@@ -173,6 +173,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - The Phase 14 presentation preserves the hidden legacy Builder shell while canonical refresh helpers still own references into it, preventing deleted-Qt-label failures during saved-build refresh without duplicating planner state
 - Context-chip polish is idempotent across repeated page visits, so reopening Rotation Builder does not stack duplicate Character/Build/Trial/Boss/Difficulty captions
 - The Rotation Builder front page is constrained to four primary setup surfaces before generation: compact Context, Rotation Intent, Inputs & Obligations, and the result-navigation panel; intent icons are displayed above their labels and generated-setting rows expose explicit edit pencils
+- Rotation Intent, Inputs & Obligations, and Generated Settings use the large gold section hierarchy from the Phase 14 mockup, while result navigation and semantic SVG icons are reasserted at the final visible-page boundary
 - **Generate Rotation** remains the single dominant setup action; save/export controls stay in the generated-result workflow
 
 ---
