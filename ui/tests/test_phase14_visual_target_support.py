@@ -268,3 +268,56 @@ def test_phase14_build_trait_icon_vocabulary_is_wired() -> None:
         assert mapping in source
     assert "_decorate_trait_combo(controller.trait_combo)" in source
     assert "row.addWidget(icon_label(trait_icon, 16))" in source
+
+
+def test_phase14_icon_contract_normalizes_user_added_asset_names() -> None:
+    source = _source(ux_icons)
+
+    assert "def _normalized_icon_stem(value: str) -> str:" in source
+    assert "root.iterdir()" in source
+    assert '"stream-events": ("stream-events", "stream_events")' in source
+    assert '"arcane": ("magic", "Arcane", "arcane")' in source
+    assert '"nirnhoned": ("drop", "Nirnhoned", "nirnhoned")' in source
+    assert '"bloodthirsty": ("drop", "Bloodthirsty", "bloodthirsty")' in source
+    assert 'label.setProperty("semanticIconName", name)' in source
+    assert 'button_widget.setProperty("semanticIconName", icon_name)' in source
+
+
+def test_phase14_build_icons_are_reasserted_when_page_becomes_visible() -> None:
+    source = _source(phase14_build_icon_polish_support)
+
+    assert "original_show_event = ThemedBuildsPage.showEvent" in source
+    assert "def show_event_with_phase14_icons(self, event):" in source
+    assert "refresh_theme_icons(self)" in source
+    assert "ThemedBuildsPage.showEvent = show_event_with_phase14_icons" in source
+
+
+def test_phase14_rotation_front_page_is_the_four_requested_surfaces() -> None:
+    command = Path(phase14_rotation_visual_target_support.__file__).with_name(
+        "phase14_rotation_command_center_support.py"
+    ).read_text(encoding="utf-8")
+    visual = _source(phase14_rotation_visual_target_support)
+
+    assert 'tab.setObjectName("phase14RotationFrontPage")' in command
+    assert '_build_context(page)' in command
+    assert '_build_intent_card(page)' in command
+    assert '_build_obligations_card(page)' in command
+    assert 'layout.addWidget(nav)' in visual
+    assert 'card.header.hide()' in visual
+    assert 'card.set_icon("rotations")' in visual
+    assert 'card.set_icon("field-office")' in visual
+    assert "refresh_theme_icons(page)" in visual
+
+
+def test_phase14_rotation_intents_and_settings_match_target_card_controls() -> None:
+    command = Path(phase14_rotation_visual_target_support.__file__).with_name(
+        "phase14_rotation_command_center_support.py"
+    ).read_text(encoding="utf-8")
+
+    assert "button = QToolButton()" in command
+    assert "ToolButtonTextUnderIcon" in command
+    assert 'set_button_icon(button, values["icon"], size=36)' in command
+    assert 'set_button_icon(edit, "pen", size=18)' in command
+    assert 'These settings shape your rotation and ability priorities.' in command
+    assert 'Custom rules, conditionals, and resource management.' in command
+    assert 'page.generate_button.setText("▶  Generate Rotation")' in command
