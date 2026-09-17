@@ -55,7 +55,6 @@ def _install_result_nav(page) -> None:
 
     hint = QLabel("Generate a rotation to unlock results.")
     hint.setProperty("muted", True)
-    hint.setAlignment(hint.alignment())
     page.phase14_result_nav_hint = hint
     root.addWidget(hint)
 
@@ -92,6 +91,28 @@ def _apply_target_geometry(page) -> None:
         team_label.parentWidget().hide()
 
 
+def apply_phase14_rotation_visual_target(page) -> None:
+    """Apply the target mockup after the canonical Rotation layout has been built."""
+    tabs = getattr(page, "rotation_builder_tabs", None)
+    if tabs is None or tabs.count() < 1:
+        return
+
+    _install_result_nav(page)
+    _apply_target_geometry(page)
+
+    tab_bar = tabs.tabBar()
+    tab_bar.setVisible(tabs.currentIndex() != 0)
+
+    if not bool(getattr(page, "_phase14_result_tab_visibility_wired", False)):
+        def sync_tab_bar(index: int) -> None:
+            tab_bar.setVisible(int(index) != 0)
+
+        tabs.currentChanged.connect(sync_tab_bar)
+        page._phase14_result_tab_visibility_wired = True
+
+    _sync_result_nav(page, bool(getattr(page, "rotation_plan", None)))
+
+
 def install() -> None:
     global _INSTALLED
     if _INSTALLED:
@@ -111,14 +132,14 @@ def install() -> None:
 
     def install_target(page) -> None:
         if bool(getattr(page, "_phase14_rotation_command_center_installed", False)):
+            apply_phase14_rotation_visual_target(page)
             return
 
         tabs = getattr(page, "rotation_builder_tabs", None)
         legacy_builder = tabs.widget(0) if tabs is not None and tabs.count() else None
         if legacy_builder is not None:
-            # Phase 14 moves the real controls out of this widget, but older refresh
-            # helpers still retain QLabel references created there. Keep the hidden
-            # shell alive instead of deleteLater() invalidating those wrappers.
+            # Keep the old builder shell alive because older refresh helpers retain
+            # QLabel references created there. Deleting it creates stale shiboken wrappers.
             try:
                 legacy_builder.deleteLater = legacy_builder.hide
             except (AttributeError, TypeError):
@@ -126,27 +147,14 @@ def install() -> None:
             page._phase14_preserved_legacy_builder = legacy_builder
 
         original_install(page)
-        _install_result_nav(page)
-        _apply_target_geometry(page)
-
-        # The target does not show a second tab strip above Builder. On the setup
-        # page the result buttons live below the cards; once a result is opened,
-        # reveal the canonical tab bar so navigation/back remains ordinary Qt.
-        tab_bar = page.rotation_builder_tabs.tabBar()
-        tab_bar.setVisible(False)
-
-        def sync_tab_bar(index: int) -> None:
-            tab_bar.setVisible(int(index) != 0)
-
-        page.rotation_builder_tabs.currentChanged.connect(sync_tab_bar)
-        _sync_result_nav(page, bool(getattr(page, "rotation_plan", None)))
+        apply_phase14_rotation_visual_target(page)
 
     command_center.install_phase14_rotation_command_center = install_target
     # rotation_dashboard_layout_support imported the function directly, so replace
-    # that bound module symbol too. Human beings invented imports, then made them
-    # stateful. Naturally.
+    # that bound module symbol too. The canonical page also reapplies the visual target
+    # after layout installation, making this robust against import/decorator ordering.
     layout_support.install_phase14_rotation_command_center = install_target
     _INSTALLED = True
 
 
-__all__ = ["install"]
+__all__ = ["apply_phase14_rotation_visual_target", "install"]
