@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ui import application_workspace_bootstrap
+from ui import phase14_build_creation_bridge
 from ui import phase14_build_profile_support
 from ui import phase14_builds_command_center_support
 from ui import phase14_rotation_command_center_support
@@ -18,11 +19,15 @@ def test_phase14_build_command_center_is_composed_after_existing_build_features(
 
     assert "install_phase14_builds_command_center_support()" in source
     assert "install_phase14_build_profile_support()" in source
+    assert "install_phase14_build_creation_bridge()" in source
     assert source.index("install_build_reuse_template_support()") < source.index(
         "install_phase14_builds_command_center_support()"
     )
     assert source.index("install_phase14_builds_command_center_support()") < source.index(
         "install_phase14_build_profile_support()"
+    )
+    assert source.index("install_phase14_build_profile_support()") < source.index(
+        "install_phase14_build_creation_bridge()"
     )
 
 
@@ -45,6 +50,15 @@ def test_build_profile_support_uses_additive_sidecar_and_baseline() -> None:
     assert '"My Build" if profile.ownership == "mine"' in source
     assert 'favorite=not profile.favorite' in source
     assert 'archived=not profile.archived' in source
+
+
+def test_phase14_new_build_uses_existing_easy_mode_panel() -> None:
+    source = _source(phase14_build_creation_bridge)
+
+    assert 'panel = getattr(self, "new_build_panel", None)' in source
+    assert "button.clicked.connect(panel.open_for_creation)" in source
+    assert 'old_host = getattr(self, "new_build_action_host", None)' in source
+    assert "old_host.hide()" in source
 
 
 def test_rotation_command_center_is_installed_by_dashboard_layout() -> None:
