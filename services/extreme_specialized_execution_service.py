@@ -14,6 +14,9 @@ from services.extreme_record_execution_catalog_service import (
     ExtremeRecordExecutionCatalogService,
     ExtremeRecordExecutionStatus,
 )
+from services.extreme_stealth_source_package_service import (
+    ExtremeStealthSourcePackageService,
+)
 
 
 @dataclass(frozen=True)
@@ -55,6 +58,7 @@ class ExtremeSpecializedExecutionService:
             "movement_speed",
             "sprint_speed",
             "stealthed_movement_speed",
+            "detection_radius_reduction",
         }
     )
     _SAVED_BUILD_REQUIRED_KEYS = frozenset({"actual_heal", "critical_heal"})
@@ -84,14 +88,10 @@ class ExtremeSpecializedExecutionService:
             ),
         ),
         "movement-state": (),
-        "stealth-state": (
-            ExtremeSpecializedInputRequirement(
-                "stealth_sources",
-                "Stealth Sources",
-                "canonical_state",
-                note="Aggregate reviewed flat and multiplicative detection-radius reductions.",
-            ),
-        ),
+        # The first stealth-state route now owns a legal named-gear lower bound.
+        # Final detection-radius stacking and non-gear source composition remain
+        # explicit unresolved evidence rather than manual UI inputs.
+        "stealth-state": (),
         "stealth-runtime": (
             ExtremeSpecializedInputRequirement(
                 "duration_seconds",
@@ -113,11 +113,17 @@ class ExtremeSpecializedExecutionService:
         *,
         healing_events: ExtremeHealingEventRecordService | None = None,
         movement_package: ExtremeMovementStaticPackageService | None = None,
+        stealth_package: ExtremeStealthSourcePackageService | None = None,
         database_path: str | Path | None = None,
     ) -> None:
         self.healing_events = healing_events or ExtremeHealingEventRecordService()
         self.movement_package = movement_package or (
             ExtremeMovementStaticPackageService(database_path)
+            if database_path is not None
+            else None
+        )
+        self.stealth_package = stealth_package or (
+            ExtremeStealthSourcePackageService(database_path)
             if database_path is not None
             else None
         )
@@ -221,6 +227,33 @@ class ExtremeSpecializedExecutionService:
                     ("Effective speed", f"{state.effective_multiplier * 100.0:.1f}%"),
                     ("Effective cap", f"{state.effective_cap_multiplier * 100.0:.0f}%"),
                 ),
+                unresolved=result.unresolved,
+                search_scope=result.evidence,
+                omitted_scope=result.unresolved,
+            )
+
+        if key == "detection_radius_reduction":
+            if self.stealth_package is None:
+                raise ValueError("Extreme stealth package requires a canonical database path")
+            result = self.stealth_package.evaluate()
+            witness = result.realization
+            summary: list[tuple[str, str]] = [
+                ("Reviewed legal gear reduction", f"{result.reviewed_flat_reduction_meters:g} m"),
+                ("Gear denominator proven", "YES" if result.gear_denominator_proven else "NO"),
+            ]
+            if witness is not None:
+                summary.append(("Gear sets", ", ".join(witness.set_names)))
+                summary.append(("Set counts", " + ".join(str(value) for value in witness.counts)))
+                summary.append(("Weapon shape", witness.weapon_shape.value))
+            return ExtremeSpecializedExecutionResult(
+                objective_key=key,
+                label=descriptor.objective.label,
+                execution_family=descriptor.execution_family,
+                value=result.reviewed_flat_reduction_meters,
+                value_text=f"{result.reviewed_flat_reduction_meters:g} m reviewed gear reduction",
+                mechanic_complete=result.mechanic_complete,
+                global_maximum_proven=False,
+                summary_rows=tuple(summary),
                 unresolved=result.unresolved,
                 search_scope=result.evidence,
                 omitted_scope=result.unresolved,
