@@ -2,7 +2,10 @@ from __future__ import annotations
 
 """Urban Wilderness shell over the canonical Raid Plan editor."""
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
@@ -10,18 +13,44 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
+    QSizePolicy,
     QStackedWidget,
     QTableWidget,
     QVBoxLayout,
     QWidget,
 )
 
+from engine.config import get_resource_path
 from ui.components.foundry_card import FoundryCard
 from ui.raid_plan_adviser_page import RaidPlanAdviserPage
 
 
+_TRIAL_BANNER_FILENAMES = (
+    ("dreadsail reef", "dreadsail_reef.webp"),
+    ("sunspire", "sunspire.webp"),
+    ("cloudrest", "cloudrest.webp"),
+)
+
+
 def _clean(value: object) -> str:
     return str(value or "").strip()
+
+
+def _trial_banner_filename(*values: object) -> str | None:
+    """Resolve a trial-specific Raid Plan banner from stable identity text."""
+    identity = " ".join(_clean(value).casefold() for value in values if _clean(value))
+    for trial_key, filename in _TRIAL_BANNER_FILENAMES:
+        if trial_key in identity:
+            return filename
+    return None
+
+
+def _trial_banner_path(*values: object) -> Path | None:
+    filename = _trial_banner_filename(*values)
+    if filename is None:
+        return None
+    path = Path(get_resource_path("assets", "raid_plans", "trial_banners", filename))
+    return path if path.is_file() else None
 
 
 def _foundry_card_ancestor(widget: QWidget | None) -> QWidget | None:
@@ -31,6 +60,44 @@ def _foundry_card_ancestor(widget: QWidget | None) -> QWidget | None:
             return current
         current = current.parentWidget()
     return None
+
+
+class _TrialBannerLabel(QLabel):
+    """Crop a wide trial image to the available hero slot without distortion."""
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self._source_pixmap = QPixmap()
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setMinimumHeight(132)
+        self.setMaximumHeight(168)
+        self.setMinimumWidth(260)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setProperty("raidPlanTrialBanner", True)
+
+    def set_source(self, path: Path | None) -> None:
+        self._source_pixmap = QPixmap(str(path)) if path is not None else QPixmap()
+        self.setVisible(not self._source_pixmap.isNull())
+        self._refresh_pixmap()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._refresh_pixmap()
+
+    def _refresh_pixmap(self) -> None:
+        if self._source_pixmap.isNull() or self.width() <= 0 or self.height() <= 0:
+            self.clear()
+            return
+        scaled = self._source_pixmap.scaled(
+            self.size(),
+            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        x = max(0, (scaled.width() - self.width()) // 2)
+        y = max(0, (scaled.height() - self.height()) // 2)
+        width = min(self.width(), scaled.width())
+        height = min(self.height(), scaled.height())
+        self.setPixmap(scaled.copy(x, y, width, height))
 
 
 class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
@@ -125,10 +192,19 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         center_layout.setSpacing(8)
 
         hero = FoundryCard("Selected Plan", "trial")
+        hero_row = QWidget()
+        hero_layout = QHBoxLayout(hero_row)
+        hero_layout.setContentsMargins(0, 0, 0, 0)
+        hero_layout.setSpacing(12)
+        self.overview_art = _TrialBannerLabel()
+        self.overview_art.hide()
+        hero_layout.addWidget(self.overview_art, 3)
         self.overview_hero = QLabel("No saved plan selected.")
         self.overview_hero.setProperty("heroTitle", True)
         self.overview_hero.setWordWrap(True)
-        hero.addWidget(self.overview_hero)
+        self.overview_hero.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+        hero_layout.addWidget(self.overview_hero, 5)
+        hero.addWidget(hero_row)
         center_layout.addWidget(hero)
 
         snapshot = QGridLayout()
@@ -236,12 +312,14 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         if plan is None and plans:
             plan = plans[0]
         if plan is None:
+            self.overview_art.set_source(None)
             self.overview_hero.setText("No saved Raid Plan yet. Use Roles to assemble one without inventing missing identity.")
             for card in (self.team_snapshot, self.encounter_snapshot, self.strategy_snapshot, self.progress_snapshot):
                 card.value_label.setText("—")
             return
         assigned = sum(1 for member in plan.members if member.primary_assignment or member.secondary_assignment)
         builds = sum(1 for member in plan.members if member.build_selected)
+        self.overview_art.set_source(_trial_banner_path(plan.trial_id, plan.name))
         self.overview_hero.setText(
             f"{plan.name}\n{plan.trial_id} · {plan.difficulty or 'Difficulty not set'} · {len(plan.members)} players\nStatus: {plan.status.title()}"
         )
