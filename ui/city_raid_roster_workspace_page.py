@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_resource_path
 from ui.themed_raid_roster_workspace_page import ThemedRaidRosterWorkspacePage
+from ui.urban_wilderness_accessibility_polish import install as install_urban_wilderness_accessibility_polish
 from ui.ux_icons import icon, set_button_icon
 
 
@@ -76,6 +77,10 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
     """Compatibility route name for the single Urban Wilderness Roster dashboard."""
 
     def __init__(self, parent=None) -> None:
+        # Install presentation-only polish before the shared Roster builder creates
+        # its embedded Teams/Availability/etc. pages. This also establishes the
+        # accessible Raid Map palette before the later raid pages are constructed.
+        install_urban_wilderness_accessibility_polish()
         self._embedded_detail_indexes: dict[str, int] = {}
         self._embedded_stack: QStackedWidget | None = None
         super().__init__(parent)
