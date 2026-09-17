@@ -12,11 +12,10 @@ from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QBrush, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from engine.config import get_data_dir, get_resource_path
 from services.skill_choice_service import load_skill_choices
-from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 from ui.ux_icons import icon as semantic_icon
 
@@ -51,13 +50,15 @@ _SLOT_ICONS = {
 }
 
 
-def _role_presentation(role: str) -> tuple[str, str]:
+def _role_presentation(role: str) -> tuple[str, str] | None:
     value = str(role or "").strip().casefold()
     if "heal" in value:
         return _ROLE_PRESENTATION["healer"]
     if "tank" in value:
         return _ROLE_PRESENTATION["tank"]
-    return _ROLE_PRESENTATION.get(value, _ROLE_PRESENTATION["damage dealer"])
+    if value in {"damage", "damage dealer", "dd", "support dd"} or "damage dealer" in value:
+        return _ROLE_PRESENTATION["damage dealer"]
+    return None
 
 
 def _tinted_icon(name: str, color: str, size: int = 22) -> QIcon:
@@ -125,6 +126,9 @@ def _decorate_library_table(page) -> None:
     if table is None or not sources:
         return
     for row, source_index in enumerate(sources):
+        kind_item = table.item(row, 2)
+        if kind_item is not None and str(kind_item.text() or "").strip() == "Template":
+            continue
         if source_index < 0 or source_index >= len(page.roster.Members):
             continue
         build = page.roster.Members[source_index]
@@ -135,11 +139,13 @@ def _decorate_library_table(page) -> None:
             if not class_icon.isNull():
                 class_item.setIcon(class_icon)
         if role_item is not None:
-            role_icon_name, role_color = _role_presentation(str(getattr(build, "Role", "") or ""))
-            role_icon = _tinted_icon(role_icon_name, role_color, 20)
-            if not role_icon.isNull():
-                role_item.setIcon(role_icon)
-            role_item.setForeground(QBrush(QColor(role_color)))
+            presentation = _role_presentation(str(getattr(build, "Role", "") or ""))
+            if presentation is not None:
+                role_icon_name, role_color = presentation
+                role_icon = _tinted_icon(role_icon_name, role_color, 20)
+                if not role_icon.isNull():
+                    role_item.setIcon(role_icon)
+                role_item.setForeground(QBrush(QColor(role_color)))
 
 
 def _value_row(label: str, value: str, *, icon_name: str = "", icon_color: str | None = None) -> QWidget:
@@ -189,12 +195,15 @@ def _header(page, build) -> QWidget:
         meta.addWidget(_icon_label(eso_class.casefold(), size=16))
         meta.addWidget(QLabel(eso_class))
     role = inspector._text(getattr(build, "Role", ""))
-    if role != "—":
-        role_icon, role_color = _role_presentation(role)
+    presentation = _role_presentation(role) if role != "—" else None
+    if presentation is not None:
+        role_icon, role_color = presentation
         meta.addWidget(_icon_label(role_icon, size=16, color=role_color))
         role_label = QLabel(role)
         role_label.setStyleSheet(f"color: {role_color};")
         meta.addWidget(role_label)
+    elif role != "—":
+        meta.addWidget(QLabel(role))
     race = inspector._text(getattr(build, "Race", ""))
     if race != "—":
         meta.addWidget(QLabel(f"•  {race}"))
