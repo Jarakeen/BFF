@@ -100,11 +100,9 @@ class ExtremeBashSavedBuildRecordService:
             inputs=ExtremeBashDamageInputs(),
             champion_point=champion_point,
             jewelry=jewelry,
+            deadly_bash=deadly_bash,
         )
-        # Deadly Bash belongs to the build-objective layer but the context helper
-        # currently does not forward it. Re-evaluate the already-built context is
-        # avoided here; preserve that missing bridge explicitly until the shared
-        # context adapter accepts the passive evidence directly.
+
         unresolved = list(result.context_blockers)
         unresolved.extend(result.objective.source_blockers)
         unresolved.extend(
@@ -115,12 +113,6 @@ class ExtremeBashSavedBuildRecordService:
             f"Bash legality: {problem}"
             for problem in result.objective.objective.legality_blockers
         )
-        if deadly_bash.unresolved:
-            unresolved.extend(f"Deadly Bash: {problem}" for problem in deadly_bash.unresolved)
-        elif deadly_bash.skill2_bash_damage:
-            unresolved.append(
-                "Deadly Bash reviewed value exists but saved-build Bash context bridge does not yet forward it"
-            )
 
         evidence = [
             f"Physical Resistance: {result.physical_resistance or 0.0:.0f}",
