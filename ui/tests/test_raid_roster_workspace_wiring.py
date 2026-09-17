@@ -86,24 +86,23 @@ def test_roster_workspace_keeps_six_cards_without_legacy_filler_art() -> None:
     assert "class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):" in wrapper
     assert "self.tabs" not in wrapper
 
-    # The active wrapper explicitly retires the old city/raven filler surfaces.
     assert "_remove_legacy_city_art" in wrapper
     assert 'for attribute in ("quote_art", "team_art")' in wrapper
     assert "decorative assets never determine page/card geometry" in wrapper
     assert '"roster_people.webp"' not in wrapper
     assert '"roster_team.webp"' not in wrapper
 
-    # Players keeps the people list visible beside the record editor.
     assert "self.player_detail_table = RosterTable()" in wrapper
     assert "self.player_detail_table.memberSelected.connect(self.load_member)" in wrapper
     assert "split.setStretchFactor(0, 3)" in wrapper
     assert "split.setStretchFactor(1, 2)" in wrapper
 
-    # The six card bar has stable dimensions and number-sheet support.
     assert '"players": "users"' in wrapper
     assert '"characters": "character"' in wrapper
     assert 'setProperty("rosterMetricBadge", True)' in wrapper
-    assert 'setFixedSize(QSize(34, 34))' in wrapper
+    assert "def _trim_transparent" in wrapper
+    assert 'setFixedSize(QSize(46, 46))' in wrapper
+    assert 'border: none; border-radius: 0' in wrapper
     assert "setMaximumHeight(148)" in wrapper
 
 
