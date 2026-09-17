@@ -18,6 +18,25 @@ RUNTIME_ASSET_DATAS: tuple[tuple[str, str], ...] = (
     ("bff.ico", "."),
 )
 
+# The large startup artwork is intentionally local/optional today because image files
+# are ignored by the repository. If present on the release workstation, import only
+# this approved splash file from its historical location and place it under the active
+# Urban Wilderness runtime path. Do not reopen the retired Grimoire theme tree.
+OPTIONAL_RUNTIME_ASSET_DATAS: tuple[tuple[str, str], ...] = (
+    (
+        "assets/themes/bff/grimoire/assets/fantasy_splash.png",
+        "assets/themes/bff/urban_wilderness/startup",
+    ),
+    (
+        "assets/themes/bff/grimoire/assets/fantasy_splash.jpg",
+        "assets/themes/bff/urban_wilderness/startup",
+    ),
+    (
+        "assets/themes/bff/grimoire/assets/fantasy_splash.jpeg",
+        "assets/themes/bff/urban_wilderness/startup",
+    ),
+)
+
 SEED_DATAS: tuple[tuple[str, str], ...] = (
     ("data/eso.db", "_seed_data"),
 )
@@ -46,6 +65,7 @@ RUNTIME_EXTERNAL_DATA_FILES: tuple[str, ...] = (
     "dungeon_encounter_identity_launch_starters.json",
     "dungeon_encounter_identity_launch_starters_fifth.json",
     "dungeon_encounter_identity_launch_starters_sixth.json",
+    "gameplay_policy/endgame_pve.json",
     "raid_encounter_identity.json",
     "reference_common_names.json",
     "reference_mitigations.json",
@@ -180,4 +200,10 @@ def pyinstaller_datas(project_root):
         if not path.exists():
             raise FileNotFoundError(f"Required release asset is missing: {source}")
         entries.append((str(path), destination))
+
+    for source, destination in OPTIONAL_RUNTIME_ASSET_DATAS:
+        path = project_root / source
+        if path.exists():
+            entries.append((str(path), destination))
+
     return entries
