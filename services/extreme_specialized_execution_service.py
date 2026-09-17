@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from models.build_model import PlayerBuild
+from services.extreme_bash_saved_build_record_service import (
+    ExtremeBashSavedBuildRecordService,
+)
 from services.extreme_healing_event_record_service import (
     ExtremeHealingEventRecordService,
 )
@@ -55,13 +58,16 @@ class ExtremeSpecializedExecutionService:
         {
             "actual_heal",
             "critical_heal",
+            "bash_damage",
             "movement_speed",
             "sprint_speed",
             "stealthed_movement_speed",
             "detection_radius_reduction",
         }
     )
-    _SAVED_BUILD_REQUIRED_KEYS = frozenset({"actual_heal", "critical_heal"})
+    _SAVED_BUILD_REQUIRED_KEYS = frozenset(
+        {"actual_heal", "critical_heal", "bash_damage"}
+    )
 
     _FAMILY_REQUIREMENTS = {
         "actual-heal-event": (),
@@ -70,7 +76,7 @@ class ExtremeSpecializedExecutionService:
                 "event_source",
                 "Event Source",
                 "canonical_candidate",
-                note="Select/prove the legal Bash or damage-shield event source before scoring.",
+                note="Select/prove the legal event source before scoring.",
             ),
         ),
         "resource-timeline": (
@@ -88,9 +94,6 @@ class ExtremeSpecializedExecutionService:
             ),
         ),
         "movement-state": (),
-        # The first stealth-state route now owns a legal named-gear lower bound.
-        # Final detection-radius stacking and non-gear source composition remain
-        # explicit unresolved evidence rather than manual UI inputs.
         "stealth-state": (),
         "stealth-runtime": (
             ExtremeSpecializedInputRequirement(
@@ -107,16 +110,27 @@ class ExtremeSpecializedExecutionService:
             ),
         ),
     }
+    _OBJECTIVE_REQUIREMENTS = {
+        # Bash has a canonical saved-build record owner and therefore does not need
+        # the manual event-source input that Damage Shield still requires.
+        "bash_damage": (),
+    }
 
     def __init__(
         self,
         *,
         healing_events: ExtremeHealingEventRecordService | None = None,
+        bash_record: ExtremeBashSavedBuildRecordService | None = None,
         movement_package: ExtremeMovementStaticPackageService | None = None,
         stealth_package: ExtremeStealthSourcePackageService | None = None,
         database_path: str | Path | None = None,
     ) -> None:
         self.healing_events = healing_events or ExtremeHealingEventRecordService()
+        self.bash_record = bash_record or (
+            ExtremeBashSavedBuildRecordService(database_path)
+            if database_path is not None
+            else None
+        )
         self.movement_package = movement_package or (
             ExtremeMovementStaticPackageService(database_path)
             if database_path is not None
@@ -130,9 +144,12 @@ class ExtremeSpecializedExecutionService:
 
     @classmethod
     def requirements_for(cls, objective_key: str) -> tuple[ExtremeSpecializedInputRequirement, ...]:
-        descriptor = ExtremeRecordExecutionCatalogService.descriptor(objective_key)
+        key = str(objective_key or "").strip().casefold()
+        descriptor = ExtremeRecordExecutionCatalogService.descriptor(key)
         if descriptor.status is not ExtremeRecordExecutionStatus.SPECIALIZED:
             return ()
+        if key in cls._OBJECTIVE_REQUIREMENTS:
+            return cls._OBJECTIVE_REQUIREMENTS[key]
         try:
             return cls._FAMILY_REQUIREMENTS[descriptor.execution_family]
         except KeyError as exc:
@@ -207,6 +224,30 @@ class ExtremeSpecializedExecutionService:
                 unresolved=tuple(dict.fromkeys(item for item in unresolved if item)),
                 search_scope=tuple(catalog.search_scope),
                 omitted_scope=tuple(catalog.omitted_scope),
+            )
+
+        if key == "bash_damage":
+            if build is None:
+                raise ValueError(f"{descriptor.objective.label} requires a saved-build starting context")
+            if self.bash_record is None:
+                raise ValueError("Extreme Bash record requires a canonical database path")
+            result = self.bash_record.evaluate(build, active_bar=active_bar)
+            value = result.value
+            return ExtremeSpecializedExecutionResult(
+                objective_key=key,
+                label=descriptor.objective.label,
+                execution_family=descriptor.execution_family,
+                value=value,
+                value_text=f"{value:,.0f}",
+                mechanic_complete=result.mechanic_complete,
+                global_maximum_proven=False,
+                summary_rows=(
+                    ("Active bar", active_bar),
+                    ("Reviewed Bash lower bound", f"{value:,.0f}"),
+                ),
+                unresolved=result.unresolved,
+                search_scope=result.evidence,
+                omitted_scope=result.unresolved,
             )
 
         if key in {"movement_speed", "sprint_speed", "stealthed_movement_speed"}:
