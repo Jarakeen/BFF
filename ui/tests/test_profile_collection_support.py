@@ -51,12 +51,10 @@ def test_collectible_profile_support_uses_profile_dimension() -> None:
     assert "set_owned_batch" in ui_source
 
 
-def test_bff_collectibles_restore_field_journal_badge_sheet_without_redirecting_numbers() -> None:
+def test_collectible_profile_support_does_not_redirect_badges_to_legacy_jpeg() -> None:
     ui_source = Path(collectibles_profile_support.__file__).read_text(encoding="utf-8")
 
-    assert '"badges.jpg", 6, 4, index' in ui_source
-    assert '/ "field_journal"' in ui_source
-    assert '/ "collectibles"' in ui_source
-    assert '/ "badges.jpg"' in ui_source
-    assert 'ref.filename.casefold() == "badges.jpg"' in ui_source
-    assert "only badge art is routed" in ui_source
+    assert "Profile support owns profile state, not badge-source routing" in ui_source
+    assert "collectibles_dashboard_page.BFF_BADGES =" not in ui_source
+    assert 'ref.filename.casefold() == "badges.jpg"' not in ui_source
+    assert 'self.path.suffix.casefold() not in {".jpg", ".jpeg"}' in ui_source
