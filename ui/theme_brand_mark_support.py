@@ -23,16 +23,15 @@ def install() -> None:
     from ui.theme.theme_manager import ThemeManager
 
     original_apply = ThemeManager.apply
+    original_build_ui = FoundrySidebar.build_ui
 
     def refresh_brand_mark_sized(self) -> None:
         if not hasattr(self, "brand_mark"):
             return
 
-        # The approved BFF logo already contains the title and "we got this"
-        # subline, so the legacy text labels beside it are intentionally hidden.
         self.setMinimumWidth(248)
         self.setMaximumWidth(278)
-        self.brand_mark.setFixedSize(222, 140)
+        self.brand_mark.setFixedSize(228, 152)
         self.brand_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         path = get_resource_path(*_LOGO)
@@ -41,8 +40,8 @@ def install() -> None:
         if not pixmap.isNull():
             self.brand_mark.setPixmap(
                 pixmap.scaled(
-                    218,
-                    136,
+                    224,
+                    148,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
@@ -50,15 +49,32 @@ def install() -> None:
         else:
             self.brand_mark.setText("BFF")
 
+        # The approved image already contains BFF + "we got this". Remove the
+        # legacy text lockup entirely after construction so it cannot overlap or
+        # reserve stray layout width beside the image.
         brand_parent = self.brand_mark.parentWidget()
         if brand_parent is not None:
+            layout = brand_parent.layout()
+            if layout is not None:
+                layout.setSpacing(0)
+                layout.setAlignment(self.brand_mark, Qt.AlignmentFlag.AlignCenter)
             for label in brand_parent.findChildren(QLabel):
                 if label is self.brand_mark:
                     continue
                 if bool(label.property("sidebarLogo")) or bool(label.property("sidebarOffice")):
                     label.hide()
+                    label.setParent(None)
+                    label.deleteLater()
 
     FoundrySidebar.refresh_brand_mark = refresh_brand_mark_sized
+
+    def build_ui_with_brand(self) -> None:
+        # FoundrySidebar creates its legacy text after its first brand refresh.
+        # Refresh once more after construction so only the approved logo remains.
+        original_build_ui(self)
+        self.refresh_brand_mark()
+
+    FoundrySidebar.build_ui = build_ui_with_brand
 
     def apply_with_brand_mark(self, app: QApplication) -> None:
         original_apply(self, app)
