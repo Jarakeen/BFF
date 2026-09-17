@@ -26,6 +26,9 @@ from services.extreme_record_execution_catalog_service import (
     ExtremeRecordExecutionCatalogService,
     ExtremeRecordExecutionStatus,
 )
+from services.extreme_saved_rotation_resource_record_service import (
+    ExtremeSavedRotationResourceRecordService,
+)
 from services.extreme_stealth_source_package_service import (
     ExtremeStealthSourcePackageService,
 )
@@ -64,6 +67,8 @@ class ExtremeSpecializedExecutionService:
             "critical_heal",
             "damage_shield",
             "bash_damage",
+            "resource_sustain",
+            "ultimate_generation",
             "movement_speed",
             "sprint_speed",
             "stealthed_movement_speed",
@@ -73,7 +78,14 @@ class ExtremeSpecializedExecutionService:
     )
     _DURATION_INPUT_KEYS = frozenset({"invisibility_uptime"})
     _SAVED_BUILD_REQUIRED_KEYS = frozenset(
-        {"actual_heal", "critical_heal", "damage_shield", "bash_damage"}
+        {
+            "actual_heal",
+            "critical_heal",
+            "damage_shield",
+            "bash_damage",
+            "resource_sustain",
+            "ultimate_generation",
+        }
     )
 
     _FAMILY_REQUIREMENTS = {
@@ -120,9 +132,11 @@ class ExtremeSpecializedExecutionService:
     _OBJECTIVE_REQUIREMENTS = {
         "bash_damage": (),
         "damage_shield": (),
+        # Saved RotationPlan artifacts own the explicit timeline/workload for the
+        # two resource-timeline records. No second scenario editor is required.
+        "resource_sustain": (),
+        "ultimate_generation": (),
         "invisibility_duration": (),
-        # Provider recurrence is now derived canonically. Uptime needs only the
-        # comparison horizon; callers no longer hand-enter provider windows.
         "invisibility_uptime": (
             ExtremeSpecializedInputRequirement(
                 "duration_seconds",
@@ -139,6 +153,7 @@ class ExtremeSpecializedExecutionService:
         healing_events: ExtremeHealingEventRecordService | None = None,
         shield_record: ExtremeDamageShieldSavedBuildRecordService | None = None,
         bash_record: ExtremeBashSavedBuildRecordService | None = None,
+        saved_rotation_resources: ExtremeSavedRotationResourceRecordService | None = None,
         movement_package: ExtremeMovementStaticPackageService | None = None,
         stealth_package: ExtremeStealthSourcePackageService | None = None,
         invisibility_duration_record: ExtremeInvisibilityDurationRecordService | None = None,
@@ -153,6 +168,11 @@ class ExtremeSpecializedExecutionService:
         )
         self.bash_record = bash_record or (
             ExtremeBashSavedBuildRecordService(database_path)
+            if database_path is not None
+            else None
+        )
+        self.saved_rotation_resources = saved_rotation_resources or (
+            ExtremeSavedRotationResourceRecordService(database_path)
             if database_path is not None
             else None
         )
@@ -313,6 +333,78 @@ class ExtremeSpecializedExecutionService:
                     ("Active bar", active_bar),
                     ("Reviewed Bash lower bound", f"{value:,.0f}"),
                 ),
+                unresolved=result.unresolved,
+                search_scope=result.evidence,
+                omitted_scope=result.unresolved,
+            )
+
+        if key in {"resource_sustain", "ultimate_generation"}:
+            if build is None:
+                raise ValueError(f"{descriptor.objective.label} requires a saved-build starting context")
+            if self.saved_rotation_resources is None:
+                raise ValueError("Extreme saved-rotation resource records require a canonical database path")
+
+            if key == "resource_sustain":
+                result = self.saved_rotation_resources.resource_sustain(build)
+                record = result.record
+                summary: list[tuple[str, str]] = []
+                if result.resource is not None:
+                    summary.append(("Spent resource", result.resource.value.title()))
+                if record is not None:
+                    summary.extend(
+                        (
+                            ("Saved rotation horizon", f"{record.duration_seconds:g}s"),
+                            ("Net resource", f"{record.net_resource:+d}"),
+                            ("Net resource / second", f"{record.net_resource_per_second:+.2f}"),
+                            ("Minimum amount", str(record.minimum_amount)),
+                            ("Resolved cost events", str(result.action_cost_event_count)),
+                        )
+                    )
+                    value = record.net_resource_per_second
+                    value_text = f"{value:+.2f}/s reviewed saved-rotation lower bound"
+                else:
+                    value = None
+                    value_text = None
+                return ExtremeSpecializedExecutionResult(
+                    objective_key=key,
+                    label=descriptor.objective.label,
+                    execution_family=descriptor.execution_family,
+                    value=value,
+                    value_text=value_text,
+                    mechanic_complete=result.mechanic_complete,
+                    global_maximum_proven=False,
+                    summary_rows=tuple(summary),
+                    unresolved=result.unresolved,
+                    search_scope=result.evidence,
+                    omitted_scope=result.unresolved,
+                )
+
+            result = self.saved_rotation_resources.ultimate_generation(build)
+            record = result.record
+            summary = []
+            if record is not None:
+                summary.extend(
+                    (
+                        ("Saved rotation horizon", f"{record.duration_seconds:g}s"),
+                        ("Generated Ultimate", f"{record.total_generated:g}"),
+                        ("Ultimate / second", f"{record.generated_per_second:.2f}"),
+                        ("Generation events", str(record.event_count)),
+                    )
+                )
+                value = record.generated_per_second
+                value_text = f"{value:.2f}/s reviewed saved-rotation lower bound"
+            else:
+                value = None
+                value_text = None
+            return ExtremeSpecializedExecutionResult(
+                objective_key=key,
+                label=descriptor.objective.label,
+                execution_family=descriptor.execution_family,
+                value=value,
+                value_text=value_text,
+                mechanic_complete=result.mechanic_complete,
+                global_maximum_proven=False,
+                summary_rows=tuple(summary),
                 unresolved=result.unresolved,
                 search_scope=result.evidence,
                 omitted_scope=result.unresolved,
