@@ -94,7 +94,7 @@ _TRAIT_ICONS = {
     "Invigorating": "Invigorating",
     "Divines": "Divines",
     "Healthy": "Health",
-    "Arcane": "maguc",
+    "Arcane": "magic",
     "Robust": "Robust",
     "Bloodthirsty": "drop",
     "Harmony": "Harmony",
