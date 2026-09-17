@@ -2,7 +2,7 @@
 
 This file is the release-facing inventory for packaged FoundryDock builds. It is deliberately stricter than `FEATURES.md`: a feature may exist in source and still be excluded from a release.
 
-**Current release candidate:** `0.1.1`  
+**Current release candidate:** `0.1.2`  
 **Status date:** 2026-09-17
 
 ## Release rules
@@ -89,6 +89,7 @@ The authoritative machine-readable list lives in `packaging/release_manifest.py`
 Currently approved:
 
 - `assets/AbilityIcons` — runtime-selected ESO ability artwork
+- `assets/avatar` — bundled default character avatars for Roster character profiles
 - `assets/icons` — canonical semantic UI icon library
 - `assets/logos/BFF_logo.png` — active application branding
 - `assets/themes/bff/foundry.qss` — active base stylesheet
@@ -131,4 +132,4 @@ A release is ready only when all of the following are true:
 - existing live database migrates without reset;
 - update archive contains no `eso.db`, settings, builds, roster/progress/session state;
 - upgrade from the previous release preserves user-owned data;
-- release artifacts report version `0.1.1`.
+- release artifacts report version `0.1.2`.
