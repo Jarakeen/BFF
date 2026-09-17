@@ -118,6 +118,15 @@ RUNTIME_EXTERNAL_DATA_FILES: tuple[str, ...] = (
     "team_prescription_templates.json",
 )
 
+# Reviewed runtime directories required by the packaged application. Keep these
+# separate from file entries so the release script can copy them recursively while
+# preserving the exact data-relative path. These are canonical app inputs, not
+# research/workbench folders.
+RUNTIME_EXTERNAL_DATA_DIRECTORIES: tuple[str, ...] = (
+    "eso_info/bosses",
+    "encounter_evidence",
+)
+
 CLEAN_FIRST_INSTALL_DATA_FILES: tuple[str, ...] = (
     "builds.json",
 )
