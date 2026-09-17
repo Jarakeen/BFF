@@ -47,3 +47,15 @@ def test_u51_apprentice_no_longer_inflates_combat_spell_damage(tmp_path):
     assert len(unresolved) == 2
     assert any("experience_gain" in message for message in unresolved)
     assert any("inspiration_gain" in message for message in unresolved)
+
+
+def test_get_effects_delegates_multiplier_to_canonical_resolver(tmp_path):
+    repository = MundusRepository(tmp_path / "eso.db", game_update=50)
+
+    public_result = repository.get_effects("The Ritual", multiplier=1.5)
+    canonical_result = repository.effects_for_name("The Ritual", divines_multiplier=1.5)
+
+    assert public_result == canonical_result
+    effects, unresolved = public_result
+    assert unresolved == ()
+    assert _values(effects) == {StatId.HEALING_DONE: 12.0}
