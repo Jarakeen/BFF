@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-"""Keep the top-left Foundry/Rylo brand mark synchronized with visual theme."""
+"""Keep the top-left Foundry brand synchronized with the active visual theme."""
 
-from PySide6.QtWidgets import QApplication
+from pathlib import Path
 
-from services.accessibility_preferences import (
-    VISUAL_THEME_RYLO_CITY,
-    is_rylo_visual_theme,
-)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QApplication, QLabel
+
+from engine.config import get_resource_path
 
 _INSTALLED = False
+_LOGO = ("assets", "logos", "BFF_logo.png")
 
 
 def install() -> None:
@@ -26,38 +28,35 @@ def install() -> None:
         if not hasattr(self, "brand_mark"):
             return
 
-        app = QApplication.instance()
-        theme = str(app.property("visualTheme") if app is not None else "")
-        rylo = is_rylo_visual_theme(theme)
-        if theme == VISUAL_THEME_RYLO_CITY:
-            # City After Midnight gets the skyline mark from its approved asset
-            # board. Keep the same rail width as Rylo Grayscale so switching
-            # themes never moves the rest of the app.
-            self.setMinimumWidth(248)
-            self.setMaximumWidth(278)
-            filename = "sidebar_city_rylo.svg"
-            pix_w, pix_h = 42, 63
-            box_w, box_h = 48, 68
-        elif rylo:
-            self.setMinimumWidth(248)
-            self.setMaximumWidth(278)
-            filename = "sidebar_scythe_rylo.svg"
-            pix_w, pix_h = 42, 63
-            box_w, box_h = 48, 68
-        else:
-            self.setMinimumWidth(215)
-            self.setMaximumWidth(248)
-            filename = "sidebar_feather_gold.svg"
-            pix_w, pix_h = 32, 52
-            box_w, box_h = 38, 56
+        # The approved BFF logo already contains the title and "we got this"
+        # subline, so the legacy text labels beside it are intentionally hidden.
+        self.setMinimumWidth(248)
+        self.setMaximumWidth(278)
+        self.brand_mark.setFixedSize(222, 140)
+        self.brand_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.brand_mark.setFixedSize(box_w, box_h)
-        pixmap = self._asset_pixmap(filename, pix_w, pix_h)
+        path = get_resource_path(*_LOGO)
+        pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
         self.brand_mark.clear()
         if not pixmap.isNull():
-            self.brand_mark.setPixmap(pixmap)
+            self.brand_mark.setPixmap(
+                pixmap.scaled(
+                    218,
+                    136,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
         else:
-            self.brand_mark.setText("✦")
+            self.brand_mark.setText("BFF")
+
+        brand_parent = self.brand_mark.parentWidget()
+        if brand_parent is not None:
+            for label in brand_parent.findChildren(QLabel):
+                if label is self.brand_mark:
+                    continue
+                if bool(label.property("sidebarLogo")) or bool(label.property("sidebarOffice")):
+                    label.hide()
 
     FoundrySidebar.refresh_brand_mark = refresh_brand_mark_sized
 
@@ -69,7 +68,7 @@ def install() -> None:
                     sidebar.refresh_brand_mark()
         except RuntimeError:
             # Startup applies the theme before MainWindow exists; the sidebar
-            # chooses the correct mark itself when it is later constructed.
+            # chooses the approved logo itself when it is later constructed.
             pass
 
     ThemeManager.apply = apply_with_brand_mark
