@@ -9,19 +9,21 @@ def _source(path: str) -> str:
 
 def test_roster_summary_cards_open_embedded_workspaces() -> None:
     source = _source("ui/city_raid_roster_workspace_page.py")
+    top_back = _source("ui/roster_top_back_control_support.py")
 
     assert "QStackedWidget" in source
     assert "_embed_detail_workspaces" in source
     assert 'QPushButton("Back to Roster")' not in source
-    assert "back = QToolButton()" in source
-    assert 'back.setProperty("rosterBackButton", True)' in source
-    assert 'back.setToolTip("Back to Roster")' in source
-    assert "back.setIcon(_roster_back_icon())" in source
-    assert "nav_rail.addStretch(1)" in source
-    assert "shell_layout.addLayout(nav_rail)" in source
-    assert "back.clicked.connect(self._show_dashboard)" in source
     assert "self._embedded_stack.setCurrentIndex(index)" in source
     assert "super()._show_detail(key)" in source
+
+    assert "install_roster_top_back_control" in top_back
+    assert 'back.setProperty("rosterBackButton", True)' in top_back
+    assert 'back.setToolTip("Back to Roster")' in top_back
+    assert '"urban_wilderness",' in top_back
+    assert '"back_arrow.png"' in top_back
+    assert "metrics_layout.addWidget(back, 0, 0" in top_back
+    assert "stack.currentChanged.connect(sync_visibility)" in top_back
 
 
 def test_roster_is_streamlined_landing_surface() -> None:
@@ -29,6 +31,7 @@ def test_roster_is_streamlined_landing_surface() -> None:
     sidebar = _source("ui/components/foundry_sidebar.py")
 
     assert 'window.show_page("roster_workspace")' in support
+    assert "install_roster_top_back_control(roster_workspace)" in support
     assert '("Community News", "community_news")' not in sidebar
 
 
@@ -62,12 +65,19 @@ def test_readiness_note_art_is_fixed_field_journal_sketch_and_status_is_not_colo
     assert "self.setFixedHeight(150)" in source
 
 
-def test_urban_collectibles_use_approved_dedicated_badge_sheets() -> None:
+def test_urban_collectibles_use_clean_large_approved_badge_sheets() -> None:
     source = _source("ui/collectibles_new_theme_assets_support.py")
 
     assert '"urban_wilderness", "collectibles"' in source
     assert 'dashboard.SpriteRef("badges_1.png", 6, 4' in source
     assert 'dashboard.SpriteRef("badges_2.png", 3, 3' in source
+    assert "def _prepare_city_badge" in source
+    assert "Flood-fill from the four corners" in source
+    assert "return _trim_alpha(QPixmap.fromImage(image))" in source
+    assert "label.setFixedSize(104, 104)" in source
+    assert 'label.setStyleSheet("background: transparent; border: none; padding: 0;")' in source
+    assert "original_set_sprite(label, pixmap, 100)" in source
+    assert "dashboard.ProgressTile._set_sprite = staticmethod(set_sprite)" in source
     assert "return dedicated_badge(city_theme, city_badges.get(label))" in source
     assert "_CITY_BADGE_TONES" not in source
     assert 'dashboard.SpriteRef("badges.jpg", 6, 4, index)' in source  # Field Journal only.
