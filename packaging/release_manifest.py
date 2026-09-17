@@ -30,14 +30,43 @@ SEED_DATAS: tuple[tuple[str, str], ...] = (
     ("data/eso.db", "_seed_data"),
 )
 
-# External runtime reference files copied beside the executable. This starts empty on
-# purpose: each data file must be reviewed before it earns a place in a clean release.
-# The strict release build refuses to run while unclassified top-level data remains.
-RUNTIME_EXTERNAL_DATA_FILES: tuple[str, ...] = ()
+# External runtime reference files copied beside the executable. These are reviewed
+# one family at a time; nothing earns a release slot merely because it lives in data/.
+RUNTIME_EXTERNAL_DATA_FILES: tuple[str, ...] = (
+    # Antiquity reference catalog is consumed by Antiquities and Extreme named-gear logic.
+    "antiquities_01.csv",
+    "antiquities_02.csv",
+    "antiquities_03.csv",
+    "antiquities_04.csv",
+    "antiquities_05.csv",
+    "antiquities_06.csv",
+    "antiquities_07.csv",
+    "antiquities_08.csv",
+    # Reviewed dungeon encounter identity is consumed by encounter/reference services.
+    "dungeon_encounter_identity.json",
+    "dungeon_encounter_identity_launch_starters.json",
+    "dungeon_encounter_identity_launch_starters_fifth.json",
+    "dungeon_encounter_identity_launch_starters_sixth.json",
+)
 
 # Files created cleanly on first install instead of copied from the developer machine.
 CLEAN_FIRST_INSTALL_DATA_FILES: tuple[str, ...] = (
     "builds.json",
+)
+
+# Top-level data artifacts that must never ship. Pattern matching is intentional for
+# timestamped/one-off recovery copies. These remain useful in source archaeology only.
+EXCLUDED_TOP_LEVEL_DATA_GLOBS: tuple[str, ...] = (
+    "*.before-*",
+    "*.backup*",
+    "*.bak",
+    "*.old",
+    "*.orig",
+    "*.pre-*",
+    "*.pre_*",
+    "eso.db.before-*",
+    "eso.db.pre-*",
+    "eso.db.*backup*",
 )
 
 # These source trees may remain in the repository but are not release payloads.
@@ -74,12 +103,16 @@ USER_OWNED_DATA_FILES: tuple[str, ...] = (
     "CurrentBroadcast.json",
     "CurrentExpedition.json",
     "CurrentIncident.json",
+    "encounter_positioning.json",
+    "encounter_positioning.png",
+    "encounter_positioning_timeline.json",
     "FieldNoteCounter.txt",
     "ExpeditionCounter.txt",
     "IncidentCounter.txt",
     "MarkerLog.md",
     "StreamEvents.json",
     "StreamSession.json",
+    "TamrielDate.txt",
     "team_prescription_observed_templates.json",
 )
 
