@@ -446,6 +446,7 @@ def _build_intent_card(page) -> FoundryCard:
     page.phase14_rotation_reset_button.clicked.connect(lambda: _apply_intent(page, page.phase14_rotation_intent))
     generated_heading.addWidget(page.phase14_rotation_reset_button)
     intent_card.addLayout(generated_heading)
+    intent_card.addWidget(_muted("These settings shape your rotation and ability priorities."))
 
     page.phase14_rotation_setting_labels = {
         name: QLabel() for name in ("Weaving", "Bar swapping", "Heavy attacks", "Resource reserve")
@@ -456,8 +457,8 @@ def _build_intent_card(page) -> FoundryCard:
     page.phase14_rotation_advanced_panel = _build_advanced_panel(page)
     page.phase14_rotation_advanced_panel.hide()
     intent_card.addStretch(1)
-    advanced_button = QPushButton("Advanced execution & sustain")
-    advanced_button.setMinimumHeight(44)
+    advanced_button = QPushButton("Advanced execution & sustain\nCustom rules, conditionals, and resource management.")
+    advanced_button.setMinimumHeight(54)
     set_button_icon(advanced_button, "uptime", size=19)
     advanced_button.clicked.connect(
         lambda: page.phase14_rotation_advanced_panel.setVisible(not page.phase14_rotation_advanced_panel.isVisible())
