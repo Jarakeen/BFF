@@ -92,19 +92,63 @@ def test_rotation_command_center_has_intents_obligations_and_result_gate() -> No
         assert label in source
     for label in ("Build skills", "Gear procs", "Team duties", "Pressure windows", "Advanced rules"):
         assert label in source
-    assert 'page.generate_button.setMinimumHeight(50)' in source
+    assert 'page.generate_button.setMinimumHeight(60)' in source
     assert '_enable_result_tabs(page, False)' in source
     assert 'page.phase14_rotation_customized_label.setText("Customized" if customized else "Preset defaults")' in source
     assert 'page.phase14_rotation_reset_button.setVisible(customized)' in source
 
 
-def test_rotation_context_is_summary_first_with_explicit_edit_disclosure() -> None:
+def test_rotation_context_is_icon_led_summary_with_explicit_edit_disclosure() -> None:
     source = _source(phase14_rotation_command_center_support)
 
-    assert 'page.phase14_context_summary_label = QLabel()' in source
+    assert '("CHARACTER", "user", "character_combo")' in source
+    assert '("BUILD", "builds", "build_combo")' in source
+    assert '("TRIAL", "trial", "rotation_content_combo")' in source
+    assert '("BOSS", "boss", "rotation_boss_combo")' in source
+    assert '("DIFFICULTY", "crossed-swords", "rotation_threshold_difficulty_combo")' in source
+    assert 'page.phase14_context_value_labels = {}' in source
     assert 'page.phase14_context_edit_button = QPushButton("Edit Context")' in source
     assert "page.phase14_context_controls_panel.hide()" in source
     assert "_refresh_context_summary(page)" in source
+
+
+def test_rotation_intents_settings_and_obligations_use_requested_semantic_icons() -> None:
+    source = _source(phase14_rotation_command_center_support)
+
+    for icon_name in (
+        "shield",
+        "scales",
+        "optimization",
+        "cog",
+        "swapping",
+        "sword",
+        "drop",
+        "book-open-text",
+        "roster",
+        "warning",
+        "field-office",
+        "uptime",
+    ):
+        assert f'"{icon_name}"' in source
+    assert 'button.setMinimumHeight(98)' in source
+    assert 'row.setMinimumHeight(48)' in source
+    assert 'button.setMinimumHeight(54)' in source
+
+
+def test_rotation_result_tabs_have_clean_labels_and_icons() -> None:
+    source = _source(phase14_rotation_command_center_support)
+
+    for label, icon_name in (
+        ("Timeline", "hourglass"),
+        ("Uptime & Resources", "filter"),
+        ("Explanations", "binoculars"),
+        ("Compare", "scales"),
+        ("Save & Export", "download"),
+    ):
+        assert f'"{label}"' in source
+        assert f'"{icon_name}"' in source
+    assert "Uptime_Resources" not in source
+    assert "Advanced execution_sustain" not in source
 
 
 def test_advanced_rules_does_not_reparent_execution_panel() -> None:
