@@ -28,13 +28,14 @@ def test_specialized_page_routes_only_zero_input_families_through_gateway() -> N
     assert "No fallback" not in source
 
 
-def test_heal_and_movement_families_are_current_zero_input_specialized_routes() -> None:
+def test_heal_movement_and_stealth_are_current_zero_input_specialized_routes() -> None:
     for key in (
         "actual_heal",
         "critical_heal",
         "movement_speed",
         "sprint_speed",
         "stealthed_movement_speed",
+        "detection_radius_reduction",
     ):
         assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
 
@@ -43,7 +44,6 @@ def test_heal_and_movement_families_are_current_zero_input_specialized_routes() 
         "bash_damage",
         "resource_sustain",
         "ultimate_generation",
-        "detection_radius_reduction",
         "invisibility_duration",
         "invisibility_uptime",
     ):
@@ -53,7 +53,12 @@ def test_heal_and_movement_families_are_current_zero_input_specialized_routes() 
 def test_only_heal_direct_routes_require_saved_build_context() -> None:
     assert ExtremeSpecializedExecutionService.requires_saved_build("actual_heal")
     assert ExtremeSpecializedExecutionService.requires_saved_build("critical_heal")
-    for key in ("movement_speed", "sprint_speed", "stealthed_movement_speed"):
+    for key in (
+        "movement_speed",
+        "sprint_speed",
+        "stealthed_movement_speed",
+        "detection_radius_reduction",
+    ):
         assert not ExtremeSpecializedExecutionService.requires_saved_build(key)
 
 
