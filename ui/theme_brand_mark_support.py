@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Keep the top-left Foundry brand synchronized with the active visual theme."""
+"""Keep the top-left Foundry brand and release navigation synchronized."""
 
 from pathlib import Path
 
@@ -9,9 +9,46 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QLabel
 
 from engine.config import get_resource_path
+from services.release_feature_policy import release_mode, route_allowed
 
 _INSTALLED = False
 _LOGO = ("assets", "logos", "BFF_logo.png")
+
+
+def _filter_release_sections(sections: list) -> list:
+    """Remove non-release routes while preserving category structure and ordering."""
+    if not release_mode():
+        return sections
+
+    filtered: list = []
+    for section in sections:
+        if isinstance(section, tuple):
+            if len(section) >= 2 and route_allowed(section[1]):
+                filtered.append(section)
+            continue
+
+        if not isinstance(section, dict):
+            continue
+
+        page = section.get("page")
+        if page and not route_allowed(page):
+            continue
+
+        children = [
+            child
+            for child in section.get("children", ())
+            if len(child) >= 2 and route_allowed(child[1])
+        ]
+        clone = dict(section)
+        clone["children"] = children
+
+        # A category with neither a page nor release-approved children has no
+        # purpose in the packaged navigation and should disappear entirely.
+        if not clone.get("page") and not children:
+            continue
+        filtered.append(clone)
+
+    return filtered
 
 
 def install() -> None:
@@ -19,11 +56,18 @@ def install() -> None:
     if _INSTALLED:
         return
 
+    from ui.components import foundry_sidebar as sidebar_module
     from ui.components.foundry_sidebar import FoundrySidebar
     from ui.theme.theme_manager import ThemeManager
 
     original_apply = ThemeManager.apply
     original_build_ui = FoundrySidebar.build_ui
+    original_nav_sections = sidebar_module.nav_sections
+
+    def release_aware_nav_sections(include_broadcast: bool) -> list:
+        return _filter_release_sections(original_nav_sections(include_broadcast))
+
+    sidebar_module.nav_sections = release_aware_nav_sections
 
     def refresh_brand_mark_sized(self) -> None:
         if not hasattr(self, "brand_mark"):
