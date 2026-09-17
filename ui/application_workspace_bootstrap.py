@@ -49,6 +49,7 @@ def bootstrap_workspace_extensions() -> None:
     from ui.build_reuse_template_support import install as install_build_reuse_template_support
     from ui.phase14_builds_command_center_support import install as install_phase14_builds_command_center_support
     from ui.phase14_build_profile_support import install as install_phase14_build_profile_support
+    from ui.phase14_build_creation_bridge import install as install_phase14_build_creation_bridge
 
     # Personnel is player-level identity. Repair duplicates left by older imports
     # before any roster page reads them. The merge unions teams and moves legacy
@@ -84,9 +85,11 @@ def bootstrap_workspace_extensions() -> None:
     install_build_reuse_template_support()
     # Phase 14 layers the command-center shell over existing canonical build behavior,
     # then adds persisted profile defaults/favorite/archive metadata without mutating
-    # the saved build or ESO database.
+    # the saved build or ESO database. Creation remains owned by Easy Mode and is
+    # merely routed through the new top-row action.
     install_phase14_builds_command_center_support()
     install_phase14_build_profile_support()
+    install_phase14_build_creation_bridge()
 
     _BOOTSTRAPPED = True
 
