@@ -567,8 +567,12 @@ def install_phase14_rotation_command_center(page) -> None:
     tabs.insertTab(0, setup, "Builder")
     tabs.setCurrentIndex(0)
     if old_builder is not None:
+        # Older refresh helpers still hold QLabel/widget references created in
+        # the legacy Builder shell. Keep that shell alive but hidden instead of
+        # scheduling its C++ children for deletion; stale shiboken wrappers can
+        # otherwise crash the process when the Rotation page is first shown.
         old_builder.hide()
-        old_builder.deleteLater()
+        page._phase14_preserved_legacy_builder = old_builder
 
     _configure_result_tabs(page)
 
