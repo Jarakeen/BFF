@@ -100,14 +100,18 @@ class FoundryCard(QFrame):
             self.set_icon(semantic_icon(title))
 
     def set_icon(self, icon: str):
+        """Use the canonical assets/icons library for heading icons first."""
         self._icon_name = icon or ""
         self.icon_label.clear()
         self.icon_label.setVisible(bool(icon))
         if not icon:
             return
 
-        path = icon_path(icon)
-        if path is not None:
+        filename = icon if icon.lower().endswith(".svg") else f"{icon}.svg"
+        path = get_resource_path("assets", "icons", filename)
+        if not path.exists():
+            path = icon_path(icon)
+        if path is not None and path.exists():
             pixmap = QPixmap(str(path))
             if not pixmap.isNull():
                 self.icon_label.setPixmap(pixmap)
@@ -222,8 +226,6 @@ class FoundryCard(QFrame):
         theme = app.property("visualTheme") if app is not None else ""
         rylo = is_rylo_visual_theme(str(theme or ""))
 
-        # Keep the original restrained corner marks. They frame the card without
-        # intruding into the content area.
         ornament = QColor("#73777C" if rylo else ("#6F5736" if parchment else "#9A794A"))
         ornament.setAlpha(105 if parchment else 82)
         painter.setPen(QPen(ornament, 1.0))
@@ -241,9 +243,6 @@ class FoundryCard(QFrame):
         painter.drawLine(w - inset, h - inset, w - inset - arm, h - inset)
         painter.drawLine(w - inset, h - inset, w - inset, h - inset - arm)
 
-        # Add quiet layered edge work to create the recessed, book-bound depth
-        # from the visual mockup. These strokes stay at the perimeter and never
-        # pass through labels, fields, tables, or other card content.
         if self.width() > 16 and self.height() > 16:
             inner_highlight = QColor("#8F959B" if rylo else ("#B89A63" if not parchment else "#8A6B43"))
             inner_highlight.setAlpha(34 if not parchment else 30)
