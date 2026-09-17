@@ -135,6 +135,7 @@ RUNTIME_EXTERNAL_DATA_DIRECTORIES: tuple[str, ...] = (
 
 CLEAN_FIRST_INSTALL_DATA_FILES: tuple[str, ...] = (
     "builds.json",
+    "characters.json",
 )
 
 EXCLUDED_TOP_LEVEL_DATA_GLOBS: tuple[str, ...] = (
