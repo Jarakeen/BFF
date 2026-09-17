@@ -107,8 +107,16 @@ def _polish_context_chips(page) -> None:
             if parent is not None:
                 parent.hide()
             continue
+
+        # showEvent runs every time the page becomes visible. The value label is
+        # reparented into a caption stack during the first polish pass, so checking
+        # only its current parent caused each later visit to wrap that stack again
+        # and append another caption. Mark the stable value label itself instead.
+        if bool(value_label.property("phase14ContextPolished")):
+            continue
+
         chip = value_label.parentWidget()
-        if chip is None or bool(chip.property("phase14ContextPolished")):
+        if chip is None:
             continue
         layout = chip.layout()
         if layout is None:
@@ -127,6 +135,7 @@ def _polish_context_chips(page) -> None:
         layout.addWidget(stack, 1)
         chip.setMinimumHeight(58)
         chip.setProperty("phase14ContextPolished", True)
+        value_label.setProperty("phase14ContextPolished", True)
 
     edit = getattr(page, "phase14_context_edit_button", None)
     if edit is not None:
