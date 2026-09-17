@@ -321,3 +321,12 @@ def test_phase14_rotation_intents_and_settings_match_target_card_controls() -> N
     assert 'These settings shape your rotation and ability priorities.' in command
     assert 'Custom rules, conditionals, and resource management.' in command
     assert 'page.generate_button.setText("▶  Generate Rotation")' in command
+
+
+def test_phase14_rotation_command_center_imports_qt_for_tool_button_style() -> None:
+    command = Path(phase14_rotation_visual_target_support.__file__).with_name(
+        "phase14_rotation_command_center_support.py"
+    ).read_text(encoding="utf-8")
+
+    assert "from PySide6.QtCore import Qt" in command
+    assert "Qt.ToolButtonStyle.ToolButtonTextUnderIcon" in command
