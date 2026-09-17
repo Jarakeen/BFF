@@ -40,16 +40,19 @@ def test_assignments_drops_redundant_bottom_field_note_card() -> None:
     assert 'FoundryCard("Assignment Summary", "group")' in source
 
 
-def test_readiness_note_art_is_static_webp_and_status_is_not_color_only() -> None:
+def test_readiness_note_art_is_fixed_field_journal_sketch_and_status_is_not_color_only() -> None:
     source = _source("ui/city_raid_readiness_page.py")
 
     assert "class _ReadinessArt(QLabel)" in source
     assert "QTimer" not in source
     assert 'return "✓ READY" if value else "! GAP"' in source
     assert 'return "○ NEEDS REVIEW"' in source
-    assert '"roster_people.webp"' in source
-    assert '"roster_team.webp"' in source
-    assert '"city_night", "roster"' in source
+    assert '"roster_people.jpg"' in source
+    assert '"roster_team.jpg"' in source
+    assert '"field_journal", "roster"' in source
+    assert '"roster_people.webp"' not in source
+    assert '"roster_team.webp"' not in source
+    assert "self.setFixedHeight(150)" in source
 
 
 def test_urban_collectibles_reuse_etched_badge_art_with_recolor() -> None:
@@ -59,14 +62,19 @@ def test_urban_collectibles_reuse_etched_badge_art_with_recolor() -> None:
     assert "source = field_etched_badge(label)" in source
     assert "_CITY_BADGE_TONES" in source
     assert "_recolor_badge" in source
+    assert 'dashboard.SpriteRef("badges.jpg", 6, 4, index)' in source
 
 
-def test_teams_bottom_strip_uses_wide_existing_art() -> None:
+def test_teams_and_parchment_notes_do_not_reintroduce_retired_city_roster_art() -> None:
     source = _source("ui/urban_wilderness_accessibility_polish.py")
 
-    assert '"roster_team.webp"' in source
+    assert '"field_journal", "roster", "roster_team.jpg"' in source
+    assert '"field_journal", "roster", "roster_people.jpg"' in source
+    assert '"roster_team.webp"' not in source
+    assert '"roster_people.webp"' not in source
     assert "self.setMinimumHeight(150)" in source
     assert "QSizePolicy.Policy.Expanding" in source
+    assert "Parchment/field-journal surfaces use the pencil/sketch family only" in source
 
 
 def test_raid_map_palette_is_red_green_independent_and_shape_coded() -> None:
@@ -78,7 +86,7 @@ def test_raid_map_palette_is_red_green_independent_and_shape_coded() -> None:
     assert '"Danger": Qt.PenStyle.SolidLine' in source
     assert '"Safe": Qt.PenStyle.DashLine' in source
     assert '"Stack": Qt.PenStyle.DotLine' in source
-    assert "not a red danger halo" in source
+    assert 'outer = QColor("#BDA968" if selected else "#7E7357")' in source
 
 
 def test_live_raid_notes_are_explicit_editable_state() -> None:
