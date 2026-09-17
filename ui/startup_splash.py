@@ -47,24 +47,30 @@ def _draw_centered_text(
 
 
 def _fantasy_splash_pixmap() -> QPixmap:
-    """Return the optional fantasy splash artwork when it is installed locally."""
-    for filename in ("fantasy_splash.png", "fantasy_splash.jpg", "fantasy_splash.jpeg"):
-        path = get_resource_path(
-            "assets", "themes", "bff", "grimoire", "assets", filename
-        )
-        if not path.exists():
-            continue
+    """Return the approved fantasy splash artwork when it is installed locally."""
+    search_roots = (
+        ("assets", "themes", "bff", "urban_wilderness", "startup"),
+        # Source checkouts may still keep the ignored local artwork at its
+        # historical path. The release manifest imports only this named file
+        # into the active Urban Wilderness runtime path.
+        ("assets", "themes", "bff", "grimoire", "assets"),
+    )
+    for root in search_roots:
+        for filename in ("fantasy_splash.png", "fantasy_splash.jpg", "fantasy_splash.jpeg"):
+            path = get_resource_path(*root, filename)
+            if not path.exists():
+                continue
 
-        pixmap = QPixmap(str(path))
-        if pixmap.isNull():
-            continue
+            pixmap = QPixmap(str(path))
+            if pixmap.isNull():
+                continue
 
-        if pixmap.width() > 1400:
-            pixmap = pixmap.scaledToWidth(
-                1400,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-        return pixmap
+            if pixmap.width() > 1400:
+                pixmap = pixmap.scaledToWidth(
+                    1400,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            return pixmap
 
     return QPixmap()
 
