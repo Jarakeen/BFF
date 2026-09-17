@@ -23,6 +23,7 @@ def test_release_manifest_is_positive_asset_allowlist() -> None:
     assert "assets/themes/bff/field_journal/roster" in sources
     assert "assets/icons" in sources
     assert "assets/AbilityIcons" in sources
+    assert "assets/avatar" in sources
     assert "assets" not in sources
 
     for forbidden in manifest.FORBIDDEN_RELEASE_ASSET_PREFIXES:
@@ -88,7 +89,7 @@ def test_release_version_has_one_python_source_of_truth() -> None:
     version = (ROOT / "app_version.py").read_text(encoding="utf-8")
     build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
 
-    assert 'APP_VERSION = "0.1.1"' in version
+    assert 'APP_VERSION = "0.1.2"' in version
     assert 'from app_version import APP_VERSION; print(APP_VERSION)' in build
     assert 'APP_VERSION' not in (ROOT / "packaging" / "BFF.spec").read_text(encoding="utf-8")
 
@@ -210,8 +211,8 @@ def test_packaged_sidebar_hides_only_unreleased_routes_and_keeps_collectibles_vi
     policy = (ROOT / "services" / "release_feature_policy.py").read_text(encoding="utf-8")
     support = (ROOT / "ui" / "theme_brand_mark_support.py").read_text(encoding="utf-8")
 
+    assert '"rotations"' not in policy
     for route in (
-        '"rotations"',
         '"extreme_optimization"',
         '"console:6"',
     ):
