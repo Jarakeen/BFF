@@ -35,6 +35,7 @@ These are current release candidates, subject to the final packaged smoke gate.
 - Combat / Reference Data workspace
 - Gear Lookup / reference tools that remain visible in current navigation
 - Achievements and currently wired progress surfaces
+- Collectibles / Stickerbook core workflows and category deep links; badge/layout polish remains a non-blocking visual follow-up
 - Application update check / staged in-place portable update support
 - Database migration/provisioning needed by supported runtime paths
 
@@ -49,7 +50,6 @@ These remain active development work. Source builds keep them visible for develo
 - Rotation Builder / rotation runtime completion and UI hardening
 - Extreme Build Engine / ceiling-proof engine
 - Optimizer Adviser transition
-- Collectibles presentation polish and final badge/layout review
 - Remaining Raid Engine visual/interaction cleanup
 - Clean packaged-build validation
 
