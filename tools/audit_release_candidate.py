@@ -12,7 +12,6 @@ from fnmatch import fnmatch
 import importlib.util
 from pathlib import Path
 import re
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "packaging" / "release_manifest.py"
@@ -98,15 +97,25 @@ def main(argv: list[str] | None = None) -> int:
     runtime_external = set(getattr(manifest, "RUNTIME_EXTERNAL_DATA_FILES", ()))
     first_install = set(getattr(manifest, "CLEAN_FIRST_INSTALL_DATA_FILES", ()))
     excluded_patterns = tuple(getattr(manifest, "EXCLUDED_TOP_LEVEL_DATA_GLOBS", ()))
-    classified = user_owned | runtime_external | first_install
+    excluded_exact = set(getattr(manifest, "EXCLUDED_TOP_LEVEL_DATA_FILES", ()))
+    classified = user_owned | runtime_external | first_install | excluded_exact
 
     all_top_level = _top_level_data_files()
-    excluded = [name for name in all_top_level if _matches_any(name, excluded_patterns)]
+    excluded = [
+        name
+        for name in all_top_level
+        if name in excluded_exact or _matches_any(name, excluded_patterns)
+    ]
     unclassified = [
         name
         for name in all_top_level
         if name not in classified and not _matches_any(name, excluded_patterns)
     ]
+
+    # A classified runtime file is only useful if it exists on the build workstation.
+    for name in sorted(runtime_external):
+        if not (ROOT / "data" / name).is_file():
+            errors.append(f"Allowlisted runtime data file is missing: data/{name}")
 
     if unclassified:
         if args.list_unclassified:
