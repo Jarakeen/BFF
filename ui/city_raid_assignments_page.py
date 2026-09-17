@@ -17,10 +17,25 @@ from PySide6.QtWidgets import (
 from ui.components.foundry_card import FoundryCard
 from ui.raid_plan_assignment_page import RaidPlanAssignmentPage
 from ui.raid_plan_page import RAID_PLAN_SEATS, _slug
+from ui.ux_icons import icon, set_button_icon
 
 
 def _clean(value: object) -> str:
     return str(value or "").strip()
+
+
+def _role_icon_name(role: str) -> str:
+    """Map ESO raid-role language to the dedicated Selected Spot role badges."""
+    value = _clean(role).casefold()
+    if "support" in value and any(token in value for token in ("dd", "dps", "damage")):
+        return "role-support-dd"
+    if "heal" in value:
+        return "role-healer"
+    if "tank" in value:
+        return "role-tank"
+    if any(token in value for token in ("dd", "dps", "damage")):
+        return "role-dd"
+    return ""
 
 
 class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
@@ -102,7 +117,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         table_card.addWidget(self.assignment_table)
         body.addWidget(table_card, 7)
 
-        detail = FoundryCard("Selected Spot", "feather")
+        detail = FoundryCard("Selected Spot", "assignment")
         detail.setProperty("selectedSpotCard", True)
 
         self.selected_spot_title = QLabel("Select a spot")
@@ -110,10 +125,20 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.selected_spot_title.setWordWrap(True)
         detail.addWidget(self.selected_spot_title)
 
+        role_row = QHBoxLayout()
+        role_row.setContentsMargins(0, 0, 0, 0)
+        role_row.setSpacing(8)
+        self.selected_spot_role_icon = QLabel()
+        self.selected_spot_role_icon.setProperty("selectedSpotRoleIcon", True)
+        self.selected_spot_role_icon.setFixedSize(30, 30)
+        self.selected_spot_role_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.selected_spot_role_icon.hide()
+        role_row.addWidget(self.selected_spot_role_icon)
         self.selected_spot_role = QLabel("No assignment selected")
         self.selected_spot_role.setProperty("selectedSpotRole", True)
         self.selected_spot_role.setWordWrap(True)
-        detail.addWidget(self.selected_spot_role)
+        role_row.addWidget(self.selected_spot_role, 1)
+        detail.addLayout(role_row)
 
         form = QFormLayout()
         form.setContentsMargins(0, 4, 0, 4)
@@ -137,12 +162,15 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         detail.addStretch(1)
 
         open_build = QPushButton("Open Build")
+        set_button_icon(open_build, "builds")
         open_build.clicked.connect(lambda: self.pageRequested.emit("console:2"))
         detail.addWidget(open_build)
         open_rotation = QPushButton("Open Rotation")
+        set_button_icon(open_rotation, "rotations")
         open_rotation.clicked.connect(lambda: self.pageRequested.emit("rotations"))
         detail.addWidget(open_rotation)
         edit_roles = QPushButton("Edit Duties")
+        set_button_icon(edit_roles, "pen-tool")
         edit_roles.clicked.connect(self._toggle_plan_setup)
         detail.addWidget(edit_roles)
         body.addWidget(detail, 3)
@@ -173,9 +201,22 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         label.setProperty("selectedSpotValue", True)
         return label
 
+    def _set_selected_role_icon(self, role: str) -> None:
+        icon_name = _role_icon_name(role)
+        value = icon(icon_name) if icon_name else None
+        if not icon_name or value is None or value.isNull():
+            self.selected_spot_role_icon.clear()
+            self.selected_spot_role_icon.hide()
+            return
+        self.selected_spot_role_icon.setPixmap(value.pixmap(28, 28))
+        self.selected_spot_role_icon.setProperty("semanticIconName", icon_name)
+        self.selected_spot_role_icon.setToolTip(role or "Raid role")
+        self.selected_spot_role_icon.show()
+
     def _set_selected_spot_empty(self, title: str, message: str) -> None:
         self.selected_spot_title.setText(title)
         self.selected_spot_role.setText(message)
+        self._set_selected_role_icon("")
         for label in (
             self.selected_player,
             self.selected_character,
@@ -240,6 +281,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         eso_class = _clean(member.eso_class)
         self.selected_spot_title.setText(spot)
         self.selected_spot_role.setText(" • ".join(value for value in (role, eso_class) if value))
+        self._set_selected_role_icon(role)
         self.selected_player.setText(member.gamertag)
         self.selected_character.setText(_clean(member.character_name) or "Not selected")
         self.selected_primary.setText(_clean(member.primary_assignment) or "Not set")
@@ -259,4 +301,4 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
             self._refresh_city_assignment_rows()
 
 
-__all__ = ["CityRaidAssignmentsPage"]
+__all__ = ["CityRaidAssignmentsPage", "_role_icon_name"]
