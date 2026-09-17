@@ -256,7 +256,7 @@ def test_phase14_build_trait_icon_vocabulary_is_wired() -> None:
         '"Invigorating": "Invigorating"',
         '"Divines": "Divines"',
         '"Healthy": "Health"',
-        '"Arcane": "maguc"',
+        '"Arcane": "magic"',
         '"Robust": "Robust"',
         '"Bloodthirsty": "drop"',
         '"Harmony": "Harmony"',
