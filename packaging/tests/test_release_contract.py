@@ -44,7 +44,7 @@ def test_release_version_has_one_python_source_of_truth() -> None:
     version = (ROOT / "app_version.py").read_text(encoding="utf-8")
     build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
 
-    assert 'APP_VERSION = "0.1.0"' in version
+    assert 'APP_VERSION = "0.1.1"' in version
     assert 'from app_version import APP_VERSION; print(APP_VERSION)' in build
     assert 'APP_VERSION' not in (ROOT / "packaging" / "BFF.spec").read_text(encoding="utf-8")
 
@@ -163,3 +163,4 @@ def test_release_status_names_disabled_and_in_progress_boundaries() -> None:
     assert "Community News" in status
     assert "Broadcast module" in status
     assert "## Legacy / deprecated / superseded" in status
+    assert "Data payload classification: complete" in status
