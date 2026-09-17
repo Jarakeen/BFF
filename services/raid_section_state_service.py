@@ -76,6 +76,22 @@ class RaidSectionStateService:
         state = payload.get("runs", {}).get(_clean(plan_id), {})
         return dict(state) if isinstance(state, dict) else {}
 
+    def run_notes(self, plan_id: str) -> str:
+        return _clean(self.run_state(plan_id).get("notes"))
+
+    def set_run_notes(self, plan_id: str, notes: str) -> dict:
+        payload = self._read()
+        runs = payload.setdefault("runs", {})
+        state = dict(runs.get(_clean(plan_id), {}))
+        cleaned = _clean(notes)
+        changed = _clean(state.get("notes")) != cleaned
+        state["notes"] = cleaned
+        runs[_clean(plan_id)] = state
+        if changed:
+            self._append_event_payload(payload, plan_id, "run_notes", "Run notes updated", "MANUAL")
+        self._write(payload)
+        return dict(state)
+
     def start_pull(self, plan_id: str) -> dict:
         payload = self._read()
         runs = payload.setdefault("runs", {})
@@ -87,6 +103,7 @@ class RaidSectionStateService:
             "started_at": _now(),
             "ended_at": "",
             "notes_paused": False,
+            "notes": _clean(prior.get("notes")),
         }
         runs[_clean(plan_id)] = state
         self._append_event_payload(payload, plan_id, "pull_started", f"Pull #{attempt} started", "MANUAL")
