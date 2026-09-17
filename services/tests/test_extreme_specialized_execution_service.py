@@ -78,6 +78,20 @@ class _InvisibilityDurationRecord:
         )
 
 
+class _InvisibilityUptimeRecord:
+    def evaluate(self, *, duration_seconds):
+        return SimpleNamespace(
+            provider=SimpleNamespace(name="Prowler's Talisman"),
+            duration_seconds=float(duration_seconds),
+            covered_seconds=30.0,
+            uptime_ratio=0.30,
+            window_count=3,
+            mechanic_complete=False,
+            evidence=("constructive Prowler recurrence",),
+            unresolved=("Invisibility provider corpus is not yet exhaustive",),
+        )
+
+
 def _service():
     return ExtremeSpecializedExecutionService(
         healing_events=_HealingEvents(),
@@ -86,6 +100,7 @@ def _service():
         movement_package=_MovementPackage(),
         stealth_package=_StealthPackage(),
         invisibility_duration_record=_InvisibilityDurationRecord(),
+        invisibility_uptime_record=_InvisibilityUptimeRecord(),
     )
 
 
@@ -98,12 +113,20 @@ def test_current_direct_specialized_routes_are_explicit() -> None:
         assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
 
 
+def test_duration_input_route_is_explicit() -> None:
+    assert ExtremeSpecializedExecutionService.can_execute_with_duration_input("invisibility_uptime")
+    assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("invisibility_uptime")
+    assert tuple(
+        row.key for row in ExtremeSpecializedExecutionService.requirements_for("invisibility_uptime")
+    ) == ("duration_seconds",)
+
+
 def test_saved_build_direct_routes_are_explicit() -> None:
     for key in ("actual_heal", "critical_heal", "damage_shield", "bash_damage"):
         assert ExtremeSpecializedExecutionService.requires_saved_build(key)
     for key in (
         "movement_speed", "sprint_speed", "stealthed_movement_speed",
-        "detection_radius_reduction", "invisibility_duration",
+        "detection_radius_reduction", "invisibility_duration", "invisibility_uptime",
     ):
         assert not ExtremeSpecializedExecutionService.requires_saved_build(key)
 
@@ -113,16 +136,11 @@ def test_single_event_records_no_longer_share_identical_input_requirements() -> 
     assert ExtremeSpecializedExecutionService.requirements_for("damage_shield") == ()
 
 
-def test_scenario_driven_records_keep_shared_requirements_where_they_are_real() -> None:
+def test_resource_timeline_records_still_require_real_timeline_evidence() -> None:
     sustain = ExtremeSpecializedExecutionService.requirements_for("resource_sustain")
     ultimate = ExtremeSpecializedExecutionService.requirements_for("ultimate_generation")
     assert sustain == ultimate
     assert tuple(row.key for row in sustain) == ("duration_seconds", "timeline_evidence")
-
-    # Longest duration is provider-local. Uptime still requires a horizon/windows.
-    assert ExtremeSpecializedExecutionService.requirements_for("invisibility_duration") == ()
-    invis_uptime = ExtremeSpecializedExecutionService.requirements_for("invisibility_uptime")
-    assert tuple(row.key for row in invis_uptime) == ("duration_seconds", "invisibility_windows")
 
 
 def test_saved_build_direct_execution_rejects_missing_build() -> None:
@@ -164,3 +182,17 @@ def test_invisibility_duration_execution_normalizes_reviewed_provider_lower_boun
     assert ("Reviewed contiguous duration", "10s") in result.summary_rows
     assert result.global_maximum_proven is False
     assert result.unresolved == ("Invisibility provider corpus is not yet exhaustive",)
+
+
+def test_invisibility_uptime_requires_duration_and_normalizes_reviewed_schedule() -> None:
+    with pytest.raises(ValueError, match="requires family-specific scenario inputs"):
+        _service().execute(None, "invisibility_uptime")
+
+    result = _service().execute(None, "invisibility_uptime", duration_seconds=100.0)
+    assert result.value == pytest.approx(0.30)
+    assert result.value_text == "30.0% reviewed lower bound"
+    assert ("Comparison horizon", "100s") in result.summary_rows
+    assert ("Reviewed covered time", "30s") in result.summary_rows
+    assert ("Reviewed windows", "3") in result.summary_rows
+    assert ("Reviewed provider", "Prowler's Talisman") in result.summary_rows
+    assert result.global_maximum_proven is False
