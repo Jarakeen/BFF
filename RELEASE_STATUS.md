@@ -90,6 +90,7 @@ Currently approved:
 
 - `assets/AbilityIcons` — runtime-selected ESO ability artwork
 - `assets/avatar` — bundled default character avatars for Roster character profiles
+- `assets/timers/vas2` — optional local vAS+2 timer artwork bundled when present on the release workstation
 - `assets/icons` — canonical semantic UI icon library
 - `assets/logos/BFF_logo.png` — active application branding
 - `assets/themes/bff/foundry.qss` — active base stylesheet
