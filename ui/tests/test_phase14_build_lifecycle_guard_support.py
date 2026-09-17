@@ -49,4 +49,8 @@ def test_phase14_build_lifecycle_guard_rebuilds_and_shows_presentation_only() ->
     assert "command_center._quiet_overview_action_bar(page)" in source
     assert "tabs.setCurrentIndex(0)" in source
     assert "splitter.show()" in source
+    assert "detail.show()" in source
+    assert "right.setMinimumWidth(500)" in source
+    assert "inspector_support._render_inspector(page)" in source
+    assert "splitter.setSizes([820, 620])" in source
     assert "eso.db" not in source
