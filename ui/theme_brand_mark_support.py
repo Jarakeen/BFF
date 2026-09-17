@@ -42,8 +42,6 @@ def _filter_release_sections(sections: list) -> list:
         clone = dict(section)
         clone["children"] = children
 
-        # A category with neither a page nor release-approved children has no
-        # purpose in the packaged navigation and should disappear entirely.
         if not clone.get("page") and not children:
             continue
         filtered.append(clone)
@@ -73,9 +71,10 @@ def install() -> None:
         if not hasattr(self, "brand_mark"):
             return
 
-        self.setMinimumWidth(248)
-        self.setMaximumWidth(278)
-        self.brand_mark.setFixedSize(228, 152)
+        # Keep branding compact enough that navigation remains the visual priority.
+        self.setMinimumWidth(215)
+        self.setMaximumWidth(248)
+        self.brand_mark.setFixedSize(190, 116)
         self.brand_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         path = get_resource_path(*_LOGO)
@@ -84,8 +83,8 @@ def install() -> None:
         if not pixmap.isNull():
             self.brand_mark.setPixmap(
                 pixmap.scaled(
-                    224,
-                    148,
+                    186,
+                    112,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
@@ -113,8 +112,6 @@ def install() -> None:
     FoundrySidebar.refresh_brand_mark = refresh_brand_mark_sized
 
     def build_ui_with_brand(self) -> None:
-        # FoundrySidebar creates its legacy text after its first brand refresh.
-        # Refresh once more after construction so only the approved logo remains.
         original_build_ui(self)
         self.refresh_brand_mark()
 
@@ -127,8 +124,6 @@ def install() -> None:
                 for sidebar in top.findChildren(FoundrySidebar):
                     sidebar.refresh_brand_mark()
         except RuntimeError:
-            # Startup applies the theme before MainWindow exists; the sidebar
-            # chooses the approved logo itself when it is later constructed.
             pass
 
     ThemeManager.apply = apply_with_brand_mark
