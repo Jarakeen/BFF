@@ -6,27 +6,41 @@ The underlying themed roster page owns canonical data and actions. This wrapper 
 those data owners intact while presenting the approved single-window Roster flow: six
 summary cards across the top, then either the dashboard or the selected roster detail
 workspace directly underneath. No modal editor windows are used on this surface.
+
+Roster visual contract:
+- decorative city/raven filler art is not used;
+- full-color artwork is never placed on parchment cards;
+- decorative assets never determine page/card geometry;
+- Players always retains a visible people table;
+- Character details remain a compact profile surface rather than another editor maze.
 """
 
 from pathlib import Path
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QRect, QSize, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
+    QFrame,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QPushButton,
     QSizePolicy,
+    QSplitter,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from engine.config import get_resource_path
+from ui.components.foundry_card import FoundryCard
+from ui.raid_roster_workspace_page import RaidRosterWorkspacePage, _clean
 from ui.themed_raid_roster_workspace_page import ThemedRaidRosterWorkspacePage
 from ui.urban_wilderness_accessibility_polish import install as install_urban_wilderness_accessibility_polish
 from ui.ux_icons import icon, set_button_icon
+from widgets.roster_actions import RosterActions
+from widgets.roster_record import RosterRecord
+from widgets.roster_table import RosterTable
 
 
 _BADGES = {
@@ -39,41 +53,19 @@ _BADGES = {
 }
 
 
-class _StaticRosterArt(QLabel):
-    """Existing low-stimulation WebP art reused without animation or brightness effects."""
+def _number_sprite(index: int) -> QPixmap:
+    """Return one numbered Collectibles sprite without coupling layout to art size."""
+    path = get_resource_path("assets", "themes", "Bff", "collectibles", "numbers.png")
+    sheet = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
+    if sheet.isNull() or not 0 <= index < 24:
+        return QPixmap()
 
-    def __init__(self, filename: str, parent=None) -> None:
-        super().__init__(parent)
-        self.filename = filename
-        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.setProperty("rosterSketch", True)
-        self.refresh()
-
-    def refresh(self) -> None:
-        # The field-journal JPG copies are intentionally avoided here. Some of
-        # those files trigger libjpeg marker warnings in Qt. The equivalent
-        # lightweight WebP assets are stable and cheaper to repaint on resize.
-        path = get_resource_path(
-            "assets", "themes", "bff", "city_night", "roster", self.filename
-        )
-        pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
-        self.clear()
-        if pixmap.isNull():
-            self.setText("Leave better records.")
-            return
-        self.setPixmap(
-            pixmap.scaled(
-                max(300, self.width() or 420),
-                max(120, self.height() or 170),
-                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-        )
-
-    def resizeEvent(self, event) -> None:
-        super().resizeEvent(event)
-        self.refresh()
+    columns, rows = 6, 4
+    cell_width = max(1, sheet.width() // columns)
+    cell_height = max(1, sheet.height() // rows)
+    column = index % columns
+    row = index // columns
+    return sheet.copy(QRect(column * cell_width, row * cell_height, cell_width, cell_height))
 
 
 class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
@@ -84,35 +76,101 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self._embedded_detail_indexes: dict[str, int] = {}
         self._embedded_stack: QStackedWidget | None = None
         super().__init__(parent)
-        self._replace_legacy_city_art()
+        self._remove_legacy_city_art()
         self._polish_urban_wilderness_roster()
         self._embed_detail_workspaces()
 
-    def _replace_legacy_city_art(self) -> None:
-        """Replace the old panels with stable Urban Wilderness city art."""
-        for attribute, filename in (
-            ("quote_art", "roster_people.webp"),
-            ("team_art", "roster_team.webp"),
-        ):
+    # ------------------------------------------------------------------
+    # Detail workspaces
+    # ------------------------------------------------------------------
+
+    def _build_detail_workspaces(self) -> None:
+        """Build detail pages with a real Players list instead of a form-only dead end."""
+        self.record = RosterRecord()
+        self.actions = RosterActions()
+
+        player_page = QWidget()
+        player_layout = QVBoxLayout(player_page)
+        player_layout.setContentsMargins(8, 8, 8, 8)
+        player_layout.setSpacing(8)
+
+        split = QSplitter(Qt.Orientation.Horizontal)
+        split.setChildrenCollapsible(False)
+
+        people_card = FoundryCard("Players", "group")
+        self.player_detail_table = RosterTable()
+        self.player_detail_table.memberSelected.connect(self.load_member)
+        people_card.addWidget(self.player_detail_table)
+        split.addWidget(people_card)
+
+        record_card = FoundryCard("Player Record", "person")
+        record_card.addWidget(self.record)
+        record_card.addStretch(1)
+        split.addWidget(record_card)
+        split.setStretchFactor(0, 3)
+        split.setStretchFactor(1, 2)
+
+        player_layout.addWidget(split, 1)
+        player_layout.addWidget(self.actions)
+
+        self._install_detail_dialog("players", "Players", player_page, (1180, 760))
+        self._install_detail_dialog(
+            "characters",
+            "Characters",
+            RaidRosterWorkspacePage._build_characters_tab(self),
+            (1180, 760),
+        )
+        self._install_detail_dialog(
+            "teams", "Teams", RaidRosterWorkspacePage._build_teams_tab(self), (1120, 760)
+        )
+        self._install_detail_dialog(
+            "availability",
+            "Availability",
+            RaidRosterWorkspacePage._build_availability_tab(self),
+            (1250, 720),
+        )
+        self._install_detail_dialog(
+            "recruitment",
+            "Recruitment",
+            RaidRosterWorkspacePage._build_recruitment_tab(self),
+            (1180, 760),
+        )
+        self._install_detail_dialog(
+            "archive", "Archive", RaidRosterWorkspacePage._build_archive_tab(self), (1050, 680)
+        )
+
+    def refresh(self) -> None:
+        super().refresh()
+        if hasattr(self, "player_detail_table"):
+            selected_id = self.player_detail_table.selected_member_id()
+            self.player_detail_table.load_members(self.members)
+            if selected_id is not None:
+                self.player_detail_table.select_member_id(selected_id)
+
+    # ------------------------------------------------------------------
+    # Dashboard visual contract
+    # ------------------------------------------------------------------
+
+    def _remove_legacy_city_art(self) -> None:
+        """Remove the raven/street filler panels entirely instead of swapping pictures."""
+        for attribute in ("quote_art", "team_art"):
             old = getattr(self, attribute, None)
             if old is None:
                 continue
             parent = old.parentWidget()
             layout = parent.layout() if parent is not None else None
-            if layout is None:
-                continue
-            replacement = _StaticRosterArt(filename, parent)
-            layout.replaceWidget(old, replacement)
+            if layout is not None:
+                layout.removeWidget(old)
             old.hide()
             old.deleteLater()
-            setattr(self, attribute, replacement)
+            setattr(self, attribute, None)
 
     def _polish_urban_wilderness_roster(self) -> None:
-        """Keep the mockup readable at normal desktop widths without horizontal sprawl."""
-        self.header.subtitle.setText("Same people. Different rooftops. Better runs.")
+        """Keep the roster compact, stable, and readable at normal desktop widths."""
+        self.header.subtitle.setText("People. Characters. Teams. Ready for what's next.")
         self.header._set_icon("feather")
 
-        for key, card in self.metric_cards.items():
+        for ordinal, (key, card) in enumerate(self.metric_cards.items()):
             card.setMinimumWidth(0)
             card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             card.setMinimumHeight(132)
@@ -128,38 +186,182 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
             )
             if badge is not None:
                 badge.clear()
-                badge.setFixedSize(QSize(54, 54))
+                badge.setFixedSize(QSize(58, 58))
                 badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                badge.setPixmap(icon(_BADGES.get(key, "compass")).pixmap(46, 46))
+                badge.setPixmap(icon(_BADGES.get(key, "compass")).pixmap(44, 44))
                 badge.setProperty("rosterMetricBadge", True)
 
-        if hasattr(self, "quote_art"):
-            self.quote_art.setMinimumWidth(0)
-            self.quote_art.setMaximumWidth(390)
-            self.quote_art.setMinimumHeight(165)
-            self.quote_art.setMaximumHeight(220)
-        if hasattr(self, "team_art"):
-            self.team_art.setMinimumWidth(0)
-            self.team_art.setMaximumWidth(460)
-            self.team_art.setMinimumHeight(120)
-            self.team_art.setMaximumHeight(160)
+            number = next(
+                (
+                    label
+                    for label in card.findChildren(QLabel)
+                    if bool(label.property("rosterMetricOrdinal"))
+                ),
+                None,
+            )
+            if number is not None:
+                sprite = _number_sprite(ordinal)
+                number.setText("")
+                number.setFixedSize(QSize(34, 34))
+                number.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                if not sprite.isNull():
+                    number.setPixmap(
+                        sprite.scaled(
+                            32,
+                            32,
+                            Qt.AspectRatioMode.KeepAspectRatio,
+                            Qt.TransformationMode.SmoothTransformation,
+                        )
+                    )
+                else:
+                    number.setText(str(ordinal + 1))
 
         if hasattr(self, "table"):
-            header = self.table.horizontalHeader()
-            header.setStretchLastSection(True)
-            header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-            for column, width in enumerate((190, 165, 110, 120, 120, 130, 105)):
-                self.table.setColumnWidth(column, width)
-            self.table.setMinimumWidth(720)
+            self._polish_roster_table(self.table)
+        if hasattr(self, "player_detail_table"):
+            self._polish_roster_table(self.player_detail_table)
 
         if hasattr(self, "team_snapshot_label"):
             self.team_snapshot_label.setToolTip(
-                "Good people make hard things possible. Different rooftops. Same horizon."
+                "Good people make hard things possible. Same people. Better records."
             )
 
+    @staticmethod
+    def _polish_roster_table(table: RosterTable) -> None:
+        header = table.horizontalHeader()
+        header.setStretchLastSection(True)
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        for column, width in enumerate((190, 165, 110, 120, 120, 130, 105)):
+            table.setColumnWidth(column, width)
+        table.setMinimumWidth(660)
+
+    # ------------------------------------------------------------------
+    # Character profile presentation
+    # ------------------------------------------------------------------
+
+    def _show_character_detail(self, item, _previous=None) -> None:
+        """Present player/character/build identity as a compact profile card."""
+        if item is None:
+            self.character_detail.set_title("Character")
+            self.character_detail_body.setText("Select a player, character, or build.")
+            return
+
+        data = item.data(0, Qt.ItemDataRole.UserRole)
+        if not isinstance(data, tuple) or len(data) != 2:
+            self.character_detail_body.setText(item.text(0))
+            return
+
+        kind, identity = data
+        catalog = self.build_library.canonical.catalog_service
+        self.character_detail_body.setTextFormat(Qt.TextFormat.RichText)
+
+        if kind == "player":
+            player = catalog.get_player(identity) or {}
+            characters = catalog.characters_for_player(identity)
+            gamertag = _clean(player.get("gamertag")) or "Player"
+            roster = next(
+                (member for member in self.members if _clean(member.PlayerName).casefold() == gamertag.casefold()),
+                None,
+            )
+            self.character_detail.set_title(gamertag)
+            self.character_detail_body.setText(
+                self._profile_html(
+                    heading=gamertag,
+                    rows=(
+                        ("Profile", "Player"),
+                        ("Characters", str(len(characters))),
+                        ("Teams", _clean(roster.Team) if roster else "Not assigned"),
+                        ("Status", _clean(roster.Status) if roster else "Active"),
+                        ("Canonical ID", identity),
+                    ),
+                )
+            )
+            return
+
+        if kind == "character":
+            character = catalog.get_character(identity) or {}
+            player = catalog.player_for_character(identity) or {}
+            builds = catalog.builds_for_character(identity)
+            name = _clean(character.get("name")) or "Character"
+            gamertag = _clean(player.get("gamertag")) or "Unknown"
+            roster = next(
+                (
+                    member
+                    for member in self.members
+                    if _clean(member.PlayerName).casefold() == gamertag.casefold()
+                    or _clean(member.CharacterName).casefold() == name.casefold()
+                ),
+                None,
+            )
+            role = _clean(roster.PrimaryRole) if roster else "Not set"
+            self.character_detail.set_title(name)
+            self.character_detail_body.setText(
+                self._profile_html(
+                    heading=name,
+                    subheading=f"Player: {gamertag}",
+                    rows=(
+                        ("Class", _clean(character.get("eso_class")) or "Not set"),
+                        ("Race", _clean(character.get("race")) or "Not set"),
+                        ("Role", role),
+                        ("Teams", _clean(roster.Team) if roster else "Not assigned"),
+                        ("Status", _clean(roster.Status) if roster else "Active"),
+                        ("Saved builds", str(len(builds))),
+                    ),
+                )
+            )
+            return
+
+        build = catalog.get_build(identity) or {}
+        payload = build.get("payload") if isinstance(build.get("payload"), dict) else {}
+        character = catalog.get_character(_clean(build.get("character_id"))) or {}
+        name = _clean(build.get("name")) or "Build"
+        self.character_detail.set_title(name)
+        self.character_detail_body.setText(
+            self._profile_html(
+                heading=name,
+                subheading=f"Character: {_clean(character.get('name')) or 'Unknown'}",
+                rows=(
+                    ("Role", _clean(payload.get("Role")) or "Not set"),
+                    ("Class", _clean(character.get("eso_class")) or "Not set"),
+                    ("Race", _clean(character.get("race")) or "Not set"),
+                    ("Build ID", identity),
+                ),
+            )
+        )
+
+    @staticmethod
+    def _profile_html(
+        *,
+        heading: str,
+        rows: tuple[tuple[str, str], ...],
+        subheading: str = "",
+    ) -> str:
+        pieces = [
+            '<div style="padding:8px 4px;">',
+            f'<div style="font-size:20px; font-weight:700; margin-bottom:2px;">{heading}</div>',
+        ]
+        if subheading:
+            pieces.append(
+                f'<div style="opacity:.78; margin-bottom:12px;">{subheading}</div>'
+            )
+        pieces.append('<table cellspacing="0" cellpadding="6" width="100%">')
+        for label, value in rows:
+            pieces.append(
+                "<tr>"
+                f'<td width="32%" style="opacity:.72; border-bottom:1px solid #314247;">{label}</td>'
+                f'<td style="border-bottom:1px solid #314247;"><b>{value}</b></td>'
+                "</tr>"
+            )
+        pieces.append("</table></div>")
+        return "".join(pieces)
+
+    # ------------------------------------------------------------------
+    # Embedded navigation
+    # ------------------------------------------------------------------
+
     def _embed_detail_workspaces(self) -> None:
-        """Move legacy dialog-owned editors into one in-page stack beneath the card bar."""
+        """Move dialog-owned editors into one in-page stack beneath the card bar."""
         if self.workspace_layout.count() < 2:
             return
 
@@ -205,6 +407,9 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self._detail_dialogs.clear()
         self.workspace_layout.insertWidget(1, stack, 1)
         stack.setCurrentIndex(0)
+
+        if hasattr(self, "player_detail_table"):
+            self._polish_roster_table(self.player_detail_table)
 
     def _show_dashboard(self) -> None:
         if self._embedded_stack is not None:
