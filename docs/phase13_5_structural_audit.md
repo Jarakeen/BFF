@@ -4,7 +4,8 @@ This ledger records the Phase 13 / 13.5 closeout structural audit required by `M
 
 ## Status
 
-Audit in progress.
+**COMPLETE.** Every material finding has a disposition and the repository-wide
+regression gate is green: **3026 passed in 46.93s** on 2026-09-17.
 
 ## Findings
 
@@ -236,11 +237,17 @@ Audit in progress.
 
 **Finding:** the service descriptor for `rotation.healer.stabilized_runtime_role_output` still names `RotationCandidateHealerRoleOutputService` as the healer-output input. Production Generate now binds `RotationHealerCanonicalRoleOutputFactoryResult` / `RotationCandidateHealerMultiDemandRoleOutputService` and may also recompute verified healer hard criteria from the same stabilized runtime context. The descriptor therefore understates the current production contract.
 
-**Disposition:** DEFERRED TO DOCUMENTATION/CONFIGURATION CLEANUP.
+**Disposition:** FIXED.
 
-**Reason deferred:** `rotation_catalog_descriptors.py` is a large shared registry file under concurrent Phase 13.5 activity. Runtime behavior is already correct and verified; replacing the entire shared file for a narrow metadata edit would create unnecessary overwrite risk. The catalog is discovery metadata, not runtime authority.
+**Resolution:** the stabilized-runtime descriptor now advertises
+`RotationHealerCanonicalRoleOutputFactoryResult`,
+`RotationCandidateHealerMultiDemandRoleOutputService`, and the shared runtime
+resolver consumed by verified healer hard criteria. Its dependencies now point to
+the registered multi-demand and healer-criteria authorities.
 
-**Closeout boundary:** before Phase 13.5 closes, update the stabilized healer descriptor to advertise the multi-demand healer provider/factory result and the shared runtime hard-criteria binding. Do not treat the stale descriptor as evidence that production still uses the single-demand path.
+**Closeout boundary:** discovery metadata must continue to describe the production
+multi-demand path. The lower-level single-demand service remains diagnostic-only as
+recorded in F012.
 
 ---
 
@@ -264,15 +271,67 @@ Audit in progress.
 
 ---
 
+### F013 — Active formula tests imported removed quarantine modules
+
+**Category:** stale tests / quarantine drift
+
+**Files:** twelve formula regression modules under `minmax/tests`.
+
+**Finding:** the formula consolidation moved live implementations into
+`final_calculations`, `resolved_modifiers`, `derived_stats`, `core_stats`, and
+`power_mitigations`, but twelve active tests still imported nonexistent
+`old_pages.old_*` modules. Repository-wide test collection therefore stopped before
+running any regression gate.
+
+**Disposition:** FIXED.
+
+**Resolution:** the tests now import the live canonical formula owners. The
+architecture audit also reports an error when any active test imports a quarantine
+module that no longer exists; historical comparisons may still import real archived
+modules.
+
+**Validation:** **127 passed in 1.41s** for the migrated formula set.
+
+---
+
+### F014 — Healer Performance Dashboard extensions fell out of explicit bootstrap
+
+**Category:** unwired user-visible capability / UI composition drift
+
+**Files:**
+- `ui/application_performance_dashboard_bootstrap.py`
+- `services/performance_healer_analysis_support.py`
+- `ui/performance_dashboard_healer_support.py`
+- architecture and UI bootstrap tests
+
+**Finding:** both the healer analysis decorator and healer dashboard presentation
+still existed, but neither was installed after Performance Dashboard composition was
+moved into its explicit application bootstrap. The tests still described the correct
+pre-`MainWindow` contract, but production startup did not satisfy it.
+
+**Disposition:** FIXED.
+
+**Resolution:** the explicit Performance Dashboard bootstrap now installs healer
+analysis before presentation and before `MainWindow` construction. The architecture
+audit additionally fails when a runtime UI class-patch adapter has no non-test
+production import owner.
+
+**Validation:** architecture, bootstrap, healer UI, and service-catalog focused gate:
+**24 passed in 12.19s**.
+
+---
+
 ## Audit queue
 
 Completed/reviewed in this ledger:
 - Character -> Build -> Team identity reconstruction/fallback paths;
-- stale rotation aliases/wrappers/compatibility seams reviewed so far.
+- stale rotation aliases, wrappers, compatibility seams, and suspicious services;
+- effect/proc/runtime-condition authorities and hard-coded reviewed semantics;
+- documentation/service-catalog drift;
+- stale quarantine-dependent regression tests;
+- production reachability of runtime UI class-patch adapters;
+- focused regression after material cleanup;
+- full repository regression checkpoint.
 
-Remaining Phase 13.5 audit:
-
-1. unused/dead Phase 13 services and catalog entries;
-2. documentation/configuration drift, including F011;
-3. focused regression after each material cleanup;
-4. full regression checkpoint before Phase 13.5 closeout.
+No Phase 13.5 structural-audit item remains without a fixed, intentionally retained,
+or explicitly deferred owner/boundary disposition.

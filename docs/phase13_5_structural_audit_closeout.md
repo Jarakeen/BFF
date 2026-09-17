@@ -6,7 +6,7 @@ This note closes the repository-structure pass required by the Phase 13 / 13.5 R
 
 ## Result
 
-**STRUCTURAL AUDIT COMPLETE — Rotation-focused regression checkpoint verified green; full repository regression still required before Phase 13 closes.**
+**STRUCTURAL AUDIT COMPLETE — focused and full repository regression checkpoints verified green.**
 
 The audit found no proven orphaned Rotation production service whose removal would improve correctness without removing a supported caller, diagnostic boundary, evidence-review path, or explicit compatibility contract.
 
@@ -40,10 +40,9 @@ The detailed ledger records and dispositions F001–F012. Important closeout out
 These items do **not** represent missing Rotation Engine architecture:
 
 1. **F009 — Comp candidate identity contract debt.** Owner: broader Comp Maker candidate contract. `CompBuildCandidate.source_name` must not be adopted as canonical Rotation identity.
-2. **F011 — stabilized-healer service catalog metadata drift.** Owner: documentation/catalog cleanup. Runtime wiring is correct; the discovery descriptor still describes the older single-demand input shape. The service catalog is metadata, not runtime authority.
-3. **Lightning Staff light-attack semantics.** Owner: source review. Production remains fail-closed because the preserved shock-LA modifier contract contains HA/Empower/DoT-shaped terms not sufficiently verified for modern light attacks.
-4. **Exact Stampede replay anchors for the real DD validation plan.** Owner: reviewed observation evidence. Architecture is complete; exact planned-action anchors cannot be manufactured from aggregate timing statistics.
-5. **Unreviewed continuous execute interpolation such as Executioner.** Owner: source review. Reviewed discrete execute semantics remain supported; unreviewed interpolation stays unresolved.
+2. **Lightning Staff light-attack semantics.** Owner: source review. Production remains fail-closed because the preserved shock-LA modifier contract contains HA/Empower/DoT-shaped terms not sufficiently verified for modern light attacks.
+3. **Exact Stampede replay anchors for the real DD validation plan.** Owner: reviewed observation evidence. Architecture is complete; exact planned-action anchors cannot be manufactured from aggregate timing statistics.
+4. **Unreviewed continuous execute interpolation such as Executioner.** Owner: source review. Reviewed discrete execute semantics remain supported; unreviewed interpolation stays unresolved.
 
 ### Canonical team/build prerequisite
 
@@ -57,17 +56,15 @@ The Rotation-specific closeout gates have now been reported green by the user:
 - Exploiter-focused DD repair gate: **14 passed in 3.37s**;
 - real `Rylonia` / `Corpsebuster DD` whole-plan damage audit: **0 actionable blockers**; remaining unresolved damage actions were classified as runtime-input-required because Exploiter requires authoritative target `CombatState` at each damage instant rather than a guessed standing bonus;
 - broad Rotation regression across `services/tests`, `ui/tests`, `minmax/tests`, and `tools/tests` with `-k "rotation"`: **2425 passed, 6774 deselected in 73.26s**.
+- final architecture/bootstrap/service-catalog focused gate: **25 passed in 17.61s**;
+- restored canonical formula regression set: **127 passed in 1.41s**;
+- full repository gate: **3026 passed in 46.93s**.
 
 The broad Rotation gate initially exposed stale fixtures and compatibility-test drift around hardened canonical contracts. Those fixtures were updated without weakening production boundaries. The final rerun was fully green.
 
-## Remaining closeout gate
+## Closeout gate
 
-Only the repository-wide regression checkpoint remains before Phase 13 / 13.5 Rotation can be recorded closed:
-
-```powershell
-python -m pytest -q
-```
-
-If that full suite is green, the Rotation Engine is closed for Phase 13.5. Any remaining Lightning Staff, exact Stampede-anchor, execute-interpolation, or similar items remain explicitly owned by future source/evidence review and do not reopen engine architecture.
-
-Until the full repository regression is reported green, Phase 13 remains **Rotation-green, repository-closeout-pending**.
+The repository-wide regression checkpoint is green. Phase 13 / 13.5 Rotation and its
+required structural audit are closed. Remaining Lightning Staff, exact
+Stampede-anchor, execute-interpolation, or similar items stay explicitly owned by
+future source/evidence review and do not reopen engine architecture.

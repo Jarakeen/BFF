@@ -52,6 +52,40 @@ Protected scope remains unchanged:
 - keep ESO Logs integrated because Top Gear, Capabilities, Performance, and ranked-team evidence actively consume it;
 - defer Broadcast / Field Notes modular extraction to its own explicit migration.
 
+## Final closeout checkpoint — 2026-09-17
+
+**AUDIT COMPLETE.** The audit now has zero architectural closeout blockers and the
+full repository gate is green: **3026 passed in 46.93s**.
+
+| Finding | Final disposition |
+|---|---|
+| A-01 Build persistence authority | Fixed; canonical catalog/bridge authority is no longer replaced at package import. |
+| A-02 hidden UI composition | Stabilized; installer fan-out is closed, application bootstraps own composition order, and every retained class-patch adapter has a proven non-test runtime owner. |
+| A-03 player/character/team identity overlap | Stabilized with canonical IDs and fail-closed bridges; display-name compatibility does not become execution identity. |
+| A-04 GeneratedRosterPlan overlap | Fixed; live callers use the draft API and legacy names/tables are compatibility/read-migration only. |
+| A-05 RaidPlan identity/docs | Fixed; persistence documentation and stable selected-build identity match the live repository. |
+| A-06 legacy Console prototypes | Fixed by quarantine; normal runtime imports from quarantine are architecture errors. |
+| A-07 service-catalog aggregation | Fixed through the explicit catalog aggregator. |
+| A-08 package import side effects | Fixed for the audited persistence/runtime authority paths. |
+| A-09 runtime-local data defaults | Fixed for the audited paths; packaged-path configuration remains authoritative. |
+| A-10 healer Performance composition | Fixed; healer analysis and presentation are restored to the explicit pre-window bootstrap. |
+
+The static report deliberately retains two warning inventories rather than hiding
+them:
+
+- **272 `service-catalog:unregistered-service-boundary` candidates.** This heuristic
+  includes leaf helpers whose class names end in `Service`; it is a review inventory,
+  not proof that 272 canonical authorities are missing. Catalog integrity and unknown
+  dependency errors remain blocking.
+- **77 `ui-class-monkey-patch` adapters.** These are countable staged migration debt.
+  All 77 have a production import owner; a test-only, dead, or dropped adapter is now
+  an architecture error. Collectibles remain in the protected/out-of-scope subset.
+
+`python tools/audit_system_architecture.py --closeout` treats any error or any warning
+outside those two explicit inventories as a closeout blocker. This preserves visible
+debt while preventing a raw warning count from masquerading as an unresolved
+correctness finding.
+
 ---
 
 ## Healthy architecture worth preserving

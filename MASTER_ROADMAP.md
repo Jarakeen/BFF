@@ -909,6 +909,12 @@ Fight-horizon policy: most raid fights are expected to finish within roughly six
 
 ### Phase 13 / current Phase 13.5 closeout structural audit
 
+**Closeout result (2026-09-17): COMPLETE.** The detailed ledger and architecture
+audit have dispositions for every material finding, the architecture closeout gate has
+zero blockers, and the full repository checkpoint is **3026 passed in 46.93s**. The
+remaining UI class-patch and service-catalog candidate lists are explicit migration
+inventories, not undispositioned correctness findings.
+
 Before the current Phase 13 line is considered ready to close, and before Phase 14 begins building on top of it, perform a deliberate repository-wide structural audit. This is a stabilization gate, not a feature-expansion pass.
 
 The audit must cover:
@@ -932,6 +938,10 @@ The purpose is not to minimize line count. The purpose is to prove that the arch
 
 # PHASE 14 · Combat Simulation
 **Status: 🔴 Planned**
+
+The `phase14` branch was opened from the completed Phase 13.5 release baseline on
+2026-09-17. Combat Simulation implementation remains planned; the structural and
+architectural prerequisite is now closed.
 
 ```text
 CombatState
