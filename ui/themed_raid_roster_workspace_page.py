@@ -4,31 +4,30 @@ from __future__ import annotations
 
 The rebuilt Roster intentionally has no top-level tabs. The six Collectibles-style
 summary cards are navigation/summary surfaces; detailed editors stay available as
-explicit modal workspaces so the canonical roster/team/availability/recruitment
-services remain the only data owners.
+explicit workspaces so the canonical roster/team/availability/recruitment services
+remain the only data owners.
+
+The dashboard itself contains no decorative roster photo/filler panels. Parchment
+sketches belong only on deliberate field-journal note surfaces, while full-color art
+belongs only on dark framed surfaces elsewhere in the app.
 """
 
-from pathlib import Path
-
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QCursor, QPixmap
+from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QFileDialog,
-    QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
-from engine.config import get_resource_path
 from services.roster_share_formats import discord_roster_text, export_roster_csv
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -53,53 +52,13 @@ class _DashboardMetricCard(_MetricCard):
         super().mouseReleaseEvent(event)
 
 
-class _CityArt(QLabel):
-    def __init__(self, filename: str, parent=None, *, minimum_height: int = 120) -> None:
-        super().__init__(parent)
-        self.filename = filename
-        self.setMinimumHeight(minimum_height)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setProperty("rosterSketch", True)
-        self.refresh()
-
-    def refresh(self) -> None:
-        path = get_resource_path(
-            "assets", "themes", "bff", "city_night", "roster", self.filename
-        )
-        pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
-        self.clear()
-        if pixmap.isNull():
-            self.setText("Same streets. Better runs.")
-            return
-        size = self.size()
-        width = max(320, size.width() or 520)
-        height = max(100, size.height() or 180)
-        self.setPixmap(
-            pixmap.scaled(
-                width,
-                height,
-                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-        )
-
-    def resizeEvent(self, event) -> None:
-        super().resizeEvent(event)
-        self.refresh()
-
-
 class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
-    """Single-page City roster dashboard matching the approved mockup."""
+    """Single-page roster dashboard with stable, art-independent geometry."""
 
     def __init__(self, parent=None) -> None:
         self._detail_dialogs: dict[str, QDialog] = {}
         super().__init__(parent)
         self.refresh_theme_assets()
-
-    # ------------------------------------------------------------------
-    # City dashboard shell
-    # ------------------------------------------------------------------
 
     def _build_ui(self) -> None:
         self.header = FoundryHeader(
@@ -136,8 +95,6 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
             metrics_layout.setColumnStretch(column, 1)
         self.workspace_layout.addWidget(metrics)
 
-        # Detailed editors are deliberately not tabs on the dashboard. They are
-        # real persistent workspaces opened by the summary cards/quick actions.
         self._build_detail_workspaces()
 
         dashboard = QWidget()
@@ -153,22 +110,21 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
         roster_card.addWidget(self.table)
         grid.addWidget(roster_card, 0, 0, 2, 1)
 
-        quick_row = QWidget()
-        quick_layout = QHBoxLayout(quick_row)
-        quick_layout.setContentsMargins(0, 0, 0, 0)
-        quick_layout.setSpacing(8)
-        quick_layout.addWidget(self._build_quick_actions_card(), 2)
-        self.quote_art = _CityArt("roster_people.webp", minimum_height=220)
-        quick_layout.addWidget(self.quote_art, 3)
-        grid.addWidget(quick_row, 0, 1)
+        # Keep functional cards in the right column. Decorative filler no longer
+        # owns layout space or influences the page's minimum size.
+        grid.addWidget(self._build_quick_actions_card(), 0, 1)
 
         self.recent_activity_card = FoundryCard("Recent Activity", "stopwatch")
         self.recent_activity = QTableWidget(0, 2)
         self.recent_activity.setHorizontalHeaderLabels(("Activity", "When"))
         self.recent_activity.verticalHeader().setVisible(False)
         self.recent_activity.horizontalHeader().setStretchLastSection(False)
-        self.recent_activity.horizontalHeader().setSectionResizeMode(0, self.recent_activity.horizontalHeader().ResizeMode.Stretch)
-        self.recent_activity.horizontalHeader().setSectionResizeMode(1, self.recent_activity.horizontalHeader().ResizeMode.ResizeToContents)
+        self.recent_activity.horizontalHeader().setSectionResizeMode(
+            0, self.recent_activity.horizontalHeader().ResizeMode.Stretch
+        )
+        self.recent_activity.horizontalHeader().setSectionResizeMode(
+            1, self.recent_activity.horizontalHeader().ResizeMode.ResizeToContents
+        )
         self.recent_activity.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.recent_activity.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
         self.recent_activity_card.addWidget(self.recent_activity)
@@ -178,10 +134,8 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
         lower_layout = QHBoxLayout(lower)
         lower_layout.setContentsMargins(0, 0, 0, 0)
         lower_layout.setSpacing(8)
-        lower_layout.addWidget(self._build_team_snapshot_card(), 2)
-        self.team_art = _CityArt("roster_team.webp", minimum_height=145)
-        lower_layout.addWidget(self.team_art, 3)
-        lower_layout.addWidget(self._build_recruitment_needs_card(), 2)
+        lower_layout.addWidget(self._build_team_snapshot_card(), 1)
+        lower_layout.addWidget(self._build_recruitment_needs_card(), 1)
         grid.addWidget(lower, 2, 0, 1, 2)
 
         self.add_workspace(dashboard)
@@ -218,11 +172,30 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
         player_layout.addWidget(self.actions)
 
         self._install_detail_dialog("players", "Player Record", player_page, (760, 720))
-        self._install_detail_dialog("characters", "Characters", RaidRosterWorkspacePage._build_characters_tab(self), (1050, 720))
-        self._install_detail_dialog("teams", "Teams", RaidRosterWorkspacePage._build_teams_tab(self), (1120, 760))
-        self._install_detail_dialog("availability", "Availability", RaidRosterWorkspacePage._build_availability_tab(self), (1250, 720))
-        self._install_detail_dialog("recruitment", "Recruitment", RaidRosterWorkspacePage._build_recruitment_tab(self), (1180, 760))
-        self._install_detail_dialog("archive", "Archive", RaidRosterWorkspacePage._build_archive_tab(self), (1050, 680))
+        self._install_detail_dialog(
+            "characters",
+            "Characters",
+            RaidRosterWorkspacePage._build_characters_tab(self),
+            (1050, 720),
+        )
+        self._install_detail_dialog(
+            "teams", "Teams", RaidRosterWorkspacePage._build_teams_tab(self), (1120, 760)
+        )
+        self._install_detail_dialog(
+            "availability",
+            "Availability",
+            RaidRosterWorkspacePage._build_availability_tab(self),
+            (1250, 720),
+        )
+        self._install_detail_dialog(
+            "recruitment",
+            "Recruitment",
+            RaidRosterWorkspacePage._build_recruitment_tab(self),
+            (1180, 760),
+        )
+        self._install_detail_dialog(
+            "archive", "Archive", RaidRosterWorkspacePage._build_archive_tab(self), (1050, 680)
+        )
 
     def _install_detail_dialog(self, key: str, title: str, page: QWidget, size: tuple[int, int]) -> None:
         dialog = QDialog(self)
@@ -240,10 +213,6 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
         dialog.show()
         dialog.raise_()
         dialog.activateWindow()
-
-    # ------------------------------------------------------------------
-    # Mockup cards
-    # ------------------------------------------------------------------
 
     def _build_quick_actions_card(self) -> FoundryCard:
         card = FoundryCard("Quick Actions", "warning")
@@ -276,10 +245,6 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
         self.recruitment_needs_label.setProperty("rosterDashboardSummary", True)
         card.addWidget(self.recruitment_needs_label)
         return card
-
-    # ------------------------------------------------------------------
-    # Wired actions
-    # ------------------------------------------------------------------
 
     def _new_player(self) -> None:
         self.table.clearSelection()
@@ -327,10 +292,6 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
         target = export_roster_csv(filename, members, team_schedules=schedules)
         self.status.success(f"Roster exported: {target.name}")
 
-    # ------------------------------------------------------------------
-    # Refresh/dashboard composition
-    # ------------------------------------------------------------------
-
     def refresh(self) -> None:
         super().refresh()
         self._refresh_dashboard_cards()
@@ -368,7 +329,10 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
             role = _clean(candidate.desired_role) or "Unspecified"
             recruit_roles[role] = recruit_roles.get(role, 0) + 1
         if recruit_roles:
-            lines = [f"{role}  •  {count} candidate{'s' if count != 1 else ''}" for role, count in sorted(recruit_roles.items())]
+            lines = [
+                f"{role}  •  {count} candidate{'s' if count != 1 else ''}"
+                for role, count in sorted(recruit_roles.items())
+            ]
             self.recruitment_needs_label.setText("\n".join(lines[:6]))
         else:
             self.recruitment_needs_label.setText("No active recruitment candidates.")
@@ -390,23 +354,16 @@ class ThemedRaidRosterWorkspacePage(RaidRosterWorkspacePage):
             self.recent_activity.setItem(row, 1, QTableWidgetItem(display_when))
         if not activity:
             self.recent_activity.setRowCount(1)
-            self.recent_activity.setItem(0, 0, QTableWidgetItem("No roster workflow activity recorded yet."))
+            self.recent_activity.setItem(
+                0, 0, QTableWidgetItem("No roster workflow activity recorded yet.")
+            )
             self.recent_activity.setItem(0, 1, QTableWidgetItem("—"))
-
-        if hasattr(self, "quote_art"):
-            self.quote_art.refresh()
-        if hasattr(self, "team_art"):
-            self.team_art.refresh()
 
     def refresh_theme_assets(self) -> None:
         self.header.subtitle.setText("Built from static, stubbornness, and one more pull.")
         refresh_header = getattr(self.header, "refresh_visual_theme", None)
         if callable(refresh_header):
             refresh_header()
-        if hasattr(self, "quote_art"):
-            self.quote_art.refresh()
-        if hasattr(self, "team_art"):
-            self.team_art.refresh()
 
 
 __all__ = ["ThemedRaidRosterWorkspacePage"]
