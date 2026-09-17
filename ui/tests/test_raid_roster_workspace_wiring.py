@@ -66,7 +66,7 @@ def test_raid_lead_navigation_uses_real_current_routes() -> None:
         assert f'("{label}", "{route}")' in source
 
 
-def test_roster_workspace_exposes_six_card_workspaces_and_urban_wilderness_art() -> None:
+def test_roster_workspace_keeps_six_cards_without_legacy_filler_art() -> None:
     base = Path("ui/raid_roster_workspace_page.py").read_text(encoding="utf-8")
     dashboard = Path("ui/themed_raid_roster_workspace_page.py").read_text(encoding="utf-8")
     wrapper = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
@@ -83,19 +83,66 @@ def test_roster_workspace_exposes_six_card_workspaces_and_urban_wilderness_art()
 
     assert "QTabWidget" not in dashboard
     assert "self.tabs" not in dashboard
-    assert '"city_night"' in dashboard
-    assert '"roster_people.webp"' in dashboard
-    assert '"roster_team.webp"' in dashboard
     assert "class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):" in wrapper
     assert "self.tabs" not in wrapper
 
-    # Final composition polish protects the approved mockup proportions.
+    # The active wrapper explicitly retires the old city/raven filler surfaces.
+    assert "_remove_legacy_city_art" in wrapper
+    assert 'for attribute in ("quote_art", "team_art")' in wrapper
+    assert "decorative assets never determine page/card geometry" in wrapper
+    assert '"roster_people.webp"' not in wrapper
+    assert '"roster_team.webp"' not in wrapper
+
+    # Players keeps the people list visible beside the record editor.
+    assert "self.player_detail_table = RosterTable()" in wrapper
+    assert "self.player_detail_table.memberSelected.connect(self.load_member)" in wrapper
+    assert "split.setStretchFactor(0, 3)" in wrapper
+    assert "split.setStretchFactor(1, 2)" in wrapper
+
+    # The six card bar has stable dimensions and number-sheet support.
     assert '"players": "users"' in wrapper
     assert '"characters": "character"' in wrapper
     assert 'setProperty("rosterMetricBadge", True)' in wrapper
-    assert "setMaximumWidth(390)" in wrapper
-    assert "setMaximumHeight(220)" in wrapper
-    assert "self.table.setMinimumWidth(720)" in wrapper
+    assert 'setFixedSize(QSize(34, 34))' in wrapper
+    assert "setMaximumHeight(148)" in wrapper
+
+
+def test_roster_character_detail_is_profile_style_without_build_assignment_tabs() -> None:
+    wrapper = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
+
+    assert "def _show_character_detail" in wrapper
+    assert "def _profile_html" in wrapper
+    assert '("Class",' in wrapper
+    assert '("Race",' in wrapper
+    assert '("Role",' in wrapper
+    assert '("Teams",' in wrapper
+    assert '("Status",' in wrapper
+    assert "Builds and Assignments" not in wrapper
+
+
+def test_readiness_parchment_uses_field_journal_sketches_with_fixed_height() -> None:
+    source = Path("ui/city_raid_readiness_page.py").read_text(encoding="utf-8")
+
+    assert '"field_journal", "roster"' in source
+    assert '"roster_people.jpg"' in source
+    assert '"roster_team.jpg"' in source
+    assert '"city_night", "roster"' not in source
+    assert "self.setFixedHeight(150)" in source
+    assert "Full-color city artwork belongs on dark surfaces" in source
+
+
+def test_assignment_selected_spot_is_structured_profile_card() -> None:
+    source = Path("ui/city_raid_assignments_page.py").read_text(encoding="utf-8")
+
+    assert 'detail.setProperty("selectedSpotCard", True)' in source
+    assert 'self.selected_spot_title.setProperty("selectedSpotTitle", True)' in source
+    assert 'form.addRow("Player", self.selected_player)' in source
+    assert 'form.addRow("Character", self.selected_character)' in source
+    assert 'form.addRow("Primary Assignment", self.selected_primary)' in source
+    assert 'form.addRow("Secondary Assignment", self.selected_secondary)' in source
+    assert 'form.addRow("Gear Needed", self.selected_gear)' in source
+    assert 'form.addRow("Linked Build", self.selected_build)' in source
+    assert 'edit_roles = QPushButton("Edit Duties")' in source
 
 
 def test_city_key_remains_the_compatibility_storage_key_for_urban_wilderness() -> None:
