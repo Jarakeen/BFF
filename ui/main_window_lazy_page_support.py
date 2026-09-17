@@ -19,12 +19,13 @@ _INSTALLED = False
 _ORIGINAL_BUILD_UI = None
 _ORIGINAL_SHOW_PAGE = None
 
-# Keep pages with build-time cross-wiring eager.  In particular,
+# Keep pages with build-time cross-wiring eager. In particular, Rotation is now
+# a release-visible primary workspace with a dense decorator/runtime graph, so
+# constructing it during MainWindow setup is safer than first-click materialization.
 # operations_console is the startup destination, Achievements supplies the
 # active profile used by Collectibles, and Raid Engine source pages are still
 # composed together by existing support layers.
 LAZY_PAGE_SPECS: dict[str, str] = {
-    "rotations": "CanonicalRotationDashboardPage",
     "gear_lookup": "GearLookupPage",
     "stickerbook": "StickerbookPage",
     "timers": "AsylumPerfectaTimerPage",
