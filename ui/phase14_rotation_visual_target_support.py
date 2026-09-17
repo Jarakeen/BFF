@@ -308,12 +308,10 @@ def install() -> None:
         tabs = getattr(page, "rotation_builder_tabs", None)
         legacy_builder = tabs.widget(0) if tabs is not None and tabs.count() else None
         if legacy_builder is not None:
-            # Keep the old builder shell alive because older refresh helpers retain
-            # QLabel references created there. Deleting it creates stale shiboken wrappers.
-            try:
-                legacy_builder.deleteLater = legacy_builder.hide
-            except (AttributeError, TypeError):
-                pass
+            # Command-center installation now preserves this widget directly.
+            # Holding the reference here as well keeps the intent explicit while
+            # avoiding runtime monkeypatching of Qt-owned C++ methods.
+            legacy_builder.hide()
             page._phase14_preserved_legacy_builder = legacy_builder
 
         original_install(page)
