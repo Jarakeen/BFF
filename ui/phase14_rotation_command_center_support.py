@@ -436,7 +436,9 @@ def _build_intent_card(page) -> FoundryCard:
 
     generated_heading = QHBoxLayout()
     generated_heading.setContentsMargins(0, 4, 0, 2)
-    generated_heading.addWidget(QLabel("Generated Settings"))
+    page.phase14_generated_settings_heading = QLabel("Generated Settings")
+    page.phase14_generated_settings_heading.setProperty("phase14SectionHeading", True)
+    generated_heading.addWidget(page.phase14_generated_settings_heading)
     generated_heading.addStretch(1)
     page.phase14_rotation_customized_label = QLabel("Preset defaults")
     page.phase14_rotation_customized_label.setProperty("cardBadge", True)
