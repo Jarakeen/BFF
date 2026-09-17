@@ -217,6 +217,7 @@ def install() -> None:
     original_theme_root = dashboard._theme_root
     original_badge_sprite = dashboard._badge_sprite
     original_number_sprite = dashboard._number_sprite
+    original_set_sprite = dashboard.ProgressTile._set_sprite
 
     def active_theme():
         app = QApplication.instance()
@@ -264,6 +265,16 @@ def install() -> None:
 
         return original_badge_sprite(theme, label)
 
+    def set_sprite(label, pixmap, size: int) -> bool:
+        """Give Urban Wilderness badge art a large, frameless presentation."""
+        app = QApplication.instance()
+        visual_theme = str(app.property("visualTheme") if app is not None else "")
+        if visual_theme == VISUAL_THEME_RYLO_CITY and size >= 70:
+            label.setFixedSize(104, 104)
+            label.setStyleSheet("background: transparent; border: none; padding: 0;")
+            return original_set_sprite(label, pixmap, 100)
+        return original_set_sprite(label, pixmap, size)
+
     def number_sprite(theme, index: int):
         if theme.key == field_theme.key:
             source = original_number_sprite(dashboard.BFF_THEME, index)
@@ -283,6 +294,7 @@ def install() -> None:
     dashboard._theme_root = theme_root
     dashboard._badge_sprite = badge_sprite
     dashboard._number_sprite = number_sprite
+    dashboard.ProgressTile._set_sprite = staticmethod(set_sprite)
 
     _INSTALLED = True
 
