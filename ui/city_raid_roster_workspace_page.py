@@ -40,7 +40,7 @@ _BADGES = {
 
 
 class _StaticRosterArt(QLabel):
-    """Existing field-journal art reused without animation or brightness effects."""
+    """Existing low-stimulation WebP art reused without animation or brightness effects."""
 
     def __init__(self, filename: str, parent=None) -> None:
         super().__init__(parent)
@@ -51,8 +51,11 @@ class _StaticRosterArt(QLabel):
         self.refresh()
 
     def refresh(self) -> None:
+        # The field-journal JPG copies are intentionally avoided here. Some of
+        # those files trigger libjpeg marker warnings in Qt. The equivalent
+        # lightweight WebP assets are stable and cheaper to repaint on resize.
         path = get_resource_path(
-            "assets", "themes", "bff", "field_journal", "roster", self.filename
+            "assets", "themes", "bff", "city_night", "roster", self.filename
         )
         pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
         self.clear()
@@ -77,9 +80,6 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
     """Compatibility route name for the single Urban Wilderness Roster dashboard."""
 
     def __init__(self, parent=None) -> None:
-        # Install presentation-only polish before the shared Roster builder creates
-        # its embedded Teams/Availability/etc. pages. This also establishes the
-        # accessible Raid Map palette before the later raid pages are constructed.
         install_urban_wilderness_accessibility_polish()
         self._embedded_detail_indexes: dict[str, int] = {}
         self._embedded_stack: QStackedWidget | None = None
@@ -89,10 +89,10 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self._embed_detail_workspaces()
 
     def _replace_legacy_city_art(self) -> None:
-        """Replace the older raven/street panels with quieter existing field art."""
+        """Replace the old panels with stable Urban Wilderness city art."""
         for attribute, filename in (
-            ("quote_art", "roster_people.jpg"),
-            ("team_art", "roster_team.jpg"),
+            ("quote_art", "roster_people.webp"),
+            ("team_art", "roster_team.webp"),
         ):
             old = getattr(self, attribute, None)
             if old is None:
