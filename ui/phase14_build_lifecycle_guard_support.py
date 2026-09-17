@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-"""Guard Phase 14 Builds against stale Qt objects during legacy wrapper startup.
+"""Guard Phase 14 Builds against stale or detached Qt objects.
 
 FoundryDock still has several BuildsPage decorators that assume the original splitter
-geometry. During construction one of those legacy wrappers can dispose a Phase 14
-command-center child after the command center has stored it on the page. PySide keeps
-the Python wrapper, but the underlying C++ object is gone. This layer fails closed
-while that happens and, after the complete build-ui chain returns, reconstructs the
-command center once if its Qt objects were invalidated.
+geometry. During construction an older wrapper can either dispose a Phase 14 child or
+leave the command-center widgets alive but detached from the visible Roster tab. PySide
+then gives us one of two equally charming outcomes: a deleted C++ object behind a live
+Python wrapper, or a perfectly valid widget marooned outside the visible layout.
 
-No build data or database state is touched here. This is UI lifetime repair only.
+This layer fails closed while constructor-time wrappers run and performs a final
+presentation-only repair after both the base BuildsPage chain and the themed BuildsPage
+subclass chain have completed. No build data or database state is touched here.
 """
 
 from shiboken6 import isValid
@@ -42,32 +43,101 @@ def _command_center_alive(page) -> bool:
     )
 
 
+def _command_center_attached(page) -> bool:
+    """Return True only when the live command center is actually in splitter slot 0."""
+    if not _command_center_alive(page):
+        return False
+    splitter = getattr(page, "splitter", None)
+    if not _valid(splitter) or splitter.count() < 1:
+        return False
+
+    table = page.phase14_build_table
+    current = table
+    # Walk from the table to the direct splitter child. A live widget is not enough;
+    # this catches the blank-page case where a legacy wrapper leaves Phase 14 alive
+    # but no longer attached to the visible workspace.
+    while _valid(current):
+        parent = current.parentWidget()
+        if parent is None:
+            return False
+        if parent is splitter:
+            return splitter.widget(0) is current
+        current = parent
+    return False
+
+
+def _show_library_workspace(page) -> None:
+    """Make the library tab/splitter visible without exposing legacy editor chrome."""
+    splitter = getattr(page, "splitter", None)
+    if _valid(splitter):
+        splitter.show()
+
+    tabs = getattr(page, "build_tabs", None)
+    if _valid(tabs) and tabs.count() > 0:
+        tabs.show()
+        if tabs.currentIndex() != 0:
+            tabs.setCurrentIndex(0)
+        roster_tab = tabs.widget(0)
+        if _valid(roster_tab):
+            roster_tab.show()
+
+
+def _repair_command_center(page, command_center) -> None:
+    """Rebuild only the Phase 14 presentation surface when it is missing/detached."""
+    splitter = getattr(page, "splitter", None)
+    if not _valid(splitter):
+        return
+
+    if not _command_center_attached(page):
+        replacement = command_center._create_command_center(page)
+        replacement.show()
+        current = splitter.widget(0) if splitter.count() else None
+        if splitter.count():
+            displaced = splitter.replaceWidget(0, replacement)
+        else:
+            splitter.insertWidget(0, replacement)
+            displaced = None
+        stale = displaced if displaced is not None else current
+        if stale is not None and stale is not replacement and _valid(stale):
+            stale.hide()
+            stale.setParent(page)
+
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 2)
+        splitter.setSizes([860, 650])
+        command_center._wire_new_build_button(page)
+        command_center._quiet_overview_action_bar(page)
+
+    _show_library_workspace(page)
+
+
 def install() -> None:
     global _INSTALLED
     if _INSTALLED:
         return
 
-    from ui.builds_page import BuildsPage
+    from ui.builds_page import BuildsPage as BaseBuildsPage
+    from ui.themed_builds_page import BuildsPage as ThemedBuildsPage
     from ui import phase14_build_profile_support as profile_support
     from ui import phase14_builds_command_center_support as command_center
 
-    original_build_ui = BuildsPage._build_ui
+    original_base_build_ui = BaseBuildsPage._build_ui
+    original_themed_build_ui = ThemedBuildsPage._build_ui
     original_set_filters = command_center._set_filters_from_library
     original_populate = command_center._populate_build_table
 
     def safe_template_mode(page) -> bool:
-        if not _command_center_alive(page):
-            # Treat a stale command center as unavailable while constructor-time
-            # legacy wrappers finish. Returning True makes downstream inspector /
-            # profile decorators skip Phase 14 widget work instead of dereferencing
-            # deleted Qt objects.
+        if not _command_center_attached(page):
+            # Treat stale/detached presentation as unavailable while constructor-time
+            # wrappers finish. Returning True makes downstream inspector/profile
+            # decorators skip Phase 14 widget work instead of dereferencing ghosts.
             return True
         tabs = page.phase14_library_tabs
         index = tabs.currentIndex()
         return bool(index >= 0 and tabs.tabText(index) == "Templates")
 
     def safe_active_library_mode(page) -> str:
-        if not _command_center_alive(page):
+        if not _command_center_attached(page):
             return "All"
         tabs = page.phase14_library_tabs
         index = tabs.currentIndex()
@@ -76,12 +146,12 @@ def install() -> None:
         return str(tabs.tabText(index) or "All")
 
     def safe_set_filters(page) -> None:
-        if not _command_center_alive(page):
+        if not _command_center_attached(page):
             return
         original_set_filters(page)
 
     def safe_populate(page) -> None:
-        if not _command_center_alive(page):
+        if not _command_center_attached(page):
             return
         original_populate(page)
 
@@ -106,29 +176,19 @@ def install() -> None:
     command_center._populate_build_table = safe_populate
     profile_support._profile_matches_mode = safe_profile_matches_mode
 
-    def build_ui_with_lifecycle_repair(self):
-        original_build_ui(self)
-        if _command_center_alive(self):
-            return
+    def build_base_ui_with_lifecycle_repair(self):
+        original_base_build_ui(self)
+        _repair_command_center(self, command_center)
 
-        # A legacy wrapper invalidated the first command center. Rebuild only the
-        # presentation surface after the full wrapper chain has returned, when no
-        # inner decorator can still delete its children.
-        replacement = command_center._create_command_center(self)
-        current = self.splitter.widget(0)
-        displaced = self.splitter.replaceWidget(0, replacement)
-        stale = displaced if displaced is not None else current
-        if stale is not None and stale is not replacement and _valid(stale):
-            stale.hide()
-            stale.setParent(self)
+    def build_themed_ui_with_final_repair(self):
+        # The actual MainWindow instantiates ui.themed_builds_page.BuildsPage.
+        # Repair once more after that subclass's complete wrapper chain returns;
+        # this is the boundary the previous guard did not cover.
+        original_themed_build_ui(self)
+        _repair_command_center(self, command_center)
 
-        self.splitter.setStretchFactor(0, 3)
-        self.splitter.setStretchFactor(1, 2)
-        self.splitter.setSizes([860, 650])
-        command_center._wire_new_build_button(self)
-        command_center._quiet_overview_action_bar(self)
-
-    BuildsPage._build_ui = build_ui_with_lifecycle_repair
+    BaseBuildsPage._build_ui = build_base_ui_with_lifecycle_repair
+    ThemedBuildsPage._build_ui = build_themed_ui_with_final_repair
     _INSTALLED = True
 
 
