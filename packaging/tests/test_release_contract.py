@@ -37,7 +37,24 @@ def test_pyinstaller_spec_consumes_release_manifest_instead_of_whole_assets_tree
 
     assert 'release_manifest.py' in source
     assert 'manifest["pyinstaller_datas"](project_root)' in source
+    assert 'release_excludes = list(manifest.get("PYINSTALLER_EXCLUDES", ()))' in source
+    assert 'excludes=release_excludes' in source
     assert '(str(project_root / "assets"), "assets")' not in source
+
+
+def test_release_excludes_archived_legacy_and_optional_python_namespaces() -> None:
+    manifest = _load_manifest()
+    excluded = set(manifest.PYINSTALLER_EXCLUDES)
+
+    for namespace in (
+        "old_pages",
+        "legacy",
+        "deprecated",
+        "migration",
+        "modules.broadcast",
+        "pytest",
+    ):
+        assert namespace in excluded
 
 
 def test_release_version_has_one_python_source_of_truth() -> None:
