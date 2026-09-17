@@ -276,21 +276,15 @@ def icon_path(name: str) -> Path | None:
 
 
 def _strip_full_canvas_background(svg: str) -> str:
-    """Remove opaque 512x512 backing tiles while preserving the source glyph colors."""
-    svg = re.sub(
+    """Remove full-canvas backing tiles before recoloring/rendering the glyph."""
+    patterns = (
         r'<path(?=[^>]*d=["\']M0\s+0h512v512H0z["\'])[^>]*/?>',
-        '',
-        svg,
-        flags=re.IGNORECASE,
-    )
-    svg = re.sub(
         r'<path(?=[^>]*d=["\']M0\s+0\s+h512\s+v512\s+H0\s+z["\'])[^>]*/?>',
-        '',
-        svg,
-        flags=re.IGNORECASE,
+        r'<rect(?=[^>]*x=["\']0["\'])(?=[^>]*y=["\']0["\'])(?=[^>]*width=["\']512["\'])(?=[^>]*height=["\']512["\'])[^>]*/?>',
     )
+    for pattern in patterns:
+        svg = re.sub(pattern, "", svg, flags=re.IGNORECASE)
     return svg
-
 
 @lru_cache(maxsize=512)
 def _source_svg_pixmap(path_text: str, size: int) -> QPixmap:
@@ -321,31 +315,13 @@ def _source_svg_icon(path: Path, size: int = 48) -> QIcon:
 
 
 def _recolor_svg(svg: str, tone: str) -> str:
-    """Flatten a source SVG into Rylo's matte steel icon language.
-
-    The existing library contains a mix of gold glyphs and full-canvas dark
-    backing squares. Rylo keeps the shapes, removes those tiles, and treats
-    color as state rather than decoration.
-    """
-    svg = re.sub(
-        r'<path(?=[^>]*d=["\']M0\s+0h512v512H0z["\'])[^>]*/?>',
-        '',
-        svg,
-        flags=re.IGNORECASE,
-    )
-    svg = re.sub(
-        r'<path(?=[^>]*d=["\']M0\s+0\s+h512\s+v512\s+H0\s+z["\'])[^>]*/?>',
-        '',
-        svg,
-        flags=re.IGNORECASE,
-    )
-
+    """Flatten a source SVG to one semantic UI tone after removing backing tiles."""
+    svg = _strip_full_canvas_background(svg)
     svg = re.sub(r'fill=["\']#[0-9A-Fa-f]{3,8}["\']', f'fill="{tone}"', svg)
     svg = re.sub(r'stroke=["\']#[0-9A-Fa-f]{3,8}["\']', f'stroke="{tone}"', svg)
     svg = re.sub(r'fill\s*:\s*#[0-9A-Fa-f]{3,8}', f'fill:{tone}', svg)
     svg = re.sub(r'stroke\s*:\s*#[0-9A-Fa-f]{3,8}', f'stroke:{tone}', svg)
     return svg
-
 
 @lru_cache(maxsize=512)
 def _rylo_pixmap(path_text: str, tone: str, size: int) -> QPixmap:
@@ -377,32 +353,32 @@ def _rylo_icon(path: Path, size: int = 32) -> QIcon:
     return result
 
 
+
+def _foundry_icon(path: Path, size: int = 48) -> QIcon:
+    """Render Foundry icons gold, reserving silver for disabled state."""
+    result = QIcon()
+    result.addPixmap(_rylo_pixmap(str(path), _FOUNDRY_DEFAULT, size), QIcon.Mode.Normal, QIcon.State.Off)
+    result.addPixmap(_rylo_pixmap(str(path), _FOUNDRY_ACTIVE, size), QIcon.Mode.Active, QIcon.State.Off)
+    result.addPixmap(_rylo_pixmap(str(path), _FOUNDRY_SELECTED, size), QIcon.Mode.Selected, QIcon.State.Off)
+    result.addPixmap(_rylo_pixmap(str(path), _FOUNDRY_DISABLED, size), QIcon.Mode.Disabled, QIcon.State.Off)
+    result.addPixmap(_rylo_pixmap(str(path), _FOUNDRY_SELECTED, size), QIcon.Mode.Normal, QIcon.State.On)
+    return result
+
 def icon(name: str) -> QIcon:
     path = icon_path(name)
     if path is None:
         return QIcon()
     if path.suffix.casefold() == ".svg":
-        if _is_rylo_theme():
-            value = _rylo_icon(path)
-            if not value.isNull():
-                return value
-
-        # Prefer Qt's native icon loader first. Some Windows/PySide builds are
-        # happier loading the SVG as a QIcon than through an explicit renderer.
-        # If that path fails, fall back to the explicit renderer used to strip
-        # opaque backing tiles. The icon service should not become all-or-nothing
-        # merely because one SVG code path is fussy.
-        direct = QIcon(str(path))
-        if not direct.isNull():
-            return direct
+        themed = _rylo_icon(path) if _is_rylo_theme() else _foundry_icon(path)
+        if not themed.isNull():
+            return themed
 
         rendered = _source_svg_icon(path)
         if not rendered.isNull():
             return rendered
-        return QIcon()
+        return QIcon(str(path))
 
     return QIcon(str(path))
-
 
 def semantic_icon(text: str, *, button: bool = False) -> str:
     value = (text or "").strip().lower()
