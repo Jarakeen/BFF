@@ -161,6 +161,62 @@ def _monkey_patch_findings(root: Path, path: Path, tree: ast.Module) -> list[Arc
     ]
 
 
+def _runtime_imported_modules(tree: ast.Module) -> set[str]:
+    """Return modules explicitly imported by one runtime syntax tree.
+
+    Class-patch compatibility adapters are allowed during the staged UI migration,
+    but they must have a visible production owner. Test-only imports do not prove that
+    an adapter participates in application composition.
+    """
+    imported: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            imported_from = str(node.module or "")
+            if imported_from:
+                imported.add(imported_from)
+                imported.update(
+                    f"{imported_from}.{alias.name}" for alias in node.names
+                )
+        elif isinstance(node, ast.Call):
+            name = _dotted_name(node.func)
+            if name.rsplit(".", 1)[-1] != "import_module" or not node.args:
+                continue
+            first = node.args[0]
+            if isinstance(first, ast.Constant) and isinstance(first.value, str):
+                imported.add(first.value)
+    return imported
+
+
+def _unowned_ui_patch_findings(
+    root: Path,
+    patch_findings: Iterable[ArchitectureFinding],
+) -> list[ArchitectureFinding]:
+    """Flag class-patch modules that have no non-test runtime composition owner."""
+    runtime_paths = (root / "app.py", *_runtime_python_files(root))
+    imported_modules: set[str] = set()
+    for path in runtime_paths:
+        if not path.is_file() or (tree := _parse(path)) is None:
+            continue
+        imported_modules.update(_runtime_imported_modules(tree))
+    findings: list[ArchitectureFinding] = []
+    for patch in patch_findings:
+        module_name = Path(patch.path).with_suffix("").as_posix().replace("/", ".")
+        if module_name in imported_modules:
+            continue
+        findings.append(
+            ArchitectureFinding(
+                "ERROR",
+                "ui-class-monkey-patch-unowned",
+                patch.path,
+                "runtime class-patch adapter has no non-test import owner; it may be dead, "
+                "test-only, or missing from application composition",
+            )
+        )
+    return findings
+
+
 def _install_fanout_findings(root: Path, path: Path, tree: ast.Module) -> list[ArchitectureFinding]:
     findings: list[ArchitectureFinding] = []
     for node in tree.body:
@@ -366,6 +422,7 @@ def _repo_contract_findings(root: Path) -> list[ArchitectureFinding]:
 def audit_system_architecture(*, root: Path) -> ArchitectureAuditResult:
     root = root.resolve()
     findings: list[ArchitectureFinding] = []
+    patch_findings: list[ArchitectureFinding] = []
 
     catalog = audit_service_catalog(root=root)
     for item in catalog.findings:
@@ -383,12 +440,15 @@ def audit_system_architecture(*, root: Path) -> ArchitectureAuditResult:
         if tree is None:
             continue
         findings.extend(_duplicate_class_findings(root, path, tree))
-        findings.extend(_monkey_patch_findings(root, path, tree))
+        patches = _monkey_patch_findings(root, path, tree)
+        findings.extend(patches)
+        patch_findings.extend(patches)
         findings.extend(_install_fanout_findings(root, path, tree))
         findings.extend(_quarantine_import_findings(root, path, tree))
         findings.extend(_legacy_generated_roster_alias_findings(root, path, tree))
         findings.extend(_runtime_path_findings(root, path, tree))
 
+    findings.extend(_unowned_ui_patch_findings(root, patch_findings))
     findings.extend(_repo_contract_findings(root))
 
     severity_rank = {"ERROR": 0, "WARNING": 1, "INFO": 2}

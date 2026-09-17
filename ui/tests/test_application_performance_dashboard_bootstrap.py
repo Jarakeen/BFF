@@ -31,6 +31,7 @@ def test_performance_dashboard_bootstrap_preserves_extension_order() -> None:
     )
 
     ordered_calls = (
+        "install_performance_healer_analysis_support()",
         "install_performance_dashboard_polish()",
         "install_performance_dashboard_overlay()",
         "install_performance_dashboard_timeline()",
@@ -39,6 +40,7 @@ def test_performance_dashboard_bootstrap_preserves_extension_order() -> None:
         "install_performance_dashboard_timeline_service()",
         "install_performance_dashboard_boss_activity()",
         "install_performance_dashboard_focus()",
+        "install_performance_dashboard_healer_support()",
         "install_operations_console_focus()",
     )
     positions = [source.index(call) for call in ordered_calls]

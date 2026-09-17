@@ -218,13 +218,18 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         inputs=(
             "RecoveryHeavyStabilizedCandidateSnapshot",
             "PlayerBuild",
-            "RotationCandidateHealerRoleOutputService",
+            "RotationHealerCanonicalRoleOutputFactoryResult",
+            "RotationCandidateHealerMultiDemandRoleOutputService",
             "RotationPlanRuntimeBuildContextService",
         ),
-        outputs=("RotationCandidateRoleOutputEvidence",),
+        outputs=(
+            "RotationCandidateRoleOutputEvidence",
+            "RotationRuntimeBuildContextResolver",
+        ),
         dependencies=(
             "rotation.runtime.build_context_projection",
-            "rotation.healer.role_output",
+            "rotation.healer.multi_demand_role_output",
+            "rotation.healer.criteria_hard_gate",
         ),
         responsibilities=("rotation_healer_final_stabilized_runtime_role_output",),
         roles=("Healer",),
@@ -234,7 +239,9 @@ ROTATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Runtime context is bound only after recovery stabilization so moved casts and "
             "bar swaps are evaluated on the plan actually ranked. Snapshots without "
-            "authoritative runtime history retain the static healer-output path."
+            "authoritative runtime history retain the static healer-output path. The same "
+            "resolver is exposed to verified healer hard criteria so ranking and hard "
+            "obligations consume one finalized runtime context."
         ),
     ),
     ServiceDescriptor(

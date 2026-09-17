@@ -10,6 +10,7 @@ from tools.audit_system_architecture import (
     _monkey_patch_findings,
     _quarantine_import_findings,
     _repo_contract_findings,
+    _unowned_ui_patch_findings,
     audit_system_architecture,
 )
 
@@ -47,6 +48,28 @@ def install():
     assert patches and patches[0].code == "ui-class-monkey-patch"
     assert "Page.__init__" in patches[0].message
     assert fanout and fanout[0].code == "installer-fanout"
+
+
+def test_ui_patch_requires_a_non_test_runtime_import_owner(tmp_path) -> None:
+    patch_path = tmp_path / "ui" / "feature_support.py"
+    patch_path.parent.mkdir(parents=True)
+    patch_path.write_text("Page.__init__ = replacement\n", encoding="utf-8")
+    patch = _monkey_patch_findings(tmp_path, patch_path, ast.parse(patch_path.read_text()))
+
+    tests = tmp_path / "ui" / "tests"
+    tests.mkdir()
+    (tests / "test_feature.py").write_text(
+        "from ui.feature_support import install\n", encoding="utf-8"
+    )
+    unowned = _unowned_ui_patch_findings(tmp_path, patch)
+
+    assert len(unowned) == 1
+    assert unowned[0].code == "ui-class-monkey-patch-unowned"
+
+    app = tmp_path / "app.py"
+    app.write_text("from ui.feature_support import install\n", encoding="utf-8")
+
+    assert _unowned_ui_patch_findings(tmp_path, patch) == []
 
 
 def test_runtime_quarantine_imports_are_architecture_errors(tmp_path) -> None:
@@ -163,6 +186,7 @@ def test_current_repo_audit_confirms_resolved_authority_and_identity_debt() -> N
     assert "overlapping-plan-persistence" not in codes
     assert "runtime-local-data-path" not in codes
     assert "installer-fanout" not in codes
+    assert "ui-class-monkey-patch-unowned" not in codes
     assert not any(
         row.code == "ui-class-monkey-patch"
         and row.path == "ui/phase5_build_delete_support.py"

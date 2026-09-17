@@ -98,9 +98,16 @@ def test_healer_ui_is_role_gated_and_describes_evidence_boundaries() -> None:
 
 
 def test_healer_stack_is_installed_before_main_window_construction() -> None:
-    source = Path("app.py").read_text(encoding="utf-8")
-    assert "install_performance_healer_analysis_support()" in source
-    assert "install_performance_dashboard_healer_support()" in source
-    assert source.index("install_performance_healer_analysis_support()") < source.index(
+    app_source = Path("app.py").read_text(encoding="utf-8")
+    bootstrap_source = Path(
+        "ui/application_performance_dashboard_bootstrap.py"
+    ).read_text(encoding="utf-8")
+
+    assert "install_performance_healer_analysis_support()" in bootstrap_source
+    assert "install_performance_dashboard_healer_support()" in bootstrap_source
+    assert bootstrap_source.index(
+        "install_performance_healer_analysis_support()"
+    ) < bootstrap_source.index("install_performance_dashboard_healer_support()")
+    assert app_source.index("bootstrap_performance_dashboard_extensions()") < app_source.index(
         "from ui.main_window import MainWindow"
     )

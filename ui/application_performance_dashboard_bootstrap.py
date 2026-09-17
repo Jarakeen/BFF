@@ -17,6 +17,8 @@ def bootstrap_performance_dashboard_extensions() -> None:
     if _BOOTSTRAPPED:
         return
 
+    from services.performance_healer_analysis_support import install as install_performance_healer_analysis_support
+    install_performance_healer_analysis_support()
     from ui.performance_dashboard_polish_support import install as install_performance_dashboard_polish
     install_performance_dashboard_polish()
     from ui.performance_dashboard_overlay_support import install as install_performance_dashboard_overlay
@@ -33,6 +35,8 @@ def bootstrap_performance_dashboard_extensions() -> None:
     install_performance_dashboard_boss_activity()
     from ui.performance_dashboard_focus_support import install as install_performance_dashboard_focus
     install_performance_dashboard_focus()
+    from ui.performance_dashboard_healer_support import install as install_performance_dashboard_healer_support
+    install_performance_dashboard_healer_support()
     from ui.operations_console_focus_support import install as install_operations_console_focus
     install_operations_console_focus()
 
