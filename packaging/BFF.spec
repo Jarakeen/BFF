@@ -1,10 +1,13 @@
 from pathlib import Path
+import runpy
 
 from PyInstaller.building.splash import Splash
 
 # PyInstaller defines SPECPATH as the directory containing this spec file.
 # packaging/ lives directly under the project root, so one parent is enough.
 project_root = Path(SPECPATH).resolve().parent
+manifest = runpy.run_path(str(project_root / "packaging" / "release_manifest.py"))
+datas = manifest["pyinstaller_datas"](project_root)
 
 # Build a deliberately dark, static boot plate for the PyInstaller bootloader.
 # This appears before Python/Qt has finished starting, preventing the one-file
@@ -32,18 +35,9 @@ with boot_splash_path.open("wb") as handle:
     handle.write(f"P6\n{width} {height}\n255\n".encode("ascii"))
     handle.write(pixels)
 
-# Read-only UI resources are bundled into PyInstaller's extraction directory.
-# The friend package still places the working data/eso.db beside FoundryDock.exe,
-# but a second read-only seed is bundled so a frozen app can recover when a user
-# accidentally separates the EXE from its data folder.  engine.config only
-# provisions this seed when the external database is absent and never overwrites
-# an existing database.
-datas = [
-    (str(project_root / "assets"), "assets"),
-    (str(project_root / "bff.ico"), "."),
-    (str(project_root / "data" / "eso.db"), "_seed_data"),
-]
-
+# Runtime resources are supplied only by packaging/release_manifest.py. Do not
+# replace this with a whole-tree assets copy: the source repo intentionally keeps
+# retired themes, research art, and development-only files that must not ship.
 a = Analysis(
     [str(project_root / "app.py")],
     pathex=[str(project_root)],
