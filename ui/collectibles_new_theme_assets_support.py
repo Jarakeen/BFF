@@ -2,13 +2,14 @@ from __future__ import annotations
 
 """Collectibles assets for the additive Field Journal and Urban Wilderness themes.
 
-Field Journal retains its etched/recolored treatment. Urban Wilderness now consumes the
+Field Journal retains its etched/recolored treatment. Urban Wilderness consumes the
 approved dedicated badge sheets from assets/themes/bff/urban_wilderness/collectibles
 without recoloring them again or falling back to legacy badge art.
 """
 
 from pathlib import Path
 
+from PySide6.QtCore import QRect, Qt
 from PySide6.QtGui import QColor, QImage, QPixmap
 from PySide6.QtWidgets import QApplication
 
@@ -68,6 +69,66 @@ def _recolor_badge(pixmap: QPixmap | None, tone: str) -> QPixmap | None:
     return QPixmap.fromImage(image)
 
 
+def _trim_alpha(pixmap: QPixmap) -> QPixmap:
+    """Trim transparent padding without clipping the badge's cardinal ornaments."""
+    if pixmap.isNull():
+        return pixmap
+    image = pixmap.toImage()
+    left, top = image.width(), image.height()
+    right = bottom = -1
+    for y in range(image.height()):
+        for x in range(image.width()):
+            if image.pixelColor(x, y).alpha() <= 8:
+                continue
+            left = min(left, x)
+            top = min(top, y)
+            right = max(right, x)
+            bottom = max(bottom, y)
+    if right < left or bottom < top:
+        return pixmap
+    pad = 3
+    left = max(0, left - pad)
+    top = max(0, top - pad)
+    right = min(image.width() - 1, right + pad)
+    bottom = min(image.height() - 1, bottom + pad)
+    return pixmap.copy(QRect(left, top, right - left + 1, bottom - top + 1))
+
+
+def _prepare_city_badge(pixmap: QPixmap | None) -> QPixmap | None:
+    """Remove authored black sheet space and return only the collectible medallion.
+
+    The approved Urban Wilderness sheets were generated against pure black negative
+    space rather than alpha. Only near-black connected background is removed here;
+    dark navy/teal detail inside the medallions is deliberately preserved.
+    """
+    if pixmap is None or pixmap.isNull():
+        return None
+
+    image = pixmap.toImage().convertToFormat(QImage.Format.Format_ARGB32)
+    width = image.width()
+    height = image.height()
+    if width <= 0 or height <= 0:
+        return pixmap
+
+    # Flood-fill from the four corners so only exterior near-black space becomes
+    # transparent. This avoids punching holes through legitimate dark badge detail.
+    pending = [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
+    visited: set[tuple[int, int]] = set()
+    while pending:
+        x, y = pending.pop()
+        if (x, y) in visited or x < 0 or y < 0 or x >= width or y >= height:
+            continue
+        visited.add((x, y))
+        color = image.pixelColor(x, y)
+        if color.red() > 24 or color.green() > 24 or color.blue() > 24:
+            continue
+        color.setAlpha(0)
+        image.setPixelColor(x, y, color)
+        pending.extend(((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)))
+
+    return _trim_alpha(QPixmap.fromImage(image))
+
+
 def install() -> None:
     global _INSTALLED
     if _INSTALLED:
@@ -120,36 +181,36 @@ def install() -> None:
         for index, label in enumerate(labels)
     }
 
-    # Approved Urban Wilderness sheets. badges_1 is the 6x4 primary set;
-    # badges_2 supplies the alternate/specialized 3x3 identities.
+    # Approved Urban Wilderness sheets. No inset cropping: the generated badges
+    # use nearly the full grid cell and their cardinal ornaments must remain intact.
     city_badges = {
-        "Mounts": dashboard.SpriteRef("badges_1.png", 6, 4, 0, 0.03, 0.02),
-        "Pets": dashboard.SpriteRef("badges_1.png", 6, 4, 1, 0.03, 0.02),
-        "Armor Styles": dashboard.SpriteRef("badges_1.png", 6, 4, 2, 0.03, 0.02),
-        "Costumes": dashboard.SpriteRef("badges_1.png", 6, 4, 5, 0.03, 0.02),
-        "Personalities": dashboard.SpriteRef("badges_1.png", 6, 4, 6, 0.03, 0.02),
-        "Emotes": dashboard.SpriteRef("badges_1.png", 6, 4, 7, 0.03, 0.02),
-        "Mementos": dashboard.SpriteRef("badges_1.png", 6, 4, 9, 0.03, 0.02),
-        "Furnishings": dashboard.SpriteRef("badges_1.png", 6, 4, 10, 0.03, 0.02),
-        "Assistants": dashboard.SpriteRef("badges_1.png", 6, 4, 11, 0.03, 0.02),
-        "Companions": dashboard.SpriteRef("badges_1.png", 6, 4, 12, 0.03, 0.02),
-        "Body Markings": dashboard.SpriteRef("badges_1.png", 6, 4, 13, 0.03, 0.02),
-        "Head Markings": dashboard.SpriteRef("badges_1.png", 6, 4, 14, 0.03, 0.02),
-        "Hair": dashboard.SpriteRef("badges_1.png", 6, 4, 15, 0.03, 0.02),
-        "Hats": dashboard.SpriteRef("badges_1.png", 6, 4, 16, 0.03, 0.02),
-        "Facial Hair / Horns": dashboard.SpriteRef("badges_1.png", 6, 4, 18, 0.03, 0.02),
-        "Piercing / Jewelry": dashboard.SpriteRef("badges_1.png", 6, 4, 19, 0.03, 0.02),
-        "Tools & Upgrades": dashboard.SpriteRef("badges_1.png", 6, 4, 23, 0.03, 0.02),
-        "Customized Actions": dashboard.SpriteRef("badges_1.png", 6, 4, 21, 0.03, 0.02),
-        "Skins": dashboard.SpriteRef("badges_2.png", 3, 3, 0, 0.02, 0.02),
-        "Weapon Styles": dashboard.SpriteRef("badges_2.png", 3, 3, 1, 0.02, 0.02),
-        "Houses": dashboard.SpriteRef("badges_2.png", 3, 3, 2, 0.02, 0.02),
-        "Polymorphs": dashboard.SpriteRef("badges_2.png", 3, 3, 3, 0.02, 0.02),
-        "Facial Accessories": dashboard.SpriteRef("badges_2.png", 3, 3, 4, 0.02, 0.02),
-        "Fragments": dashboard.SpriteRef("badges_2.png", 3, 3, 5, 0.02, 0.02),
-        "Motifs": dashboard.SpriteRef("badges_2.png", 3, 3, 6, 0.02, 0.02),
-        "Antiquities": dashboard.SpriteRef("badges_2.png", 3, 3, 7, 0.02, 0.02),
-        "Lorebooks": dashboard.SpriteRef("badges_2.png", 3, 3, 8, 0.02, 0.02),
+        "Mounts": dashboard.SpriteRef("badges_1.png", 6, 4, 0),
+        "Pets": dashboard.SpriteRef("badges_1.png", 6, 4, 1),
+        "Armor Styles": dashboard.SpriteRef("badges_1.png", 6, 4, 2),
+        "Costumes": dashboard.SpriteRef("badges_1.png", 6, 4, 5),
+        "Personalities": dashboard.SpriteRef("badges_1.png", 6, 4, 6),
+        "Emotes": dashboard.SpriteRef("badges_1.png", 6, 4, 7),
+        "Mementos": dashboard.SpriteRef("badges_1.png", 6, 4, 9),
+        "Furnishings": dashboard.SpriteRef("badges_1.png", 6, 4, 10),
+        "Assistants": dashboard.SpriteRef("badges_1.png", 6, 4, 11),
+        "Companions": dashboard.SpriteRef("badges_1.png", 6, 4, 12),
+        "Body Markings": dashboard.SpriteRef("badges_1.png", 6, 4, 13),
+        "Head Markings": dashboard.SpriteRef("badges_1.png", 6, 4, 14),
+        "Hair": dashboard.SpriteRef("badges_1.png", 6, 4, 15),
+        "Hats": dashboard.SpriteRef("badges_1.png", 6, 4, 16),
+        "Facial Hair / Horns": dashboard.SpriteRef("badges_1.png", 6, 4, 18),
+        "Piercing / Jewelry": dashboard.SpriteRef("badges_1.png", 6, 4, 19),
+        "Tools & Upgrades": dashboard.SpriteRef("badges_1.png", 6, 4, 23),
+        "Customized Actions": dashboard.SpriteRef("badges_1.png", 6, 4, 21),
+        "Skins": dashboard.SpriteRef("badges_2.png", 3, 3, 0),
+        "Weapon Styles": dashboard.SpriteRef("badges_2.png", 3, 3, 1),
+        "Houses": dashboard.SpriteRef("badges_2.png", 3, 3, 2),
+        "Polymorphs": dashboard.SpriteRef("badges_2.png", 3, 3, 3),
+        "Facial Accessories": dashboard.SpriteRef("badges_2.png", 3, 3, 4),
+        "Fragments": dashboard.SpriteRef("badges_2.png", 3, 3, 5),
+        "Motifs": dashboard.SpriteRef("badges_2.png", 3, 3, 6),
+        "Antiquities": dashboard.SpriteRef("badges_2.png", 3, 3, 7),
+        "Lorebooks": dashboard.SpriteRef("badges_2.png", 3, 3, 8),
     }
 
     original_active_theme = dashboard._active_theme
@@ -184,7 +245,8 @@ def install() -> None:
         path = root / ref.filename
         if not path.is_file():
             return None
-        return dashboard._sheet_for(theme, ref).cell(ref.index)
+        source = dashboard._sheet_for(theme, ref).cell(ref.index)
+        return _prepare_city_badge(source) if theme.key == city_theme.key else source
 
     def field_etched_badge(label: str):
         """Use the canonical BFF PNG badge assets; never decode the damaged JPEG sheet."""
@@ -196,8 +258,8 @@ def install() -> None:
             return _recolor_badge(source, _tone_for(label, labels, _FIELD_BADGE_TONES))
 
         if theme.key == city_theme.key:
-            # Use the approved art exactly as authored. Missing art falls back to
-            # the card's normal glyph, never to an old collectible badge family.
+            # Use the approved art exactly as authored after removing only the
+            # generated black sheet background. Never fall back to old badge art.
             return dedicated_badge(city_theme, city_badges.get(label))
 
         return original_badge_sprite(theme, label)
