@@ -18,15 +18,12 @@ RELEASE_HIDDEN_ROUTES: frozenset[str] = frozenset(
         "rotations",
         "extreme_optimization",
         "console:6",  # Optimizer Adviser / transition workspace
-        "collectibles",
-        "stickerbook",
     }
 )
 
-# Prefix routes cover Collectibles category deep-links without enumerating every type.
-RELEASE_HIDDEN_ROUTE_PREFIXES: tuple[str, ...] = (
-    "collectibles:",
-)
+# No currently approved release feature needs a hidden route prefix. Keep the tuple
+# as the policy hook for future families of development-only deep links.
+RELEASE_HIDDEN_ROUTE_PREFIXES: tuple[str, ...] = ()
 
 
 def release_mode() -> bool:
