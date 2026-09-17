@@ -152,6 +152,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - The Phase 14 library reasserts the approved library-left / inspector-right split after legacy Builds decorators finish, restores the selected-build dossier when older wrappers detach it, and presents only one visible New Build entry while continuing to route through the canonical Easy Mode creator
 - Phase 14 Build polish moves the single **Create New Build** action beside Help as a solid-gold primary control, adds class icons and colorblind-safe role icons, decorates equipment/food/potion rows with the canonical icon library, and restores canonical ESO ability artwork to the Skills inspector cards
 - Heavy canonical editors remain lazy from the command-center view: the outer editor tabs are hidden while browsing and appear only when Edit, Character Progression, or Scribed Skills is explicitly opened
+- Build Edit remains the canonical inline editor, but **Save** and **Cancel** return directly to the Phase 14 Builds library/inspector instead of leaving the user stranded on the legacy Edit workspace
 
 ---
 
@@ -166,6 +167,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Build skills, gear procs, team duties, pressure windows, and advanced rules are presented as compact obligation summaries; unsupported evidence remains explicitly unresolved instead of being fabricated
 - Timeline, Uptime & Resources, Explanations, Compare, and Save & Export are exposed as an icon-led result navigation row beneath the setup cards and remain disabled until a generated plan exists; the canonical result tabs stay available after entering a result view
 - The Phase 14 presentation preserves the hidden legacy Builder shell while canonical refresh helpers still own references into it, preventing deleted-Qt-label failures during saved-build refresh without duplicating planner state
+- Context-chip polish is idempotent across repeated page visits, so reopening Rotation Builder does not stack duplicate Character/Build/Trial/Boss/Difficulty captions
 - **Generate Rotation** remains the single dominant setup action; save/export controls stay in the generated-result workflow
 
 ---
