@@ -12,6 +12,7 @@ RUNTIME_ASSET_DATAS: tuple[tuple[str, str], ...] = (
     ("assets/AbilityIcons", "assets/AbilityIcons"),
     ("assets/icons", "assets/icons"),
     ("assets/logos/BFF_logo.png", "assets/logos"),
+    ("assets/raid_plans/trial_banners", "assets/raid_plans/trial_banners"),
     ("assets/themes/bff/foundry.qss", "assets/themes/bff"),
     ("assets/themes/bff/urban_wilderness", "assets/themes/bff/urban_wilderness"),
     ("assets/themes/bff/field_journal/roster", "assets/themes/bff/field_journal/roster"),
