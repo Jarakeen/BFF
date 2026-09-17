@@ -8,90 +8,44 @@ summary cards across the top, then either the dashboard or the selected roster d
 workspace directly underneath. No modal editor windows are used on this surface.
 
 Roster visual contract:
-- decorative city/raven filler art is not used;
-- full-color artwork is never placed on parchment cards;
+- summary cards use the dedicated teal/bronze Roster medallions without ordinals;
 - decorative assets never determine page/card geometry;
 - Players always retains a visible people table;
-- Character details remain a compact profile surface rather than another editor maze.
+- Character details remain a compact human-facing profile surface;
+- canonical database IDs stay out of the visible profile card.
 """
 
-from pathlib import Path
-
-from PySide6.QtCore import QRect, QSize, Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
-    QFrame,
     QHBoxLayout,
     QHeaderView,
     QLabel,
-    QPushButton,
     QSizePolicy,
     QSplitter,
     QStackedWidget,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from engine.config import get_resource_path
 from ui.components.foundry_card import FoundryCard
 from ui.raid_roster_workspace_page import RaidRosterWorkspacePage, _clean
 from ui.themed_raid_roster_workspace_page import ThemedRaidRosterWorkspacePage
 from ui.urban_wilderness_accessibility_polish import install as install_urban_wilderness_accessibility_polish
-from ui.ux_icons import icon, set_button_icon
+from ui.ux_icons import icon
 from widgets.roster_actions import RosterActions
 from widgets.roster_record import RosterRecord
 from widgets.roster_table import RosterTable
 
 
 _BADGES = {
-    "players": "users",
-    "characters": "character",
-    "teams": "users",
-    "availability": "stopwatch",
-    "recruitment": "person",
-    "archive": "archive",
+    "players": "roster-players",
+    "characters": "roster-characters",
+    "teams": "roster-teams",
+    "availability": "roster-availability",
+    "recruitment": "roster-recruitment",
+    "archive": "roster-archive",
 }
-
-
-def _trim_transparent(pixmap: QPixmap) -> QPixmap:
-    """Trim transparent sprite padding so collectible numbers read at card scale."""
-    if pixmap.isNull():
-        return pixmap
-    image = pixmap.toImage()
-    left, top = image.width(), image.height()
-    right = bottom = -1
-    for y in range(image.height()):
-        for x in range(image.width()):
-            if image.pixelColor(x, y).alpha() <= 16:
-                continue
-            left = min(left, x)
-            top = min(top, y)
-            right = max(right, x)
-            bottom = max(bottom, y)
-    if right < left or bottom < top:
-        return pixmap
-    padding = max(1, min(image.width(), image.height()) // 40)
-    left = max(0, left - padding)
-    top = max(0, top - padding)
-    right = min(image.width() - 1, right + padding)
-    bottom = min(image.height() - 1, bottom + padding)
-    return pixmap.copy(QRect(left, top, right - left + 1, bottom - top + 1))
-
-
-def _number_sprite(index: int) -> QPixmap:
-    """Return one cropped numbered Collectibles sprite for the Roster card corner."""
-    path = get_resource_path("assets", "themes", "bff", "collectibles", "numbers.png")
-    sheet = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
-    if sheet.isNull() or not 0 <= index < 24:
-        return QPixmap()
-
-    columns, rows = 6, 4
-    cell_width = max(1, sheet.width() // columns)
-    cell_height = max(1, sheet.height() // rows)
-    column = index % columns
-    row = index // columns
-    sprite = sheet.copy(QRect(column * cell_width, row * cell_height, cell_width, cell_height))
-    return _trim_transparent(sprite)
 
 
 class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
@@ -140,12 +94,11 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         player_layout.addWidget(self.actions)
 
         self._install_detail_dialog("players", "Players", player_page, (1180, 760))
-        self._install_detail_dialog(
-            "characters",
-            "Characters",
-            RaidRosterWorkspacePage._build_characters_tab(self),
-            (1180, 760),
-        )
+
+        character_page = RaidRosterWorkspacePage._build_characters_tab(self)
+        self._install_character_profile_shell()
+        self._install_detail_dialog("characters", "Characters", character_page, (1180, 760))
+
         self._install_detail_dialog(
             "teams", "Teams", RaidRosterWorkspacePage._build_teams_tab(self), (1120, 760)
         )
@@ -165,6 +118,52 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
             "archive", "Archive", RaidRosterWorkspacePage._build_archive_tab(self), (1050, 680)
         )
 
+    def _install_character_profile_shell(self) -> None:
+        """Give the nested character browser a stable portrait slot and profile composition."""
+        if not hasattr(self, "character_detail") or not hasattr(self, "character_detail_body"):
+            return
+
+        layout = self.character_detail.body_layout
+        layout.removeWidget(self.character_detail_body)
+
+        profile = QWidget()
+        profile.setProperty("rosterCharacterProfile", True)
+        profile_layout = QHBoxLayout(profile)
+        profile_layout.setContentsMargins(0, 0, 0, 0)
+        profile_layout.setSpacing(12)
+
+        self.character_detail_avatar = QLabel()
+        self.character_detail_avatar.setProperty("rosterProfileImage", True)
+        self.character_detail_avatar.setFixedSize(92, 92)
+        self.character_detail_avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.character_detail_avatar.setToolTip(
+            "Character portrait. Default themed portraits can be assigned here later."
+        )
+        self.character_detail_avatar.setStyleSheet(
+            "background:#0A1D22; border:2px solid #4D8291; border-radius:46px; padding:8px;"
+        )
+        profile_layout.addWidget(self.character_detail_avatar, 0, Qt.AlignmentFlag.AlignTop)
+
+        self.character_detail_body.setWordWrap(True)
+        profile_layout.addWidget(self.character_detail_body, 1)
+        layout.insertWidget(0, profile)
+        self._set_profile_avatar("character")
+
+    def _set_profile_avatar(self, kind: str) -> None:
+        avatar = getattr(self, "character_detail_avatar", None)
+        if avatar is None:
+            return
+        icon_name = {
+            "player": "person",
+            "character": "character",
+            "build": "builds",
+        }.get(kind, "character")
+        value = icon(icon_name)
+        avatar.clear()
+        if not value.isNull():
+            avatar.setPixmap(value.pixmap(70, 70))
+            avatar.setProperty("semanticIconName", icon_name)
+
     def refresh(self) -> None:
         super().refresh()
         if hasattr(self, "player_detail_table"):
@@ -178,7 +177,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
     # ------------------------------------------------------------------
 
     def _remove_legacy_city_art(self) -> None:
-        """Remove the raven/street filler panels entirely instead of swapping pictures."""
+        """Retire the two old roster filler panels without affecting page geometry."""
         for attribute in ("quote_art", "team_art"):
             old = getattr(self, attribute, None)
             if old is None:
@@ -196,7 +195,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self.header.subtitle.setText("People. Characters. Teams. Ready for what's next.")
         self.header._set_icon("feather")
 
-        for ordinal, (key, card) in enumerate(self.metric_cards.items()):
+        for key, card in self.metric_cards.items():
             card.setMinimumWidth(0)
             card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             card.setMinimumHeight(132)
@@ -212,12 +211,13 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
             )
             if badge is not None:
                 badge.clear()
-                badge.setFixedSize(QSize(58, 58))
+                badge.setFixedSize(QSize(72, 72))
                 badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                badge.setPixmap(icon(_BADGES.get(key, "compass")).pixmap(44, 44))
+                badge.setPixmap(icon(_BADGES.get(key, "compass")).pixmap(68, 68))
                 badge.setProperty("rosterMetricBadge", True)
 
-            number = next(
+            # The medallion itself owns the identity now. No duplicate 1–6 ordinal.
+            ordinal = next(
                 (
                     label
                     for label in card.findChildren(QLabel)
@@ -225,29 +225,10 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
                 ),
                 None,
             )
-            if number is not None:
-                sprite = _number_sprite(ordinal)
-                number.setText("")
-                number.setFixedSize(QSize(46, 46))
-                number.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                number.setStyleSheet(
-                    "background: transparent; border: none; border-radius: 0; padding: 0;"
-                )
-                if not sprite.isNull():
-                    number.setPixmap(
-                        sprite.scaled(
-                            42,
-                            42,
-                            Qt.AspectRatioMode.KeepAspectRatio,
-                            Qt.TransformationMode.SmoothTransformation,
-                        )
-                    )
-                else:
-                    number.setText(str(ordinal + 1))
-                    number.setStyleSheet(
-                        "background: transparent; border: none; border-radius: 0; padding: 0; "
-                        "color: #C49A5A; font-size: 22px; font-weight: 700;"
-                    )
+            if ordinal is not None:
+                ordinal.clear()
+                ordinal.hide()
+                ordinal.setFixedSize(QSize(0, 0))
 
         if hasattr(self, "table"):
             self._polish_roster_table(self.table)
@@ -274,9 +255,10 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
     # ------------------------------------------------------------------
 
     def _show_character_detail(self, item, _previous=None) -> None:
-        """Present player/character/build identity as a compact profile card."""
+        """Present player/character/build identity as a compact human-facing profile card."""
         if item is None:
             self.character_detail.set_title("Character")
+            self._set_profile_avatar("character")
             self.character_detail_body.setText("Select a player, character, or build.")
             return
 
@@ -288,6 +270,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         kind, identity = data
         catalog = self.build_library.canonical.catalog_service
         self.character_detail_body.setTextFormat(Qt.TextFormat.RichText)
+        self._set_profile_avatar(kind)
 
         if kind == "player":
             player = catalog.get_player(identity) or {}
@@ -306,7 +289,6 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
                         ("Characters", str(len(characters))),
                         ("Teams", _clean(roster.Team) if roster else "Not assigned"),
                         ("Status", _clean(roster.Status) if roster else "Active"),
-                        ("Canonical ID", identity),
                     ),
                 )
             )
@@ -338,7 +320,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
                         ("Race", _clean(character.get("race")) or "Not set"),
                         ("Role", role),
                         ("Teams", _clean(roster.Team) if roster else "Not assigned"),
-                        ("Status", _clean(roster.Status) if roster else "Active"),
+                        ("Readiness", _clean(roster.Status) if roster else "Active"),
                         ("Saved builds", str(len(builds))),
                     ),
                 )
@@ -355,10 +337,10 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
                 heading=name,
                 subheading=f"Character: {_clean(character.get('name')) or 'Unknown'}",
                 rows=(
+                    ("Profile", "Saved Build"),
                     ("Role", _clean(payload.get("Role")) or "Not set"),
                     ("Class", _clean(character.get("eso_class")) or "Not set"),
                     ("Race", _clean(character.get("race")) or "Not set"),
-                    ("Build ID", identity),
                 ),
             )
         )
@@ -371,12 +353,12 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         subheading: str = "",
     ) -> str:
         pieces = [
-            '<div style="padding:8px 4px;">',
+            '<div style="padding:6px 2px;">',
             f'<div style="font-size:20px; font-weight:700; margin-bottom:2px;">{heading}</div>',
         ]
         if subheading:
             pieces.append(
-                f'<div style="opacity:.78; margin-bottom:12px;">{subheading}</div>'
+                f'<div style="opacity:.78; margin-bottom:10px;">{subheading}</div>'
             )
         pieces.append('<table cellspacing="0" cellpadding="6" width="100%">')
         for label, value in rows:
@@ -421,11 +403,21 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
             shell = QWidget()
             shell_layout = QVBoxLayout(shell)
             shell_layout.setContentsMargins(0, 0, 0, 0)
-            shell_layout.setSpacing(8)
+            shell_layout.setSpacing(4)
 
             nav = QHBoxLayout()
-            back = QPushButton("Back to Roster")
-            set_button_icon(back, "back")
+            nav.setContentsMargins(2, 0, 0, 0)
+            back = QToolButton()
+            back.setProperty("rosterBackButton", True)
+            back.setToolTip("Back to Roster")
+            back.setAutoRaise(True)
+            back.setFixedSize(34, 30)
+            back.setIcon(icon("roster-back"))
+            back.setIconSize(QSize(28, 28))
+            back.setStyleSheet(
+                "QToolButton { background: transparent; border: none; padding: 0; } "
+                "QToolButton:hover { background: rgba(200,164,106,28); border-radius: 4px; }"
+            )
             back.clicked.connect(self._show_dashboard)
             nav.addWidget(back)
             nav.addStretch(1)
