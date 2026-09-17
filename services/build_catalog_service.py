@@ -427,6 +427,25 @@ class BuildCatalogService:
                 return copy.deepcopy(character)
         return None
 
+    def set_character_avatar(
+        self,
+        *,
+        character_id: str,
+        avatar_path: str,
+    ) -> dict[str, Any] | None:
+        """Persist one character-owned avatar reference without touching eso.db."""
+        normalized_path = str(avatar_path or "").strip()
+        catalog = self.load()
+        for index, character in enumerate(catalog["characters"]):
+            if character.get("character_id") != character_id:
+                continue
+            updated = copy.deepcopy(character)
+            updated["avatar_path"] = normalized_path
+            catalog["characters"][index] = updated
+            self.save(catalog)
+            return copy.deepcopy(updated)
+        return None
+
     def set_owned_skill_lines(
         self,
         *,
