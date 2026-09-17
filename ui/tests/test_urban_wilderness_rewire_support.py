@@ -12,7 +12,8 @@ def test_roster_summary_cards_open_embedded_workspaces() -> None:
 
     assert "QStackedWidget" in source
     assert "_embed_detail_workspaces" in source
-    assert 'back = QPushButton("Back to Roster")' in source
+    assert 'QPushButton("Back to Roster")' not in source
+    assert 'set_button_icon(back, "back")' in source
     assert "self._embedded_stack.setCurrentIndex(index)" in source
     assert "super()._show_detail(key)" in source
 
