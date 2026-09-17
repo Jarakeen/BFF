@@ -68,24 +68,32 @@ def test_readiness_note_art_is_fixed_field_journal_sketch_and_status_is_not_colo
     assert "self.setFixedHeight(150)" in source
 
 
-def test_urban_collectibles_use_clean_large_approved_badge_sheets() -> None:
+def test_urban_collectibles_use_clean_approved_badge_sheets() -> None:
     assets = _source("ui/collectibles_new_theme_assets_support.py")
     presentation = _source("ui/collectibles_badge_presentation_support.py")
+    reference = _source("ui/collectibles_reference_dashboard_support.py")
     theme = _source("ui/rylo_theme_support.py")
 
     assert '"urban_wilderness", "collectibles"' in assets
     assert 'dashboard.SpriteRef("badges_1.png", 6, 4' in assets
     assert 'dashboard.SpriteRef("badges_2.png", 3, 3' in assets
+    assert 'dashboard.SpriteRef("badges_3.png", 4, 1' in assets
     assert "def _prepare_city_badge" in assets
     assert "Flood-fill from the four corners" in assets
+    assert "def _keep_center_component" in assets
+    assert "image = _keep_center_component(image)" in assets
     assert "return dedicated_badge(city_theme, city_badges.get(label))" in assets
 
-    assert "def prepare_city_badge(pixmap):" in presentation
-    assert "prepared.width()" not in presentation
-    assert "image.width() * 0.075" in presentation
-    assert "label.setFixedSize(132, 132)" in presentation
+    assert '"Furnishing Plans": dashboard.SpriteRef("badges_3.png", 4, 1, 0)' in assets
+    assert '"Recipes": dashboard.SpriteRef("badges_3.png", 4, 1, 1)' in assets
+    assert '"Rumors": dashboard.SpriteRef("badges_3.png", 4, 1, 2)' in assets
+    assert '"Favors": dashboard.SpriteRef("badges_3.png", 4, 1, 3)' in assets
+    assert '"Rumors" not in existing_routes' in reference
+    assert '"Favors" not in existing_routes' in reference
+
+    assert "label.setFixedSize(90, 90)" in presentation
     assert 'label.setStyleSheet("background: transparent; border: none; padding: 0;")' in presentation
-    assert "original_set_sprite(label, pixmap, 128)" in presentation
+    assert "original_set_sprite(label, pixmap, 86)" in presentation
     assert "dashboard.ProgressTile._set_sprite = staticmethod(set_sprite)" in presentation
     assert "install_collectibles_badge_presentation()" in theme
 
