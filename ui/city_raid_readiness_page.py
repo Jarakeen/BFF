@@ -48,7 +48,11 @@ def _unknown() -> str:
 
 
 class _ReadinessArt(QLabel):
-    """Static low-stimulation fantasy art; no timers, flashing, or animated effects."""
+    """Fixed-height field-journal sketch for parchment cards.
+
+    Parchment cards deliberately use the monochrome/pencil field-journal family only.
+    Full-color city artwork belongs on dark surfaces and never controls card geometry.
+    """
 
     def __init__(self, filename: str, fallback: str, parent=None) -> None:
         super().__init__(parent)
@@ -56,30 +60,26 @@ class _ReadinessArt(QLabel):
         self.fallback = fallback
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setWordWrap(True)
-        self.setMinimumHeight(125)
-        self.setMaximumHeight(175)
+        self.setFixedHeight(150)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.setProperty("readinessNoteArt", True)
         self._refresh_pixmap()
 
     def _refresh_pixmap(self) -> None:
-        # Use the verified WebP artwork. The old field-journal JPEG copies emit
-        # repeated Qt decoder warnings on some systems and are no longer loaded.
         path = get_resource_path(
-            "assets", "themes", "bff", "city_night", "roster", self.filename
+            "assets", "themes", "bff", "field_journal", "roster", self.filename
         )
         pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
         self.clear()
         if pixmap.isNull():
             self.setText(self.fallback)
+            self.setToolTip("")
             return
-        width = max(260, self.width() or 340)
-        height = max(110, self.height() or 145)
         self.setPixmap(
             pixmap.scaled(
-                width,
-                height,
-                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                max(240, self.width() or 320),
+                138,
+                Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             )
         )
@@ -148,7 +148,7 @@ class CityRaidReadinessPage(FoundryPage):
         field_note.setProperty("parchment", True)
         field_note.addWidget(
             _ReadinessArt(
-                "roster_people.webp",
+                "roster_people.jpg",
                 "Ready means proven or explicitly confirmed. Unknown is allowed to stay unknown.",
             )
         )
@@ -214,7 +214,7 @@ class CityRaidReadinessPage(FoundryPage):
         fun_note.setProperty("parchment", True)
         fun_note.addWidget(
             _ReadinessArt(
-                "roster_team.webp",
+                "roster_team.jpg",
                 "A ready group is just panic that has been alphabetized.",
             )
         )
