@@ -6,9 +6,13 @@ def test_collectibles_use_dedicated_urban_wilderness_sheets_without_legacy_fallb
 
     assert 'dashboard.SpriteRef("badges_1.png", 6, 4' in source
     assert 'dashboard.SpriteRef("badges_2.png", 3, 3' in source
+    assert 'dashboard.SpriteRef("badges_3.png", 4, 1' in source
     assert '"urban_wilderness", "collectibles"' in source
     assert "return dedicated_badge(city_theme, city_badges.get(label))" in source
-    assert "Never fall back to old badge art" in source
+    assert '"Furnishing Plans": dashboard.SpriteRef("badges_3.png", 4, 1, 0)' in source
+    assert '"Recipes": dashboard.SpriteRef("badges_3.png", 4, 1, 1)' in source
+    assert '"Rumors": dashboard.SpriteRef("badges_3.png", 4, 1, 2)' in source
+    assert '"Favors": dashboard.SpriteRef("badges_3.png", 4, 1, 3)' in source
 
 
 def test_collectible_palette_uses_steel_amber_not_red_green_status_language() -> None:
@@ -20,13 +24,15 @@ def test_collectible_palette_uses_steel_amber_not_red_green_status_language() ->
     assert "_CITY_BADGE_TONES" not in source
 
 
-def test_collectible_badges_are_large_frameless_and_trim_sheet_spill() -> None:
-    source = Path("ui/collectibles_badge_presentation_support.py").read_text(encoding="utf-8")
+def test_collectible_badges_are_consistent_frameless_and_remove_sheet_spill() -> None:
+    assets = Path("ui/collectibles_new_theme_assets_support.py").read_text(encoding="utf-8")
+    presentation = Path("ui/collectibles_badge_presentation_support.py").read_text(encoding="utf-8")
 
-    assert "image.width() * 0.075" in source
-    assert "label.setFixedSize(132, 132)" in source
-    assert "original_set_sprite(label, pixmap, 128)" in source
-    assert 'background: transparent; border: none; padding: 0;' in source
+    assert "def _keep_center_component" in assets
+    assert "image = _keep_center_component(image)" in assets
+    assert "label.setFixedSize(90, 90)" in presentation
+    assert "original_set_sprite(label, pixmap, 86)" in presentation
+    assert 'background: transparent; border: none; padding: 0;' in presentation
 
 
 def test_roster_dashboard_uses_dedicated_theme_assets() -> None:
