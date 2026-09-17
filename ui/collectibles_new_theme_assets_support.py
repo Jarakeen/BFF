@@ -165,15 +165,15 @@ def install() -> None:
         return dashboard._sheet_for(theme, ref).cell(ref.index)
 
     def field_etched_badge(label: str):
-        """Canonical 6x4 etched badge sheet used as the Urban recolor source."""
-        ref = field_badges.get(label)
-        return dedicated_badge(field_theme, ref) if ref else None
+        """Use the canonical BFF PNG badge assets; never decode the damaged JPEG sheet."""
+        return original_badge_sprite(dashboard.BFF_THEME, label)
 
     def badge_sprite(theme, label: str):
         if theme.key == field_theme.key:
             source = field_etched_badge(label)
             if source is None or source.isNull():
-                source = original_badge_sprite(dashboard.BFF_THEME, label)
+                ref = city_badges.get(label)
+                source = dedicated_badge(city_theme, ref) if ref else None
             return _recolor_badge(source, _tone_for(label, labels, _FIELD_BADGE_TONES))
 
         if theme.key == city_theme.key:
