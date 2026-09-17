@@ -17,13 +17,24 @@ def _source(module) -> str:
 def test_build_visual_target_keeps_one_visible_new_build_action_and_right_inspector() -> None:
     source = _source(phase14_build_visual_target_support)
 
-    assert "original_wire(page)" in source
+    assert "def apply_phase14_build_visual_target(page) -> None:" in source
     assert 'source = getattr(page, "create_character_button", None)' in source
     assert "source.hide()" in source
     assert "parent.hide()" in source
-    assert "detail.show()" in source
-    assert "detail.setMinimumWidth(500)" in source
-    assert "splitter.setSizes([820, 620])" in source
+    assert "inspector.show()" in source
+    assert "inspector.setMinimumWidth(500)" in source
+    assert "splitter.setChildrenCollapsible(False)" in source
+    assert "splitter.setSizes([900, 650])" in source
+
+
+def test_build_visual_target_runs_after_actual_themed_build_ui_chain() -> None:
+    source = _source(phase14_build_visual_target_support)
+
+    assert "from ui.themed_builds_page import BuildsPage as ThemedBuildsPage" in source
+    assert "original_themed_build_ui = ThemedBuildsPage._build_ui" in source
+    assert "def build_themed_with_final_visual_target(self):" in source
+    assert "apply_phase14_build_visual_target(self)" in source
+    assert "ThemedBuildsPage._build_ui = build_themed_with_final_visual_target" in source
 
 
 def test_build_lifecycle_repair_restores_inspector_after_legacy_wrappers() -> None:
@@ -49,7 +60,7 @@ def test_rotation_visual_target_moves_results_below_builder_and_hides_team_chip(
         assert f'"{icon_name}"' in source
     assert 'get("TEAM")' in source
     assert "team_label.parentWidget().hide()" in source
-    assert "tab_bar.setVisible(False)" in source
+    assert "tab_bar.setVisible(tabs.currentIndex() != 0)" in source
     assert "layout.addWidget(nav)" in source
 
 
@@ -59,6 +70,16 @@ def test_rotation_visual_target_preserves_legacy_builder_widget_lifetime() -> No
     assert "page._phase14_preserved_legacy_builder = legacy_builder" in source
     assert "legacy_builder.deleteLater = legacy_builder.hide" in source
     assert "layout_support.install_phase14_rotation_command_center = install_target" in source
+
+
+def test_rotation_visual_target_reasserts_at_real_page_show_boundary() -> None:
+    source = _source(phase14_rotation_visual_target_support)
+
+    assert "from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage" in source
+    assert "original_show_event = CanonicalRotationDashboardPage.showEvent" in source
+    assert "def show_event_with_visual_target(self, event) -> None:" in source
+    assert "apply_phase14_rotation_visual_target(self)" in source
+    assert "CanonicalRotationDashboardPage.showEvent = show_event_with_visual_target" in source
 
 
 def test_visual_target_support_is_composed_before_page_construction() -> None:
