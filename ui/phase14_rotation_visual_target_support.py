@@ -120,9 +120,11 @@ def install() -> None:
 
     from ui import phase14_rotation_command_center_support as command_center
     from ui import rotation_dashboard_layout_support as layout_support
+    from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage
 
     original_install = command_center.install_phase14_rotation_command_center
     original_enable = command_center._enable_result_tabs
+    original_show_event = CanonicalRotationDashboardPage.showEvent
 
     def enable_result_tabs_with_nav(page, enabled: bool) -> None:
         original_enable(page, enabled)
@@ -149,11 +151,17 @@ def install() -> None:
         original_install(page)
         apply_phase14_rotation_visual_target(page)
 
+    def show_event_with_visual_target(self, event) -> None:
+        original_show_event(self, event)
+        # Reassert presentation at the real runtime boundary. This deliberately
+        # avoids relying on import/monkeypatch ordering during constructor setup.
+        apply_phase14_rotation_visual_target(self)
+
     command_center.install_phase14_rotation_command_center = install_target
     # rotation_dashboard_layout_support imported the function directly, so replace
-    # that bound module symbol too. The canonical page also reapplies the visual target
-    # after layout installation, making this robust against import/decorator ordering.
+    # that bound module symbol too. showEvent is the final safety net after construction.
     layout_support.install_phase14_rotation_command_center = install_target
+    CanonicalRotationDashboardPage.showEvent = show_event_with_visual_target
     _INSTALLED = True
 
 
