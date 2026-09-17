@@ -10,6 +10,7 @@ audits consume this manifest so only explicitly approved runtime assets are bund
 # (source path relative to project root, destination path inside the frozen app)
 RUNTIME_ASSET_DATAS: tuple[tuple[str, str], ...] = (
     ("assets/AbilityIcons", "assets/AbilityIcons"),
+    ("assets/avatar", "assets/avatar"),
     ("assets/icons", "assets/icons"),
     ("assets/logos/BFF_logo.png", "assets/logos"),
     ("assets/raid_plans/trial_banners", "assets/raid_plans/trial_banners"),
