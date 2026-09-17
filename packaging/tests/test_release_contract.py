@@ -116,6 +116,19 @@ def test_release_build_supports_nested_runtime_reference_data() -> None:
     assert "New-Item -ItemType Directory -Force -Path $UpdateDestinationParent" in build
 
 
+def test_release_includes_canonical_encounter_runtime_directories() -> None:
+    manifest = _load_manifest()
+    build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
+    audit = (ROOT / "tools" / "audit_release_candidate.py").read_text(encoding="utf-8")
+
+    runtime_directories = set(manifest.RUNTIME_EXTERNAL_DATA_DIRECTORIES)
+    assert runtime_directories == {"eso_info/bosses", "encounter_evidence"}
+    assert "RUNTIME_EXTERNAL_DATA_DIRECTORIES" in build
+    assert "Copy-Item $Source $Destination -Recurse -Force" in build
+    assert "RUNTIME_EXTERNAL_DATA_DIRECTORIES" in audit
+    assert "runtime_external_directories" in audit
+
+
 def test_final_release_build_is_blocked_until_data_classification_is_complete() -> None:
     build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
     audit = (ROOT / "tools" / "audit_release_candidate.py").read_text(encoding="utf-8")
@@ -123,10 +136,12 @@ def test_final_release_build_is_blocked_until_data_classification_is_complete() 
 
     assert 'audit_release_candidate.py --strict-data' in build
     assert 'RUNTIME_EXTERNAL_DATA_FILES' in audit
+    assert 'RUNTIME_EXTERNAL_DATA_DIRECTORIES' in audit
     assert 'EXCLUDED_TOP_LEVEL_DATA_GLOBS' in audit
     assert 'EXCLUDED_TOP_LEVEL_DATA_FILES' in audit
     assert '--list-unclassified' in audit
     assert hasattr(manifest, "RUNTIME_EXTERNAL_DATA_FILES")
+    assert hasattr(manifest, "RUNTIME_EXTERNAL_DATA_DIRECTORIES")
     assert hasattr(manifest, "CLEAN_FIRST_INSTALL_DATA_FILES")
     assert hasattr(manifest, "EXCLUDED_TOP_LEVEL_DATA_GLOBS")
     assert hasattr(manifest, "EXCLUDED_TOP_LEVEL_DATA_FILES")
@@ -135,6 +150,7 @@ def test_final_release_build_is_blocked_until_data_classification_is_complete() 
 def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
     manifest = _load_manifest()
     runtime = set(manifest.RUNTIME_EXTERNAL_DATA_FILES)
+    runtime_directories = set(manifest.RUNTIME_EXTERNAL_DATA_DIRECTORIES)
     user_owned = set(manifest.USER_OWNED_DATA_FILES)
     excluded_globs = set(manifest.EXCLUDED_TOP_LEVEL_DATA_GLOBS)
     excluded_exact = set(manifest.EXCLUDED_TOP_LEVEL_DATA_FILES)
@@ -159,6 +175,9 @@ def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
         "team_prescription_templates.json",
     ):
         assert name in runtime
+
+    assert "eso_info/bosses" in runtime_directories
+    assert "encounter_evidence" in runtime_directories
 
     for name in (
         "encounter_positioning.json",
