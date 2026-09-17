@@ -52,6 +52,7 @@ def bootstrap_workspace_extensions() -> None:
     from ui.phase14_build_inspector_support import install as install_phase14_build_inspector_support
     from ui.phase14_build_lifecycle_guard_support import install as install_phase14_build_lifecycle_guard_support
     from ui.phase14_build_visual_target_support import install as install_phase14_build_visual_target_support
+    from ui.phase14_rotation_visual_target_support import install as install_phase14_rotation_visual_target_support
 
     # Personnel is player-level identity. Repair duplicates left by older imports
     # before any roster page reads them. The merge unions teams and moves legacy
@@ -97,6 +98,11 @@ def bootstrap_workspace_extensions() -> None:
     install_phase14_build_inspector_support()
     install_phase14_build_lifecycle_guard_support()
     install_phase14_build_visual_target_support()
+
+    # Rotation gets the same final presentation pass before MainWindow constructs
+    # CanonicalRotationDashboardPage. It preserves the old hidden builder shell so
+    # older refresh helpers cannot dereference deleted QLabel wrappers.
+    install_phase14_rotation_visual_target_support()
 
     _BOOTSTRAPPED = True
 
