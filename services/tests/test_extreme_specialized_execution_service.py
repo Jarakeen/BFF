@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from minmax.resource_costs import ResourceType
 from services.extreme_specialized_execution_service import ExtremeSpecializedExecutionService
 
 
@@ -42,6 +43,36 @@ class _BashRecord:
             mechanic_complete=False,
             evidence=("Bashing Brutality stages: 2",),
             unresolved=("Bash formula channel unresolved",),
+        )
+
+
+class _SavedRotationResources:
+    def resource_sustain(self, _build):
+        return SimpleNamespace(
+            resource=ResourceType.MAGICKA,
+            record=SimpleNamespace(
+                duration_seconds=60.0,
+                net_resource=-600,
+                net_resource_per_second=-10.0,
+                minimum_amount=12000,
+            ),
+            action_cost_event_count=18,
+            mechanic_complete=False,
+            evidence=("saved rotation sustain",),
+            unresolved=("global sustain search remains open",),
+        )
+
+    def ultimate_generation(self, _build):
+        return SimpleNamespace(
+            record=SimpleNamespace(
+                duration_seconds=60.0,
+                total_generated=150.0,
+                generated_per_second=2.5,
+                event_count=50,
+            ),
+            mechanic_complete=False,
+            evidence=("saved rotation Ultimate generation",),
+            unresolved=("Heroism search remains open",),
         )
 
 
@@ -97,6 +128,7 @@ def _service():
         healing_events=_HealingEvents(),
         shield_record=_ShieldRecord(),
         bash_record=_BashRecord(),
+        saved_rotation_resources=_SavedRotationResources(),
         movement_package=_MovementPackage(),
         stealth_package=_StealthPackage(),
         invisibility_duration_record=_InvisibilityDurationRecord(),
@@ -104,9 +136,10 @@ def _service():
     )
 
 
-def test_current_direct_specialized_routes_are_explicit() -> None:
+def test_all_zero_input_specialized_routes_are_explicit() -> None:
     for key in (
         "actual_heal", "critical_heal", "damage_shield", "bash_damage",
+        "resource_sustain", "ultimate_generation",
         "movement_speed", "sprint_speed", "stealthed_movement_speed",
         "detection_radius_reduction", "invisibility_duration",
     ):
@@ -121,8 +154,11 @@ def test_duration_input_route_is_explicit() -> None:
     ) == ("duration_seconds",)
 
 
-def test_saved_build_direct_routes_are_explicit() -> None:
-    for key in ("actual_heal", "critical_heal", "damage_shield", "bash_damage"):
+def test_saved_build_routes_include_saved_rotation_records() -> None:
+    for key in (
+        "actual_heal", "critical_heal", "damage_shield", "bash_damage",
+        "resource_sustain", "ultimate_generation",
+    ):
         assert ExtremeSpecializedExecutionService.requires_saved_build(key)
     for key in (
         "movement_speed", "sprint_speed", "stealthed_movement_speed",
@@ -131,20 +167,16 @@ def test_saved_build_direct_routes_are_explicit() -> None:
         assert not ExtremeSpecializedExecutionService.requires_saved_build(key)
 
 
-def test_single_event_records_no_longer_share_identical_input_requirements() -> None:
-    assert ExtremeSpecializedExecutionService.requirements_for("bash_damage") == ()
-    assert ExtremeSpecializedExecutionService.requirements_for("damage_shield") == ()
-
-
-def test_resource_timeline_records_still_require_real_timeline_evidence() -> None:
-    sustain = ExtremeSpecializedExecutionService.requirements_for("resource_sustain")
-    ultimate = ExtremeSpecializedExecutionService.requirements_for("ultimate_generation")
-    assert sustain == ultimate
-    assert tuple(row.key for row in sustain) == ("duration_seconds", "timeline_evidence")
+def test_resource_timeline_records_derive_timeline_from_saved_rotation() -> None:
+    assert ExtremeSpecializedExecutionService.requirements_for("resource_sustain") == ()
+    assert ExtremeSpecializedExecutionService.requirements_for("ultimate_generation") == ()
 
 
 def test_saved_build_direct_execution_rejects_missing_build() -> None:
-    for key in ("actual_heal", "damage_shield", "bash_damage"):
+    for key in (
+        "actual_heal", "damage_shield", "bash_damage",
+        "resource_sustain", "ultimate_generation",
+    ):
         with pytest.raises(ValueError, match="requires a saved-build starting context"):
             _service().execute(None, key)
 
@@ -162,6 +194,24 @@ def test_bash_execution_normalizes_saved_build_lower_bound() -> None:
     result = _service().execute(SimpleNamespace(), "bash_damage", active_bar="back")
     assert result.value == pytest.approx(12345.0)
     assert result.value_text == "12,345"
+
+
+def test_resource_sustain_execution_normalizes_saved_rotation_lower_bound() -> None:
+    result = _service().execute(SimpleNamespace(), "resource_sustain")
+    assert result.value == pytest.approx(-10.0)
+    assert result.value_text == "-10.00/s reviewed saved-rotation lower bound"
+    assert ("Spent resource", "Magicka") in result.summary_rows
+    assert ("Resolved cost events", "18") in result.summary_rows
+    assert result.global_maximum_proven is False
+
+
+def test_ultimate_generation_execution_normalizes_saved_rotation_lower_bound() -> None:
+    result = _service().execute(SimpleNamespace(), "ultimate_generation")
+    assert result.value == pytest.approx(2.5)
+    assert result.value_text == "2.50/s reviewed saved-rotation lower bound"
+    assert ("Generated Ultimate", "150") in result.summary_rows
+    assert ("Generation events", "50") in result.summary_rows
+    assert result.global_maximum_proven is False
 
 
 def test_movement_execution_normalizes_reviewed_lower_bound_without_saved_build() -> None:
