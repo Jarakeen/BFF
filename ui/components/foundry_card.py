@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 from engine.config import get_resource_path
 from services.accessibility_preferences import is_rylo_visual_theme
 from ui.theme.fonts import Fonts
-from ui.ux_icons import icon_path, semantic_icon, set_button_icon
+from ui.ux_icons import icon as semantic_qicon, semantic_icon, set_button_icon
 
 
 class FoundryCard(QFrame):
@@ -100,26 +100,23 @@ class FoundryCard(QFrame):
             self.set_icon(semantic_icon(title))
 
     def set_icon(self, icon: str):
-        """Use the canonical assets/icons library for heading icons first."""
+        """Use the canonical, theme-aware semantic icon service for headings."""
         self._icon_name = icon or ""
         self.icon_label.clear()
-        self.icon_label.setVisible(bool(icon))
+        self.icon_label.setVisible(False)
         if not icon:
             return
 
-        filename = icon if icon.lower().endswith(".svg") else f"{icon}.svg"
-        path = get_resource_path("assets", "icons", filename)
-        if not path.exists():
-            path = icon_path(icon)
-        if path is not None and path.exists():
-            pixmap = QPixmap(str(path))
-            if not pixmap.isNull():
-                self.icon_label.setPixmap(pixmap)
-                self.icon_label.setToolTip(icon.replace("-", " ").title())
-                return
+        value = semantic_qicon(icon)
+        if value.isNull():
+            # Missing icons fail visually closed. Never print a clipped filename in
+            # the heading, which is how we ended up with charming labels like 'rot'.
+            return
 
-        # Backward compatibility for the few callers that still pass a glyph.
-        self.icon_label.setText(icon)
+        self.icon_label.setPixmap(value.pixmap(17, 17))
+        self.icon_label.setToolTip(icon.replace("-", " ").replace("_", " ").title())
+        self.icon_label.setProperty("semanticIconName", icon)
+        self.icon_label.setVisible(True)
 
     def set_badge(self, text: str):
         self.badge_label.setText(text)
