@@ -80,7 +80,7 @@ try {
     Copy-Item $SourceDatabase (Join-Path $DataRoot "eso.db") -Force
 
     # Runtime external data is positive-allowlisted by release_manifest.py.
-    $RuntimeFiles = python -c "import runpy; m=runpy.run_path(r'packaging/release_manifest.py'); print('`n'.join(m.get('RUNTIME_EXTERNAL_DATA_FILES', ())))"
+    $RuntimeFiles = python -c "import runpy; m=runpy.run_path(r'packaging/release_manifest.py'); print(chr(10).join(m.get('RUNTIME_EXTERNAL_DATA_FILES', ())))"
     if ($LASTEXITCODE -ne 0) {
         throw "Could not read runtime data allowlist."
     }
