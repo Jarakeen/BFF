@@ -23,8 +23,11 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
     """
 
     def __init__(self, parent=None):
-        self.specialized_service = ExtremeSpecializedExecutionService()
         super().__init__(parent)
+        self.specialized_service = ExtremeSpecializedExecutionService(
+            database_path=self.service.database_path,
+        )
+        self._objective_changed()
 
     def _objective_changed(self, _index: int = -1) -> None:
         if not hasattr(self, "run_button") or not hasattr(self, "scope_text"):
@@ -92,7 +95,9 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
 
         self.current_result = result
         self._show_specialized_result(result)
-        value = "unresolved" if result.value is None else f"{result.value:,.0f}"
+        value = result.value_text or (
+            "unresolved" if result.value is None else f"{result.value:,.0f}"
+        )
         if result.global_maximum_proven:
             self.status.success(f"Extreme record proven: {result.label} {value}.")
         elif result.mechanic_complete:
@@ -105,7 +110,9 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
             )
 
     def _show_specialized_result(self, result: ExtremeSpecializedExecutionResult) -> None:
-        value = "—" if result.value is None else f"{result.value:,.0f}"
+        value = result.value_text or (
+            "—" if result.value is None else f"{result.value:,.0f}"
+        )
         self.baseline_value.setText("—")
         self.optimized_value.setText(value)
         self.delta_value.setText("—")
