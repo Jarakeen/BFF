@@ -150,6 +150,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Build-level inherited gear baseline defaults to **Gold · CP160 · Truly Superb**; blank item values inherit the baseline while existing explicit values are preserved and differing values are counted as visible exceptions
 - The Phase 14 inspector uses Overview, Gear, Skills, CP, Consumables, Scribing, and Notes tabs, with Gear grouped into Armor, Jewelry, Front Bar, and Back Bar summaries instead of one giant spreadsheet
 - The Phase 14 library reasserts the approved library-left / inspector-right split after legacy Builds decorators finish, restores the selected-build dossier when older wrappers detach it, and presents only one visible New Build entry while continuing to route through the canonical Easy Mode creator
+- Phase 14 Build polish moves the single **Create New Build** action beside Help as a solid-gold primary control, adds class icons and colorblind-safe role icons, decorates equipment/food/potion rows with the canonical icon library, and restores canonical ESO ability artwork to the Skills inspector cards
 - Heavy canonical editors remain lazy from the command-center view: the outer editor tabs are hidden while browsing and appear only when Edit, Character Progression, or Scribed Skills is explicitly opened
 
 ---
@@ -161,6 +162,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Preset-selected execution/sustain values remain visible, editable, show a **Customized** state after manual changes, and can be reset to the active preset defaults
 - Rotation context is summary-first: the collapsed bar emphasizes character/build/trial/boss/difficulty, while Team remains available under **Edit Context** for assignment-sensitive generation
 - Phase 14 Rotation uses the canonical theme-aware `assets/icons` vocabulary across context chips, intent presets, generated settings, obligation rows, advanced controls, and result navigation; larger intent/settings/obligation/action surfaces fill the two-column workspace instead of leaving the command center top-heavy
+- Phase 14 Rotation polish adds visible labels beneath the context values, enlarges the intent/setting/obligation surfaces, makes Generate Rotation the solid-gold dominant action, suppresses redundant legacy header actions during setup, and keeps icon-led result navigation below the command center
 - Build skills, gear procs, team duties, pressure windows, and advanced rules are presented as compact obligation summaries; unsupported evidence remains explicitly unresolved instead of being fabricated
 - Timeline, Uptime & Resources, Explanations, Compare, and Save & Export are exposed as an icon-led result navigation row beneath the setup cards and remain disabled until a generated plan exists; the canonical result tabs stay available after entering a result view
 - The Phase 14 presentation preserves the hidden legacy Builder shell while canonical refresh helpers still own references into it, preventing deleted-Qt-label failures during saved-build refresh without duplicating planner state
