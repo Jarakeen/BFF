@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -106,18 +105,22 @@ def _set_combo_text(combo, text: str) -> None:
 
 def _apply_intent(page, name: str) -> None:
     values = _INTENTS[name]
-    _set_combo_text(page.rotation_goal_combo, values["goal"])
-    _set_combo_text(page.rotation_la_reliability_combo, values["weaving"])
-    _set_combo_text(page.rotation_bar_swap_comfort_combo, values["bar_swapping"])
-    _set_combo_text(page.rotation_heavy_behavior_combo, values["heavy_attacks"])
-    _set_combo_text(page.rotation_complexity_combo, values["complexity"])
-    page.rotation_minimum_reserve_spin.setValue(int(values["reserve"]))
-    page.rotation_prioritize_survival.setChecked(bool(values["survival"]))
-    page.phase14_rotation_intent = name
-    for button_name, button in page.phase14_intent_buttons.items():
-        button.blockSignals(True)
-        button.setChecked(button_name == name)
-        button.blockSignals(False)
+    page.phase14_applying_intent = True
+    try:
+        _set_combo_text(page.rotation_goal_combo, values["goal"])
+        _set_combo_text(page.rotation_la_reliability_combo, values["weaving"])
+        _set_combo_text(page.rotation_bar_swap_comfort_combo, values["bar_swapping"])
+        _set_combo_text(page.rotation_heavy_behavior_combo, values["heavy_attacks"])
+        _set_combo_text(page.rotation_complexity_combo, values["complexity"])
+        page.rotation_minimum_reserve_spin.setValue(int(values["reserve"]))
+        page.rotation_prioritize_survival.setChecked(bool(values["survival"]))
+        page.phase14_rotation_intent = name
+        for button_name, button in page.phase14_intent_buttons.items():
+            button.blockSignals(True)
+            button.setChecked(button_name == name)
+            button.blockSignals(False)
+    finally:
+        page.phase14_applying_intent = False
     _refresh_setting_summary(page)
 
 
@@ -132,6 +135,24 @@ def _summary_row(title: str, value_label: QLabel) -> QWidget:
     return row
 
 
+def _is_customized(page) -> bool:
+    name = str(getattr(page, "phase14_rotation_intent", "") or "")
+    values = _INTENTS.get(name)
+    if not values:
+        return False
+    return any(
+        (
+            page.rotation_goal_combo.currentText() != values["goal"],
+            page.rotation_la_reliability_combo.currentText() != values["weaving"],
+            page.rotation_bar_swap_comfort_combo.currentText() != values["bar_swapping"],
+            page.rotation_heavy_behavior_combo.currentText() != values["heavy_attacks"],
+            page.rotation_complexity_combo.currentText() != values["complexity"],
+            page.rotation_minimum_reserve_spin.value() != int(values["reserve"]),
+            page.rotation_prioritize_survival.isChecked() != bool(values["survival"]),
+        )
+    )
+
+
 def _refresh_setting_summary(page) -> None:
     if not hasattr(page, "phase14_rotation_setting_labels"):
         return
@@ -143,6 +164,17 @@ def _refresh_setting_summary(page) -> None:
     }
     for key, label in page.phase14_rotation_setting_labels.items():
         label.setText(values[key])
+    customized = _is_customized(page)
+    page.phase14_rotation_customized_label.setText("Customized" if customized else "Preset defaults")
+    page.phase14_rotation_reset_button.setVisible(customized)
+
+
+def _refresh_obligation_counts(page) -> None:
+    labels = getattr(page, "phase14_obligation_count_labels", {})
+    if "Build skills" in labels:
+        labels["Build skills"].setText(str(_skill_count(page)))
+    if "Pressure windows" in labels:
+        labels["Pressure windows"].setText(str(_pressure_count(page)))
 
 
 def _obligation_row(page, title: str, description: str, count_text: str, detail: QWidget | None = None) -> QWidget:
@@ -160,6 +192,7 @@ def _obligation_row(page, title: str, description: str, count_text: str, detail:
     row.addWidget(description_label, 1)
     count = QLabel(count_text)
     count.setProperty("cardBadge", True)
+    page.phase14_obligation_count_labels[title] = count
     row.addWidget(count)
     row.addWidget(QLabel("›"))
     outer.addWidget(button)
@@ -192,6 +225,19 @@ def _build_advanced_panel(page) -> QWidget:
     grid.addWidget(page.rotation_human_reaction_time, 6, 0, 1, 2)
     grid.addWidget(page.rotation_prepare_for_pressure, 7, 0, 1, 2)
     return panel
+
+
+def _build_rules_detail() -> QWidget:
+    detail = QFrame()
+    detail.setProperty("foundryCard", True)
+    layout = QVBoxLayout(detail)
+    layout.setContentsMargins(10, 8, 10, 8)
+    layout.addWidget(
+        _muted(
+            "Ability-priority editing is available under Build skills. Additional conditional rule editors stay hidden until their canonical planner contracts are implemented."
+        )
+    )
+    return detail
 
 
 def _build_setup_tab(page) -> QWidget:
@@ -232,7 +278,20 @@ def _build_setup_tab(page) -> QWidget:
         intent_buttons.addWidget(button, 1)
     intent_card.addLayout(intent_buttons)
 
-    intent_card.addWidget(QLabel("Generated Settings"))
+    generated_heading = QHBoxLayout()
+    generated_heading.addWidget(QLabel("Generated Settings"))
+    generated_heading.addStretch(1)
+    page.phase14_rotation_customized_label = QLabel("Preset defaults")
+    page.phase14_rotation_customized_label.setProperty("cardBadge", True)
+    generated_heading.addWidget(page.phase14_rotation_customized_label)
+    page.phase14_rotation_reset_button = QPushButton("Reset to preset")
+    page.phase14_rotation_reset_button.setVisible(False)
+    page.phase14_rotation_reset_button.clicked.connect(
+        lambda: _apply_intent(page, page.phase14_rotation_intent)
+    )
+    generated_heading.addWidget(page.phase14_rotation_reset_button)
+    intent_card.addLayout(generated_heading)
+
     page.phase14_rotation_setting_labels = {
         name: QLabel() for name in ("Weaving", "Bar swapping", "Heavy attacks", "Resource reserve")
     }
@@ -255,7 +314,7 @@ def _build_setup_tab(page) -> QWidget:
     obligations.addWidget(
         _muted("Detected from the selected build, encounter context, and canonical rules. Unknown evidence stays unknown.")
     )
-    page.phase14_skill_count = QLabel()
+    page.phase14_obligation_count_labels = {}
 
     priority_host = QWidget()
     priority_layout = QVBoxLayout(priority_host)
@@ -282,7 +341,7 @@ def _build_setup_tab(page) -> QWidget:
         _obligation_row(page, "Pressure windows", "Short intense encounter windows and custom reviewed windows.", str(_pressure_count(page)), pressure_host)
     )
     obligations.addWidget(
-        _obligation_row(page, "Advanced rules", "Custom ability priorities and conditional logic.", "›", page.phase14_rotation_advanced_panel)
+        _obligation_row(page, "Advanced rules", "Custom ability priorities and conditional logic.", "—", _build_rules_detail())
     )
 
     page.generate_button.setMinimumHeight(54)
@@ -301,6 +360,7 @@ def _enable_result_tabs(page, enabled: bool) -> None:
 
 def _refresh_phase14_state(page) -> None:
     _refresh_setting_summary(page)
+    _refresh_obligation_counts(page)
     if hasattr(page, "phase14_intent_buttons") and not getattr(page, "phase14_rotation_intent", ""):
         _apply_intent(page, "Safe Progression")
     has_result = bool(getattr(page, "rotation_plan", None))
@@ -343,15 +403,31 @@ def install_phase14_rotation_command_center(page) -> None:
     page.clear_rotation_plan = clear_plan_phase14
 
     for control in (
+        page.rotation_goal_combo,
         page.rotation_la_reliability_combo,
         page.rotation_bar_swap_comfort_combo,
         page.rotation_heavy_behavior_combo,
+        page.rotation_complexity_combo,
+        page.rotation_primary_resource_combo,
         page.rotation_minimum_reserve_spin,
+        page.rotation_prioritize_survival,
     ):
         if hasattr(control, "currentTextChanged"):
             control.currentTextChanged.connect(lambda _value: _refresh_setting_summary(page))
         if hasattr(control, "valueChanged"):
             control.valueChanged.connect(lambda _value: _refresh_setting_summary(page))
+        if hasattr(control, "toggled"):
+            control.toggled.connect(lambda _value: _refresh_setting_summary(page))
+
+    for control in (
+        page.character_combo,
+        page.build_combo,
+        page.rotation_team_combo,
+        page.rotation_content_combo,
+        page.rotation_boss_combo,
+        page.rotation_threshold_difficulty_combo,
+    ):
+        control.currentIndexChanged.connect(lambda _index: _refresh_obligation_counts(page))
 
     _refresh_phase14_state(page)
     page._phase14_rotation_command_center_installed = True
