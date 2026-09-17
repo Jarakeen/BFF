@@ -146,6 +146,50 @@ _ICON_ALIASES = {
     "drop": ("drop", "potion", "stamina"),
     "scales": ("scales", "balance", "optimization"),
     "pen-tool": ("pen-tool", "pen"),
+    "stream-events": ("stream-events", "stream_events"),
+    "stream_events": ("stream_events", "stream-events"),
+    "health": ("health", "role-healer"),
+    "role-healer": ("role-healer", "health"),
+    "role-tank": ("role-tank", "shield"),
+    "role-dd": ("role-dd", "set"),
+    "role-support-dd": ("role-support-dd", "set"),
+    "head": ("viking-helmet", "head"),
+    "shoulder": ("spiked-shoulder-armor", "shoulder"),
+    "shoulders": ("spiked-shoulder-armor", "shoulders"),
+    "chest": ("leather-armor", "leather_armor", "chest"),
+    "hands": ("mailed-fist", "hands"),
+    "waist": ("metal-skirt", "metal_skirt", "waist"),
+    "legs": ("greaves", "legs"),
+    "feet": ("metal-boot", "metal_boot", "feet"),
+    "neck": ("heart-necklace", "heart_necklace", "neck"),
+    "ring": ("ring",),
+    "main-hand": ("lunar-wand", "lunar_wand", "main-hand"),
+    "off-hand": ("shield", "off-hand"),
+    "food": ("food", "coffee"),
+    "potion": ("potion",),
+    "powered": ("Powered", "powered"),
+    "charged": ("Charged", "charged"),
+    "precise": ("Precise", "precise"),
+    "infused": ("Infused", "infused"),
+    "defending": ("Defending", "defending"),
+    "training": ("Training", "training"),
+    "sharpened": ("Sharpened", "sharpened"),
+    "decisive": ("Decisive", "decisive"),
+    "nirnhoned": ("drop", "Nirnhoned", "nirnhoned"),
+    "sturdy": ("Sturdy", "sturdy"),
+    "impenetrable": ("Impenetrable", "impenetrable"),
+    "reinforced": ("Reinforced", "reinforced"),
+    "well-fitted": ("Well-fitted", "well_fitted", "well-fitted"),
+    "invigorating": ("Invigorating", "invigorating"),
+    "divines": ("Divines", "divines"),
+    "healthy": ("Health", "health", "Healthy", "healthy"),
+    "arcane": ("magic", "Arcane", "arcane"),
+    "robust": ("Robust", "robust"),
+    "bloodthirsty": ("drop", "Bloodthirsty", "bloodthirsty"),
+    "harmony": ("Harmony", "harmony"),
+    "triune": ("Triune", "triune"),
+    "protective": ("Protective", "protective"),
+    "swift": ("Swift", "swift"),
 }
 
 # Rylo icon colors are identity states, not semantic combat states. Keep them
@@ -183,12 +227,41 @@ def _icon_name_candidates(name: str) -> tuple[str, ...]:
     return tuple(values)
 
 
+def _normalized_icon_stem(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value or "").casefold())
+
+
+@lru_cache(maxsize=512)
 def icon_path(name: str) -> Path | None:
-    for candidate_name in _icon_name_candidates(name):
+    candidates = _icon_name_candidates(name)
+
+    # Fast path: exact reviewed filenames and spelling aliases.
+    for candidate_name in candidates:
         filename = f"{candidate_name}.svg"
         for parts in _ICON_ROOTS:
             candidate = get_resource_path(*parts, filename)
             if candidate.exists():
+                return candidate
+
+    # The icon folder is intentionally user-extensible and has accumulated
+    # spaces, hyphens, underscores, capitalization, and Windows localized-name
+    # oddities. Resolve those differences by normalized stem instead of silently
+    # dropping the icon. This also means newly added class/trait icons work
+    # without another code edit merely because their filename uses TitleCase.
+    wanted = {_normalized_icon_stem(candidate) for candidate in candidates}
+    wanted.discard("")
+    for parts in _ICON_ROOTS:
+        root = get_resource_path(*parts)
+        if not root.is_dir():
+            continue
+        try:
+            files = tuple(root.iterdir())
+        except OSError:
+            continue
+        for candidate in files:
+            if candidate.suffix.casefold() != ".svg":
+                continue
+            if _normalized_icon_stem(candidate.stem) in wanted:
                 return candidate
     return None
 
@@ -277,22 +350,23 @@ def set_button_icon(
     size: int = 15,
 ) -> None:
     icon_name = name or semantic_icon(button_widget.text(), button=True)
+    button_widget.setProperty("semanticIconName", icon_name)
     value = icon(icon_name)
     if value.isNull():
+        button_widget.setIcon(QIcon())
         return
     button_widget.setIcon(value)
     button_widget.setIconSize(QSize(size, size))
-    button_widget.setProperty("semanticIconName", icon_name)
 
 
 def icon_label(name: str, size: int = 18, parent: QWidget | None = None) -> QLabel:
     label = QLabel(parent)
     label.setFixedSize(size, size)
     label.setScaledContents(True)
+    label.setProperty("semanticIconName", name)
     value = icon(name)
     if not value.isNull():
         label.setPixmap(value.pixmap(size, size))
-        label.setProperty("semanticIconName", name)
     return label
 
 
