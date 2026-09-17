@@ -7,7 +7,6 @@ from ui.main_window_lazy_page_support import LAZY_PAGE_SPECS
 
 def test_lazy_page_set_is_limited_to_dependency_light_pages():
     assert LAZY_PAGE_SPECS == {
-        "rotations": "CanonicalRotationDashboardPage",
         "gear_lookup": "GearLookupPage",
         "stickerbook": "StickerbookPage",
         "timers": "AsylumPerfectaTimerPage",
@@ -19,6 +18,7 @@ def test_lazy_page_set_is_limited_to_dependency_light_pages():
     # first performance pass.
     for eager_page in (
         "operations_console",
+        "rotations",
         "achievements",
         "collectibles",
         "collectibles_browser",
