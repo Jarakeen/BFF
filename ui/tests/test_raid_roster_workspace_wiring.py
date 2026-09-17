@@ -89,33 +89,53 @@ def test_roster_workspace_keeps_six_cards_without_legacy_filler_art() -> None:
     assert "_remove_legacy_city_art" in wrapper
     assert 'for attribute in ("quote_art", "team_art")' in wrapper
     assert "decorative assets never determine page/card geometry" in wrapper
-    assert '"roster_people.webp"' not in wrapper
-    assert '"roster_team.webp"' not in wrapper
 
     assert "self.player_detail_table = RosterTable()" in wrapper
     assert "self.player_detail_table.memberSelected.connect(self.load_member)" in wrapper
     assert "split.setStretchFactor(0, 3)" in wrapper
     assert "split.setStretchFactor(1, 2)" in wrapper
 
-    assert '"players": "users"' in wrapper
-    assert '"characters": "character"' in wrapper
+    for icon_name in (
+        "roster-players",
+        "roster-characters",
+        "roster-teams",
+        "roster-availability",
+        "roster-recruitment",
+        "roster-archive",
+    ):
+        assert f'"{icon_name}"' in wrapper
+        assert Path(f"assets/icons/{icon_name}.svg").is_file()
+
     assert 'setProperty("rosterMetricBadge", True)' in wrapper
-    assert "def _trim_transparent" in wrapper
-    assert 'setFixedSize(QSize(46, 46))' in wrapper
-    assert 'border: none; border-radius: 0' in wrapper
+    assert "ordinal.hide()" in wrapper
+    assert 'ordinal.setFixedSize(QSize(0, 0))' in wrapper
     assert "setMaximumHeight(148)" in wrapper
 
 
-def test_roster_character_detail_is_profile_style_without_build_assignment_tabs() -> None:
+def test_roster_embedded_pages_use_compact_bronze_back_arrow() -> None:
+    wrapper = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
+
+    assert "back = QToolButton()" in wrapper
+    assert 'back.setIcon(icon("roster-back"))' in wrapper
+    assert 'back.setToolTip("Back to Roster")' in wrapper
+    assert 'QPushButton("Back to Roster")' not in wrapper
+    assert Path("assets/icons/roster-back.svg").is_file()
+
+
+def test_roster_character_detail_is_profile_style_without_database_ids() -> None:
     wrapper = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
 
     assert "def _show_character_detail" in wrapper
     assert "def _profile_html" in wrapper
+    assert "self.character_detail_avatar" in wrapper
+    assert 'setProperty("rosterProfileImage", True)' in wrapper
     assert '("Class",' in wrapper
     assert '("Race",' in wrapper
     assert '("Role",' in wrapper
     assert '("Teams",' in wrapper
-    assert '("Status",' in wrapper
+    assert '("Readiness",' in wrapper
+    assert '"Canonical ID"' not in wrapper
+    assert '"Build ID"' not in wrapper
     assert "Builds and Assignments" not in wrapper
 
 
@@ -130,11 +150,16 @@ def test_readiness_parchment_uses_field_journal_sketches_with_fixed_height() -> 
     assert "Full-color city artwork belongs on dark surfaces" in source
 
 
-def test_assignment_selected_spot_is_structured_profile_card() -> None:
+def test_assignment_selected_spot_is_structured_profile_card_with_role_icons() -> None:
     source = Path("ui/city_raid_assignments_page.py").read_text(encoding="utf-8")
 
     assert 'detail.setProperty("selectedSpotCard", True)' in source
     assert 'self.selected_spot_title.setProperty("selectedSpotTitle", True)' in source
+    assert 'self.selected_spot_role_icon.setProperty("selectedSpotRoleIcon", True)' in source
+    assert "def _role_icon_name" in source
+    for icon_name in ("role-healer", "role-tank", "role-dd", "role-support-dd"):
+        assert f'"{icon_name}"' in source
+        assert Path(f"assets/icons/{icon_name}.svg").is_file()
     assert 'form.addRow("Player", self.selected_player)' in source
     assert 'form.addRow("Character", self.selected_character)' in source
     assert 'form.addRow("Primary Assignment", self.selected_primary)' in source
