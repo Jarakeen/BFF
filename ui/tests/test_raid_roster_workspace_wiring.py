@@ -149,16 +149,20 @@ def test_readiness_parchment_uses_field_journal_sketches_with_fixed_height() -> 
     assert "Full-color city artwork belongs on dark surfaces" in source
 
 
-def test_assignment_selected_spot_is_structured_profile_card_with_role_icons() -> None:
+def test_assignment_selected_spot_is_structured_profile_card_with_drawn_role_marks() -> None:
     source = Path("ui/city_raid_assignments_page.py").read_text(encoding="utf-8")
 
     assert 'detail.setProperty("selectedSpotCard", True)' in source
     assert 'self.selected_spot_title.setProperty("selectedSpotTitle", True)' in source
     assert 'self.selected_spot_role_icon.setProperty("selectedSpotRoleIcon", True)' in source
     assert "def _role_icon_name" in source
-    for icon_name in ("role-healer", "role-tank", "role-dd", "role-support-dd"):
-        assert f'"{icon_name}"' in source
-        assert Path(f"assets/icons/{icon_name}.svg").is_file()
+    assert "def _role_icon_pixmap" in source
+    for role_key in ("healer", "tank", "dd", "support-dd"):
+        assert f'"{role_key}"' in source
+    assert 'from ui.ux_icons import set_button_icon' in source
+    assert 'from ui.ux_icons import icon' not in source
+    assert 'assets/icons/role-' not in source
+    assert 'setProperty("semanticRoleMark", role_key)' in source
     assert 'form.addRow("Player", self.selected_player)' in source
     assert 'form.addRow("Character", self.selected_character)' in source
     assert 'form.addRow("Primary Assignment", self.selected_primary)' in source
