@@ -178,6 +178,41 @@ def install() -> None:
     # is created. The canonical catalog/service API remains otherwise intact.
     collectibles_page.EsoCollectibleDatabaseService = ProfiledCollectibleService
 
+    # Restore the original BFF 6x4 field-journal badge sheet. The dashboard has
+    # exactly 24 current categories and the sheet follows that same semantic
+    # order. Keep number sheets on their existing path; only badge art is routed
+    # into field_journal so unrelated assets are not silently redirected.
+    collectibles_dashboard_page.BFF_BADGES = {
+        spec.label: collectibles_dashboard_page.SpriteRef(
+            "badges.jpg", 6, 4, index, 0.04, 0.03
+        )
+        for index, spec in enumerate(collectibles_dashboard_page.DASHBOARD_SPECS)
+    }
+    original_sheet_for = collectibles_dashboard_page._sheet_for
+
+    def sheet_for_with_field_journal_badges(theme, ref):
+        if theme.key == "bff" and ref.filename.casefold() == "badges.jpg":
+            path = (
+                collectibles_dashboard_page.Path(collectibles_dashboard_page.__file__).resolve().parents[1]
+                / "assets"
+                / "themes"
+                / "bff"
+                / "field_journal"
+                / "collectibles"
+                / "badges.jpg"
+            )
+            key = (str(path), ref.columns, ref.rows, ref.inset_x, ref.inset_y)
+            sheet = collectibles_dashboard_page._SPRITE_SHEETS.get(key)
+            if sheet is None:
+                sheet = collectibles_dashboard_page.SpriteSheet(
+                    path, ref.columns, ref.rows, ref.inset_x, ref.inset_y
+                )
+                collectibles_dashboard_page._SPRITE_SHEETS[key] = sheet
+            return sheet
+        return original_sheet_for(theme, ref)
+
+    collectibles_dashboard_page._sheet_for = sheet_for_with_field_journal_badges
+
     original_build_ui = collectibles_page.CollectiblesPage.build_ui
     original_connect_signals = collectibles_page.CollectiblesPage.connect_signals
 
