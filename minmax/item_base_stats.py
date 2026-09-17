@@ -8,6 +8,7 @@ from models.build_model import GearSlot, PlayerBuild
 from .base_character_state import FlatContribution, ResourceInputs
 from .derived_stats import DerivedStatInputs, StatContribution
 from .gear_stat_inputs import GearCalculationInputs
+from .weapon_trait_effectiveness import WeaponTraitEffectivenessResolver
 
 
 ARMOR_BASE_CP160_GOLD: dict[str, dict[str, float]] = {
@@ -196,6 +197,10 @@ class BaseItemStatResolver:
     def _weapon_trait_multiplier(weapon_type: str) -> float:
         return 2.0 if weapon_type in TWO_SLOT_WEAPON_TYPES else 1.0
 
+    @staticmethod
+    def _trait_effectiveness_suffix(multiplier: float) -> str:
+        return "" if abs(float(multiplier) - 1.0) <= 1e-9 else f", x{float(multiplier):g} trait effectiveness"
+
     def _apply_weapon_trait(
         self,
         *,
@@ -207,38 +212,41 @@ class BaseItemStatResolver:
         applied: int,
         unresolved: list[str],
         nirnhoned_scale: float = 1.0,
+        trait_effectiveness_multiplier: float = 1.0,
     ):
         trait_key = trait.casefold()
         if not trait_key:
             return core, applied
+        trait_effectiveness = float(trait_effectiveness_multiplier)
+        suffix = self._trait_effectiveness_suffix(trait_effectiveness)
         if trait_key == "nirnhoned":
             nirn_power = float(floor(power * (1.0 + WEAPON_NIRNHONED_PERCENT_GOLD)))
-            bonus = (nirn_power - power) * nirnhoned_scale
-            label = f"{slot_name}: Nirnhoned weapon power ({power:g} -> {nirn_power:g})"
+            bonus = (nirn_power - power) * nirnhoned_scale * trait_effectiveness
+            label = f"{slot_name}: Nirnhoned weapon power ({power:g} -> {nirn_power:g}{suffix})"
             core = self._core_flat(core, "weapon_damage", label, bonus)
             core = self._core_flat(core, "spell_damage", label, bonus)
             return core, applied + 2
-        multiplier = self._weapon_trait_multiplier(weapon_type)
+        multiplier = self._weapon_trait_multiplier(weapon_type) * trait_effectiveness
         if trait_key == "precise":
             amount = WEAPON_PRECISE_CRIT_GOLD * multiplier
-            label = f"{slot_name}: Precise (+{amount * 100:g}% critical)"
+            label = f"{slot_name}: Precise (+{amount * 100:g}% critical{suffix})"
             core = self._core_additive_after_percent(core, "weapon_critical", label, amount)
             core = self._core_additive_after_percent(core, "spell_critical", label, amount)
             return core, applied + 2
         if trait_key == "sharpened":
             amount = WEAPON_SHARPENED_PENETRATION_GOLD * multiplier
-            label = f"{slot_name}: Sharpened (+{amount:g} penetration)"
+            label = f"{slot_name}: Sharpened (+{amount:g} penetration{suffix})"
             core = self._core_flat(core, "physical_penetration", label, amount)
             core = self._core_flat(core, "spell_penetration", label, amount)
             return core, applied + 2
         if trait_key == "powered":
             amount = WEAPON_POWERED_HEALING_GOLD * multiplier
-            label = f"{slot_name}: Powered (+{amount * 100:g}% healing done)"
+            label = f"{slot_name}: Powered (+{amount * 100:g}% healing done{suffix})"
             core = self._core_additive_after_percent(core, "healing_done", label, amount)
             return core, applied + 1
         if trait_key == "defending":
             amount = WEAPON_DEFENDING_RESISTANCE_GOLD * multiplier
-            label = f"{slot_name}: Defending (+{amount:g} resistance)"
+            label = f"{slot_name}: Defending (+{amount:g} resistance{suffix})"
             core = self._core_flat(core, "physical_resistance", label, amount)
             core = self._core_flat(core, "spell_resistance", label, amount)
             return core, applied + 2
@@ -297,6 +305,7 @@ class BaseItemStatResolver:
         unresolved = list(result.unresolved)
         applied = result.applied_effect_count
         core = result.core
+        trait_effectiveness = WeaponTraitEffectivenessResolver.resolve(result.set_counts)
         is_front = active_bar.casefold() == "front"
         bar_name = "Front Bar" if is_front else "Back Bar"
         main, offhand = build.active_weapon_slots(active_bar)
@@ -340,6 +349,7 @@ class BaseItemStatResolver:
             power=main_power,
             applied=applied,
             unresolved=unresolved,
+            trait_effectiveness_multiplier=trait_effectiveness.multiplier,
         )
 
         if dual_wield:
@@ -366,6 +376,7 @@ class BaseItemStatResolver:
                         applied=applied,
                         unresolved=unresolved,
                         nirnhoned_scale=DUAL_WIELD_OFFHAND_POWER_RATIO,
+                        trait_effectiveness_multiplier=trait_effectiveness.multiplier,
                     )
 
         result = replace(result, core=core, applied_effect_count=applied, unresolved=tuple(unresolved))
