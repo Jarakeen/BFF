@@ -8,14 +8,18 @@ summary cards across the top, then either the dashboard or the selected roster d
 workspace directly underneath. No modal editor windows are used on this surface.
 
 Roster visual contract:
-- summary cards use the dedicated teal/bronze Roster medallions without ordinals;
+- summary cards use the dedicated Urban Wilderness Roster badge sheet, never assets/icons;
+- detail navigation uses the dedicated bronze back-arrow art at the middle-left edge;
 - decorative assets never determine page/card geometry;
 - Players always retains a visible people table;
 - Character details remain a compact human-facing profile surface;
 - canonical database IDs stay out of the visible profile card.
 """
 
-from PySide6.QtCore import QSize, Qt
+from pathlib import Path
+
+from PySide6.QtCore import QRect, QSize, Qt
+from PySide6.QtGui import QIcon, QImage, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
@@ -28,24 +32,73 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import get_resource_path
 from ui.components.foundry_card import FoundryCard
 from ui.raid_roster_workspace_page import RaidRosterWorkspacePage, _clean
 from ui.themed_raid_roster_workspace_page import ThemedRaidRosterWorkspacePage
 from ui.urban_wilderness_accessibility_polish import install as install_urban_wilderness_accessibility_polish
-from ui.ux_icons import icon
 from widgets.roster_actions import RosterActions
 from widgets.roster_record import RosterRecord
 from widgets.roster_table import RosterTable
 
 
-_BADGES = {
-    "players": "roster-players",
-    "characters": "roster-characters",
-    "teams": "roster-teams",
-    "availability": "roster-availability",
-    "recruitment": "roster-recruitment",
-    "archive": "roster-archive",
-}
+_ROSTER_BADGE_SHEET = ("assets", "themes", "bff", "urban_wilderness", "roster", "roster_badges.png")
+_ROSTER_BACK_ARROW = ("assets", "themes", "bff", "urban_wilderness", "roster", "back_arrow.png")
+
+
+def _trim_transparent(pixmap: QPixmap) -> QPixmap:
+    if pixmap.isNull():
+        return pixmap
+    image = pixmap.toImage()
+    left, top = image.width(), image.height()
+    right = bottom = -1
+    for y in range(image.height()):
+        for x in range(image.width()):
+            if image.pixelColor(x, y).alpha() <= 12:
+                continue
+            left = min(left, x)
+            top = min(top, y)
+            right = max(right, x)
+            bottom = max(bottom, y)
+    if right < left or bottom < top:
+        return pixmap
+    return pixmap.copy(QRect(left, top, right - left + 1, bottom - top + 1))
+
+
+def _roster_badge_sprite(index: int) -> QPixmap:
+    """Extract one medallion from the dedicated six-badge Roster sheet."""
+    path = get_resource_path(*_ROSTER_BADGE_SHEET)
+    if not Path(path).is_file() or not 0 <= index < 6:
+        return QPixmap()
+    sheet = QImage(str(path)).convertToFormat(QImage.Format.Format_ARGB32)
+    if sheet.isNull():
+        return QPixmap()
+
+    cell_width = max(1, sheet.width() // 6)
+    cell = sheet.copy(QRect(index * cell_width, 0, cell_width, sheet.height()))
+
+    # Generated sheets use black negative space. Make that transparent so the
+    # medallion sits naturally on the card instead of carrying a black rectangle.
+    for y in range(cell.height()):
+        for x in range(cell.width()):
+            color = cell.pixelColor(x, y)
+            if color.red() < 18 and color.green() < 18 and color.blue() < 18:
+                color.setAlpha(0)
+                cell.setPixelColor(x, y, color)
+
+    trimmed = _trim_transparent(QPixmap.fromImage(cell))
+    if trimmed.isNull():
+        return trimmed
+
+    # roster_badges.png includes a title plaque beneath each medallion. The
+    # card already owns its title, so display only the medallion art here.
+    medallion_height = max(1, round(trimmed.height() * 0.74))
+    return _trim_transparent(trimmed.copy(QRect(0, 0, trimmed.width(), medallion_height)))
+
+
+def _roster_back_icon() -> QIcon:
+    path = get_resource_path(*_ROSTER_BACK_ARROW)
+    return QIcon(str(path)) if Path(path).is_file() else QIcon()
 
 
 class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
@@ -150,19 +203,20 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self._set_profile_avatar("character")
 
     def _set_profile_avatar(self, kind: str) -> None:
+        """Keep the image slot neutral until the default portrait set is installed."""
         avatar = getattr(self, "character_detail_avatar", None)
         if avatar is None:
             return
-        icon_name = {
-            "player": "person",
-            "character": "character",
-            "build": "builds",
-        }.get(kind, "character")
-        value = icon(icon_name)
         avatar.clear()
-        if not value.isNull():
-            avatar.setPixmap(value.pixmap(70, 70))
-            avatar.setProperty("semanticIconName", icon_name)
+        avatar.setPixmap(QPixmap())
+        avatar.setText(
+            {
+                "player": "PLAYER\nIMAGE",
+                "character": "CHARACTER\nIMAGE",
+                "build": "BUILD\nIMAGE",
+            }.get(kind, "CHARACTER\nIMAGE")
+        )
+        avatar.setProperty("semanticIconName", "")
 
     def refresh(self) -> None:
         super().refresh()
@@ -195,7 +249,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self.header.subtitle.setText("People. Characters. Teams. Ready for what's next.")
         self.header._set_icon("feather")
 
-        for key, card in self.metric_cards.items():
+        for index, (_key, card) in enumerate(self.metric_cards.items()):
             card.setMinimumWidth(0)
             card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             card.setMinimumHeight(132)
@@ -211,12 +265,21 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
             )
             if badge is not None:
                 badge.clear()
-                badge.setFixedSize(QSize(72, 72))
+                badge.setFixedSize(QSize(76, 76))
                 badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                badge.setPixmap(icon(_BADGES.get(key, "compass")).pixmap(68, 68))
+                sprite = _roster_badge_sprite(index)
+                if not sprite.isNull():
+                    badge.setPixmap(
+                        sprite.scaled(
+                            74,
+                            74,
+                            Qt.AspectRatioMode.KeepAspectRatio,
+                            Qt.TransformationMode.SmoothTransformation,
+                        )
+                    )
                 badge.setProperty("rosterMetricBadge", True)
 
-            # The medallion itself owns the identity now. No duplicate 1–6 ordinal.
+            # The medallion owns the visual identity now. No duplicate 1–6 ordinal.
             ordinal = next(
                 (
                     label
@@ -401,27 +464,33 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
             page.setParent(None)
 
             shell = QWidget()
-            shell_layout = QVBoxLayout(shell)
+            shell_layout = QHBoxLayout(shell)
             shell_layout.setContentsMargins(0, 0, 0, 0)
             shell_layout.setSpacing(4)
 
-            nav = QHBoxLayout()
-            nav.setContentsMargins(2, 0, 0, 0)
+            # Keep navigation beside the leftmost detail surface, vertically centered.
+            # It no longer consumes a row beneath the six Roster summary cards.
+            nav_rail = QVBoxLayout()
+            nav_rail.setContentsMargins(0, 0, 0, 0)
+            nav_rail.setSpacing(0)
+            nav_rail.addStretch(1)
+
             back = QToolButton()
             back.setProperty("rosterBackButton", True)
             back.setToolTip("Back to Roster")
             back.setAutoRaise(True)
-            back.setFixedSize(34, 30)
-            back.setIcon(icon("roster-back"))
-            back.setIconSize(QSize(28, 28))
+            back.setFixedSize(52, 52)
+            back.setIcon(_roster_back_icon())
+            back.setIconSize(QSize(46, 46))
             back.setStyleSheet(
                 "QToolButton { background: transparent; border: none; padding: 0; } "
-                "QToolButton:hover { background: rgba(200,164,106,28); border-radius: 4px; }"
+                "QToolButton:hover { background: rgba(200,164,106,20); border-radius: 6px; }"
             )
             back.clicked.connect(self._show_dashboard)
-            nav.addWidget(back)
-            nav.addStretch(1)
-            shell_layout.addLayout(nav)
+            nav_rail.addWidget(back, 0, Qt.AlignmentFlag.AlignHCenter)
+            nav_rail.addStretch(1)
+
+            shell_layout.addLayout(nav_rail)
             shell_layout.addWidget(page, 1)
 
             index = stack.addWidget(shell)
