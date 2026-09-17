@@ -3,8 +3,8 @@ from __future__ import annotations
 """Final presentation pass for Urban Wilderness collectible badge artwork.
 
 The approved generated sheets contain a little neighboring artwork at some cell edges.
-This pass trims only that outer spill, preserves the badge itself, and presents the art
-large and frameless directly on the dark card surface.
+This pass removes that edge spill, preserves the badge itself, and presents the art large
+and frameless directly on the dark card surface.
 """
 
 from PySide6.QtCore import QRect
@@ -51,23 +51,34 @@ def install() -> None:
         if prepared is None or prepared.isNull():
             return prepared
 
-        # Generated grid sheets can leave slivers of the neighboring medallion
-        # at the extreme left/right edges. Remove only a narrow outer gutter,
-        # then trim alpha so the badge sits directly on the card background.
-        gutter_x = max(1, round(prepared.width() * 0.045))
-        gutter_y = max(0, round(prepared.height() * 0.01))
-        width = max(1, prepared.width() - (gutter_x * 2))
-        height = max(1, prepared.height() - (gutter_y * 2))
-        cropped = prepared.copy(QRect(gutter_x, gutter_y, width, height))
-        return _trim_alpha(cropped)
+        # Neighboring cells leave narrow gold/teal slivers right at the sheet
+        # boundaries. Clear a safe horizontal gutter, then alpha-trim again.
+        # The actual medallion and its cardinal ornaments remain well inside it.
+        image = prepared.toImage().convertToFormat(prepared.toImage().format())
+        gutter_x = max(2, round(image.width() * 0.075))
+        gutter_y = max(1, round(image.height() * 0.015))
+        for y in range(image.height()):
+            for x in range(image.width()):
+                if x < gutter_x or x >= image.width() - gutter_x:
+                    color = image.pixelColor(x, y)
+                    color.setAlpha(0)
+                    image.setPixelColor(x, y, color)
+                elif y < gutter_y or y >= image.height() - gutter_y:
+                    # Top/bottom spill is uncommon and much shallower than the
+                    # side spill. Clear only the very outer rim.
+                    color = image.pixelColor(x, y)
+                    if color.alpha() > 0:
+                        color.setAlpha(0)
+                        image.setPixelColor(x, y, color)
+        return _trim_alpha(QPixmap.fromImage(image))
 
     def set_sprite(label, pixmap, size: int) -> bool:
         app = QApplication.instance()
         visual_theme = str(app.property("visualTheme") if app is not None else "")
         if visual_theme == VISUAL_THEME_RYLO_CITY and size >= 70:
-            label.setFixedSize(120, 120)
+            label.setFixedSize(132, 132)
             label.setStyleSheet("background: transparent; border: none; padding: 0;")
-            return original_set_sprite(label, pixmap, 116)
+            return original_set_sprite(label, pixmap, 128)
         return original_set_sprite(label, pixmap, size)
 
     assets_support._prepare_city_badge = prepare_city_badge
