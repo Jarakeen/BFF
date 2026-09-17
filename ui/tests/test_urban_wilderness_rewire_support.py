@@ -40,15 +40,16 @@ def test_assignments_drops_redundant_bottom_field_note_card() -> None:
     assert 'FoundryCard("Assignment Summary", "group")' in source
 
 
-def test_readiness_note_art_is_static_and_status_is_not_color_only() -> None:
+def test_readiness_note_art_is_static_webp_and_status_is_not_color_only() -> None:
     source = _source("ui/city_raid_readiness_page.py")
 
     assert "class _ReadinessArt(QLabel)" in source
     assert "QTimer" not in source
     assert 'return "✓ READY" if value else "! GAP"' in source
     assert 'return "○ NEEDS REVIEW"' in source
-    assert '"roster_people.jpg"' in source
-    assert '"roster_team.jpg"' in source
+    assert '"roster_people.webp"' in source
+    assert '"roster_team.webp"' in source
+    assert '"city_night", "roster"' in source
 
 
 def test_urban_collectibles_reuse_etched_badge_art_with_recolor() -> None:
@@ -58,3 +59,35 @@ def test_urban_collectibles_reuse_etched_badge_art_with_recolor() -> None:
     assert "source = field_etched_badge(label)" in source
     assert "_CITY_BADGE_TONES" in source
     assert "_recolor_badge" in source
+
+
+def test_teams_bottom_strip_uses_wide_existing_art() -> None:
+    source = _source("ui/urban_wilderness_accessibility_polish.py")
+
+    assert '"roster_team.webp"' in source
+    assert "self.setMinimumHeight(150)" in source
+    assert "QSizePolicy.Policy.Expanding" in source
+
+
+def test_raid_map_palette_is_red_green_independent_and_shape_coded() -> None:
+    source = _source("ui/urban_wilderness_accessibility_polish.py")
+
+    assert '"Danger": "#B9792F"' in source
+    assert '"Safe": "#397A9B"' in source
+    assert '"Stack": "#74608E"' in source
+    assert '"Danger": Qt.PenStyle.SolidLine' in source
+    assert '"Safe": Qt.PenStyle.DashLine' in source
+    assert '"Stack": Qt.PenStyle.DotLine' in source
+    assert "not a red danger halo" in source
+
+
+def test_live_raid_notes_are_explicit_editable_state() -> None:
+    polish = _source("ui/urban_wilderness_accessibility_polish.py")
+    state = _source("services/raid_section_state_service.py")
+
+    assert "QTextEdit" in polish
+    assert 'QPushButton("Save Run Notes")' in polish
+    assert "self.user_state.set_run_notes" in polish
+    assert "def run_notes(" in state
+    assert "def set_run_notes(" in state
+    assert '"notes": _clean(prior.get("notes"))' in state
