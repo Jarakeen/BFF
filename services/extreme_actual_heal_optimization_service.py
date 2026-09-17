@@ -33,6 +33,9 @@ from services.extreme_healing_event_service import (
     ExtremeHealingEventResult,
     ExtremeHealingEventService,
 )
+from services.extreme_unresolved_incumbent_admission_service import (
+    ExtremeUnresolvedIncumbentAdmissionService,
+)
 from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
 
 
@@ -350,6 +353,12 @@ class ExtremeActualHealOptimizationService:
                 )
                 score = self._score(event)
                 if score <= current_score + 1e-9:
+                    continue
+                admission = ExtremeUnresolvedIncumbentAdmissionService.review(
+                    tuple(current_unresolved),
+                    tuple(candidate_unresolved),
+                )
+                if not admission.admissible:
                     continue
                 if best is None or score > best[0] + 1e-9 or (
                     abs(score - best[0]) <= 1e-9
