@@ -8,6 +8,7 @@ files are reported separately until each has been classified for the release pay
 """
 
 import argparse
+from fnmatch import fnmatch
 import importlib.util
 from pathlib import Path
 import re
@@ -48,12 +49,21 @@ def _top_level_data_files() -> list[str]:
     )
 
 
+def _matches_any(name: str, patterns: tuple[str, ...]) -> bool:
+    return any(fnmatch(name, pattern) for pattern in patterns)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--strict-data",
         action="store_true",
         help="Fail while any top-level runtime data file remains unclassified.",
+    )
+    parser.add_argument(
+        "--list-unclassified",
+        action="store_true",
+        help="Print every unclassified top-level data filename instead of a preview.",
     )
     args = parser.parse_args(argv)
 
@@ -87,16 +97,30 @@ def main(argv: list[str] | None = None) -> int:
     user_owned = set(manifest.USER_OWNED_DATA_FILES)
     runtime_external = set(getattr(manifest, "RUNTIME_EXTERNAL_DATA_FILES", ()))
     first_install = set(getattr(manifest, "CLEAN_FIRST_INSTALL_DATA_FILES", ()))
+    excluded_patterns = tuple(getattr(manifest, "EXCLUDED_TOP_LEVEL_DATA_GLOBS", ()))
     classified = user_owned | runtime_external | first_install
-    unclassified = [name for name in _top_level_data_files() if name not in classified]
+
+    all_top_level = _top_level_data_files()
+    excluded = [name for name in all_top_level if _matches_any(name, excluded_patterns)]
+    unclassified = [
+        name
+        for name in all_top_level
+        if name not in classified and not _matches_any(name, excluded_patterns)
+    ]
+
     if unclassified:
-        preview = ", ".join(unclassified[:30])
-        more = len(unclassified) - min(len(unclassified), 30)
-        suffix = f" (+{more} more)" if more else ""
-        message = (
-            f"{len(unclassified)} top-level data files are not release-classified yet: "
-            f"{preview}{suffix}"
-        )
+        if args.list_unclassified:
+            message = (
+                f"{len(unclassified)} top-level data files are not release-classified yet."
+            )
+        else:
+            preview = ", ".join(unclassified[:30])
+            more = len(unclassified) - min(len(unclassified), 30)
+            suffix = f" (+{more} more)" if more else ""
+            message = (
+                f"{len(unclassified)} top-level data files are not release-classified yet: "
+                f"{preview}{suffix}"
+            )
         if args.strict_data:
             errors.append(message)
         else:
@@ -106,7 +130,15 @@ def main(argv: list[str] | None = None) -> int:
     print(f"version={version}")
     print(f"approved_asset_entries={len(manifest.RUNTIME_ASSET_DATAS)}")
     print(f"seed_entries={len(manifest.SEED_DATAS)}")
+    print(f"runtime_external_data={len(runtime_external)}")
+    print(f"user_owned_data={len(user_owned)}")
+    print(f"excluded_top_level_data={len(excluded)}")
     print(f"unclassified_top_level_data={len(unclassified)}")
+
+    if args.list_unclassified and unclassified:
+        print("\nUNCLASSIFIED DATA")
+        for name in unclassified:
+            print(f"  - {name}")
 
     if warnings:
         print("\nWARNINGS")
