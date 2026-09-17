@@ -363,3 +363,14 @@ def test_semantic_icon_refresh_clears_miss_cache_and_uses_native_svg_fallback() 
     assert "direct = QIcon(str(path))" in source
     assert "if not direct.isNull():" in source
     assert "rendered = _source_svg_icon(path)" in source
+
+
+def test_foundry_semantic_icons_are_gold_and_backing_tiles_are_stripped() -> None:
+    source = _source(ux_icons)
+
+    assert '_FOUNDRY_DEFAULT = "#C8A46A"' in source
+    assert '_FOUNDRY_DISABLED = "#73777C"' in source
+    assert "def _foundry_icon" in source
+    assert "themed = _rylo_icon(path) if _is_rylo_theme() else _foundry_icon(path)" in source
+    assert "_strip_full_canvas_background(svg)" in source
+    assert '"cog": ("cog", "gears")' in source
