@@ -57,6 +57,15 @@ def test_release_excludes_archived_legacy_and_optional_python_namespaces() -> No
         assert namespace in excluded
 
 
+def test_release_runtime_formula_module_does_not_import_pytest() -> None:
+    source = (ROOT / "minmax" / "formulas" / "final_calculations.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "import pytest" not in source
+    assert "from pytest" not in source
+
+
 def test_release_version_has_one_python_source_of_truth() -> None:
     version = (ROOT / "app_version.py").read_text(encoding="utf-8")
     build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
