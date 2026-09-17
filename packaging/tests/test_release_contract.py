@@ -40,11 +40,17 @@ def test_release_imports_only_approved_optional_splash_from_legacy_location() ->
     assert optional[
         "assets/themes/bff/grimoire/assets/fantasy_splash.png"
     ] == "assets/themes/bff/urban_wilderness/startup"
-    assert all("grimoire" in source for source in optional)
+    splash_optional = {
+        source: destination
+        for source, destination in optional.items()
+        if "fantasy_splash" in source
+    }
+    assert all("grimoire" in source for source in splash_optional)
     assert all(
         destination == "assets/themes/bff/urban_wilderness/startup"
-        for destination in optional.values()
+        for destination in splash_optional.values()
     )
+    assert optional["assets/timers/vas2"] == "assets/timers/vas2"
 
     splash = (ROOT / "ui" / "startup_splash.py").read_text(encoding="utf-8")
     assert '("assets", "themes", "bff", "urban_wilderness", "startup")' in splash
@@ -241,3 +247,16 @@ def test_release_status_names_disabled_and_in_progress_boundaries() -> None:
     assert "Broadcast module" in status
     assert "## Legacy / deprecated / superseded" in status
     assert "Data payload classification: complete" in status
+
+
+def test_rotation_command_center_preserves_legacy_shell_without_delete_later() -> None:
+    command_center = (ROOT / "ui" / "phase14_rotation_command_center_support.py").read_text(
+        encoding="utf-8"
+    )
+    visual = (ROOT / "ui" / "phase14_rotation_visual_target_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "page._phase14_preserved_legacy_builder = old_builder" in command_center
+    assert "old_builder.deleteLater()" not in command_center
+    assert "legacy_builder.deleteLater =" not in visual
