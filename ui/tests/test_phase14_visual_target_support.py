@@ -330,3 +330,27 @@ def test_phase14_rotation_command_center_imports_qt_for_tool_button_style() -> N
 
     assert "from PySide6.QtCore import Qt" in command
     assert "Qt.ToolButtonStyle.ToolButtonTextUnderIcon" in command
+
+
+def test_phase14_rotation_headings_are_large_gold_and_reassert_result_icons() -> None:
+    visual = _source(phase14_rotation_visual_target_support)
+    command = Path(phase14_rotation_visual_target_support.__file__).with_name(
+        "phase14_rotation_command_center_support.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'page.phase14_generated_settings_heading = QLabel("Generated Settings")' in command
+    assert "def _polish_primary_headings(page) -> None:" in visual
+    assert '"color: #C8A46A; font-size: 22px; font-weight: 700;"' in visual
+    assert '"color: #C8A46A; font-size: 20px; font-weight: 700;"' in visual
+    assert "card.icon_label.setFixedSize(30, 30)" in visual
+    assert "def _polish_result_nav(page) -> None:" in visual
+    assert "set_button_icon(button, icon_name, size=24)" in visual
+
+
+def test_phase14_semantic_icons_use_explicit_svg_renderer() -> None:
+    source = _source(ux_icons)
+
+    assert "def _source_svg_pixmap(path_text: str, size: int) -> QPixmap:" in source
+    assert "QSvgRenderer" in source
+    assert "def _strip_full_canvas_background(svg: str) -> str:" in source
+    assert "return _source_svg_icon(path)" in source
