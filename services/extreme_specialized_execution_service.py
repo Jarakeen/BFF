@@ -57,6 +57,7 @@ class ExtremeSpecializedExecutionService:
             "stealthed_movement_speed",
         }
     )
+    _SAVED_BUILD_REQUIRED_KEYS = frozenset({"actual_heal", "critical_heal"})
 
     _FAMILY_REQUIREMENTS = {
         "actual-heal-event": (),
@@ -82,9 +83,6 @@ class ExtremeSpecializedExecutionService:
                 note="Reuse Phase 4 resource events or explicit Ultimate generation events.",
             ),
         ),
-        # Reviewed build-owned movement sources can now produce a lower-bound
-        # record without asking the user to manually enter stat buckets. Missing
-        # runtime/provider families remain unresolved evidence in the result.
         "movement-state": (),
         "stealth-state": (
             ExtremeSpecializedInputRequirement(
@@ -143,9 +141,13 @@ class ExtremeSpecializedExecutionService:
             return False
         return not cls.requirements_for(key)
 
+    @classmethod
+    def requires_saved_build(cls, objective_key: str) -> bool:
+        return str(objective_key or "").strip().casefold() in cls._SAVED_BUILD_REQUIRED_KEYS
+
     def execute(
         self,
-        build: PlayerBuild,
+        build: PlayerBuild | None,
         objective_key: str,
         *,
         active_bar: str = "front",
@@ -162,6 +164,8 @@ class ExtremeSpecializedExecutionService:
             )
 
         if key in {"actual_heal", "critical_heal"}:
+            if build is None:
+                raise ValueError(f"{descriptor.objective.label} requires a saved-build starting context")
             result = self.healing_events.evaluate(
                 build,
                 key,
