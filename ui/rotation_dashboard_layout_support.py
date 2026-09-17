@@ -4,8 +4,8 @@ from __future__ import annotations
 
 The canonical controls are created by their existing owners. This layer moves those
 exact widgets rather than cloning engine inputs, keeps the full potion catalog in sync,
-hides the unfinished encounter-aware advanced controls, and installs the intent-first
-Rotation Builder V2 workspace.
+hides the unfinished encounter-aware advanced controls, installs the V2 workspace, and
+then applies the Phase 14 command-center presentation.
 """
 
 from PySide6.QtCore import Qt
@@ -23,6 +23,9 @@ from ui.rotation_builder_v2_finish_support import install_rotation_builder_v2_fi
 from ui.rotation_builder_v2_layout_support import install_rotation_builder_v2_layout
 from ui.rotation_builder_v2_runtime_repairs_support import (
     install_rotation_builder_v2_runtime_repairs,
+)
+from ui.phase14_rotation_command_center_support import (
+    install_phase14_rotation_command_center,
 )
 
 
@@ -248,7 +251,7 @@ def refresh_rotation_consumables(page) -> None:
 
 
 def install_rotation_dashboard_layout(page) -> None:
-    """Install the functional V2 workspace, compact context, and narrow runtime repairs."""
+    """Install canonical Rotation controls, then apply the Phase 14 presentation."""
     _rebuild_rotation_setup(page)
     _rebuild_consumables(page)
     page._refresh_build_context()
@@ -256,6 +259,7 @@ def install_rotation_dashboard_layout(page) -> None:
     install_rotation_builder_v2_finish(page)
     install_rotation_builder_v2_compact_context(page)
     install_rotation_builder_v2_runtime_repairs(page)
+    install_phase14_rotation_command_center(page)
 
 
 __all__ = ["install_rotation_dashboard_layout", "refresh_rotation_consumables"]
