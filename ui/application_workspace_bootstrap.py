@@ -53,6 +53,7 @@ def bootstrap_workspace_extensions() -> None:
     from ui.phase14_build_lifecycle_guard_support import install as install_phase14_build_lifecycle_guard_support
     from ui.phase14_build_visual_target_support import install as install_phase14_build_visual_target_support
     from ui.phase14_build_icon_polish_support import install as install_phase14_build_icon_polish_support
+    from ui.phase14_build_edit_return_support import install as install_phase14_build_edit_return_support
     from ui.phase14_rotation_visual_target_support import install as install_phase14_rotation_visual_target_support
 
     # Personnel is player-level identity. Repair duplicates left by older imports
@@ -100,6 +101,7 @@ def bootstrap_workspace_extensions() -> None:
     install_phase14_build_lifecycle_guard_support()
     install_phase14_build_visual_target_support()
     install_phase14_build_icon_polish_support()
+    install_phase14_build_edit_return_support()
 
     # Rotation gets the same final presentation pass before MainWindow constructs
     # CanonicalRotationDashboardPage. It preserves the old hidden builder shell so
