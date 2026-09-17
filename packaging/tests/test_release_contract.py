@@ -68,8 +68,37 @@ def test_final_release_build_is_blocked_until_data_classification_is_complete() 
 
     assert 'audit_release_candidate.py --strict-data' in build
     assert 'RUNTIME_EXTERNAL_DATA_FILES' in audit
+    assert 'EXCLUDED_TOP_LEVEL_DATA_GLOBS' in audit
+    assert '--list-unclassified' in audit
     assert hasattr(manifest, "RUNTIME_EXTERNAL_DATA_FILES")
     assert hasattr(manifest, "CLEAN_FIRST_INSTALL_DATA_FILES")
+    assert hasattr(manifest, "EXCLUDED_TOP_LEVEL_DATA_GLOBS")
+
+
+def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
+    manifest = _load_manifest()
+    runtime = set(manifest.RUNTIME_EXTERNAL_DATA_FILES)
+    user_owned = set(manifest.USER_OWNED_DATA_FILES)
+    excluded = set(manifest.EXCLUDED_TOP_LEVEL_DATA_GLOBS)
+
+    for name in (
+        "antiquities_01.csv",
+        "antiquities_08.csv",
+        "dungeon_encounter_identity.json",
+        "dungeon_encounter_identity_launch_starters_sixth.json",
+    ):
+        assert name in runtime
+
+    for name in (
+        "encounter_positioning.json",
+        "encounter_positioning.png",
+        "encounter_positioning_timeline.json",
+        "TamrielDate.txt",
+    ):
+        assert name in user_owned
+
+    assert "*.before-*" in excluded
+    assert "eso.db.before-*" in excluded
 
 
 def test_release_status_names_disabled_and_in_progress_boundaries() -> None:
