@@ -19,23 +19,29 @@ def test_specialized_page_routes_only_zero_input_families_through_gateway() -> N
     source = Path(extreme_specialized_optimization_page.__file__).read_text(encoding="utf-8")
 
     assert "class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):" in source
+    assert "database_path=self.service.database_path" in source
     assert "ExtremeSpecializedExecutionService.can_execute_without_extra_inputs" in source
     assert "self.specialized_service.execute(" in source
+    assert "result.value_text" in source
     assert "super()._run_extreme_search()" in source
     assert "No fallback" not in source
 
 
-def test_heal_event_family_is_current_zero_input_specialized_route() -> None:
-    assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("actual_heal")
-    assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("critical_heal")
+def test_heal_and_movement_families_are_current_zero_input_specialized_routes() -> None:
+    for key in (
+        "actual_heal",
+        "critical_heal",
+        "movement_speed",
+        "sprint_speed",
+        "stealthed_movement_speed",
+    ):
+        assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
+
     for key in (
         "damage_shield",
         "bash_damage",
         "resource_sustain",
         "ultimate_generation",
-        "movement_speed",
-        "sprint_speed",
-        "stealthed_movement_speed",
         "detection_radius_reduction",
         "invisibility_duration",
         "invisibility_uptime",
