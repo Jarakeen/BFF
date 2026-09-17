@@ -143,6 +143,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Context Variants provide sparse **Team**, **Boss**, and **Team + Boss** gear, weapon, Mundus, Champion Point, skill-bar, food, potion, and note overrides while unchanged fields inherit automatically
 - Matching build variants resolve field-by-field as **Team + Boss -> Team -> Boss -> base build**, so a boss-specific tweak does not require cloning an entire build
 - Conditional **Rotation** tab appears only when the selected build owns a saved completed rotation
+- Phase 14 Builds command center provides first-class All, Mine, Team, Templates, Favorites, and Archive library views with compact search/class/role/content filtering and a persistent inspector area
+- Build Favorites and Archive state are persisted as additive profile metadata keyed by canonical build id, so starring or archiving never duplicates or deletes the underlying saved build
+- Build-level inherited gear baseline defaults to **Gold · CP160 · Truly Superb**; blank item values inherit the baseline while existing explicit values are preserved and differing values are counted as visible exceptions
 
 ---
 
