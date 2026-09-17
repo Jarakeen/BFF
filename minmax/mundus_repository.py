@@ -375,6 +375,18 @@ class MundusRepository:
         self._records_cache[key.casefold()] = result
         return result
 
+    def get_effects(
+        self,
+        name: str,
+        *,
+        multiplier: float = 1.0,
+    ) -> tuple[tuple[Effect, ...], tuple[str, ...]]:
+        """Compatibility wrapper for the established public Mundus API."""
+        return self.effects_for_name(
+            name,
+            divines_multiplier=multiplier,
+        )
+
     def effects_for_name(
         self,
         name: str,
