@@ -122,12 +122,31 @@ _KEYWORDS = (
 
 _BUTTON_KEYWORDS = (
     ("save", "check-mark"), ("apply", "check-mark"), ("generate", "gears"),
-    ("auto-fill", "check-mark"), ("edit", "pen-tool"), ("add", "plus"),
+    ("auto-fill", "check-mark"), ("edit", "pen"), ("add", "plus"),
     ("new", "plus"), ("remove", "cancel"), ("delete", "cancel"),
     ("discard", "cancel"), ("clear", "cancel"), ("reset", "refresh"),
     ("refresh", "refresh"), ("search", "search"), ("view", "binoculars"),
     ("import", "download"), ("start", "stopwatch"), ("analyze", "binoculars"),
 )
+
+# Friendly semantic aliases for the evolving canonical icon library. The project
+# already contains a mixture of spaces, hyphens, underscores, singular/plural names,
+# and older names. Callers should not need to care which spelling won that week.
+_ICON_ALIASES = {
+    "user": ("user", "person", "character"),
+    "build": ("build", "builds"),
+    "builds": ("builds", "build"),
+    "field-office": ("field-office", "field_office", "field office", "notebook"),
+    "field_office": ("field_office", "field-office", "field office", "notebook"),
+    "book_open_text": ("book_open_text", "book-open-text", "open-book"),
+    "book-open-text": ("book-open-text", "book_open_text", "open-book"),
+    "crossed_swords": ("crossed_swords", "crossed-swords", "set"),
+    "crossed-swords": ("crossed-swords", "crossed_swords", "set"),
+    "swapping": ("swapping", "switch-weapon"),
+    "drop": ("drop", "potion", "stamina"),
+    "scales": ("scales", "balance", "optimization"),
+    "pen-tool": ("pen-tool", "pen"),
+}
 
 # Rylo icon colors are identity states, not semantic combat states. Keep them
 # steel/stone so semantic blue/orange/gold remains meaningful elsewhere.
@@ -143,14 +162,34 @@ def _is_rylo_theme() -> bool:
     return is_rylo_visual_theme(str(theme or ""))
 
 
+def _icon_name_candidates(name: str) -> tuple[str, ...]:
+    raw = str(name or "").strip()
+    if not raw:
+        return ()
+    stem = raw[:-4] if raw.lower().endswith(".svg") else raw
+    values: list[str] = []
+    for candidate in _ICON_ALIASES.get(stem, (stem,)):
+        for variant in (
+            candidate,
+            candidate.replace("_", "-"),
+            candidate.replace("_", " "),
+            candidate.replace("-", "_"),
+            candidate.replace("-", " "),
+            candidate.replace(" ", "-"),
+            candidate.replace(" ", "_"),
+        ):
+            if variant and variant not in values:
+                values.append(variant)
+    return tuple(values)
+
+
 def icon_path(name: str) -> Path | None:
-    if not name:
-        return None
-    filename = name if name.lower().endswith(".svg") else f"{name}.svg"
-    for parts in _ICON_ROOTS:
-        candidate = get_resource_path(*parts, filename)
-        if candidate.exists():
-            return candidate
+    for candidate_name in _icon_name_candidates(name):
+        filename = f"{candidate_name}.svg"
+        for parts in _ICON_ROOTS:
+            candidate = get_resource_path(*parts, filename)
+            if candidate.exists():
+                return candidate
     return None
 
 
