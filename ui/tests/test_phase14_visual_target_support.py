@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ui import application_workspace_bootstrap
+from ui import phase14_build_icon_polish_support
 from ui import phase14_build_lifecycle_guard_support
 from ui import phase14_build_visual_target_support
 from ui import phase14_rotation_visual_target_support
@@ -46,6 +47,49 @@ def test_build_lifecycle_repair_restores_inspector_after_legacy_wrappers() -> No
     assert "_restore_inspector(page)" in source
 
 
+def test_build_icon_polish_moves_new_build_to_header_and_uses_solid_gold() -> None:
+    source = _source(phase14_build_icon_polish_support)
+
+    assert "header.context_layout.addWidget(button)" in source
+    assert 'button.setText("+ Create New Build")' in source
+    assert "background: #C8A46A" in source
+    assert "phase14GoldAction" in source
+
+
+def test_build_icon_polish_uses_class_role_equipment_and_consumable_icons() -> None:
+    source = _source(phase14_build_icon_polish_support)
+
+    for icon_name in (
+        "health",
+        "shield",
+        "set",
+        "greaves",
+        "heart_necklace",
+        "leather_armor",
+        "lunar_wand",
+        "metal_boot",
+        "metal_skirt",
+        "ring",
+        "spiked-shoulder-armor",
+        "viking-helmet",
+        "mailed-fist",
+        "potion",
+        "food",
+    ):
+        assert f'"{icon_name}"' in source
+    assert "class_item.setIcon(class_icon)" in source
+    assert "role_item.setIcon(role_icon)" in source
+
+
+def test_build_skill_cards_restore_canonical_ability_art() -> None:
+    source = _source(phase14_build_icon_polish_support)
+
+    assert "load_skill_choices" in source
+    assert '("assets", "AbilityIcons", "icons", "128"' in source
+    assert "_skill_icon(name, 38)" in source
+    assert "card.addWidget(_skill_row(index, skill))" in source
+
+
 def test_rotation_visual_target_moves_results_below_builder_and_hides_team_chip() -> None:
     source = _source(phase14_rotation_visual_target_support)
 
@@ -58,10 +102,23 @@ def test_rotation_visual_target_moves_results_below_builder_and_hides_team_chip(
     ):
         assert f'"{label}"' in source
         assert f'"{icon_name}"' in source
-    assert 'get("TEAM")' in source
-    assert "team_label.parentWidget().hide()" in source
+    assert 'if key == "TEAM":' in source
+    assert "parent.hide()" in source
     assert "tab_bar.setVisible(tabs.currentIndex() != 0)" in source
     assert "layout.addWidget(nav)" in source
+
+
+def test_rotation_visual_target_strengthens_context_intent_and_primary_action() -> None:
+    source = _source(phase14_rotation_visual_target_support)
+
+    assert '"CHARACTER": "Character"' in source
+    assert "chip.setMinimumHeight(58)" in source
+    assert "button.setMinimumHeight(132)" in source
+    assert "button.setIconSize(QSize(38, 38))" in source
+    assert "button.setMinimumHeight(64)" in source
+    assert "background: #C8A46A" in source
+    assert 'save_to_build = getattr(page, "save_rotation_to_build_button", None)' in source
+    assert "save_to_build.hide()" in source
 
 
 def test_rotation_visual_target_preserves_legacy_builder_widget_lifetime() -> None:
@@ -86,9 +143,13 @@ def test_visual_target_support_is_composed_before_page_construction() -> None:
     source = _source(application_workspace_bootstrap)
 
     assert "install_phase14_build_visual_target_support()" in source
+    assert "install_phase14_build_icon_polish_support()" in source
     assert "install_phase14_rotation_visual_target_support()" in source
     assert source.index("install_phase14_build_lifecycle_guard_support()") < source.index(
         "install_phase14_build_visual_target_support()"
+    )
+    assert source.index("install_phase14_build_visual_target_support()") < source.index(
+        "install_phase14_build_icon_polish_support()"
     )
 
 
