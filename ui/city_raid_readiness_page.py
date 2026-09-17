@@ -63,8 +63,10 @@ class _ReadinessArt(QLabel):
         self._refresh_pixmap()
 
     def _refresh_pixmap(self) -> None:
+        # Use the verified WebP artwork. The old field-journal JPEG copies emit
+        # repeated Qt decoder warnings on some systems and are no longer loaded.
         path = get_resource_path(
-            "assets", "themes", "bff", "field_journal", "roster", self.filename
+            "assets", "themes", "bff", "city_night", "roster", self.filename
         )
         pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
         self.clear()
@@ -77,7 +79,7 @@ class _ReadinessArt(QLabel):
             pixmap.scaled(
                 width,
                 height,
-                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
                 Qt.TransformationMode.SmoothTransformation,
             )
         )
@@ -146,7 +148,7 @@ class CityRaidReadinessPage(FoundryPage):
         field_note.setProperty("parchment", True)
         field_note.addWidget(
             _ReadinessArt(
-                "roster_people.jpg",
+                "roster_people.webp",
                 "Ready means proven or explicitly confirmed. Unknown is allowed to stay unknown.",
             )
         )
@@ -212,7 +214,7 @@ class CityRaidReadinessPage(FoundryPage):
         fun_note.setProperty("parchment", True)
         fun_note.addWidget(
             _ReadinessArt(
-                "roster_team.jpg",
+                "roster_team.webp",
                 "A ready group is just panic that has been alphabetized.",
             )
         )
