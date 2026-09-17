@@ -19,10 +19,12 @@ def install(app: QApplication) -> None:
         return
 
     from ui.collectibles_new_theme_assets_support import install as install_collectibles_theme_assets
+    from ui.collectibles_badge_presentation_support import install as install_collectibles_badge_presentation
     from ui.theme import theme_manager
     from ui import settings_page
 
     install_collectibles_theme_assets()
+    install_collectibles_badge_presentation()
 
     # Normalize every install to the one supported skin before pages are built.
     manager = theme_manager.ThemeManager()
