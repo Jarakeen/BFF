@@ -52,6 +52,7 @@ def bootstrap_workspace_extensions() -> None:
     from ui.phase14_build_inspector_support import install as install_phase14_build_inspector_support
     from ui.phase14_build_lifecycle_guard_support import install as install_phase14_build_lifecycle_guard_support
     from ui.phase14_build_visual_target_support import install as install_phase14_build_visual_target_support
+    from ui.phase14_build_icon_polish_support import install as install_phase14_build_icon_polish_support
     from ui.phase14_rotation_visual_target_support import install as install_phase14_rotation_visual_target_support
 
     # Personnel is player-level identity. Repair duplicates left by older imports
@@ -91,13 +92,14 @@ def bootstrap_workspace_extensions() -> None:
     # the saved build or ESO database. The command center itself routes New Build to
     # the existing Easy Mode action, so no second wrapper is needed around _build_ui.
     # The inspector supplies the read-first dossier. The lifecycle guard reconstructs
-    # presentation if older wrappers detach it, and the final visual pass hides only
-    # legacy chrome while preserving the canonical actions behind the new shell.
+    # presentation if older wrappers detach it, and the final visual passes align the
+    # mockup geometry plus class/role/gear/skill icon vocabulary.
     install_phase14_builds_command_center_support()
     install_phase14_build_profile_support()
     install_phase14_build_inspector_support()
     install_phase14_build_lifecycle_guard_support()
     install_phase14_build_visual_target_support()
+    install_phase14_build_icon_polish_support()
 
     # Rotation gets the same final presentation pass before MainWindow constructs
     # CanonicalRotationDashboardPage. It preserves the old hidden builder shell so
