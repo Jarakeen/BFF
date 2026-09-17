@@ -41,6 +41,7 @@ def test_complete_raid_workspace_is_registered_as_first_class_pages() -> None:
         assert page_type in source
         assert f'_register_page(window, "{route}"' in source
 
+    assert "install_roster_top_back_control(roster_workspace)" in source
     assert 'window.pages["assignments"] = page' not in source
     assert 'MainWindow.' not in source
 
@@ -107,16 +108,20 @@ def test_roster_workspace_keeps_six_cards_without_legacy_filler_art() -> None:
     assert Path("assets/themes/bff/urban_wilderness/roster/roster_badges.png").is_file()
 
 
-def test_roster_embedded_pages_use_side_mounted_dedicated_back_arrow() -> None:
+def test_roster_detail_back_arrow_lives_in_top_card_strip_without_squeezing_content() -> None:
     wrapper = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
+    support = Path("ui/roster_top_back_control_support.py").read_text(encoding="utf-8")
 
-    assert "back = QToolButton()" in wrapper
-    assert "back.setIcon(_roster_back_icon())" in wrapper
-    assert 'back.setToolTip("Back to Roster")' in wrapper
     assert 'QPushButton("Back to Roster")' not in wrapper
-    assert "nav_rail.addStretch(1)" in wrapper
-    assert "shell_layout.addLayout(nav_rail)" in wrapper
-    assert '"urban_wilderness", "roster", "back_arrow.png"' in wrapper
+    assert "install_roster_top_back_control" in support
+    assert 'back.setObjectName("rosterTopBackButton")' in support
+    assert 'back.setProperty("rosterBackButton", True)' in support
+    assert 'back.setToolTip("Back to Roster")' in support
+    assert '"back_arrow.png"' in support
+    assert "metrics_layout.addWidget(back, 0, 0" in support
+    assert "for column, card in enumerate(page.metric_cards.values(), start=1)" in support
+    assert "stack.currentChanged.connect(sync_visibility)" in support
+    assert "shell_layout.addLayout(nav_rail)" not in support
     assert Path("assets/themes/bff/urban_wilderness/roster/back_arrow.png").is_file()
 
 
