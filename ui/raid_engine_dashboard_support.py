@@ -192,8 +192,10 @@ def register_raid_engine_pages(window) -> None:
     from ui.city_raid_readiness_page import CityRaidReadinessPage
     from ui.city_raid_roster_workspace_page import CityRaidRosterWorkspacePage
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
+    from ui.roster_top_back_control_support import install_roster_top_back_control
 
     roster_workspace = CityRaidRosterWorkspacePage()
+    install_roster_top_back_control(roster_workspace)
     _register_page(window, "roster_workspace", roster_workspace)
     _register_roster_workspace_refresh(window, roster_workspace)
 
