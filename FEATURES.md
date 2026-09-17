@@ -158,8 +158,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Pre-generation command center exposes **Safe Progression**, **Balanced**, and **Maximum Output** intent presets over the existing canonical rotation controls rather than inventing a second planner state
 - Preset-selected execution/sustain values remain visible, editable, show a **Customized** state after manual changes, and can be reset to the active preset defaults
 - Rotation context is summary-first: character/build/content/boss/difficulty/team are shown as one compact line and the six selectors expand only through **Edit Context**
+- Phase 14 Rotation uses the canonical theme-aware `assets/icons` vocabulary across context chips, intent presets, generated settings, obligation rows, advanced controls, and result tabs; larger intent/settings/obligation/action surfaces fill the two-column workspace instead of leaving the command center top-heavy
 - Build skills, gear procs, team duties, pressure windows, and advanced rules are presented as compact obligation summaries; unsupported evidence remains explicitly unresolved instead of being fabricated
-- Timeline, Uptime & Resources, Explanations, Compare, and Save / Export remain result-only tabs and stay disabled until a generated plan exists
+- Timeline, Uptime & Resources, Explanations, Compare, and Save & Export remain result-only tabs and stay disabled until a generated plan exists
 - **Generate Rotation** remains the single dominant setup action; save/export controls stay in the generated-result workflow
 
 ---
