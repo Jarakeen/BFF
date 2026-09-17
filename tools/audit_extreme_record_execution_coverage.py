@@ -12,17 +12,42 @@ from services.extreme_record_execution_catalog_service import (
     ExtremeRecordExecutionCatalogService,
     ExtremeRecordExecutionStatus,
 )
+from services.extreme_specialized_execution_service import (
+    ExtremeSpecializedExecutionService,
+)
 
 
 def main() -> int:
     rows = ExtremeRecordExecutionCatalogService.descriptors()
     status_counts = Counter(row.status.value for row in rows)
     family_counts = Counter(row.execution_family for row in rows)
+    direct_specialized = tuple(
+        row.objective.key
+        for row in rows
+        if row.status is ExtremeRecordExecutionStatus.SPECIALIZED
+        and ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(
+            row.objective.key
+        )
+    )
+    direct_specialized_saved_build = tuple(
+        key
+        for key in direct_specialized
+        if ExtremeSpecializedExecutionService.requires_saved_build(key)
+    )
+    direct_specialized_scratch = tuple(
+        key
+        for key in direct_specialized
+        if not ExtremeSpecializedExecutionService.requires_saved_build(key)
+    )
 
     print("EXTREME RECORD EXECUTION COVERAGE")
     print(f"canonical_record_count={len(rows)}")
     for status in ExtremeRecordExecutionStatus:
         print(f"{status.value}_count={status_counts[status.value]}")
+    print(f"direct_specialized_count={len(direct_specialized)}")
+    print(f"direct_specialized_records={direct_specialized}")
+    print(f"direct_specialized_saved_build_records={direct_specialized_saved_build}")
+    print(f"direct_specialized_scratch_records={direct_specialized_scratch}")
     print()
     print("EXECUTION FAMILIES")
     for family, count in sorted(family_counts.items()):
