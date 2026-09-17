@@ -49,13 +49,29 @@ def test_u51_apprentice_no_longer_inflates_combat_spell_damage(tmp_path):
     assert any("inspiration_gain" in message for message in unresolved)
 
 
-def test_get_effects_delegates_multiplier_to_canonical_resolver(tmp_path):
+def test_get_effects_preserves_public_list_api_and_multiplier(tmp_path):
     repository = MundusRepository(tmp_path / "eso.db", game_update=50)
 
-    public_result = repository.get_effects("The Ritual", multiplier=1.5)
-    canonical_result = repository.effects_for_name("The Ritual", divines_multiplier=1.5)
+    effects, unresolved = repository.get_effects("The Ritual", multiplier=1.5)
+    canonical_effects, canonical_unresolved = repository.effects_for_name(
+        "The Ritual",
+        divines_multiplier=1.5,
+    )
 
-    assert public_result == canonical_result
-    effects, unresolved = public_result
-    assert unresolved == ()
+    assert isinstance(effects, list)
+    assert isinstance(unresolved, list)
+    assert effects == list(canonical_effects)
+    assert unresolved == list(canonical_unresolved)
+    assert unresolved == []
     assert _values(effects) == {StatId.HEALING_DONE: 12.0}
+
+
+def test_get_records_preserves_public_list_api(tmp_path):
+    repository = MundusRepository(tmp_path / "eso.db", game_update=50)
+
+    records = repository.get_records("The Mage")
+
+    assert isinstance(records, list)
+    assert records == list(repository.records_for_name("The Mage"))
+    assert len(records) == 1
+    assert records[0].stat_id == StatId.MAX_MAGICKA.value
