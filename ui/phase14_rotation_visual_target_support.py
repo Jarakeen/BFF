@@ -188,6 +188,41 @@ def _polish_generate(page) -> None:
     )
 
 
+def _polish_primary_headings(page) -> None:
+    """Match the mockup's large gold section hierarchy."""
+    from ui.components.foundry_card import FoundryCard
+
+    for card in page.findChildren(FoundryCard):
+        title = str(card.title_label.text() or "").strip()
+        if title not in {"Rotation Intent", "Inputs & Obligations"}:
+            continue
+
+        card.header.setMinimumHeight(48)
+        card.header.setMaximumHeight(54)
+        card.icon_label.setFixedSize(30, 30)
+        card.title_label.setStyleSheet(
+            "color: #C8A46A; font-size: 22px; font-weight: 700;"
+        )
+        card.set_icon("rotations" if title == "Rotation Intent" else "field-office")
+
+    generated = getattr(page, "phase14_generated_settings_heading", None)
+    if generated is not None:
+        generated.setStyleSheet(
+            "color: #C8A46A; font-size: 20px; font-weight: 700;"
+        )
+        generated.setMinimumHeight(28)
+
+
+def _polish_result_nav(page) -> None:
+    buttons = getattr(page, "phase14_result_nav_buttons", {})
+    for index, label, icon_name in _RESULT_NAV:
+        button = buttons.get(index)
+        if button is None:
+            continue
+        button.setText(label)
+        set_button_icon(button, icon_name, size=24)
+
+
 def _apply_target_geometry(page) -> None:
     from ui.components.foundry_card import FoundryCard
 
@@ -223,6 +258,8 @@ def apply_phase14_rotation_visual_target(page) -> None:
     _polish_summary_rows(page)
     _polish_obligations(page)
     _polish_generate(page)
+    _polish_primary_headings(page)
+    _polish_result_nav(page)
     _apply_target_geometry(page)
 
     tab_bar = tabs.tabBar()
