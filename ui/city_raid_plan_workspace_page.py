@@ -26,19 +26,54 @@ from ui.raid_plan_adviser_page import RaidPlanAdviserPage
 
 
 _TRIAL_BANNER_FILENAMES = (
-    ("dreadsail reef", "dreadsail_reef.webp"),
-    ("sunspire", "sunspire.webp"),
+    ("aetherian archive", "aetherian_archive.webp"),
+    ("asylum sanctorium", "asylum_sanctorium.webp"),
     ("cloudrest", "cloudrest.webp"),
+    ("dreadsail reef", "dreadsail_reef.webp"),
+    ("halls of fabrication", "halls_of_fabrication.webp"),
+    ("hel ra citadel", "hel_ra_citadel.webp"),
+    ("kyne's aegis", "kynes_aegis.webp"),
+    ("lucent citadel", "lucent_citadel.webp"),
+    ("maw of lorkhaj", "maw_of_lorkhaj.webp"),
+    ("rockgrove", "rockgrove.webp"),
+    ("sanctum ophidia", "sanctum_ophidia.webp"),
+    ("sanity's edge", "sanitys_edge.webp"),
+    ("sunspire", "sunspire.webp"),
 )
+
+_TRIAL_BANNER_ALIASES = {
+    "aa": "aetherian_archive.webp",
+    "as": "asylum_sanctorium.webp",
+    "cr": "cloudrest.webp",
+    "dsr": "dreadsail_reef.webp",
+    "hof": "halls_of_fabrication.webp",
+    "hrc": "hel_ra_citadel.webp",
+    "ka": "kynes_aegis.webp",
+    "lc": "lucent_citadel.webp",
+    "mol": "maw_of_lorkhaj.webp",
+    "rg": "rockgrove.webp",
+    "so": "sanctum_ophidia.webp",
+    "se": "sanitys_edge.webp",
+    "ss": "sunspire.webp",
+}
 
 
 def _clean(value: object) -> str:
     return str(value or "").strip()
 
 
+def _normalize_trial_identity(value: object) -> str:
+    text = _clean(value).casefold().replace("’", "'").replace("_", " ").replace("-", " ")
+    return " ".join(text.split())
+
+
 def _trial_banner_filename(*values: object) -> str | None:
     """Resolve a trial-specific Raid Plan banner from stable identity text."""
-    identity = " ".join(_clean(value).casefold() for value in values if _clean(value))
+    identities = tuple(_normalize_trial_identity(value) for value in values if _clean(value))
+    for identity in identities:
+        if identity in _TRIAL_BANNER_ALIASES:
+            return _TRIAL_BANNER_ALIASES[identity]
+    identity = " ".join(identities)
     for trial_key, filename in _TRIAL_BANNER_FILENAMES:
         if trial_key in identity:
             return filename
