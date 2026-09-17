@@ -50,6 +50,7 @@ def bootstrap_workspace_extensions() -> None:
     from ui.phase14_builds_command_center_support import install as install_phase14_builds_command_center_support
     from ui.phase14_build_profile_support import install as install_phase14_build_profile_support
     from ui.phase14_build_inspector_support import install as install_phase14_build_inspector_support
+    from ui.phase14_build_lifecycle_guard_support import install as install_phase14_build_lifecycle_guard_support
 
     # Personnel is player-level identity. Repair duplicates left by older imports
     # before any roster page reads them. The merge unions teams and moves legacy
@@ -87,11 +88,13 @@ def bootstrap_workspace_extensions() -> None:
     # then adds persisted profile defaults/favorite/archive metadata without mutating
     # the saved build or ESO database. The command center itself routes New Build to
     # the existing Easy Mode action, so no second wrapper is needed around _build_ui.
-    # The final inspector layer replaces the cramped legacy detail stack with a
-    # read-first tabbed dossier.
+    # The inspector supplies the read-first dossier. The lifecycle guard installs last
+    # because legacy Build decorators may still invalidate a newly-created Qt child
+    # during construction; it fails closed and reconstructs presentation only.
     install_phase14_builds_command_center_support()
     install_phase14_build_profile_support()
     install_phase14_build_inspector_support()
+    install_phase14_build_lifecycle_guard_support()
 
     _BOOTSTRAPPED = True
 
