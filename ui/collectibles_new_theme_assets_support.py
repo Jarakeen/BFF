@@ -9,7 +9,7 @@ without recoloring them again or falling back to legacy badge art.
 
 from pathlib import Path
 
-from PySide6.QtCore import QRect, Qt
+from PySide6.QtCore import QRect
 from PySide6.QtGui import QColor, QImage, QPixmap
 from PySide6.QtWidgets import QApplication
 
@@ -94,13 +94,82 @@ def _trim_alpha(pixmap: QPixmap) -> QPixmap:
     return pixmap.copy(QRect(left, top, right - left + 1, bottom - top + 1))
 
 
-def _prepare_city_badge(pixmap: QPixmap | None) -> QPixmap | None:
-    """Remove authored black sheet space and return only the collectible medallion.
+def _keep_center_component(image: QImage) -> QImage:
+    """Discard stray neighboring badge fragments from generated sprite-sheet cells.
 
-    The approved Urban Wilderness sheets were generated against pure black negative
-    space rather than alpha. Only near-black connected background is removed here;
-    dark navy/teal detail inside the medallions is deliberately preserved.
+    The first Urban Wilderness sheets have a few ornaments that cross nominal grid
+    boundaries. After the exterior black is made transparent, the wanted medallion
+    remains the opaque component surrounding the center of the cell. Keeping that
+    component removes the little arcs and partial badges leaking in from adjacent
+    rows without shaving the actual medallion frame.
     """
+    width = image.width()
+    height = image.height()
+    if width <= 0 or height <= 0:
+        return image
+
+    center_x = width // 2
+    center_y = height // 2
+    start: tuple[int, int] | None = None
+
+    # The medallion normally covers the exact center. Search a small expanding box
+    # as a guard against art whose central pixels happen to be transparent.
+    max_radius = max(width, height) // 4
+    for radius in range(max_radius + 1):
+        left = max(0, center_x - radius)
+        right = min(width - 1, center_x + radius)
+        top = max(0, center_y - radius)
+        bottom = min(height - 1, center_y + radius)
+        candidates = (
+            (center_x, top),
+            (center_x, bottom),
+            (left, center_y),
+            (right, center_y),
+        )
+        for x, y in candidates:
+            if image.pixelColor(x, y).alpha() > 8:
+                start = (x, y)
+                break
+        if start is not None:
+            break
+
+    if start is None:
+        return image
+
+    keep: set[tuple[int, int]] = set()
+    pending = [start]
+    while pending:
+        x, y = pending.pop()
+        if (x, y) in keep or x < 0 or y < 0 or x >= width or y >= height:
+            continue
+        if image.pixelColor(x, y).alpha() <= 8:
+            continue
+        keep.add((x, y))
+        pending.extend(
+            (
+                (x - 1, y - 1),
+                (x, y - 1),
+                (x + 1, y - 1),
+                (x - 1, y),
+                (x + 1, y),
+                (x - 1, y + 1),
+                (x, y + 1),
+                (x + 1, y + 1),
+            )
+        )
+
+    for y in range(height):
+        for x in range(width):
+            if image.pixelColor(x, y).alpha() <= 8 or (x, y) in keep:
+                continue
+            color = image.pixelColor(x, y)
+            color.setAlpha(0)
+            image.setPixelColor(x, y, color)
+    return image
+
+
+def _prepare_city_badge(pixmap: QPixmap | None) -> QPixmap | None:
+    """Remove authored black sheet space and return one clean collectible medallion."""
     if pixmap is None or pixmap.isNull():
         return None
 
@@ -111,7 +180,7 @@ def _prepare_city_badge(pixmap: QPixmap | None) -> QPixmap | None:
         return pixmap
 
     # Flood-fill from the four corners so only exterior near-black space becomes
-    # transparent. This avoids punching holes through legitimate dark badge detail.
+    # transparent. Dark navy/teal detail enclosed by the medallion is preserved.
     pending = [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
     visited: set[tuple[int, int]] = set()
     while pending:
@@ -126,6 +195,7 @@ def _prepare_city_badge(pixmap: QPixmap | None) -> QPixmap | None:
         image.setPixelColor(x, y, color)
         pending.extend(((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)))
 
+    image = _keep_center_component(image)
     return _trim_alpha(QPixmap.fromImage(image))
 
 
@@ -181,8 +251,6 @@ def install() -> None:
         for index, label in enumerate(labels)
     }
 
-    # Approved Urban Wilderness sheets. No inset cropping: the generated badges
-    # use nearly the full grid cell and their cardinal ornaments must remain intact.
     city_badges = {
         "Mounts": dashboard.SpriteRef("badges_1.png", 6, 4, 0),
         "Pets": dashboard.SpriteRef("badges_1.png", 6, 4, 1),
@@ -211,6 +279,10 @@ def install() -> None:
         "Motifs": dashboard.SpriteRef("badges_2.png", 3, 3, 6),
         "Antiquities": dashboard.SpriteRef("badges_2.png", 3, 3, 7),
         "Lorebooks": dashboard.SpriteRef("badges_2.png", 3, 3, 8),
+        "Furnishing Plans": dashboard.SpriteRef("badges_3.png", 4, 1, 0),
+        "Recipes": dashboard.SpriteRef("badges_3.png", 4, 1, 1),
+        "Rumors": dashboard.SpriteRef("badges_3.png", 4, 1, 2),
+        "Favors": dashboard.SpriteRef("badges_3.png", 4, 1, 3),
     }
 
     original_active_theme = dashboard._active_theme
@@ -250,7 +322,7 @@ def install() -> None:
         return _prepare_city_badge(source) if theme.key == city_theme.key else source
 
     def field_etched_badge(label: str):
-        """Use the canonical BFF PNG badge assets; never decode the damaged JPEG sheet."""
+        """Use canonical BFF PNG badge assets; never decode the damaged JPEG sheet."""
         return original_badge_sprite(dashboard.BFF_THEME, label)
 
     def badge_sprite(theme, label: str):
@@ -259,20 +331,18 @@ def install() -> None:
             return _recolor_badge(source, _tone_for(label, labels, _FIELD_BADGE_TONES))
 
         if theme.key == city_theme.key:
-            # Use the approved art exactly as authored after removing only the
-            # generated black sheet background. Never fall back to old badge art.
             return dedicated_badge(city_theme, city_badges.get(label))
 
         return original_badge_sprite(theme, label)
 
     def set_sprite(label, pixmap, size: int) -> bool:
-        """Give Urban Wilderness badge art a large, frameless presentation."""
+        """Keep Urban Wilderness medallions large but inside the tile's intended box."""
         app = QApplication.instance()
         visual_theme = str(app.property("visualTheme") if app is not None else "")
         if visual_theme == VISUAL_THEME_RYLO_CITY and size >= 70:
-            label.setFixedSize(104, 104)
+            label.setFixedSize(90, 90)
             label.setStyleSheet("background: transparent; border: none; padding: 0;")
-            return original_set_sprite(label, pixmap, 100)
+            return original_set_sprite(label, pixmap, 86)
         return original_set_sprite(label, pixmap, size)
 
     def number_sprite(theme, index: int):
