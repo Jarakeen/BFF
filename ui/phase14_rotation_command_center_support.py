@@ -182,6 +182,31 @@ def _refresh_obligation_counts(page) -> None:
         labels["Pressure windows"].setText(str(_pressure_count(page)))
 
 
+def _context_value(combo, fallback: str) -> str:
+    text = str(combo.currentText() or "").strip()
+    return text or fallback
+
+
+def _refresh_context_summary(page) -> None:
+    label = getattr(page, "phase14_context_summary_label", None)
+    if label is None:
+        return
+    character = _context_value(page.character_combo, "No character")
+    build = _context_value(page.build_combo, "No build")
+    content = _context_value(page.rotation_content_combo, "All content")
+    boss = _context_value(page.rotation_boss_combo, "No boss")
+    difficulty = _context_value(page.rotation_threshold_difficulty_combo, "Difficulty not set")
+    team = _context_value(page.rotation_team_combo, "No team context")
+    label.setText(f"{character}  ·  {build}    |    {content}  ·  {boss}  ·  {difficulty}    |    {team}")
+
+
+def _toggle_context_controls(page) -> None:
+    panel = page.phase14_context_controls_panel
+    visible = not panel.isVisible()
+    panel.setVisible(visible)
+    page.phase14_context_edit_button.setText("Done" if visible else "Edit Context")
+
+
 def _obligation_row(page, title: str, description: str, count_text: str, detail: QWidget | None = None) -> QWidget:
     host = QWidget()
     outer = QVBoxLayout(host)
@@ -257,9 +282,22 @@ def _build_rules_detail() -> QWidget:
 def _build_context(page) -> FoundryCard:
     context = FoundryCard("Rotation Context", "✦")
     context.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
-    context_row = QHBoxLayout()
-    context_row.setContentsMargins(0, 0, 0, 0)
-    context_row.setSpacing(7)
+
+    summary_row = QHBoxLayout()
+    summary_row.setContentsMargins(0, 0, 0, 0)
+    page.phase14_context_summary_label = QLabel()
+    page.phase14_context_summary_label.setWordWrap(False)
+    page.phase14_context_summary_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+    summary_row.addWidget(page.phase14_context_summary_label, 1)
+    page.phase14_context_edit_button = QPushButton("Edit Context")
+    page.phase14_context_edit_button.setFixedHeight(32)
+    summary_row.addWidget(page.phase14_context_edit_button)
+    context.addLayout(summary_row)
+
+    page.phase14_context_controls_panel = QWidget()
+    controls = QHBoxLayout(page.phase14_context_controls_panel)
+    controls.setContentsMargins(0, 5, 0, 0)
+    controls.setSpacing(7)
     for title, control in (
         ("CHARACTER", page.character_combo),
         ("BUILD", page.build_combo),
@@ -269,8 +307,12 @@ def _build_context(page) -> FoundryCard:
         ("DIFFICULTY", page.rotation_threshold_difficulty_combo),
     ):
         control.show()
-        context_row.addWidget(_field(title, control), 1)
-    context.addLayout(context_row)
+        controls.addWidget(_field(title, control), 1)
+    page.phase14_context_controls_panel.hide()
+    context.addWidget(page.phase14_context_controls_panel)
+
+    page.phase14_context_edit_button.clicked.connect(lambda: _toggle_context_controls(page))
+    _refresh_context_summary(page)
     return context
 
 
@@ -380,6 +422,7 @@ def _refresh_phase14_state(page) -> None:
         _apply_intent(page, "Safe Progression")
     _refresh_setting_summary(page)
     _refresh_obligation_counts(page)
+    _refresh_context_summary(page)
     has_result = bool(getattr(page, "rotation_plan", None))
     _enable_result_tabs(page, has_result)
 
@@ -435,8 +478,15 @@ def install_phase14_rotation_command_center(page) -> None:
         if hasattr(control, "toggled"):
             control.toggled.connect(lambda _value: _refresh_setting_summary(page))
 
-    for signal_owner in (page.character_combo, page.build_combo, page.rotation_team_combo, page.rotation_content_combo, page.rotation_boss_combo):
-        signal_owner.currentIndexChanged.connect(lambda _i: _refresh_obligation_counts(page))
+    for signal_owner in (
+        page.character_combo,
+        page.build_combo,
+        page.rotation_team_combo,
+        page.rotation_content_combo,
+        page.rotation_boss_combo,
+        page.rotation_threshold_difficulty_combo,
+    ):
+        signal_owner.currentIndexChanged.connect(lambda _i: (_refresh_context_summary(page), _refresh_obligation_counts(page)))
 
     _refresh_phase14_state(page)
     page._phase14_rotation_command_center_installed = True
