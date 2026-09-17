@@ -95,6 +95,7 @@ def main(argv: list[str] | None = None) -> int:
 
     user_owned = set(manifest.USER_OWNED_DATA_FILES)
     runtime_external = set(getattr(manifest, "RUNTIME_EXTERNAL_DATA_FILES", ()))
+    runtime_directories = set(getattr(manifest, "RUNTIME_EXTERNAL_DATA_DIRECTORIES", ()))
     first_install = set(getattr(manifest, "CLEAN_FIRST_INSTALL_DATA_FILES", ()))
     excluded_patterns = tuple(getattr(manifest, "EXCLUDED_TOP_LEVEL_DATA_GLOBS", ()))
     excluded_exact = set(getattr(manifest, "EXCLUDED_TOP_LEVEL_DATA_FILES", ()))
@@ -112,10 +113,17 @@ def main(argv: list[str] | None = None) -> int:
         if name not in classified and not _matches_any(name, excluded_patterns)
     ]
 
-    # A classified runtime file is only useful if it exists on the build workstation.
+    # Classified runtime payload is only useful if it exists on the build workstation.
     for name in sorted(runtime_external):
         if not (ROOT / "data" / name).is_file():
             errors.append(f"Allowlisted runtime data file is missing: data/{name}")
+    for name in sorted(runtime_directories):
+        path = ROOT / "data" / name
+        if not path.is_dir():
+            errors.append(f"Allowlisted runtime data directory is missing: data/{name}")
+            continue
+        if not any(path.iterdir()):
+            errors.append(f"Allowlisted runtime data directory is empty: data/{name}")
 
     if unclassified:
         if args.list_unclassified:
@@ -140,6 +148,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"approved_asset_entries={len(manifest.RUNTIME_ASSET_DATAS)}")
     print(f"seed_entries={len(manifest.SEED_DATAS)}")
     print(f"runtime_external_data={len(runtime_external)}")
+    print(f"runtime_external_directories={len(runtime_directories)}")
     print(f"user_owned_data={len(user_owned)}")
     print(f"excluded_top_level_data={len(excluded)}")
     print(f"unclassified_top_level_data={len(unclassified)}")
