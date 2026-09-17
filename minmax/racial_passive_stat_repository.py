@@ -168,6 +168,10 @@ class RacialPassiveStatRepository:
                 rf"Increases? your Critical Damage and Critical Healing by {_NUMBER}%",
                 ("critical_damage_percent", "critical_healing_percent"),
             ),
+            (
+                rf"Decreases? your detection radius (?:while Sneaking|in Stealth) by {_NUMBER} meters?",
+                ("detection_radius_reduction",),
+            ),
             (rf"Increases? your Flame Resistance by {_NUMBER}", ("flame_resistance",)),
             (
                 rf"Increases? your Physical and Spell Resistance by {_NUMBER}",
