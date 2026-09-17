@@ -15,7 +15,6 @@ import sys
 # exposed from a packaged release until their release status is explicitly promoted.
 RELEASE_HIDDEN_ROUTES: frozenset[str] = frozenset(
     {
-        "rotations",
         "extreme_optimization",
         "console:6",  # Optimizer Adviser / transition workspace
     }
