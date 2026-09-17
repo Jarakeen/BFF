@@ -1,0 +1,150 @@
+from __future__ import annotations
+
+"""Persistent Phase 14 build profile metadata.
+
+The profile is additive user state layered over an existing saved build. Existing
+explicit gear values remain authoritative overrides; no saved build or database row
+is normalized or deleted merely because a default exists.
+"""
+
+from dataclasses import asdict, dataclass
+import json
+from pathlib import Path
+from typing import Any
+
+DEFAULT_QUALITY = "Gold"
+DEFAULT_ITEM_LEVEL = "CP160"
+DEFAULT_ENCHANTMENT_TIER = "Truly Superb"
+
+
+@dataclass(frozen=True)
+class BuildProfile:
+    quality: str = DEFAULT_QUALITY
+    item_level: str = DEFAULT_ITEM_LEVEL
+    enchantment_tier: str = DEFAULT_ENCHANTMENT_TIER
+    favorite: bool = False
+    archived: bool = False
+    ownership: str = "mine"
+    source_owner: str = ""
+    source_template_id: str = ""
+
+    def normalized(self) -> "BuildProfile":
+        ownership = str(self.ownership or "mine").strip().casefold()
+        if ownership not in {"mine", "team"}:
+            ownership = "mine"
+        return BuildProfile(
+            quality=str(self.quality or DEFAULT_QUALITY).strip() or DEFAULT_QUALITY,
+            item_level=str(self.item_level or DEFAULT_ITEM_LEVEL).strip() or DEFAULT_ITEM_LEVEL,
+            enchantment_tier=str(self.enchantment_tier or DEFAULT_ENCHANTMENT_TIER).strip() or DEFAULT_ENCHANTMENT_TIER,
+            favorite=bool(self.favorite),
+            archived=bool(self.archived),
+            ownership=ownership,
+            source_owner=str(self.source_owner or "").strip(),
+            source_template_id=str(self.source_template_id or "").strip(),
+        )
+
+
+@dataclass(frozen=True)
+class EffectiveItemProfile:
+    quality: str
+    item_level: str
+    enchantment_tier: str
+    quality_overridden: bool
+    item_level_overridden: bool
+    enchantment_tier_overridden: bool
+
+    @property
+    def has_override(self) -> bool:
+        return any((self.quality_overridden, self.item_level_overridden, self.enchantment_tier_overridden))
+
+
+class BuildProfileService:
+    """Read/write additive profile records keyed by canonical saved-build id."""
+
+    def __init__(self, path: str | Path) -> None:
+        self.path = Path(path)
+
+    def _load_payload(self) -> dict[str, Any]:
+        if not self.path.is_file():
+            return {"version": 1, "profiles": {}}
+        try:
+            payload = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {"version": 1, "profiles": {}}
+        profiles = payload.get("profiles") if isinstance(payload, dict) else None
+        return {"version": 1, "profiles": profiles if isinstance(profiles, dict) else {}}
+
+    def get(self, build_id: str) -> BuildProfile:
+        key = str(build_id or "").strip()
+        if not key:
+            return BuildProfile()
+        row = self._load_payload()["profiles"].get(key)
+        if not isinstance(row, dict):
+            return BuildProfile()
+        return BuildProfile(
+            quality=str(row.get("quality") or DEFAULT_QUALITY),
+            item_level=str(row.get("item_level") or DEFAULT_ITEM_LEVEL),
+            enchantment_tier=str(row.get("enchantment_tier") or DEFAULT_ENCHANTMENT_TIER),
+            favorite=bool(row.get("favorite", False)),
+            archived=bool(row.get("archived", False)),
+            ownership=str(row.get("ownership") or "mine"),
+            source_owner=str(row.get("source_owner") or ""),
+            source_template_id=str(row.get("source_template_id") or ""),
+        ).normalized()
+
+    def put(self, build_id: str, profile: BuildProfile) -> None:
+        key = str(build_id or "").strip()
+        if not key:
+            raise ValueError("build_id is required")
+        payload = self._load_payload()
+        profiles = dict(payload["profiles"])
+        profiles[key] = asdict(profile.normalized())
+        temporary = self.path.with_suffix(self.path.suffix + ".tmp")
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        temporary.write_text(json.dumps({"version": 1, "profiles": profiles}, indent=2, sort_keys=True), encoding="utf-8")
+        temporary.replace(self.path)
+
+    def update(self, build_id: str, **changes: Any) -> BuildProfile:
+        current = asdict(self.get(build_id))
+        for key, value in changes.items():
+            if key not in current:
+                raise ValueError(f"Unknown build profile field: {key}")
+            current[key] = value
+        updated = BuildProfile(**current).normalized()
+        self.put(build_id, updated)
+        return updated
+
+
+def effective_item_profile(item, profile: BuildProfile) -> EffectiveItemProfile:
+    if hasattr(item, "Quality"):
+        quality = str(getattr(item, "Quality", "") or "").strip()
+        item_level = str(getattr(item, "Level", "") or "").strip()
+        enchantment_tier = str(getattr(item, "EnchantTier", "") or "").strip()
+    elif isinstance(item, dict):
+        quality = str(item.get("Quality") or "").strip()
+        item_level = str(item.get("Level") or "").strip()
+        enchantment_tier = str(item.get("EnchantTier") or "").strip()
+    else:
+        quality = item_level = enchantment_tier = ""
+    normalized = profile.normalized()
+    return EffectiveItemProfile(
+        quality=quality or normalized.quality,
+        item_level=item_level or normalized.item_level,
+        enchantment_tier=enchantment_tier or normalized.enchantment_tier,
+        quality_overridden=bool(quality and quality.casefold() != normalized.quality.casefold()),
+        item_level_overridden=bool(item_level and item_level.casefold() != normalized.item_level.casefold()),
+        enchantment_tier_overridden=bool(enchantment_tier and enchantment_tier.casefold() != normalized.enchantment_tier.casefold()),
+    )
+
+
+def build_profile_exception_count(build, profile: BuildProfile) -> int:
+    items = list(getattr(build, "Armor", {}).values())
+    items.extend([
+        getattr(build, "Necklace", None), getattr(build, "Ring1", None), getattr(build, "Ring2", None),
+        getattr(build, "FrontBarWeapon", None), getattr(build, "FrontBarOffHand", None),
+        getattr(build, "BackBarWeapon", None), getattr(build, "BackBarOffHand", None),
+    ])
+    return sum(1 for item in items if item is not None and effective_item_profile(item, profile).has_override)
+
+
+__all__ = ["BuildProfile", "BuildProfileService", "EffectiveItemProfile", "DEFAULT_QUALITY", "DEFAULT_ITEM_LEVEL", "DEFAULT_ENCHANTMENT_TIER", "effective_item_profile", "build_profile_exception_count"]
