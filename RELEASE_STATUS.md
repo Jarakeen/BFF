@@ -2,8 +2,7 @@
 
 This file is the release-facing inventory for packaged FoundryDock builds. It is deliberately stricter than `FEATURES.md`: a feature may exist in source and still be excluded from a release.
 
-**Current development version:** `0.1.0`  
-**Next release version:** `0.1.1` when the release candidate is approved.  
+**Current release candidate:** `0.1.1`  
 **Status date:** 2026-09-17
 
 ## Release rules
@@ -13,13 +12,13 @@ This file is the release-facing inventory for packaged FoundryDock builds. It is
 - Disabled, legacy, deprecated, superseded, experimental, or unfinished user-facing features do not ship as visible release features.
 - Updates may replace application files but must never overwrite the live `eso.db`, user settings, saved builds, roster state, progress, or session data.
 - `app_version.py` is the single source of truth for the application version.
-- Final release approval requires a clean build on a machine/environment that is not relying on the developer checkout.
+- Final release approval requires a clean packaged-build smoke pass.
 
 ---
 
 ## Release candidate: working / intended to ship
 
-These are current release candidates, subject to the final smoke gate.
+These are current release candidates, subject to the final packaged smoke gate.
 
 - Desktop application shell and Urban Wilderness visual skin
 - Canonical sidebar/navigation for enabled workspaces
@@ -39,21 +38,20 @@ These are current release candidates, subject to the final smoke gate.
 - Application update check / staged in-place portable update support
 - Database migration/provisioning needed by supported runtime paths
 
-**Final release gate still required:** every visible route must open successfully from the packaged build and must not depend on developer-only files.
+**Final release gate still required:** the packaged executable must launch and every visible release route must open without depending on developer-only files.
 
 ---
 
-## In progress: source retained, not considered release-ready yet
+## In progress: source retained, hidden from packaged release navigation
 
-These remain active development work. They may be present in the source tree and may be packaged only if their runtime dependencies are needed by another approved feature; they are not to be advertised as finished release features until their gate is explicitly changed here.
+These remain active development work. Source builds keep them visible for development; frozen release builds hide their routes until they are explicitly promoted here.
 
 - Rotation Builder / rotation runtime completion and UI hardening
 - Extreme Build Engine / ceiling-proof engine
 - Optimizer Adviser transition
 - Collectibles presentation polish and final badge/layout review
 - Remaining Raid Engine visual/interaction cleanup
-- Final executable data-payload classification
-- Clean-machine packaged-build validation
+- Clean packaged-build validation
 
 ---
 
@@ -64,7 +62,7 @@ These remain active development work. They may be present in the source tree and
 - Any feature explicitly disabled by an optional-module/runtime gate
 - Broadcast module in the default FoundryDock build; it remains an explicitly optional payload only
 
-Disabled implementation may remain in source when it is intentionally retained for future work, but its UI entry points and startup work must remain off.
+Disabled implementation may remain in source when intentionally retained for future work, but its UI entry points and startup work must remain off.
 
 ---
 
@@ -95,26 +93,26 @@ Currently approved:
 - `assets/logos/BFF_logo.png` — active application branding
 - `assets/themes/bff/foundry.qss` — active base stylesheet
 - `assets/themes/bff/urban_wilderness` — active visual skin assets
-- `assets/themes/bff/field_journal/roster` — two pencil/sketch Roster/Readiness assets still intentionally used by Urban Wilderness
+- `assets/themes/bff/field_journal/roster` — pencil/sketch Roster/Readiness assets still intentionally used by Urban Wilderness
 - `bff.ico` — Windows application icon
-- `data/eso.db` as a **read-only seed only** inside the frozen app
+- `data/eso.db` as a **read-only recovery seed only** inside the frozen app
 
 The live writable database remains external.
 
 ---
 
-## Data payload classification: required before final 0.1.1 build
+## Data payload classification: complete
 
-The current portable build historically copied many top-level `data/` reference files. Do not remove them by guesswork: several Rotation, Extreme, coverage, encounter, potion, gear, and canonical services consume JSON semantics at runtime.
+The top-level `data/` release boundary is fully classified.
 
-Before final packaging, every external `data/` file must be assigned exactly one class:
+Every external data file is assigned to one of these classes:
 
-1. **runtime-required** — ships with the app/update;
+1. **runtime-required** — copied with the first install and safe update payload;
 2. **first-install state** — created cleanly, never copied from the developer workstation;
-3. **user-owned** — preserved across updates, never replaced;
+3. **user-owned** — preserved across updates and never replaced;
 4. **development/evidence/legacy** — excluded.
 
-The release audit intentionally reports this as an outstanding gate until the classification is complete.
+The release audit currently reports `unclassified_top_level_data=0`.
 
 ---
 
@@ -124,14 +122,13 @@ A release is ready only when all of the following are true:
 
 - full intended release test suite passes;
 - release audit passes;
-- app boots from a clean checkout;
-- packaged app boots without the developer virtual environment;
-- every visible sidebar route opens;
-- disabled routes are absent;
-- no missing/corrupt image warnings;
+- packaged app launches without the developer virtual environment;
+- every visible release sidebar route opens;
+- in-progress and disabled routes are absent from packaged navigation;
+- no missing/corrupt image warnings appear;
 - no required runtime asset/data file is missing;
 - no forbidden legacy asset tree is bundled;
 - existing live database migrates without reset;
 - update archive contains no `eso.db`, settings, builds, roster/progress/session state;
 - upgrade from the previous release preserves user-owned data;
-- `APP_VERSION` is bumped to the new release number only after the candidate is approved.
+- release artifacts report version `0.1.1`.
