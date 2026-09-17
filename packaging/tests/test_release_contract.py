@@ -32,6 +32,24 @@ def test_release_manifest_is_positive_asset_allowlist() -> None:
         )
 
 
+def test_release_imports_only_approved_optional_splash_from_legacy_location() -> None:
+    manifest = _load_manifest()
+    optional = dict(manifest.OPTIONAL_RUNTIME_ASSET_DATAS)
+
+    assert optional[
+        "assets/themes/bff/grimoire/assets/fantasy_splash.png"
+    ] == "assets/themes/bff/urban_wilderness/startup"
+    assert all("grimoire" in source for source in optional)
+    assert all(
+        destination == "assets/themes/bff/urban_wilderness/startup"
+        for destination in optional.values()
+    )
+
+    splash = (ROOT / "ui" / "startup_splash.py").read_text(encoding="utf-8")
+    assert '("assets", "themes", "bff", "urban_wilderness", "startup")' in splash
+    assert "fantasy_splash.png" in splash
+
+
 def test_pyinstaller_spec_consumes_release_manifest_instead_of_whole_assets_tree() -> None:
     source = (ROOT / "packaging" / "BFF.spec").read_text(encoding="utf-8")
 
@@ -87,6 +105,17 @@ def test_release_build_preserves_user_database_and_uses_fixed_update_asset_name(
     assert 'Copy-Item (Join-Path $DataRoot "builds.json")' not in build
 
 
+def test_release_build_supports_nested_runtime_reference_data() -> None:
+    manifest = _load_manifest()
+    build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
+
+    assert "gameplay_policy/endgame_pve.json" in manifest.RUNTIME_EXTERNAL_DATA_FILES
+    assert "$DestinationParent = Split-Path $Destination -Parent" in build
+    assert "$UpdateDestinationParent = Split-Path $UpdateDestination -Parent" in build
+    assert "New-Item -ItemType Directory -Force -Path $DestinationParent" in build
+    assert "New-Item -ItemType Directory -Force -Path $UpdateDestinationParent" in build
+
+
 def test_final_release_build_is_blocked_until_data_classification_is_complete() -> None:
     build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
     audit = (ROOT / "tools" / "audit_release_candidate.py").read_text(encoding="utf-8")
@@ -115,6 +144,7 @@ def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
         "antiquities_08.csv",
         "dungeon_encounter_identity.json",
         "dungeon_encounter_identity_launch_starters_sixth.json",
+        "gameplay_policy/endgame_pve.json",
         "raid_encounter_identity.json",
         "reference_common_names.json",
         "reference_mitigations.json",
