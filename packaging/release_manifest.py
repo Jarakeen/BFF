@@ -30,6 +30,16 @@ SEED_DATAS: tuple[tuple[str, str], ...] = (
     ("data/eso.db", "_seed_data"),
 )
 
+# External runtime reference files copied beside the executable. This starts empty on
+# purpose: each data file must be reviewed before it earns a place in a clean release.
+# The strict release build refuses to run while unclassified top-level data remains.
+RUNTIME_EXTERNAL_DATA_FILES: tuple[str, ...] = ()
+
+# Files created cleanly on first install instead of copied from the developer machine.
+CLEAN_FIRST_INSTALL_DATA_FILES: tuple[str, ...] = (
+    "builds.json",
+)
+
 # These source trees may remain in the repository but are not release payloads.
 # Adding one of them to RUNTIME_ASSET_DATAS should fail the release audit.
 FORBIDDEN_RELEASE_ASSET_PREFIXES: tuple[str, ...] = (
