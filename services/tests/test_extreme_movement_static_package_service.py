@@ -67,8 +67,10 @@ def _service() -> ExtremeMovementStaticPackageService:
 def test_static_movement_package_reuses_steed_three_swift_and_celerity() -> None:
     result = _service().evaluate("movement_speed")
 
-    assert result.result.raw_multiplier == pytest.approx(1.41)
-    assert result.result.effective_multiplier == pytest.approx(1.41)
+    # Additive run-speed sources: 21% Swift + 10% Steed. Celerity is the
+    # multiplicative CP.MovementSpeed bucket in the canonical run equation.
+    assert result.result.raw_multiplier == pytest.approx(1.31 * 1.10)
+    assert result.result.effective_multiplier == pytest.approx(1.31 * 1.10)
     assert "Major/Minor Expedition provider search not yet included" in result.unresolved
     assert any("Necklace: Legendary Swift" == row for row in result.evidence)
     assert any("Champion Point: Celerity max rank" == row for row in result.evidence)
