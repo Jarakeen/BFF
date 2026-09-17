@@ -32,6 +32,7 @@ These are current release candidates, subject to the final packaged smoke gate.
 - Live Raid workspace
 - Coverage workflows that are currently registered and tested
 - Comp Maker workflows that are currently registered and tested
+- Rotation Builder / rotation runtime and Phase 14 command-center UI
 - Combat / Reference Data workspace
 - Gear Lookup / reference tools that remain visible in current navigation
 - Achievements and currently wired progress surfaces
@@ -47,7 +48,6 @@ These are current release candidates, subject to the final packaged smoke gate.
 
 These remain active development work. Source builds keep them visible for development; frozen release builds hide their routes until they are explicitly promoted here.
 
-- Rotation Builder / rotation runtime completion and UI hardening
 - Extreme Build Engine / ceiling-proof engine
 - Optimizer Adviser transition
 - Remaining Raid Engine visual/interaction cleanup
