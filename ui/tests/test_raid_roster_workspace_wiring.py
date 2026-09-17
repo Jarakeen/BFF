@@ -95,31 +95,29 @@ def test_roster_workspace_keeps_six_cards_without_legacy_filler_art() -> None:
     assert "split.setStretchFactor(0, 3)" in wrapper
     assert "split.setStretchFactor(1, 2)" in wrapper
 
-    for icon_name in (
-        "roster-players",
-        "roster-characters",
-        "roster-teams",
-        "roster-availability",
-        "roster-recruitment",
-        "roster-archive",
-    ):
-        assert f'"{icon_name}"' in wrapper
-        assert Path(f"assets/icons/{icon_name}.svg").is_file()
-
+    assert '"urban_wilderness", "roster", "roster_badges.png"' in wrapper
+    assert "def _roster_badge_sprite" in wrapper
+    assert "badge.setPixmap(" in wrapper
+    assert "from ui.ux_icons import icon" not in wrapper
+    assert '"roster-players"' not in wrapper
     assert 'setProperty("rosterMetricBadge", True)' in wrapper
     assert "ordinal.hide()" in wrapper
     assert 'ordinal.setFixedSize(QSize(0, 0))' in wrapper
     assert "setMaximumHeight(148)" in wrapper
+    assert Path("assets/themes/bff/urban_wilderness/roster/roster_badges.png").is_file()
 
 
-def test_roster_embedded_pages_use_compact_bronze_back_arrow() -> None:
+def test_roster_embedded_pages_use_side_mounted_dedicated_back_arrow() -> None:
     wrapper = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
 
     assert "back = QToolButton()" in wrapper
-    assert 'back.setIcon(icon("roster-back"))' in wrapper
+    assert "back.setIcon(_roster_back_icon())" in wrapper
     assert 'back.setToolTip("Back to Roster")' in wrapper
     assert 'QPushButton("Back to Roster")' not in wrapper
-    assert Path("assets/icons/roster-back.svg").is_file()
+    assert "nav_rail.addStretch(1)" in wrapper
+    assert "shell_layout.addLayout(nav_rail)" in wrapper
+    assert '"urban_wilderness", "roster", "back_arrow.png"' in wrapper
+    assert Path("assets/themes/bff/urban_wilderness/roster/back_arrow.png").is_file()
 
 
 def test_roster_character_detail_is_profile_style_without_database_ids() -> None:
@@ -137,6 +135,7 @@ def test_roster_character_detail_is_profile_style_without_database_ids() -> None
     assert '"Canonical ID"' not in wrapper
     assert '"Build ID"' not in wrapper
     assert "Builds and Assignments" not in wrapper
+    assert '"CHARACTER\\nIMAGE"' in wrapper
 
 
 def test_readiness_parchment_uses_field_journal_sketches_with_fixed_height() -> None:
