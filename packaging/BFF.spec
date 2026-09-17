@@ -4,22 +4,19 @@ import runpy
 from PyInstaller.building.splash import Splash
 
 # PyInstaller defines SPECPATH as the directory containing this spec file.
-# packaging/ lives directly under the project root, so one parent is enough.
 project_root = Path(SPECPATH).resolve().parent
 manifest = runpy.run_path(str(project_root / "packaging" / "release_manifest.py"))
 datas = manifest["pyinstaller_datas"](project_root)
+release_excludes = list(manifest.get("PYINSTALLER_EXCLUDES", ()))
 
 # Build a deliberately dark, static boot plate for the PyInstaller bootloader.
-# This appears before Python/Qt has finished starting, preventing the one-file
-# executable from presenting a bright/blank startup flash. It contains no
-# animation, blinking, cycling text, or progress effects.
 boot_splash_path = project_root / "build" / "foundrydock_boot_splash.ppm"
 boot_splash_path.parent.mkdir(parents=True, exist_ok=True)
 
 width, height = 680, 400
-background = (12, 23, 27)       # #0C171B
-outer_border = (92, 78, 52)     # subdued brass, intentionally low-luminance
-inner_border = (31, 63, 69)     # muted teal
+background = (12, 23, 27)
+outer_border = (92, 78, 52)
+inner_border = (31, 63, 69)
 
 pixels = bytearray()
 for y in range(height):
@@ -35,9 +32,9 @@ with boot_splash_path.open("wb") as handle:
     handle.write(f"P6\n{width} {height}\n255\n".encode("ascii"))
     handle.write(pixels)
 
-# Runtime resources are supplied only by packaging/release_manifest.py. Do not
-# replace this with a whole-tree assets copy: the source repo intentionally keeps
-# retired themes, research art, and development-only files that must not ship.
+# Runtime resources and explicit code exclusions are supplied only by the release
+# manifest. Do not replace this with whole-tree copies: the source repo intentionally
+# retains retired, optional, and development-only material that must not ship.
 a = Analysis(
     [str(project_root / "app.py")],
     pathex=[str(project_root)],
@@ -47,7 +44,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=release_excludes,
     noarchive=False,
     optimize=0,
 )
