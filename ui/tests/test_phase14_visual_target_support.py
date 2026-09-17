@@ -354,3 +354,12 @@ def test_phase14_semantic_icons_use_explicit_svg_renderer() -> None:
     assert "QSvgRenderer" in source
     assert "def _strip_full_canvas_background(svg: str) -> str:" in source
     assert "return _source_svg_icon(path)" in source
+
+
+def test_semantic_icon_refresh_clears_miss_cache_and_uses_native_svg_fallback() -> None:
+    source = _source(ux_icons)
+
+    assert "icon_path.cache_clear()" in source
+    assert "direct = QIcon(str(path))" in source
+    assert "if not direct.isNull():" in source
+    assert "rendered = _source_svg_icon(path)" in source
