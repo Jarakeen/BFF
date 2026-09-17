@@ -2,10 +2,9 @@ from __future__ import annotations
 
 """Phase 14 command-center shell for the Builds workspace.
 
-This is deliberately a presentation layer over the existing BuildsPage and its
-already-installed template/copy/edit support. It does not introduce a second build
-store, rewrite builds.json, or infer ownership/favorite/archive metadata that the
-current persistence model does not yet own.
+Presentation only. Existing build/template/edit behavior remains canonical. The command
+center owns the library browser geometry and selection bridge without introducing a
+second build store or rewriting user build data.
 """
 
 from PySide6.QtCore import Qt
@@ -14,7 +13,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
     QTableWidget,
     QTableWidgetItem,
     QTabBar,
@@ -31,7 +29,6 @@ _ORIGINAL_BUILD_UI = None
 _ORIGINAL_LOAD = None
 _ORIGINAL_REFRESH_ROSTER = None
 _ORIGINAL_REFRESH_DETAIL = None
-
 
 _LIBRARY_TABS = ("All", "Mine", "Team", "Templates", "Favorites", "Archive")
 
@@ -59,9 +56,8 @@ def _content_for_build(build) -> str:
 
 
 def _template_mode(page) -> bool:
-    return getattr(page, "phase14_library_tabs", None) is not None and (
-        page.phase14_library_tabs.tabText(page.phase14_library_tabs.currentIndex()) == "Templates"
-    )
+    tabs = getattr(page, "phase14_library_tabs", None)
+    return bool(tabs is not None and tabs.currentIndex() >= 0 and tabs.tabText(tabs.currentIndex()) == "Templates")
 
 
 def _active_library_mode(page) -> str:
@@ -89,9 +85,7 @@ def _build_matches_filters(page, build) -> bool:
             return False
 
     selected_class = str(page.phase14_class_filter.currentText() or "All")
-    if selected_class != "All" and selected_class.casefold() != str(
-        getattr(build, "EsoClass", "") or ""
-    ).strip().casefold():
+    if selected_class != "All" and selected_class.casefold() != str(getattr(build, "EsoClass", "") or "").strip().casefold():
         return False
 
     selected_role = str(page.phase14_role_filter.currentText() or "All")
@@ -106,17 +100,10 @@ def _build_matches_filters(page, build) -> bool:
 
 def _set_filters_from_library(page) -> None:
     classes = sorted(
-        {
-            str(getattr(build, "EsoClass", "") or "").strip()
-            for build in page.roster.Members
-            if str(getattr(build, "EsoClass", "") or "").strip()
-        },
+        {str(getattr(build, "EsoClass", "") or "").strip() for build in page.roster.Members if str(getattr(build, "EsoClass", "") or "").strip()},
         key=str.casefold,
     )
-    roles = sorted(
-        {_role_for_row(page, build) for build in page.roster.Members if _role_for_row(page, build)},
-        key=str.casefold,
-    )
+    roles = sorted({_role_for_row(page, build) for build in page.roster.Members if _role_for_row(page, build)}, key=str.casefold)
     contents = sorted({_content_for_build(build) for build in page.roster.Members}, key=str.casefold)
     for combo, values in (
         (page.phase14_class_filter, classes),
@@ -140,19 +127,12 @@ def _populate_build_table(page) -> None:
     page.phase14_table_source_rows = []
 
     if _template_mode(page):
-        # The existing build-reuse feature remains authoritative for template loading,
-        # selection, and applying a template. Mirror its rows instead of reading a
-        # second template source here.
         for source_row in range(page.roster_list.count()):
             item = page.roster_list.item(source_row)
             row = table.rowCount()
             table.insertRow(row)
-            table.setItem(row, 0, QTableWidgetItem("☆"))
-            table.setItem(row, 1, QTableWidgetItem(item.text()))
-            table.setItem(row, 2, QTableWidgetItem("Template"))
-            table.setItem(row, 3, QTableWidgetItem("—"))
-            table.setItem(row, 4, QTableWidgetItem("Template"))
-            table.setItem(row, 5, QTableWidgetItem("Reusable"))
+            for column, value in enumerate(("☆", item.text(), "Template", "—", "Template", "Reusable")):
+                table.setItem(row, column, QTableWidgetItem(value))
             page.phase14_table_source_rows.append(source_row)
         table.blockSignals(False)
         if table.rowCount():
@@ -185,9 +165,7 @@ def _populate_build_table(page) -> None:
 
     table.blockSignals(False)
     if table.rowCount():
-        desired = 0
-        if page.selected_index in page.phase14_table_source_rows:
-            desired = page.phase14_table_source_rows.index(page.selected_index)
+        desired = page.phase14_table_source_rows.index(page.selected_index) if page.selected_index in page.phase14_table_source_rows else 0
         table.selectRow(desired)
 
 
@@ -212,58 +190,47 @@ def _switch_library_mode(page, index: int) -> None:
         else:
             page.status.warning("Template browsing is not installed in this app session.")
             return
-    else:
-        if page.view_combo.findText("All Builds") >= 0:
-            page.view_combo.setCurrentText("All Builds")
-
-    unsupported = {
-        "Team": "Team/shared ownership metadata is the next Phase 14 persistence slice.",
-        "Favorites": "Favorites metadata is the next Phase 14 persistence slice.",
-        "Archive": "Archive metadata is the next Phase 14 persistence slice.",
-    }
-    page.phase14_library_notice.setText(unsupported.get(mode, ""))
-    page.phase14_library_notice.setVisible(mode in unsupported)
+    elif page.view_combo.findText("All Builds") >= 0:
+        page.view_combo.setCurrentText("All Builds")
     _populate_build_table(page)
 
 
 def _create_command_center(page) -> QWidget:
     host = QWidget()
+    host.setObjectName("phase14BuildLibrary")
     layout = QVBoxLayout(host)
     layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(8)
+    layout.setSpacing(7)
 
-    controls = QWidget()
-    controls_layout = QHBoxLayout(controls)
-    controls_layout.setContentsMargins(0, 0, 0, 0)
-    controls_layout.setSpacing(8)
+    top = QHBoxLayout()
+    top.setContentsMargins(0, 0, 0, 0)
+    top.setSpacing(7)
 
     page.phase14_library_tabs = QTabBar()
-    page.phase14_library_tabs.setDocumentMode(True)
-    page.phase14_library_tabs.setExpanding(False)
+    page.phase14_library_tabs.setDocumentMode(False)
+    page.phase14_library_tabs.setExpanding(True)
+    page.phase14_library_tabs.setUsesScrollButtons(False)
+    page.phase14_library_tabs.setElideMode(Qt.TextElideMode.ElideNone)
+    page.phase14_library_tabs.setMinimumWidth(470)
     for name in _LIBRARY_TABS:
         page.phase14_library_tabs.addTab(name)
-    controls_layout.addWidget(page.phase14_library_tabs, 1)
+    top.addWidget(page.phase14_library_tabs, 5)
 
     page.phase14_build_search = QLineEdit()
     page.phase14_build_search.setPlaceholderText("Search builds…")
     page.phase14_build_search.setClearButtonEnabled(True)
-    page.phase14_build_search.setMinimumWidth(220)
-    controls_layout.addWidget(page.phase14_build_search)
+    page.phase14_build_search.setMinimumWidth(210)
+    top.addWidget(page.phase14_build_search, 2)
 
     page.phase14_create_build_button = FoundryButton("+ Create New Build", role=ButtonRole.PRIMARY)
-    page.phase14_create_build_button.setToolTip(
-        "Create New Build remains routed through the existing character/build creation workflow."
-    )
-    # Existing BuildsPage has no canonical blank-build creation action. Keep this
-    # honest instead of silently inventing an incomplete record.
-    page.phase14_create_build_button.setEnabled(False)
-    controls_layout.addWidget(page.phase14_create_build_button)
-    layout.addWidget(controls)
+    page.phase14_create_build_button.setMinimumWidth(150)
+    top.addWidget(page.phase14_create_build_button)
+    layout.addLayout(top)
 
-    filters = QWidget()
-    filter_layout = QHBoxLayout(filters)
-    filter_layout.setContentsMargins(0, 0, 0, 0)
-    filter_layout.addStretch()
+    filters = QHBoxLayout()
+    filters.setContentsMargins(0, 0, 0, 0)
+    filters.setSpacing(6)
+    filters.addStretch(1)
     page.phase14_class_filter = QComboBox()
     page.phase14_role_filter = QComboBox()
     page.phase14_content_filter = QComboBox()
@@ -272,29 +239,26 @@ def _create_command_center(page) -> QWidget:
         ("Role", page.phase14_role_filter),
         ("Content", page.phase14_content_filter),
     ):
-        filter_layout.addWidget(QLabel(label))
+        filters.addWidget(QLabel(label))
         combo.addItem("All")
-        combo.setMinimumWidth(120)
-        filter_layout.addWidget(combo)
-    layout.addWidget(filters)
-
-    page.phase14_library_notice = QLabel("")
-    page.phase14_library_notice.setWordWrap(True)
-    page.phase14_library_notice.setProperty("muted", True)
-    page.phase14_library_notice.hide()
-    layout.addWidget(page.phase14_library_notice)
+        combo.setMinimumWidth(115)
+        filters.addWidget(combo)
+    layout.addLayout(filters)
 
     table_card = FoundryCard("Build Library", "▤")
     page.phase14_build_table = QTableWidget(0, 6)
-    page.phase14_build_table.setHorizontalHeaderLabels(
-        ["★", "Name", "Character", "Class", "Role", "Content"]
-    )
+    page.phase14_build_table.setHorizontalHeaderLabels(["★", "Name", "Character", "Class", "Role", "Content"])
     page.phase14_build_table.verticalHeader().setVisible(False)
     page.phase14_build_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
     page.phase14_build_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
     page.phase14_build_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
     page.phase14_build_table.horizontalHeader().setStretchLastSection(True)
-    page.phase14_build_table.setMinimumWidth(520)
+    page.phase14_build_table.setMinimumWidth(650)
+    page.phase14_build_table.setColumnWidth(0, 42)
+    page.phase14_build_table.setColumnWidth(1, 225)
+    page.phase14_build_table.setColumnWidth(2, 150)
+    page.phase14_build_table.setColumnWidth(3, 130)
+    page.phase14_build_table.setColumnWidth(4, 120)
     table_card.addWidget(page.phase14_build_table)
     layout.addWidget(table_card, 1)
 
@@ -307,8 +271,36 @@ def _create_command_center(page) -> QWidget:
     return host
 
 
+def _wire_new_build_button(page) -> None:
+    existing = getattr(page, "create_character_button", None)
+    if existing is not None:
+        page.phase14_create_build_button.clicked.connect(existing.click)
+        page.phase14_create_build_button.setEnabled(existing.isEnabled())
+    else:
+        page.phase14_create_build_button.setEnabled(False)
+
+    action_host = getattr(page, "new_build_action_host", None)
+    if action_host is not None:
+        action_host.hide()
+
+
+def _quiet_overview_action_bar(page) -> None:
+    """The library/inspector view should not look like an open editor."""
+    for name in (
+        "save_build_button",
+        "cancel_build_button",
+        "delete_build_button",
+        "copy_build_button",
+        "template_build_button",
+        "save_button",
+        "export_button",
+    ):
+        button = getattr(page, name, None)
+        if button is not None:
+            button.hide()
+
+
 def install() -> None:
-    """Install the Phase 14 Builds command-center shell exactly once."""
     global _INSTALLED, _ORIGINAL_BUILD_UI, _ORIGINAL_LOAD, _ORIGINAL_REFRESH_ROSTER, _ORIGINAL_REFRESH_DETAIL
     if _INSTALLED:
         return
@@ -324,27 +316,24 @@ def install() -> None:
         _ORIGINAL_BUILD_UI(self)
         self.header.subtitle.setText("Create. Refine. Compare. Save what works.")
 
-        # Keep the decorated roster/list machinery alive as the compatibility bridge,
-        # but remove its visual ownership of the page. Selection and template actions
-        # still flow through the existing methods.
-        self.roster_list.hide()
-        roster_card = self.roster_list.parentWidget()
-        if roster_card is not None:
-            roster_card.hide()
-
         command_center = _create_command_center(self)
-        self.splitter.insertWidget(0, command_center)
+        old_roster_card = self.splitter.widget(0)
+        replaced = self.splitter.replaceWidget(0, command_center)
+        if replaced is not None:
+            replaced.hide()
+            replaced.setParent(self)
+        elif old_roster_card is not None:
+            old_roster_card.hide()
+
         self.splitter.setStretchFactor(0, 3)
         self.splitter.setStretchFactor(1, 2)
+        self.splitter.setSizes([860, 650])
 
-        # Legacy header selectors remain data/compatibility controls. They no longer
-        # need to consume visual space in the command-center presentation.
+        self.roster_list.hide()
         self.trial_combo.parentWidget().hide()
         self.view_combo.parentWidget().hide()
-
-        # The mockup's quiet action hierarchy keeps Save visible while secondary
-        # operations remain in the existing inspector/edit surfaces.
-        self.export_button.hide()
+        _wire_new_build_button(self)
+        _quiet_overview_action_bar(self)
 
     def load_phase14(self):
         _ORIGINAL_LOAD(self)
@@ -361,8 +350,6 @@ def install() -> None:
     def refresh_detail_phase14(self, *_args):
         result = _ORIGINAL_REFRESH_DETAIL(self, *_args)
         if hasattr(self, "phase14_build_table") and not _template_mode(self):
-            # Keep the command-center selection aligned after edits/reloads without
-            # causing another detail refresh signal loop.
             if self.selected_index in getattr(self, "phase14_table_source_rows", ()):
                 row = self.phase14_table_source_rows.index(self.selected_index)
                 self.phase14_build_table.blockSignals(True)
