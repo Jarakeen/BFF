@@ -190,10 +190,18 @@ _ICON_ALIASES = {
     "triune": ("Triune", "triune"),
     "protective": ("Protective", "protective"),
     "swift": ("Swift", "swift"),
+    "scales": ("scales", "optimization"),
+    "cog": ("cog", "gears"),
+    "drop": ("drop", "potion"),
 }
 
 # Rylo icon colors are identity states, not semantic combat states. Keep them
 # steel/stone so semantic blue/orange/gold remains meaningful elsewhere.
+_FOUNDRY_DEFAULT = "#C8A46A"
+_FOUNDRY_ACTIVE = "#D8B86F"
+_FOUNDRY_DISABLED = "#73777C"
+_FOUNDRY_SELECTED = "#E0C27A"
+
 _RYLO_DEFAULT = "#AEB3B7"
 _RYLO_ACTIVE = "#D4D1CB"
 _RYLO_DISABLED = "#676B70"
