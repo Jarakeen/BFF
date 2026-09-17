@@ -108,20 +108,22 @@ def test_roster_workspace_keeps_six_cards_without_legacy_filler_art() -> None:
     assert Path("assets/themes/bff/urban_wilderness/roster/roster_badges.png").is_file()
 
 
-def test_roster_detail_back_arrow_lives_in_top_card_strip_without_squeezing_content() -> None:
+def test_roster_detail_back_arrow_is_contextual_overlay_without_squeezing_content() -> None:
     wrapper = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
     support = Path("ui/roster_top_back_control_support.py").read_text(encoding="utf-8")
 
     assert 'QPushButton("Back to Roster")' not in wrapper
     assert "install_roster_top_back_control" in support
-    assert 'back.setObjectName("rosterTopBackButton")' in support
+    assert "class _BackArrowAnchor(QObject)" in support
+    assert 'back.setObjectName("rosterContextBackButton")' in support
     assert 'back.setProperty("rosterBackButton", True)' in support
     assert 'back.setToolTip("Back to Roster")' in support
     assert '"back_arrow.png"' in support
-    assert "metrics_layout.addWidget(back, 0, 0" in support
-    assert "for column, card in enumerate(page.metric_cards.values(), start=1)" in support
+    assert "back = QToolButton(stack)" in support
+    assert "self.button.move(x, y)" in support
     assert "stack.currentChanged.connect(sync_visibility)" in support
-    assert "shell_layout.addLayout(nav_rail)" not in support
+    assert "back.setVisible(visible)" in support
+    assert "metrics_layout.addWidget(back" not in support
     assert Path("assets/themes/bff/urban_wilderness/roster/back_arrow.png").is_file()
 
 
