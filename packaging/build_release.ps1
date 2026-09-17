@@ -130,6 +130,15 @@ try {
         $Utf8NoBom
     )
 
+    # First install also starts with a clean canonical player/character/build
+    # catalog. Existing installs keep their own characters.json because the
+    # updater never ships or replaces user-owned identity state.
+    [System.IO.File]::WriteAllText(
+        (Join-Path $DataRoot "characters.json"),
+        '{"schema_version": 4, "players": [], "characters": [], "builds": [], "team_assignments": []}',
+        $Utf8NoBom
+    )
+
     $CleanSettings = @'
 {
   "EsoLogsClientId": "",
