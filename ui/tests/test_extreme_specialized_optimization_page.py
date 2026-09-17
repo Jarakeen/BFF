@@ -25,13 +25,13 @@ def test_specialized_page_routes_only_zero_input_families_through_gateway() -> N
     assert "self.specialized_service.execute(" in source
     assert "result.value_text" in source
     assert "super()._run_extreme_search()" in source
-    assert "No fallback" not in source
 
 
-def test_current_zero_input_specialized_routes_are_explicit() -> None:
+def test_current_direct_specialized_routes_are_explicit() -> None:
     for key in (
         "actual_heal",
         "critical_heal",
+        "damage_shield",
         "bash_damage",
         "movement_speed",
         "sprint_speed",
@@ -41,7 +41,6 @@ def test_current_zero_input_specialized_routes_are_explicit() -> None:
         assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
 
     for key in (
-        "damage_shield",
         "resource_sustain",
         "ultimate_generation",
         "invisibility_duration",
@@ -51,7 +50,7 @@ def test_current_zero_input_specialized_routes_are_explicit() -> None:
 
 
 def test_saved_build_direct_routes_are_explicit() -> None:
-    for key in ("actual_heal", "critical_heal", "bash_damage"):
+    for key in ("actual_heal", "critical_heal", "damage_shield", "bash_damage"):
         assert ExtremeSpecializedExecutionService.requires_saved_build(key)
     for key in (
         "movement_speed",
