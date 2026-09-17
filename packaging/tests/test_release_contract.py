@@ -69,23 +69,38 @@ def test_final_release_build_is_blocked_until_data_classification_is_complete() 
     assert 'audit_release_candidate.py --strict-data' in build
     assert 'RUNTIME_EXTERNAL_DATA_FILES' in audit
     assert 'EXCLUDED_TOP_LEVEL_DATA_GLOBS' in audit
+    assert 'EXCLUDED_TOP_LEVEL_DATA_FILES' in audit
     assert '--list-unclassified' in audit
     assert hasattr(manifest, "RUNTIME_EXTERNAL_DATA_FILES")
     assert hasattr(manifest, "CLEAN_FIRST_INSTALL_DATA_FILES")
     assert hasattr(manifest, "EXCLUDED_TOP_LEVEL_DATA_GLOBS")
+    assert hasattr(manifest, "EXCLUDED_TOP_LEVEL_DATA_FILES")
 
 
 def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
     manifest = _load_manifest()
     runtime = set(manifest.RUNTIME_EXTERNAL_DATA_FILES)
     user_owned = set(manifest.USER_OWNED_DATA_FILES)
-    excluded = set(manifest.EXCLUDED_TOP_LEVEL_DATA_GLOBS)
+    excluded_globs = set(manifest.EXCLUDED_TOP_LEVEL_DATA_GLOBS)
+    excluded_exact = set(manifest.EXCLUDED_TOP_LEVEL_DATA_FILES)
 
     for name in (
         "antiquities_01.csv",
         "antiquities_08.csv",
         "dungeon_encounter_identity.json",
         "dungeon_encounter_identity_launch_starters_sixth.json",
+        "raid_encounter_identity.json",
+        "reference_common_names.json",
+        "reference_mitigations.json",
+        "reference_mitigations_xalvakka_overview.json",
+        "reference_version_history.json",
+        "rotation_dd_periodic_runtime_semantics.json",
+        "rotation_dd_periodic_target_health_semantics.json",
+        "rotation_runtime_output_conditions.json",
+        "rotation_scribed_skill_damage_semantics.json",
+        "source_manifest.json",
+        "team_compositions.json",
+        "team_prescription_templates.json",
     ):
         assert name in runtime
 
@@ -93,12 +108,27 @@ def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
         "encounter_positioning.json",
         "encounter_positioning.png",
         "encounter_positioning_timeline.json",
+        "esologs_trending_history.json",
+        "performance_dashboard.json",
+        "performance_focus.json",
         "TamrielDate.txt",
+        "team_composition_user_templates.json",
     ):
         assert name in user_owned
 
-    assert "*.before-*" in excluded
-    assert "eso.db.before-*" in excluded
+    for name in (
+        "eso_achievements.json",
+        "eso_categories.json",
+        "eso_tree.json",
+        "healer_refresh_reviewed.json",
+        "healer_runtime_candidates.json",
+        "healer_runtime_reviewed.json",
+        "rotation_dd_periodic_runtime_semantics_review.json",
+    ):
+        assert name in excluded_exact
+
+    assert "*.before-*" in excluded_globs
+    assert "eso.db.before-*" in excluded_globs
 
 
 def test_release_status_names_disabled_and_in_progress_boundaries() -> None:
