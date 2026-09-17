@@ -7,6 +7,7 @@ widgets into the approved intent + obligations presentation and keeps result tab
 behind the generation boundary. It does not duplicate planner state.
 """
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
