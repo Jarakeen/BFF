@@ -33,6 +33,12 @@ _SKIP_PARTS = frozenset({"tests", "test", "__pycache__", *_QUARANTINE_ROOTS})
 _LEGACY_GENERATED_ROSTER_NAMES = frozenset(
     {"GeneratedRosterPlan", "GeneratedRosterPlanService", "GeneratedRosterPlanSlot"}
 )
+_TRACKED_CLOSEOUT_DEBT_CODES = frozenset(
+    {
+        "service-catalog:unregistered-service-boundary",
+        "ui-class-monkey-patch",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -58,6 +64,25 @@ class ArchitectureAuditResult:
     @property
     def infos(self) -> tuple[ArchitectureFinding, ...]:
         return tuple(row for row in self.findings if row.severity == "INFO")
+
+    @property
+    def closeout_blockers(self) -> tuple[ArchitectureFinding, ...]:
+        """Return unresolved findings outside the two explicit migration inventories.
+
+        The service-catalog heuristic intentionally inventories leaf ``*Service``
+        classes as well as true architectural boundaries. UI class patches are staged
+        compatibility debt and are separately required to have a live runtime owner.
+        Neither raw inventory is treated as proof of a correctness gap by itself.
+        """
+        return tuple(
+            row
+            for row in self.findings
+            if row.severity == "ERROR"
+            or (
+                row.severity == "WARNING"
+                and row.code not in _TRACKED_CLOSEOUT_DEBT_CODES
+            )
+        )
 
 
 def _relative(root: Path, path: Path) -> str:
@@ -267,6 +292,46 @@ def _quarantine_import_findings(root: Path, path: Path, tree: ast.Module) -> lis
     ]
 
 
+def _broken_quarantine_test_import_findings(root: Path) -> list[ArchitectureFinding]:
+    """Reject active tests that name quarantine modules which no longer exist."""
+    findings: list[ArchitectureFinding] = []
+    for path in sorted(root.rglob("test_*.py")):
+        if ".git" in path.parts or "__pycache__" in path.parts:
+            continue
+        tree = _parse(path)
+        if tree is None:
+            continue
+        missing: set[str] = set()
+        for node in ast.walk(tree):
+            modules: list[str] = []
+            if isinstance(node, ast.Import):
+                modules.extend(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                modules.append(str(node.module or ""))
+            for module in modules:
+                if not any(
+                    module == prefix or module.startswith(prefix + ".")
+                    for prefix in _QUARANTINE_ROOTS
+                ):
+                    continue
+                module_path = root.joinpath(*module.split("."))
+                if not module_path.with_suffix(".py").is_file() and not (
+                    module_path / "__init__.py"
+                ).is_file():
+                    missing.add(module)
+        if missing:
+            findings.append(
+                ArchitectureFinding(
+                    "ERROR",
+                    "missing-quarantine-test-import",
+                    _relative(root, path),
+                    "active test imports missing quarantined module(s): "
+                    + ", ".join(sorted(missing)),
+                )
+            )
+    return findings
+
+
 def _legacy_generated_roster_alias_findings(
     root: Path, path: Path, tree: ast.Module
 ) -> list[ArchitectureFinding]:
@@ -449,6 +514,7 @@ def audit_system_architecture(*, root: Path) -> ArchitectureAuditResult:
         findings.extend(_runtime_path_findings(root, path, tree))
 
     findings.extend(_unowned_ui_patch_findings(root, patch_findings))
+    findings.extend(_broken_quarantine_test_import_findings(root))
     findings.extend(_repo_contract_findings(root))
 
     severity_rank = {"ERROR": 0, "WARNING": 1, "INFO": 2}
@@ -472,6 +538,7 @@ def _print_result(result: ArchitectureAuditResult) -> None:
     print(f"Errors:   {len(result.errors)}")
     print(f"Warnings: {len(result.warnings)}")
     print(f"Info:     {len(result.infos)}")
+    print(f"Closeout blockers: {len(result.closeout_blockers)}")
     print()
     if not result.findings:
         print("No findings.")
@@ -491,9 +558,19 @@ def main() -> int:
         action="store_true",
         help="return non-zero when ERROR findings are present",
     )
+    parser.add_argument(
+        "--closeout",
+        action="store_true",
+        help=(
+            "return non-zero for errors or warnings outside the explicitly tracked "
+            "service-catalog and owned UI-patch migration inventories"
+        ),
+    )
     args = parser.parse_args()
     result = audit_system_architecture(root=args.root)
     _print_result(result)
+    if args.closeout and result.closeout_blockers:
+        return 1
     return 1 if args.strict and result.errors else 0
 
 

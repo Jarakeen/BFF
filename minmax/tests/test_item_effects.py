@@ -1,11 +1,13 @@
 import pytest
 
-from old_pages.old_item_effects import (
+from minmax.formulas.derived_stats import (
     calculate_bloodthirsty_spell_damage,
     calculate_bloodthirsty_weapon_damage,
+)
+from minmax.formulas.final_calculations import calculate_sneak_cost
+from minmax.formulas.resolved_modifiers import (
     calculate_potion_cooldown,
     calculate_potion_duration,
-    calculate_sneak_cost,
     calculate_ultimate_restore,
 )
 

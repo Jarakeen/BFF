@@ -1,6 +1,6 @@
 import pytest
 
-from old_pages.old_calculate_la_speed import (
+from minmax.formulas.final_calculations import (
     calculate_la_melee_speed,
     calculate_la_speed,
 )

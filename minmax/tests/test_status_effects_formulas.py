@@ -1,6 +1,6 @@
 import pytest
 
-from old_pages.old_status_effects import (
+from minmax.formulas.resolved_modifiers import (
     calculate_magical_ability_status_chance,
     calculate_magical_aoe_dot_status_chance,
     calculate_magical_aoe_status_chance,

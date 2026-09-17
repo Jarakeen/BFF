@@ -1,6 +1,6 @@
 import pytest
 
-from old_pages.old_movement import (
+from minmax.formulas.final_calculations import (
     calculate_run_speed,
     calculate_sneak_detect_range,
     calculate_sneak_range,

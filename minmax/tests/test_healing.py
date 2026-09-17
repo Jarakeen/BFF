@@ -1,6 +1,6 @@
 import pytest
 
-from old_pages.old_healing import (
+from minmax.formulas.resolved_modifiers import (
     calculate_aoe_healing_done,
     calculate_dot_healing_done,
     calculate_health_restore,
@@ -8,10 +8,10 @@ from old_pages.old_healing import (
     calculate_healing_received,
     calculate_healing_reduction,
     calculate_healing_taken,
-    calculate_healing_total,
     calculate_resurrect_time,
     calculate_single_target_healing_done,
 )
+from minmax.formulas.final_calculations import calculate_healing_total
 
 
 def test_calculate_healing_done():

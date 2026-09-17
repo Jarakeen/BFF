@@ -1,6 +1,6 @@
 import pytest
 
-from old_pages.old_elemental_resistances import (
+from minmax.formulas.core_stats import (
     calculate_disease_resist,
     calculate_flame_resist,
     calculate_frost_resist,

@@ -4,6 +4,7 @@ import ast
 from pathlib import Path
 
 from tools.audit_system_architecture import (
+    _broken_quarantine_test_import_findings,
     _duplicate_class_findings,
     _install_fanout_findings,
     _legacy_generated_roster_alias_findings,
@@ -92,6 +93,27 @@ from migration.v2_to_v3 import migrate
     assert "legacy.compat" in finding.message
     assert "deprecated.previous_service" in finding.message
     assert "migration.v2_to_v3" in finding.message
+
+
+def test_missing_quarantine_import_in_active_test_is_an_error(tmp_path) -> None:
+    tests = tmp_path / "minmax" / "tests"
+    tests.mkdir(parents=True)
+    path = tests / "test_old_formula.py"
+    path.write_text(
+        "from old_pages.old_missing_formula import calculate\n", encoding="utf-8"
+    )
+
+    findings = _broken_quarantine_test_import_findings(tmp_path)
+
+    assert len(findings) == 1
+    assert findings[0].code == "missing-quarantine-test-import"
+    assert "old_pages.old_missing_formula" in findings[0].message
+
+    old_pages = tmp_path / "old_pages"
+    old_pages.mkdir()
+    (old_pages / "old_missing_formula.py").write_text("pass\n", encoding="utf-8")
+
+    assert _broken_quarantine_test_import_findings(tmp_path) == []
 
 
 def test_normal_runtime_imports_do_not_trigger_quarantine_boundary(tmp_path) -> None:
@@ -187,6 +209,8 @@ def test_current_repo_audit_confirms_resolved_authority_and_identity_debt() -> N
     assert "runtime-local-data-path" not in codes
     assert "installer-fanout" not in codes
     assert "ui-class-monkey-patch-unowned" not in codes
+    assert "missing-quarantine-test-import" not in codes
+    assert result.closeout_blockers == ()
     assert not any(
         row.code == "ui-class-monkey-patch"
         and row.path == "ui/phase5_build_delete_support.py"

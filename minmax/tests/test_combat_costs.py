@@ -1,6 +1,6 @@
 import pytest
 
-from old_pages.old_combat_costs import (
+from minmax.formulas.final_calculations import (
     calculate_bash_cost,
     calculate_bash_damage,
     calculate_block_cost,
@@ -214,4 +214,3 @@ def test_calculate_damage_shield_cost():
 
 def test_zero_inputs_produce_expected_baselines():
     assert calculate_damage_shield_cost() == pytest.approx(0)
-    
