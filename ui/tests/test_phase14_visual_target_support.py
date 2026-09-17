@@ -4,6 +4,7 @@ from pathlib import Path
 
 from ui import application_workspace_bootstrap
 from ui import phase14_build_icon_polish_support
+from ui import phase14_build_edit_return_support
 from ui import phase14_build_lifecycle_guard_support
 from ui import phase14_build_visual_target_support
 from ui import phase14_rotation_visual_target_support
@@ -168,3 +169,21 @@ def test_foundry_card_never_prints_missing_icon_name_as_heading_text() -> None:
     assert "semantic_qicon(icon)" in source
     assert "if value.isNull():" in source
     assert "self.icon_label.setText(icon)" not in source
+
+
+def test_build_edit_save_and_cancel_return_to_phase14_library() -> None:
+    source = _source(phase14_build_edit_return_support)
+
+    assert "def _return_to_library(page) -> None:" in source
+    assert "tabs.setCurrentIndex(0)" in source
+    assert "def save_and_return(self) -> None:" in source
+    assert "def cancel_and_return(self) -> None:" in source
+    assert "apply_phase14_build_visual_target(page)" in source
+    assert "_render_inspector(page)" in source
+
+
+def test_rotation_context_polish_is_idempotent_across_page_reopen() -> None:
+    source = _source(phase14_rotation_visual_target_support)
+
+    assert 'value_label.property("phase14ContextPolished")' in source
+    assert 'value_label.setProperty("phase14ContextPolished", True)' in source
