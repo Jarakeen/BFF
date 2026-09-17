@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QTableWidgetItem
+from PySide6.QtWidgets import QInputDialog, QTableWidgetItem
 
 from services.extreme_record_execution_catalog_service import (
     ExtremeRecordExecutionStatus,
@@ -16,10 +16,9 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
     """Extreme Build Lab with one gateway for specialized execution families.
 
     The base page remains the owner of layout, saved builds, blueprint mode and
-    shared-static execution. This subclass only intercepts specialized records
-    that the shared gateway can execute without additional scenario inputs.
-    Future family forms can feed that same gateway instead of adding page-specific
-    optimizers or monkeypatching the base class.
+    shared-static execution. This subclass owns only specialized routing and the
+    small set of family inputs that have canonical contracts.  Mechanics stay in
+    family services instead of migrating into Qt code.
     """
 
     def __init__(self, parent=None):
@@ -29,6 +28,14 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
         )
         self._objective_changed()
 
+    @staticmethod
+    def _specialized_route_kind(objective_key: str) -> str | None:
+        if ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(objective_key):
+            return "direct"
+        if ExtremeSpecializedExecutionService.can_execute_with_duration_input(objective_key):
+            return "duration"
+        return None
+
     def _objective_changed(self, _index: int = -1) -> None:
         if not hasattr(self, "run_button") or not hasattr(self, "scope_text"):
             return
@@ -36,23 +43,28 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
         descriptor = self._current_execution_descriptor()
         objective_key = descriptor.objective.key
         scratch = self.source_combo.currentData() == "scratch"
-        direct_specialized = (
-            descriptor.status is ExtremeRecordExecutionStatus.SPECIALIZED
-            and ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(
-                objective_key
-            )
+        route_kind = (
+            self._specialized_route_kind(objective_key)
+            if descriptor.status is ExtremeRecordExecutionStatus.SPECIALIZED
+            else None
         )
         saved_build_required = ExtremeSpecializedExecutionService.requires_saved_build(
             objective_key
         )
-        if direct_specialized and (not scratch or not saved_build_required):
+        if route_kind is not None and (not scratch or not saved_build_required):
             self.run_button.setEnabled(True)
             self.run_button.setToolTip("")
-            context_line = (
-                "Saved-build starting context required."
-                if saved_build_required
-                else "No saved-build context required; canonical source package is searched directly."
-            )
+            if saved_build_required:
+                context_line = "Saved-build starting context required."
+            elif route_kind == "duration":
+                context_line = (
+                    "An explicit comparison duration is requested when the search runs; "
+                    "provider windows are derived canonically."
+                )
+            else:
+                context_line = (
+                    "No saved-build context required; canonical source package is searched directly."
+                )
             self.scope_text.setPlainText(
                 f"{descriptor.objective.label}\n"
                 f"Shared execution family: {descriptor.execution_family}\n"
@@ -67,13 +79,12 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
     def _run_extreme_search(self) -> None:
         objective_key = str(self.objective_combo.currentData() or "")
         descriptor = self._current_execution_descriptor()
-        direct_specialized = (
-            descriptor.status is ExtremeRecordExecutionStatus.SPECIALIZED
-            and ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(
-                objective_key
-            )
+        route_kind = (
+            self._specialized_route_kind(objective_key)
+            if descriptor.status is ExtremeRecordExecutionStatus.SPECIALIZED
+            else None
         )
-        if not direct_specialized:
+        if route_kind is None:
             super()._run_extreme_search()
             return
 
@@ -95,6 +106,20 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
                 return
             build = self.builds[index]
 
+        duration_seconds: float | None = None
+        if route_kind == "duration":
+            duration_seconds, accepted = QInputDialog.getDouble(
+                self,
+                f"{descriptor.objective.label} Duration",
+                "Comparison duration (seconds):",
+                60.0,
+                1.0,
+                86400.0,
+                1,
+            )
+            if not accepted:
+                return
+
         active_bar = str(self.bar_combo.currentData() or "front")
         self.status.info(
             f"Searching {descriptor.objective.label} through the shared {descriptor.execution_family} engine."
@@ -104,6 +129,7 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
                 build,
                 objective_key,
                 active_bar=active_bar,
+                duration_seconds=duration_seconds,
             )
         except Exception as exc:
             self.status.error(f"Extreme specialized search failed: {exc}")
