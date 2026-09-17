@@ -375,11 +375,24 @@ def icon(name: str) -> QIcon:
         return QIcon()
     if path.suffix.casefold() == ".svg":
         if _is_rylo_theme():
-            return _rylo_icon(path)
-        # Render source SVGs ourselves. This avoids environment-dependent SVG
-        # QIcon loading and strips the opaque square tiles present in a few
-        # hand-added assets while preserving their authored Foundry colors.
-        return _source_svg_icon(path)
+            value = _rylo_icon(path)
+            if not value.isNull():
+                return value
+
+        # Prefer Qt's native icon loader first. Some Windows/PySide builds are
+        # happier loading the SVG as a QIcon than through an explicit renderer.
+        # If that path fails, fall back to the explicit renderer used to strip
+        # opaque backing tiles. The icon service should not become all-or-nothing
+        # merely because one SVG code path is fussy.
+        direct = QIcon(str(path))
+        if not direct.isNull():
+            return direct
+
+        rendered = _source_svg_icon(path)
+        if not rendered.isNull():
+            return rendered
+        return QIcon()
+
     return QIcon(str(path))
 
 
@@ -423,6 +436,9 @@ def icon_label(name: str, size: int = 18, parent: QWidget | None = None) -> QLab
 
 def refresh_theme_icons(root: QWidget | QApplication | None = None) -> None:
     """Refresh semantic icons, page headers, and brand marks after an in-app theme switch."""
+    # Icon assets are intentionally user-extensible. A previous miss must not
+    # remain cached after files are added/pulled while the app is running.
+    icon_path.cache_clear()
     app = QApplication.instance()
     if app is None:
         return
