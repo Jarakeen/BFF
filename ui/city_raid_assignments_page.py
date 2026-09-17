@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QFormLayout,
     QHeaderView,
     QHBoxLayout,
     QLabel,
@@ -37,7 +38,6 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.header.subtitle.setText("Turn good intentions into clear jobs.")
         self.header.department.setText("RAID • ASSIGNMENTS")
 
-        # Keep the canonical plan editor available, but out of the main reading path.
         legacy = QWidget()
         legacy_layout = QVBoxLayout(legacy)
         legacy_layout.setContentsMargins(0, 0, 0, 0)
@@ -78,10 +78,6 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
             if title == "Roles":
                 button.clicked.connect(self._toggle_plan_setup)
             views.addWidget(button)
-        note = QLabel("If the job is vague, the wipe is specific. — Field Note")
-        note.setWordWrap(True)
-        note.setProperty("muted", True)
-        views.addWidget(note)
         body.addWidget(views, 2)
 
         table_card = FoundryCard("Team Assignments", "group")
@@ -107,16 +103,46 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         body.addWidget(table_card, 7)
 
         detail = FoundryCard("Selected Spot", "feather")
-        self.selected_spot_label = QLabel("Select a spot to review its duties.")
-        self.selected_spot_label.setWordWrap(True)
-        detail.addWidget(self.selected_spot_label)
+        detail.setProperty("selectedSpotCard", True)
+
+        self.selected_spot_title = QLabel("Select a spot")
+        self.selected_spot_title.setProperty("selectedSpotTitle", True)
+        self.selected_spot_title.setWordWrap(True)
+        detail.addWidget(self.selected_spot_title)
+
+        self.selected_spot_role = QLabel("No assignment selected")
+        self.selected_spot_role.setProperty("selectedSpotRole", True)
+        self.selected_spot_role.setWordWrap(True)
+        detail.addWidget(self.selected_spot_role)
+
+        form = QFormLayout()
+        form.setContentsMargins(0, 4, 0, 4)
+        form.setHorizontalSpacing(10)
+        form.setVerticalSpacing(7)
+        self.selected_player = self._selected_value_label()
+        self.selected_character = self._selected_value_label()
+        self.selected_primary = self._selected_value_label()
+        self.selected_secondary = self._selected_value_label()
+        self.selected_gear = self._selected_value_label()
+        self.selected_build = self._selected_value_label()
+        self.selected_notes = self._selected_value_label()
+        form.addRow("Player", self.selected_player)
+        form.addRow("Character", self.selected_character)
+        form.addRow("Primary Assignment", self.selected_primary)
+        form.addRow("Secondary Assignment", self.selected_secondary)
+        form.addRow("Gear Needed", self.selected_gear)
+        form.addRow("Linked Build", self.selected_build)
+        form.addRow("Notes", self.selected_notes)
+        detail.addLayout(form)
+        detail.addStretch(1)
+
         open_build = QPushButton("Open Build")
         open_build.clicked.connect(lambda: self.pageRequested.emit("console:2"))
         detail.addWidget(open_build)
         open_rotation = QPushButton("Open Rotation")
         open_rotation.clicked.connect(lambda: self.pageRequested.emit("rotations"))
         detail.addWidget(open_rotation)
-        edit_roles = QPushButton("Edit Roles / Spots")
+        edit_roles = QPushButton("Edit Duties")
         edit_roles.clicked.connect(self._toggle_plan_setup)
         detail.addWidget(edit_roles)
         body.addWidget(detail, 3)
@@ -138,6 +164,28 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         bottom.addWidget(coverage, 1)
         self.workspace_layout.addLayout(bottom)
         self.workspace_layout.addWidget(legacy)
+
+    @staticmethod
+    def _selected_value_label() -> QLabel:
+        label = QLabel("—")
+        label.setWordWrap(True)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        label.setProperty("selectedSpotValue", True)
+        return label
+
+    def _set_selected_spot_empty(self, title: str, message: str) -> None:
+        self.selected_spot_title.setText(title)
+        self.selected_spot_role.setText(message)
+        for label in (
+            self.selected_player,
+            self.selected_character,
+            self.selected_primary,
+            self.selected_secondary,
+            self.selected_gear,
+            self.selected_build,
+            self.selected_notes,
+        ):
+            label.setText("—")
 
     def _toggle_plan_setup(self) -> None:
         visible = not self.plan_setup_surface.isVisible()
@@ -176,7 +224,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
     def _refresh_selected_spot(self) -> None:
         row = self.assignment_table.currentRow()
         if row < 0:
-            self.selected_spot_label.setText("Select a spot to review its duties.")
+            self._set_selected_spot_empty("Select a spot", "Choose a row to review its duties.")
             return
         spot = RAID_PLAN_SEATS[row]
         try:
@@ -185,17 +233,20 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         except Exception:
             member = None
         if member is None:
-            self.selected_spot_label.setText(f"{spot}\nNo player assigned to this spot yet.")
+            self._set_selected_spot_empty(spot, "No player assigned to this spot yet.")
             return
-        self.selected_spot_label.setText(
-            f"{spot}\n"
-            f"Player: {member.gamertag}\n"
-            f"Role: {_clean(member.role) or 'Not selected'}\n"
-            f"Main Duty: {_clean(member.primary_assignment) or 'Not set'}\n"
-            f"Backup / Utility: {_clean(member.secondary_assignment) or 'None'}\n"
-            f"Linked Build: {_clean(member.selected_build_name) or 'Not selected'}\n"
-            f"Notes: {_clean(member.notes) or 'None'}"
-        )
+
+        role = _clean(member.role) or "Role not selected"
+        eso_class = _clean(member.eso_class)
+        self.selected_spot_title.setText(spot)
+        self.selected_spot_role.setText(" • ".join(value for value in (role, eso_class) if value))
+        self.selected_player.setText(member.gamertag)
+        self.selected_character.setText(_clean(member.character_name) or "Not selected")
+        self.selected_primary.setText(_clean(member.primary_assignment) or "Not set")
+        self.selected_secondary.setText(_clean(member.secondary_assignment) or "None")
+        self.selected_gear.setText("Not tracked in Raid Plan")
+        self.selected_build.setText(_clean(member.selected_build_name) or "Not selected")
+        self.selected_notes.setText(_clean(member.notes) or "None")
 
     def apply_plan(self, plan) -> None:
         super().apply_plan(plan)
