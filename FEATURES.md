@@ -21,6 +21,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Theme-aware UI components
 - Rylo theme and Rylo-specific visual assets
 - Theme-aware cards, controls, tables, and result surfaces
+- FoundryCard headings resolve semantic heading icons from the canonical `assets/icons` library before compatibility icon locations
+- BFF sidebar branding uses the compact **BFF / RAID OPERATIONS** lockup and compass mark
 - Urban Wilderness uses a single low-stimulation, red/green-independent raid-lead workflow with static artwork, no flashing UI effects, Roster as the landing surface, and Community News hidden while disabled
 - Raid Engine overview accents and New Build entry adapt to Foundry teal/amber or Rylo's squared steel palette, with text and numeric progress cues alongside color
 - Main overview keeps four cards in each dashboard row at desktop widths; compact labeled attribute meters use red Health, green Stamina, and blue Magicka in both visual themes
@@ -31,7 +33,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Raid Engine dashboard summarizes static coverage evidence with distinct available, conditional, not-identified, and unverified labels rather than treating an unknown effect as missing
 - Raid Plans provides a visible 12-chair trial-planning workspace where gamertag can be known before character, role, class, or build, and saved builds can be assigned without mutating existing Roster persistence
 - Raid Plans now keeps the non-editable center note as a static quote panel, removes the redundant top Roles/Spots field-note card, and routes detailed assignment work to the dedicated Assignments surface
-- Readiness uses static fantasy field-art notes and explicit READY / GAP / NEEDS REVIEW text-and-symbol states so meaning is not encoded by red/green color alone
+- Readiness parchment notes use fixed-height field-journal pencil/sketch artwork; full-color city art is reserved for dark surfaces and decorative art cannot change page/card geometry
 - Empty boss, mechanic, positioning, and Raid Map panels use distinct compact field-art placeholders for Foundry and Rylo, with visible labels that distinguish decorative art from reviewed encounter evidence
 - Main character overview dashboard
 - Role-aware application surfaces
@@ -205,7 +207,11 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Preserve roster identity separately from build identity
 - Save generated team builds back to roster characters
 - Roster summary cards for Players, Characters, Teams, Availability, Recruitment, and Archive open their detailed workspaces inline beneath the card bar instead of launching modal pop-ups
-- The streamlined Roster workspace uses the feather identity, asset-backed semantic card badges, and existing static field-journal artwork in place of the older city raven/street panels
+- Roster top cards use stable fixed geometry, semantic badge/icon treatment, and the existing Collectibles number-sheet contract without allowing artwork to resize the page
+- The active Roster dashboard retires the old raven/street filler panels entirely; full-color art is not placed on parchment surfaces
+- Players keeps a visible people table beside the editable Player Record instead of opening a form-only detail view
+- Character detail uses a compact profile-style panel for player, class, race, role, teams, status, and saved-build count without showing Builds or Assignments tabs
+- Assignment **Selected Spot** uses a structured profile card for player, character, role, primary/secondary duty, gear status, linked build, and notes with direct Build/Rotation/Edit Duties actions
 - Import external raid rosters by merge rather than replacement, preserving unrelated players, teams, characters, and saved builds
 - Imported build/team assignments are attached to the canonical gamertag/character/build identities when the import can resolve them uniquely
 - Personnel keeps explicit **Known Aliases** for old gamertags, Discord names, and raid-sheet names; aliases are learned from manual entry, renames, or explicit merges rather than guessed from similarity
@@ -462,7 +468,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Compact multi-column collection layouts
 - Suggested collectibles to work on
 - Optional collectible thumbnail support
-- Urban Wilderness Collectibles restores the etched fantasy badge silhouettes and recolors them into the low-brightness blue/gold palette instead of leaving category badge slots empty
+- BFF Collectibles uses the original 24-cell `field_journal/collectibles/badges.jpg` category sheet in dashboard order while leaving the separate numbered-corner sprite contract untouched
+- Urban Wilderness Collectibles keeps badge labels transparent over the art and content-crops generated badge cells without borrowing Rylo artwork
 
 ---
 
