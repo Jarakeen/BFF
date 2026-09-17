@@ -1,5 +1,4 @@
 import math
-import pytest
 
 def calculate_la_speed(
     *,
