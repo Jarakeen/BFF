@@ -30,12 +30,14 @@ def test_specialized_page_routes_supported_families_through_gateway() -> None:
     assert "super()._run_extreme_search()" in source
 
 
-def test_current_zero_input_specialized_routes_are_explicit() -> None:
+def test_all_zero_input_specialized_routes_are_explicit() -> None:
     for key in (
         "actual_heal",
         "critical_heal",
         "damage_shield",
         "bash_damage",
+        "resource_sustain",
+        "ultimate_generation",
         "movement_speed",
         "sprint_speed",
         "stealthed_movement_speed",
@@ -44,12 +46,7 @@ def test_current_zero_input_specialized_routes_are_explicit() -> None:
     ):
         assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
 
-    for key in (
-        "resource_sustain",
-        "ultimate_generation",
-        "invisibility_uptime",
-    ):
-        assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
+    assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("invisibility_uptime")
 
 
 def test_invisibility_uptime_uses_generic_duration_route() -> None:
@@ -62,8 +59,15 @@ def test_invisibility_uptime_uses_generic_duration_route() -> None:
     assert '"Comparison duration (seconds):"' in source
 
 
-def test_saved_build_direct_routes_are_explicit() -> None:
-    for key in ("actual_heal", "critical_heal", "damage_shield", "bash_damage"):
+def test_saved_build_direct_routes_include_saved_rotation_records() -> None:
+    for key in (
+        "actual_heal",
+        "critical_heal",
+        "damage_shield",
+        "bash_damage",
+        "resource_sustain",
+        "ultimate_generation",
+    ):
         assert ExtremeSpecializedExecutionService.requires_saved_build(key)
     for key in (
         "movement_speed",
