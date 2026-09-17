@@ -136,12 +136,12 @@ class FoundrySidebar(QWidget):
         app = QApplication.instance()
         if app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO:
             return "sidebar_scythe_rylo.svg"
-        return "sidebar_feather_gold.svg"
+        return "compass_watermark.svg"
 
     def refresh_brand_mark(self) -> None:
         if not hasattr(self, "brand_mark"):
             return
-        pixmap = self._asset_pixmap(self._brand_mark_filename(), 30, 50)
+        pixmap = self._asset_pixmap(self._brand_mark_filename(), 50, 50)
         self.brand_mark.clear()
         if not pixmap.isNull():
             self.brand_mark.setPixmap(pixmap)
@@ -157,25 +157,25 @@ class FoundrySidebar(QWidget):
         brand = QWidget()
         brand_layout = QHBoxLayout(brand)
         brand_layout.setContentsMargins(0, 0, 0, 0)
-        brand_layout.setSpacing(6)
+        brand_layout.setSpacing(8)
 
         self.brand_mark = QLabel()
-        self.brand_mark.setFixedSize(36, 54)
+        self.brand_mark.setFixedSize(54, 54)
         self.brand_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.brand_mark.setProperty("sidebarBrandMark", True)
         self.refresh_brand_mark()
-        brand_layout.addWidget(self.brand_mark, 0, Qt.AlignmentFlag.AlignTop)
+        brand_layout.addWidget(self.brand_mark, 0, Qt.AlignmentFlag.AlignVCenter)
 
         brand_text = QVBoxLayout()
         brand_text.setContentsMargins(0, 0, 0, 0)
         brand_text.setSpacing(0)
-        logo = QLabel("BLACK FEATHER\nFOUNDRY")
+        logo = QLabel("BFF")
         logo.setFont(Fonts.logo())
         logo.setProperty("sidebarLogo", True)
-        logo.setWordWrap(True)
+        logo.setWordWrap(False)
         logo.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         brand_text.addWidget(logo)
-        office = QLabel("FIELD OFFICE")
+        office = QLabel("RAID OPERATIONS")
         office.setProperty("sidebarOffice", True)
         brand_text.addWidget(office)
         brand_layout.addLayout(brand_text, 1)
