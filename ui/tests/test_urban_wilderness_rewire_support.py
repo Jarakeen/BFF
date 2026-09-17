@@ -9,7 +9,7 @@ def _source(path: str) -> str:
 
 def test_roster_summary_cards_open_embedded_workspaces() -> None:
     source = _source("ui/city_raid_roster_workspace_page.py")
-    top_back = _source("ui/roster_top_back_control_support.py")
+    back_support = _source("ui/roster_top_back_control_support.py")
 
     assert "QStackedWidget" in source
     assert "_embed_detail_workspaces" in source
@@ -17,13 +17,16 @@ def test_roster_summary_cards_open_embedded_workspaces() -> None:
     assert "self._embedded_stack.setCurrentIndex(index)" in source
     assert "super()._show_detail(key)" in source
 
-    assert "install_roster_top_back_control" in top_back
-    assert 'back.setProperty("rosterBackButton", True)' in top_back
-    assert 'back.setToolTip("Back to Roster")' in top_back
-    assert '"urban_wilderness",' in top_back
-    assert '"back_arrow.png"' in top_back
-    assert "metrics_layout.addWidget(back, 0, 0" in top_back
-    assert "stack.currentChanged.connect(sync_visibility)" in top_back
+    assert "install_roster_top_back_control" in back_support
+    assert "class _BackArrowAnchor(QObject)" in back_support
+    assert "back = QToolButton(stack)" in back_support
+    assert 'back.setProperty("rosterBackButton", True)' in back_support
+    assert 'back.setToolTip("Back to Roster")' in back_support
+    assert '"back_arrow.png"' in back_support
+    assert "self.button.move(x, y)" in back_support
+    assert "stack.currentChanged.connect(sync_visibility)" in back_support
+    assert "back.setVisible(visible)" in back_support
+    assert "metrics_layout.addWidget(back" not in back_support
 
 
 def test_roster_is_streamlined_landing_surface() -> None:
@@ -66,21 +69,24 @@ def test_readiness_note_art_is_fixed_field_journal_sketch_and_status_is_not_colo
 
 
 def test_urban_collectibles_use_clean_large_approved_badge_sheets() -> None:
-    source = _source("ui/collectibles_new_theme_assets_support.py")
+    assets = _source("ui/collectibles_new_theme_assets_support.py")
+    presentation = _source("ui/collectibles_badge_presentation_support.py")
+    theme = _source("ui/rylo_theme_support.py")
 
-    assert '"urban_wilderness", "collectibles"' in source
-    assert 'dashboard.SpriteRef("badges_1.png", 6, 4' in source
-    assert 'dashboard.SpriteRef("badges_2.png", 3, 3' in source
-    assert "def _prepare_city_badge" in source
-    assert "Flood-fill from the four corners" in source
-    assert "return _trim_alpha(QPixmap.fromImage(image))" in source
-    assert "label.setFixedSize(104, 104)" in source
-    assert 'label.setStyleSheet("background: transparent; border: none; padding: 0;")' in source
-    assert "original_set_sprite(label, pixmap, 100)" in source
-    assert "dashboard.ProgressTile._set_sprite = staticmethod(set_sprite)" in source
-    assert "return dedicated_badge(city_theme, city_badges.get(label))" in source
-    assert "_CITY_BADGE_TONES" not in source
-    assert 'dashboard.SpriteRef("badges.jpg", 6, 4, index)' in source  # Field Journal only.
+    assert '"urban_wilderness", "collectibles"' in assets
+    assert 'dashboard.SpriteRef("badges_1.png", 6, 4' in assets
+    assert 'dashboard.SpriteRef("badges_2.png", 3, 3' in assets
+    assert "def _prepare_city_badge" in assets
+    assert "Flood-fill from the four corners" in assets
+    assert "return dedicated_badge(city_theme, city_badges.get(label))" in assets
+
+    assert "def prepare_city_badge(pixmap):" in presentation
+    assert "gutter_x = max(1, round(prepared.width() * 0.045))" in presentation
+    assert "label.setFixedSize(120, 120)" in presentation
+    assert 'label.setStyleSheet("background: transparent; border: none; padding: 0;")' in presentation
+    assert "original_set_sprite(label, pixmap, 116)" in presentation
+    assert "dashboard.ProgressTile._set_sprite = staticmethod(set_sprite)" in presentation
+    assert "install_collectibles_badge_presentation()" in theme
 
 
 def test_teams_and_parchment_notes_do_not_reintroduce_retired_city_roster_art() -> None:
