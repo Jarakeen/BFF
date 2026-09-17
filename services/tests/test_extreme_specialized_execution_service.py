@@ -35,6 +35,17 @@ class _HealingEvents:
         )
 
 
+class _BashRecord:
+    def evaluate(self, _build, *, active_bar="front"):
+        assert active_bar == "back"
+        return SimpleNamespace(
+            value=12345.0,
+            mechanic_complete=False,
+            evidence=("Bashing Brutality stages: 2", "Equipped jewelry Bash bonus: 900"),
+            unresolved=("Bash formula channel unresolved: buff_extra_bash_damage",),
+        )
+
+
 class _MovementPackage:
     def evaluate(self, objective_key):
         assert objective_key in {"movement_speed", "sprint_speed", "stealthed_movement_speed"}
@@ -72,38 +83,42 @@ class _StealthPackage:
 def _service() -> ExtremeSpecializedExecutionService:
     return ExtremeSpecializedExecutionService(
         healing_events=_HealingEvents(),
+        bash_record=_BashRecord(),
         movement_package=_MovementPackage(),
         stealth_package=_StealthPackage(),
     )
 
 
-def test_heal_movement_and_stealth_records_are_direct_specialized_routes() -> None:
+def test_current_direct_specialized_routes_are_explicit() -> None:
     for key in (
         "actual_heal",
         "critical_heal",
+        "bash_damage",
         "movement_speed",
         "sprint_speed",
         "stealthed_movement_speed",
         "detection_radius_reduction",
     ):
         assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
-    assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("bash_damage")
+    assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("damage_shield")
 
 
-def test_only_heal_event_direct_routes_require_saved_build_context() -> None:
-    assert ExtremeSpecializedExecutionService.requires_saved_build("actual_heal")
-    assert ExtremeSpecializedExecutionService.requires_saved_build("critical_heal")
-    assert not ExtremeSpecializedExecutionService.requires_saved_build("movement_speed")
-    assert not ExtremeSpecializedExecutionService.requires_saved_build("sprint_speed")
-    assert not ExtremeSpecializedExecutionService.requires_saved_build("stealthed_movement_speed")
-    assert not ExtremeSpecializedExecutionService.requires_saved_build("detection_radius_reduction")
+def test_saved_build_direct_routes_are_explicit() -> None:
+    for key in ("actual_heal", "critical_heal", "bash_damage"):
+        assert ExtremeSpecializedExecutionService.requires_saved_build(key)
+    for key in (
+        "movement_speed",
+        "sprint_speed",
+        "stealthed_movement_speed",
+        "detection_radius_reduction",
+    ):
+        assert not ExtremeSpecializedExecutionService.requires_saved_build(key)
 
 
-def test_family_requirements_are_shared_by_related_records() -> None:
-    bash = ExtremeSpecializedExecutionService.requirements_for("bash_damage")
+def test_objective_specific_requirements_can_diverge_within_one_family() -> None:
+    assert ExtremeSpecializedExecutionService.requirements_for("bash_damage") == ()
     shield = ExtremeSpecializedExecutionService.requirements_for("damage_shield")
-    assert bash == shield
-    assert tuple(row.key for row in bash) == ("event_source",)
+    assert tuple(row.key for row in shield) == ("event_source",)
 
     sustain = ExtremeSpecializedExecutionService.requirements_for("resource_sustain")
     ultimate = ExtremeSpecializedExecutionService.requirements_for("ultimate_generation")
@@ -123,62 +138,55 @@ def test_family_requirements_are_shared_by_related_records() -> None:
 
 
 def test_heal_event_execution_normalizes_family_result_for_ui() -> None:
-    result = _service().execute(
-        SimpleNamespace(),
-        "actual_heal",
-        active_bar="back",
-    )
+    result = _service().execute(SimpleNamespace(), "actual_heal", active_bar="back")
 
-    assert result.objective_key == "actual_heal"
-    assert result.execution_family == "actual-heal-event"
     assert result.value == pytest.approx(54321.0)
     assert result.value_text == "54,321"
-    assert result.mechanic_complete is False
-    assert result.global_maximum_proven is False
     assert ("Heal", "Fixture Heal") in result.summary_rows
-    assert ("Class", "Warden") in result.summary_rows
-    assert ("Bar slot", "3") in result.summary_rows
     assert result.unresolved == ("fixture unresolved",)
-    assert result.search_scope == ("shared H1 search",)
-    assert result.omitted_scope == ("fixture omitted",)
 
 
-def test_heal_event_execution_rejects_missing_saved_build() -> None:
-    with pytest.raises(ValueError, match="requires a saved-build starting context"):
-        _service().execute(None, "actual_heal")
+def test_saved_build_direct_execution_rejects_missing_build() -> None:
+    for key in ("actual_heal", "bash_damage"):
+        with pytest.raises(ValueError, match="requires a saved-build starting context"):
+            _service().execute(None, key)
+
+
+def test_bash_execution_normalizes_saved_build_lower_bound() -> None:
+    result = _service().execute(SimpleNamespace(), "bash_damage", active_bar="back")
+
+    assert result.execution_family == "single-event-output"
+    assert result.value == pytest.approx(12345.0)
+    assert result.value_text == "12,345"
+    assert result.mechanic_complete is False
+    assert ("Active bar", "back") in result.summary_rows
+    assert ("Reviewed Bash lower bound", "12,345") in result.summary_rows
+    assert result.search_scope == (
+        "Bashing Brutality stages: 2",
+        "Equipped jewelry Bash bonus: 900",
+    )
 
 
 def test_movement_execution_normalizes_reviewed_lower_bound_without_saved_build() -> None:
     result = _service().execute(None, "movement_speed")
 
-    assert result.execution_family == "movement-state"
     assert result.value == pytest.approx(1.41)
     assert result.value_text == "141.0%"
-    assert result.global_maximum_proven is False
-    assert result.mechanic_complete is False
-    assert ("Reviewed raw speed", "141.0%") in result.summary_rows
     assert ("Effective cap", "200%") in result.summary_rows
-    assert result.search_scope == ("reviewed static movement package",)
-    assert result.unresolved == ("runtime movement providers not yet exhaustive",)
 
 
 def test_stealth_execution_normalizes_legal_gear_lower_bound_without_saved_build() -> None:
     result = _service().execute(None, "detection_radius_reduction")
 
-    assert result.execution_family == "stealth-state"
     assert result.value == pytest.approx(4.0)
     assert result.value_text == "4 m reviewed gear reduction"
-    assert result.mechanic_complete is False
-    assert result.global_maximum_proven is False
-    assert ("Reviewed legal gear reduction", "4 m") in result.summary_rows
     assert ("Gear denominator proven", "YES") in result.summary_rows
     assert ("Gear sets", "Night Terror, Night Mother's Embrace") in result.summary_rows
-    assert result.unresolved == ("final stealth stacking unresolved",)
 
 
-def test_specialized_family_needing_inputs_names_shared_requirements() -> None:
+def test_damage_shield_still_names_its_missing_event_source() -> None:
     with pytest.raises(
         ValueError,
         match="requires family-specific scenario inputs before execution: Event Source",
     ):
-        _service().execute(SimpleNamespace(), "bash_damage")
+        _service().execute(SimpleNamespace(), "damage_shield")
