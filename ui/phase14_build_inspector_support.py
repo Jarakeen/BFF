@@ -3,8 +3,8 @@ from __future__ import annotations
 """Phase 14 read-first Build inspector.
 
 The Builds library stays a browser. The right pane is a compact dossier with the
-approved Overview/Gear/Skills/CP/Consumables/Scribing/Notes tabs. Editing still routes
-to the existing canonical Build Editor tab instead of cloning editor state here.
+approved Overview/Gear/Skills/CP/Consumables/Scribing/Notes tabs. Heavy canonical
+editors remain in the existing workspace tabs and are opened only when requested.
 """
 
 from collections import Counter
@@ -48,20 +48,46 @@ def _clear(layout) -> None:
             _clear(nested)
 
 
-def _open_editor(page) -> None:
+def _sync_outer_chrome(page, index: int) -> None:
     tabs = getattr(page, "build_tabs", None)
-    if tabs is not None and tabs.count() > 1:
-        tabs.setCurrentIndex(1)
-        selector = getattr(page, "edit_build_selector", None)
-        if selector is not None:
-            index = selector.findData(page.selected_index)
-            if index >= 0:
-                selector.setCurrentIndex(index)
+    if tabs is None:
+        return
+    library_mode = int(index) == 0
+    tabs.tabBar().setVisible(not library_mode)
+
+    action_host = getattr(page, "edit_button", None)
+    action_host = action_host.parentWidget() if action_host is not None else None
+    if action_host is not None:
+        action_host.setVisible(int(index) == 1)
+
+    if int(index) == 1:
+        for name in ("cancel_build_button", "save_build_button", "delete_build_button"):
+            button = getattr(page, name, None)
+            if button is not None:
+                button.show()
 
 
-def _edit_button(page) -> FoundryButton:
-    button = FoundryButton("Edit", role=ButtonRole.SECONDARY, compact=True)
-    button.clicked.connect(lambda: _open_editor(page))
+def _open_workspace_tab(page, index: int) -> None:
+    tabs = getattr(page, "build_tabs", None)
+    if tabs is None or index < 0 or index >= tabs.count():
+        return
+    tabs.setCurrentIndex(index)
+
+    selector_name = {
+        1: "edit_build_selector",
+        2: "progression_build_selector",
+        3: "scribed_build_selector",
+    }.get(index, "")
+    selector = getattr(page, selector_name, None) if selector_name else None
+    if selector is not None:
+        match = selector.findData(page.selected_index)
+        if match >= 0:
+            selector.setCurrentIndex(match)
+
+
+def _action_button(page, label: str = "Edit", *, workspace_tab: int = 1) -> FoundryButton:
+    button = FoundryButton(label, role=ButtonRole.SECONDARY, compact=True)
+    button.clicked.connect(lambda: _open_workspace_tab(page, workspace_tab))
     return button
 
 
@@ -81,7 +107,7 @@ def _header(page, build) -> QWidget:
     ready = QLabel("Ready" if bool(getattr(build, "ReadyForRaid", False)) else "Not Ready")
     ready.setProperty("cardBadge", True)
     layout.addWidget(ready)
-    layout.addWidget(_edit_button(page))
+    layout.addWidget(_action_button(page))
     return host
 
 
@@ -146,7 +172,7 @@ def _gear_card(page, title: str, rows: list[tuple[str, object]]) -> FoundryCard:
         card.addWidget(_row(slot, _gear_summary(value)))
     actions = QHBoxLayout()
     actions.addStretch(1)
-    actions.addWidget(_edit_button(page))
+    actions.addWidget(_action_button(page))
     card.addLayout(actions)
     return card
 
@@ -179,7 +205,7 @@ def _skills_tab(page, build) -> QWidget:
         card = FoundryCard(title, "◇")
         for index, skill in enumerate(values, start=1):
             card.addWidget(_row(f"Slot {index}", _text(skill)))
-        card.addWidget(_edit_button(page))
+        card.addWidget(_action_button(page))
         layout.addWidget(card, 1)
     return tab
 
@@ -195,7 +221,8 @@ def _cp_tab(page, build) -> QWidget:
             card.addWidget(_row(entry.Name, _text(entry.Points, "0")))
     else:
         card.addWidget(QLabel("No Champion Points recorded."))
-    card.addWidget(_edit_button(page))
+    card.addWidget(_action_button(page))
+    card.addWidget(_action_button(page, "Character Progression", workspace_tab=2))
     layout.addWidget(card)
     layout.addStretch(1)
     return tab
@@ -208,7 +235,7 @@ def _consumables_tab(page, build) -> QWidget:
     card = FoundryCard("Consumables", "◆")
     card.addWidget(_row("Food", _text(build.Food, "Not selected")))
     card.addWidget(_row("Potion", _text(build.Potion, "Not selected")))
-    card.addWidget(_edit_button(page))
+    card.addWidget(_action_button(page))
     layout.addWidget(card)
     layout.addStretch(1)
     return tab
@@ -227,7 +254,7 @@ def _scribing_tab(page, build) -> QWidget:
             card.addWidget(QLabel(name))
     else:
         card.addWidget(QLabel("No scribed skills recorded."))
-    card.addWidget(_edit_button(page))
+    card.addWidget(_action_button(page, "Open Scribed Skills", workspace_tab=3))
     layout.addWidget(card)
     layout.addStretch(1)
     return tab
@@ -241,10 +268,16 @@ def _notes_tab(page, build) -> QWidget:
     note = QLabel(_text(build.Notes, "No build notes recorded."))
     note.setWordWrap(True)
     card.addWidget(note)
-    card.addWidget(_edit_button(page))
+    card.addWidget(_action_button(page))
     layout.addWidget(card)
     layout.addStretch(1)
     return tab
+
+
+def _proxy_click(page, name: str) -> None:
+    button = getattr(page, name, None)
+    if button is not None:
+        button.click()
 
 
 def _footer(page) -> QWidget:
@@ -253,9 +286,9 @@ def _footer(page) -> QWidget:
     row.setContentsMargins(0, 4, 0, 0)
 
     copy = FoundryButton("Copy Build To…", role=ButtonRole.SECONDARY, compact=True)
-    copy.clicked.connect(lambda: getattr(page, "copy_build_button", QPushButton()).click())
+    copy.clicked.connect(lambda: _proxy_click(page, "copy_build_button"))
     template = FoundryButton("Save as Template", role=ButtonRole.SECONDARY, compact=True)
-    template.clicked.connect(lambda: getattr(page, "template_build_button", QPushButton()).click())
+    template.clicked.connect(lambda: _proxy_click(page, "template_build_button"))
     save = FoundryButton("Save", role=ButtonRole.SUCCESS)
     save.clicked.connect(page._save)
 
@@ -303,7 +336,15 @@ def install() -> None:
 
     from ui.builds_page import BuildsPage
 
+    original_build_ui = BuildsPage._build_ui
     original_refresh_detail = BuildsPage._refresh_detail
+
+    def build_ui_phase14_inspector(self):
+        original_build_ui(self)
+        tabs = getattr(self, "build_tabs", None)
+        if tabs is not None:
+            tabs.currentChanged.connect(lambda index: _sync_outer_chrome(self, index))
+            _sync_outer_chrome(self, tabs.currentIndex())
 
     def refresh_detail_phase14_inspector(self, *_args):
         result = original_refresh_detail(self, *_args)
@@ -312,6 +353,7 @@ def install() -> None:
             _render_inspector(self)
         return result
 
+    BuildsPage._build_ui = build_ui_phase14_inspector
     BuildsPage._refresh_detail = refresh_detail_phase14_inspector
     _INSTALLED = True
 
