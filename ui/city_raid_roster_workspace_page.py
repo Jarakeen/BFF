@@ -17,22 +17,27 @@ Roster visual contract:
 """
 
 from pathlib import Path
+import shutil
 
 from PySide6.QtCore import QRect, QSize, Qt
-from PySide6.QtGui import QIcon, QImage, QPixmap
+from PySide6.QtGui import QIcon, QImage, QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import (
+    QFileDialog,
+    QDialog,
+    QGridLayout,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QSizePolicy,
     QSplitter,
     QStackedWidget,
+    QPushButton,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from engine.config import get_resource_path
+from engine.config import get_data_dir, get_resource_path
 from ui.components.foundry_card import FoundryCard
 from ui.raid_roster_workspace_page import RaidRosterWorkspacePage, _clean
 from ui.themed_raid_roster_workspace_page import ThemedRaidRosterWorkspacePage
@@ -101,6 +106,141 @@ def _roster_back_icon() -> QIcon:
     return QIcon(str(path)) if Path(path).is_file() else QIcon()
 
 
+_AVATAR_ROOT = ("assets", "avatar")
+_AVATAR_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+
+
+def _avatar_default_files() -> tuple[Path, ...]:
+    root = get_resource_path(*_AVATAR_ROOT)
+    if not root.is_dir():
+        return ()
+    return tuple(
+        sorted(
+            (
+                path
+                for path in root.iterdir()
+                if path.is_file() and path.suffix.casefold() in _AVATAR_EXTENSIONS
+            ),
+            key=lambda path: path.name.casefold(),
+        )
+    )
+
+
+def _avatar_path(reference: str) -> Path | None:
+    value = str(reference or "").strip()
+    if not value:
+        return None
+    normalized = value.replace("\\", "/")
+    if normalized.startswith("assets/avatar/"):
+        relative = normalized[len("assets/avatar/") :]
+        candidate = get_resource_path("assets", "avatar", relative)
+        return candidate if candidate.is_file() else None
+    candidate = Path(value)
+    return candidate if candidate.is_file() else None
+
+
+def _circular_avatar_pixmap(path: Path, size: int = 92) -> QPixmap:
+    source = QPixmap(str(path))
+    if source.isNull():
+        return QPixmap()
+    scaled = source.scaled(
+        size,
+        size,
+        Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+        Qt.TransformationMode.SmoothTransformation,
+    )
+    x = max(0, (scaled.width() - size) // 2)
+    y = max(0, (scaled.height() - size) // 2)
+    cropped = scaled.copy(x, y, size, size)
+
+    result = QPixmap(size, size)
+    result.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(result)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    path_clip = QPainterPath()
+    path_clip.addEllipse(0, 0, size, size)
+    painter.setClipPath(path_clip)
+    painter.drawPixmap(0, 0, cropped)
+    painter.end()
+    return result
+
+
+class _CharacterAvatarDialog(QDialog):
+    """Pick one bundled default avatar or import a custom local portrait."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.selected_reference = ""
+        self.setWindowTitle("Choose Character Avatar")
+        self.setModal(True)
+        self.setMinimumWidth(560)
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(14, 14, 14, 14)
+        root.setSpacing(10)
+
+        heading = QLabel("Default avatars")
+        heading.setProperty("cardTitle", True)
+        root.addWidget(heading)
+
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(10)
+        defaults = _avatar_default_files()
+        if defaults:
+            for index, path in enumerate(defaults):
+                button = QToolButton()
+                button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+                button.setText(path.stem.replace("_", " ").replace("-", " ").title())
+                button.setIcon(QIcon(_circular_avatar_pixmap(path, 72)))
+                button.setIconSize(QSize(72, 72))
+                button.setFixedSize(150, 110)
+                reference = f"assets/avatar/{path.name}"
+                button.clicked.connect(
+                    lambda _checked=False, value=reference: self._choose(value)
+                )
+                grid.addWidget(button, index // 3, index % 3)
+        else:
+            empty = QLabel("No default avatars found in assets/avatar yet.")
+            empty.setProperty("muted", True)
+            grid.addWidget(empty, 0, 0, 1, 3)
+        root.addLayout(grid)
+
+        actions = QHBoxLayout()
+        clear = QPushButton("Clear Avatar")
+        browse = QPushButton("Choose Custom Image…")
+        cancel = QPushButton("Cancel")
+        clear.clicked.connect(lambda: self._choose(""))
+        browse.clicked.connect(self._browse_custom)
+        cancel.clicked.connect(self.reject)
+        actions.addWidget(clear)
+        actions.addStretch(1)
+        actions.addWidget(browse)
+        actions.addWidget(cancel)
+        root.addLayout(actions)
+
+    def _choose(self, reference: str) -> None:
+        self.selected_reference = str(reference or "").strip()
+        self.accept()
+
+    def _browse_custom(self) -> None:
+        path_text, _selected_filter = QFileDialog.getOpenFileName(
+            self,
+            "Choose Character Avatar",
+            "",
+            "Images (*.png *.jpg *.jpeg *.webp)",
+        )
+        if not path_text:
+            return
+        source = Path(path_text)
+        target_root = get_data_dir() / "avatar"
+        target_root.mkdir(parents=True, exist_ok=True)
+        target = target_root / source.name
+        if source.resolve() != target.resolve():
+            shutil.copy2(source, target)
+        self._choose(str(target))
+
+
 class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
     """Compatibility route name for the single Urban Wilderness Roster dashboard."""
 
@@ -108,6 +248,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         install_urban_wilderness_accessibility_polish()
         self._embedded_detail_indexes: dict[str, int] = {}
         self._embedded_stack: QStackedWidget | None = None
+        self._active_character_avatar_id: str = ""
         super().__init__(parent)
         self._remove_legacy_city_art()
         self._polish_urban_wilderness_roster()
@@ -190,11 +331,13 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self.character_detail_avatar.setFixedSize(92, 92)
         self.character_detail_avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.character_detail_avatar.setToolTip(
-            "Character portrait. Default themed portraits can be assigned here later."
+            "Click to choose a character avatar."
         )
+        self.character_detail_avatar.setCursor(Qt.CursorShape.PointingHandCursor)
         self.character_detail_avatar.setStyleSheet(
-            "background:#0A1D22; border:2px solid #4D8291; border-radius:46px; padding:8px;"
+            "background:#0A1D22; border:2px solid #4D8291; border-radius:46px; padding:0px;"
         )
+        self.character_detail_avatar.mousePressEvent = self._avatar_mouse_press
         profile_layout.addWidget(self.character_detail_avatar, 0, Qt.AlignmentFlag.AlignTop)
 
         self.character_detail_body.setWordWrap(True)
@@ -202,12 +345,19 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         layout.insertWidget(0, profile)
         self._set_profile_avatar("character")
 
-    def _set_profile_avatar(self, kind: str) -> None:
-        """Keep the image slot neutral until the default portrait set is installed."""
+    def _set_profile_avatar(self, kind: str, reference: str = "") -> None:
         avatar = getattr(self, "character_detail_avatar", None)
         if avatar is None:
             return
         avatar.clear()
+        avatar.setProperty("semanticIconName", "")
+        path = _avatar_path(reference)
+        if path is not None:
+            pixmap = _circular_avatar_pixmap(path, 88)
+            if not pixmap.isNull():
+                avatar.setPixmap(pixmap)
+                avatar.setText("")
+                return
         avatar.setPixmap(QPixmap())
         avatar.setText(
             {
@@ -216,7 +366,29 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
                 "build": "BUILD\nIMAGE",
             }.get(kind, "CHARACTER\nIMAGE")
         )
-        avatar.setProperty("semanticIconName", "")
+
+    def _avatar_mouse_press(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._edit_character_avatar()
+            event.accept()
+            return
+        event.ignore()
+
+    def _edit_character_avatar(self) -> None:
+        character_id = str(getattr(self, "_active_character_avatar_id", "") or "").strip()
+        if not character_id:
+            return
+        dialog = _CharacterAvatarDialog(self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        catalog = self.build_library.canonical.catalog_service
+        updated = catalog.set_character_avatar(
+            character_id=character_id,
+            avatar_path=dialog.selected_reference,
+        )
+        if updated is None:
+            return
+        self._set_profile_avatar("character", str(updated.get("avatar_path") or ""))
 
     def refresh(self) -> None:
         super().refresh()
@@ -320,6 +492,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
     def _show_character_detail(self, item, _previous=None) -> None:
         """Present player/character/build identity as a compact human-facing profile card."""
         if item is None:
+            self._active_character_avatar_id = ""
             self.character_detail.set_title("Character")
             self._set_profile_avatar("character")
             self.character_detail_body.setText("Select a player, character, or build.")
@@ -333,9 +506,10 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         kind, identity = data
         catalog = self.build_library.canonical.catalog_service
         self.character_detail_body.setTextFormat(Qt.TextFormat.RichText)
-        self._set_profile_avatar(kind)
 
         if kind == "player":
+            self._active_character_avatar_id = ""
+            self._set_profile_avatar("player")
             player = catalog.get_player(identity) or {}
             characters = catalog.characters_for_player(identity)
             gamertag = _clean(player.get("gamertag")) or "Player"
@@ -359,6 +533,11 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
 
         if kind == "character":
             character = catalog.get_character(identity) or {}
+            self._active_character_avatar_id = str(identity or "").strip()
+            self._set_profile_avatar(
+                "character",
+                str(character.get("avatar_path") or ""),
+            )
             player = catalog.player_for_character(identity) or {}
             builds = catalog.builds_for_character(identity)
             name = _clean(character.get("name")) or "Character"
@@ -392,7 +571,13 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
 
         build = catalog.get_build(identity) or {}
         payload = build.get("payload") if isinstance(build.get("payload"), dict) else {}
-        character = catalog.get_character(_clean(build.get("character_id"))) or {}
+        character_id = _clean(build.get("character_id"))
+        character = catalog.get_character(character_id) or {}
+        self._active_character_avatar_id = character_id
+        self._set_profile_avatar(
+            "build",
+            str(character.get("avatar_path") or ""),
+        )
         name = _clean(build.get("name")) or "Build"
         self.character_detail.set_title(name)
         self.character_detail_body.setText(
