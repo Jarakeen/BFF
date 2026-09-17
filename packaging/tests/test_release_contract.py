@@ -131,6 +131,26 @@ def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
     assert "eso.db.before-*" in excluded_globs
 
 
+def test_packaged_sidebar_hides_in_progress_routes_but_source_build_keeps_them_available() -> None:
+    policy = (ROOT / "services" / "release_feature_policy.py").read_text(encoding="utf-8")
+    support = (ROOT / "ui" / "theme_brand_mark_support.py").read_text(encoding="utf-8")
+
+    for route in (
+        '"rotations"',
+        '"extreme_optimization"',
+        '"console:6"',
+        '"collectibles"',
+        '"stickerbook"',
+    ):
+        assert route in policy
+    assert '"collectibles:"' in policy
+    assert 'getattr(sys, "frozen", False)' in policy
+    assert 'FOUNDRYDOCK_RELEASE_MODE' in policy
+    assert "route_allowed" in support
+    assert "_filter_release_sections" in support
+    assert "sidebar_module.nav_sections = release_aware_nav_sections" in support
+
+
 def test_release_status_names_disabled_and_in_progress_boundaries() -> None:
     status = (ROOT / "RELEASE_STATUS.md").read_text(encoding="utf-8")
 
