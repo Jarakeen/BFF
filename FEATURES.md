@@ -29,6 +29,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Rylo theme and Rylo-specific visual assets
 - Theme-aware cards, controls, tables, and result surfaces
 - FoundryCard headings resolve semantic heading icons from the canonical `assets/icons` library before compatibility icon locations
+- Semantic icon lookup accepts space, hyphen, underscore, singular/plural, and reviewed alias variants so theme-aware UI surfaces can use one meaning-oriented icon vocabulary without leaking missing filename text into card headings
 - BFF sidebar branding uses the compact **BFF / RAID OPERATIONS** lockup and compass mark
 - Urban Wilderness uses a single low-stimulation, red/green-independent raid-lead workflow with static artwork, no flashing UI effects, Roster as the landing surface, and Community News hidden while disabled
 - Raid Engine overview accents and New Build entry adapt to Foundry teal/amber or Rylo's squared steel palette, with text and numeric progress cues alongside color
@@ -148,6 +149,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Build Favorites and Archive state are persisted as additive profile metadata keyed by canonical build id, so starring or archiving never duplicates or deletes the underlying saved build
 - Build-level inherited gear baseline defaults to **Gold · CP160 · Truly Superb**; blank item values inherit the baseline while existing explicit values are preserved and differing values are counted as visible exceptions
 - The Phase 14 inspector uses Overview, Gear, Skills, CP, Consumables, Scribing, and Notes tabs, with Gear grouped into Armor, Jewelry, Front Bar, and Back Bar summaries instead of one giant spreadsheet
+- The Phase 14 library reasserts the approved library-left / inspector-right split after legacy Builds decorators finish, restores the selected-build dossier when older wrappers detach it, and presents only one visible New Build entry while continuing to route through the canonical Easy Mode creator
 - Heavy canonical editors remain lazy from the command-center view: the outer editor tabs are hidden while browsing and appear only when Edit, Character Progression, or Scribed Skills is explicitly opened
 
 ---
@@ -157,10 +159,11 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Phase 14 keeps Rotation Builder as its own workspace, separate from Builds, while accepting the selected saved build as input
 - Pre-generation command center exposes **Safe Progression**, **Balanced**, and **Maximum Output** intent presets over the existing canonical rotation controls rather than inventing a second planner state
 - Preset-selected execution/sustain values remain visible, editable, show a **Customized** state after manual changes, and can be reset to the active preset defaults
-- Rotation context is summary-first: character/build/content/boss/difficulty/team are shown as one compact line and the six selectors expand only through **Edit Context**
-- Phase 14 Rotation uses the canonical theme-aware `assets/icons` vocabulary across context chips, intent presets, generated settings, obligation rows, advanced controls, and result tabs; larger intent/settings/obligation/action surfaces fill the two-column workspace instead of leaving the command center top-heavy
+- Rotation context is summary-first: the collapsed bar emphasizes character/build/trial/boss/difficulty, while Team remains available under **Edit Context** for assignment-sensitive generation
+- Phase 14 Rotation uses the canonical theme-aware `assets/icons` vocabulary across context chips, intent presets, generated settings, obligation rows, advanced controls, and result navigation; larger intent/settings/obligation/action surfaces fill the two-column workspace instead of leaving the command center top-heavy
 - Build skills, gear procs, team duties, pressure windows, and advanced rules are presented as compact obligation summaries; unsupported evidence remains explicitly unresolved instead of being fabricated
-- Timeline, Uptime & Resources, Explanations, Compare, and Save & Export remain result-only tabs and stay disabled until a generated plan exists
+- Timeline, Uptime & Resources, Explanations, Compare, and Save & Export are exposed as an icon-led result navigation row beneath the setup cards and remain disabled until a generated plan exists; the canonical result tabs stay available after entering a result view
+- The Phase 14 presentation preserves the hidden legacy Builder shell while canonical refresh helpers still own references into it, preventing deleted-Qt-label failures during saved-build refresh without duplicating planner state
 - **Generate Rotation** remains the single dominant setup action; save/export controls stay in the generated-result workflow
 
 ---
