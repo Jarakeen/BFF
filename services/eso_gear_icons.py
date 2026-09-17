@@ -18,13 +18,13 @@ GEAR_SLOT_ICONS = {
     "ring1": "ring.svg",
     "ring2": "ring.svg",
     # Legacy keys retained for callers/saved UI layouts.
-    "main_hand": "switch-weapon.svg",
-    "off_hand": "skull-staff.svg",
+    "main_hand": "lunar-wand.svg",
+    "off_hand": "shield.svg",
     # Explicit front/back weapon rows introduced by the Phase 2 weapon model.
-    "front_main_hand": "switch-weapon.svg",
-    "front_off_hand": "skull-staff.svg",
-    "back_main_hand": "switch-weapon.svg",
-    "back_off_hand": "skull-staff.svg",
+    "front_main_hand": "lunar-wand.svg",
+    "front_off_hand": "shield.svg",
+    "back_main_hand": "lunar-wand.svg",
+    "back_off_hand": "shield.svg",
 }
 
 
