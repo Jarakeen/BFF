@@ -266,6 +266,52 @@ def icon_path(name: str) -> Path | None:
     return None
 
 
+
+def _strip_full_canvas_background(svg: str) -> str:
+    """Remove opaque 512x512 backing tiles while preserving the source glyph colors."""
+    svg = re.sub(
+        r'<path(?=[^>]*d=["\']M0\s+0h512v512H0z["\'])[^>]*/?>',
+        '',
+        svg,
+        flags=re.IGNORECASE,
+    )
+    svg = re.sub(
+        r'<path(?=[^>]*d=["\']M0\s+0\s+h512\s+v512\s+H0\s+z["\'])[^>]*/?>',
+        '',
+        svg,
+        flags=re.IGNORECASE,
+    )
+    return svg
+
+
+@lru_cache(maxsize=512)
+def _source_svg_pixmap(path_text: str, size: int) -> QPixmap:
+    """Render SVGs explicitly instead of depending on QIcon's SVG plugin path."""
+    path = Path(path_text)
+    try:
+        source = path.read_text(encoding="utf-8")
+    except OSError:
+        return QPixmap()
+
+    renderer = QSvgRenderer(
+        QByteArray(_strip_full_canvas_background(source).encode("utf-8"))
+    )
+    if not renderer.isValid():
+        return QPixmap()
+
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    renderer.render(painter)
+    painter.end()
+    return pixmap
+
+
+def _source_svg_icon(path: Path, size: int = 48) -> QIcon:
+    pixmap = _source_svg_pixmap(str(path), size)
+    return QIcon(pixmap) if not pixmap.isNull() else QIcon()
+
+
 def _recolor_svg(svg: str, tone: str) -> str:
     """Flatten a source SVG into Rylo's matte steel icon language.
 
@@ -327,8 +373,13 @@ def icon(name: str) -> QIcon:
     path = icon_path(name)
     if path is None:
         return QIcon()
-    if _is_rylo_theme() and path.suffix.casefold() == ".svg":
-        return _rylo_icon(path)
+    if path.suffix.casefold() == ".svg":
+        if _is_rylo_theme():
+            return _rylo_icon(path)
+        # Render source SVGs ourselves. This avoids environment-dependent SVG
+        # QIcon loading and strips the opaque square tiles present in a few
+        # hand-added assets while preserving their authored Foundry colors.
+        return _source_svg_icon(path)
     return QIcon(str(path))
 
 
