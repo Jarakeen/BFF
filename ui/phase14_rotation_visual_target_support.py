@@ -11,7 +11,7 @@ planner inputs and generation state remain owned by the existing Rotation page.
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
-from ui.ux_icons import icon_label, set_button_icon
+from ui.ux_icons import icon_label, refresh_theme_icons, set_button_icon
 
 _INSTALLED = False
 _RESULT_NAV = (
@@ -151,7 +151,7 @@ def _polish_intents(page) -> None:
         button.setIconSize(QSize(38, 38))
         button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         button.setStyleSheet(
-            "QPushButton[rotationIntentChoice=\"true\"] { text-align: center; padding: 12px 14px; }"
+            "QToolButton[rotationIntentChoice=\"true\"] { text-align: center; padding: 10px 14px; }"
         )
 
 
@@ -194,11 +194,19 @@ def _apply_target_geometry(page) -> None:
     for card in page.findChildren(FoundryCard):
         title = str(card.title_label.text() or "").strip()
         if title == "Rotation Context":
-            card.setMinimumHeight(92)
-            card.setMaximumHeight(190)
-        elif title in {"Rotation Intent", "Inputs & Obligations"}:
-            card.setMinimumHeight(540)
-            card.setMaximumHeight(610)
+            card.header.hide()
+            card.setMinimumHeight(72)
+            card.setMaximumHeight(170)
+            card.set_body_margins(8, 6, 8, 6)
+        elif title == "Rotation Intent":
+            card.set_icon("rotations")
+            card.setMinimumHeight(500)
+            card.setMaximumHeight(575)
+            card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        elif title == "Inputs & Obligations":
+            card.set_icon("field-office")
+            card.setMinimumHeight(500)
+            card.setMaximumHeight(575)
             card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
 
@@ -228,6 +236,12 @@ def apply_phase14_rotation_visual_target(page) -> None:
         page._phase14_result_tab_visibility_wired = True
 
     _sync_result_nav(page, bool(getattr(page, "rotation_plan", None)))
+
+    # This page intentionally presents only four primary surfaces before
+    # generation: Context, Rotation Intent, Inputs & Obligations, and the
+    # disabled result-navigation panel. Reassert every semantic icon only after
+    # those final widgets exist so local additions to assets/icons are honored.
+    refresh_theme_icons(page)
 
 
 def install() -> None:
