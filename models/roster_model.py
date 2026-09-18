@@ -8,7 +8,6 @@ ROLES = [
     "Tank",
     "Healer",
     "DD",
-    "Support DD",
 ]
 
 
@@ -19,7 +18,7 @@ def normalize_roster_role(value: object) -> str:
     if folded in {"dd", "dps", "damage", "damage dealer"}:
         return "DD"
     if folded in {"support dd", "support dps", "support damage", "support damage dealer"}:
-        return "Support DD"
+        return "DD"
     if folded == "tank":
         return "Tank"
     if folded in {"healer", "heal", "heals", "healing"}:
