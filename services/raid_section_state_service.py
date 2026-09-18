@@ -101,6 +101,8 @@ class RaidSectionStateService:
         plan_name: str,
         attempt: int,
         notes: str,
+        started_at: str = "",
+        ended_at: str = "",
     ) -> dict | None:
         """Upsert the durable review note for one Raid Plan attempt."""
         cleaned = _clean(notes)
@@ -137,9 +139,54 @@ class RaidSectionStateService:
         existing["trial_id"] = _clean(trial_id)
         existing["plan_name"] = _clean(plan_name)
         existing["notes"] = cleaned
+        existing["started_at"] = _clean(started_at) or _clean(existing.get("started_at"))
+        existing["ended_at"] = _clean(ended_at) or _clean(existing.get("ended_at"))
         existing["updated_at"] = now
+        self._set_review_duration(existing)
         self._write(payload)
         return dict(existing)
+
+    @staticmethod
+    def _set_review_duration(review: dict) -> None:
+        started = _clean(review.get("started_at"))
+        ended = _clean(review.get("ended_at"))
+        if not started or not ended:
+            review["duration_seconds"] = None
+            return
+        try:
+            start_dt = datetime.fromisoformat(started)
+            end_dt = datetime.fromisoformat(ended)
+        except ValueError:
+            review["duration_seconds"] = None
+            return
+        review["duration_seconds"] = max(
+            0,
+            int((end_dt - start_dt).total_seconds()),
+        )
+
+    @classmethod
+    def _update_review_timing_payload(
+        cls,
+        payload: dict,
+        *,
+        plan_id: str,
+        attempt: int,
+        started_at: str,
+        ended_at: str,
+    ) -> None:
+        plan_key = _clean(plan_id)
+        attempt_number = max(0, int(attempt or 0))
+        for review in payload.setdefault("reviews", []):
+            if not isinstance(review, dict):
+                continue
+            if (
+                _clean(review.get("plan_id")) == plan_key
+                and int(review.get("attempt", 0) or 0) == attempt_number
+            ):
+                review["started_at"] = _clean(started_at) or _clean(review.get("started_at"))
+                review["ended_at"] = _clean(ended_at) or _clean(review.get("ended_at"))
+                cls._set_review_duration(review)
+                return
 
     def review_notes(self) -> tuple[dict, ...]:
         """Return review notes newest first without inventing missing run metadata."""
@@ -191,6 +238,13 @@ class RaidSectionStateService:
         state["ended_at"] = _now()
         runs[_clean(plan_id)] = state
         attempt = int(state.get("attempt", 0) or 0)
+        self._update_review_timing_payload(
+            payload,
+            plan_id=plan_id,
+            attempt=attempt,
+            started_at=_clean(state.get("started_at")),
+            ended_at=_clean(state.get("ended_at")),
+        )
         self._append_event_payload(payload, plan_id, "attempt_ended", f"Attempt #{attempt} ended", "MANUAL")
         self._write(payload)
         return dict(state)
