@@ -242,6 +242,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 ## Roster
 
+- **Player avatar picker** — clicking the Character detail portrait opens the bundled `assets/avatar` choices; the selected portrait is stored on the canonical Player and follows all of that player's characters/builds.
+
 - Player roster
 - Character roster records
 - Role assignment
