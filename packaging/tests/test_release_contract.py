@@ -260,3 +260,14 @@ def test_rotation_command_center_preserves_legacy_shell_without_delete_later() -
     assert "page._phase14_preserved_legacy_builder = old_builder" in command_center
     assert "old_builder.deleteLater()" not in command_center
     assert "legacy_builder.deleteLater =" not in visual
+
+
+def test_first_install_starts_without_developer_character_identity() -> None:
+    manifest = _load_manifest()
+    build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
+
+    assert "characters.json" in manifest.CLEAN_FIRST_INSTALL_DATA_FILES
+    assert '"players": []' in build
+    assert '"characters": []' in build
+    assert '"team_assignments": []' in build
+    assert '(Join-Path $DataRoot "characters.json")' in build
