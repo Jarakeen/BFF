@@ -101,12 +101,19 @@ def test_prescription_projection_preserves_saved_player_and_concrete_recruit_req
     assert slots[0].build_name == "YOUR TANK BUILD"
     assert "Turning Tide" in slots[0].gear_summary
     assert "Pearlescent Ward" in slots[0].gear_summary
+    assert slots[0].role == "Tank"
+    assert slots[0].source_kind == "optimizer_prescription"
+    assert slots[0].gear_sets == ("Turning Tide", "Pearlescent Ward")
 
     assert slots[1].kind == "prescribed_recruit"
     assert slots[1].player_name == "Recruitment Needed"
     assert slots[1].eso_class == "Warden"
     assert slots[1].build_name == "Brittle Warden"
     assert slots[1].gear_summary == "Serpent's Disdain + Pillager's Profit"
+    assert slots[1].gear_sets == ("Serpent's Disdain", "Pillager's Profit")
+    assert slots[1].role == "Healer"
+    assert slots[1].source_kind == "optimizer_prescription"
+    assert slots[1].candidate_id == "optimizer:Healer 1"
     assert "traits and enchants" in slots[1].unresolved
 
     assert slots[2].kind == "open_recruit"
@@ -135,3 +142,44 @@ def test_live_prescription_transfer_uses_generated_roster_draft_api() -> None:
     assert "GeneratedRosterDraftSlot" in source
     assert "GeneratedRosterPlanService" not in source
     assert "GeneratedRosterPlanSlot" not in source
+
+
+def test_optimizer_send_is_owned_by_raid_plan_not_legacy_roster() -> None:
+    source = Path("ui/team_prescription_roster_transfer_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    handler = source.split(
+        "def _send_generated_prescription_to_raid_plan", 1
+    )[1].split("def install()", 1)[0]
+
+    assert "raid_plan_from_generated_slots" in handler
+    assert 'window.pages.get("raid_plans")' in handler
+    assert "raid_plans.plan_repository.save(plan)" in handler
+    assert "raid_plans.apply_plan(plan)" in handler
+    assert 'window.show_page("raid_plans")' in handler
+    assert 'window.show_page("roster_page")' not in handler
+    assert "base_plan=base_plan" in handler
+
+
+def test_optimizer_install_overrides_send_handler_with_raid_plan_handoff() -> None:
+    source = Path("ui/team_prescription_roster_transfer_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert (
+        "MainWindow._send_optimized_team_to_roster = "
+        "_send_generated_prescription_to_raid_plan"
+    ) in source
+
+
+def test_optimizer_opened_from_raid_plan_binds_origin_identity() -> None:
+    source = Path("ui/main_window.py").read_text(encoding="utf-8")
+
+    block = source.split('if page_name == "console:6":', 1)[1].split(
+        'if page_name == "console:2":', 1
+    )[0]
+    assert 'self.page_containers.get("raid_plans")' in block
+    assert "raid_plans.current_plan()" in block
+    assert "optimizer._raid_plan_origin_id = origin.plan_id" in block
+    assert "optimizer._raid_plan_origin_trial_id = origin.trial_id" in block
