@@ -23,7 +23,8 @@ def test_raid_lead_navigation_exposes_current_planning_workspaces() -> None:
             if isinstance(row, dict) and row.get("label") == "Team"
         )
 
-        assert raid.get("children", [])[:3] == [
+        assert raid.get("children", [])[:4] == [
+            ("Raid Dashboard", "raid_engine_dashboard"),
             ("Raid Plans", "raid_plans"),
             ("Assignments", "assignments"),
             ("Readiness", "readiness"),
