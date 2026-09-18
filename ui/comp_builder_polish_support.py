@@ -160,11 +160,11 @@ def _polish_visible_controls(page) -> None:
     if combo is not None:
         combo.setMinimumHeight(38)
         combo.setProperty("compCandidateChoiceProminent", True)
-        combo.setToolTip("Choose the build to assign to the selected role.")
+        combo.setToolTip("Choose the build to assign to the selected player or Recruit slot.")
 
     label = getattr(page, "comp_candidate_choice_label", None)
     if label is not None:
-        label.setText("▼ BUILD OPTIONS • Choose the build to assign to the highlighted role")
+        label.setText("▼ BUILD OPTIONS • Choose what this player or Recruit slot should run")
         label.setProperty("compCandidateChoiceProminentLabel", True)
 
 
@@ -177,22 +177,14 @@ def _refresh_picker_with_role_language(page) -> None:
         if combo is not None and combo.count():
             label.setText("▼ BUILD OPTIONS • Choose the build to assign to the highlighted role")
         else:
-            label.setText("▼ BUILD OPTIONS • No eligible build is available for this role")
+            label.setText("▼ BUILD OPTIONS • No eligible build is available for this player or Recruit slot")
     _refresh_comp_progress_from_assignments(page)
 
 
 def _refresh_assignment_with_role_language(page) -> None:
     assert _ORIGINAL_ASSIGNMENT_REFRESH is not None
     _ORIGINAL_ASSIGNMENT_REFRESH(page)
-    cue = getattr(page, "comp_assignment_cue_label", None)
-    if cue is not None:
-        cue.setText(
-            cue.text()
-            .replace("PLAYER / CHAIR", "ROLE")
-            .replace("PLAYER/CHAIR", "ROLE")
-            .replace("CHAIR", "ROLE")
-            .replace("chair", "role")
-        )
+    # Keep the assignment cue in player/slot language.
 
 
 def _sync_role_language(page) -> None:
