@@ -15,7 +15,7 @@ _INSTALLED = False
 
 
 def _install_canonical_sidebar_routes() -> None:
-    """Expose the canonical workflow-domain navigation in a stable order."""
+    """Reorder the existing workflow groups without changing their membership."""
     from ui.components import foundry_sidebar
 
     def existing_dict(label: str):
@@ -31,7 +31,7 @@ def _install_canonical_sidebar_routes() -> None:
         {
             "label": "Raid",
             "children": [
-                ("Raid Dashboard", "raid_engine_dashboard"),
+                ("Roster", "roster_workspace"),
                 ("Raid Plans", "raid_plans"),
                 ("Assignments", "assignments"),
                 ("Readiness", "readiness"),
@@ -41,10 +41,9 @@ def _install_canonical_sidebar_routes() -> None:
         {
             "label": "Team",
             "children": [
-                ("Roster", "roster_workspace"),
+                ("Coverage", "console:7"),
                 ("Comp Builder", "comp_builder"),
                 ("Optimizer Adviser", "console:6"),
-                ("Coverage", "console:7"),
             ],
         },
         {
@@ -65,7 +64,6 @@ def _install_canonical_sidebar_routes() -> None:
         {
             "label": "Review",
             "children": [
-                ("Raid Review", "raid_review"),
                 ("Top Gear", "console:3"),
             ],
         },
@@ -79,8 +77,6 @@ def _install_canonical_sidebar_routes() -> None:
         sections.append(normalized_tools)
     sections.append({"label": "Settings", "page": "settings", "children": []})
 
-    # Community News remains registered for compatibility, but is intentionally
-    # absent from navigation while the feature is disabled.
     foundry_sidebar.CORE_NAV_SECTIONS[:] = sections
 
 
