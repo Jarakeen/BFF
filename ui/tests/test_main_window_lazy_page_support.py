@@ -8,6 +8,7 @@ from ui.main_window_lazy_page_support import LAZY_PAGE_SPECS
 def test_lazy_page_set_is_limited_to_dependency_light_pages():
     assert LAZY_PAGE_SPECS == {
         "achievements": "AchievementsPage",
+        "collectibles_browser": "CollectiblesPage",
         "gear_lookup": "GearLookupPage",
         "stickerbook": "StickerbookPage",
         "timers": "AsylumPerfectaTimerPage",
@@ -21,7 +22,6 @@ def test_lazy_page_set_is_limited_to_dependency_light_pages():
         "operations_console",
         "rotations",
         "collectibles",
-        "collectibles_browser",
         "roster_page",
         "comp_builder",
         "console:1",
@@ -254,3 +254,47 @@ def test_collectibles_profile_sync_does_not_require_achievements_page_object() -
     assert 'self.pages.get("achievements")' not in source.split(
         "def _refresh_collectibles_for_active_profile", 1
     )[1].split("@staticmethod", 1)[0]
+
+
+def test_collectibles_dashboard_stays_eager_while_browser_is_lazy() -> None:
+    source = Path("ui/main_window.py").read_text(encoding="utf-8")
+
+    assert '"collectibles": collectible_dashboard' in source
+    assert '"collectibles_browser": collectible_browser' in source
+    assert "self.collectible_service = ProfiledCollectibleService" in source
+    assert "CollectiblesDashboardPage(self.collectible_service)" in source
+    assert "CollectiblesPage(service=self.collectible_service)" in source
+    assert LAZY_PAGE_SPECS["collectibles_browser"] == "CollectiblesPage"
+
+
+def test_collectibles_category_route_materializes_browser_not_dashboard() -> None:
+    source = Path("ui/main_window_lazy_page_support.py").read_text(encoding="utf-8")
+
+    assert 'if requested_key.startswith("collectibles:")' in source
+    assert '"collectibles_browser"' in source
+    assert 'requested_key.startswith("collectibles:")' in source
+
+
+def test_lazy_collectibles_browser_reuses_shared_service_and_skips_throwaway_refresh() -> None:
+    calls = []
+    shared = object()
+
+    class Browser:
+        def __init__(self, service=None):
+            self.service = service
+            self.refresh()
+
+        def refresh(self):
+            calls.append("refresh")
+
+    window = SimpleNamespace(collectible_service=shared)
+    page = lazy_support._construct_lazy_page(
+        Browser,
+        "collectibles_browser",
+        window=window,
+    )
+
+    assert page.service is shared
+    assert calls == []
+    page.refresh()
+    assert calls == ["refresh"]
