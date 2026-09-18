@@ -110,3 +110,25 @@ def test_phase14_why_refresh_initializes_set_state_in_every_branch() -> None:
 
     candidate_assignment = source.index("set_one, set_two = _candidate_sets(candidate)")
     assert source.find("if not set_two:", 0, candidate_assignment) == -1
+
+
+def test_phase14_why_choices_apply_to_selected_chair() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert 'setProperty("compCandidateChoice", True)' in source
+    assert "candidate_support._set_candidate_for_row(page, row, candidate)" in source
+    assert "page.comp_phase14_recommendation_frame._comp_candidate = candidate" in source
+    assert "page.comp_phase14_alt_one_frame._comp_candidate = alt_one" in source
+    assert "page.comp_phase14_alt_two_frame._comp_candidate = alt_two" in source
+    assert "_refresh_shell(page)" in source
+
+
+def test_phase14_why_choices_use_five_piece_projection_and_confidence_levels() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert 'getattr(candidate, "five_piece_sets", ())' in source
+    assert '"No five-piece sets resolved"' in source
+    assert '("high", "High confidence"' in source
+    assert '("medium", "Medium confidence"' in source
+    assert '("low", "Low confidence"' in source
+    assert '("review", "Needs review"' in source
