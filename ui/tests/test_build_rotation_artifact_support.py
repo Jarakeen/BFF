@@ -81,3 +81,14 @@ def test_phase14_build_dossier_owns_character_progression_and_legacy_editor_is_f
     assert "tabs.setTabVisible(1, True)" in focused
     assert "for legacy_index in (1, 2, 3):" in legacy
     assert "tabs.setTabVisible(legacy_index, False)" in legacy
+
+
+def test_character_progression_has_global_buy_all_actions() -> None:
+    source = Path("ui/phase5_build_ui_support.py").read_text(encoding="utf-8")
+
+    assert '"Buy All Passive Skills"' in source
+    assert '"Buy All Passive CP"' in source
+    assert "for check in self._line_checks.values():" in source
+    assert 'check.setChecked(True)' in source
+    assert '_set_progression_spins(all_skill_spins, "max")' in source
+    assert '_set_progression_spins(all_cp_spins, "max")' in source
