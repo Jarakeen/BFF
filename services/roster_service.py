@@ -83,7 +83,8 @@ class RosterService:
                 raid_time TEXT NOT NULL DEFAULT '',
                 timezone TEXT NOT NULL DEFAULT '',
                 raid_schedule_json TEXT NOT NULL DEFAULT '',
-                current_focus TEXT NOT NULL DEFAULT ''
+                current_focus TEXT NOT NULL DEFAULT '',
+                discord_url TEXT NOT NULL DEFAULT ''
             )
         """)
         existing_team_columns = {
@@ -95,6 +96,7 @@ class RosterService:
             "timezone",
             "raid_schedule_json",
             "current_focus",
+            "discord_url",
         ):
             if column not in existing_team_columns:
                 self.db.execute(
@@ -263,11 +265,12 @@ class RosterService:
             TimeZone=row["timezone"] or "",
             Slots=slots,
             CurrentFocus=(row["current_focus"] if "current_focus" in row.keys() else "") or "",
+            DiscordUrl=(row["discord_url"] if "discord_url" in row.keys() else "") or "",
         )
 
     def list_team_schedules(self) -> list[TeamSchedule]:
         rows = self.db.execute("""
-            SELECT name, raid_days, raid_time, timezone, raid_schedule_json, current_focus
+            SELECT name, raid_days, raid_time, timezone, raid_schedule_json, current_focus, discord_url
             FROM team ORDER BY name COLLATE NOCASE
         """).fetchall()
         return [self._schedule_from_row(row) for row in rows]
@@ -277,7 +280,7 @@ class RosterService:
         if not name:
             return None
         row = self.db.execute("""
-            SELECT name, raid_days, raid_time, timezone, raid_schedule_json, current_focus
+            SELECT name, raid_days, raid_time, timezone, raid_schedule_json, current_focus, discord_url
             FROM team WHERE name = ? COLLATE NOCASE
         """, (name,)).fetchone()
         if row is None:
@@ -301,7 +304,7 @@ class RosterService:
         self.db.execute("INSERT OR IGNORE INTO team (name) VALUES (?)", (name,))
         self.db.execute("""
             UPDATE team
-            SET raid_days = ?, raid_time = ?, timezone = ?, raid_schedule_json = ?, current_focus = ?
+            SET raid_days = ?, raid_time = ?, timezone = ?, raid_schedule_json = ?, current_focus = ?, discord_url = ?
             WHERE name = ? COLLATE NOCASE
         """, (
             raid_days,
@@ -309,6 +312,7 @@ class RosterService:
             str(schedule.TimeZone or "").strip(),
             slots_json,
             str(schedule.CurrentFocus or "").strip(),
+            str(schedule.DiscordUrl or "").strip(),
             name,
         ))
         self.db.commit()
