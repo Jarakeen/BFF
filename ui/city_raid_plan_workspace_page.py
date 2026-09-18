@@ -116,7 +116,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             ("Strategy", "console:4"),
             ("Readiness", "readiness"),
             ("Run", "live_raid"),
-            ("Review", "console:3"),
+            ("Review", "raid_review"),
         )
         for title, route in routes:
             button = QPushButton(title)
