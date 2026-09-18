@@ -15,6 +15,9 @@ from services.extreme_actual_heal_gear_set_candidate_service import (
 )
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
+from services.extreme_actual_heal_special_gear_denominator_service import (
+    ExtremeActualHealSpecialGearDenominatorService,
+)
 
 
 class ExtremeActualHealMythicPackageService:
@@ -35,9 +38,10 @@ class ExtremeActualHealMythicPackageService:
 
     HEAD_EQUIP_TYPE = GearSetCategoryResolver.HEAD_EQUIP_TYPE
     SHOULDERS_EQUIP_TYPE = GearSetCategoryResolver.SHOULDERS_EQUIP_TYPE
-    NECK_EQUIP_TYPE = 8
-    RING_EQUIP_TYPE = 9
-    TWO_HAND_EQUIP_TYPE = 11
+    # Canonical ESO equipType ids as imported from the mined item corpus.
+    NECK_EQUIP_TYPE = 2
+    RING_EQUIP_TYPE = 12
+    TWO_HAND_EQUIP_TYPE = 6
 
     PRIMARY_SLOTS = ("Chest", "Legs", "Hands", "Waist", "Feet")
     SECONDARY_ARMOR_SLOTS = ("Head", "Shoulders")
@@ -186,8 +190,23 @@ class ExtremeActualHealMythicPackageService:
                         continue
                     if not self.ordinary_candidates._h1_positive(row):
                         continue
-                elif not row.mechanic_complete or row.reviewed_delta <= 0:
-                    continue
+                else:
+                    disposition = (
+                        ExtremeActualHealSpecialGearDenominatorService.special_h1_disposition(
+                            "mythic",
+                            row.set_name,
+                            objective,
+                        )
+                    )
+                    special_admitted = disposition in {
+                        "standing",
+                        "package",
+                        "standing_and_package",
+                    }
+                    if not special_admitted and (
+                        not row.mechanic_complete or row.reviewed_delta <= 0
+                    ):
+                        continue
                 gear_set = self.repository.get_set_by_id(row.set_id)
                 if gear_set is None:
                     continue
