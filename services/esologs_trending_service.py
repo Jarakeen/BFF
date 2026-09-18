@@ -121,24 +121,28 @@ class EsoLogsTrendingService:
         for role_key in _ROLE_KEYS:
             role_label, metric = _ROLE_RANKING_METRIC[role_key]
             if role_key == "tank":
-                rankings, tank_error = self._get_tank_rankings(
-                    encounter_id=int(encounter_id),
-                    limit=limit,
-                )
-                if rankings is None:
-                    role_errors[role_key] = tank_error or "Tank rankings were unavailable."
-                    continue
-            else:
                 try:
-                    rankings = self._get_metric_rankings(
+                    tanks = self._coordinated_tank_players(
                         encounter_id=int(encounter_id),
-                        role_label=role_label,
-                        metric=metric,
                         limit=limit,
                     )
                 except EsoLogsApiError as exc:
                     role_errors[role_key] = str(exc)
                     continue
+                players_by_role[role_key].extend(tanks)
+                ranked_players_analyzed += len(tanks)
+                continue
+
+            try:
+                rankings = self._get_metric_rankings(
+                    encounter_id=int(encounter_id),
+                    role_label=role_label,
+                    metric=metric,
+                    limit=limit,
+                )
+            except EsoLogsApiError as exc:
+                role_errors[role_key] = str(exc)
+                continue
 
             for ranking in rankings:
                 player = self._resolve_ranked_player(
@@ -179,6 +183,61 @@ class EsoLogsTrendingService:
             ranked_players_skipped=ranked_players_skipped,
             role_summaries=summaries,
             role_errors=role_errors,
+        )
+
+    def _coordinated_tank_players(
+        self,
+        *,
+        encounter_id: int,
+        limit: int,
+    ) -> list[TopTeamPlayer]:
+        """Sample actual Tank-bucket players from top coordinated encounter reports.
+
+        Tank Trending is meant to answer what top-team tanks are wearing. Individual
+        tank-ranking pages can reward damage-oriented setups, so they are not used as
+        the gear source here.
+        """
+        candidates = self.client.get_top_reports_for_encounter(
+            int(encounter_id),
+            limit=max(3, int(limit)),
+        )
+        tanks: list[TopTeamPlayer] = []
+        seen: set[tuple[str, str]] = set()
+        errors: list[str] = []
+        for report_code, fight_id in candidates:
+            try:
+                fight = self.client.get_fight(report_code, fight_id)
+                start = float(fight.get("startTime", 0.0))
+                end = float(fight.get("endTime", 0.0))
+                details = self.client.get_report_player_summary(
+                    report_code,
+                    fight_id,
+                    start,
+                    end,
+                )
+            except EsoLogsApiError as exc:
+                errors.append(f"{report_code}#{fight_id}: {exc}")
+                continue
+
+            for player in TopTeamService._players_from_details(details):
+                if player.Role != "tank":
+                    continue
+                identity = (
+                    player.Name.strip().casefold(),
+                    player.ClassName.strip().casefold(),
+                )
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                tanks.append(player)
+                if len(tanks) >= limit:
+                    return tanks
+
+        if tanks:
+            return tanks
+        detail = "; ".join(errors) or "no explicit Tank-bucket players found"
+        raise EsoLogsApiError(
+            f"Could not load coordinated Tank build evidence: {detail}."
         )
 
     def _get_tank_rankings(
