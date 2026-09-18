@@ -63,3 +63,21 @@ def test_phase14_build_dossier_labels_base_skills_and_cp_as_inherited_baseline()
     assert '"Edit Base CP"' in source
     assert "Context variants inherit these base skill bars until overridden." in source
     assert "Context variants inherit these base Champion Points until overridden." in source
+
+
+def test_phase14_build_dossier_owns_character_progression_and_legacy_editor_is_fallback() -> None:
+    focused = Path("ui/phase14_build_focused_editors_support.py").read_text(encoding="utf-8")
+    inspector = Path("ui/phase14_build_inspector_support.py").read_text(encoding="utf-8")
+    legacy = Path("ui/build_editor_inline_compat.py").read_text(encoding="utf-8")
+
+    assert "def _progression_tab(page, build)" in focused
+    assert '"Passive Skills"' in focused
+    assert '"Passive Champion Points"' in focused
+    assert '"Edit Passive Skills"' in focused
+    assert '"Edit Passive CP"' in focused
+    assert "CharacterProgressionService(catalog_service).save" in focused
+    assert 'tabs.addTab(_progression_tab(page, build), "Progression")' in inspector
+    assert '"Legacy Build Editor (Fallback)"' in focused
+    assert "tabs.setTabVisible(1, True)" in focused
+    assert "for legacy_index in (1, 2, 3):" in legacy
+    assert "tabs.setTabVisible(legacy_index, False)" in legacy
