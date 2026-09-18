@@ -54,3 +54,12 @@ def test_urban_wilderness_branding_uses_only_approved_bff_logo() -> None:
     assert 'label.property("sidebarOffice")' in source
     assert "label.setParent(None)" in source
     assert Path("assets/logos/BFF_logo.png").is_file()
+
+
+def test_sidebar_brand_mark_returns_to_main_page() -> None:
+    source = Path("ui/components/foundry_sidebar.py").read_text(encoding="utf-8")
+
+    assert 'self.brand_mark.setCursor(Qt.CursorShape.PointingHandCursor)' in source
+    assert 'self.brand_mark.setToolTip("Return to Main Page")' in source
+    assert 'self.brand_mark.mousePressEvent = self._brand_mark_mouse_press' in source
+    assert 'self.pageRequested.emit("operations_console")' in source
