@@ -29,6 +29,7 @@ from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
+from ui.raid_trial_banner_support import TrialBannerLabel, trial_banner_path
 
 
 def _clean(value: object) -> str:
@@ -91,10 +92,14 @@ class CityLiveRaidPage(FoundryPage):
 
         hero = FoundryCard("Current Encounter", "trial")
         hero_row = QHBoxLayout()
+        hero_row.setSpacing(12)
+        self.hero_art = TrialBannerLabel()
+        self.hero_art.hide()
+        hero_row.addWidget(self.hero_art, 3)
         self.hero_title = QLabel("No Raid Plan selected")
         self.hero_title.setProperty("heroTitle", True)
         self.hero_title.setWordWrap(True)
-        hero_row.addWidget(self.hero_title, 3)
+        hero_row.addWidget(self.hero_title, 4)
         self.phase_label = QLabel("PLANNED\nPhase: —")
         self.phase_label.setWordWrap(True)
         hero_row.addWidget(self.phase_label, 1)
@@ -193,10 +198,12 @@ class CityLiveRaidPage(FoundryPage):
         plan = self._plan
         self.spots_table.setRowCount(0)
         if plan is None:
+            self.hero_art.set_source(None)
             self.hero_title.setText("No Raid Plan selected")
             self.callouts_label.setText("No planned callouts for this Raid Plan.")
             self.events_label.setText("No manual run events yet.")
             return
+        self.hero_art.set_source(trial_banner_path(plan.trial_id, plan.name))
         self.hero_title.setText(
             f"{plan.name}\n{plan.trial_id} · {plan.difficulty or 'Difficulty not set'} · {len(plan.members)} planned players"
         )
