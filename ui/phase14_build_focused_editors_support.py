@@ -14,6 +14,7 @@ from pathlib import Path
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QFormLayout,
@@ -533,6 +534,18 @@ def _header(page, build) -> QWidget:
     layout.addLayout(text, 1)
 
     layout.addWidget(_favorite_button(page, build))
+
+    ready = QCheckBox("Ready")
+    ready.setToolTip(
+        "Mark this saved build as ready for raid. This is your own check, "
+        "not a team or encounter check."
+    )
+    ready.setChecked(bool(getattr(build, "ReadyForRaid", False)))
+    ready.toggled.connect(
+        lambda checked, selected=build: page._set_build_ready(selected, checked)
+    )
+    layout.addWidget(ready)
+
     profile = profiles._profile(page, build)
     ownership = QLabel("My Build" if profile.ownership == "mine" else (profile.source_owner or "Team Build"))
     ownership.setProperty("cardBadge", True)
