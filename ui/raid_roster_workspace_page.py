@@ -381,6 +381,29 @@ class RaidRosterWorkspacePage(FoundryPage):
         top.addWidget(create)
         root.addLayout(top)
 
+        self.optimizer_plan_card = FoundryCard("Optimizer Plan", "compass")
+        self.optimizer_plan_card.setVisible(False)
+        self.optimizer_plan_table = QTableWidget(0, 6)
+        self.optimizer_plan_table.setHorizontalHeaderLabels(
+            ("Role", "Player", "Character", "Class", "Build", "Status")
+        )
+        self.optimizer_plan_table.verticalHeader().setVisible(False)
+        self.optimizer_plan_table.setEditTriggers(
+            QAbstractItemView.EditTrigger.NoEditTriggers
+        )
+        self.optimizer_plan_table.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.optimizer_plan_table.horizontalHeader().setStretchLastSection(True)
+        self.optimizer_plan_card.addWidget(self.optimizer_plan_table)
+        self.optimizer_plan_note = QLabel(
+            "Optimizer plans are temporary suggestions. They do not change saved "
+            "team membership until you explicitly edit the roster."
+        )
+        self.optimizer_plan_note.setWordWrap(True)
+        self.optimizer_plan_card.addWidget(self.optimizer_plan_note)
+        root.addWidget(self.optimizer_plan_card)
+
         upper = QHBoxLayout()
         members_card = FoundryCard("Team Members", "group")
         self.team_members_table = QTableWidget(0, 6)
@@ -790,6 +813,44 @@ class RaidRosterWorkspacePage(FoundryPage):
     # ------------------------------------------------------------------
     # Teams
     # ------------------------------------------------------------------
+
+    def load_optimizer_plan(self, plan) -> None:
+        """Show one non-destructive Optimizer team in the current Roster surface."""
+        rows = tuple(plan or ())
+        if not hasattr(self, "optimizer_plan_table"):
+            return
+
+        self.optimizer_plan_table.setRowCount(0)
+        for entry in rows:
+            row = self.optimizer_plan_table.rowCount()
+            self.optimizer_plan_table.insertRow(row)
+            kind = _clean(entry.get("kind") if isinstance(entry, dict) else "")
+            status = "Recruit" if kind == "recruitment" else "Saved build"
+            values = (
+                _clean(entry.get("slot") if isinstance(entry, dict) else ""),
+                _clean(entry.get("player") if isinstance(entry, dict) else ""),
+                _clean(entry.get("character") if isinstance(entry, dict) else ""),
+                _clean(entry.get("class") if isinstance(entry, dict) else ""),
+                _clean(entry.get("build") if isinstance(entry, dict) else ""),
+                status,
+            )
+            for column, value in enumerate(values):
+                self.optimizer_plan_table.setItem(
+                    row,
+                    column,
+                    _set_readonly(QTableWidgetItem(value or "—")),
+                )
+
+        self.optimizer_plan_card.setVisible(bool(rows))
+        self.optimizer_plan_card.set_badge(f"{len(rows)} SLOT(S)" if rows else "")
+        show_detail = getattr(self, "_show_detail", None)
+        if callable(show_detail):
+            show_detail("teams")
+        self.status.success(
+            f"Loaded Optimizer plan with {len(rows)} slot(s). "
+            "Saved team membership was not changed."
+        )
+
 
     def _refresh_teams(self) -> None:
         current = self.team_combo.currentText()
