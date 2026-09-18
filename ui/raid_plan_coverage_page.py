@@ -1,35 +1,20 @@
 from __future__ import annotations
 
-"""Raid Plan workspace with explicit Coverage handoff."""
+"""Raid Plan workspace with Coverage available as an independent destination page."""
 
 from PySide6.QtCore import Signal
 
-from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.raid_plan_assignment_page import RaidPlanAssignmentPage
 
 
 class RaidPlanCoveragePage(RaidPlanAssignmentPage):
-    """Assignment-aware Raid Plan page that can send its exact plan to Coverage."""
+    """Assignment-aware Raid Plan page.
+
+    Coverage selection is owned by the Coverage page itself. This class keeps the
+    compatibility signal for older callers but does not add a special handoff button.
+    """
 
     coverageRequested = Signal(object)
-
-    def _build_ui(self) -> None:
-        super()._build_ui()
-        self.check_plan_coverage_button = FoundryButton(
-            "Check Plan Coverage",
-            role=ButtonRole.PRIMARY,
-            compact=True,
-        )
-        self.check_plan_coverage_button.setToolTip(
-            "Audit exactly this Raid Plan's selected saved builds and explicit Primary/Secondary provider labels."
-        )
-        self.check_plan_coverage_button.clicked.connect(self._request_plan_coverage)
-        self.header.add_context_widget(self.check_plan_coverage_button)
-
-    def _open_coverage(self, *_args) -> None:
-        # The lower Raid Plan button must use the same exact-plan handoff as the
-        # header Coverage action. Generic navigation would silently drop planned gear.
-        self._request_plan_coverage()
 
     def _request_plan_coverage(self) -> None:
         try:
