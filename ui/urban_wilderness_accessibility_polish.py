@@ -99,7 +99,7 @@ def install() -> None:
     if _INSTALLED:
         return
 
-    from ui import city_live_raid_page, city_raid_plan_workspace_page, city_raid_readiness_page
+    from ui import city_raid_plan_workspace_page
     from ui import raid_roster_workspace_page
     from ui.components import encounter_board as board
 
@@ -142,25 +142,6 @@ def install() -> None:
     raid_roster_workspace_page._ThemeSketch.__init__ = sketch_init
     raid_roster_workspace_page._ThemeSketch.refresh_theme = sketch_refresh
     raid_roster_workspace_page._ThemeSketch.resizeEvent = sketch_resize
-
-    # ------------------------------------------------------------------
-    # Readiness decorative notes: field-journal art only on parchment
-    # ------------------------------------------------------------------
-    def readiness_art_refresh(self) -> None:
-        path = _first_art(
-            ("assets", "themes", "bff", "field_journal", "roster", self.filename),
-        )
-        _set_art(
-            self,
-            path,
-            fallback=self.fallback,
-            width=max(280, self.width() or 360),
-            height=138,
-        )
-        if path is not None:
-            self.setToolTip(self.fallback)
-
-    city_raid_readiness_page._ReadinessArt._refresh_pixmap = readiness_art_refresh
 
     # ------------------------------------------------------------------
     # Raid Plan center note is decorative, so make it visibly decorative.
