@@ -341,11 +341,14 @@ def _refresh_plan_table(page) -> None:
             role = page._cell_text(backend_row, 1) or "Unresolved"
             selected_class = page._selected_class(backend_row) or "Any class"
             role_class = role if selected_class == "Any class" else f"{role} • {selected_class}"
+            slot_name = page._cell_text(backend_row, 0) or f"Slot {backend_row + 1}"
+            manual_sets = _manual_sets_for_slot(page, slot_name)
+            build_label = " + ".join(manual_sets) if manual_sets else _candidate_label(candidate)
             values = (
                 str(backend_row + 1),
                 player,
                 role_class,
-                _candidate_label(candidate),
+                build_label,
                 _responsibility_for_row(page, backend_row),
                 _status_for_row(page, backend_row, candidate),
             )
