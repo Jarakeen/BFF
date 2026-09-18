@@ -98,6 +98,11 @@ _PELINALS_WRATH_BLOCKER = re.compile(
     r"The damage shield scales off the higher of your Weapon or Spell Damage, and the damage scales off your Max Health\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+
+_HEARTLAND_CONQUEROR_BLOCKER = re.compile(
+    r"^Heartland Conqueror \(5\): active set bonus is not yet mechanic-mapped:.*Increase the effectiveness of your Weapon Traits by 100%.*$",
+    re.IGNORECASE | re.DOTALL,
+)
 _LIGHT_SPEAKER_BLOCKER = re.compile(
     r"^Light Speaker \(5\): relevant set effect requires condition ability_scope:restoration_staff$",
     re.IGNORECASE,
@@ -215,11 +220,19 @@ class ExtremeActualHealGearSetCandidateService:
             "scorion's feast": _SCORIONS_FEAST_BLOCKER,
             "vykand's soulfury": _VYKANDS_SOULFURY_BLOCKER,
             "yandir's might": _YANDIRS_MIGHT_BLOCKER,
+            "heartland conqueror": _HEARTLAND_CONQUEROR_BLOCKER,
         }.get(set_name)
         if set_name == "armor master":
             reviewed_objectives = {"max_health"}
         elif set_name == "basalt-blooded warrior":
             reviewed_objectives = {"healing_done"}
+        elif set_name == "heartland conqueror":
+            reviewed_objectives = {
+                "healing_done",
+                "critical_healing",
+                "spell_damage",
+                "weapon_damage",
+            }
         else:
             reviewed_objectives = {"spell_damage", "weapon_damage"}
         if (
