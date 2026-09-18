@@ -14,6 +14,9 @@ from minmax.skill_tooltip_calculator import SkillTooltipResult
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 from services.extreme_critical_healing_cap_service import ExtremeCriticalHealingCapService
+from services.extreme_actual_heal_weapon_passive_power_service import (
+    ExtremeActualHealWeaponPassivePowerService,
+)
 from services.extreme_healing_event_recipient_scope_service import (
     ExtremeHealingEventRecipientScopeService,
 )
@@ -122,6 +125,7 @@ class ExtremeHealingEventService:
         nightblade_siphoning_healing: ExtremeNightbladeSiphoningHealingService | None = None,
         necromancer_living_death_slotted_healing: ExtremeNecromancerLivingDeathSlottedHealingService | None = None,
         warden_green_balance_healing: ExtremeWardenGreenBalanceHealingService | None = None,
+        weapon_passive_power: ExtremeActualHealWeaponPassivePowerService | None = None,
     ) -> None:
         self.database_path = Path(database_path or get_data_dir() / "eso.db")
         self.tooltip_service = tooltip_service or SavedBuildSkillTooltipService(
@@ -158,6 +162,13 @@ class ExtremeHealingEventService:
                 skill_line_repository=self.skill_line_repository,
             )
         )
+        self.weapon_passive_power = (
+            weapon_passive_power
+            or ExtremeActualHealWeaponPassivePowerService(
+                self.database_path,
+                skill_line_repository=self.skill_line_repository,
+            )
+        )
 
     def evaluate(
         self,
@@ -190,11 +201,22 @@ class ExtremeHealingEventService:
         reviewed_sources = list(additional_healing_done_sources)
         if abs(float(bar_multiplier) - 1.0) > 1e-12:
             reviewed_sources.append("Extreme reviewed active-bar Healing Done")
+        active_bar = str(getattr(context, "active_bar", "front") or "front")
+        weapon_power = self.weapon_passive_power.resolve(
+            build=build,
+            context=context,
+            active_bar=active_bar,
+        )
+        total_power_bonus = (
+            float(mastery.weapon_spell_damage_bonus)
+            + float(weapon_power.power_bonus)
+        )
         mastery_power_sources = (
             ("Nightblade Class Mastery: An Eye for Exploitation",)
             if abs(float(mastery.weapon_spell_damage_bonus)) > 1e-12
             else ()
         )
+        power_sources = mastery_power_sources + tuple(weapon_power.sources)
 
         result = self.tooltip_service.evaluate_entity_id(
             build=build,
@@ -202,11 +224,12 @@ class ExtremeHealingEventService:
             entity_id=entity_id,
             additional_healing_done_percent=reviewed_healing_done_bonus * 100.0,
             additional_healing_done_sources=tuple(reviewed_sources),
-            additional_power_bonus=float(mastery.weapon_spell_damage_bonus),
-            additional_power_sources=mastery_power_sources,
+            additional_power_bonus=total_power_bonus,
+            additional_power_sources=power_sources,
         )
         unresolved = list(bar_unresolved)
         unresolved.extend(mastery.unresolved)
+        unresolved.extend(weapon_power.unresolved)
         unresolved.extend(result.unresolved)
 
         skill_name = str(getattr(getattr(result, "skill", None), "name", "") or "").strip()
