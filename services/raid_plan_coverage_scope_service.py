@@ -3,8 +3,9 @@ from __future__ import annotations
 """Resolve one RaidPlan into the exact static-build scope Coverage may inspect.
 
 This integration service does not calculate coverage and does not infer provider ownership.
-It resolves only explicitly selected saved builds, preserves unresolved chair evidence, and
-projects exact assignment-label matches for Coverage presentation. Primary and secondary
+It resolves explicitly selected saved builds, preserves Raid Plan planned-set evidence,
+preserves unresolved chair evidence, and projects exact assignment-label matches for Coverage
+presentation. Primary and secondary
 assignment labels remain raid-lead planning intent, not proof of effect uptime.
 """
 
@@ -34,6 +35,13 @@ class RaidPlanCoverageMember:
 
 
 @dataclass(frozen=True)
+class RaidPlanPlannedGear:
+    seat_id: str
+    player_label: str
+    gear_sets: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class RaidPlanCoverageScope:
     plan_id: str
     plan_name: str
@@ -41,6 +49,7 @@ class RaidPlanCoverageScope:
     total_chairs: int
     named_members: int
     members: tuple[RaidPlanCoverageMember, ...]
+    planned_gear: tuple[RaidPlanPlannedGear, ...]
     unresolved: tuple[str, ...]
     primary_providers: tuple[tuple[str, tuple[str, ...]], ...]
     secondary_providers: tuple[tuple[str, tuple[str, ...]], ...]
@@ -82,12 +91,27 @@ class RaidPlanCoverageScopeService:
             if _clean(name)
         }
         members: list[RaidPlanCoverageMember] = []
+        planned_gear: list[RaidPlanPlannedGear] = []
         unresolved: list[str] = []
         primary: dict[str, list[str]] = {key: [] for key in effect_labels}
         secondary: dict[str, list[str]] = {key: [] for key in effect_labels}
 
         for member in raid_plan.members:
             player_label = member.character_name or member.gamertag or member.seat_id
+            planned_sets = tuple(
+                str(value).strip()
+                for value in (member.planned_gear_sets or ())
+                if str(value).strip()
+            )
+            if planned_sets:
+                planned_gear.append(
+                    RaidPlanPlannedGear(
+                        seat_id=member.seat_id,
+                        player_label=player_label,
+                        gear_sets=planned_sets,
+                    )
+                )
+
             result = self.resolver.resolve(
                 raid_plan=raid_plan,
                 seat_id=member.seat_id,
@@ -118,6 +142,7 @@ class RaidPlanCoverageScopeService:
             total_chairs=int(total_chairs),
             named_members=len(raid_plan.members),
             members=tuple(members),
+            planned_gear=tuple(planned_gear),
             unresolved=tuple(dict.fromkeys(unresolved)),
             primary_providers=tuple(
                 (key, tuple(values)) for key, values in primary.items() if values
@@ -130,6 +155,7 @@ class RaidPlanCoverageScopeService:
 
 __all__ = [
     "RaidPlanCoverageMember",
+    "RaidPlanPlannedGear",
     "RaidPlanCoverageScope",
     "RaidPlanCoverageScopeService",
 ]
