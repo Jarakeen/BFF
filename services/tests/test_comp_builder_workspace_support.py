@@ -80,3 +80,13 @@ def test_comp_maker_rylo_has_explicit_workspace_overrides():
     assert 'QLineEdit[compMakerConstraintInput="true"]' in source
     assert "install_comp_builder_rylo()" in installer
     assert "install_comp_builder_workspace()" in installer
+
+
+def test_comp_maker_workspace_keeps_player_column_from_first_paint() -> None:
+    source = Path("ui/comp_builder_workspace_support.py").read_text(encoding="utf-8")
+
+    assert "PLAYER_COLUMN = 11" in source
+    assert "table.setColumnCount(12)" in source
+    assert '"PLAYER"' in source
+    assert 'QTableWidgetItem("Recruit")' in source
+    assert "header.moveSection(player_visual, 0)" in source
