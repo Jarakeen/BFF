@@ -49,8 +49,8 @@ def install() -> None:
             service.set_active_profile(self.service.active_profile)
         return service
 
-    def init_with_lorebooks(self, parent=None):
-        original_init(self, parent)
+    def init_with_lorebooks(self, parent=None, service=None):
+        original_init(self, parent, service=service)
         self.lorebook_service = LorebookService(self.data_dir / "eso.db")
         self.lorebook_text = QPlainTextEdit()
         self.lorebook_text.setReadOnly(True)
