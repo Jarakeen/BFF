@@ -86,13 +86,13 @@ class CompBuildCandidate:
     eso_class: str
     role: str
     gear_sets: tuple[str, ...]
-    five_piece_sets: tuple[str, ...]
     skills: tuple[str, ...]
     mundus: str
     complete_build: bool
     unresolved: tuple[str, ...]
     score: float
     score_reasons: tuple[str, ...]
+    five_piece_sets: tuple[str, ...] = ()
 
 
 class CompBuilderBuildCandidateService:
