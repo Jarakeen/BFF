@@ -58,8 +58,8 @@ def install() -> None:
     def is_learned_category(self) -> bool:
         return self.category in LEARNED_CATEGORIES
 
-    def init_with_learned_collections(self, parent=None):
-        original_init(self, parent)
+    def init_with_learned_collections(self, parent=None, service=None):
+        original_init(self, parent, service=service)
         self.learned_recipe_service = LearnedRecipeService(self.data_dir / "eso.db")
 
     def set_category_with_learned(self, category: str):
