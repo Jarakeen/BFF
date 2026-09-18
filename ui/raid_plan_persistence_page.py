@@ -19,7 +19,7 @@ from services.raid_plan_member_identity_resolution_service import (
     RaidPlanMemberIdentityResolutionService,
 )
 from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
-from ui.raid_plan_page import RAID_PLAN_SEATS, _clean, _slug
+from ui.raid_plan_page import RAID_PLAN_SEATS, _clean, _slug, new_personnel_member
 from ui.raid_plan_stable_identity_selection_page import RaidPlanStableIdentitySelectionPage
 
 
@@ -237,8 +237,23 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         wanted = plan.trial_id.casefold()
         return next((name for name in COMP_MAKER_TRIALS if _slug(name) == wanted), plan.trial_id)
 
+    def _ensure_named_players_in_personnel(self) -> int:
+        """Promote typed Raid Plan gamertags into minimal Personnel identities."""
+        created = 0
+        for row in range(self.team_table.rowCount()):
+            gamertag = self._player_text(row)
+            if not gamertag or self._personnel_match(gamertag) is not None:
+                continue
+            self.roster_service.create_member(new_personnel_member(gamertag))
+            created += 1
+
+        if created:
+            self.refresh_personnel()
+        return created
+
     def save_current_plan(self) -> None:
         try:
+            created_players = self._ensure_named_players_in_personnel()
             plan = self.current_plan()
             self.plan_repository.save(plan)
             persisted = self.plan_repository.get(plan.plan_id)
@@ -263,10 +278,15 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             for member in persisted.members
             if member.selected_build_name or member.planned_gear_sets
         )
+        created_note = (
+            f" • {created_players} new player(s) added to Personnel"
+            if created_players
+            else ""
+        )
         self.status.success(
             f"Saved Raid Plan: {persisted.name} • "
             f"{len(persisted.members)} player(s) • {characters} character(s) • "
-            f"{roles} role(s) • {planned} planned build(s)"
+            f"{roles} role(s) • {planned} planned build(s){created_note}"
         )
 
     def load_selected_plan(self) -> None:
