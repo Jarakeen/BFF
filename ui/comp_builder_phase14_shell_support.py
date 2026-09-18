@@ -662,7 +662,11 @@ def refresh_phase14_presentation(page) -> None:
     _apply_plan_geometry(page, size)
     table = getattr(page, "comp_phase14_plan_table", None)
     if table is not None:
-        table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        table.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+            if size == 12
+            else Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
     _refresh_shell(page)
 
 
