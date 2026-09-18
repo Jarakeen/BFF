@@ -139,3 +139,9 @@ def test_lower_raid_plan_save_is_bound_by_persistence_page() -> None:
     source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
     assert 'lower_save = getattr(self, "lower_save_plan_button", None)' in source
     assert "lower_save.clicked.connect(self.save_current_plan)" in source
+
+
+def test_lower_raid_plan_save_binding_does_not_disconnect_empty_signal() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+    assert "lower_save.clicked.connect(self.save_current_plan)" in source
+    assert "lower_save.clicked.disconnect()" not in source
