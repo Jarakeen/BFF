@@ -117,13 +117,20 @@ def _candidate_for_row(page, row: int):
     return candidates[0] if candidates else None
 
 
-def _candidate_label(candidate) -> str:
+def _candidate_sets(candidate) -> tuple[str, str]:
     if candidate is None:
-        return "Open"
-    gear = tuple(getattr(candidate, "gear_sets", ()) or ())
-    if gear:
-        return " + ".join(gear[:2])
-    return str(getattr(candidate, "name", "") or "Build recommendation")
+        return ("Open", "")
+    gear = tuple(str(value).strip() for value in (getattr(candidate, "gear_sets", ()) or ()) if str(value).strip())
+    if len(gear) >= 2:
+        return (gear[0], gear[1])
+    if len(gear) == 1:
+        return (gear[0], "")
+    return (str(getattr(candidate, "name", "") or "Build recommendation"), "")
+
+
+def _candidate_label(candidate) -> str:
+    first, second = _candidate_sets(candidate)
+    return " + ".join(value for value in (first, second) if value)
 
 
 def _responsibility_for_row(page, row: int) -> str:
@@ -273,7 +280,11 @@ def _refresh_why(page) -> None:
     if row < 0 or row >= page.matrix_table.rowCount():
         page.comp_phase14_why_header.setText("No player selected")
         page.comp_phase14_recommendation.setText("No recommendation available.")
+        page.comp_phase14_set_one.setText("No recommendation")
+        page.comp_phase14_set_two.setText("")
+        page.comp_phase14_set_plus.setVisible(False)
         page.comp_phase14_confidence.setText("No evidence")
+        page.comp_phase14_role_footer.setText("No role selected")
         page.comp_phase14_why_text.setText("Select a player in Recommended Team Plan.")
         page.comp_phase14_alt_one.setText("—")
         page.comp_phase14_alt_two.setText("—")
@@ -295,7 +306,13 @@ def _refresh_why(page) -> None:
     candidate = _candidate_for_row(page, row)
     if candidate is None:
         page.comp_phase14_recommendation.setText("No eligible build recommendation resolved.")
+        page.comp_phase14_set_one.setText("No eligible build")
+        page.comp_phase14_set_two.setText("")
+        page.comp_phase14_set_plus.setVisible(False)
         page.comp_phase14_confidence.setText("Needs review")
+        page.comp_phase14_role_footer.setText(f"{selected_class}  •  {role}")
+    if not set_two:
+        page.comp_phase14_set_two.setText("No second set resolved")
         page.comp_phase14_why_text.setText(
             f"No source-backed recommendation is currently available for {role}. "
             "The slot remains intentionally unresolved."
@@ -305,8 +322,17 @@ def _refresh_why(page) -> None:
         return
 
     page.comp_phase14_recommendation.setText(_candidate_label(candidate))
+    set_one, set_two = _candidate_sets(candidate)
+    page.comp_phase14_set_one.setText(set_one)
+    page.comp_phase14_set_two.setText(set_two)
+    page.comp_phase14_set_plus.setVisible(bool(set_two))
     score = float(getattr(candidate, "score", 0.0) or 0.0)
-    page.comp_phase14_confidence.setText(f"{_candidate_source(candidate)} • relevance {score:.1f}")
+    page.comp_phase14_confidence.setText(
+        f"High confidence • {_candidate_source(candidate)} • relevance {score:.1f}"
+        if score >= 80.0
+        else f"{_candidate_source(candidate)} • relevance {score:.1f}"
+    )
+    page.comp_phase14_role_footer.setText(f"{selected_class}  •  {role}")
 
     reasons = tuple(getattr(candidate, "score_reasons", ()) or ())
     obligations = []
@@ -618,23 +644,61 @@ def _build_why(page, card: FoundryCard) -> None:
     layout.addWidget(recommendation_title)
 
     recommendation_frame, recommendation_layout = _why_section_frame("recommendation")
-    recommendation_top = QHBoxLayout()
-    recommendation_top.setContentsMargins(0, 0, 0, 0)
-    recommendation_top.setSpacing(8)
 
-    page.comp_phase14_recommendation = QLabel("No recommendation available.")
-    page.comp_phase14_recommendation.setWordWrap(True)
-    page.comp_phase14_recommendation.setProperty("compPlanRecommendation", True)
-    recommendation_top.addWidget(page.comp_phase14_recommendation, 1)
-
+    confidence_row = QHBoxLayout()
+    confidence_row.setContentsMargins(0, 0, 0, 0)
+    confidence_row.addStretch(1)
     page.comp_phase14_confidence = QLabel("Evidence pending")
     page.comp_phase14_confidence.setProperty("compPlanConfidence", True)
+    page.comp_phase14_confidence.setProperty("confidenceBadge", True)
     page.comp_phase14_confidence.setAlignment(
         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
     )
-    recommendation_top.addWidget(page.comp_phase14_confidence, 0)
+    confidence_row.addWidget(page.comp_phase14_confidence, 0)
+    recommendation_layout.addLayout(confidence_row)
 
-    recommendation_layout.addLayout(recommendation_top)
+    set_row = QHBoxLayout()
+    set_row.setContentsMargins(0, 2, 0, 2)
+    set_row.setSpacing(10)
+
+    set_one_frame, set_one_layout = _why_section_frame("recommendedSet")
+    page.comp_phase14_set_one = QLabel("No recommendation")
+    page.comp_phase14_set_one.setWordWrap(True)
+    page.comp_phase14_set_one.setProperty("compRecommendedSetName", True)
+    set_one_layout.addWidget(page.comp_phase14_set_one)
+    set_one_count = QLabel("5 pieces")
+    set_one_count.setProperty("compRecommendedSetCount", True)
+    set_one_layout.addWidget(set_one_count)
+
+    page.comp_phase14_set_plus = QLabel("+")
+    page.comp_phase14_set_plus.setProperty("compRecommendedSetPlus", True)
+    page.comp_phase14_set_plus.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    page.comp_phase14_set_plus.setFixedWidth(24)
+
+    set_two_frame, set_two_layout = _why_section_frame("recommendedSet")
+    page.comp_phase14_set_two = QLabel("")
+    page.comp_phase14_set_two.setWordWrap(True)
+    page.comp_phase14_set_two.setProperty("compRecommendedSetName", True)
+    set_two_layout.addWidget(page.comp_phase14_set_two)
+    set_two_count = QLabel("5 pieces")
+    set_two_count.setProperty("compRecommendedSetCount", True)
+    set_two_layout.addWidget(set_two_count)
+
+    set_row.addWidget(set_one_frame, 1)
+    set_row.addWidget(page.comp_phase14_set_plus, 0, Qt.AlignmentFlag.AlignCenter)
+    set_row.addWidget(set_two_frame, 1)
+    recommendation_layout.addLayout(set_row)
+
+    page.comp_phase14_role_footer = QLabel("No role selected")
+    page.comp_phase14_role_footer.setProperty("compRecommendationRoleFooter", True)
+    recommendation_layout.addWidget(page.comp_phase14_role_footer)
+
+    # Retained as a compact accessible summary for tests/tooltips and any consumers
+    # that already read the recommendation label.
+    page.comp_phase14_recommendation = QLabel("No recommendation available.")
+    page.comp_phase14_recommendation.setVisible(False)
+    page.comp_phase14_recommendation.setProperty("compPlanRecommendation", True)
+
     layout.addWidget(recommendation_frame)
 
     why_title = QLabel("WHY")
