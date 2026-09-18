@@ -70,3 +70,12 @@ def test_raid_plan_coverage_overlays_reviewed_planned_set_evidence() -> None:
     assert "for row in scope.planned_gear:" in source
     assert "planned-set evidence is therefore Conditional" in source
     assert "snapshot = _overlay_planned_gear(snapshot, scope)" in source
+
+
+def test_lower_open_coverage_uses_exact_raid_plan_handoff() -> None:
+    base = Path("ui/raid_plan_page.py").read_text(encoding="utf-8")
+    coverage_page = Path("ui/raid_plan_coverage_page.py").read_text(encoding="utf-8")
+
+    assert "self.open_coverage_button.clicked.connect(self._open_coverage)" in base
+    assert "def _open_coverage(self, *_args) -> None:" in coverage_page
+    assert "self._request_plan_coverage()" in coverage_page
