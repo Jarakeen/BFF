@@ -1166,6 +1166,15 @@ def _init_with_phase14_shell(self, parent=None) -> None:
 def _render_slots_with_phase14_shell(self, slots) -> None:
     assert _ORIGINAL_RENDER_SLOTS is not None
     _ORIGINAL_RENDER_SLOTS(self, slots)
+
+    # Roster/Raid Plan intake can own an explicit class requirement for a Recruit
+    # chair. Reapply that chair-level constraint after every later matrix rebuild.
+    try:
+        from ui.comp_builder_roster_intake_support import _reapply_class_constraints
+        _reapply_class_constraints(self)
+    except (AttributeError, TypeError, ValueError):
+        pass
+
     if hasattr(self, "comp_phase14_plan_table"):
         _refresh_shell(self)
 
@@ -1201,6 +1210,11 @@ def install() -> None:
         def apply_roster_context_with_shell(self, *args, **kwargs) -> None:
             assert _ORIGINAL_APPLY_ROSTER_CONTEXT is not None
             _ORIGINAL_APPLY_ROSTER_CONTEXT(self, *args, **kwargs)
+            try:
+                from ui.comp_builder_roster_intake_support import _reapply_class_constraints
+                _reapply_class_constraints(self)
+            except (AttributeError, TypeError, ValueError):
+                pass
             _refresh_shell(self)
 
         CompBuilderPage.apply_roster_team_context = apply_roster_context_with_shell
