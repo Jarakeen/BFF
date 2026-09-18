@@ -47,6 +47,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Raid Plans provides a visible 12-chair trial-planning workspace where gamertag can be known before character, role, class, or build, and saved builds can be assigned without mutating existing Roster persistence
 - Raid Plans now keeps the non-editable center note as a static quote panel, removes the redundant top Roles/Spots field-note card, and routes detailed assignment work to the dedicated Assignments surface
 - Raid Plans can show trial-specific wide hero artwork for Cloudrest, Sunspire, and Dreadsail Reef; banners resolve from the selected plan identity, crop without distortion, fail closed for unmapped trials, and are bundled as compressed WebP release assets
+- Comp Builder and Optimizer promote their current per-chair decisions back into **Raid Plan** ownership; when opened from Raid Plan they update that same plan, preserve character/role identity plus planned gear/skill/Mundus evidence, and do not silently overwrite reusable saved Builds or Roster team membership
 - Readiness parchment notes use fixed-height field-journal pencil/sketch artwork; full-color city art is reserved for dark surfaces and decorative art cannot change page/card geometry
 - Empty boss, mechanic, positioning, and Raid Map panels use distinct compact field-art placeholders for Foundry and Rylo, with visible labels that distinguish decorative art from reviewed encounter evidence
 - Main character overview dashboard
