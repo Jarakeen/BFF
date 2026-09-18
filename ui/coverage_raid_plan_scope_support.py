@@ -351,7 +351,7 @@ def install() -> None:
         _ORIGINAL_INIT(self, *args, **kwargs)
         _refresh_scope_plan_choices(self)
 
-    def refresh_with_raid_plan(self) -> None:
+    def refresh_with_raid_plan(self, *args, **kwargs):
         _refresh_scope_plan_choices(self)
         data = str(self.scope_combo.currentData() or "")
         plan_id = _selected_plan_id(self)
@@ -378,7 +378,7 @@ def install() -> None:
             return
 
         self._raid_plan_coverage_scope = None
-        _ORIGINAL_REFRESH(self)
+        return _ORIGINAL_REFRESH(self, *args, **kwargs)
 
     def set_raid_plan_scope(self, raid_plan: RaidPlan) -> None:
         """Compatibility helper: choose the plan in Coverage's own scope menu."""
