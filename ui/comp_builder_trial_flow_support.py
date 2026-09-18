@@ -59,13 +59,29 @@ def _chair_candidates_for_selected_trial(page, row: int):
         if observed is not None
         else ()
     )
-    return page._comp_build_candidate_service.candidates_for_chair(
+    candidates = page._comp_build_candidate_service.candidates_for_chair(
         goal=goal,
         slot_name=slot_name,
         role=role,
         preferred_class=preferred_class,
         observed_gear_sets=observed_gear,
         observed_skills=observed_skills,
+    )
+
+    # Trial-first selection changes only the content scope. It must not bypass
+    # roster ownership or let Recruit slots borrow another player's saved build.
+    from ui import comp_builder_build_candidate_support as candidate_support
+
+    member = candidate_support._roster_member_for_row(page, row)
+    recruit = candidate_support._row_is_recruit(page, row)
+    return tuple(
+        candidate
+        for candidate in candidates
+        if candidate_support._candidate_matches_roster_member(
+            candidate,
+            member,
+            recruit=recruit,
+        )
     )
 
 
