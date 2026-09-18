@@ -95,23 +95,23 @@ def test_reviewed_conditional_ordinary_set_survives_all_package_admission_paths(
     assert ordinary.candidate_set_names(per_objective=None) == expected
 
     monster = _package_service(_Monster)
-    assert monster._reviewed_names(monster=False, per_objective=20) == expected
+    assert monster._reviewed_names(monster=False, per_objective=None) == expected
 
     double_five = _package_service(_DoubleFive)
     assert double_five._reviewed_names(
         secondary_shape=False,
-        per_objective=20,
+        per_objective=None,
     ) == expected
     assert double_five._reviewed_names(
         secondary_shape=True,
-        per_objective=20,
+        per_objective=None,
     ) == expected
 
     ring_mythic = _package_service(_RingMythic)
     assert ring_mythic._reviewed_names(
         shape="primary",
-        per_objective=20,
+        per_objective=None,
     ) == expected
 
     slot_mythic = _package_service(_SlotMythic)
-    assert slot_mythic._reviewed_ordinary_names(per_objective=20) == expected
+    assert slot_mythic._reviewed_ordinary_names(per_objective=None) == expected
