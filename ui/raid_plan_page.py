@@ -288,36 +288,15 @@ class RaidPlanPage(FoundryPage):
 
         actions.addStretch(1)
 
-        research = FoundryButton("Build Research / Top Gear", role=ButtonRole.SECONDARY, compact=True)
-        research.clicked.connect(lambda *_: self.pageRequested.emit("console:3"))
-        actions.addWidget(research)
-
         self.lower_save_plan_button = FoundryButton(
             "Save",
-            role=ButtonRole.SECONDARY,
+            role=ButtonRole.PRIMARY,
             compact=True,
         )
         self.lower_save_plan_button.setToolTip(
             "Save the current Raid Plan using the same persistence path as Plan Controls."
         )
         actions.addWidget(self.lower_save_plan_button)
-
-        comp = FoundryButton("Open Comp Maker", role=ButtonRole.SECONDARY, compact=True)
-        comp.clicked.connect(lambda *_: self.pageRequested.emit("comp_builder"))
-        actions.addWidget(comp)
-
-        self.open_coverage_button = FoundryButton(
-            "Open Coverage",
-            role=ButtonRole.SECONDARY,
-            compact=True,
-        )
-        self.open_coverage_button.clicked.connect(self._open_coverage)
-        actions.addWidget(self.open_coverage_button)
-
-        adviser = FoundryButton("Open Optimizer", role=ButtonRole.PRIMARY, compact=True)
-        adviser.setToolTip("Open the existing optimization workspace while the Adviser remodel is still in progress.")
-        adviser.clicked.connect(lambda *_: self.pageRequested.emit("console:6"))
-        actions.addWidget(adviser)
 
         root.addLayout(actions)
         self.add_workspace(workspace)
