@@ -433,9 +433,21 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                                 or member.build_source_kind
                             )
                         ):
+                            planned_sets = " + ".join(member.planned_gear_sets[:2])
+                            planned_label = (
+                                f"Planned • {planned_sets}"
+                                if planned_sets
+                                else f"Planned • {member.selected_build_name}"
+                            )
                             build_combo.addItem(
-                                f"Planned • {member.selected_build_name}",
+                                planned_label,
                                 f"planned:{member.seat_id}",
+                            )
+                            build_combo.setItemData(
+                                build_combo.count() - 1,
+                                " • ".join(member.planned_gear_sets)
+                                or member.selected_build_name,
+                                Qt.ItemDataRole.ToolTipRole,
                             )
                             build_combo.setCurrentIndex(build_combo.count() - 1)
                 self._refresh_personnel_button(row)
