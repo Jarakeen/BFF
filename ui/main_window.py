@@ -189,15 +189,20 @@ class MainWindow(QMainWindow):
     def connect_signals(self):
         self.sidebar.pageRequested.connect(self.show_page)
 
-    def _show_generated_roster_plan(self, plan_name: str) -> None:
-        """Promote a persisted Comp Builder draft into the durable Raid Plan owner."""
+    def _persist_generated_comp_plan_to_raid_plan(
+        self,
+        plan_name: str,
+        *,
+        navigate: bool,
+    ):
+        """Merge one persisted Comp Builder draft into its originating Raid Plan."""
         from services.eso_database import EsoDatabase
         from services.generated_roster_draft_service import GeneratedRosterDraftService
         from services.team_plan_to_raid_plan import raid_plan_from_generated_slots
 
         raid_plans = self.pages.get("raid_plans")
         if raid_plans is None:
-            return
+            return None
 
         draft = GeneratedRosterDraftService(
             EsoDatabase(get_data_dir() / "eso.db")
@@ -206,8 +211,9 @@ class MainWindow(QMainWindow):
             raid_plans.status.warning(
                 f'Could not reload Comp Builder plan "{plan_name}".'
             )
-            self.show_page("raid_plans")
-            return
+            if navigate:
+                self.show_page("raid_plans")
+            return None
 
         comp = self.pages.get("comp_builder")
         origin_id = str(
@@ -227,13 +233,21 @@ class MainWindow(QMainWindow):
         )
         raid_plans.plan_repository.save(plan)
         raid_plans.apply_plan(plan)
-        raid_plans._show_local_view(0)
         raid_plans._refresh_overview()
         raid_plans.status.success(
-            f"Comp Builder plan loaded into Raid Plan: {plan.name}. "
-            "Planned build changes were preserved without overwriting saved Builds."
+            f"Comp Builder changes saved to Raid Plan: {plan.name}. "
+            "Planned build choices were preserved without overwriting saved Builds."
         )
-        self.show_page("raid_plans")
+        if navigate:
+            raid_plans._show_local_view(0)
+            self.show_page("raid_plans")
+        return plan
+
+    def _show_generated_roster_plan(self, plan_name: str) -> None:
+        self._persist_generated_comp_plan_to_raid_plan(
+            plan_name,
+            navigate=True,
+        )
 
     def _confirm_collectible_navigation(self, target_page: str) -> bool:
         collectibles_page = self.pages.get("collectibles_browser")
