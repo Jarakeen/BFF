@@ -46,6 +46,8 @@ _ROLE_SHORT = {
     "damage": "DD",
     "dps": "DD",
     "dd": "DD",
+    "support dd": "SupportDD",
+    "support dps": "SupportDD",
 }
 
 _ROLE_INPUT_ALIASES = {
@@ -55,10 +57,12 @@ _ROLE_INPUT_ALIASES = {
     "heal": "Healer",
     "heals": "Healer",
     "healer": "Healer",
-    "dd": "Damage Dealer",
-    "dps": "Damage Dealer",
-    "damage": "Damage Dealer",
-    "damage dealer": "Damage Dealer",
+    "dd": "DD",
+    "dps": "DD",
+    "damage": "DD",
+    "damage dealer": "DD",
+    "support dd": "Support DD",
+    "support dps": "Support DD",
 }
 
 
