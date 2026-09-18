@@ -210,3 +210,22 @@ def test_current_teams_editor_exposes_and_persists_discord_link() -> None:
     assert 'form.addRow("Discord", self.team_discord)' in source
     assert "self.team_discord.setText(schedule.DiscordUrl if schedule else \"\")" in source
     assert "DiscordUrl=_clean(self.team_discord.text())" in source
+
+
+def test_optimizer_handoff_targets_current_roster_workspace() -> None:
+    main_window = Path("ui/main_window.py").read_text(encoding="utf-8")
+    roster = Path("ui/raid_roster_workspace_page.py").read_text(encoding="utf-8")
+
+    method = main_window.split(
+        "def _send_optimized_team_to_roster", 1
+    )[1].split("def _open_player_builds", 1)[0]
+
+    assert 'self.pages.get("roster_workspace")' in method
+    assert 'self.show_page("roster_workspace")' in method
+    assert 'self.show_page("roster_page")' not in method
+    assert 'load_optimizer_plan' in method
+
+    assert 'FoundryCard("Optimizer Plan", "compass")' in roster
+    assert "def load_optimizer_plan(self, plan)" in roster
+    assert 'show_detail("teams")' in roster
+    assert "Saved team membership was not changed." in roster
