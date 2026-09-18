@@ -397,8 +397,10 @@ def _refresh_why(page) -> None:
     except (AttributeError, OSError, TypeError, ValueError):
         candidates = ()
 
-    candidate = _candidate_for_row(page, row)
-    if candidate is None:
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    applied = getattr(page, "_comp_applied_candidates", {}).get(slot_name)
+    preferred = candidates[0] if candidates else applied
+    if preferred is None:
         page.comp_phase14_recommendation.setText(
             "No eligible build recommendation resolved."
         )
@@ -427,18 +429,18 @@ def _refresh_why(page) -> None:
         _style_confidence_badge(page.comp_phase14_confidence, None)
         return
 
-    page.comp_phase14_recommendation.setText(_candidate_label(candidate))
-    set_one, set_two = _candidate_sets(candidate)
+    page.comp_phase14_recommendation.setText(_candidate_label(preferred))
+    set_one, set_two = _candidate_sets(preferred)
     page.comp_phase14_set_one.setText(set_one)
     page.comp_phase14_set_two.setText(
         set_two if set_two else "No second set resolved"
     )
     page.comp_phase14_set_plus.setVisible(bool(set_two))
 
-    _style_confidence_badge(page.comp_phase14_confidence, candidate)
+    _style_confidence_badge(page.comp_phase14_confidence, preferred)
     page.comp_phase14_role_footer.setText(f"{selected_class}  •  {role}")
 
-    reasons = tuple(getattr(candidate, "score_reasons", ()) or ())
+    reasons = tuple(getattr(preferred, "score_reasons", ()) or ())
     obligations = []
     for column in (4, 6, 7):
         obligations.extend(page._split_values(page._cell_text(row, column)))
@@ -455,29 +457,35 @@ def _refresh_why(page) -> None:
     alternatives = [
         item
         for item in candidates
-        if item.candidate_id != candidate.candidate_id
+        if item.candidate_id != preferred.candidate_id
     ]
     alt_one = alternatives[0] if alternatives else None
     alt_two = alternatives[1] if len(alternatives) > 1 else None
     page.comp_phase14_alt_one.setText(_alternative_text(alt_one))
     page.comp_phase14_alt_two.setText(_alternative_text(alt_two))
 
-    page.comp_phase14_recommendation_frame._comp_candidate = candidate
+    page.comp_phase14_recommendation_frame._comp_candidate = preferred
     page.comp_phase14_alt_one_frame._comp_candidate = alt_one
     page.comp_phase14_alt_two_frame._comp_candidate = alt_two
+
+    selected_id = (
+        str(getattr(applied, "candidate_id", "") or "")
+        if applied is not None
+        else str(getattr(preferred, "candidate_id", "") or "")
+    )
     _set_choice_state(
         page.comp_phase14_recommendation_frame,
-        selected=True,
+        selected=preferred.candidate_id == selected_id,
         enabled=True,
     )
     _set_choice_state(
         page.comp_phase14_alt_one_frame,
-        selected=False,
+        selected=bool(alt_one and alt_one.candidate_id == selected_id),
         enabled=alt_one is not None,
     )
     _set_choice_state(
         page.comp_phase14_alt_two_frame,
-        selected=False,
+        selected=bool(alt_two and alt_two.candidate_id == selected_id),
         enabled=alt_two is not None,
     )
 
