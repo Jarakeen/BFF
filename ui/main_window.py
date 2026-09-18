@@ -44,6 +44,7 @@ from ui.operations_console import OperationsConsole
 from ui.optimization_page import OptimizationPage
 from ui.reference_data_page import ReferenceDataPage
 from ui.raid_review_page import RaidReviewPage
+from ui.phase14_rotation_page import RotationBuilderPage
 from ui.themed_roster_page import RosterPage
 from ui.settings_page import SettingsPage
 from ui.stickerbook_page import StickerbookPage
@@ -134,6 +135,7 @@ class MainWindow(QMainWindow):
             "console:7": CoveragePage(),
             "console:8": ReferenceDataPage(),
             "raid_review": RaidReviewPage(),
+            "rotations": RotationBuilderPage(),
             "gear_lookup": GearLookupPage(),
             "timers": AsylumPerfectaTimerPage(),
             "community_news": CommunityNewsPage(),
