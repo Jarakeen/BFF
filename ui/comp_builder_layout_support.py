@@ -67,33 +67,36 @@ def _install_layout(page) -> None:
     right.setSpacing(10)
     right.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-    # LEFT: player comp -> group coverage -> evidence/provenance.
+    # LEFT: the team is the primary workspace. Keep the whole group visible, then
+    # show team health immediately underneath so coverage gaps are never buried.
+    matrix.title_label.setText("Team")
     matrix.setMinimumHeight(470)
     matrix.setMaximumHeight(480)
     left.addWidget(matrix, 0)
 
-    coverage.setMinimumHeight(185)
+    coverage.title_label.setText("Team Health")
+    coverage.setMinimumHeight(190)
     coverage.setMaximumHeight(235)
     left.addWidget(coverage, 0)
 
-    evidence.setMinimumHeight(165)
-    evidence.setMaximumHeight(220)
+    evidence.setMinimumHeight(120)
+    evidence.setMaximumHeight(150)
     for text in evidence.findChildren(QTextEdit):
-        text.setMinimumHeight(110)
-        text.setMaximumHeight(160)
+        text.setMinimumHeight(72)
+        text.setMaximumHeight(100)
     left.addWidget(evidence, 0)
     left.addStretch(1)
 
-    # RIGHT: plan name/style now live in the page header, so Actions only needs the
-    # execution rows. Give the reclaimed height directly to the ESO Logs catalog.
-    actions.setMinimumHeight(205)
-    actions.setMaximumHeight(225)
+    # RIGHT: choose what the selected person should run. The catalog is supporting
+    # evidence, not the page's main character, so it stays compact and scrollable.
+    actions.setMinimumHeight(170)
+    actions.setMaximumHeight(195)
     right.addWidget(actions, 0)
 
-    details.title_label.setText("ESO Logs Catalog & Chair Evidence")
-    details.setMinimumHeight(760)
-    details.setMaximumHeight(1060)
-    right.addWidget(details, 1)
+    details.title_label.setText("Selected Player / Build Recommendation")
+    details.setMinimumHeight(440)
+    details.setMaximumHeight(620)
+    right.addWidget(details, 0)
     right.addStretch(1)
 
     columns.addLayout(left, 1)
