@@ -364,6 +364,10 @@ class RosterService:
         return True
 
     def create_member(self, member: RosterMember) -> int:
+        if is_personnel_placeholder(member.PlayerName):
+            raise ValueError(
+                f"{member.PlayerName!r} is a planning placeholder, not a Personnel player"
+            )
         cursor = self.db.execute("""
             INSERT INTO roster_member (
                 player_name, character_name, eso_class,
@@ -386,6 +390,10 @@ class RosterService:
     def update_member(self, member: RosterMember):
         if member.Id is None:
             raise ValueError("Cannot update a roster member with no Id.")
+        if is_personnel_placeholder(member.PlayerName):
+            raise ValueError(
+                f"{member.PlayerName!r} is a planning placeholder, not a Personnel player"
+            )
         self.db.execute("""
             UPDATE roster_member SET
                 player_name = ?, character_name = ?, eso_class = ?,
