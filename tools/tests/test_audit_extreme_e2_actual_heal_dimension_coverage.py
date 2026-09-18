@@ -39,8 +39,9 @@ def test_e2_actual_heal_dimension_ledger_does_not_overclaim_global_denominator()
     assert by_key["class_route"].status is E2DimensionStatus.COVERED
     assert by_key["attributes"].status is E2DimensionStatus.COVERED
     assert by_key["armor_weights_passives"].status is E2DimensionStatus.COVERED
+    assert by_key["progression_passives"].status is E2DimensionStatus.COVERED
     assert by_key["gear_packages_procs"].status is E2DimensionStatus.PARTIAL
-    assert by_key["weapon_configuration_passives"].status is E2DimensionStatus.PARTIAL
+    assert by_key["weapon_configuration_passives"].status is E2DimensionStatus.COVERED
     assert by_key["skills_morphs_ultimates"].status is E2DimensionStatus.PARTIAL
     assert by_key["champion_points"].status is E2DimensionStatus.PARTIAL
     assert by_key["potion_state"].status is E2DimensionStatus.CONDITIONAL
@@ -56,7 +57,8 @@ def test_e2_actual_heal_dimension_ledger_keeps_open_gaps_explicit() -> None:
     assert open_rows
     assert all(row.remaining_gap for row in open_rows)
     assert any("critical-heal evidence" in row.remaining_gap for row in open_rows)
-    assert any("front/back weapon-configuration" in row.remaining_gap for row in open_rows)
+    assert any("monster/mythic/arena/proc package families" in row.remaining_gap for row in open_rows)
+    assert any("Full multi-skill front/back-bar combinatorial search" in row.remaining_gap for row in open_rows)
 
 
 def test_e2_attribute_row_records_the_full_denominator_proof() -> None:
@@ -89,3 +91,21 @@ def test_e2_gear_row_records_ordinary_denominator_without_overclaiming_special_f
     assert "complete canonical ordinary-set corpus" in gear.evidence
     assert "authoritative five-piece candidate pool" in gear.evidence
     assert "monster/mythic/arena/proc package families" in gear.remaining_gap
+
+
+def test_e2_progression_and_weapon_rows_record_closed_denominators() -> None:
+    rows = build_dimension_coverage()
+    by_key = {row.key: row for row in rows}
+
+    progression = by_key["progression_passives"]
+    assert progression.status is E2DimensionStatus.COVERED
+    assert "all 21 canonical class skill-line families" in progression.evidence
+    assert "16 healing-relevant families" in progression.evidence
+    assert progression.remaining_gap == ""
+
+    weapons = by_key["weapon_configuration_passives"]
+    assert weapons.status is E2DimensionStatus.COVERED
+    assert "28 legal configurations per bar" in weapons.evidence
+    assert "784 structural front/back pairs" in weapons.evidence
+    assert "all 30 canonical weapon passives" in weapons.evidence
+    assert weapons.remaining_gap == ""
