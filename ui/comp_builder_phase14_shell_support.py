@@ -120,7 +120,11 @@ def _candidate_for_row(page, row: int):
 def _candidate_sets(candidate) -> tuple[str, str]:
     if candidate is None:
         return ("Open", "")
-    gear = tuple(str(value).strip() for value in (getattr(candidate, "gear_sets", ()) or ()) if str(value).strip())
+    gear = tuple(
+        str(value).strip()
+        for value in (getattr(candidate, "five_piece_sets", ()) or ())
+        if str(value).strip()
+    )
     if len(gear) >= 2:
         return (gear[0], gear[1])
     if len(gear) == 1:
