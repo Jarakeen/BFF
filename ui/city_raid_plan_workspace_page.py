@@ -2,6 +2,8 @@ from __future__ import annotations
 
 """Urban Wilderness shell over the canonical Raid Plan editor."""
 
+from dataclasses import replace
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QGridLayout,
@@ -10,6 +12,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
+    QPlainTextEdit,
     QStackedWidget,
     QTableWidget,
     QVBoxLayout,
@@ -208,13 +211,15 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         notes = FoundryCard("Plan Note", "feather")
         notes.setProperty("parchment", True)
         notes.set_watermark("compass", 0.12)
-        self.plan_notes = QLabel("If it matters, write it down.")
-        self.plan_notes.setWordWrap(True)
-        self.plan_notes.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.plan_notes.setProperty("heroTitle", True)
-        notes.addStretch(1)
+        self.plan_notes = QPlainTextEdit()
+        self.plan_notes.setPlaceholderText("If it matters, write it down.")
+        self.plan_notes.setProperty("parchmentEditor", True)
+        self.plan_notes.setMinimumHeight(126)
+        self.plan_notes.setMaximumHeight(160)
+        self.plan_notes.setToolTip(
+            "Saved with this Raid Plan. Loading another plan restores its own note."
+        )
         notes.addWidget(self.plan_notes)
-        notes.addStretch(1)
         middle.addWidget(notes, 4)
 
         timeline = FoundryCard("Timeline", "stopwatch")
@@ -300,6 +305,21 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.encounter_snapshot.value_label.setText(plan.trial_id)
         self.strategy_snapshot.value_label.setText(f"{assigned} / {len(plan.members)} spots assigned")
         self.progress_snapshot.value_label.setText(f"{builds} builds linked")
+
+    def current_plan(self):
+        plan = super().current_plan()
+        note = self.plan_notes.toPlainText().strip() if hasattr(self, "plan_notes") else ""
+        return replace(plan, plan_note=note or None)
+
+    def apply_plan(self, plan) -> None:
+        super().apply_plan(plan)
+        if hasattr(self, "plan_notes"):
+            self.plan_notes.setPlainText(str(getattr(plan, "plan_note", "") or ""))
+
+    def clear_plan(self) -> None:
+        super().clear_plan()
+        if hasattr(self, "plan_notes"):
+            self.plan_notes.clear()
 
     def _load_overview_plan(self, item: QListWidgetItem) -> None:
         plan_id = item.data(Qt.ItemDataRole.UserRole)
