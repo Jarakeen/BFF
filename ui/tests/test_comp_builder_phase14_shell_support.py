@@ -183,3 +183,23 @@ def test_phase14_final_shell_reapplies_recruit_class_constraints() -> None:
     assert "_reapply_class_constraints(self)" in source
     assert "def _render_slots_with_phase14_shell(self, slots)" in source
     assert "def apply_roster_context_with_shell(self, *args, **kwargs)" in source
+
+
+def test_phase14_save_materializes_visible_recommendations_before_draft_persistence() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert "def _materialize_visible_recommendations(page)" in source
+    assert "if slot_name in applied:" in source
+    assert "candidate_support._set_candidate_for_row(page, row, candidates[0])" in source
+    assert source.index("_materialize_visible_recommendations(page)") < source.index(
+        "candidate_support.save_generated_plan(page)"
+    )
+
+
+def test_comp_to_raid_plan_bridge_verifies_exact_repository_round_trip() -> None:
+    source = Path("ui/main_window.py").read_text(encoding="utf-8")
+
+    assert "persisted = raid_plans.plan_repository.get(plan.plan_id)" in source
+    assert "persisted is None or persisted != plan" in source
+    assert "the app is refusing to report success" in source
+    assert "raid_plans.apply_plan(persisted)" in source
