@@ -121,11 +121,11 @@ class ExtremeActualHealDoubleFivePackageService:
         self,
         *,
         secondary_shape: bool,
-        per_objective: int,
+        per_objective: int | None,
     ) -> tuple[str, ...]:
         names: list[str] = []
         seen: set[str] = set()
-        limit = max(1, int(per_objective))
+        limit = None if per_objective is None else max(1, int(per_objective))
         ordinary_allowed = frozenset(
             name.casefold()
             for name in self.ordinary_candidates.candidate_set_names(per_objective=None)
@@ -169,7 +169,7 @@ class ExtremeActualHealDoubleFivePackageService:
                     seen.add(key)
                     names.append(row.set_name)
                 accepted += 1
-                if accepted >= limit:
+                if limit is not None and accepted >= limit:
                     break
         return tuple(names)
 
