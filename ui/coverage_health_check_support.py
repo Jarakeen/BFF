@@ -12,7 +12,7 @@ example Assignments -> Evaluate) explicitly supplies an encounter context.
 
 from copy import deepcopy
 
-from PySide6.QtWidgets import QComboBox, QPushButton
+from PySide6.QtWidgets import QComboBox
 
 from engine.config import get_data_dir
 from models.build_model import PlayerBuild
@@ -218,25 +218,22 @@ def run_team_health_check(
     Contextual callers can provide a Boss and/or ``use_context=True`` to audit the
     effective Team/Boss build instead.
     """
-    combo = getattr(page, "health_check_team_combo", None)
+    combo = getattr(page, "scope_combo", None)
     if combo is None:
-        enhance_coverage_page(page)
-        combo = getattr(page, "health_check_team_combo", None)
-    if combo is None:
-        page.status.error("Team Health Check controls could not be initialized.")
+        page.status.error("Coverage build-scope control is unavailable.")
         return
 
     if team_name is not None:
-        _sync_team_choices(page)
-        index = combo.findData(str(team_name or "").strip())
-        if index < 0:
-            page.status.warning(f"Roster team not found: {team_name}")
-            return
-        combo.blockSignals(True)
-        combo.setCurrentIndex(index)
-        combo.blockSignals(False)
+        selected_team = str(team_name or "").strip()
+    else:
+        data = str(combo.currentData() or "").strip()
+        if data.startswith("roster_team:"):
+            selected_team = data.split(":", 1)[1].strip()
+        elif data == "team":
+            selected_team = str(getattr(page, "_team_scope_name", "") or "").strip()
+        else:
+            selected_team = ""
 
-    selected_team = str(combo.currentData() or "").strip()
     if not selected_team:
         page._team_scope = ()
         page._team_scope_name = ""
@@ -319,24 +316,35 @@ def run_team_health_check(
 
 
 def _sync_team_choices(page) -> None:
-    combo = getattr(page, "health_check_team_combo", None)
+    """Expose saved Roster teams in Coverage's one canonical Build Scope menu."""
+    combo = getattr(page, "scope_combo", None)
     service = getattr(page, "health_check_roster_service", None)
     if combo is None or service is None:
         return
-    current = str(combo.currentData() or "")
+
+    current = combo.currentData()
     names = tuple(service.list_team_names())
     combo.blockSignals(True)
-    combo.clear()
-    combo.addItem("All Saved Builds", "")
-    for name in names:
-        combo.addItem(name, name)
-    index = combo.findData(current)
-    combo.setCurrentIndex(index if index >= 0 else 0)
-    combo.blockSignals(False)
+    try:
+        for index in range(combo.count() - 1, -1, -1):
+            if str(combo.itemData(index) or "").startswith("roster_team:"):
+                combo.removeItem(index)
+        for name in names:
+            combo.addItem(f"Roster Team: {name}", f"roster_team:{name}")
+        if current is not None:
+            index = combo.findData(current)
+            if index >= 0:
+                combo.setCurrentIndex(index)
+    finally:
+        combo.blockSignals(False)
 
 
 def enhance_coverage_page(page) -> None:
-    """Install the self-loading health-check controls once on one Coverage page."""
+    """Add Roster teams to Coverage's canonical Build Scope selector.
+
+    Raid Plans and Roster teams share one selector. No second Team picker or
+    route-specific Health Check button is created.
+    """
     if bool(getattr(page, "_health_check_enhanced", False)):
         _sync_team_choices(page)
         return
@@ -345,38 +353,23 @@ def enhance_coverage_page(page) -> None:
     page.health_check_roster_service = RosterService(EsoDatabase(get_data_dir() / "eso.db"))
 
     if hasattr(page.header, "title"):
-        page.header.title.setText("Team Health Check")
+        page.header.title.setText("Coverage & Team Health")
     if hasattr(page.header, "subtitle"):
         page.header.subtitle.setText(
-            "Choose a saved raid team to check its base-build buff/debuff coverage. Boss context is optional and only applied when explicitly supplied."
+            "Choose All Saved Builds, a Roster Team, or a Raid Plan from Build Scope."
         )
 
-    old_scope_parent = page.scope_combo.parentWidget()
-    if old_scope_parent is not None:
-        old_scope_parent.setVisible(False)
-
-    combo = QComboBox()
-    combo.setMinimumWidth(190)
-    combo.setToolTip(
-        "Choose a saved Roster team. Coverage audits its assigned base builds directly; no Boss selection or Optimization step is required."
-    )
-    page.health_check_team_combo = combo
-    page.header.add_context_widget(page._context_field("TEAM", combo))
-
-    run = QPushButton("Check Base Builds")
-    run.setProperty("primary", True)
-    run.setToolTip("Audit the selected team's assigned base builds for static buff/debuff coverage.")
-    run.clicked.connect(lambda *_: run_team_health_check(page, use_context=False))
-    page.health_check_run_button = run
-    page.header.add_context_widget(run)
+    scope_combo = getattr(page, "scope_combo", None)
+    if scope_combo is not None:
+        parent = scope_combo.parentWidget()
+        if parent is not None:
+            parent.setVisible(True)
+        scope_combo.setToolTip(
+            "Choose all saved builds, a saved Roster team, or a Raid Plan. "
+            "Raid Plans include reviewed planned-set evidence."
+        )
 
     _sync_team_choices(page)
-    combo.currentIndexChanged.connect(
-        lambda *_: run_team_health_check(page, use_context=False)
-    )
-    page.scope_note.setText(
-        "Choose a raid team above to audit its assigned base builds. Boss and Team/Boss Context Variants are ignored in this direct Coverage view."
-    )
 
 
 __all__ = ["enhance_coverage_page", "run_team_health_check", "select_team_builds"]
