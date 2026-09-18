@@ -19,7 +19,13 @@ from services.raid_plan_member_identity_resolution_service import (
     RaidPlanMemberIdentityResolutionService,
 )
 from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
-from ui.raid_plan_page import RAID_PLAN_SEATS, _clean, _slug, new_personnel_member
+from ui.raid_plan_page import (
+    RAID_PLAN_SEATS,
+    _clean,
+    _slug,
+    is_seat_placeholder,
+    new_personnel_member,
+)
 from ui.raid_plan_stable_identity_selection_page import RaidPlanStableIdentitySelectionPage
 
 
@@ -254,7 +260,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         team_name = self._active_team_name()
         for row in range(self.team_table.rowCount()):
             gamertag = self._player_text(row)
-            if not gamertag:
+            if not gamertag or is_seat_placeholder(gamertag):
                 continue
             existing = self._personnel_match(gamertag)
             if existing is None:
@@ -273,6 +279,9 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
     def save_player_to_personnel(self, row: int) -> None:
         """Save one player and, when this plan owns a Team, add that player to it."""
         gamertag = self._player_text(row)
+        if is_seat_placeholder(gamertag):
+            self.status.warning("Raid Plan seat placeholders cannot be saved as players.")
+            return
         super().save_player_to_personnel(row)
         member = self._personnel_match(gamertag)
         team_name = self._active_team_name()
