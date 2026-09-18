@@ -89,6 +89,8 @@ def trial_banner_path(*values: object) -> Path | None:
         identity.replace("'", "").replace(" ", "_")
         for identity in identities
     }
+    if filename is not None:
+        wanted_stems.add(Path(filename).stem.casefold())
     if banner_dir.is_dir():
         for candidate in banner_dir.iterdir():
             if candidate.suffix.casefold() not in {".webp", ".png", ".jpg", ".jpeg"}:
