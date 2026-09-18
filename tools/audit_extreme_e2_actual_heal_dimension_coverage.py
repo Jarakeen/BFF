@@ -31,6 +31,10 @@ from services.extreme_actual_heal_optimization_service import (
 from services.extreme_actual_heal_trait_denominator_service import (
     ExtremeActualHealTraitDenominatorService,
 )
+from services.extreme_actual_heal_weapon_denominator_service import (
+    ExtremeActualHealWeaponDenominatorService,
+)
+from engine.config import get_data_dir
 from services.extreme_canonical_actual_heal_optimization_service import (
     ExtremeCanonicalActualHealOptimizationService,
 )
@@ -178,10 +182,9 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         E2DimensionCoverage(
             "weapon_configuration_passives",
             "Front/back weapon configuration + weapon passives",
-            E2DimensionStatus.PARTIAL,
-            "ExtremeActualHealClassRouteCatalogService + arena/mythic weapon package services",
-            "Weapon-skill heal legality and exact active-weapon subtype requirements are enforced for reviewed candidates.",
-            "H1 does not yet enumerate the complete legal front/back weapon-configuration axis and all weapon-passive consequences.",
+            E2DimensionStatus.COVERED,
+            "ExtremeActualHealWeaponDenominatorService + ExtremeActualHealWeaponCandidateService + ExtremeActualHealWeaponPassivePowerService",
+            "The canonical weapon denominator proves 28 legal configurations per bar and 784 structural front/back pairs, with all 30 canonical weapon passives dispositioned. H1 searches every legal active-bar configuration and rescoring includes reviewed standing Weapon/Spell Damage consequences such as Twin Blade and Blunt, Ambidextrous, Sword and Board, and Heavy Weapons. For one instantaneous standing heal, the inactive bar is safely irrelevant unless a prior-bar proc/state persists; those cases remain owned by the explicit runtime/proc dimensions rather than being invented here.",
         ),
         E2DimensionCoverage(
             "skills_morphs_ultimates",
@@ -229,6 +232,7 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         (_scope_contains(optimization_scope, "armor traits"), "H1 armor-trait search scope disappeared"),
         (_scope_contains(optimization_scope, "jewelry traits"), "H1 jewelry-trait search scope disappeared"),
         (_scope_contains(optimization_scope, "weapon traits"), "H1 weapon-trait search scope disappeared"),
+        (_scope_contains(optimization_scope, "28 legal active-bar weapon configurations"), "H1 legal weapon-configuration search scope disappeared"),
         (_scope_contains(route_scope, "structurally legal class-line routes"), "H1 class-route search scope disappeared"),
         (_scope_contains(route_scope, "selected heal replacement"), "H1 selected-heal search scope disappeared"),
         (_scope_contains(route_omitted, "full multi-skill"), "H1 multi-skill omission boundary disappeared without ledger review"),
@@ -253,6 +257,27 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
     if trait_denominator.legal_trait_value_count != 27:
         raise AssertionError(
             "Extreme H1 canonical trait-value denominator changed without E2 ledger review"
+        )
+
+    weapon_denominator = ExtremeActualHealWeaponDenominatorService(
+        get_data_dir() / "eso.db"
+    ).build()
+    if not weapon_denominator.denominator_proven:
+        raise AssertionError(
+            "Extreme H1 weapon denominator is not proven: "
+            + "; ".join(weapon_denominator.unresolved)
+        )
+    if weapon_denominator.legal_bar_configuration_count != 28:
+        raise AssertionError(
+            "Extreme H1 legal single-bar weapon denominator changed without E2 ledger review"
+        )
+    if weapon_denominator.legal_two_bar_configuration_count != 784:
+        raise AssertionError(
+            "Extreme H1 legal front/back weapon denominator changed without E2 ledger review"
+        )
+    if len(weapon_denominator.canonical_weapon_passives) != 30:
+        raise AssertionError(
+            "Extreme H1 canonical weapon-passive denominator changed without E2 ledger review"
         )
 
     return rows
