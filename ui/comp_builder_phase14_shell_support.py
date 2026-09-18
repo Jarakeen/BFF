@@ -35,6 +35,8 @@ _ORIGINAL_RENDER_SLOTS = None
 _ORIGINAL_REFRESH_CANDIDATES = None
 _ORIGINAL_APPLY_ROSTER_CONTEXT = None
 
+MAX_WIDGET_HEIGHT = 16_777_215
+
 PRESENTATION_HEADERS = (
     "#",
     "PLAYER",
@@ -622,9 +624,9 @@ def _apply_plan_geometry(page, size: int) -> None:
         table_policy = QSizePolicy.Policy.Preferred
     else:
         card_minimum = 620
-        card_maximum = QWIDGETSIZE_MAX
+        card_maximum = MAX_WIDGET_HEIGHT
         table_minimum = 540
-        table_maximum = QWIDGETSIZE_MAX
+        table_maximum = MAX_WIDGET_HEIGHT
         card_policy = QSizePolicy.Policy.Expanding
         table_policy = QSizePolicy.Policy.Expanding
 
@@ -756,7 +758,7 @@ def _build_plan_table(page, card: FoundryCard) -> None:
     table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
     table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
     table.setMinimumHeight(500)
-    table.setMaximumHeight(QWIDGETSIZE_MAX)
+    table.setMaximumHeight(MAX_WIDGET_HEIGHT)
     table.setSizePolicy(
         QSizePolicy.Policy.Expanding,
         QSizePolicy.Policy.Expanding,
@@ -999,7 +1001,6 @@ def _install_shell(page) -> None:
     _detach_layout(root)
     root.setContentsMargins(0, 0, 0, 0)
     root.setSpacing(10)
-    root.setAlignment(Qt.AlignmentFlag.AlignTop)
 
     page.header.subtitle.setText("Plan the team. Fill the gaps. Clear the content.")
     page.header.department.setText("FOUNDRYDOCK • RAID ENGINE")
@@ -1011,7 +1012,7 @@ def _install_shell(page) -> None:
     matrix.set_title("Recommended Team Plan")
     matrix.setProperty("compRecommendedTeamPlan", True)
     matrix.setMinimumHeight(520)
-    matrix.setMaximumHeight(QWIDGETSIZE_MAX)
+    matrix.setMaximumHeight(MAX_WIDGET_HEIGHT)
     matrix.setSizePolicy(
         QSizePolicy.Policy.Expanding,
         QSizePolicy.Policy.Expanding,
@@ -1022,7 +1023,7 @@ def _install_shell(page) -> None:
     details.set_title("Why This Plan")
     details.setProperty("compWhyThisPlan", True)
     details.setMinimumHeight(520)
-    details.setMaximumHeight(QWIDGETSIZE_MAX)
+    details.setMaximumHeight(MAX_WIDGET_HEIGHT)
     details.setSizePolicy(
         QSizePolicy.Policy.Expanding,
         QSizePolicy.Policy.Expanding,
