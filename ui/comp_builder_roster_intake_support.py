@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Carry roster-owned player/class/role/job context into Comp Maker without inventing builds."""
+"""Carry roster-owned player/class/role/job context into Comp Builder without inventing builds."""
 
 from PySide6.QtWidgets import QComboBox, QHeaderView, QTableWidgetItem
 
@@ -61,7 +61,7 @@ def _is_recruit_member(member) -> bool:
 
 
 def _group_size_for_members(members) -> int:
-    """Roster intake supports the two ESO group sizes Comp Maker is meant to plan."""
+    """Roster intake supports the two ESO group sizes Comp Builder is meant to plan."""
     return 4 if len(tuple(members)) <= 4 else 12
 
 
@@ -130,7 +130,7 @@ def _set_player(page, row: int, member, assignment: dict | None = None) -> None:
         page.matrix_table.setItem(row, PLAYER_COLUMN, item)
     item.setText(_player_label(member))
     job = str((assignment or {}).get("primary_assignment", "") or "").strip()
-    tooltip = "Roster player carried into Comp Maker. This does not imply a saved build exists."
+    tooltip = "Roster player carried into Comp Builder. This does not imply a saved build exists."
     if job:
         tooltip += f"\nRaid job for this context: {job}."
     item.setToolTip(tooltip)
@@ -155,7 +155,7 @@ def _clear_player_rows(page) -> None:
 
 
 def _match_rows(page, members) -> list[tuple[int, object]]:
-    """Place roster members into matching Comp Maker role chairs.
+    """Place roster members into matching Comp Builder role chairs.
 
     Known-role players are placed first so an unresolved roster role cannot steal
     a Tank/Healer chair before a real Tank/Healer is processed. Within each role,
@@ -238,7 +238,7 @@ def apply_roster_team_context(
     if page._roster_encounter_context_name:
         context_label = f"{context_label} • {page._roster_encounter_context_name}"
     page.status.info(
-        f"Loaded {len(matched)} roster slot(s) from {context_label} into a {group_size}-player Comp Maker plan: "
+        f"Loaded {len(matched)} roster slot(s) from {context_label} into a {group_size}-player Comp Builder plan: "
         f"{role_counts['tank']} tank, {role_counts['healer']} healer, "
         f"{role_counts['damage']} DD, {role_counts['unresolved']} unresolved. "
         "Classes and raid jobs are carried over; empty builds remain intentionally unresolved."
@@ -250,11 +250,11 @@ def _send_roster_team_to_comp(page) -> None:
 
     team_name = assignment_actions._selected_team_name(page)
     if not team_name:
-        page.status.warning("Choose a team in Assignments before sending it to Comp Maker.")
+        page.status.warning("Choose a team in Assignments before sending it to Comp Builder.")
         return
     members = assignment_actions._team_members(page, team_name)
     if not members:
-        page.status.warning(f"{team_name} has no roster members to send to Comp Maker.")
+        page.status.warning(f"{team_name} has no roster members to send to Comp Builder.")
         return
 
     encounter_id = selected_encounter_id(page)
@@ -279,7 +279,7 @@ def _send_roster_team_to_comp(page) -> None:
 
     comp = getattr(page.window(), "pages", {}).get("comp_builder")
     if comp is None or not hasattr(comp, "apply_roster_team_context"):
-        page.status.warning("Comp Maker opened, but the roster intake bridge is unavailable.")
+        page.status.warning("Comp Builder opened, but the roster intake bridge is unavailable.")
         return
     comp.apply_roster_team_context(
         team_name,
