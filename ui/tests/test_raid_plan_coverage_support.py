@@ -3,16 +3,13 @@ from pathlib import Path
 
 def test_raid_plan_route_preserves_coverage_aware_workspace() -> None:
     route_source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
-    adviser_source = Path("ui/raid_plan_adviser_page.py").read_text(encoding="utf-8")
-    rotation_source = Path("ui/raid_plan_rotation_page.py").read_text(encoding="utf-8")
 
-    assert "RaidPlanAdviserPage" in route_source
-    assert "from ui.raid_plan_rotation_page import RaidPlanRotationPage" in adviser_source
-    assert "class RaidPlanAdviserPage(RaidPlanRotationPage):" in adviser_source
-    assert "from ui.raid_plan_coverage_page import RaidPlanCoveragePage" in rotation_source
-    assert "class RaidPlanRotationPage(RaidPlanCoveragePage):" in rotation_source
     assert '("Coverage", "console:7")' in route_source
     assert '("Comp Builder", "comp_builder")' in route_source
+    assert '("Optimizer Adviser", "console:6")' in route_source
+    assert "install_coverage_raid_plan_scope_support()" in route_source
+    assert "install_raid_plan_optimizer_adviser_support()" in route_source
+    assert "bind_raid_plan_rotation_page" in route_source
     assert 'window.show_page(target)' in route_source
 
 
@@ -39,8 +36,8 @@ def test_coverage_owns_saved_raid_plan_scope_selection() -> None:
     assert "def _load_selected_plan_scope(page):" in source
     assert "RaidPlanCoverageScopeService().compose" in source
     assert "scope.resolved_builds" in source
-    assert "scope.primary_for(effect)" in source
-    assert "scope.secondary_for(effect)" in source
+    assert "RaidPlanCoverageAssignmentService" in source
+    assert "assignment_service.review(" in source
 
 
 def test_raid_plan_coverage_renders_full_raid_effect_catalog() -> None:
@@ -51,7 +48,8 @@ def test_raid_plan_coverage_renders_full_raid_effect_catalog() -> None:
     assert "RAID_PLAN_COVERAGE_NAMES" in source
     assert "Powerful Assault" not in source  # catalog-driven, never hard-coded here
     assert "snapshot.conditional_providers.get(effect, [])" in source
-    assert '"conditional": "Conditional"' in source
+    assert 'review.state == "assigned_conditional"' in source
+    assert "review.label" in source
 
 
 def test_raid_plan_page_does_not_add_special_coverage_button() -> None:
