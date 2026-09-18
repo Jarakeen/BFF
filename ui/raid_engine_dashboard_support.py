@@ -252,8 +252,27 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
         for member in getattr(plan, "members", ()) or ()
         if str(getattr(member, "eso_class", "") or "").strip()
     }
+    planned_sets_by_seat = {
+        next(
+            (
+                seat
+                for seat in canonical_seats
+                if "-".join(seat.casefold().split())
+                == str(getattr(member, "seat_id", "") or "").strip().casefold()
+            ),
+            str(getattr(member, "seat_id", "") or "").strip(),
+        ): tuple(
+            str(value).strip()
+            for value in (getattr(member, "planned_gear_sets", ()) or ())
+            if str(value).strip()
+        )[:2]
+        for member in getattr(plan, "members", ()) or ()
+        if getattr(member, "planned_gear_sets", ())
+    }
+
     comp._raid_plan_class_by_seat = dict(class_by_seat)
     comp._comp_class_constraint_by_slot = dict(class_by_seat)
+    comp._comp_manual_gear_sets_by_slot = dict(planned_sets_by_seat)
 
     comp.apply_roster_team_context(
         str(getattr(plan, "name", "") or trial_name or "Raid Plan"),
@@ -263,6 +282,7 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
 
     from ui.comp_builder_roster_intake_support import apply_raid_plan_class_constraints
     apply_raid_plan_class_constraints(comp, class_by_seat)
+    comp._comp_manual_gear_sets_by_slot = dict(planned_sets_by_seat)
 
     # The backend chair selectors now contain the new Raid Plan values. Refresh the
     # visible Phase 14 projection immediately so it cannot continue showing the
