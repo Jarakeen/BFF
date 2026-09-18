@@ -51,6 +51,7 @@ CORE_NAV_SECTIONS = [
         ("Encounters", "console:1"),
         ("Mechanics", "console:4"),
         ("Top Gear", "console:3"),
+        ("Review", "raid_review"),
     ]},
     ("Achievements", "achievements"),
     {"label": "Collectibles", "page": "collectibles", "children": [
