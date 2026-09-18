@@ -148,12 +148,12 @@ class RaidPlan:
     name: str
     team_name: str | None = None
     difficulty: str | None = None
-    plan_note: str | None = None
     status: str = "planning"
     members: tuple[RaidPlanMember, ...] = field(default_factory=tuple)
     triggered_responsibilities: tuple[RaidPlanTriggeredResponsibility, ...] = field(
         default_factory=tuple
     )
+    plan_note: str | None = None
 
     def __post_init__(self) -> None:
         plan_id = _clean(self.plan_id)
