@@ -1,3 +1,6 @@
+
+- **Raid Review journal** — Live Raid notes are stored per Raid Plan attempt and indexed by date → trial on a dedicated Review page, with the full saved note shown in a large reading pane.
+- **Top Gear naming** — the former Capabilities surface is presented as Top Gear; Raid Plan Review now opens the run-note journal instead of Top Gear.
 # BFF / FoundryDock Feature Index
 
 This file is a working index of features, tools, workflows, and notable user-facing capabilities that exist in BFF / FoundryDock.
