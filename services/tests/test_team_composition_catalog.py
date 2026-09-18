@@ -68,6 +68,7 @@ def test_catalog_loads_versioned_composition_evidence(tmp_path) -> None:
     template = snapshot.templates[0]
     assert template.goal == "Godslayer"
     assert template.trial_name == "Sunspire"
+    assert template.slots[0].slot_name == "Tank 1"
     assert template.slots[0].preferred_class == "Dragonknight"
     assert template.slots[0].alternative_classes == ("Necromancer",)
     assert template.slots[0].required_responsibilities == ("Boss positioning",)
@@ -109,6 +110,7 @@ def test_flexible_raid_skeleton_is_two_two_eight_without_fake_classes() -> None:
     slots = flexible_raid_slots(12)
 
     assert len(slots) == 12
+    assert [slot.slot_name for slot in slots[:4]] == ["Tank 1", "Tank 2", "Healer 1", "Healer 2"]
     assert [slot.role for slot in slots[:4]] == ["Tank", "Tank", "Healer", "Healer"]
     assert sum(slot.role == "DD" for slot in slots) == 8
     assert all(slot.preferred_class == "Any class" for slot in slots)
