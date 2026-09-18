@@ -56,7 +56,8 @@ QWidget[foundryHeader="true"] {
     background-color: #10161A;
     border-bottom: 1px solid #5E5138;
 }
-QLabel[pageTitle="true"], QLabel[heroTitle="true"] { color: #E5E7E2; }
+QLabel[pageTitle="true"] { color: #D5A85F; }
+QLabel[heroTitle="true"] { color: #E5E7E2; }
 QLabel[pageSubtitle="true"], QLabel[heroSubtitle="true"] { color: #A8B1B3; }
 QLabel[departmentLabel="true"] { color: #7EA6B8; }
 
