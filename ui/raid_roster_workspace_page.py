@@ -381,7 +381,7 @@ class RaidRosterWorkspacePage(FoundryPage):
         top.addWidget(create)
         root.addLayout(top)
 
-        self.optimizer_plan_card = FoundryCard("Optimizer Plan", "compass")
+        self.optimizer_plan_card = FoundryCard("Incoming Team Plan", "compass")
         self.optimizer_plan_card.setVisible(False)
         self.optimizer_plan_table = QTableWidget(0, 6)
         self.optimizer_plan_table.setHorizontalHeaderLabels(
@@ -814,18 +814,31 @@ class RaidRosterWorkspacePage(FoundryPage):
     # Teams
     # ------------------------------------------------------------------
 
-    def load_optimizer_plan(self, plan) -> None:
-        """Show one non-destructive Optimizer team in the current Roster surface."""
+    def load_external_team_plan(
+        self,
+        plan,
+        *,
+        source: str = "Team Planner",
+        plan_name: str = "",
+    ) -> None:
+        """Show one non-destructive generated team in the current Roster surface."""
         rows = tuple(plan or ())
         if not hasattr(self, "optimizer_plan_table"):
             return
 
+        self.optimizer_plan_card.set_title(
+            f"{source} Plan" if not plan_name else f"{source} • {plan_name}"
+        )
         self.optimizer_plan_table.setRowCount(0)
         for entry in rows:
             row = self.optimizer_plan_table.rowCount()
             self.optimizer_plan_table.insertRow(row)
             kind = _clean(entry.get("kind") if isinstance(entry, dict) else "")
-            status = "Recruit" if kind == "recruitment" else "Saved build"
+            status = (
+                "Recruit"
+                if "recruit" in kind.casefold()
+                else "Saved build"
+            )
             values = (
                 _clean(entry.get("slot") if isinstance(entry, dict) else ""),
                 _clean(entry.get("player") if isinstance(entry, dict) else ""),
@@ -847,9 +860,12 @@ class RaidRosterWorkspacePage(FoundryPage):
         if callable(show_detail):
             show_detail("teams")
         self.status.success(
-            f"Loaded Optimizer plan with {len(rows)} slot(s). "
+            f"Loaded {source} plan with {len(rows)} slot(s). "
             "Saved team membership was not changed."
         )
+
+    def load_optimizer_plan(self, plan) -> None:
+        self.load_external_team_plan(plan, source="Optimizer")
 
 
     def _refresh_teams(self) -> None:
