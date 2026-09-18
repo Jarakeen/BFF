@@ -71,3 +71,37 @@ def test_parse_set_page_reconstructs_multi_fragment_perfected_bonus() -> None:
         "(2 items) Adds 526 Critical Chance, When you cast Whirlwind while in combat, you gain a stack."
     ]
     assert result["unresolved"] == []
+
+
+def test_parse_set_page_stops_bonus_before_ad_and_compare_chrome() -> None:
+    html = """
+    <html><body>
+      <h1>Chaotic Whirlwind Set ESO - Stats & Location</h1>
+      <div class="tooltip">
+        <span>(2 items)</span>
+        <span>When you cast Whirlwind while in combat, you gain a stack.</span>
+        <span>[Mobile] Skyscraper - Above the Fold (ATF)</span>
+        <script>window.ramp.que.push(function () { window.ramp.addTag("pwMobiSkyAtf"); })</script>
+        <span>Compare this armor set with other sets</span>
+      </div>
+      <div>Weapons</div>
+      <div><strong>Type:</strong><span>Trial</span></div>
+      <div><strong>Location:</strong><span>Asylum Sanctorium</span></div>
+      <div>This armor set modifies the following skills</div>
+      <div><a href="/en/skills/dual-wield/whirlwind">Whirlwind</a></div>
+      <div><a href="/en/skills/dual-wield/steel-tornado">Steel Tornado</a></div>
+      <div><a href="/en/skills/dual-wield/whirling-blades">Whirling Blades</a></div>
+      <div>Champion Points that buff this armor set</div>
+    </body></html>
+    """
+
+    result = parse_set_page(
+        html,
+        expected_name="Chaotic Whirlwind",
+        url="https://eso-hub.com/en/sets/chaotic-whirlwind",
+    )
+
+    assert result["bonuses"] == [
+        "(2 items) When you cast Whirlwind while in combat, you gain a stack."
+    ]
+    assert result["unresolved"] == []
