@@ -56,7 +56,13 @@ QWidget[foundryHeader="true"] {
     background-color: #10161A;
     border-bottom: 1px solid #5E5138;
 }
-QLabel[pageTitle="true"] { color: #D5A85F; }
+QLabel[pageTitle="true"] {
+    color: #D5A85F;
+    font-family: "Montserrat";
+    font-size: 21pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
 QLabel[heroTitle="true"] { color: #E5E7E2; }
 QLabel[pageSubtitle="true"], QLabel[heroSubtitle="true"] { color: #A8B1B3; }
 QLabel[departmentLabel="true"] { color: #7EA6B8; }
@@ -153,6 +159,68 @@ QPushButton:disabled {
     background-color: #15191C;
     color: #737D82;
     border-color: #343C41;
+}
+
+QToolButton[rotationIntentChoice="true"] {
+    background-color: #171E23;
+    color: #DCE2E2;
+    border: 1px solid #53616A;
+    border-radius: 4px;
+    padding: 10px 8px 8px 8px;
+}
+QToolButton[rotationIntentChoice="true"]:hover {
+    background-color: #253640;
+    color: #F0F4F5;
+    border-color: #92AAB5;
+}
+QToolButton[rotationIntentChoice="true"]:checked {
+    background-color: #24343D;
+    color: #FFFFFF;
+    border-color: #92AAB5;
+    border-bottom: 3px solid #AABAC2;
+}
+
+QFrame[rotationResultsShell="true"] {
+    background-color: #0C1418;
+    border: 1px solid #465057;
+    border-radius: 4px;
+}
+QPushButton[rotationResultNav="true"] {
+    background-color: #141C21;
+    color: #AEB8BC;
+    border: 1px solid #3D464C;
+    border-radius: 3px;
+    text-align: left;
+    padding: 6px 14px;
+}
+QPushButton[rotationResultNav="true"]:hover {
+    background-color: #223039;
+    color: #EDF2F4;
+    border-color: #819BA7;
+}
+QPushButton[rotationResultNav="true"]:checked {
+    background-color: #24343D;
+    color: #FFFFFF;
+    border-color: #8EA6B2;
+    border-bottom: 3px solid #AABAC2;
+}
+QLabel[rotationResultsLocked="true"] {
+    color: #C9D2D5;
+    font-family: "Montserrat";
+    font-size: 10pt;
+}
+
+QPlainTextEdit[parchmentEditor="true"] {
+    background-color: rgba(199, 177, 132, 0.82);
+    color: #28251F;
+    border: 1px solid #88734B;
+    border-radius: 3px;
+    padding: 10px;
+    font-family: "Cormorant Garamond";
+    font-size: 12pt;
+}
+QPlainTextEdit[parchmentEditor="true"]:focus {
+    border: 2px solid #7B909B;
 }
 
 QWidget[foundrySidebar="true"], QFrame[settingsRail="true"] {
