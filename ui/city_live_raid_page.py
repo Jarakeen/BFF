@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -151,9 +152,15 @@ class CityLiveRaidPage(FoundryPage):
         lower.addWidget(timeline, 2)
 
         notes = FoundryCard("Quick Notes / Run Sheet", "clipboard")
-        self.notes_label = QLabel("MANUAL\n• Confirm assignments before pull\n• Record meaningful wipe notes\n• Keep observed facts separate from plans")
-        self.notes_label.setWordWrap(True)
-        notes.addWidget(self.notes_label)
+        self.run_notes_edit = QTextEdit()
+        self.run_notes_edit.setAcceptRichText(False)
+        self.run_notes_edit.setPlaceholderText("Add manual pull notes, reminders, or observations…")
+        self.run_notes_edit.setMaximumHeight(135)
+        notes.addWidget(self.run_notes_edit)
+        self.save_run_notes_button = QPushButton("Save Run Notes")
+        self.save_run_notes_button.setProperty("primary", True)
+        self.save_run_notes_button.clicked.connect(self._save_run_notes)
+        notes.addWidget(self.save_run_notes_button)
         lower.addWidget(notes, 2)
 
         coverage = FoundryCard("Coverage Snapshot", "shield")
@@ -202,8 +209,13 @@ class CityLiveRaidPage(FoundryPage):
             self.hero_title.setText("No Raid Plan selected")
             self.callouts_label.setText("No planned callouts for this Raid Plan.")
             self.events_label.setText("No manual run events yet.")
+            self.run_notes_edit.clear()
+            self.run_notes_edit.setEnabled(False)
+            self.save_run_notes_button.setEnabled(False)
             return
         self.hero_art.set_source(trial_banner_path(plan.trial_id, plan.name))
+        if not self.run_notes_edit.hasFocus():
+            self.run_notes_edit.setPlainText(self.user_state.run_notes(plan.plan_id))
         self.hero_title.setText(
             f"{plan.name}\n{plan.trial_id} · {plan.difficulty or 'Difficulty not set'} · {len(plan.members)} planned players"
         )
@@ -248,6 +260,8 @@ class CityLiveRaidPage(FoundryPage):
         self.pause_button.setText("Resume Notes" if paused else "Pause Notes")
         self.start_button.setEnabled(not active)
         self.end_button.setEnabled(active)
+        self.run_notes_edit.setEnabled(not paused)
+        self.save_run_notes_button.setEnabled(not paused)
         self._refresh_clock()
 
     def _refresh_clock(self) -> None:
@@ -273,6 +287,27 @@ class CityLiveRaidPage(FoundryPage):
         self.events_label.setText(
             "\n".join(f"{event.evidence}  {event.text}" for event in rows) or "No manual run events yet."
         )
+
+    def _save_run_notes(self) -> None:
+        if self._plan is None:
+            self.status.warning("Select a Raid Plan before saving run notes.")
+            return
+        notes = self.run_notes_edit.toPlainText().strip()
+        state = self.user_state.set_run_notes(self._plan.plan_id, notes)
+        attempt = int(state.get("attempt", 0) or 0)
+        archived = self.user_state.save_review_note(
+            plan_id=self._plan.plan_id,
+            trial_id=self._plan.trial_id,
+            plan_name=self._plan.name,
+            attempt=attempt,
+            notes=notes,
+        )
+        if archived is None:
+            self.status.info("Blank notes cleared from the active Raid Plan.")
+        else:
+            label = f"attempt #{attempt}" if attempt else "general note"
+            self.status.info(f"Run notes saved to Review for {label}.")
+        self._refresh_events()
 
     def _start_pull(self) -> None:
         if self._plan is None:
