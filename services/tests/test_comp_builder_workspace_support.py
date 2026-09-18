@@ -42,13 +42,16 @@ def test_comp_maker_layout_is_balanced_two_column_workspace():
     assert "left.addWidget(coverage, 0)" in source
     assert "left.addWidget(evidence, 0)" in source
     assert "right.addWidget(actions, 0)" in source
-    assert "right.addWidget(details, 1)" in source
+    assert "right.addWidget(details, 0)" in source
     assert "columns.addLayout(left, 1)" in source
     assert "columns.addLayout(right, 1)" in source
     assert "columns.addWidget(assignment_arrow" not in source
     assert "columns.setStretch(0, 1)" in source
     assert "columns.setStretch(1, 1)" in source
-    assert 'details.title_label.setText("ESO Logs Catalog & Chair Evidence")' in source
+    assert 'matrix.title_label.setText("Team")' in source
+    assert 'coverage.title_label.setText("Team Health")' in source
+    assert 'details.title_label.setText("Selected Player / Build Recommendation")' in source
+    assert "details.setMaximumHeight(620)" in source
     assert "ScrollBarAlwaysOff" in source
 
 
@@ -61,6 +64,8 @@ def test_comp_maker_selected_chair_editor_contains_duties_providers_mechanics_an
     assert '"MECHANIC JOBS"' in source
     assert "comp_required_gear_sets_input" in source
     assert 'details.title_label.setText("Selected Chair Setup & Evidence")' in source
+    assert 'QPushButton("Advanced Assignment Details ▸")' in source
+    assert "editor_host.setVisible(False)" in source
 
 
 def test_comp_maker_rylo_has_explicit_workspace_overrides():
