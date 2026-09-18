@@ -226,3 +226,23 @@ def test_raid_plan_handoff_replaces_stale_comp_class_state_before_render() -> No
     refresh_index = source.index("refresh_phase14_presentation(comp)")
     assert map_index < apply_index < refresh_index
     assert "comp._comp_class_constraint_by_slot = dict(class_by_seat)" in source
+
+
+def test_phase14_comp_builder_can_pick_individual_sets_per_chair() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert "def _toggle_manual_set(page, set_name: str)" in source
+    assert '"_comp_manual_gear_sets_by_slot"' in source
+    assert '"CHOOSE SETS FOR THIS CHAIR • pick up to 2"' in source
+    assert "button.setCheckable(True)" in source
+    assert "if len(current) >= 2:" in source
+    assert "_refresh_manual_set_picker(page, candidates)" in source
+    assert 'build_label = " + ".join(manual_sets) if manual_sets else _candidate_label(candidate)' in source
+
+
+def test_raid_plan_reopens_comp_with_planned_manual_sets() -> None:
+    handoff = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+
+    assert "planned_sets_by_seat = {" in handoff
+    assert 'getattr(member, "planned_gear_sets", ())' in handoff
+    assert "comp._comp_manual_gear_sets_by_slot = dict(planned_sets_by_seat)" in handoff
