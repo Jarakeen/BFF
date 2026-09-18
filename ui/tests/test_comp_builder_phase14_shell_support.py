@@ -216,3 +216,13 @@ def test_raid_plan_class_map_is_authoritative_in_visible_comp_shell() -> None:
     assert 'page._comp_class_constraint_by_slot = dict(cleaned)' in intake
     assert 'raid_classes = dict(getattr(page, "_raid_plan_class_by_seat", {}) or {})' in source
     assert 'apply_raid_plan_class_constraints(page, raid_classes)' in source
+
+
+def test_raid_plan_handoff_replaces_stale_comp_class_state_before_render() -> None:
+    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+
+    map_index = source.index("comp._raid_plan_class_by_seat = dict(class_by_seat)")
+    apply_index = source.index("comp.apply_roster_team_context(")
+    refresh_index = source.index("refresh_phase14_presentation(comp)")
+    assert map_index < apply_index < refresh_index
+    assert "comp._comp_class_constraint_by_slot = dict(class_by_seat)" in source
