@@ -10,6 +10,7 @@ editors remain in the existing workspace tabs and are opened only when requested
 from collections import Counter
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -105,8 +106,15 @@ def _header(page, build) -> QWidget:
     text.addWidget(subtitle)
     layout.addLayout(text, 1)
 
-    ready = QLabel("Ready" if bool(getattr(build, "ReadyForRaid", False)) else "Not Ready")
-    ready.setProperty("cardBadge", True)
+    ready = QCheckBox("Ready")
+    ready.setToolTip(
+        "Mark this saved build as ready for raid. This is your own check, "
+        "not a team or encounter check."
+    )
+    ready.setChecked(bool(getattr(build, "ReadyForRaid", False)))
+    ready.toggled.connect(
+        lambda checked, selected=build: page._set_build_ready(selected, checked)
+    )
     layout.addWidget(ready)
     layout.addWidget(_action_button(page))
     return host
