@@ -52,15 +52,17 @@ def test_raid_plan_surface_exposes_roles_and_spots_as_user_language() -> None:
     assert "Duties live in Assignments" in source
 
 
-def test_assignment_surface_prefers_readable_duties_over_schema_columns() -> None:
+def test_assignment_surface_separates_support_jobs_from_utility() -> None:
     source = Path("ui/city_raid_assignments_page.py").read_text(encoding="utf-8")
 
-    assert '("Spot", "Player", "Main Duty", "Backup / Utility", "Gear", "Notes", "Source")' in source
-    assert '"Character", "Role"' not in source
-    assert "Primary and Secondary fields" not in source
-    assert "Main Duty is the canonical primary assignment" in source
-    assert "If the job is vague, the wipe is specific." in source
-    assert "The best teams are built twice" in source
+    assert '("Spot", "Player", "Buffs / Debuffs", "Gear / Build", "Source")' in source
+    assert '("Spot", "Player", "Utility / Mechanic Job")' in source
+    assert 'FoundryCard("Buffs / Debuffs", "checklist")' in source
+    assert 'FoundryCard("Utility / Mechanics", "warning")' in source
+    assert 'FoundryCard("Plan Snapshot", "compass")' in source
+    assert 'FoundryCard("Mechanic Coverage", "shield")' not in source
+    assert '"Notes"' not in source.split('self.support_table.setHorizontalHeaderLabels', 1)[1].split(')', 1)[0]
+    assert 'form.addRow("Notes", self.selected_notes)' in source
 
 
 def test_roster_top_surface_has_badges_and_mockup_proportion_polish() -> None:
