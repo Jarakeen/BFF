@@ -81,3 +81,16 @@ def test_delete_team_removes_schedule_and_membership_but_keeps_roster_member(tmp
 def test_schedule_exporter_accepts_both_theme_styles():
     exporter = TeamScheduleShareDocumentExporter()
     assert exporter is not None
+
+
+def test_add_member_to_team_preserves_existing_memberships(tmp_path):
+    service = RosterService(EsoDatabase(tmp_path / "eso.db"))
+    member_id = service.create_member(
+        RosterMember(PlayerName="AAA aces", Team="Team One", Status="Active")
+    )
+
+    service.add_member_to_team(member_id, "Team Two")
+    restored = service.get_member(member_id)
+
+    assert restored is not None
+    assert set(part.strip() for part in restored.Team.split(",")) == {"Team One", "Team Two"}
