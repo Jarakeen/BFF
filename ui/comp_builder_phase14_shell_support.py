@@ -294,7 +294,9 @@ def _refresh_why(page) -> None:
     slot = page._cell_text(row, 0) or f"Slot {row + 1}"
     role = page._cell_text(row, 1) or "Unresolved"
     selected_class = page._selected_class(row) or "Any class"
-    page.comp_phase14_why_header.setText(f"{player}  •  {slot}  •  {selected_class}")
+    page.comp_phase14_why_header.setText(
+        f"{player}  •  {slot}  •  {selected_class}"
+    )
 
     try:
         from ui import comp_builder_build_candidate_support as candidate_support
@@ -305,27 +307,34 @@ def _refresh_why(page) -> None:
 
     candidate = _candidate_for_row(page, row)
     if candidate is None:
-        page.comp_phase14_recommendation.setText("No eligible build recommendation resolved.")
+        page.comp_phase14_recommendation.setText(
+            "No eligible build recommendation resolved."
+        )
         page.comp_phase14_set_one.setText("No eligible build")
         page.comp_phase14_set_two.setText("")
         page.comp_phase14_set_plus.setVisible(False)
         page.comp_phase14_confidence.setText("Needs review")
         page.comp_phase14_role_footer.setText(f"{selected_class}  •  {role}")
-    if not set_two:
-        page.comp_phase14_set_two.setText("No second set resolved")
         page.comp_phase14_why_text.setText(
             f"No source-backed recommendation is currently available for {role}. "
             "The slot remains intentionally unresolved."
         )
-        page.comp_phase14_alt_one.setText("No alternate recommendation resolved.")
-        page.comp_phase14_alt_two.setText("No alternate recommendation resolved.")
+        page.comp_phase14_alt_one.setText(
+            "No alternate recommendation resolved."
+        )
+        page.comp_phase14_alt_two.setText(
+            "No alternate recommendation resolved."
+        )
         return
 
     page.comp_phase14_recommendation.setText(_candidate_label(candidate))
     set_one, set_two = _candidate_sets(candidate)
     page.comp_phase14_set_one.setText(set_one)
-    page.comp_phase14_set_two.setText(set_two)
+    page.comp_phase14_set_two.setText(
+        set_two if set_two else "No second set resolved"
+    )
     page.comp_phase14_set_plus.setVisible(bool(set_two))
+
     score = float(getattr(candidate, "score", 0.0) or 0.0)
     page.comp_phase14_confidence.setText(
         f"High confidence • {_candidate_source(candidate)} • relevance {score:.1f}"
@@ -343,14 +352,22 @@ def _refresh_why(page) -> None:
         why_parts.append("Plan obligation: " + " • ".join(obligations[:2]))
     if not why_parts:
         why_parts.append(
-            "This is the highest-ranked eligible evidence for the selected player, role, class, and trial."
+            "This is the highest-ranked eligible evidence for the selected "
+            "player, role, class, and trial."
         )
     page.comp_phase14_why_text.setText(" ".join(why_parts))
 
-    alternatives = [item for item in candidates if item.candidate_id != candidate.candidate_id]
-    page.comp_phase14_alt_one.setText(_alternative_text(alternatives[0] if alternatives else None))
-    page.comp_phase14_alt_two.setText(_alternative_text(alternatives[1] if len(alternatives) > 1 else None))
-
+    alternatives = [
+        item
+        for item in candidates
+        if item.candidate_id != candidate.candidate_id
+    ]
+    page.comp_phase14_alt_one.setText(
+        _alternative_text(alternatives[0] if alternatives else None)
+    )
+    page.comp_phase14_alt_two.setText(
+        _alternative_text(alternatives[1] if len(alternatives) > 1 else None)
+    )
 
 def _health_tile(
     title: str,
