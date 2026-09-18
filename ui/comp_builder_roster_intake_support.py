@@ -195,6 +195,7 @@ def apply_roster_team_context(
     encounter_id: str = "",
     encounter_name: str = "",
     assignments: dict[int, dict] | None = None,
+    group_size: int | None = None,
 ) -> None:
     members = tuple(members)
     assignments = dict(assignments or {})
@@ -210,7 +211,7 @@ def apply_roster_team_context(
     # Roster size owns the neutral group shape. Four-person groups stay four-person;
     # trial rosters stay twelve-person. Team/boss assignment remains context and must
     # never invent extra people or silently expand a dungeon group into a trial.
-    group_size = _group_size_for_members(members)
+    group_size = 4 if group_size == 4 else 12 if group_size == 12 else _group_size_for_members(members)
     page._comp_group_size = group_size
     _load_roster_shape(page, group_size)
     _clear_player_rows(page)
