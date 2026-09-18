@@ -77,3 +77,15 @@ def test_roster_intake_accepts_explicit_four_or_twelve_player_context():
 
     assert "group_size: int | None = None" in source
     assert "group_size = 4 if group_size == 4 else 12 if group_size == 12" in source
+
+
+def test_comp_builder_accepts_direct_pasted_team_list():
+    source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+    controls = Path("ui/comp_builder_main_controls_support.py").read_text(encoding="utf-8")
+
+    assert "def open_team_list_dialog(page) -> None:" in source
+    assert '"One player per line. Use Recruit for any open spot."' in source
+    assert "group_size = 4 if len(names) <= 4 else 12" in source
+    assert 'QPushButton("Load Team List")' in controls
+    assert 'generate.setText("Recommend Team")' in controls
+    assert 'apply_chair.setText("Use Selected Build")' in controls
