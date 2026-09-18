@@ -20,8 +20,7 @@
 #     hid names), and charting that player's buff/debuff uptime
 #     plus their healing or damage output.
 #
-# Wired to the sidebar's existing "Capabilities" nav entry
-# (Raid Operations > Capabilities, page key "console:3").
+# Wired to the Raid Engine > Top Gear navigation entry\n# (page key "console:3"; the route is retained for compatibility).
 #
 # ==================================================
 
@@ -77,10 +76,7 @@ CAPABILITIES_PATH = "data/capabilities.json"
 
 
 class CapabilitiesPage(FoundryPage):
-    """
-    Capabilities Desk -- ranked-team build evidence, top-player ESO Logs trends,
-    and per-member performance dashboards.
-    """
+    """Top Gear page: ranked-team evidence, ESO Logs trends, and performance data.\n\n    The historical class name is retained as a compatibility boundary because\n    services/tests still use capability terminology for the underlying data.\n    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
