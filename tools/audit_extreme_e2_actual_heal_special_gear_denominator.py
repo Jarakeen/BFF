@@ -37,16 +37,25 @@ def main() -> int:
         conditional = tuple(
             row for row in family_rows if row.conditional_objectives
         )
+        package = tuple(
+            row for row in family_rows if row.package_objectives
+        )
         print()
         print(f"[{family.upper()}]")
         print(f"canonical_count={len(family_rows)}")
         print(f"h1_relevant_count={len(relevant)}")
         print(f"conditional_count={len(conditional)}")
+        print(f"package_count={len(package)}")
         print(f"unresolved_count={len(unresolved)}")
         for row in conditional:
             print(
                 f"CONDITIONAL family={family} set={row.set_name!r} "
                 f"objectives={row.conditional_objectives}"
+            )
+        for row in package:
+            print(
+                f"PACKAGE family={family} set={row.set_name!r} "
+                f"objectives={row.package_objectives}"
             )
         for row in unresolved:
             print(
