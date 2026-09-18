@@ -13,7 +13,7 @@ ESO_WEAPON_TYPE_ID_BY_WEAPON_TYPE: dict[WeaponType, int] = {
     WeaponType.GREATSWORD: 4,
     WeaponType.BATTLEAXE: 5,
     WeaponType.MAUL: 6,
-    WeaponType.SHIELD: 7,
+    WeaponType.SHIELD: 14,
     WeaponType.BOW: 8,
     WeaponType.RESTORATION_STAFF: 9,
     WeaponType.DAGGER: 11,
