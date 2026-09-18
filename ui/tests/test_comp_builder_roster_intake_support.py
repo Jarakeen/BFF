@@ -89,3 +89,14 @@ def test_comp_builder_accepts_direct_pasted_team_list():
     assert 'QPushButton("Load Team List")' in controls
     assert 'generate.setText("Recommend Team")' in controls
     assert 'apply_chair.setText("Use Selected Build")' in controls
+
+
+def test_recruit_class_constraints_survive_comp_matrix_rerenders() -> None:
+    source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+
+    assert "page._comp_class_constraint_by_slot = {}" in source
+    assert "page._comp_class_constraint_by_slot[slot_name] = eso_class" in source
+    assert "def _reapply_class_constraints(page)" in source
+    assert "def render_slots_with_class_constraints(self, slots)" in source
+    assert "CompBuilderPage._render_slots = render_slots_with_class_constraints" in source
+    assert "_reapply_class_constraints(self)" in source
