@@ -64,7 +64,7 @@ def _install_canonical_sidebar_routes() -> None:
             "label": "Team",
             "children": [
                 ("Coverage", "console:7"),
-                ("Comp Maker", "comp_builder"),
+                ("Comp Builder", "comp_builder"),
                 ("Optimizer Adviser", "console:6"),
             ],
         },
