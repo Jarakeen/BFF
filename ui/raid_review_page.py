@@ -36,6 +36,28 @@ def _display_date(value: object) -> str:
         return text[:10] or "Unknown date"
 
 
+def _display_clock(value: object) -> str:
+    text = _clean(value)
+    if not text:
+        return ""
+    try:
+        return datetime.fromisoformat(text).astimezone().strftime("%I:%M %p").lstrip("0")
+    except ValueError:
+        return ""
+
+
+def _display_duration(value: object) -> str:
+    try:
+        seconds = max(0, int(value))
+    except (TypeError, ValueError):
+        return ""
+    minutes, second = divmod(seconds, 60)
+    hours, minute = divmod(minutes, 60)
+    if hours:
+        return f"{hours:d}:{minute:02d}:{second:02d}"
+    return f"{minute:02d}:{second:02d}"
+
+
 def _display_timestamp(value: object) -> str:
     text = _clean(value)
     if not text:
@@ -126,6 +148,12 @@ class RaidReviewPage(FoundryPage):
 
             attempt = int(row.get("attempt", 0) or 0)
             label = f"Attempt #{attempt}" if attempt else "General note"
+            started_clock = _display_clock(row.get("started_at"))
+            duration = _display_duration(row.get("duration_seconds"))
+            if started_clock:
+                label += f" · {started_clock}"
+            if duration:
+                label += f" · {duration}"
             plan_name = _clean(row.get("plan_name"))
             if plan_name:
                 label += f" · {plan_name}"
@@ -155,10 +183,20 @@ class RaidReviewPage(FoundryPage):
         trial = _clean(row.get("trial_id")) or "Unknown Trial"
         plan = _clean(row.get("plan_name")) or "Unnamed Raid Plan"
         self.note_heading.setText(f"{trial} · {plan}")
-        self.note_meta.setText(
-            f"{_display_timestamp(row.get('updated_at') or row.get('created_at'))}"
-            + (f" · Attempt #{attempt}" if attempt else " · General note")
-        )
+        meta = [
+            f"Saved {_display_timestamp(row.get('updated_at') or row.get('created_at'))}",
+            f"Attempt #{attempt}" if attempt else "General note",
+        ]
+        started = _clean(row.get("started_at"))
+        ended = _clean(row.get("ended_at"))
+        duration = _display_duration(row.get("duration_seconds"))
+        if started:
+            meta.append(f"Started {_display_timestamp(started)}")
+        if ended:
+            meta.append(f"Ended {_display_timestamp(ended)}")
+        if duration:
+            meta.append(f"Duration {duration}")
+        self.note_meta.setText(" · ".join(meta))
         self.note_body.setPlainText(_clean(row.get("notes")))
 
 
