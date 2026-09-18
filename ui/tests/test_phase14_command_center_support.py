@@ -4,6 +4,7 @@ from pathlib import Path
 
 from ui import application_workspace_bootstrap
 from ui import phase14_build_inspector_support
+from ui import phase14_build_focused_editors_support
 from ui import phase14_build_profile_support
 from ui import phase14_builds_command_center_support
 from ui import phase14_rotation_command_center_support
@@ -156,3 +157,20 @@ def test_advanced_rules_does_not_reparent_execution_panel() -> None:
 
     assert '_obligation_row(page, "Advanced rules", "Priority and conditional logic.", "—", _build_rules_detail())' in source
     assert 'page.rotation_advanced_panel' not in source
+
+
+def test_phase14_final_build_header_keeps_ready_checkbox_visible() -> None:
+    source = _source(phase14_build_focused_editors_support)
+
+    assert 'ready = QCheckBox("Ready")' in source
+    assert "ready.setChecked(bool(getattr(build, \"ReadyForRaid\", False)))" in source
+    assert "page._set_build_ready(selected, checked)" in source
+
+
+def test_phase14_build_overview_restores_context_variant_access() -> None:
+    source = _source(phase14_build_focused_editors_support)
+
+    assert 'FoundryCard("Context Variants", "swapping")' in source
+    assert '"Edit Context Variants"' in source
+    assert "page._open_phase14_legacy_build_editor()" in source
+    assert "inspector._overview_tab = overview_with_context_variants" in source
