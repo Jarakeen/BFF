@@ -463,6 +463,49 @@ def _edit_identity(page) -> None:
     _run_dialog(page, _IdentityDialog(page, build), "Build identity updated.")
 
 
+def _context_variants_summary(page, build) -> FoundryCard:
+    card = FoundryCard("Context Variants", "swapping")
+    variants = list(getattr(build, "ContextVariants", ()) or ())
+    if not variants:
+        from models.build_model import BuildContextVariant
+        variants = [
+            BuildContextVariant.from_boss_loadout(item)
+            for item in (getattr(build, "BossLoadouts", ()) or ())
+        ]
+
+    if variants:
+        for variant in variants[:6]:
+            kind = str(getattr(variant, "ContextType", "") or "Boss").strip()
+            context = " • ".join(
+                value
+                for value in (
+                    str(getattr(variant, "TeamName", "") or "").strip(),
+                    str(getattr(variant, "BossName", "") or "").strip(),
+                )
+                if value
+            ) or "Unspecified context"
+            note = str(getattr(variant, "Notes", "") or "").strip()
+            label = QLabel(f"{kind}: {context}" + (f" — {note}" if note else ""))
+            label.setWordWrap(True)
+            card.addWidget(label)
+        if len(variants) > 6:
+            card.addWidget(QLabel(f"+ {len(variants) - 6} more variant(s)"))
+    else:
+        card.addWidget(QLabel("No Team, Boss, or Team + Boss variants saved."))
+
+    edit = FoundryButton(
+        "Edit Context Variants",
+        role=ButtonRole.SECONDARY,
+        compact=True,
+    )
+    edit.setToolTip(
+        "Open the canonical build editor for Team, Boss, and Team + Boss overrides."
+    )
+    edit.clicked.connect(lambda: page._open_phase14_legacy_build_editor())
+    card.addWidget(edit)
+    return card
+
+
 def _favorite_button(page, build) -> QPushButton:
     from ui import phase14_build_profile_support as profiles
 
@@ -991,6 +1034,17 @@ def _install_overrides() -> None:
     from ui import phase14_build_profile_support as profiles
 
     inspector._header = _header
+    original_overview = inspector._overview_tab
+
+    def overview_with_context_variants(page, build):
+        tab = original_overview(page, build)
+        layout = tab.layout()
+        if isinstance(layout, QGridLayout):
+            layout.addWidget(_context_variants_summary(page, build), 2, 0, 1, 2)
+            layout.setRowStretch(3, 1)
+        return tab
+
+    inspector._overview_tab = overview_with_context_variants
     inspector._gear_card = _gear_card
     inspector._skills_tab = _skills_tab
     inspector._cp_tab = _cp_tab
