@@ -561,11 +561,9 @@ class GearSetParser:
         rest of the parser.
         """
 
-        # TODO:
-        # Replace these IDs with the documented
-        # UESP equipType values once confirmed.
-
-        HEAD_EQUIP_TYPE = 3
+        # Verified against the imported Magma Incarnate structure and the
+        # canonical GearSetCategoryResolver: head=1, shoulders=4.
+        HEAD_EQUIP_TYPE = 1
         SHOULDERS_EQUIP_TYPE = 4
 
         return equip_types == {
