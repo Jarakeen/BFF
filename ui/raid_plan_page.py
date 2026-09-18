@@ -388,7 +388,7 @@ class RaidPlanPage(FoundryPage):
         self._update_summary()
 
     def _refresh_personnel_button(self, row: int) -> None:
-        button = self.team_table.cellWidget(row, 4)
+        button = self.team_table.cellWidget(row, 5)
         if not isinstance(button, QPushButton):
             return
         gamertag = self._player_text(row)
