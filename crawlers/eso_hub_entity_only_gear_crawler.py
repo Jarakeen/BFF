@@ -143,14 +143,43 @@ def _bonus_lines(soup: BeautifulSoup) -> tuple[str, ...]:
         if title_string in strings:
             start = strings.index(title_string) + 1
 
+    stop_prefixes = (
+        "compare this armor set with other sets",
+        "this armor set modifies the following skills",
+        "champion points that buff",
+        "top builds using",
+        "images of ",
+        "available weapon traits",
+        "available enchantments",
+        "frequently asked questions",
+        "other sets in ",
+        "[mobile]",
+        "[desktop]",
+        "skyscraper",
+        "window.ramp.",
+    )
+
     result: list[str] = []
     pending: str | None = None
     for raw in strings[start:]:
+        parent = getattr(raw, "parent", None)
+        if isinstance(parent, Tag) and parent.name in {"script", "style", "noscript"}:
+            continue
+
         text = normalize_text(str(raw))
         if not text:
             continue
-        if text.casefold() == "weapons":
+        lowered = text.casefold()
+        if lowered == "weapons":
             break
+
+        if pending is not None and any(
+            lowered.startswith(prefix) for prefix in stop_prefixes
+        ):
+            if pending not in result:
+                result.append(pending)
+            pending = None
+            continue
 
         if marker.match(text):
             if pending and pending not in result:
@@ -161,8 +190,8 @@ def _bonus_lines(soup: BeautifulSoup) -> tuple[str, ...]:
         if pending is not None:
             # ESO-Hub may split one bonus across several nested spans, e.g.
             # "(2 items)" + "Adds" + "526 Critical Chance," + proc text.
-            # Continue collecting until the next item-count marker or Weapons
-            # boundary instead of stopping after the first fragment.
+            # Continue collecting until the next item-count marker or an
+            # explicit section/ad boundary rather than swallowing page chrome.
             pending = normalize_text(f"{pending} {text}")
 
     if pending and pending not in result:
