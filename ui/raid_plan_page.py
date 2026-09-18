@@ -298,9 +298,13 @@ class RaidPlanPage(FoundryPage):
         comp.clicked.connect(lambda *_: self.pageRequested.emit("comp_builder"))
         actions.addWidget(comp)
 
-        coverage = FoundryButton("Open Coverage", role=ButtonRole.SECONDARY, compact=True)
-        coverage.clicked.connect(lambda *_: self.pageRequested.emit("console:7"))
-        actions.addWidget(coverage)
+        self.open_coverage_button = FoundryButton(
+            "Open Coverage",
+            role=ButtonRole.SECONDARY,
+            compact=True,
+        )
+        self.open_coverage_button.clicked.connect(self._open_coverage)
+        actions.addWidget(self.open_coverage_button)
 
         adviser = FoundryButton("Open Optimizer", role=ButtonRole.PRIMARY, compact=True)
         adviser.setToolTip("Open the existing optimization workspace while the Adviser remodel is still in progress.")
@@ -316,6 +320,10 @@ class RaidPlanPage(FoundryPage):
         self.trial_combo.currentTextChanged.connect(self._update_summary)
         self.difficulty_combo.currentTextChanged.connect(self._update_summary)
         self.plan_name_edit.textChanged.connect(self._update_summary)
+
+    def _open_coverage(self, *_args) -> None:
+        """Open generic Coverage when no plan-aware subclass owns the handoff."""
+        self.pageRequested.emit("console:7")
 
     @staticmethod
     def _item_text(table: QTableWidget, row: int, column: int) -> str:
