@@ -22,10 +22,12 @@ _ORIGINAL_SHOW_PAGE = None
 # Keep pages with build-time cross-wiring eager. In particular, Rotation is now
 # a release-visible primary workspace with a dense decorator/runtime graph, so
 # constructing it during MainWindow setup is safer than first-click materialization.
-# operations_console is the startup destination, Achievements supplies the
-# active profile used by Collectibles, and Raid Engine source pages are still
-# composed together by existing support layers.
+# operations_console is the startup destination and Rotation remains eager
+# because its decorated runtime graph is not safe to materialize on first click.
+# Achievement profile state is now owned independently from the page, so the
+# heavy Achievements browser can be deferred safely.
 LAZY_PAGE_SPECS: dict[str, str] = {
+    "achievements": "AchievementsPage",
     "gear_lookup": "GearLookupPage",
     "stickerbook": "StickerbookPage",
     "timers": "AsylumPerfectaTimerPage",
@@ -162,6 +164,12 @@ def _show_page_with_lazy_materialization(self, page_name: str):
     ):
         self._operations_console_initial_navigation_pending = False
         return _show_page_without_refresh(self, page_name, "operations_console")
+
+    # AchievementsPage builds and refreshes its complete browser in __init__().
+    # MainWindow's normal achievements navigation also refreshes, so reuse the
+    # constructor state on the first lazy visit instead of doing the same DB work twice.
+    if page_key == "achievements" and was_lazy:
+        return _show_page_without_refresh(self, page_name, "achievements")
 
     # GearLookupPage performs its canonical database refresh in __init__().
     # Its ordinary navigation path also refreshes, so the very first lazy visit
