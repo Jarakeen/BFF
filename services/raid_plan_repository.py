@@ -112,6 +112,7 @@ class RaidPlanRepository:
                 name=raw.get("name", ""),
                 team_name=raw.get("team_name"),
                 difficulty=raw.get("difficulty"),
+                plan_note=raw.get("plan_note"),
                 status=raw.get("status", "planning"),
                 members=members,
                 triggered_responsibilities=triggered,
