@@ -132,3 +132,17 @@ def test_live_raid_notes_are_explicit_editable_state() -> None:
     assert "def run_notes(" in state
     assert "def set_run_notes(" in state
     assert '"notes": _clean(prior.get("notes"))' in state
+
+
+def test_rumor_collectible_page_reads_imported_rumor_tables() -> None:
+    service = _source("services/profiled_collectible_service.py")
+    reference = _source("ui/collectibles_reference_dashboard_support.py")
+
+    assert 'str(category or "").strip().casefold() == "rumors"' in service
+    assert "FROM collectible_rumor r" in service
+    assert "FROM collectible_rumor_hint" in service
+    assert "CREATE TABLE IF NOT EXISTS collectible_rumor_progress" in service
+    assert "return self._rumor_rows(query)" in service
+    assert "return self._rumor_detail(rumor_id)" in service
+    assert '"Rumors": self.service.progress_summary("Rumors")' in reference
+    assert 'additive_routes = ("Furnishing Plans", "Recipes", "Lorebooks")' in reference
