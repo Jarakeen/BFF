@@ -7,12 +7,9 @@ RotationPlan and presents that saved artifact on the Builds workspace.  It never
 generates, repairs, or infers rotation evidence while saving.
 """
 
-from typing import Any
-
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QLabel,
-    QPushButton,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -39,41 +36,6 @@ def _build_id_for_page(page, build) -> str | None:
         page.build_service.canonical.catalog_service,
         build,
     )
-
-
-def _policy(page, name: str) -> dict[str, Any]:
-    resolver = getattr(page, name, None)
-    if not callable(resolver):
-        return {}
-    try:
-        value = resolver()
-    except (TypeError, ValueError):
-        return {}
-    return dict(value) if isinstance(value, dict) else {}
-
-
-def _rotation_artifact(page) -> dict[str, Any]:
-    plan = page.rotation_plan
-    if plan is None or not tuple(getattr(plan, "actions", ()) or ()):
-        raise ValueError("Generate a completed rotation before saving it to the build.")
-
-    setup = dict(page.rotation_settings())
-    setup.update(_policy(page, "canonical_threshold_projection_policy"))
-    setup.update(_policy(page, "canonical_dd_evaluation_policy"))
-
-    recovery = _policy(page, "canonical_recovery_policy")
-    if recovery:
-        setup["recovery_resource"] = recovery.get("resource")
-        setup["recovery_trigger_fraction"] = recovery.get("trigger_fraction")
-
-    selected_encounter = getattr(page, "selected_encounter_id", None)
-    encounter_id = selected_encounter() if callable(selected_encounter) else None
-
-    payload = jsonable(plan)
-    payload["artifact_schema_version"] = 1
-    payload["encounter_id"] = str(encounter_id or "")
-    payload["setup"] = jsonable(setup)
-    return payload
 
 
 def _find_tab(tabs, title: str) -> int:
@@ -223,72 +185,17 @@ def _refresh_build_rotation(page) -> None:
 
 
 def install() -> None:
+    """Install the Builds-side saved-rotation viewer only.
+
+    Rotation Builder is intentionally excluded from Phase 14 application startup and
+    packaged builds. Existing saved rotation artifacts remain readable from Builds,
+    but this adapter must not import or patch CanonicalRotationDashboardPage.
+    """
     global _INSTALLED
     if _INSTALLED:
         return
 
-    from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage
     from ui.themed_builds_page import BuildsPage
-
-    rotation_init = CanonicalRotationDashboardPage.__init__
-    rotation_set_plan = CanonicalRotationDashboardPage.set_rotation_plan
-    rotation_clear_plan = CanonicalRotationDashboardPage.clear_rotation_plan
-
-    def rotation_init_with_build_save(self, *args, **kwargs) -> None:
-        rotation_init(self, *args, **kwargs)
-        self.build_rotation_artifacts = _artifact_service()
-        self.save_rotation_to_build_button = QPushButton("Save Rotation to Build")
-        self.save_rotation_to_build_button.setProperty("primary", True)
-        self.save_rotation_to_build_button.setEnabled(bool(self.rotation_plan and self.rotation_plan.actions))
-        self.save_rotation_to_build_button.setToolTip(
-            "Save the currently completed RotationPlan to this exact canonical build. "
-            "Saving again replaces that build's previous saved rotation."
-        )
-
-        def save_current_rotation() -> None:
-            build = self._selected_build()
-            if build is None:
-                self.status.warning("Select a saved build before saving a rotation.")
-                return
-            if self.rotation_plan is None or not self.rotation_plan.actions:
-                self.status.warning("Generate a completed rotation before saving it to the build.")
-                return
-            build_id = _build_id_for_page(self, build)
-            if not build_id:
-                self.status.warning(
-                    "This saved build could not be resolved to one canonical build identity; rotation was not saved."
-                )
-                return
-            try:
-                self.build_rotation_artifacts.save_rotation(
-                    build_id=build_id,
-                    artifact=_rotation_artifact(self),
-                )
-            except (OSError, ValueError) as exc:
-                self.status.error(f"Save rotation to build failed: {exc}")
-                return
-            character = str(getattr(build, "Name", "") or "Unnamed Character")
-            build_name = str(getattr(build, "BuildName", "") or "Current Build")
-            self.status.success(
-                f"Saved rotation to {character} • {build_name}. It is now available on the Build page."
-            )
-
-        self.save_rotation_to_build_button.clicked.connect(save_current_rotation)
-        self.header.add_context_widget(self.save_rotation_to_build_button)
-
-    def set_plan_with_build_save(self, plan) -> None:
-        rotation_set_plan(self, plan)
-        if hasattr(self, "save_rotation_to_build_button"):
-            self.save_rotation_to_build_button.setEnabled(bool(plan and plan.actions))
-
-    def clear_plan_with_build_save(self, *args, **kwargs) -> None:
-        rotation_clear_plan(self, *args, **kwargs)
-        if hasattr(self, "save_rotation_to_build_button"):
-            self.save_rotation_to_build_button.setEnabled(False)
-
-    CanonicalRotationDashboardPage.__init__ = rotation_init_with_build_save
-    CanonicalRotationDashboardPage.set_rotation_plan = set_plan_with_build_save
-    CanonicalRotationDashboardPage.clear_rotation_plan = clear_plan_with_build_save
 
     builds_build_ui = BuildsPage._build_ui
     builds_select_member = BuildsPage._select_member
@@ -304,7 +211,7 @@ def install() -> None:
         )
         self.build_tabs.setTabToolTip(
             rotation_index,
-            "Completed rotation saved from Raid Engine • Rotations for this exact build.",
+            "Previously saved completed rotation for this exact build.",
         )
         self.build_tabs.setTabVisible(rotation_index, False)
 
