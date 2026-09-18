@@ -179,8 +179,8 @@ class ExtremeActualHealDoubleFivePackageService:
         *,
         character_id: str,
         baseline_build_id: str,
-        primary_per_objective: int = 8,
-        secondary_per_objective: int = 8,
+        primary_per_objective: int | None = None,
+        secondary_per_objective: int | None = None,
     ) -> tuple[BuildCandidate, ...]:
         primary_names = self._reviewed_names(
             secondary_shape=False,
