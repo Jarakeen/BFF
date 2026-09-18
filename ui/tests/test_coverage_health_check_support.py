@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 from models.build_model import BuildContextVariant, PlayerBuild
@@ -163,3 +164,21 @@ def test_contextual_coverage_can_apply_team_variant_explicitly():
 
     assert unresolved == ()
     assert selected[0][1].Food == "Team Food"
+
+
+def test_coverage_health_check_reuses_canonical_build_scope_selector() -> None:
+    source = Path("ui/coverage_health_check_support.py").read_text(encoding="utf-8")
+
+    assert 'combo = getattr(page, "scope_combo", None)' in source
+    assert 'combo.addItem(f"Roster Team: {name}", f"roster_team:{name}")' in source
+    assert 'if data.startswith("roster_team:"):' in source
+    assert "health_check_team_combo" not in source
+    assert "Check Base Builds" not in source
+    assert "scope_combo.parentWidget()" not in source
+
+
+def test_coverage_health_check_does_not_hide_build_scope_control() -> None:
+    source = Path("ui/coverage_health_check_support.py").read_text(encoding="utf-8")
+
+    assert "parent.setVisible(True)" in source
+    assert "old_scope_parent.setVisible(False)" not in source
