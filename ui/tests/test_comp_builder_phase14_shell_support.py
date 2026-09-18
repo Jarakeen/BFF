@@ -96,3 +96,17 @@ def test_phase14_team_health_uses_mockup_status_indicators() -> None:
     assert '("DUPLICATE", "!", "duplicate"' in source
     assert '("RECRUIT NEED", "i", "recruit"' in source
     assert 'setProperty("compHealthIndicator", True)' in source
+
+
+def test_phase14_why_refresh_initializes_set_state_in_every_branch() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert 'page.comp_phase14_set_one.setText("No recommendation")' in source
+    assert 'page.comp_phase14_set_two.setText("")' in source
+    assert 'page.comp_phase14_set_plus.setVisible(False)' in source
+    assert 'page.comp_phase14_set_one.setText("No eligible build")' in source
+    assert 'set_one, set_two = _candidate_sets(candidate)' in source
+    assert 'set_two if set_two else "No second set resolved"' in source
+
+    candidate_assignment = source.index("set_one, set_two = _candidate_sets(candidate)")
+    assert source.find("if not set_two:", 0, candidate_assignment) == -1
