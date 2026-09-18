@@ -124,40 +124,88 @@ def _label_value(soup: BeautifulSoup, label: str) -> str:
 
 
 def _bonus_lines(soup: BeautifulSoup) -> tuple[str, ...]:
-    pattern = re.compile(r"^\(\d+\s+items?\)\s*", re.IGNORECASE)
+    """Extract only the focal set's tooltip bonuses.
+
+    ESO-Hub set pages render many unrelated set cards farther down the page.
+    The focal tooltip appears after the page title and before the first Weapons
+    section. Some pages split the item-count marker and description into
+    separate text nodes, so reconstruct those nodes instead of scanning every
+    stripped string on the page.
+    """
+
+    marker = re.compile(r"^\(\d+\s+items?\)\s*", re.IGNORECASE)
+    exact_marker = re.compile(r"^\(\d+\s+items?\)$", re.IGNORECASE)
+    h1 = soup.find("h1")
+    strings = list(soup.find_all(string=True))
+    start = 0
+    if h1 is not None:
+        title_string = h1.find(string=True)
+        if title_string in strings:
+            start = strings.index(title_string) + 1
+
     result: list[str] = []
-    for raw in soup.stripped_strings:
-        text = normalize_text(raw)
-        if pattern.match(text) and text not in result:
-            result.append(text)
+    pending: str | None = None
+    for raw in strings[start:]:
+        text = normalize_text(str(raw))
+        if not text:
+            continue
+        if text.casefold() == "weapons":
+            break
+
+        if marker.match(text):
+            if pending and pending not in result:
+                result.append(pending)
+            pending = text
+            continue
+
+        if pending and exact_marker.fullmatch(pending):
+            pending = normalize_text(f"{pending} {text}")
+
+    if pending and pending not in result:
+        result.append(pending)
+
     return tuple(result)
 
 
 def _modified_skills(soup: BeautifulSoup) -> tuple[str, ...]:
-    heading = None
-    for tag in soup.find_all(re.compile(r"^h[1-6]$")):
-        text = normalize_text(tag.get_text(" ", strip=True)).casefold()
+    """Extract skill links from ESO-Hub's modified-skills section.
+
+    The section label is not consistently a heading tag, so walk document text
+    in order from the label until the next known section boundary and retain
+    only anchor text in that interval.
+    """
+
+    strings = list(soup.find_all(string=True))
+    start: int | None = None
+    for index, raw in enumerate(strings):
+        text = normalize_text(str(raw)).casefold()
         if text.startswith("this armor set modifies the following skills"):
-            heading = tag
+            start = index + 1
             break
-    if heading is None:
+    if start is None:
         return ()
 
+    stop_prefixes = (
+        "champion points that buff",
+        "top builds using",
+        "images of ",
+        "available weapon traits",
+        "available enchantments",
+        "frequently asked questions",
+        "other sets in ",
+    )
     result: list[str] = []
-    for sibling in heading.next_siblings:
-        if isinstance(sibling, Tag) and re.fullmatch(r"h[1-6]", sibling.name or ""):
-            break
-        if not isinstance(sibling, Tag):
+    for raw in strings[start:]:
+        text = normalize_text(str(raw))
+        if not text:
             continue
-        for anchor in sibling.find_all("a"):
-            text = normalize_text(anchor.get_text(" ", strip=True))
-            if text and text not in result:
+        lowered = text.casefold()
+        if any(lowered.startswith(prefix) for prefix in stop_prefixes):
+            break
+        parent = getattr(raw, "parent", None)
+        if isinstance(parent, Tag) and parent.name == "a":
+            if text not in result:
                 result.append(text)
-        if sibling.name == "ul":
-            for li in sibling.find_all("li"):
-                text = normalize_text(li.get_text(" ", strip=True))
-                if text and text not in result:
-                    result.append(text)
     return tuple(result)
 
 
@@ -182,6 +230,8 @@ def parse_set_page(html: str, *, expected_name: str, url: str) -> dict:
         unresolved.append("no '(N items)' set bonus text extracted")
     if not set_type:
         unresolved.append("set Type label/value not extracted")
+    if str(set_type).casefold() in {"arena", "trial"} and not modified_skills:
+        unresolved.append("modified-skill section was not extracted")
 
     return {
         "name": expected_name,
