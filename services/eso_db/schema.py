@@ -13,7 +13,7 @@ import sqlite3
 from pathlib import Path
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 DDL = """
@@ -233,6 +233,56 @@ def _migrate_v1_to_v2(connection: sqlite3.Connection) -> None:
     )
 
 
+def _table_exists(connection: sqlite3.Connection, table: str) -> bool:
+    return connection.execute(
+        """
+        SELECT 1
+        FROM sqlite_master
+        WHERE type = 'table' AND name = ?
+        """,
+        (table,),
+    ).fetchone() is not None
+
+
+def _migrate_v2_to_v3(connection: sqlite3.Connection) -> None:
+    """Repair canonical monster-set categories without rebuilding user data.
+
+    Older gear imports used the wrong head equipType while classifying sets.
+    The imported structural evidence is already present, so repair only rows
+    whose topology is unambiguously a two-piece head+shoulders non-weapon set.
+    """
+    required = ("gear_set", "gear_set_piece")
+    if not all(_table_exists(connection, table) for table in required):
+        return
+
+    connection.execute(
+        """
+        UPDATE gear_set
+        SET category = 'monster'
+        WHERE max_equip_count = 2
+          AND EXISTS (
+              SELECT 1 FROM gear_set_piece p
+              WHERE p.set_id = gear_set.id AND p.equip_type = 1
+          )
+          AND EXISTS (
+              SELECT 1 FROM gear_set_piece p
+              WHERE p.set_id = gear_set.id AND p.equip_type = 4
+          )
+          AND NOT EXISTS (
+              SELECT 1 FROM gear_set_piece p
+              WHERE p.set_id = gear_set.id
+                AND p.equip_type IS NOT NULL
+                AND p.equip_type NOT IN (1, 4)
+          )
+          AND NOT EXISTS (
+              SELECT 1 FROM gear_set_piece p
+              WHERE p.set_id = gear_set.id
+                AND COALESCE(p.weapon_type, 0) > 0
+          )
+        """
+    )
+
+
 def _migrate(connection: sqlite3.Connection) -> None:
     """Apply all migrations required to reach SCHEMA_VERSION."""
     current_version = _get_schema_version(connection)
@@ -252,6 +302,11 @@ def _migrate(connection: sqlite3.Connection) -> None:
         _migrate_v1_to_v2(connection)
         _set_schema_version(connection, 2)
         current_version = 2
+
+    if current_version == 2:
+        _migrate_v2_to_v3(connection)
+        _set_schema_version(connection, 3)
+        current_version = 3
 
     if current_version != SCHEMA_VERSION:
         raise RuntimeError(
