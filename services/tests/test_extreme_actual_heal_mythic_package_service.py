@@ -53,23 +53,23 @@ def _write_db(path: Path) -> None:
                 (5, 5, 5, 'Adds 171 Weapon and Spell Damage');
 
             INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES
-                (1, 2, 1, 0),
                 (1, 3, 1, 0),
-                (1, 5, 1, 0),
-                (1, 6, 1, 0),
-                (1, 7, 1, 0),
+                (1, 9, 1, 0),
+                (1, 13, 1, 0),
+                (1, 8, 1, 0),
+                (1, 10, 1, 0),
                 (2, 1, 1, 0),
                 (2, 4, 1, 0),
-                (2, 8, 0, 0),
-                (2, 11, 0, 9),
-                (2, 10, 0, 3),
-                (2, 10, 0, 7),
-                (3, 9, 0, 0),
-                (4, 8, 0, 0),
+                (2, 2, 0, 0),
+                (2, 6, 0, 9),
+                (2, 5, 0, 3),
+                (2, 7, 0, 14),
+                (3, 12, 0, 0),
+                (4, 2, 0, 0),
                 (5, 1, 1, 0),
                 (5, 4, 1, 0),
-                (5, 8, 0, 0),
-                (5, 11, 0, 12);
+                (5, 2, 0, 0),
+                (5, 6, 0, 12);
 
             INSERT INTO gear_set_item VALUES
                 (1, 1001),
@@ -108,7 +108,7 @@ def test_secondary_set_requires_exact_active_weapon_subtype(tmp_path: Path) -> N
         5, "standard", weapon_type_ids=(9,), paired=False
     ) is False
     assert service._secondary_legal(
-        2, "standard", weapon_type_ids=(3, 7), paired=True
+        2, "standard", weapon_type_ids=(3, 14), paired=True
     ) is True
     assert service._secondary_legal(
         2, "standard", weapon_type_ids=(3, 11), paired=True
