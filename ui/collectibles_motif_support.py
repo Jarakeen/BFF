@@ -50,8 +50,8 @@ def install() -> None:
             service.set_active_profile(self.service.active_profile)
         return service
 
-    def init_with_motifs(self, parent=None):
-        original_init(self, parent)
+    def init_with_motifs(self, parent=None, service=None):
+        original_init(self, parent, service=service)
         self.learned_motif_service = LearnedMotifService(self.data_dir / "eso.db")
 
     def set_category_with_motifs(self, category: str):
