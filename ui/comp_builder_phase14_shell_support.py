@@ -140,6 +140,121 @@ def _candidate_label(candidate) -> str:
     return " + ".join(value for value in (first, second) if value)
 
 
+def _manual_sets_for_slot(page, slot_name: str) -> tuple[str, ...]:
+    return tuple(
+        str(value).strip()
+        for value in getattr(page, "_comp_manual_gear_sets_by_slot", {}).get(slot_name, ())
+        if str(value).strip()
+    )
+
+
+def _toggle_manual_set(page, set_name: str) -> None:
+    row = _selected_backend_row(page)
+    if row < 0:
+        return
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    name = str(set_name or "").strip()
+    if not name:
+        return
+
+    store = getattr(page, "_comp_manual_gear_sets_by_slot", None)
+    if store is None:
+        page._comp_manual_gear_sets_by_slot = {}
+        store = page._comp_manual_gear_sets_by_slot
+
+    current = list(_manual_sets_for_slot(page, slot_name))
+    matching = next(
+        (value for value in current if value.casefold() == name.casefold()),
+        None,
+    )
+    if matching is not None:
+        current.remove(matching)
+    else:
+        if len(current) >= 2:
+            page.status.warning(
+                f"{slot_name} already has two manually selected five-piece sets. "
+                "Remove one before choosing another."
+            )
+            return
+        current.append(name)
+
+    if current:
+        store[slot_name] = tuple(current)
+    else:
+        store.pop(slot_name, None)
+
+    package = " + ".join(current) if current else "automatic recommendation"
+    page.status.success(f"{slot_name} gear package: {package}.")
+    _refresh_shell(page)
+
+
+def _refresh_manual_set_picker(page, candidates) -> None:
+    host = getattr(page, "comp_phase14_set_picker_host", None)
+    layout = getattr(page, "comp_phase14_set_picker_layout", None)
+    if host is None or layout is None:
+        return
+
+    while layout.count():
+        item = layout.takeAt(0)
+        widget = item.widget()
+        if widget is not None:
+            widget.deleteLater()
+
+    row = _selected_backend_row(page)
+    if row < 0:
+        host.setVisible(False)
+        return
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    selected = {
+        value.casefold()
+        for value in _manual_sets_for_slot(page, slot_name)
+    }
+
+    names: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        for name in getattr(candidate, "five_piece_sets", ()) or ():
+            text = str(name or "").strip()
+            key = text.casefold()
+            if text and key not in seen:
+                seen.add(key)
+                names.append(text)
+
+    if not names:
+        host.setVisible(False)
+        return
+
+    heading = QLabel("CHOOSE SETS FOR THIS CHAIR • pick up to 2")
+    heading.setProperty("sidebarHeading", True)
+    layout.addWidget(heading)
+
+    selected_label = QLabel(
+        "Selected: "
+        + (
+            " + ".join(_manual_sets_for_slot(page, slot_name))
+            or "Automatic pair"
+        )
+    )
+    selected_label.setWordWrap(True)
+    selected_label.setProperty("compManualSetSummary", True)
+    layout.addWidget(selected_label)
+
+    for name in names:
+        button = QPushButton(name)
+        button.setCheckable(True)
+        button.setChecked(name.casefold() in selected)
+        button.setProperty("compManualSetChoice", True)
+        button.setToolTip(
+            "Choose this five-piece set independently of the observed two-set pairing."
+        )
+        button.clicked.connect(
+            lambda _checked=False, set_name=name: _toggle_manual_set(page, set_name)
+        )
+        layout.addWidget(button)
+
+    host.setVisible(True)
+
+
 def _responsibility_for_row(page, row: int) -> str:
     for column in (4, 6, 7):
         value = page._cell_text(row, column)
@@ -387,6 +502,7 @@ def _refresh_why(page) -> None:
             frame._comp_candidate = None
             _set_choice_state(frame, selected=False, enabled=False)
         _style_confidence_badge(page.comp_phase14_confidence, None)
+        _refresh_manual_set_picker(page, ())
         refresh_sources = getattr(page, "comp_phase14_refresh_sources", None)
         if refresh_sources is not None:
             refresh_sources.setVisible(False)
@@ -437,6 +553,7 @@ def _refresh_why(page) -> None:
             frame._comp_candidate = None
             _set_choice_state(frame, selected=False, enabled=False)
         _style_confidence_badge(page.comp_phase14_confidence, None)
+        _refresh_manual_set_picker(page, ())
         refresh_sources = getattr(page, "comp_phase14_refresh_sources", None)
         if refresh_sources is not None:
             refresh_sources.setVisible(True)
@@ -471,6 +588,8 @@ def _refresh_why(page) -> None:
             "player, role, class, and trial."
         )
     page.comp_phase14_why_text.setText(" ".join(why_parts))
+
+    _refresh_manual_set_picker(page, candidates)
 
     alternatives = [
         item
@@ -962,12 +1081,21 @@ def _build_why(page, card: FoundryCard) -> None:
     alt_two_frame.mousePressEvent = (
         lambda event, frame=alt_two_frame: _apply_choice(page, frame)
     )
+    if not hasattr(page, "_comp_manual_gear_sets_by_slot"):
+        page._comp_manual_gear_sets_by_slot = {}
     page.comp_phase14_alt_two_frame = alt_two_frame
     page.comp_phase14_alt_two = QLabel()
     page.comp_phase14_alt_two.setWordWrap(True)
     page.comp_phase14_alt_two.setProperty("compPlanAlternative", True)
     alt_two_layout.addWidget(page.comp_phase14_alt_two)
     layout.addWidget(alt_two_frame)
+
+    page.comp_phase14_set_picker_host = QWidget()
+    page.comp_phase14_set_picker_layout = QVBoxLayout(page.comp_phase14_set_picker_host)
+    page.comp_phase14_set_picker_layout.setContentsMargins(0, 4, 0, 4)
+    page.comp_phase14_set_picker_layout.setSpacing(6)
+    page.comp_phase14_set_picker_host.setVisible(False)
+    layout.addWidget(page.comp_phase14_set_picker_host)
 
     for choice_frame in (
         recommendation_frame,
