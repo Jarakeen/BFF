@@ -241,9 +241,9 @@ class ExtremeActualHealMythicPackageService:
         character_id: str,
         baseline_build_id: str,
         active_bar: str = "front",
-        primary_per_objective: int = 6,
-        secondary_per_objective: int = 6,
-        mythic_per_objective: int = 6,
+        primary_per_objective: int | None = None,
+        secondary_per_objective: int | None = None,
+        mythic_per_objective: int | None = None,
     ) -> tuple[BuildCandidate, ...]:
         main, offhand = baseline_build.active_weapon_slots(active_bar)
         main_type_id = eso_weapon_type_id_from_saved_name(main.WeaponType)
