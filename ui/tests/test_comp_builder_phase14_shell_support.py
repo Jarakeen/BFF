@@ -246,3 +246,13 @@ def test_raid_plan_reopens_comp_with_planned_manual_sets() -> None:
     assert "planned_sets_by_seat = {" in handoff
     assert 'getattr(member, "planned_gear_sets", ())' in handoff
     assert "comp._comp_manual_gear_sets_by_slot = dict(planned_sets_by_seat)" in handoff
+
+
+def test_raid_plan_handoff_copies_class_directly_into_comp_selector() -> None:
+    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+
+    assert "for comp_row in range(comp.matrix_table.rowCount()):" in source
+    assert 'slot_name = str(comp._cell_text(comp_row, 0) or "").strip()' in source
+    assert 'wanted_class = str(class_by_seat.get(slot_name, "") or "").strip()' in source
+    assert "selector = comp.matrix_table.cellWidget(comp_row, 2)" in source
+    assert "selector.setCurrentIndex(match)" in source
