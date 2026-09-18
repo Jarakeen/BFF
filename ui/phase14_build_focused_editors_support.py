@@ -567,7 +567,7 @@ def _header(page, build) -> QWidget:
     text = QVBoxLayout()
     text.setSpacing(2)
     title = QLabel(f"{_text(build.Name, 'Unnamed Character')} — {_text(build.BuildName, 'Default')}")
-    title.setProperty("pageTitle", True)
+    title.setProperty("heroTitle", True)
     text.addWidget(title)
 
     content = command_center._content_for_build(build)
