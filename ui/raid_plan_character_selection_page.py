@@ -93,7 +93,7 @@ def known_character_classes(saved_builds, personnel_members, gamertag: str, char
 
 def raid_plan_stretch_columns() -> tuple[int, ...]:
     """Columns that should consume the available Raid Plan workspace width."""
-    return (1, 2, 3, 4, 5)
+    return (1, 2, 3, 4)
 
 
 class RaidPlanCharacterSelectionPage(RaidPlanPage):
@@ -124,7 +124,7 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
         header.setStretchLastSection(False)
         header.setMinimumSectionSize(70)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
         for column in raid_plan_stretch_columns():
             header.setSectionResizeMode(column, QHeaderView.ResizeMode.Stretch)
 
@@ -202,7 +202,7 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
         self._apply_character_class(row)
 
     def _refresh_build_options(self, row: int) -> None:
-        combo = self.team_table.cellWidget(row, 5)
+        combo = self.team_table.cellWidget(row, 4)
         if not isinstance(combo, QComboBox):
             return
 
@@ -250,11 +250,15 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
             character,
         )
         if len(classes) == 1:
-            super()._set_item_text(row, 4, classes[0])
+            class_combo = self.team_table.cellWidget(row, 3)
+            if isinstance(class_combo, QComboBox):
+                class_combo.setCurrentText(classes[0])
         elif character:
             # Do not preserve a class from the prior player's character when the
             # selected identity has no single source-backed class.
-            super()._set_item_text(row, 4, "")
+            class_combo = self.team_table.cellWidget(row, 3)
+            if isinstance(class_combo, QComboBox):
+                class_combo.setCurrentText("")
 
     def _character_text_changed(self, row: int) -> None:
         self._apply_character_class(row)
