@@ -116,10 +116,10 @@ class MainWindow(QMainWindow):
         comp_builder_page.rosterPlanSent.connect(self._show_generated_roster_plan)
 
         optimization_page = OptimizationPage()
-        send_team_button = QPushButton("Send Team to Roster")
+        send_team_button = QPushButton("Send Team to Raid Plan")
         send_team_button.setProperty("primary", True)
         send_team_button.setToolTip(
-            "Send the currently selected optimization team into Roster as an assignment plan."
+            "Send the currently selected optimization team into Raid Plan with its current build choices."
         )
         send_team_button.clicked.connect(self._send_optimized_team_to_roster)
         optimization_page.header.add_context_widget(send_team_button)
@@ -190,43 +190,40 @@ class MainWindow(QMainWindow):
         self.sidebar.pageRequested.connect(self.show_page)
 
     def _show_generated_roster_plan(self, plan_name: str) -> None:
-        """Open a persisted Comp Builder draft in the rebuilt Roster workspace."""
+        """Promote a persisted Comp Builder draft into the durable Raid Plan owner."""
         from services.eso_database import EsoDatabase
         from services.generated_roster_draft_service import GeneratedRosterDraftService
+        from services.team_plan_to_raid_plan import raid_plan_from_generated_slots
 
-        roster_workspace = self.pages.get("roster_workspace")
-        if roster_workspace is None:
+        raid_plans = self.pages.get("raid_plans")
+        if raid_plans is None:
             return
 
-        plan = GeneratedRosterDraftService(
+        draft = GeneratedRosterDraftService(
             EsoDatabase(get_data_dir() / "eso.db")
         ).load_plan(plan_name)
-        if plan is None:
-            status = getattr(roster_workspace, "status", None)
-            if status is not None:
-                status.warning(f'Could not reload Comp Builder plan "{plan_name}".')
-            self.show_page("roster_workspace")
+        if draft is None:
+            raid_plans.status.warning(
+                f'Could not reload Comp Builder plan "{plan_name}".'
+            )
+            self.show_page("raid_plans")
             return
 
-        rows = tuple(
-            {
-                "kind": slot.kind,
-                "slot": slot.slot_name,
-                "player": slot.player_name,
-                "character": slot.character_name,
-                "class": slot.eso_class,
-                "build": slot.build_name,
-            }
-            for slot in plan.slots
+        plan = raid_plan_from_generated_slots(
+            name=draft.name,
+            trial_name=draft.goal,
+            difficulty=draft.difficulty,
+            slots=draft.slots,
         )
-        load_plan = getattr(roster_workspace, "load_external_team_plan", None)
-        if callable(load_plan):
-            load_plan(
-                rows,
-                source="Comp Builder",
-                plan_name=plan.name,
-            )
-        self.show_page("roster_workspace")
+        raid_plans.plan_repository.save(plan)
+        raid_plans.apply_plan(plan)
+        raid_plans._show_local_view(0)
+        raid_plans._refresh_overview()
+        raid_plans.status.success(
+            f"Comp Builder plan loaded into Raid Plan: {plan.name}. "
+            "Planned build changes were preserved without overwriting saved Builds."
+        )
+        self.show_page("raid_plans")
 
     def _confirm_collectible_navigation(self, target_page: str) -> bool:
         collectibles_page = self.pages.get("collectibles_browser")
