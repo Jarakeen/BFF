@@ -23,6 +23,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - `tools/audit_release_candidate.py` validates the packaging boundary and can block final builds while runtime data files remain unclassified
 - `packaging/build_release.ps1` builds versioned first-install packages and updater payloads only after the strict release audit and test gate pass
 - Release updates preserve the live `eso.db`, settings, builds, roster/progress/session state, and other user-owned data rather than replacing them with developer copies
+- Clean first-install releases create an empty canonical characters catalog so developer/test player identities are never shipped in a fresh package
 - `app_version.py` remains the single source of truth for the application release version
 - Multiple visual themes
 - Theme-aware UI components
@@ -155,6 +156,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Build Edit remains the canonical inline editor, but **Save** and **Cancel** return directly to the Phase 14 Builds library/inspector instead of leaving the user stranded on the legacy Edit workspace
 - Focused Build editors open only the requested section (identity, Armor, Jewelry, Front Bar, Back Bar, Skills, Champion Points, Consumables, Notes, and existing Scribing access) from the right-side dossier; the monolithic legacy editor is retained only as a compatibility fallback
 - The Phase 14 right-side dossier uses compact grouped Gear cards, slot/class/role/consumable icon vocabulary, collapsible per-slot detail, a compact baseline/exception strip, More Actions menu, and a single gold Save action
+- Base skill bars and Base Champion Points are labeled explicitly in the Phase 14 dossier; Team/Boss context variants inherit those base values until a sparse override is recorded
 - Build Gear popups and dossier summaries use the reviewed ESO trait icon vocabulary for weapon, armor, and jewelry traits while retaining the trait text as the accessible source of meaning
 - Phase 14 uses a user-extensible semantic icon resolver that tolerates spaces, hyphens, underscores, capitalization, and localized Windows filename display quirks, then reasserts Builds icons at the final visible-page boundary
 
