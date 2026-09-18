@@ -95,6 +95,9 @@ class MainWindow(QMainWindow):
         # visual Collections landing page. The heavier category browser may be
         # lazy-loaded, so MainWindow owns the one shared profile-aware service.
         self.collectible_service = ProfiledCollectibleService(data_dir / "eso.db")
+        self.collectible_service.set_active_profile(
+            self.achievement_progress_service.active_profile
+        )
         collectible_browser = CollectiblesPage(service=self.collectible_service)
         collectible_dashboard = CollectiblesDashboardPage(self.collectible_service)
         collectible_dashboard.categoryRequested.connect(
