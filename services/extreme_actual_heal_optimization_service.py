@@ -117,6 +117,7 @@ class ExtremeActualHealOptimizationService:
         "jewelry traits",
         "jewelry enchants",
         "weapon traits",
+        "all 28 legal active-bar weapon configurations with reviewed standing weapon-passive power",
         "food/drink",
         "reviewed ordinary five-piece body-set replacement",
         "reviewed legal five-piece + two-piece monster body package",
