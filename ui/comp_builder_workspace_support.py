@@ -29,6 +29,7 @@ _ORIGINAL_REFRESH_COVERAGE = None
 SUMMARY_CANDIDATE_COLUMN = 8
 SUMMARY_CONSTRAINT_COLUMN = 9
 SUMMARY_JOB_COLUMN = 10
+PLAYER_COLUMN = 11
 
 
 def _card(page, title: str) -> FoundryCard | None:
@@ -107,6 +108,12 @@ def _refresh_overview_rows(page) -> None:
     if page.matrix_table.columnCount() <= SUMMARY_JOB_COLUMN:
         return
     for row in range(page.matrix_table.rowCount()):
+        player_item = page.matrix_table.item(row, PLAYER_COLUMN)
+        if player_item is None:
+            player_item = QTableWidgetItem("Recruit")
+            page.matrix_table.setItem(row, PLAYER_COLUMN, player_item)
+        elif not player_item.text().strip():
+            player_item.setText("Recruit")
         _set_summary_item(page, row, SUMMARY_CANDIDATE_COLUMN, _summary_candidate(page, row))
         _set_summary_item(page, row, SUMMARY_CONSTRAINT_COLUMN, _summary_constraints(page, row))
         _set_summary_item(page, row, SUMMARY_JOB_COLUMN, _summary_jobs(page, row))
@@ -275,7 +282,7 @@ def _install_selected_chair_editor(page) -> None:
 
 def _configure_overview_table(page) -> None:
     table = page.matrix_table
-    table.setColumnCount(11)
+    table.setColumnCount(12)
     table.setHorizontalHeaderLabels(
         (
             "SLOT",
@@ -289,6 +296,7 @@ def _configure_overview_table(page) -> None:
             "ASSIGNED BUILD",
             "BUILD AROUND",
             "PROVIDERS / JOBS",
+            "PLAYER",
         )
     )
 
@@ -308,8 +316,10 @@ def _configure_overview_table(page) -> None:
         header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
     for column in (SUMMARY_CANDIDATE_COLUMN, SUMMARY_CONSTRAINT_COLUMN, SUMMARY_JOB_COLUMN):
         header.setSectionResizeMode(column, QHeaderView.ResizeMode.Stretch)
-    if table.columnCount() > 11:
-        header.setSectionResizeMode(11, QHeaderView.ResizeMode.Stretch)
+    header.setSectionResizeMode(PLAYER_COLUMN, QHeaderView.ResizeMode.Stretch)
+    player_visual = header.visualIndex(PLAYER_COLUMN)
+    if player_visual > 0:
+        header.moveSection(player_visual, 0)
 
     table.setMinimumHeight(430)
     table.setMaximumHeight(430)
