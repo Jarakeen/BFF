@@ -7,7 +7,12 @@ def test_owned_rotation_page_preserves_command_center_visual_contract() -> None:
     assert 'FoundryCard("Rotation Context", "rotations")' in source
     assert 'FoundryCard("Rotation Intent", "rotations")' in source
     assert 'FoundryCard("Inputs & Obligations", "field-office")' in source
-    assert 'FoundryCard("Generate & Results", "optimization")' in source
+    assert 'FoundryCard("Generate & Results", "optimization")' not in source
+    obligations_start = source.index('def _build_obligations_card')
+    obligations_end = source.index('def _obligation_row', obligations_start)
+    obligations = source[obligations_start:obligations_end]
+    assert 'self.generate_button = QPushButton("Generate Rotation")' in obligations
+    assert 'self.clear_button = QPushButton("Clear Results")' in obligations
     assert '"Safe Progression"' in source
     assert '"Balanced"' in source
     assert '"Maximum Output"' in source
