@@ -34,10 +34,9 @@ def test_sidebar_uses_requested_workflow_domain_order():
 def test_team_menu_owns_people_and_team_planning_tools():
     section = _section("Team")
     assert section["children"] == [
-        ("Roster", "roster_workspace"),
+        ("Coverage", "console:7"),
         ("Comp Builder", "comp_builder"),
         ("Optimizer Adviser", "console:6"),
-        ("Coverage", "console:7"),
     ]
 
 
@@ -53,7 +52,7 @@ def test_build_menu_owns_build_workspaces():
 def test_raid_menu_owns_run_specific_planning_workflow():
     section = _section("Raid")
     assert section["children"] == [
-        ("Raid Dashboard", "raid_engine_dashboard"),
+        ("Roster", "roster_workspace"),
         ("Raid Plans", "raid_plans"),
         ("Assignments", "assignments"),
         ("Readiness", "readiness"),
@@ -73,7 +72,6 @@ def test_encounter_and_reference_data_remain_separate_destinations():
 
 def test_review_menu_owns_raid_review_and_top_gear():
     assert _section("Review")["children"] == [
-        ("Raid Review", "raid_review"),
         ("Top Gear", "console:3"),
     ]
 
