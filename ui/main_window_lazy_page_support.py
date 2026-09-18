@@ -28,6 +28,7 @@ _ORIGINAL_SHOW_PAGE = None
 # heavy Achievements browser can be deferred safely.
 LAZY_PAGE_SPECS: dict[str, str] = {
     "achievements": "AchievementsPage",
+    "collectibles_browser": "CollectiblesPage",
     "gear_lookup": "GearLookupPage",
     "stickerbook": "StickerbookPage",
     "timers": "AsylumPerfectaTimerPage",
@@ -44,12 +45,25 @@ class _LazyPagePlaceholder(QWidget):
         self.page_key = str(page_key)
 
 
-def _construct_lazy_page(factory: Callable[[], QWidget], page_key: str) -> QWidget:
+def _construct_lazy_page(
+    factory: Callable[[], QWidget],
+    page_key: str,
+    *,
+    window=None,
+) -> QWidget:
     """Construct a deferred page without performing known throwaway first work."""
-    if page_key != "stickerbook":
-        return factory()
+    kwargs = {}
+    if page_key == "collectibles_browser" and window is not None:
+        service = getattr(window, "collectible_service", None)
+        if service is not None:
+            kwargs["service"] = service
 
-    # StickerbookPage refreshes the Default profile from __init__(), but its
+    if page_key not in {"stickerbook", "collectibles_browser"}:
+        return factory(**kwargs)
+
+    # StickerbookPage and CollectiblesPage both refresh from __init__(), but
+    # their first navigation immediately selects/synchronizes the requested
+    # profile/category and refreshes again. Suppress only that throwaway pass.
     # first navigation immediately synchronizes the active Achievements profile
     # and refreshes again.  Suppress only that constructor refresh so the first
     # database read/population is for the profile the user actually has active.
@@ -59,7 +73,7 @@ def _construct_lazy_page(factory: Callable[[], QWidget], page_key: str) -> QWidg
 
     setattr(factory, "refresh", lambda self: None)
     try:
-        return factory()
+        return factory(**kwargs)
     finally:
         setattr(factory, "refresh", refresh)
 
@@ -74,7 +88,7 @@ def _materialize_page(window, page_key: str):
         return current
 
     started = perf_counter()
-    page = _construct_lazy_page(factory, page_key)
+    page = _construct_lazy_page(factory, page_key, window=window)
     container = window.wrap_page(page)
     old_container = window.page_containers.get(page_key)
     old_index = window.stack.indexOf(old_container) if old_container is not None else -1
@@ -107,7 +121,7 @@ def _build_ui_with_lazy_pages(self) -> None:
         setattr(
             main_window,
             attribute_name,
-            lambda _page_key=page_key: _LazyPagePlaceholder(_page_key),
+            lambda *args, _page_key=page_key, **kwargs: _LazyPagePlaceholder(_page_key),
         )
 
     try:
@@ -154,7 +168,12 @@ def _show_page_without_refresh(window, page_name: str, page_key: str):
 
 def _show_page_with_lazy_materialization(self, page_name: str):
     assert _ORIGINAL_SHOW_PAGE is not None
-    page_key = str(page_name or "")
+    requested_key = str(page_name or "")
+    page_key = (
+        "collectibles_browser"
+        if requested_key.startswith("collectibles:")
+        else requested_key
+    )
     was_lazy = isinstance(self.pages.get(page_key), _LazyPagePlaceholder)
     _materialize_page(self, page_key)
 
