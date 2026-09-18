@@ -187,9 +187,9 @@ def _refresh_build_rotation(page) -> None:
 def install() -> None:
     """Install the Builds-side saved-rotation viewer only.
 
-    Rotation Builder is intentionally excluded from Phase 14 application startup and
-    packaged builds. Existing saved rotation artifacts remain readable from Builds,
-    but this adapter must not import or patch CanonicalRotationDashboardPage.
+    Rotation Builder now uses an owned Phase 14 page. Existing saved rotation artifacts
+    remain readable from Builds, and this adapter still must not import or patch the
+    legacy CanonicalRotationDashboardPage.
     """
     global _INSTALLED
     if _INSTALLED:
