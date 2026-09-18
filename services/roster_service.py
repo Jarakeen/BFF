@@ -16,6 +16,7 @@ import json
 from models.roster_model import RosterMember, normalize_roster_role
 from models.team_schedule import TeamSchedule, TeamScheduleSlot
 from services.eso_database import EsoDatabase
+from services.roster_placeholder_identity import is_personnel_placeholder
 
 
 class RosterService:
@@ -31,6 +32,7 @@ class RosterService:
     def __init__(self, database: EsoDatabase):
         self.db = database
         self._ensure_schema()
+        self.remove_placeholder_members()
 
     def _ensure_schema(self):
         self.db.execute("""
@@ -125,6 +127,35 @@ class RosterService:
             )
         """)
         self.db.commit()
+
+    def remove_placeholder_members(self) -> tuple[str, ...]:
+        """Delete exact non-player placeholder identities from Personnel.
+
+        This is intentionally conservative: only canonical placeholder labels are
+        removed. Real gamertags are never guessed from shape, prefixes, or substrings.
+        """
+        rows = self.db.execute(
+            "SELECT id, player_name FROM roster_member ORDER BY id"
+        ).fetchall()
+        removed: list[str] = []
+        for row in rows:
+            player_name = str(row["player_name"] or "").strip()
+            if not is_personnel_placeholder(player_name):
+                continue
+            member_id = int(row["id"])
+            self.db.execute(
+                "DELETE FROM roster_member_assignment WHERE roster_member_id = ?",
+                (member_id,),
+            )
+            self.db.execute(
+                "DELETE FROM team_member WHERE roster_member_id = ?",
+                (member_id,),
+            )
+            self.db.execute("DELETE FROM roster_member WHERE id = ?", (member_id,))
+            removed.append(player_name)
+        if removed:
+            self.db.commit()
+        return tuple(removed)
 
     def list_members(self) -> list[RosterMember]:
         rows = self.db.execute("""
