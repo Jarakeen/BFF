@@ -326,21 +326,62 @@ def _refresh_why(page) -> None:
     page.comp_phase14_alt_two.setText(_alternative_text(alternatives[1] if len(alternatives) > 1 else None))
 
 
-def _health_tile(title: str) -> tuple[QWidget, QLabel, QLabel]:
+def _health_tile(
+    title: str,
+    symbol: str,
+    state: str,
+) -> tuple[QWidget, QLabel, QLabel]:
     tile = QFrame()
     tile.setProperty("compHealthTile", True)
-    layout = QVBoxLayout(tile)
-    layout.setContentsMargins(10, 7, 10, 7)
-    layout.setSpacing(2)
+    tile.setProperty("healthState", state)
+
+    row = QHBoxLayout(tile)
+    row.setContentsMargins(10, 7, 10, 7)
+    row.setSpacing(10)
+
+    indicator = QLabel(symbol)
+    indicator.setObjectName(f"compHealthIndicator_{state}")
+    indicator.setProperty("compHealthIndicator", True)
+    indicator.setProperty("healthState", state)
+    indicator.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    indicator.setFixedSize(34, 34)
+
+    palette = {
+        "covered": ("#2ECC71", "#082A18"),
+        "missing": ("#FF625E", "#351010"),
+        "duplicate": ("#F0B84B", "#33240A"),
+        "recruit": ("#59B6E8", "#0A2433"),
+    }
+    foreground, background = palette[state]
+    indicator.setStyleSheet(
+        "QLabel {"
+        f"color: {foreground};"
+        f"background: {background};"
+        f"border: 2px solid {foreground};"
+        "border-radius: 17px;"
+        "font-weight: 700;"
+        "font-size: 18px;"
+        "}"
+    )
+
+    text_host = QWidget()
+    text_layout = QVBoxLayout(text_host)
+    text_layout.setContentsMargins(0, 0, 0, 0)
+    text_layout.setSpacing(1)
+
     heading = QLabel(title)
     heading.setProperty("sidebarHeading", True)
     value = QLabel("—")
     detail = QLabel("")
     value.setWordWrap(True)
     detail.setWordWrap(True)
-    layout.addWidget(heading)
-    layout.addWidget(value)
-    layout.addWidget(detail)
+
+    text_layout.addWidget(heading)
+    text_layout.addWidget(value)
+    text_layout.addWidget(detail)
+
+    row.addWidget(indicator, 0, Qt.AlignmentFlag.AlignVCenter)
+    row.addWidget(text_host, 1)
     return tile, value, detail
 
 
@@ -414,6 +455,22 @@ def _set_group_size(page, size: int) -> None:
     page._comp_group_size = size
     page._comp_roster_member_by_slot = {}
     intake._load_roster_shape(page, size)
+
+    # The roster helper still owns legacy 4/12 matrix sizing. The Phase 14 shell
+    # owns visible geometry, so immediately remove those old clamps.
+    plan_card = getattr(page, "comp_phase14_plan_card", None)
+    why_card = getattr(page, "comp_phase14_why_card", None)
+    if plan_card is not None:
+        plan_card.setMinimumHeight(520)
+        plan_card.setMaximumHeight(640)
+    if why_card is not None:
+        why_card.setMinimumHeight(520)
+        why_card.setMaximumHeight(640)
+    plan_table = getattr(page, "comp_phase14_plan_table", None)
+    if plan_table is not None:
+        plan_table.setMinimumHeight(360 if size == 4 else 500)
+        plan_table.setMaximumHeight(600)
+
     _refresh_shell(page)
 
 
@@ -513,6 +570,8 @@ def _build_plan_table(page, card: FoundryCard) -> None:
     table.verticalHeader().setDefaultSectionSize(31)
     table.setAlternatingRowColors(False)
     table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    table.setMinimumHeight(500)
+    table.setMaximumHeight(600)
     header = table.horizontalHeader()
     header.setStretchLastSection(False)
     header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -591,13 +650,13 @@ def _build_health(page, card: FoundryCard) -> None:
     row.setSpacing(8)
 
     tiles = (
-        ("COVERED", "comp_phase14_health_covered", "comp_phase14_health_covered_detail"),
-        ("MISSING", "comp_phase14_health_missing", "comp_phase14_health_missing_detail"),
-        ("DUPLICATE", "comp_phase14_health_duplicate", "comp_phase14_health_duplicate_detail"),
-        ("RECRUIT NEED", "comp_phase14_health_recruit", "comp_phase14_health_recruit_detail"),
+        ("COVERED", "✓", "covered", "comp_phase14_health_covered", "comp_phase14_health_covered_detail"),
+        ("MISSING", "×", "missing", "comp_phase14_health_missing", "comp_phase14_health_missing_detail"),
+        ("DUPLICATE", "!", "duplicate", "comp_phase14_health_duplicate", "comp_phase14_health_duplicate_detail"),
+        ("RECRUIT NEED", "i", "recruit", "comp_phase14_health_recruit", "comp_phase14_health_recruit_detail"),
     )
-    for title, value_name, detail_name in tiles:
-        tile, value, detail = _health_tile(title)
+    for title, symbol, state, value_name, detail_name in tiles:
+        tile, value, detail = _health_tile(title, symbol, state)
         setattr(page, value_name, value)
         setattr(page, detail_name, detail)
         row.addWidget(tile, 1)
@@ -652,19 +711,22 @@ def _install_shell(page) -> None:
     matrix.setProperty("compRecommendedTeamPlan", True)
     matrix.setMinimumHeight(520)
     matrix.setMaximumHeight(640)
+    page.comp_phase14_plan_card = matrix
     _build_plan_table(page, matrix)
 
     details.set_title("Why This Plan")
     details.setProperty("compWhyThisPlan", True)
     details.setMinimumHeight(520)
     details.setMaximumHeight(640)
+    page.comp_phase14_why_card = details
     _build_why(page, details)
 
     middle = QHBoxLayout()
     middle.setContentsMargins(0, 0, 0, 0)
     middle.setSpacing(10)
-    middle.addWidget(matrix, 5)
-    middle.addWidget(details, 3)
+    middle.setAlignment(Qt.AlignmentFlag.AlignTop)
+    middle.addWidget(matrix, 5, Qt.AlignmentFlag.AlignTop)
+    middle.addWidget(details, 3, Qt.AlignmentFlag.AlignTop)
     root.addLayout(middle)
 
     coverage.set_title("Team Health")
@@ -678,6 +740,9 @@ def _install_shell(page) -> None:
         actions.hide()
     if evidence is not None:
         evidence.hide()
+    provider_workload = _card_any(page, "Provider Rotation Workload")
+    if provider_workload is not None:
+        provider_workload.hide()
     load_template = getattr(page, "load_template_button", None)
     if load_template is not None:
         load_template.hide()
