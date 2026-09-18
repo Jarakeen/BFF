@@ -371,7 +371,7 @@ class OptimizationPage(FoundryPage):
 
     def _role_slots(self) -> list[str]:
         if self.group_size_combo.currentText().startswith("12"):
-            return ["Tank 1", "Tank 2", "Healer 1", "Healer 2"] + [
+            return ["Main Tank", "Off Tank", "Healer 1", "Healer 2"] + [
                 f"DD {index}" for index in range(1, 9)
             ]
         return ["Tank", "Healer", "DD 1", "DD 2"]
