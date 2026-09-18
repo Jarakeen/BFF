@@ -65,3 +65,24 @@ def test_option_two_visible_layers_are_installed_in_final_comp_builder_stack() -
     assert 'details.set_title("Selected Player / Build Recommendation")' in polish
     assert 'QPushButton("Advanced Assignment Details ▸")' in workspace
     assert "editor_host.setVisible(False)" in workspace
+
+
+def test_runtime_sidebar_rewrite_keeps_comp_builder_route() -> None:
+    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+
+    assert '("Comp Builder", "comp_builder")' in source
+    assert "_install_canonical_sidebar_routes()" in source
+
+
+def test_raid_plan_and_assignments_handoff_current_people_to_comp_builder() -> None:
+    support = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    plan_page = Path("ui/city_raid_plan_workspace_page.py").read_text(encoding="utf-8")
+    assignments = Path("ui/city_raid_assignments_page.py").read_text(encoding="utf-8")
+
+    assert '("Comp Builder", "comp_builder")' in plan_page
+    assert 'QPushButton("Comp Builder")' in assignments
+    assert 'if target == "comp_builder":' in support
+    assert "_open_plan_comp_builder(window, source_page)" in support
+    assert "comp.apply_roster_team_context(" in support
+    assert "group_size=12" in support
+    assert 'window.show_page("comp_builder")' in support
