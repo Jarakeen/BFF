@@ -156,6 +156,18 @@ def _reapply_class_constraints(page) -> None:
             _set_class_constraint(page, row, eso_class)
 
 
+def apply_raid_plan_class_constraints(page, class_by_seat: dict[str, str]) -> None:
+    """Apply explicit Raid Plan seat classes as authoritative chair constraints."""
+    cleaned = {
+        str(seat or "").strip(): str(eso_class or "").strip()
+        for seat, eso_class in dict(class_by_seat or {}).items()
+        if str(seat or "").strip() and str(eso_class or "").strip()
+    }
+    page._raid_plan_class_by_seat = cleaned
+    page._comp_class_constraint_by_slot = dict(cleaned)
+    _reapply_class_constraints(page)
+
+
 def _set_player(page, row: int, member, assignment: dict | None = None) -> None:
     _ensure_player_column(page)
     item = page.matrix_table.item(row, PLAYER_COLUMN)
