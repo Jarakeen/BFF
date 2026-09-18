@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import json
 
-from models.roster_model import RosterMember
+from models.roster_model import RosterMember, normalize_roster_role
 from models.team_schedule import TeamSchedule, TeamScheduleSlot
 from services.eso_database import EsoDatabase
 
@@ -341,7 +341,9 @@ class RosterService:
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             member.PlayerName, member.CharacterName, member.EsoClass,
-            member.PrimaryRole, member.SecondaryRole, member.Status or "Active",
+            normalize_roster_role(member.PrimaryRole),
+            normalize_roster_role(member.SecondaryRole),
+            member.Status or "Active",
             str(member.CanonicalPlayerId or "").strip(),
             str(member.CanonicalCharacterId or "").strip(),
         ))
@@ -361,7 +363,9 @@ class RosterService:
             WHERE id = ?
         """, (
             member.PlayerName, member.CharacterName, member.EsoClass,
-            member.PrimaryRole, member.SecondaryRole, member.Status or "Active",
+            normalize_roster_role(member.PrimaryRole),
+            normalize_roster_role(member.SecondaryRole),
+            member.Status or "Active",
             str(member.CanonicalPlayerId or "").strip(),
             str(member.CanonicalCharacterId or "").strip(), member.Id,
         ))
