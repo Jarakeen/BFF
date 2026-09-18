@@ -92,3 +92,35 @@ def test_progression_finds_character_by_account_and_name(tmp_path):
 
     assert service.find_character_id(name=" magrat ", gamertag="JARAKEEN") == "char-1"
     assert service.find_character_id(name="Other", gamertag="Jarakeen") is None
+
+
+def test_progression_uses_authoritative_player_gamertag_when_character_mirror_is_stale(tmp_path):
+    catalog = BuildCatalogService(tmp_path / "characters.json")
+    catalog.save(
+        {
+            "schema_version": 4,
+            "players": [
+                {
+                    "player_id": "player-1",
+                    "gamertag": "NewTag",
+                    "status": "Active",
+                }
+            ],
+            "characters": [
+                {
+                    "character_id": "char-1",
+                    "player_id": "player-1",
+                    "name": "Magrat",
+                    "gamertag": "OldTag",
+                    "eso_class": "Warden",
+                }
+            ],
+            "builds": [],
+            "team_assignments": [],
+        }
+    )
+
+    service = CharacterProgressionService(catalog)
+
+    assert service.find_character_id(name="Magrat", gamertag="NewTag") == "char-1"
+    assert service.find_character_id(name="Magrat", gamertag="WrongTag") is None
