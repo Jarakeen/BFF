@@ -64,12 +64,9 @@ def _construct_lazy_page(
     # StickerbookPage and CollectiblesPage both refresh from __init__(), but
     # their first navigation immediately selects/synchronizes the requested
     # profile/category and refreshes again. Suppress only that throwaway pass.
-    # first navigation immediately synchronizes the active Achievements profile
-    # and refreshes again.  Suppress only that constructor refresh so the first
-    # database read/population is for the profile the user actually has active.
     refresh = getattr(factory, "refresh", None)
     if not callable(refresh):
-        return factory()
+        return factory(**kwargs)
 
     setattr(factory, "refresh", lambda self: None)
     try:
