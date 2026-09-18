@@ -174,3 +174,12 @@ def test_phase14_candidate_choices_remain_stable_after_selecting_alternative() -
     assert "item.candidate_id != preferred.candidate_id" in source
     assert "selected_id =" in source
     assert "alt_one.candidate_id == selected_id" in source
+
+
+def test_phase14_final_shell_reapplies_recruit_class_constraints() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert "from ui.comp_builder_roster_intake_support import _reapply_class_constraints" in source
+    assert "_reapply_class_constraints(self)" in source
+    assert "def _render_slots_with_phase14_shell(self, slots)" in source
+    assert "def apply_roster_context_with_shell(self, *args, **kwargs)" in source
