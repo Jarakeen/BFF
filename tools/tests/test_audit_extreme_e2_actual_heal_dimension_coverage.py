@@ -40,7 +40,7 @@ def test_e2_actual_heal_dimension_ledger_does_not_overclaim_global_denominator()
     assert by_key["attributes"].status is E2DimensionStatus.COVERED
     assert by_key["armor_weights_passives"].status is E2DimensionStatus.COVERED
     assert by_key["progression_passives"].status is E2DimensionStatus.COVERED
-    assert by_key["gear_packages_procs"].status is E2DimensionStatus.COVERED
+    assert by_key["gear_packages_procs"].status is E2DimensionStatus.PARTIAL
     assert by_key["weapon_configuration_passives"].status is E2DimensionStatus.COVERED
     assert by_key["skills_morphs_ultimates"].status is E2DimensionStatus.PARTIAL
     assert by_key["champion_points"].status is E2DimensionStatus.PARTIAL
@@ -57,7 +57,7 @@ def test_e2_actual_heal_dimension_ledger_keeps_open_gaps_explicit() -> None:
     assert open_rows
     assert all(row.remaining_gap for row in open_rows)
     assert any("critical-heal evidence" in row.remaining_gap for row in open_rows)
-    assert all(row.key != "gear_packages_procs" for row in open_rows)
+    assert any(row.key == "gear_packages_procs" for row in open_rows)
     assert any("Full multi-skill front/back-bar combinatorial search" in row.remaining_gap for row in open_rows)
 
 
@@ -83,17 +83,17 @@ def test_e2_armor_weight_row_records_physical_legality_and_reduction_proof() -> 
     assert armor.remaining_gap == ""
 
 
-def test_e2_gear_row_records_closed_ordinary_and_special_denominators() -> None:
+def test_e2_gear_row_records_closed_special_families_without_overclaiming_ordinary_mechanics() -> None:
     rows = build_dimension_coverage()
     gear = next(row for row in rows if row.key == "gear_packages_procs")
 
-    assert gear.status is E2DimensionStatus.COVERED
-    assert "ordinary five-piece H1 screen is exhaustive and mechanic-complete" in gear.evidence
+    assert gear.status is E2DimensionStatus.PARTIAL
+    assert "Ordinary five-piece H1 admission is exhaustive" in gear.evidence
     assert "70 monster sets" in gear.evidence
     assert "36 mythics" in gear.evidence
     assert "60 normalized arena-weapon sets" in gear.evidence
     assert "runtime_event_state" in gear.evidence
-    assert gear.remaining_gap == ""
+    assert "ordinary five-piece mechanic" in gear.remaining_gap
 
 
 def test_e2_progression_and_weapon_rows_record_closed_denominators() -> None:
