@@ -148,6 +148,7 @@ class RaidPlan:
     name: str
     team_name: str | None = None
     difficulty: str | None = None
+    plan_note: str | None = None
     status: str = "planning"
     members: tuple[RaidPlanMember, ...] = field(default_factory=tuple)
     triggered_responsibilities: tuple[RaidPlanTriggeredResponsibility, ...] = field(
@@ -194,6 +195,7 @@ class RaidPlan:
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "team_name", _optional(self.team_name))
         object.__setattr__(self, "difficulty", _optional(self.difficulty))
+        object.__setattr__(self, "plan_note", _optional(self.plan_note))
         object.__setattr__(self, "status", status)
         object.__setattr__(self, "members", members)
         object.__setattr__(
