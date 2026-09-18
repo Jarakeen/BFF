@@ -419,7 +419,8 @@ def _candidate_unresolved(candidate: CompBuildCandidate, base_detail: str) -> st
 
 def _send_to_roster_with_candidates(self, *_args) -> None:
     applied = getattr(self, "_comp_applied_candidates", {})
-    if not applied:
+    roster_members = getattr(self, "_comp_roster_member_by_slot", {})
+    if not applied and not roster_members:
         assert _ORIGINAL_SEND_TO_ROSTER is not None
         _ORIGINAL_SEND_TO_ROSTER(self)
         return
@@ -442,7 +443,6 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
             f"Providers: {providers}. Mechanic jobs: {mechanic_jobs}."
         )
         candidate = applied.get(slot_name)
-        roster_members = getattr(self, "_comp_roster_member_by_slot", {})
         roster_context_active = slot_name in roster_members
         roster_member = roster_members.get(slot_name)
         roster_player = (
