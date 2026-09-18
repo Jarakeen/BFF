@@ -5,7 +5,7 @@
 # ui/capabilities_page.py
 #
 # Purpose:
-# Capabilities Desk.
+# Top Gear desk.
 #
 # Three desk-level tabs:
 #   "Ranked Team Builds" -- ESO Logs top-ranked-team gear/skill
@@ -160,11 +160,11 @@ class CapabilitiesPage(FoundryPage):
     def build_ui(self):
 
         self.header = FoundryHeader(
-            title="Capabilities",
+            title="Top Gear",
             subtitle=(
                 "Buff/debuff uptime and ranked-team build evidence from ESO Logs."
             ),
-            department="Planning",
+            department="RAID • TOP GEAR",
         )
 
         self.set_header(self.header)
