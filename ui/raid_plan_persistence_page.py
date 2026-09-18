@@ -58,6 +58,10 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
         if prior is not None and _same_player_identity(prior, member):
             same_character = _same_character_identity(prior, member)
             member = member.with_selection(
+                gamertag=member.gamertag,
+                character_name=member.character_name,
+                role=member.role,
+                eso_class=member.eso_class,
                 roster_member_id=(
                     member.roster_member_id
                     if member.roster_member_id is not None
