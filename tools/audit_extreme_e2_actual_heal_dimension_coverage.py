@@ -171,10 +171,9 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         E2DimensionCoverage(
             "glyphs_enchantments",
             "Glyphs / enchantments",
-            E2DimensionStatus.PARTIAL,
-            "ExtremeCompleteOptimizationService",
-            "Armor and jewelry enchantments are explicit H1 search axes and weapon package scoring preserves canonical enchant state.",
-            "A complete H1 legal glyph/enchantment denominator with searched/pruned counts is not yet reported.",
+            E2DimensionStatus.COVERED,
+            "ExtremeActualHealStaticEnchantDenominatorService + ExtremeCompleteOptimizationService",
+            "The static H1 denominator closes all 24 canonical armor/jewelry enchant families: 4 armor families are searched, 5 jewelry families are searched, and 15 jewelry families are explicitly dispositioned as irrelevant to one instantaneous healing-event magnitude. Weapon enchantments remain correctly owned by the runtime proc/cooldown/trigger boundary rather than this static denominator.",
         ),
         E2DimensionCoverage(
             "weapon_configuration_passives",
