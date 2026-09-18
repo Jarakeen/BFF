@@ -102,21 +102,25 @@ def raid_plan_member_from_values(
     eso_class: str = "",
     selected_build_name: str = "",
 ) -> RaidPlanMember | None:
-    """Create one member only when a player identity is present.
+    """Create one persisted planning chair when any user-owned chair state exists.
 
-    Character, role, class and build deliberately remain optional so a raid lead can
-    reserve a chair for a friend before every detail is known.
+    Seat-derived role alone does not materialize an otherwise empty chair. A selected
+    class, character, build, or gamertag does, so Recruit requirements can be planned
+    before a player is assigned.
     """
     player = _clean(gamertag)
-    if not player:
+    character = _clean(character_name)
+    selected_class = _clean(eso_class)
+    build_name = _clean(selected_build_name)
+    if not any((player, character, selected_class, build_name)):
         return None
     return RaidPlanMember(
         seat_id=_slug(seat_id),
         gamertag=player,
-        character_name=_clean(character_name) or None,
+        character_name=character or None,
         role=_clean(role) or None,
-        eso_class=_clean(eso_class) or None,
-        selected_build_name=_clean(selected_build_name) or None,
+        eso_class=selected_class or None,
+        selected_build_name=build_name or None,
     )
 
 
@@ -553,10 +557,15 @@ class RaidPlanPage(FoundryPage):
 
         characters = sum(member.character_selected for member in plan.members)
         builds = sum(member.build_selected for member in plan.members)
-        known_people = sum(self._personnel_match(member.gamertag) is not None for member in plan.members)
+        named_players = sum(bool(_clean(member.gamertag)) for member in plan.members)
+        known_people = sum(
+            bool(_clean(member.gamertag))
+            and self._personnel_match(member.gamertag) is not None
+            for member in plan.members
+        )
         self.summary_label.setText(
             f"{plan.name} • {self.trial_combo.currentText()} • {self.difficulty_combo.currentText()}\n"
-            f"{len(plan.members)}/12 players named • {known_people}/{len(plan.members) or 0} in Personnel • "
+            f"{named_players}/12 players named • {known_people}/{named_players or 0} in Personnel • "
             f"{characters}/12 characters selected • {builds}/12 builds selected"
         )
 
