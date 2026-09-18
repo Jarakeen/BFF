@@ -338,9 +338,9 @@ def _open_plan_comp_builder(window, source_page) -> None:
 
 
 def _route_plan_page(window, source_page, target: str) -> None:
-    if target == "comp_builder":
-        _open_plan_comp_builder(window, source_page)
-        return
+    del source_page
+    # Navigation is intentionally dumb. Comp Maker, Coverage, and other destination
+    # pages own their saved-plan selection instead of depending on the route used.
     window.show_page(target)
 
 
