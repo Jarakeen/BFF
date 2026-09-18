@@ -40,7 +40,7 @@ class RaidSectionStateService:
 
     def _read(self) -> dict:
         if not self.path.exists():
-            return {"human_ready": {}, "runs": {}, "events": []}
+            return {"human_ready": {}, "runs": {}, "events": [], "reviews": []}
         try:
             payload = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError, TypeError):
@@ -50,6 +50,7 @@ class RaidSectionStateService:
         payload.setdefault("human_ready", {})
         payload.setdefault("runs", {})
         payload.setdefault("events", [])
+        payload.setdefault("reviews", [])
         return payload
 
     def _write(self, payload: dict) -> None:
@@ -91,6 +92,68 @@ class RaidSectionStateService:
             self._append_event_payload(payload, plan_id, "run_notes", "Run notes updated", "MANUAL")
         self._write(payload)
         return dict(state)
+
+    def save_review_note(
+        self,
+        *,
+        plan_id: str,
+        trial_id: str,
+        plan_name: str,
+        attempt: int,
+        notes: str,
+    ) -> dict | None:
+        """Upsert the durable review note for one Raid Plan attempt."""
+        cleaned = _clean(notes)
+        if not cleaned:
+            return None
+
+        payload = self._read()
+        reviews = payload.setdefault("reviews", [])
+        now = _now()
+        plan_key = _clean(plan_id)
+        attempt_number = max(0, int(attempt or 0))
+        existing = next(
+            (
+                row
+                for row in reviews
+                if isinstance(row, dict)
+                and _clean(row.get("plan_id")) == plan_key
+                and int(row.get("attempt", 0) or 0) == attempt_number
+            ),
+            None,
+        )
+
+        if existing is None:
+            existing = {
+                "review_id": f"{plan_key}:{attempt_number}",
+                "plan_id": plan_key,
+                "trial_id": _clean(trial_id),
+                "plan_name": _clean(plan_name),
+                "attempt": attempt_number,
+                "created_at": now,
+            }
+            reviews.append(existing)
+
+        existing["trial_id"] = _clean(trial_id)
+        existing["plan_name"] = _clean(plan_name)
+        existing["notes"] = cleaned
+        existing["updated_at"] = now
+        self._write(payload)
+        return dict(existing)
+
+    def review_notes(self) -> tuple[dict, ...]:
+        """Return review notes newest first without inventing missing run metadata."""
+        payload = self._read()
+        rows = [
+            dict(row)
+            for row in payload.get("reviews", [])
+            if isinstance(row, dict) and _clean(row.get("notes"))
+        ]
+        rows.sort(
+            key=lambda row: _clean(row.get("updated_at") or row.get("created_at")),
+            reverse=True,
+        )
+        return tuple(rows)
 
     def start_pull(self, plan_id: str) -> dict:
         payload = self._read()
