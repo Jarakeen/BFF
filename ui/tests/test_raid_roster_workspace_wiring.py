@@ -201,3 +201,12 @@ def test_roster_character_avatar_is_click_editable_and_character_owned() -> None
     assert 'character.get("avatar_path")' in wrapper
     assert 'def set_character_avatar(' in catalog
     assert 'updated["avatar_path"] = normalized_path' in catalog
+
+
+def test_current_teams_editor_exposes_and_persists_discord_link() -> None:
+    source = Path("ui/raid_roster_workspace_page.py").read_text(encoding="utf-8")
+
+    assert "self.team_discord = QLineEdit()" in source
+    assert 'form.addRow("Discord", self.team_discord)' in source
+    assert "self.team_discord.setText(schedule.DiscordUrl if schedule else \"\")" in source
+    assert "DiscordUrl=_clean(self.team_discord.text())" in source
