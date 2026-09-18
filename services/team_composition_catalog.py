@@ -207,8 +207,8 @@ def flexible_raid_slots(group_size: int = 12) -> tuple[CompositionSlot, ...]:
         labels = (("Tank", "Tank"), ("Healer", "Healer"), ("DD 1", "DD"), ("DD 2", "DD"))
     else:
         labels = (
-            ("Main Tank", "Tank"),
-            ("Off Tank", "Tank"),
+            ("Tank 1", "Tank"),
+            ("Tank 2", "Tank"),
             ("Healer 1", "Healer"),
             ("Healer 2", "Healer"),
             *((f"DD {index}", "DD") for index in range(1, 9)),
