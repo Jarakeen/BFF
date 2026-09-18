@@ -91,3 +91,22 @@ def test_raid_plan_coverage_refresh_wrapper_preserves_call_signature() -> None:
 
     assert "def refresh_with_raid_plan(self, *args, **kwargs):" in source
     assert "return _ORIGINAL_REFRESH(self, *args, **kwargs)" in source
+
+
+def test_raid_plan_coverage_reconciles_explicit_assignment_ownership() -> None:
+    source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
+
+    assert "RaidPlanCoverageAssignmentService" in source
+    assert "assignment_service.review(" in source
+    assert "review.label" in source
+    assert '"assigned_supported"' in source
+    assert '"assigned_conditional"' in source
+    assert '"assigned_unproven"' in source
+    assert '"gap"' in source
+    assert "DUPLICATE PRIMARY" in source
+
+
+def test_coverage_needs_review_filter_accepts_assignment_aware_evidence_state() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert 'evidence not in {"available", "assigned_supported"}' in source
