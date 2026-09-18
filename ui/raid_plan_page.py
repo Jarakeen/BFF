@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from models.raid_plan import RaidPlan, RaidPlanMember
-from models.roster_model import RosterMember
+from models.roster_model import ESO_CLASSES, RosterMember
 from services.build_service import BuildService
 from services.comp_builder_trial_scope import COMP_MAKER_TRIALS
 from services.eso_database import EsoDatabase
@@ -54,14 +54,6 @@ RAID_PLAN_SEATS: tuple[str, ...] = (
     "DD 8",
 )
 
-ROLE_OPTIONS: tuple[str, ...] = (
-    "",
-    "Tank",
-    "Healer",
-    "DD",
-)
-
-
 def _clean(value: object) -> str:
     return " ".join(str(value or "").strip().split())
 
@@ -69,6 +61,18 @@ def _clean(value: object) -> str:
 def _slug(value: object) -> str:
     text = _clean(value).casefold()
     return "-".join(part for part in text.replace("'", "").split() if part) or "raid-plan"
+
+
+def role_for_seat(seat: str) -> str:
+    """Derive the functional raid role from the chair label."""
+    key = _clean(seat).casefold()
+    if "tank" in key:
+        return "Tank"
+    if "healer" in key:
+        return "Healer"
+    if key.startswith("dd"):
+        return "DD"
+    return ""
 
 
 def personnel_player_names(members) -> tuple[str, ...]:
@@ -192,9 +196,9 @@ class RaidPlanPage(FoundryPage):
         root.addWidget(summary_card)
 
         team_card = FoundryCard("Team", "team")
-        self.team_table = QTableWidget(len(RAID_PLAN_SEATS), 7)
+        self.team_table = QTableWidget(len(RAID_PLAN_SEATS), 6)
         self.team_table.setHorizontalHeaderLabels(
-            ("SEAT", "GAMERTAG", "CHARACTER", "ROLE", "CLASS", "BUILD", "PERSONNEL")
+            ("SEAT", "GAMERTAG", "CHARACTER", "CLASS", "BUILD", "PERSONNEL")
         )
         self.team_table.verticalHeader().setVisible(False)
         self.team_table.horizontalHeader().setStretchLastSection(False)
@@ -217,20 +221,30 @@ class RaidPlanPage(FoundryPage):
             )
             self.team_table.setCellWidget(row, 1, player_combo)
 
-            for column in (2, 4):
-                self.team_table.setItem(row, column, QTableWidgetItem(""))
+            self.team_table.setItem(row, 2, QTableWidgetItem(""))
 
-            role_combo = QComboBox()
-            role_combo.addItems(ROLE_OPTIONS)
-            role_combo.currentTextChanged.connect(self._update_summary)
-            self.team_table.setCellWidget(row, 3, role_combo)
+            class_combo = QComboBox()
+            class_combo.setEditable(True)
+            class_combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+            class_combo.addItem("")
+            class_combo.addItems(ESO_CLASSES)
+            if class_combo.lineEdit() is not None:
+                class_combo.lineEdit().setPlaceholderText("Type class…")
+                class_combo.lineEdit().setClearButtonEnabled(True)
+            class_completer = QCompleter(class_combo.model(), class_combo)
+            class_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+            class_completer.setFilterMode(Qt.MatchFlag.MatchContains)
+            class_completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+            class_combo.setCompleter(class_completer)
+            class_combo.currentTextChanged.connect(self._update_summary)
+            self.team_table.setCellWidget(row, 3, class_combo)
 
             build_combo = QComboBox()
             build_combo.addItem("No build selected", None)
             build_combo.currentIndexChanged.connect(
                 lambda _index, row_index=row: self._apply_saved_build(row_index)
             )
-            self.team_table.setCellWidget(row, 5, build_combo)
+            self.team_table.setCellWidget(row, 4, build_combo)
 
             save_player = QPushButton("Save Player")
             save_player.setToolTip(
@@ -239,7 +253,7 @@ class RaidPlanPage(FoundryPage):
             save_player.clicked.connect(
                 lambda _checked=False, row_index=row: self.save_player_to_personnel(row_index)
             )
-            self.team_table.setCellWidget(row, 6, save_player)
+            self.team_table.setCellWidget(row, 5, save_player)
 
         self.team_table.cellChanged.connect(lambda *_: self._update_summary())
         team_card.addWidget(self.team_table)
@@ -293,6 +307,10 @@ class RaidPlanPage(FoundryPage):
     def _item_text(table: QTableWidget, row: int, column: int) -> str:
         item = table.item(row, column)
         return _clean(item.text() if item is not None else "")
+
+    def _class_text(self, row: int) -> str:
+        combo = self.team_table.cellWidget(row, 3)
+        return _clean(combo.currentText() if isinstance(combo, QComboBox) else "")
 
     def _player_text(self, row: int) -> str:
         combo = self.team_table.cellWidget(row, 1)
@@ -370,7 +388,7 @@ class RaidPlanPage(FoundryPage):
         self._update_summary()
 
     def _refresh_personnel_button(self, row: int) -> None:
-        button = self.team_table.cellWidget(row, 6)
+        button = self.team_table.cellWidget(row, 4)
         if not isinstance(button, QPushButton):
             return
         gamertag = self._player_text(row)
@@ -420,7 +438,7 @@ class RaidPlanPage(FoundryPage):
             self.status.warning(f"Could not load saved builds: {exc}")
 
         for row in range(self.team_table.rowCount()):
-            combo = self.team_table.cellWidget(row, 5)
+            combo = self.team_table.cellWidget(row, 4)
             if not isinstance(combo, QComboBox):
                 continue
             prior_name = ""
@@ -450,7 +468,7 @@ class RaidPlanPage(FoundryPage):
     def _apply_saved_build(self, row: int) -> None:
         if self._syncing_build_selection:
             return
-        combo = self.team_table.cellWidget(row, 5)
+        combo = self.team_table.cellWidget(row, 4)
         if not isinstance(combo, QComboBox):
             return
         index = combo.currentData()
@@ -463,15 +481,9 @@ class RaidPlanPage(FoundryPage):
         try:
             self._set_player_text(row, getattr(build, "Gamertag", ""))
             self._set_item_text(row, 2, getattr(build, "Name", ""))
-            self._set_item_text(row, 4, getattr(build, "EsoClass", ""))
-            role_combo = self.team_table.cellWidget(row, 3)
-            if isinstance(role_combo, QComboBox):
-                role = _clean(getattr(build, "Role", ""))
-                match = role_combo.findText(role, Qt.MatchFlag.MatchFixedString)
-                if match < 0 and role.casefold() in {"dps", "dd", "damage dealer"}:
-                    match = role_combo.findText("Damage Dealer")
-                if match >= 0:
-                    role_combo.setCurrentIndex(match)
+            class_combo = self.team_table.cellWidget(row, 3)
+            if isinstance(class_combo, QComboBox):
+                class_combo.setCurrentText(_clean(getattr(build, "EsoClass", "")))
         finally:
             self._syncing_build_selection = False
         self._refresh_personnel_button(row)
@@ -480,9 +492,8 @@ class RaidPlanPage(FoundryPage):
     def current_plan(self) -> RaidPlan:
         members: list[RaidPlanMember] = []
         for row, seat in enumerate(RAID_PLAN_SEATS):
-            role_combo = self.team_table.cellWidget(row, 3)
-            build_combo = self.team_table.cellWidget(row, 5)
-            role = role_combo.currentText() if isinstance(role_combo, QComboBox) else ""
+            build_combo = self.team_table.cellWidget(row, 4)
+            role = role_for_seat(seat)
             build_name = ""
             if isinstance(build_combo, QComboBox):
                 saved_index = build_combo.currentData()
@@ -494,7 +505,7 @@ class RaidPlanPage(FoundryPage):
                 gamertag=self._player_text(row),
                 character_name=self._item_text(self.team_table, row, 2),
                 role=role,
-                eso_class=self._item_text(self.team_table, row, 4),
+                eso_class=self._class_text(row),
                 selected_build_name=build_name,
             )
             if member is not None:
@@ -531,12 +542,11 @@ class RaidPlanPage(FoundryPage):
         try:
             for row in range(self.team_table.rowCount()):
                 self._set_player_text(row, "")
-                for column in (2, 4):
-                    self._set_item_text(row, column, "")
-                role_combo = self.team_table.cellWidget(row, 3)
-                if isinstance(role_combo, QComboBox):
-                    role_combo.setCurrentIndex(0)
-                build_combo = self.team_table.cellWidget(row, 5)
+                self._set_item_text(row, 2, "")
+                class_combo = self.team_table.cellWidget(row, 3)
+                if isinstance(class_combo, QComboBox):
+                    class_combo.setCurrentText("")
+                build_combo = self.team_table.cellWidget(row, 4)
                 if isinstance(build_combo, QComboBox):
                     build_combo.setCurrentIndex(0)
                 self._refresh_personnel_button(row)
@@ -548,9 +558,9 @@ class RaidPlanPage(FoundryPage):
 
 __all__ = [
     "RAID_PLAN_SEATS",
-    "ROLE_OPTIONS",
     "RaidPlanPage",
     "new_personnel_member",
     "personnel_player_names",
     "raid_plan_member_from_values",
+    "role_for_seat",
 ]
