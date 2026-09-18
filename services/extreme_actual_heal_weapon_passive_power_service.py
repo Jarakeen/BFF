@@ -75,8 +75,10 @@ class ExtremeActualHealWeaponPassivePowerService:
         main_type = weapon_type_from_saved_name(main.WeaponType)
         offhand_type = weapon_type_from_saved_name(offhand.WeaponType) if offhand.WeaponType else WeaponType.NONE
         if main_type is None:
+            if not str(main.WeaponType or "").strip():
+                return None, main, offhand, ()
             return None, main, offhand, (
-                f"active {active_bar} weapon type is unresolved: {main.WeaponType or '(empty)'}",
+                f"active {active_bar} weapon type is unresolved: {main.WeaponType}",
             )
         if offhand_type is None:
             return None, main, offhand, (
