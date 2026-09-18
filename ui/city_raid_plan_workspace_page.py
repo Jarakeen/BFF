@@ -113,6 +113,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             ("Overview", None),
             ("Roles", None),
             ("Assignments", "assignments"),
+            ("Comp Builder", "comp_builder"),
             ("Builds", "console:2"),
             ("Rotations", "rotations"),
             ("Coverage", "console:7"),
@@ -237,6 +238,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         lower.addWidget(recent, 1)
         linked = FoundryCard("Linked Resources", "clipboard")
         for title, route in (
+            ("Comp Builder", "comp_builder"),
             ("Builds", "console:2"),
             ("Rotation Builder", "rotations"),
             ("Coverage", "console:7"),
