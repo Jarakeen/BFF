@@ -7,14 +7,13 @@ def _source() -> str:
     return Path(build_rotation_artifact_support.__file__).read_text(encoding="utf-8")
 
 
-def test_rotation_page_can_save_only_a_completed_plan_to_build() -> None:
+def test_saved_rotation_adapter_does_not_import_or_patch_rotation_builder() -> None:
     source = _source()
 
-    assert 'QPushButton("Save Rotation to Build")' in source
-    assert "self.rotation_plan is None or not self.rotation_plan.actions" in source
-    assert "resolve_canonical_build_id" in source
-    assert "save_rotation(" in source
-    assert 'f"Saved rotation to {character} • {build_name}' in source
+    assert "CanonicalRotationDashboardPage" not in source
+    assert "Save Rotation to Build" not in source
+    assert "rotation_plan" not in source
+    assert "BuildsPage._build_ui = builds_ui_with_rotation_tab" in source
 
 
 def test_build_workspace_rotation_tab_is_conditional() -> None:
@@ -29,28 +28,25 @@ def test_build_workspace_rotation_tab_is_conditional() -> None:
     assert "page.build_rotation_artifacts.get_rotation(build_id or \"\")" in source
 
 
-def test_saved_rotation_renders_timeline_and_generation_setup() -> None:
+def test_saved_rotation_renders_existing_timeline_and_setup() -> None:
     source = _source()
 
     assert '["Time", "Bar", "Action", "Type", "Notes"]' in source
-    assert 'payload["setup"] = jsonable(setup)' in source
-    assert 'payload["encounter_id"]' in source
-    assert 'setup["recovery_resource"]' in source
-    assert "canonical_threshold_projection_policy" in source
-    assert "canonical_dd_evaluation_policy" in source
+    assert 'artifact.get("setup")' in source
+    assert 'artifact.get("encounter_id")' in source
+    assert "page.build_rotation_artifacts.get_rotation" in source
 
 
-def test_support_wraps_rotation_after_native_layout_construction() -> None:
+def test_support_is_owned_by_bootstrap_without_constructing_rotation_builder() -> None:
     bootstrap = Path("ui/application_workspace_bootstrap.py").read_text(
         encoding="utf-8"
     )
-    dashboard = Path("ui/rotation_dashboard_canonical_page.py").read_text(
-        encoding="utf-8"
-    )
+    main_window = Path("ui/main_window.py").read_text(encoding="utf-8")
 
     assert "install_build_rotation_artifact_support()" in bootstrap
-    assert "install_rotation_dashboard_layout(self)" in dashboard
-    assert "install_rotation_dashboard_layout_support()" not in bootstrap
+    assert "CanonicalRotationDashboardPage" not in main_window
+    assert '"rotations": CanonicalRotationDashboardPage(),' not in main_window
+    assert "install_phase14_rotation_visual_target_support()" not in bootstrap
 
 
 def test_phase14_build_dossier_labels_base_skills_and_cp_as_inherited_baseline() -> None:
