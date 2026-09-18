@@ -420,16 +420,10 @@ class MainWindow(QMainWindow):
 
         if page_name == "comp_builder":
             comp = self.pages.get("comp_builder")
-            raid_plan_container = self.page_containers.get("raid_plans")
-            if (
-                comp is not None
-                and raid_plan_container is not None
-                and self.stack.currentWidget() is raid_plan_container
-            ):
-                from ui.raid_engine_dashboard_support import _bind_plan_comp_builder
-
-                _bind_plan_comp_builder(self, self.pages["raid_plans"])
             if comp is not None:
+                refresh_names = getattr(comp, "_refresh_raid_plan_name_choices", None)
+                if callable(refresh_names):
+                    refresh_names()
                 from ui.comp_builder_phase14_shell_support import (
                     refresh_phase14_presentation,
                 )
