@@ -71,6 +71,17 @@ def _load_roster_shape(page, group_size: int) -> None:
     page.current_slots = flexible_raid_slots(group_size)
     page._render_slots(page.current_slots)
 
+    if group_size == 4:
+        page.matrix_table.setMinimumHeight(190)
+        page.matrix_table.setMaximumHeight(190)
+        page.matrix_card.setMinimumHeight(235)
+        page.matrix_card.setMaximumHeight(255)
+    else:
+        page.matrix_table.setMinimumHeight(430)
+        page.matrix_table.setMaximumHeight(430)
+        page.matrix_card.setMinimumHeight(470)
+        page.matrix_card.setMaximumHeight(480)
+
     goal = page.goal_combo.currentText().strip() or "Custom Goal"
     page.plan_name_input.setText(f"{goal} Composition")
     if hasattr(page, "trial_label"):
