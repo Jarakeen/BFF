@@ -265,4 +265,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - The Builds dossier now owns character progression access through a dedicated **Progression** tab.
 - **Passive Skills** covers character-owned skill-line access and purchased passive ranks shared by every build for that character.
 - **Passive Champion Points** covers non-slottable Champion stars shared by every build; slotted Champion Points remain build-specific on the normal CP tab.
+- Character Progression provides global **Buy All Passive Skills** and **Buy All Passive CP** actions, while retaining per-skill-line and per-discipline controls for narrower edits.
 - The old monolithic Build Editor, Character Progression workspace tab, and Scribed Skills workspace tab are hidden from the normal Phase 14 workflow and retained only as compatibility/fallback infrastructure.
