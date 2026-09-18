@@ -206,7 +206,7 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
             comp.difficulty_combo.setCurrentIndex(index)
 
     canonical_seats = (
-        "Main Tank", "Off Tank", "Healer 1", "Healer 2",
+        "Tank 1", "Tank 2", "Healer 1", "Healer 2",
         "DD 1", "DD 2", "DD 3", "DD 4",
         "DD 5", "DD 6", "DD 7", "DD 8",
     )
@@ -222,13 +222,24 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
                 ),
                 str(getattr(member, "seat_id", "") or "").strip(),
             ),
-            PlayerName=str(getattr(member, "gamertag", "") or "").strip(),
+            PlayerName=(
+                str(getattr(member, "gamertag", "") or "").strip()
+                or "Recruit"
+            ),
             CharacterName=str(getattr(member, "character_name", "") or "").strip(),
             PrimaryRole=str(getattr(member, "role", "") or "").strip(),
             EsoClass=str(getattr(member, "eso_class", "") or "").strip(),
         )
         for member in getattr(plan, "members", ()) or ()
-        if str(getattr(member, "gamertag", "") or "").strip()
+        if any(
+            (
+                str(getattr(member, "gamertag", "") or "").strip(),
+                str(getattr(member, "character_name", "") or "").strip(),
+                str(getattr(member, "eso_class", "") or "").strip(),
+                tuple(getattr(member, "planned_gear_sets", ()) or ()),
+                str(getattr(member, "selected_build_name", "") or "").strip(),
+            )
+        )
     )
 
     comp._raid_plan_origin_id = str(getattr(plan, "plan_id", "") or "").strip()
