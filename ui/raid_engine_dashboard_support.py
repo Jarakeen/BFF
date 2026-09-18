@@ -241,6 +241,25 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
         members,
         group_size=12,
     )
+
+    # Raid Plan owns explicit per-chair class requirements, including Recruit chairs.
+    # Carry them as seat-scoped planning state instead of relying on roster identity.
+    class_by_seat = {
+        next(
+            (
+                seat
+                for seat in canonical_seats
+                if "-".join(seat.casefold().split())
+                == str(getattr(member, "seat_id", "") or "").strip().casefold()
+            ),
+            str(getattr(member, "seat_id", "") or "").strip(),
+        ): str(getattr(member, "eso_class", "") or "").strip()
+        for member in getattr(plan, "members", ()) or ()
+        if str(getattr(member, "eso_class", "") or "").strip()
+    }
+    comp._raid_plan_class_by_seat = class_by_seat
+    from ui.comp_builder_roster_intake_support import apply_raid_plan_class_constraints
+    apply_raid_plan_class_constraints(comp, class_by_seat)
     return True
 
 
