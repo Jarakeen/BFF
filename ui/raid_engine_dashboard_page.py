@@ -41,8 +41,8 @@ from ui.foundry_page import FoundryPage
 
 
 RAID_SLOTS = (
-    "Main Tank",
-    "Off Tank",
+    "Tank 1",
+    "Tank 2",
     "Healer 1",
     "Healer 2",
     "DD 1",
@@ -93,10 +93,14 @@ def _normalize_slot_name(value: object) -> str:
     text = _clean(value)
     compact = re.sub(r"\s+", " ", text).strip()
     aliases = {
-        "maintank": "Main Tank",
-        "main tank": "Main Tank",
-        "offtank": "Off Tank",
-        "off tank": "Off Tank",
+        "maintank": "Tank 1",
+        "main tank": "Tank 1",
+        "tank1": "Tank 1",
+        "tank 1": "Tank 1",
+        "offtank": "Tank 2",
+        "off tank": "Tank 2",
+        "tank2": "Tank 2",
+        "tank 2": "Tank 2",
         "healer1": "Healer 1",
         "healer 1": "Healer 1",
         "healer2": "Healer 2",
