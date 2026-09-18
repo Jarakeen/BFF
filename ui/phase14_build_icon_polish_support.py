@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QBrush, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from engine.config import get_data_dir, get_resource_path
 from services.skill_choice_service import load_skill_choices
@@ -211,8 +211,15 @@ def _header(page, build) -> QWidget:
     text.addLayout(meta)
     layout.addLayout(text, 1)
 
-    ready = QLabel("Ready" if bool(getattr(build, "ReadyForRaid", False)) else "Not Ready")
-    ready.setProperty("cardBadge", True)
+    ready = QCheckBox("Ready")
+    ready.setToolTip(
+        "Mark this saved build as ready for raid. This is your own check, "
+        "not a team or encounter check."
+    )
+    ready.setChecked(bool(getattr(build, "ReadyForRaid", False)))
+    ready.toggled.connect(
+        lambda checked, selected=build: page._set_build_ready(selected, checked)
+    )
     layout.addWidget(ready)
     layout.addWidget(inspector._action_button(page))
     return host
