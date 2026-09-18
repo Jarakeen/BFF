@@ -44,14 +44,14 @@ def test_comp_maker_send_to_roster_preserves_structured_candidate_evidence():
     assert "GeneratedRosterDraftSlot(" in source
     assert "GeneratedRosterPlanSlot" not in source
     assert 'kind="saved" if is_saved else "prescribed_recruit"' in source
-    assert "build_name=candidate.name" in source
-    assert 'gear_summary=" + ".join(candidate.gear_sets)' in source
+    assert '"Manual gear package"' in source
+    assert 'manual_gear_sets or tuple(candidate.gear_sets)' in source
     assert "role=candidate.role or role" in source
     assert "source_kind=candidate.source_kind" in source
     assert "source_name=candidate.source_name" in source
     assert "source_url=candidate.source_url" in source
     assert "candidate_id=candidate.candidate_id" in source
-    assert "gear_sets=tuple(candidate.gear_sets)" in source
+    assert "gear_sets=manual_gear_sets or tuple(candidate.gear_sets)" in source
     assert "skills=tuple(candidate.skills)" in source
     assert "mundus=candidate.mundus" in source
     assert "Observed/known skills:" not in source
@@ -104,3 +104,12 @@ def test_comp_maker_materializes_optimizer_choices_before_roster_transfer():
     assert send_function.index("_materialize_current_comp(self)") < send_function.index(
         "_ORIGINAL_SEND_TO_ROSTER(self)"
     )
+
+
+def test_comp_maker_manual_set_package_overrides_candidate_pair_on_save():
+    source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+
+    assert 'getattr(page, "_comp_manual_gear_sets_by_slot", {})' in source
+    assert 'gear_summary=" + ".join(' in source
+    assert 'manual_gear_sets or tuple(candidate.gear_sets)' in source
+    assert 'gear_sets=manual_gear_sets' in source
