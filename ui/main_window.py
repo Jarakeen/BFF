@@ -337,61 +337,24 @@ class MainWindow(QMainWindow):
                 )
             return
 
-        roster_page = self.pages["roster_page"]
-        roster_page.optimized_team_plan = tuple(plan)
-        roster_page.tabs.setCurrentIndex(0)
-        roster_page.assignment_table.setRowCount(0)
+        roster_workspace = self.pages.get("roster_workspace")
+        if roster_workspace is None:
+            if optimization_page is not None:
+                optimization_page.status.warning(
+                    "The current Roster workspace is unavailable."
+                )
+            return
 
-        matched = 0
-        recruitment = 0
-        missing_records = 0
-        for plan_row in plan:
-            row = roster_page.assignment_table.rowCount()
-            roster_page.assignment_table.insertRow(row)
-            member = None
-            if plan_row["kind"] == "saved":
-                member = self._matching_roster_member(roster_page, plan_row)
-                matched += int(member is not None)
-                missing_records += int(member is None)
-            else:
-                recruitment += 1
+        load_plan = getattr(roster_workspace, "load_optimizer_plan", None)
+        if not callable(load_plan):
+            if optimization_page is not None:
+                optimization_page.status.warning(
+                    "The current Roster workspace cannot accept an Optimizer plan."
+                )
+            return
 
-            if plan_row["kind"] == "recruitment":
-                notes = "Optimization recruitment requirement; no roster person was fabricated."
-                ready = "OPEN"
-                secondary = "Recruit / qualify candidate"
-            elif member is None:
-                notes = "Saved optimized build; matching personnel record not found in Roster."
-                ready = "⚠"
-                secondary = "Add or match roster record"
-            else:
-                notes = "Imported from Team Optimization"
-                ready = "✓" if member.Status == "Active" else "•"
-                secondary = roster_page._secondary_assignment(plan_row["slot"])
-
-            values = [
-                plan_row["player"],
-                plan_row["slot"],
-                plan_row["class"],
-                plan_row["build"],
-                "Optimized team slot",
-                secondary,
-                "—",
-                notes,
-                ready,
-            ]
-            for col, value in enumerate(values):
-                item = QTableWidgetItem(str(value))
-                if col in {0, 1, 2, 3, 8}:
-                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                roster_page.assignment_table.setItem(row, col, item)
-
-        roster_page.status.success(
-            f"Optimization plan loaded: {len(plan)} slot(s), {matched} matched roster member(s), "
-            f"{recruitment} recruitment requirement(s), {missing_records} unmatched saved build(s). "
-            "Personnel records were not overwritten."
-        )
-        self.show_page("roster_page")
+        load_plan(tuple(plan))
+        self.show_page("roster_workspace")
 
     def _open_player_builds(self, gamertag: str) -> None:
         self.show_page("console:2")
