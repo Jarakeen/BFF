@@ -322,8 +322,8 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
         character_id: str,
         baseline_build_id: str,
         active_bar: str = "front",
-        ordinary_per_objective: int = 8,
-        mythic_per_objective: int = 8,
+        ordinary_per_objective: int | None = None,
+        mythic_per_objective: int | None = None,
     ) -> tuple[BuildCandidate, ...]:
         weapon_positions = self._active_weapon_positions(
             baseline_build,
