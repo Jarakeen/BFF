@@ -55,6 +55,7 @@ class RaidPlanMember:
     planned_mundus: str | None = None
     primary_assignment: str | None = None
     secondary_assignment: str | None = None
+    utility_assignments: tuple[str, ...] = field(default_factory=tuple)
     notes: str | None = None
 
     def __post_init__(self) -> None:
@@ -78,6 +79,17 @@ class RaidPlanMember:
             self,
             "planned_skills",
             tuple(dict.fromkeys(_clean(value) for value in self.planned_skills if _clean(value))),
+        )
+        object.__setattr__(
+            self,
+            "utility_assignments",
+            tuple(
+                dict.fromkeys(
+                    _clean(value)
+                    for value in self.utility_assignments
+                    if _clean(value)
+                )
+            ),
         )
         for name in (
             "player_id",
