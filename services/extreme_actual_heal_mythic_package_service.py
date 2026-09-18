@@ -157,13 +157,13 @@ class ExtremeActualHealMythicPackageService:
         self,
         *,
         shape: str,
-        per_objective: int,
+        per_objective: int | None,
         weapon_type_ids: tuple[int, ...] = (),
         paired: bool = False,
     ) -> tuple[str, ...]:
         names: list[str] = []
         seen: set[str] = set()
-        limit = max(1, int(per_objective))
+        limit = None if per_objective is None else max(1, int(per_objective))
         ordinary_shape = shape in {"primary", "secondary"}
         ordinary_allowed = (
             frozenset(
@@ -211,7 +211,7 @@ class ExtremeActualHealMythicPackageService:
                     seen.add(key)
                     names.append(row.set_name)
                 accepted += 1
-                if accepted >= limit:
+                if limit is not None and accepted >= limit:
                     break
         return tuple(names)
 
