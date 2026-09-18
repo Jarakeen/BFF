@@ -102,14 +102,14 @@ def _install_main_controls(page) -> None:
     apply_logs = _detach_widget(getattr(page, "apply_esologs_button", None))
 
     if generate is not None:
-        generate.setText("↵ Fill from Roster")
+        generate.setText("Recommend Team")
         generate.setProperty("compPrimaryGenerate", True)
         generate.setToolTip(
-            "Fill every currently open raid chair with the best eligible saved roster build "
+            "Choose the best eligible build recommendation for each loaded player or Recruit slot "
             "while preserving existing assignments and required provider coverage."
         )
     if apply_chair is not None:
-        apply_chair.setText("↰ Assign Build to Player")
+        apply_chair.setText("Use Selected Build")
         apply_chair.setProperty("compAssignBuild", True)
         apply_chair.setToolTip(
             "Assign the selected candidate build to the highlighted player/chair."
@@ -124,10 +124,9 @@ def _install_main_controls(page) -> None:
         actions.body_layout.insertLayout(insert_at, _row(*primary))
         insert_at += 1
 
-    template = tuple(widget for widget in (recommended, reset) if widget is not None)
-    if template:
-        actions.body_layout.insertLayout(insert_at, _row(*template))
-        insert_at += 1
+    for widget in (recommended, reset):
+        if widget is not None:
+            widget.hide()
 
     logs = tuple(widget for widget in (refresh_logs, apply_logs) if widget is not None)
     if logs:
