@@ -232,16 +232,23 @@ class MainWindow(QMainWindow):
             base_plan=base_plan,
         )
         raid_plans.plan_repository.save(plan)
-        raid_plans.apply_plan(plan)
+        persisted = raid_plans.plan_repository.get(plan.plan_id)
+        if persisted is None or persisted != plan:
+            raid_plans.status.error(
+                "Comp Builder save did not round-trip through Raid Plan storage exactly; "
+                "the app is refusing to report success."
+            )
+            return None
+        raid_plans.apply_plan(persisted)
         raid_plans._refresh_overview()
         raid_plans.status.success(
-            f"Comp Builder changes saved to Raid Plan: {plan.name}. "
+            f"Comp Builder changes saved to Raid Plan: {persisted.name}. "
             "Planned build choices were preserved without overwriting saved Builds."
         )
         if navigate:
             raid_plans._show_local_view(0)
             self.show_page("raid_plans")
-        return plan
+        return persisted
 
     def _show_generated_roster_plan(self, plan_name: str) -> None:
         self._persist_generated_comp_plan_to_raid_plan(
