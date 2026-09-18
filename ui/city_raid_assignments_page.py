@@ -2,19 +2,25 @@ from __future__ import annotations
 
 """Urban Wilderness assignment surface over plan-owned RaidPlan assignments."""
 
+from dataclasses import replace
+
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QPixmap
 from PySide6.QtWidgets import (
+    QComboBox,
     QFormLayout,
     QHeaderView,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QPlainTextEdit,
+    QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
+from services.raid_group_effect_catalog import GROUP_COVERAGE_NAMES
 from ui.components.foundry_card import FoundryCard
 from ui.raid_plan_assignment_page import RaidPlanAssignmentPage
 from ui.raid_plan_page import RAID_PLAN_SEATS, _slug
@@ -94,18 +100,39 @@ def _role_icon_pixmap(role_key: str, size: int = 28) -> QPixmap:
 
 
 class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
-    """Readable assignment summary with detailed editing kept in the selected-spot panel."""
+    """Raid Plan jobs: support effects first, utility/mechanics separately."""
 
     pageRequested = Signal(str)
 
+    UTILITY_CHOICES = (
+        "Kite",
+        "Portal",
+        "Interrupts",
+        "Add Control",
+        "Boss Positioning",
+        "Execute / Interrupts",
+        "Boss Damage / Mechanic",
+        "Orbs / Utility",
+        "Raid Healing / Support",
+        "Mechanic",
+        "Utility",
+        "Backup",
+    )
+
     def __init__(self, parent=None) -> None:
+        self._utility_by_seat: dict[str, tuple[str, ...]] = {}
+        self._notes_by_seat: dict[str, str] = {}
+        self._selected_note_seat = ""
+        self._loading_selected_notes = False
         super().__init__(parent)
         self._compose_city_workspace()
         self._refresh_city_assignment_rows()
 
     def _compose_city_workspace(self) -> None:
         self.header.title.setText("Assignments")
-        self.header.subtitle.setText("Turn good intentions into clear jobs.")
+        self.header.subtitle.setText(
+            "Assign buffs and debuffs first. Keep utility and mechanics separate."
+        )
         self.header.department.setText("RAID • ASSIGNMENTS")
 
         legacy = QWidget()
@@ -122,15 +149,6 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         legacy.hide()
 
         action_row = QHBoxLayout()
-        self.effective_button = QPushButton("Effective View")
-        self.effective_button.setProperty("primary", True)
-        action_row.addWidget(self.effective_button)
-        self.plan_setup_button = QPushButton("Plan Setup")
-        self.plan_setup_button.clicked.connect(self._toggle_plan_setup)
-        action_row.addWidget(self.plan_setup_button)
-        comp_builder = QPushButton("Comp Builder")
-        comp_builder.clicked.connect(lambda: self.pageRequested.emit("comp_builder"))
-        action_row.addWidget(comp_builder)
         action_row.addStretch(1)
         save = QPushButton("Save Assignments")
         save.setProperty("primary", True)
@@ -139,41 +157,51 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.workspace_layout.addLayout(action_row)
 
         body = QHBoxLayout()
-        views = FoundryCard("Assignment Views", "checklist")
-        for title, subtitle in (
-            ("Effective View", "Current plan duties"),
-            ("Plan Assignments", "Edit this Raid Plan"),
-            ("Supports", "Review support responsibilities"),
-            ("Mechanics", "Review mechanic ownership"),
-            ("Roles", "Review raid spots"),
-        ):
-            button = QPushButton(f"{title}\n{subtitle}")
-            if title == "Roles":
-                button.clicked.connect(self._toggle_plan_setup)
-            views.addWidget(button)
-        body.addWidget(views, 2)
 
-        table_card = FoundryCard("Team Assignments", "group")
-        self.assignment_table.setColumnCount(7)
-        self.assignment_table.setHorizontalHeaderLabels(
-            ("Spot", "Player", "Main Duty", "Backup / Utility", "Gear", "Notes", "Source")
+        support_card = FoundryCard("Buffs / Debuffs", "checklist")
+        self.support_table = QTableWidget(len(RAID_PLAN_SEATS), 5)
+        self.support_table.setHorizontalHeaderLabels(
+            ("Spot", "Player", "Buffs / Debuffs", "Gear / Build", "Source")
         )
-        self.assignment_table.setSelectionBehavior(self.assignment_table.SelectionBehavior.SelectRows)
-        self.assignment_table.itemSelectionChanged.connect(self._refresh_selected_spot)
-        header = self.assignment_table.horizontalHeader()
-        header.setStretchLastSection(False)
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)
-        self.assignment_table.setColumnWidth(0, 105)
-        self.assignment_table.setColumnWidth(4, 110)
-        self.assignment_table.setColumnWidth(6, 100)
-        table_card.addWidget(self.assignment_table)
-        body.addWidget(table_card, 7)
+        self.support_table.verticalHeader().setVisible(False)
+        self.support_table.setSelectionBehavior(
+            self.support_table.SelectionBehavior.SelectRows
+        )
+        self.support_table.itemSelectionChanged.connect(self._refresh_selected_spot)
+        support_header = self.support_table.horizontalHeader()
+        support_header.setStretchLastSection(False)
+        support_header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        support_header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        support_header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        support_header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        support_header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+
+        for row, spot in enumerate(RAID_PLAN_SEATS):
+            spot_item = QTableWidgetItem(spot)
+            spot_item.setFlags(spot_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            self.support_table.setItem(row, 0, spot_item)
+
+            player_item = QTableWidgetItem("")
+            player_item.setFlags(player_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            self.support_table.setItem(row, 1, player_item)
+
+            support_widget = QWidget()
+            support_layout = QVBoxLayout(support_widget)
+            support_layout.setContentsMargins(0, 1, 0, 1)
+            support_layout.setSpacing(2)
+            primary = self._new_support_combo(row, 2, "Primary buff / debuff…")
+            secondary = self._new_support_combo(row, 3, "Second / backup buff…")
+            support_layout.addWidget(primary)
+            support_layout.addWidget(secondary)
+            self.support_table.setCellWidget(row, 2, support_widget)
+
+            for column in (3, 4):
+                item = QTableWidgetItem("")
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                self.support_table.setItem(row, column, item)
+
+        support_card.addWidget(self.support_table)
+        body.addWidget(support_card, 7)
 
         detail = FoundryCard("Selected Spot", "assignment")
         detail.setProperty("selectedSpotCard", True)
@@ -204,16 +232,19 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         form.setVerticalSpacing(7)
         self.selected_player = self._selected_value_label()
         self.selected_character = self._selected_value_label()
-        self.selected_primary = self._selected_value_label()
-        self.selected_secondary = self._selected_value_label()
+        self.selected_support = self._selected_value_label()
+        self.selected_utility = self._selected_value_label()
         self.selected_gear = self._selected_value_label()
         self.selected_build = self._selected_value_label()
-        self.selected_notes = self._selected_value_label()
+        self.selected_notes = QPlainTextEdit()
+        self.selected_notes.setPlaceholderText("Plan notes for this spot…")
+        self.selected_notes.setMaximumHeight(92)
+        self.selected_notes.textChanged.connect(self._selected_notes_changed)
         form.addRow("Player", self.selected_player)
         form.addRow("Character", self.selected_character)
-        form.addRow("Primary Assignment", self.selected_primary)
-        form.addRow("Secondary Assignment", self.selected_secondary)
-        form.addRow("Gear Needed", self.selected_gear)
+        form.addRow("Buffs / Debuffs", self.selected_support)
+        form.addRow("Utility / Mechanics", self.selected_utility)
+        form.addRow("Planned Gear", self.selected_gear)
         form.addRow("Linked Build", self.selected_build)
         form.addRow("Notes", self.selected_notes)
         detail.addLayout(form)
@@ -227,12 +258,34 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         set_button_icon(open_rotation, "rotations")
         open_rotation.clicked.connect(lambda: self.pageRequested.emit("rotations"))
         detail.addWidget(open_rotation)
-        edit_roles = QPushButton("Edit Duties")
-        set_button_icon(edit_roles, "pen-tool")
-        edit_roles.clicked.connect(self._toggle_plan_setup)
-        detail.addWidget(edit_roles)
         body.addWidget(detail, 3)
         self.workspace_layout.addLayout(body)
+
+        utility_card = FoundryCard("Utility / Mechanics", "warning")
+        self.utility_table = QTableWidget(len(RAID_PLAN_SEATS), 3)
+        self.utility_table.setHorizontalHeaderLabels(("Spot", "Player", "Utility / Mechanic Job"))
+        self.utility_table.verticalHeader().setVisible(False)
+        self.utility_table.setMaximumHeight(310)
+        self.utility_table.setSelectionBehavior(
+            self.utility_table.SelectionBehavior.SelectRows
+        )
+        self.utility_table.itemSelectionChanged.connect(self._utility_row_selected)
+        utility_header = self.utility_table.horizontalHeader()
+        utility_header.setStretchLastSection(True)
+        utility_header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        utility_header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        utility_header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+
+        for row, spot in enumerate(RAID_PLAN_SEATS):
+            spot_item = QTableWidgetItem(spot)
+            spot_item.setFlags(spot_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            self.utility_table.setItem(row, 0, spot_item)
+            player_item = QTableWidgetItem("")
+            player_item.setFlags(player_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            self.utility_table.setItem(row, 1, player_item)
+            self.utility_table.setCellWidget(row, 2, self._new_utility_combo(row))
+        utility_card.addWidget(self.utility_table)
+        self.workspace_layout.addWidget(utility_card)
 
         bottom = QHBoxLayout()
         summary = FoundryCard("Assignment Summary", "group")
@@ -240,16 +293,76 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.assignment_summary_label.setWordWrap(True)
         summary.addWidget(self.assignment_summary_label)
         bottom.addWidget(summary, 1)
-        coverage = FoundryCard("Mechanic Coverage", "shield")
-        coverage_text = QLabel("Coverage remains authoritative for provider and recipient truth.")
-        coverage_text.setWordWrap(True)
-        coverage.addWidget(coverage_text)
-        open_coverage = QPushButton("Open Coverage")
-        open_coverage.clicked.connect(lambda: self.pageRequested.emit("console:7"))
-        coverage.addWidget(open_coverage)
-        bottom.addWidget(coverage, 1)
+
+        snapshot = FoundryCard("Plan Snapshot", "compass")
+        self.plan_snapshot_label = QLabel("")
+        self.plan_snapshot_label.setWordWrap(True)
+        snapshot.addWidget(self.plan_snapshot_label)
+        bottom.addWidget(snapshot, 1)
         self.workspace_layout.addLayout(bottom)
         self.workspace_layout.addWidget(legacy)
+
+    def _new_support_combo(self, row: int, hidden_column: int, placeholder: str) -> QComboBox:
+        combo = QComboBox()
+        combo.setEditable(True)
+        combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        combo.addItem("")
+        combo.addItems(tuple(GROUP_COVERAGE_NAMES))
+        if combo.lineEdit() is not None:
+            combo.lineEdit().setClearButtonEnabled(True)
+            combo.lineEdit().setPlaceholderText(placeholder)
+        combo.currentTextChanged.connect(
+            lambda text, row_index=row, column=hidden_column:
+                self._support_assignment_changed(row_index, column, text)
+        )
+        return combo
+
+    def _new_utility_combo(self, row: int) -> QComboBox:
+        combo = QComboBox()
+        combo.setEditable(True)
+        combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        combo.addItem("")
+        combo.addItems(self.UTILITY_CHOICES)
+        if combo.lineEdit() is not None:
+            combo.lineEdit().setClearButtonEnabled(True)
+            combo.lineEdit().setPlaceholderText("Type or choose utility…")
+        combo.currentTextChanged.connect(
+            lambda text, row_index=row: self._utility_assignment_changed(row_index, text)
+        )
+        return combo
+
+    def _support_combos(self, row: int) -> tuple[QComboBox | None, QComboBox | None]:
+        widget = self.support_table.cellWidget(row, 2)
+        if widget is None:
+            return None, None
+        combos = widget.findChildren(QComboBox)
+        return (
+            combos[0] if len(combos) > 0 else None,
+            combos[1] if len(combos) > 1 else None,
+        )
+
+    def _support_assignment_changed(self, row: int, hidden_column: int, value: str) -> None:
+        self._set_assignment_text(row, hidden_column, value)
+        self._refresh_assignment_summary()
+        if self.support_table.currentRow() == row:
+            self._refresh_selected_spot()
+
+    def _utility_assignment_changed(self, row: int, value: str) -> None:
+        seat_id = _slug(RAID_PLAN_SEATS[row])
+        clean = _clean(value)
+        self._utility_by_seat[seat_id] = (clean,) if clean else ()
+        self._refresh_assignment_summary()
+        if self.support_table.currentRow() == row:
+            self._refresh_selected_spot()
+
+    def _utility_row_selected(self) -> None:
+        row = self.utility_table.currentRow()
+        if row < 0:
+            return
+        self.support_table.blockSignals(True)
+        self.support_table.selectRow(row)
+        self.support_table.blockSignals(False)
+        self._refresh_selected_spot()
 
     @staticmethod
     def _selected_value_label() -> QLabel:
@@ -272,67 +385,110 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.selected_spot_role_icon.show()
 
     def _set_selected_spot_empty(self, title: str, message: str) -> None:
+        self._selected_note_seat = ""
         self.selected_spot_title.setText(title)
         self.selected_spot_role.setText(message)
         self._set_selected_role_icon("")
         for label in (
             self.selected_player,
             self.selected_character,
-            self.selected_primary,
-            self.selected_secondary,
+            self.selected_support,
+            self.selected_utility,
             self.selected_gear,
             self.selected_build,
-            self.selected_notes,
         ):
             label.setText("—")
+        self._loading_selected_notes = True
+        self.selected_notes.clear()
+        self._loading_selected_notes = False
 
-    def _toggle_plan_setup(self) -> None:
-        visible = not self.plan_setup_surface.isVisible()
-        self.plan_setup_surface.setVisible(visible)
-        self.plan_setup_button.setText("Hide Plan Setup" if visible else "Plan Setup")
+    def _selected_notes_changed(self) -> None:
+        if self._loading_selected_notes or not self._selected_note_seat:
+            return
+        self._notes_by_seat[self._selected_note_seat] = self.selected_notes.toPlainText()
 
     def _refresh_city_assignment_rows(self) -> None:
-        if not hasattr(self, "assignment_table"):
+        if not hasattr(self, "support_table"):
             return
-        plan = None
         try:
             plan = self.current_plan()
         except Exception:
-            pass
-        members = {member.seat_id.casefold(): member for member in plan.members} if plan is not None else {}
-        assigned = 0
+            plan = None
+        members = {
+            member.seat_id.casefold(): member
+            for member in plan.members
+        } if plan is not None else {}
+
         for row, spot in enumerate(RAID_PLAN_SEATS):
-            member = members.get(_slug(spot).casefold())
-            context = (
-                "—",
-                _clean(member.notes) if member else "",
-                "Raid Plan" if member else "Unassigned",
-            )
-            for offset, value in enumerate(context, start=4):
-                item = QTableWidgetItem(value)
-                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                self.assignment_table.setItem(row, offset, item)
-            if member and (member.primary_assignment or member.secondary_assignment):
-                assigned += 1
-        self.assignment_summary_label.setText(
-            f"{assigned} / {len(RAID_PLAN_SEATS)} spots have explicit duties.\n"
-            "Main Duty is the canonical primary assignment. Backup / Utility is optional secondary intent."
-        )
+            seat_id = _slug(spot)
+            member = members.get(seat_id.casefold())
+            player = _clean(member.gamertag) if member else ""
+            self.support_table.item(row, 1).setText(player)
+            self.utility_table.item(row, 1).setText(player)
+
+            gear = ""
+            if member is not None:
+                gear = " + ".join(member.planned_gear_sets)
+                if not gear:
+                    gear = _clean(member.selected_build_name)
+            self.support_table.item(row, 3).setText(gear or "—")
+            self.support_table.item(row, 4).setText("Raid Plan" if member else "Unassigned")
+
+        self._refresh_assignment_summary()
+        self._refresh_plan_snapshot()
         self._refresh_selected_spot()
 
-    def _refresh_selected_spot(self) -> None:
-        row = self.assignment_table.currentRow()
-        if row < 0:
-            self._set_selected_spot_empty("Select a spot", "Choose a row to review its duties.")
+    def _refresh_assignment_summary(self) -> None:
+        if not hasattr(self, "assignment_summary_label"):
             return
-        spot = RAID_PLAN_SEATS[row]
         try:
             plan = self.current_plan()
-            member = plan.member(_slug(spot))
+        except Exception:
+            return
+        support_count = sum(
+            bool(member.primary_assignment or member.secondary_assignment)
+            for member in plan.members
+        )
+        utility_count = sum(bool(member.utility_assignments) for member in plan.members)
+        self.assignment_summary_label.setText(
+            f"{support_count} / {len(RAID_PLAN_SEATS)} spots have buff/debuff jobs.\n"
+            f"{utility_count} / {len(RAID_PLAN_SEATS)} spots have utility/mechanic jobs.\n"
+            "Buff/debuff ownership is kept separate from utility so Coverage can audit support cleanly."
+        )
+
+    def _refresh_plan_snapshot(self) -> None:
+        if not hasattr(self, "plan_snapshot_label"):
+            return
+        try:
+            plan = self.current_plan()
+        except Exception:
+            return
+        named = sum(bool(_clean(member.gamertag)) for member in plan.members)
+        builds = sum(
+            bool(member.selected_build_name or member.planned_gear_sets)
+            for member in plan.members
+        )
+        self.plan_snapshot_label.setText(
+            f"{plan.name}\n"
+            f"{plan.trial_id} • {plan.difficulty or 'Difficulty not set'}\n"
+            f"{plan.team_name or 'Ad-hoc team'}\n"
+            f"{named}/12 players named • {builds}/12 build plans"
+        )
+
+    def _refresh_selected_spot(self) -> None:
+        row = self.support_table.currentRow()
+        if row < 0:
+            self._set_selected_spot_empty("Select a spot", "Choose a row to review its jobs.")
+            return
+        spot = RAID_PLAN_SEATS[row]
+        seat_id = _slug(spot)
+        try:
+            plan = self.current_plan()
+            member = plan.member(seat_id)
         except Exception:
             member = None
         if member is None:
-            self._set_selected_spot_empty(spot, "No player assigned to this spot yet.")
+            self._set_selected_spot_empty(spot, "No plan state exists for this spot yet.")
             return
 
         role = _clean(member.role) or "Role not selected"
@@ -340,17 +496,97 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.selected_spot_title.setText(spot)
         self.selected_spot_role.setText(" • ".join(value for value in (role, eso_class) if value))
         self._set_selected_role_icon(role)
-        self.selected_player.setText(member.gamertag)
+        self.selected_player.setText(_clean(member.gamertag) or "Recruitment Needed")
         self.selected_character.setText(_clean(member.character_name) or "Not selected")
-        self.selected_primary.setText(_clean(member.primary_assignment) or "Not set")
-        self.selected_secondary.setText(_clean(member.secondary_assignment) or "None")
-        self.selected_gear.setText("Not tracked in Raid Plan")
+        support = " • ".join(
+            value for value in (
+                _clean(member.primary_assignment),
+                _clean(member.secondary_assignment),
+            )
+            if value
+        )
+        self.selected_support.setText(support or "Not set")
+        self.selected_utility.setText(
+            " • ".join(member.utility_assignments) or "None"
+        )
+        self.selected_gear.setText(
+            " + ".join(member.planned_gear_sets) or "Not assigned"
+        )
         self.selected_build.setText(_clean(member.selected_build_name) or "Not selected")
-        self.selected_notes.setText(_clean(member.notes) or "None")
+
+        self._selected_note_seat = seat_id
+        self._loading_selected_notes = True
+        note = self._notes_by_seat.get(seat_id, _clean(member.notes))
+        self.selected_notes.setPlainText(note)
+        self._loading_selected_notes = False
+
+    def current_plan(self):
+        plan = super().current_plan()
+        if not hasattr(self, "_utility_by_seat"):
+            return plan
+        members = []
+        for member in plan.members:
+            seat_id = member.seat_id.casefold()
+            utilities = self._utility_by_seat.get(
+                seat_id,
+                tuple(member.utility_assignments),
+            )
+            note = self._notes_by_seat.get(
+                seat_id,
+                _clean(member.notes),
+            )
+            members.append(
+                member.with_selection(
+                    utility_assignments=tuple(utilities),
+                    notes=note or None,
+                )
+            )
+        return replace(plan, members=tuple(members))
 
     def apply_plan(self, plan) -> None:
         super().apply_plan(plan)
-        if hasattr(self, "assignment_summary_label"):
+        self._utility_by_seat = {
+            member.seat_id.casefold(): tuple(member.utility_assignments)
+            for member in plan.members
+        }
+        self._notes_by_seat = {
+            member.seat_id.casefold(): _clean(member.notes)
+            for member in plan.members
+        }
+        if hasattr(self, "support_table"):
+            members = {member.seat_id.casefold(): member for member in plan.members}
+            for row, spot in enumerate(RAID_PLAN_SEATS):
+                member = members.get(_slug(spot).casefold())
+                primary, secondary = self._support_combos(row)
+                for combo, value in (
+                    (primary, member.primary_assignment if member else ""),
+                    (secondary, member.secondary_assignment if member else ""),
+                ):
+                    if combo is not None:
+                        combo.blockSignals(True)
+                        combo.setCurrentText(_clean(value))
+                        combo.blockSignals(False)
+                utility = self.utility_table.cellWidget(row, 2)
+                if isinstance(utility, QComboBox):
+                    utility.blockSignals(True)
+                    value = member.utility_assignments[0] if member and member.utility_assignments else ""
+                    utility.setCurrentText(value)
+                    utility.blockSignals(False)
+            self._refresh_city_assignment_rows()
+
+    def clear_plan(self) -> None:
+        super().clear_plan()
+        self._utility_by_seat.clear()
+        self._notes_by_seat.clear()
+        if hasattr(self, "support_table"):
+            for row in range(len(RAID_PLAN_SEATS)):
+                primary, secondary = self._support_combos(row)
+                for combo in (primary, secondary):
+                    if combo is not None:
+                        combo.setCurrentText("")
+                utility = self.utility_table.cellWidget(row, 2)
+                if isinstance(utility, QComboBox):
+                    utility.setCurrentText("")
             self._refresh_city_assignment_rows()
 
     def save_current_plan(self) -> None:
