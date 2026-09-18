@@ -268,15 +268,28 @@ def _responsibility_for_row(page, row: int) -> str:
 
 def _status_for_row(page, row: int, candidate) -> str:
     player = page._cell_text(row, 11).strip()
-    if not player or player.casefold().startswith("recruit"):
-        return "Needs gear"
     slot = page._cell_text(row, 0) or f"Slot {row + 1}"
-    applied = slot in getattr(page, "_comp_applied_candidates", {})
-    if candidate is None:
+    manual_sets = _manual_sets_for_slot(page, slot)
+    applied_candidate = getattr(page, "_comp_applied_candidates", {}).get(slot)
+    applied = applied_candidate is not None
+    applied_sets = tuple(
+        str(value).strip()
+        for value in (
+            getattr(applied_candidate, "five_piece_sets", ())
+            or getattr(applied_candidate, "gear_sets", ())
+            or ()
+        )
+        if str(value).strip()
+    )
+    planned_gear = bool(manual_sets or applied_sets)
+
+    if not player or player.casefold().startswith("recruit"):
+        return "Planned gear" if planned_gear else "Needs gear"
+    if candidate is None and not planned_gear:
         return "Needs build"
     if applied and bool(getattr(candidate, "complete_build", False)):
         return "Ready"
-    if applied:
+    if applied or manual_sets:
         return "1 change"
     return "Review"
 
