@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 """Phase 14 Rotation Builder.
 
 This page deliberately owns its widgets and signals. It uses the established rotation
@@ -13,6 +15,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFrame,
+    QFileDialog,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -33,14 +36,27 @@ from minmax.resource_costs import ResourceType
 from minmax.rotation_ability_priority import AbilityPriorityEntry
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from services.build_context_variant_service import resolve_build_context
+from services.build_rotation_artifact_service import (
+    BuildRotationArtifactService,
+    jsonable,
+    resolve_canonical_build_id,
+)
 from services.build_service import BuildService
 from services.encounter_boss_guide import EncounterBossGuideService
+from services.phase14_rotation_runtime_service import Phase14RotationRuntimeService
+from services.rotation_pdf_export_service import (
+    RotationPdfExportContext,
+    RotationPdfExportService,
+)
 from services.rotation_sustain_service import RotationSustainService
+from services.rotation_timeline_projection_service import RotationTimelineProjectionService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
+from ui.components.rotation_timeline_widget import RotationTimelineWidget
 from ui.foundry_page import FoundryPage
 from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationSupport
+from ui.rotation_timeline_dashboard_support import RotationTimelineIconResolver
 from ui.ux_icons import icon_label, set_button_icon
 
 
@@ -90,7 +106,18 @@ class RotationBuilderPage(FoundryPage):
         super().__init__(parent)
         self.build_service = BuildService(get_data_dir() / "builds.json")
         self.rotation_generation = RotationGenerationSupport()
+        self.rotation_runtime = Phase14RotationRuntimeService(
+            generation=self.rotation_generation
+        )
         self.rotation_sustain = RotationSustainService(get_data_dir() / "eso.db")
+        self.rotation_artifacts = BuildRotationArtifactService(
+            get_data_dir() / "build_rotations.json"
+        )
+        self.timeline_projector = RotationTimelineProjectionService()
+        self.timeline_icon_resolver = RotationTimelineIconResolver()
+        self.rotation_pdf_exporter = RotationPdfExportService()
+        self.timeline_projection = None
+        self.last_generation_result = None
         self.encounter_service = EncounterBossGuideService(get_data_dir() / "eso.db")
         self.roster = self.build_service.load()
         self.rotation_plan: RotationPlan | None = None
@@ -234,6 +261,27 @@ class RotationBuilderPage(FoundryPage):
         timeline_host = QWidget()
         timeline_layout = QVBoxLayout(timeline_host)
         timeline_layout.setContentsMargins(6, 6, 6, 6)
+
+        timeline_controls = QHBoxLayout()
+        timeline_controls.setContentsMargins(0, 0, 0, 0)
+        timeline_controls.setSpacing(6)
+        self.timeline_visual_button = QPushButton("Timeline")
+        self.timeline_visual_button.setCheckable(True)
+        self.timeline_visual_button.setChecked(True)
+        self.timeline_visual_button.setProperty("primary", True)
+        self.timeline_details_button = QPushButton("Details")
+        self.timeline_details_button.setCheckable(True)
+        self.timeline_visual_button.clicked.connect(self._show_visual_timeline)
+        self.timeline_details_button.clicked.connect(self._show_timeline_details)
+        timeline_controls.addWidget(self.timeline_visual_button)
+        timeline_controls.addWidget(self.timeline_details_button)
+        timeline_controls.addStretch(1)
+        timeline_layout.addLayout(timeline_controls)
+
+        self.timeline_widget = RotationTimelineWidget()
+        timeline_layout.addWidget(self.timeline_widget)
+        self.timeline_table.hide()
+
         self.timeline_hint = _muted(
             "Nothing is fabricated before the engine returns an authoritative schedule."
         )
@@ -299,12 +347,28 @@ class RotationBuilderPage(FoundryPage):
         save_host = QWidget()
         save_layout = QVBoxLayout(save_host)
         save_layout.setContentsMargins(6, 6, 6, 6)
-        save_layout.addWidget(
+        save_card = FoundryCard("Save & Export", "download")
+        save_card.addWidget(
             _muted(
-                "Save & Export remains visible, but saving is disabled until the new page has "
-                "a generated authoritative plan to persist."
+                "Save the completed authoritative plan to this exact Build, or export the "
+                "same materialized timeline as a phone-readable PDF."
             )
         )
+        save_actions = QHBoxLayout()
+        save_actions.setContentsMargins(0, 0, 0, 0)
+        save_actions.setSpacing(8)
+        self.save_rotation_button = QPushButton("Save Rotation to Build")
+        self.save_rotation_button.setProperty("primary", True)
+        self.save_rotation_button.setEnabled(False)
+        self.save_rotation_button.clicked.connect(self.save_rotation_to_build)
+        self.export_pdf_button = QPushButton("Export PDF")
+        self.export_pdf_button.setEnabled(False)
+        self.export_pdf_button.clicked.connect(self.export_rotation_pdf)
+        save_actions.addWidget(self.save_rotation_button)
+        save_actions.addWidget(self.export_pdf_button)
+        save_actions.addStretch(1)
+        save_card.addLayout(save_actions)
+        save_layout.addWidget(save_card)
         save_layout.addStretch(1)
         self.result_tabs.addTab(save_host, "Save & Export")
 
@@ -800,14 +864,23 @@ class RotationBuilderPage(FoundryPage):
             )
         return tuple(entries)
 
-    def _selected_resource(self, build) -> ResourceType:
+    def _explicit_resource(self) -> ResourceType | None:
         explicit = _clean(self.resource_combo.currentData())
-        if explicit:
-            return ResourceType(explicit)
+        return ResourceType(explicit) if explicit else None
+
+    def _selected_resource(self, build) -> ResourceType:
+        explicit = self._explicit_resource()
+        if explicit is not None:
+            return explicit
         role = _clean(getattr(build, "Role", "")).casefold()
         if role == "dd":
-            front_weapon = _clean(getattr(getattr(build, "FrontBarWeapon", None), "WeaponType", ""))
-            if any(token in front_weapon.casefold() for token in ("bow", "two-handed", "sword", "axe", "mace", "dagger")):
+            front_weapon = _clean(
+                getattr(getattr(build, "FrontBarWeapon", None), "WeaponType", "")
+            )
+            if any(
+                token in front_weapon.casefold()
+                for token in ("bow", "two-handed", "sword", "axe", "mace", "dagger")
+            ):
                 return ResourceType.STAMINA
         return ResourceType.MAGICKA
 
@@ -837,19 +910,32 @@ class RotationBuilderPage(FoundryPage):
         )
 
         try:
-            result = self.rotation_generation.generate_with_evidence(
+            runtime = self.rotation_runtime.generate(
                 build=build,
                 request=request,
+                heavy_behavior=self.heavy_attack_combo.currentText(),
+                reserve_fraction=float(self.minimum_reserve_spin.value()) / 100.0,
+                explicit_resource=self._explicit_resource(),
             )
+            result = runtime.generation
         except Exception as exc:
             self.clear_result()
             self.status.error(f"Rotation generation failed: {exc}")
             return
 
+        self.last_generation_result = result
         self.rotation_plan = result.plan
         self._render_plan(result.plan)
         self._render_evidence(result.plan)
-        self._evaluate_sustain(build, result.plan)
+        self._refresh_visual_timeline(result.plan, result.duration_evidence)
+        self._evaluate_sustain(
+            build,
+            result.plan,
+            resource=runtime.resource,
+            recovery_projection=runtime.recovery_projection,
+        )
+        self.save_rotation_button.setEnabled(bool(result.plan.actions))
+        self.export_pdf_button.setEnabled(self.timeline_projection is not None)
         heavy_count = sum(
             1 for action in result.plan.actions
             if action.kind is RotationActionKind.HEAVY_ATTACK
@@ -909,12 +995,23 @@ class RotationBuilderPage(FoundryPage):
             or "No assumptions or unresolved evidence were reported."
         )
 
-    def _evaluate_sustain(self, build, plan: RotationPlan) -> None:
+    def _evaluate_sustain(
+        self,
+        build,
+        plan: RotationPlan,
+        *,
+        resource: ResourceType,
+        recovery_projection=None,
+    ) -> None:
         try:
-            projection = self.rotation_sustain.evaluate(
-                build=build,
-                plan=plan,
-                resource=self._selected_resource(build),
+            projection = (
+                recovery_projection
+                if recovery_projection is not None
+                else self.rotation_sustain.evaluate(
+                    build=build,
+                    plan=plan,
+                    resource=resource,
+                )
             )
         except Exception as exc:
             self.sustain_label.setText(
@@ -938,8 +1035,178 @@ class RotationBuilderPage(FoundryPage):
             lines.extend(f"• {item}" for item in projection.unresolved[:6])
         self.sustain_label.setText("\n".join(lines))
 
+    def _show_visual_timeline(self) -> None:
+        self.timeline_visual_button.setChecked(True)
+        self.timeline_details_button.setChecked(False)
+        self.timeline_widget.show()
+        self.timeline_table.hide()
+
+    def _show_timeline_details(self) -> None:
+        self.timeline_visual_button.setChecked(False)
+        self.timeline_details_button.setChecked(True)
+        self.timeline_widget.hide()
+        self.timeline_table.show()
+
+    def _refresh_visual_timeline(self, plan: RotationPlan, duration_evidence) -> None:
+        try:
+            projection = self.timeline_projector.project(
+                plan,
+                duration_evidence=duration_evidence,
+                icon_path_resolver=self.timeline_icon_resolver.resolve,
+            )
+        except Exception as exc:
+            self.timeline_projection = None
+            self.timeline_widget.clear_projection()
+            self.timeline_hint.setText(
+                "The authoritative plan is available, but visual timeline projection failed: "
+                + str(exc)
+            )
+            return
+
+        self.timeline_projection = projection
+        self.timeline_widget.set_projection(projection)
+        self._show_visual_timeline()
+
+    def _rotation_artifact(self) -> dict:
+        plan = self.rotation_plan
+        if plan is None or not plan.actions:
+            raise ValueError("Generate a completed rotation before saving it to the build.")
+
+        build = self._selected_build()
+        payload = jsonable(plan)
+        payload["artifact_schema_version"] = 1
+        payload["role"] = _clean(getattr(build, "Role", "")) if build is not None else ""
+        payload["rotation_type"] = _clean(self.rotation_type_combo.currentData()) or "Semi-static"
+        payload["encounter_id"] = _clean(self.boss_combo.currentData())
+        payload["setup"] = {
+            "intent": self._intent_name,
+            "team": _clean(self.team_combo.currentData()),
+            "trial_id": _clean(self.content_combo.currentData()),
+            "boss": _clean(self.boss_combo.currentText()),
+            "difficulty": _clean(self.difficulty_combo.currentText()),
+            "execute_percent": int(self.execute_spin.value()),
+            "weaving": _clean(self.weaving_combo.currentText()),
+            "bar_swapping": _clean(self.bar_swap_combo.currentText()),
+            "heavy_attacks": _clean(self.heavy_attack_combo.currentText()),
+            "recovery_resource": (
+                self._explicit_resource().value
+                if self._explicit_resource() is not None
+                else "automatic"
+            ),
+            "recovery_trigger_fraction": float(self.minimum_reserve_spin.value()) / 100.0,
+            "ultimate_bar": _clean(self.ultimate_combo.currentData()),
+            "potion": _clean(getattr(build, "Potion", "")) if build is not None else "",
+            "potion_on_cooldown": False,
+            "notes": self.notes_edit.toPlainText().strip(),
+        }
+        return payload
+
+    def save_rotation_to_build(self) -> None:
+        base_build = self._base_build()
+        if base_build is None:
+            self.status.warning("Select a saved build before saving a rotation.")
+            return
+        if self.rotation_plan is None or not self.rotation_plan.actions:
+            self.status.warning("Generate a completed rotation before saving it.")
+            return
+
+        build_id = resolve_canonical_build_id(
+            self.build_service.canonical.catalog_service,
+            base_build,
+        )
+        if not build_id:
+            self.status.warning(
+                "This build could not be resolved to one canonical Build identity; "
+                "the rotation was not saved."
+            )
+            return
+
+        try:
+            self.rotation_artifacts.save_rotation(
+                build_id=build_id,
+                artifact=self._rotation_artifact(),
+            )
+        except (OSError, ValueError) as exc:
+            self.status.error(f"Save rotation to build failed: {exc}")
+            return
+
+        self.status.success(
+            f"Saved rotation to {self._character_name(base_build)} · "
+            f"{self._build_name(base_build)}."
+        )
+
+    @staticmethod
+    def _safe_filename(value: str) -> str:
+        import re
+
+        cleaned = re.sub(
+            r"[^A-Za-z0-9._-]+",
+            "_",
+            str(value or "").strip(),
+        ).strip("_.")
+        return cleaned or "rotation"
+
+    def export_rotation_pdf(self) -> None:
+        plan = self.rotation_plan
+        projection = self.timeline_projection
+        if plan is None or projection is None:
+            self.status.warning(
+                "Generate a rotation with a materialized timeline before exporting."
+            )
+            return
+
+        build = self._selected_build()
+        default_name = (
+            f"{self._safe_filename(plan.character_name)}_"
+            f"{self._safe_filename(plan.build_name)}_rotation.pdf"
+        )
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Rotation PDF",
+            default_name,
+            "PDF Files (*.pdf)",
+        )
+        if not filename:
+            return
+
+        context = RotationPdfExportContext(
+            role=_clean(getattr(build, "Role", "")) or "Unspecified",
+            eso_class=_clean(getattr(build, "EsoClass", "")) or "Unspecified",
+            race=_clean(getattr(build, "Race", "")) or "Unspecified",
+            rotation_mode=_clean(self.rotation_type_combo.currentData()) or "Semi-static",
+            target_type="Encounter" if _clean(self.boss_combo.currentData()) else "General",
+            sustain_summary=self.sustain_label.text(),
+            sustain_detail=(
+                f"Intent: {self._intent_name}; "
+                f"Heavy attacks: {self.heavy_attack_combo.currentText()}; "
+                f"Reserve: {self.minimum_reserve_spin.value()}%"
+            ),
+            notes=self.notes_edit.toPlainText().strip(),
+        )
+        try:
+            output = self.rotation_pdf_exporter.export(
+                plan=plan,
+                projection=projection,
+                path=Path(filename),
+                context=context,
+                include_details=True,
+            )
+        except (OSError, RuntimeError, ValueError) as exc:
+            self.status.warning(f"Rotation PDF export failed: {exc}")
+            return
+
+        self.status.success(f"Rotation PDF exported: {output}")
+
     def clear_result(self) -> None:
         self.rotation_plan = None
+        self.last_generation_result = None
+        self.timeline_projection = None
+        if hasattr(self, "timeline_widget"):
+            self.timeline_widget.clear_projection()
+        if hasattr(self, "save_rotation_button"):
+            self.save_rotation_button.setEnabled(False)
+        if hasattr(self, "export_pdf_button"):
+            self.export_pdf_button.setEnabled(False)
         if hasattr(self, "timeline_table"):
             self.timeline_table.setRowCount(0)
         if hasattr(self, "timeline_hint"):
