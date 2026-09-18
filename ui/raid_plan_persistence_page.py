@@ -86,6 +86,7 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
         name=visible.name,
         team_name=loaded.team_name,
         difficulty=visible.difficulty,
+        plan_note=loaded.plan_note,
         status=loaded.status,
         members=tuple(members),
         triggered_responsibilities=triggered,
