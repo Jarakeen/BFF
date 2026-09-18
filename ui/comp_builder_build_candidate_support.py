@@ -461,6 +461,11 @@ def save_generated_plan(page):
         )
 
         candidate = applied.get(slot_name)
+        manual_gear_sets = tuple(
+            str(value).strip()
+            for value in getattr(page, "_comp_manual_gear_sets_by_slot", {}).get(slot_name, ())
+            if str(value).strip()
+        )
         roster_context_active = slot_name in roster_members
         roster_member = roster_members.get(slot_name)
         roster_player = (
@@ -486,10 +491,15 @@ def save_generated_plan(page):
                     player_name=roster_player if known_player else "Recruitment Needed",
                     character_name=roster_character if known_player else "",
                     eso_class=selected_class,
-                    build_name="Composition requirement",
-                    gear_summary="",
+                    build_name=(
+                        "Manual gear package"
+                        if manual_gear_sets
+                        else "Composition requirement"
+                    ),
+                    gear_summary=" + ".join(manual_gear_sets),
                     unresolved=detail,
                     role=role,
+                    gear_sets=manual_gear_sets,
                 )
             )
             continue
@@ -507,15 +517,21 @@ def save_generated_plan(page):
                     candidate.source_name if is_saved else ""
                 ),
                 eso_class=candidate.eso_class or selected_class,
-                build_name=candidate.name,
-                gear_summary=" + ".join(candidate.gear_sets),
+                build_name=(
+                    "Manual gear package"
+                    if manual_gear_sets
+                    else candidate.name
+                ),
+                gear_summary=" + ".join(
+                    manual_gear_sets or tuple(candidate.gear_sets)
+                ),
                 unresolved=_candidate_unresolved(candidate, detail),
                 role=candidate.role or role,
                 source_kind=candidate.source_kind,
                 source_name=candidate.source_name,
                 source_url=candidate.source_url,
                 candidate_id=candidate.candidate_id,
-                gear_sets=tuple(candidate.gear_sets),
+                gear_sets=manual_gear_sets or tuple(candidate.gear_sets),
                 skills=tuple(candidate.skills),
                 mundus=candidate.mundus,
             )
