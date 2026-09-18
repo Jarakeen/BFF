@@ -70,3 +70,10 @@ def test_roster_intake_places_player_first_in_visible_table():
 
     assert "header.visualIndex(PLAYER_COLUMN)" in source
     assert "header.moveSection(visual_index, 0)" in source
+
+
+def test_roster_intake_accepts_explicit_four_or_twelve_player_context():
+    source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+
+    assert "group_size: int | None = None" in source
+    assert "group_size = 4 if group_size == 4 else 12 if group_size == 12" in source
