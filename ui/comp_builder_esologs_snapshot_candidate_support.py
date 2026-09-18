@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from services.comp_builder_build_candidates import CompBuildCandidate
+from engine.config import get_data_dir
+from services.comp_builder_build_candidates import CompBuildCandidate, _five_piece_set_names
 from services.esologs_client import EsoLogsApiError
 from services.team_role_autofill import normalize_team_role
 
@@ -83,6 +84,10 @@ def _snapshot_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
                 score += min(10.0, float(len(skills)))
                 reasons.append("contains observed ability evidence")
 
+            five_piece_sets = _five_piece_set_names(
+                get_data_dir() / "eso.db",
+                gear_sets,
+            )
             rows.append(
                 CompBuildCandidate(
                     candidate_id=candidate_id,
@@ -97,6 +102,7 @@ def _snapshot_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
                     eso_class=eso_class,
                     role=role_label,
                     gear_sets=gear_sets,
+                    five_piece_sets=five_piece_sets,
                     skills=skills,
                     mundus=_clean(getattr(player, "Mundus", "")),
                     complete_build=False,
