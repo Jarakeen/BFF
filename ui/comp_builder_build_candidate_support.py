@@ -71,6 +71,29 @@ def _candidate_text(candidate: CompBuildCandidate, rank: int) -> list[str]:
     return lines
 
 
+def _roster_member_for_row(page, row: int):
+    if row < 0:
+        return None
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    return getattr(page, "_comp_roster_member_by_slot", {}).get(slot_name)
+
+
+def _candidate_matches_roster_member(candidate: CompBuildCandidate, member) -> bool:
+    """Saved-build candidates must belong to the loaded player; references remain advice."""
+    if member is None or candidate.source_kind != "saved_build":
+        return True
+    identities = {
+        " ".join(str(value or "").strip().casefold().split())
+        for value in (
+            getattr(member, "PlayerName", ""),
+            getattr(member, "CharacterName", ""),
+        )
+        if str(value or "").strip()
+    }
+    source = " ".join(str(candidate.source_name or "").strip().casefold().split())
+    return bool(source and source in identities)
+
+
 def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
     if row < 0:
         return ()
@@ -91,13 +114,19 @@ def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
         if observed is not None
         else ()
     )
-    return page._comp_build_candidate_service.candidates_for_chair(
+    candidates = page._comp_build_candidate_service.candidates_for_chair(
         goal=goal,
         slot_name=slot_name,
         role=role,
         preferred_class=preferred_class,
         observed_gear_sets=observed_gear,
         observed_skills=observed_skills,
+    )
+    member = _roster_member_for_row(page, row)
+    return tuple(
+        candidate
+        for candidate in candidates
+        if _candidate_matches_roster_member(candidate, member)
     )
 
 
@@ -413,14 +442,31 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
             f"Providers: {providers}. Mechanic jobs: {mechanic_jobs}."
         )
         candidate = applied.get(slot_name)
+        roster_members = getattr(self, "_comp_roster_member_by_slot", {})
+        roster_context_active = slot_name in roster_members
+        roster_member = roster_members.get(slot_name)
+        roster_player = (
+            str(getattr(roster_member, "PlayerName", "") or "").strip()
+            if roster_member is not None
+            else ""
+        )
+        roster_character = (
+            str(getattr(roster_member, "CharacterName", "") or "").strip()
+            if roster_member is not None
+            else ""
+        )
+
         if candidate is None:
             concrete = selected_class != "Any class"
+            known_player = bool(roster_context_active and roster_member is not None)
             slots.append(
                 GeneratedRosterDraftSlot(
                     slot_name=slot_name,
-                    kind="prescribed_recruit" if concrete else "open_recruit",
-                    player_name="Recruitment Needed",
-                    character_name="",
+                    kind="saved" if known_player else (
+                        "prescribed_recruit" if concrete else "open_recruit"
+                    ),
+                    player_name=roster_player if known_player else "Recruitment Needed",
+                    character_name=roster_character if known_player else "",
                     eso_class=selected_class,
                     build_name="Composition requirement",
                     gear_summary="",
@@ -431,12 +477,17 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
             continue
 
         is_saved = candidate.source_kind == "saved_build"
+        known_player = bool(roster_context_active and roster_member is not None)
         slots.append(
             GeneratedRosterDraftSlot(
                 slot_name=slot_name,
-                kind="saved" if is_saved else "prescribed_recruit",
-                player_name=candidate.source_name if is_saved else "Recruitment Needed",
-                character_name=candidate.source_name if is_saved else "",
+                kind="saved" if is_saved or known_player else "prescribed_recruit",
+                player_name=roster_player if known_player else (
+                    candidate.source_name if is_saved else "Recruitment Needed"
+                ),
+                character_name=roster_character if known_player else (
+                    candidate.source_name if is_saved else ""
+                ),
                 eso_class=candidate.eso_class or selected_class,
                 build_name=candidate.name,
                 gear_summary=" + ".join(candidate.gear_sets),
