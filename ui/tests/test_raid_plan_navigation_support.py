@@ -24,14 +24,15 @@ def test_raid_lead_navigation_exposes_current_planning_workspaces() -> None:
         )
 
         assert raid.get("children", [])[:3] == [
-            ("Roster", "roster_workspace"),
             ("Raid Plans", "raid_plans"),
             ("Assignments", "assignments"),
+            ("Readiness", "readiness"),
         ]
+        assert ("Roster", "roster_workspace") in team.get("children", [])
         assert ("Rotation Builder", "rotations") in build.get("children", [])
         assert ("Extreme Builder", "extreme_optimization") in build.get("children", [])
         assert ("Coverage", "console:7") in team.get("children", [])
-        assert ("Comp Maker", "comp_builder") in team.get("children", [])
+        assert ("Comp Builder", "comp_builder") in team.get("children", [])
         assert ("Optimizer Adviser", "console:6") in team.get("children", [])
     finally:
         foundry_sidebar.CORE_NAV_SECTIONS[:] = original
