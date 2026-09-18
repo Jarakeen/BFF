@@ -158,7 +158,11 @@ def _bonus_lines(soup: BeautifulSoup) -> tuple[str, ...]:
             pending = text
             continue
 
-        if pending and exact_marker.fullmatch(pending):
+        if pending is not None:
+            # ESO-Hub may split one bonus across several nested spans, e.g.
+            # "(2 items)" + "Adds" + "526 Critical Chance," + proc text.
+            # Continue collecting until the next item-count marker or Weapons
+            # boundary instead of stopping after the first fragment.
             pending = normalize_text(f"{pending} {text}")
 
     if pending and pending not in result:
