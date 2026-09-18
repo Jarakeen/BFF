@@ -994,6 +994,27 @@ def _build_why(page, card: FoundryCard) -> None:
     host.show()
 
 
+def _materialize_visible_recommendations(page) -> int:
+    """Commit each chair's visible recommendation unless the user chose another candidate."""
+    from ui import comp_builder_build_candidate_support as candidate_support
+
+    applied = getattr(page, "_comp_applied_candidates", {})
+    committed = 0
+    for row in range(page.matrix_table.rowCount()):
+        slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+        if slot_name in applied:
+            continue
+        try:
+            candidates = tuple(candidate_support._chair_candidates(page, row))
+        except (AttributeError, OSError, TypeError, ValueError):
+            candidates = ()
+        if not candidates:
+            continue
+        candidate_support._set_candidate_for_row(page, row, candidates[0])
+        committed += 1
+    return committed
+
+
 def _save_to_originating_raid_plan(page) -> None:
     """Save the current Comp Builder choices back into the bound Raid Plan."""
     origin_id = str(getattr(page, "_raid_plan_origin_id", "") or "").strip()
@@ -1006,6 +1027,7 @@ def _save_to_originating_raid_plan(page) -> None:
 
     from ui import comp_builder_build_candidate_support as candidate_support
 
+    _materialize_visible_recommendations(page)
     draft = candidate_support.save_generated_plan(page)
     window = page.window()
     persist = getattr(window, "_persist_generated_comp_plan_to_raid_plan", None)
