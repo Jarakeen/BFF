@@ -143,6 +143,15 @@ _SCORIONS_FEAST_BLOCKER = re.compile(
     r"^Scorion's Feast \(5\): active set bonus is not yet mechanic-mapped:.*fully-charged Heavy Attack.*Overflow Aura.*Weapon and Spell Damage.*$",
     re.IGNORECASE | re.DOTALL,
 )
+
+_VYKANDS_SOULFURY_BLOCKER = re.compile(
+    r"^Vykand's Soulfury \(5\): active set bonus is not yet mechanic-mapped:.*fully-charged Heavy Attack.*Major Force, Major Berserk, or Major Courage.*Weapon and Spell Damage.*$",
+    re.IGNORECASE | re.DOTALL,
+)
+_YANDIRS_MIGHT_BLOCKER = re.compile(
+    r"^Yandir's Might \(5\): active set bonus is not yet mechanic-mapped:.*Critical Damage increases your Weapon and Spell Damage.*fully-charged Heavy Attack removes all stacks.*Weapon and Spell Damage.*$",
+    re.IGNORECASE | re.DOTALL,
+)
 _RED_EAGLES_FURY_BLOCKER = re.compile(
     r"^Red Eagle's Fury \(5\): active set bonus is not yet mechanic-mapped:.*"
     r"Adds\s+(?:\d[\d,]*\s*-\s*)?469\s+Weapon and Spell Damage to your Weapon Skill abilities\.\s*"
@@ -204,6 +213,8 @@ class ExtremeActualHealGearSetCandidateService:
             "salvation": _SALVATION_BLOCKER,
             "scathing mage": _SCATHING_MAGE_BLOCKER,
             "scorion's feast": _SCORIONS_FEAST_BLOCKER,
+            "vykand's soulfury": _VYKANDS_SOULFURY_BLOCKER,
+            "yandir's might": _YANDIRS_MIGHT_BLOCKER,
         }.get(set_name)
         if set_name == "armor master":
             reviewed_objectives = {"max_health"}
