@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QBrush, QFont, QPainterPath, QPen, QPixmap, QPolygonF
-from PySide6.QtWidgets import QLabel, QPushButton, QSizePolicy, QTextEdit, QWidget
+from PySide6.QtWidgets import QLabel, QPushButton, QSizePolicy, QWidget
 
 from engine.config import get_resource_path
 from services.accessibility_preferences import COLOR_VISION_FRIENDLY, COLOR_VISION_STANDARD
@@ -187,57 +187,6 @@ def install() -> None:
         return page
 
     city_raid_plan_workspace_page.CityRaidPlanWorkspacePage._build_overview_surface = plan_overview_with_art
-
-    # ------------------------------------------------------------------
-    # Live Raid Quick Notes are real notes, therefore editable and persisted.
-    # ------------------------------------------------------------------
-    original_live_build_ui = city_live_raid_page.CityLiveRaidPage._build_ui
-    original_live_render = city_live_raid_page.CityLiveRaidPage._render_plan
-
-    def save_run_notes(self) -> None:
-        if self._plan is None:
-            self.status.warning("Select a Raid Plan before saving run notes.")
-            return
-        text = self.run_notes_edit.toPlainText().strip()
-        self.user_state.set_run_notes(self._plan.plan_id, text)
-        self.status.info("Run notes saved.")
-        self._refresh_events()
-
-    def live_build_ui(self) -> None:
-        original_live_build_ui(self)
-        legacy = getattr(self, "notes_label", None)
-        card = _card_ancestor(legacy)
-        if card is None:
-            return
-        if legacy is not None:
-            legacy.hide()
-        self.run_notes_edit = QTextEdit()
-        self.run_notes_edit.setPlaceholderText("Add manual pull notes, reminders, or observations…")
-        self.run_notes_edit.setAcceptRichText(False)
-        self.run_notes_edit.setMaximumHeight(135)
-        self.run_notes_edit.setToolTip("Editable manual run notes. Saved per Raid Plan; no combat telemetry is inferred.")
-        card.addWidget(self.run_notes_edit)
-        save = QPushButton("Save Run Notes")
-        save.setProperty("primary", True)
-        save.clicked.connect(self._save_run_notes)
-        card.addWidget(save)
-
-    def live_render(self) -> None:
-        original_live_render(self)
-        edit = getattr(self, "run_notes_edit", None)
-        if edit is None:
-            return
-        if self._plan is None:
-            edit.clear()
-            edit.setEnabled(False)
-            return
-        edit.setEnabled(True)
-        if not edit.hasFocus():
-            edit.setPlainText(self.user_state.run_notes(self._plan.plan_id))
-
-    city_live_raid_page.CityLiveRaidPage._save_run_notes = save_run_notes
-    city_live_raid_page.CityLiveRaidPage._build_ui = live_build_ui
-    city_live_raid_page.CityLiveRaidPage._render_plan = live_render
 
     # ------------------------------------------------------------------
     # Raid Map: remove red/green dependence from every theme.
