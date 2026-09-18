@@ -64,6 +64,10 @@ class ExtremeActualHealSpecialGearDenominator:
         return sum(row.family == "arena_weapon" for row in self.rows)
 
     @property
+    def entity_only_count(self) -> int:
+        return sum(row.family == "entity_only" for row in self.rows)
+
+    @property
     def unresolved_rows(self) -> tuple[ExtremeActualHealSpecialGearDisposition, ...]:
         return tuple(row for row in self.rows if row.unresolved)
 
@@ -138,6 +142,56 @@ class ExtremeActualHealSpecialGearDenominatorService:
             return "arena_weapon"
         return None
 
+    def _entity_only_rows(self) -> tuple[ExtremeActualHealSpecialGearDisposition, ...]:
+        """Expose canonical gear-set entities not yet normalized into gear_set.
+
+        The build editor deliberately exposes the union of gear_set and canonical
+        entity rows. Extreme must audit the same universe. Entity-only rows cannot
+        be silently treated as absent, because arena weapons are known to arrive
+        through this path before their set bonus/slot structure is normalized.
+        """
+        if not self.database_path.is_file():
+            return ()
+        with sqlite3.connect(self.database_path) as db:
+            tables = {
+                str(row[0])
+                for row in db.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                ).fetchall()
+            }
+            if "entity" not in tables or "gear_set" not in tables:
+                return ()
+            rows = db.execute(
+                """
+                SELECT e.id, e.name
+                FROM entity e
+                LEFT JOIN gear_set gs
+                  ON LOWER(TRIM(gs.name)) = LOWER(TRIM(e.name))
+                WHERE e.entity_type = 'gear_set'
+                  AND e.name IS NOT NULL
+                  AND TRIM(e.name) <> ''
+                  AND gs.id IS NULL
+                ORDER BY e.name COLLATE NOCASE, e.id
+                """
+            ).fetchall()
+
+        result: list[ExtremeActualHealSpecialGearDisposition] = []
+        for _raw_id, raw_name in rows:
+            name = str(raw_name or "").strip()
+            result.append(
+                ExtremeActualHealSpecialGearDisposition(
+                    set_id=-1,
+                    set_name=name,
+                    family="entity_only",
+                    relevant_objectives=(),
+                    unresolved=(
+                        "canonical gear-set entity is selectable but lacks normalized "
+                        "gear_set / gear_set_piece / gear_set_bonus evidence",
+                    ),
+                )
+            )
+        return tuple(result)
+
     def build(self) -> ExtremeActualHealSpecialGearDenominator:
         arena_ids = self._arena_weapon_ids()
         rows: list[ExtremeActualHealSpecialGearDisposition] = []
@@ -172,6 +226,8 @@ class ExtremeActualHealSpecialGearDenominatorService:
                     unresolved=tuple(dict.fromkeys(unresolved)),
                 )
             )
+
+        rows.extend(self._entity_only_rows())
 
         return ExtremeActualHealSpecialGearDenominator(
             rows=tuple(
