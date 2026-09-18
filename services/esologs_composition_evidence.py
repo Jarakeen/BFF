@@ -33,10 +33,6 @@ def _normalize_role(value: object) -> str:
 
 def _slot_name(role: str, ordinal: int) -> str:
     if role == "Tank":
-        if ordinal == 1:
-            return "Main Tank"
-        if ordinal == 2:
-            return "Off Tank"
         return f"Tank {ordinal}"
     if role == "Healer":
         return f"Healer {ordinal}"
