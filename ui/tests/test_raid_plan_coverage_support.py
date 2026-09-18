@@ -80,3 +80,10 @@ def test_lower_open_coverage_is_plain_navigation() -> None:
     assert "self.open_coverage_button.clicked.connect(self._open_coverage)" in base
     assert 'self.pageRequested.emit("console:7")' in base
     assert "def _open_coverage(self, *_args) -> None:" not in coverage_page
+
+
+def test_raid_plan_coverage_refresh_wrapper_preserves_call_signature() -> None:
+    source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
+
+    assert "def refresh_with_raid_plan(self, *args, **kwargs):" in source
+    assert "return _ORIGINAL_REFRESH(self, *args, **kwargs)" in source
