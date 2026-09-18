@@ -36,6 +36,8 @@ def _assignment_text(page) -> str:
     slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
     role = page._cell_text(row, 1) or "Unresolved role"
     selected_class = page._selected_class(row) or "Any class"
+    player = page._cell_text(row, 11) if page.matrix_table.columnCount() > 11 else ""
+    target = player or slot_name
 
     candidate_name = "No eligible build selected"
     try:
@@ -49,7 +51,7 @@ def _assignment_text(page) -> str:
 
     return (
         f"SELECTED BUILD: {candidate_name}\n"
-        f"TARGET PLAYER / CHAIR: {slot_name} • {role} • {selected_class}"
+        f"TARGET PLAYER / SLOT: {target} • {role} • {selected_class}"
     )
 
 
