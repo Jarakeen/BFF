@@ -157,12 +157,11 @@ def _open_raid_plan_adviser(window, plan) -> None:
 
 
 
-def _open_plan_comp_builder(window, source_page) -> None:
-    """Load the current Raid Plan people into Comp Builder before navigation."""
+def _bind_plan_comp_builder(window, source_page) -> bool:
+    """Bind the current Raid Plan into Comp Builder without navigating."""
     comp = window.pages.get("comp_builder")
     if comp is None or not hasattr(comp, "apply_roster_team_context"):
-        window.show_page("comp_builder")
-        return
+        return False
 
     try:
         plan = source_page.current_plan()
@@ -171,8 +170,7 @@ def _open_plan_comp_builder(window, source_page) -> None:
             repository.save(plan)
         source_page._loaded_plan_snapshot = plan
     except (AttributeError, OSError, TypeError, ValueError):
-        window.show_page("comp_builder")
-        return
+        return False
 
     trial_combo = getattr(source_page, "trial_combo", None)
     trial_name = (
@@ -196,18 +194,20 @@ def _open_plan_comp_builder(window, source_page) -> None:
         if index >= 0:
             comp.difficulty_combo.setCurrentIndex(index)
 
+    canonical_seats = (
+        "Main Tank", "Off Tank", "Healer 1", "Healer 2",
+        "DD 1", "DD 2", "DD 3", "DD 4",
+        "DD 5", "DD 6", "DD 7", "DD 8",
+    )
     members = tuple(
         SimpleNamespace(
             Id=None,
             RaidSeatId=next(
                 (
                     seat
-                    for seat in (
-                        "Main Tank", "Off Tank", "Healer 1", "Healer 2",
-                        "DD 1", "DD 2", "DD 3", "DD 4",
-                        "DD 5", "DD 6", "DD 7", "DD 8",
-                    )
-                    if "-".join(seat.casefold().split()) == str(getattr(member, "seat_id", "") or "").strip().casefold()
+                    for seat in canonical_seats
+                    if "-".join(seat.casefold().split())
+                    == str(getattr(member, "seat_id", "") or "").strip().casefold()
                 ),
                 str(getattr(member, "seat_id", "") or "").strip(),
             ),
@@ -219,6 +219,7 @@ def _open_plan_comp_builder(window, source_page) -> None:
         for member in getattr(plan, "members", ()) or ()
         if str(getattr(member, "gamertag", "") or "").strip()
     )
+
     comp._raid_plan_origin_id = str(getattr(plan, "plan_id", "") or "").strip()
     comp._raid_plan_origin_trial_id = str(getattr(plan, "trial_id", "") or "").strip()
     comp._raid_plan_origin_name = str(getattr(plan, "name", "") or "").strip()
@@ -229,6 +230,12 @@ def _open_plan_comp_builder(window, source_page) -> None:
         members,
         group_size=12,
     )
+    return True
+
+
+def _open_plan_comp_builder(window, source_page) -> None:
+    """Load the current Raid Plan people into Comp Builder before navigation."""
+    _bind_plan_comp_builder(window, source_page)
     window.show_page("comp_builder")
 
 
