@@ -63,6 +63,12 @@ def _slug(value: object) -> str:
     return "-".join(part for part in text.replace("'", "").split() if part) or "raid-plan"
 
 
+def is_seat_placeholder(value: object) -> bool:
+    """Return True for neutral Raid Plan chair labels, never real player identities."""
+    text = _clean(value).casefold()
+    return text in {seat.casefold() for seat in RAID_PLAN_SEATS}
+
+
 def role_for_seat(seat: str) -> str:
     """Derive the functional raid role from the chair label."""
     key = _clean(seat).casefold()
@@ -90,6 +96,8 @@ def new_personnel_member(gamertag: str) -> RosterMember:
     player = _clean(gamertag)
     if not player:
         raise ValueError("gamertag is required before saving a player to Personnel")
+    if is_seat_placeholder(player):
+        raise ValueError("Raid Plan seat placeholders cannot be saved as Personnel players")
     return RosterMember(PlayerName=player, Status="Active")
 
 
@@ -441,8 +449,8 @@ class RaidPlanPage(FoundryPage):
 
     def save_player_to_personnel(self, row: int) -> None:
         gamertag = self._player_text(row)
-        if not gamertag:
-            self.status.warning("Type a gamertag before saving a player to Personnel.")
+        if not gamertag or is_seat_placeholder(gamertag):
+            self.status.warning("Type a real gamertag before saving a player to Personnel.")
             return
 
         existing = self._personnel_match(gamertag)
@@ -599,6 +607,7 @@ class RaidPlanPage(FoundryPage):
 __all__ = [
     "RAID_PLAN_SEATS",
     "RaidPlanPage",
+    "is_seat_placeholder",
     "new_personnel_member",
     "personnel_player_names",
     "raid_plan_member_from_values",
