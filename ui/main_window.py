@@ -375,7 +375,7 @@ class MainWindow(QMainWindow):
         if not plan:
             if optimization_page is not None:
                 optimization_page.status.warning(
-                    "No planned team slots are selected. Generate or select a team before sending it to Roster."
+                    "No planned team slots are selected. Generate or select a team before sending it to Raid Plan."
                 )
             return
 
@@ -427,6 +427,27 @@ class MainWindow(QMainWindow):
                     refresh_phase14_presentation,
                 )
                 refresh_phase14_presentation(comp)
+
+        if page_name == "console:6":
+            optimizer = self.pages.get("console:6")
+            raid_plan_container = self.page_containers.get("raid_plans")
+            if (
+                optimizer is not None
+                and raid_plan_container is not None
+                and self.stack.currentWidget() is raid_plan_container
+            ):
+                raid_plans = self.pages.get("raid_plans")
+                try:
+                    origin = raid_plans.current_plan()
+                    raid_plans.plan_repository.save(origin)
+                    raid_plans._loaded_plan_snapshot = origin
+                except (AttributeError, OSError, TypeError, ValueError):
+                    origin = None
+                if origin is not None:
+                    optimizer._raid_plan_origin_id = origin.plan_id
+                    optimizer._raid_plan_origin_trial_id = origin.trial_id
+                    optimizer._raid_plan_origin_name = origin.name
+                    optimizer._raid_plan_origin_team_name = origin.team_name or ""
 
         if page_name == "console:2":
             builds_page = self.pages.get("console:2")
