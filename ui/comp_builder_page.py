@@ -141,7 +141,8 @@ class CompBuilderPage(FoundryPage):
         trial_key = str(plan.trial_id or "").replace("-", " ").casefold()
         for combo_index in range(self.goal_combo.count()):
             label = self.goal_combo.itemText(combo_index)
-            if label.replace("-", " ").casefold() == trial_key:
+            trial_label = GOAL_TRIALS.get(label, label)
+            if trial_label.replace("-", " ").casefold() == trial_key:
                 self.goal_combo.setCurrentIndex(combo_index)
                 break
         if plan.difficulty:
@@ -179,6 +180,14 @@ class CompBuilderPage(FoundryPage):
         apply_context = getattr(self, "apply_roster_team_context", None)
         if callable(apply_context):
             apply_context(plan.name, members, group_size=12)
+
+        # Roster intake may rebuild chair state. Reassert exact Raid Plan ownership
+        # after that rebuild so classes and planned gear cannot be replaced by defaults.
+        self._comp_manual_gear_sets_by_slot = {
+            self._seat_label(member.seat_id): tuple(member.planned_gear_sets or ())
+            for member in plan.members
+            if tuple(member.planned_gear_sets or ())
+        }
 
         try:
             from ui.comp_builder_roster_intake_support import apply_raid_plan_class_constraints
