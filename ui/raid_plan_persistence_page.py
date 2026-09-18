@@ -241,12 +241,33 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         try:
             plan = self.current_plan()
             self.plan_repository.save(plan)
+            persisted = self.plan_repository.get(plan.plan_id)
+            if persisted is None:
+                raise RaidPlanRepositoryError(
+                    f"saved plan {plan.plan_id!r} could not be read back"
+                )
+            if persisted != plan:
+                raise RaidPlanRepositoryError(
+                    "saved Raid Plan did not round-trip exactly; refusing to report success"
+                )
         except (RaidPlanRepositoryError, ValueError, TypeError) as exc:
             self.status.error(f"Could not save Raid Plan: {exc}")
             return
-        self._loaded_plan_snapshot = plan
-        self.refresh_saved_plan_picker(select_plan_id=plan.plan_id)
-        self.status.success(f"Saved Raid Plan: {plan.name}")
+
+        self._loaded_plan_snapshot = persisted
+        self.refresh_saved_plan_picker(select_plan_id=persisted.plan_id)
+        characters = sum(1 for member in persisted.members if member.character_name)
+        roles = sum(1 for member in persisted.members if member.role)
+        planned = sum(
+            1
+            for member in persisted.members
+            if member.selected_build_name or member.planned_gear_sets
+        )
+        self.status.success(
+            f"Saved Raid Plan: {persisted.name} • "
+            f"{len(persisted.members)} player(s) • {characters} character(s) • "
+            f"{roles} role(s) • {planned} planned build(s)"
+        )
 
     def load_selected_plan(self) -> None:
         plan_id = self.saved_plan_combo.currentData()
