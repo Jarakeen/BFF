@@ -104,7 +104,7 @@ def install() -> None:
     from ui.components import encounter_board as board
 
     # ------------------------------------------------------------------
-    # Long rectangular decorative filler: Teams page
+    # Generic roster sketch used outside the Teams color-art slot
     # ------------------------------------------------------------------
     original_sketch_init = raid_roster_workspace_page._ThemeSketch.__init__
     original_sketch_resize = raid_roster_workspace_page._ThemeSketch.resizeEvent
