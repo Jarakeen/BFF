@@ -73,6 +73,71 @@ _ARENA_H1_DISPOSITIONS: dict[tuple[str, str], str] = {
 }
 
 
+# Reviewed dispositions for the remaining special-set mechanics that the generic
+# static resolver intentionally leaves fail-closed. "package" means the mechanic
+# is deterministic from the equipped package/topology rather than runtime event
+# state, and therefore belongs to package-search proof rather than proc uptime.
+_SPECIAL_H1_DISPOSITIONS: dict[tuple[str, str, str], str] = {
+    # Monster sets: all six outstanding power effects are trigger/state owned.
+    **{
+        ("monster", name, objective): "conditional"
+        for name in (
+            "balorgh",
+            "domihaus",
+            "magma incarnate",
+            "molag kena",
+            "stone husk",
+            "zoal the ever-wakeful",
+        )
+        for objective in ("spell_damage", "weapon_damage")
+    },
+
+    # Mythics.
+    **{
+        ("mythic", "death dealer's fete", objective): "conditional"
+        for objective in ("max_health", "max_magicka", "max_stamina")
+    },
+    ("mythic", "markyn ring of majesty", "spell_damage"): "package",
+    ("mythic", "markyn ring of majesty", "weapon_damage"): "package",
+
+    ("mythic", "oakensoul ring", "healing_done"): "standing_and_package",
+    ("mythic", "oakensoul ring", "critical_healing"): "package",
+    ("mythic", "oakensoul ring", "spell_damage"): "standing_and_package",
+    ("mythic", "oakensoul ring", "weapon_damage"): "standing_and_package",
+    ("mythic", "oakensoul ring", "max_health"): "package",
+    ("mythic", "oakensoul ring", "max_magicka"): "package",
+    ("mythic", "oakensoul ring", "max_stamina"): "package",
+
+    ("mythic", "prowler's talisman", "max_magicka"): "conditional",
+    ("mythic", "prowler's talisman", "max_stamina"): "conditional",
+    ("mythic", "sea-serpent's coil", "spell_damage"): "conditional",
+    ("mythic", "sea-serpent's coil", "weapon_damage"): "conditional",
+    **{
+        ("mythic", "shapeshifter's chain", objective): "conditional"
+        for objective in ("max_health", "max_magicka", "max_stamina")
+    },
+
+    # Aura of Pride benefits other group members; the wearer pays the recovery
+    # cost and does not receive the 260 Weapon/Spell Damage self-H1 modifier.
+    ("mythic", "spaulder of ruin", "spell_damage"): "irrelevant",
+    ("mythic", "spaulder of ruin", "weapon_damage"): "irrelevant",
+
+    ("mythic", "the saint and the seducer", "spell_damage"): "conditional",
+    ("mythic", "the saint and the seducer", "weapon_damage"): "conditional",
+    ("mythic", "thrassian stranglers", "spell_damage"): "conditional",
+    ("mythic", "thrassian stranglers", "weapon_damage"): "conditional",
+    ("mythic", "thrassian stranglers", "max_health"): "conditional",
+
+    ("mythic", "torc of the last ayleid king", "healing_done"): "package",
+    ("mythic", "torc of the last ayleid king", "critical_healing"): "package",
+    ("mythic", "torc of the last ayleid king", "spell_damage"): "standing_and_package",
+    ("mythic", "torc of the last ayleid king", "weapon_damage"): "standing_and_package",
+    ("mythic", "torc of the last ayleid king", "max_health"): "package",
+    ("mythic", "torc of the last ayleid king", "max_magicka"): "package",
+    ("mythic", "torc of the last ayleid king", "max_stamina"): "package",
+}
+
+
 @dataclass(frozen=True)
 class ExtremeActualHealSpecialGearDisposition:
     set_id: int
@@ -80,6 +145,7 @@ class ExtremeActualHealSpecialGearDisposition:
     family: str
     relevant_objectives: tuple[str, ...]
     conditional_objectives: tuple[str, ...] = ()
+    package_objectives: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -88,7 +154,11 @@ class ExtremeActualHealSpecialGearDisposition:
 
     @property
     def h1_relevant(self) -> bool:
-        return bool(self.relevant_objectives or self.conditional_objectives)
+        return bool(
+            self.relevant_objectives
+            or self.conditional_objectives
+            or self.package_objectives
+        )
 
 
 @dataclass(frozen=True)
@@ -174,6 +244,19 @@ class ExtremeActualHealSpecialGearDenominatorService:
         return frozenset(arena)
 
     @staticmethod
+    def special_h1_disposition(
+        family: str,
+        set_name: str,
+        objective: str,
+    ) -> str | None:
+        key = (
+            str(family or "").strip().casefold(),
+            " ".join(str(set_name or "").strip().casefold().split()),
+            str(objective or "").strip().casefold(),
+        )
+        return _SPECIAL_H1_DISPOSITIONS.get(key)
+
+    @staticmethod
     def arena_h1_disposition(set_name: str, objective: str) -> str | None:
         key = (
             " ".join(str(set_name or "").strip().casefold().split()),
@@ -237,6 +320,7 @@ class ExtremeActualHealSpecialGearDenominatorService:
                     family="entity_only",
                     relevant_objectives=(),
                     conditional_objectives=(),
+                    package_objectives=(),
                     unresolved=(
                         "canonical gear-set entity is selectable but lacks normalized "
                         "gear_set / gear_set_piece / gear_set_bonus evidence",
@@ -256,6 +340,7 @@ class ExtremeActualHealSpecialGearDenominatorService:
 
             relevant: list[str] = []
             conditional: list[str] = []
+            package: list[str] = []
             unresolved: list[str] = []
             for objective in H1_GEAR_OBJECTIVES:
                 candidate = ExtremeGearSetObjectiveService.candidate_for_set(
@@ -264,23 +349,38 @@ class ExtremeActualHealSpecialGearDenominatorService:
                     objective,
                 )
 
+                disposition = None
                 if family == "arena_weapon":
                     disposition = self.arena_h1_disposition(
                         gear_set.name,
                         objective,
                     )
-                    if disposition == "irrelevant":
-                        continue
-                    if disposition == "standing":
-                        relevant.append(objective)
-                        continue
-                    if disposition == "conditional":
-                        conditional.append(objective)
-                        continue
-                    if disposition == "standing_and_conditional":
-                        relevant.append(objective)
-                        conditional.append(objective)
-                        continue
+                elif family in {"monster", "mythic"}:
+                    disposition = self.special_h1_disposition(
+                        family,
+                        gear_set.name,
+                        objective,
+                    )
+
+                if disposition == "irrelevant":
+                    continue
+                if disposition == "standing":
+                    relevant.append(objective)
+                    continue
+                if disposition == "conditional":
+                    conditional.append(objective)
+                    continue
+                if disposition == "package":
+                    package.append(objective)
+                    continue
+                if disposition == "standing_and_conditional":
+                    relevant.append(objective)
+                    conditional.append(objective)
+                    continue
+                if disposition == "standing_and_package":
+                    relevant.append(objective)
+                    package.append(objective)
+                    continue
 
                 if candidate.unresolved:
                     unresolved.extend(
@@ -297,6 +397,7 @@ class ExtremeActualHealSpecialGearDenominatorService:
                     family=family,
                     relevant_objectives=tuple(dict.fromkeys(relevant)),
                     conditional_objectives=tuple(dict.fromkeys(conditional)),
+                    package_objectives=tuple(dict.fromkeys(package)),
                     unresolved=tuple(dict.fromkeys(unresolved)),
                 )
             )
