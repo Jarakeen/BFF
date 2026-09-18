@@ -34,6 +34,9 @@ from services.extreme_actual_heal_trait_denominator_service import (
 from services.extreme_actual_heal_weapon_denominator_service import (
     ExtremeActualHealWeaponDenominatorService,
 )
+from services.extreme_healing_class_passive_coverage_inventory import (
+    ExtremeHealingClassPassiveCoverageInventory,
+)
 from engine.config import get_data_dir
 from services.extreme_canonical_actual_heal_optimization_service import (
     ExtremeCanonicalActualHealOptimizationService,
@@ -116,10 +119,9 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         E2DimensionCoverage(
             "progression_passives",
             "Character progression + class passives",
-            E2DimensionStatus.PARTIAL,
-            "ExtremeHypotheticalClassProgressionService + class passive coverage inventory",
-            "Selected-route progression is normalized to canonical maximum ranks.",
-            "Complete class-line passive/proc mechanic coverage remains explicit omitted scope.",
+            E2DimensionStatus.COVERED,
+            "ExtremeHypotheticalClassProgressionService + ExtremeHealingClassPassiveCoverageInventory",
+            "Selected-route progression is normalized to canonical maximum ranks, and the H1 passive inventory exactly matches all 21 canonical class skill-line families. All 21 are reviewed; 16 healing-relevant families have implemented hooks and five are explicitly objective-irrelevant. Conditional passive effects remain scenario-gated through their runtime/target evidence rather than being invented by standing search.",
         ),
         E2DimensionCoverage(
             "attributes",
@@ -236,7 +238,6 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         (_scope_contains(route_scope, "structurally legal class-line routes"), "H1 class-route search scope disappeared"),
         (_scope_contains(route_scope, "selected heal replacement"), "H1 selected-heal search scope disappeared"),
         (_scope_contains(route_omitted, "full multi-skill"), "H1 multi-skill omission boundary disappeared without ledger review"),
-        (_scope_contains(route_omitted, "passive/proc coverage"), "H1 passive/proc omission boundary disappeared without ledger review"),
         (_scope_contains(optimization_omitted, "runtime conditional"), "H1 standing-runtime omission boundary disappeared without ledger review"),
     )
     failed = tuple(message for passed, message in required_scope_checks if not passed)
@@ -278,6 +279,20 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
     if len(weapon_denominator.canonical_weapon_passives) != 30:
         raise AssertionError(
             "Extreme H1 canonical weapon-passive denominator changed without E2 ledger review"
+        )
+
+    class_passives = ExtremeHealingClassPassiveCoverageInventory().summary()
+    if not class_passives.complete:
+        raise AssertionError(
+            "Extreme H1 class-passive denominator is not complete: "
+            f"reviewed={class_passives.reviewed_families}/{class_passives.total_families}, "
+            f"partial={class_passives.partially_reviewed_families}, "
+            f"unreviewed={class_passives.unreviewed_families}, "
+            f"unsupported={class_passives.explicitly_unsupported}"
+        )
+    if class_passives.total_families != 21 or class_passives.implemented != 16:
+        raise AssertionError(
+            "Extreme H1 canonical class-passive denominator changed without E2 ledger review"
         )
 
     return rows
