@@ -29,6 +29,7 @@ class RosterActions(QWidget):
     saveRequested = Signal()
     deleteRequested = Signal()
     refreshRequested = Signal()
+    cancelRequested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -81,3 +82,18 @@ class RosterActions(QWidget):
         self.refresh_button.clicked.connect(
             self.refreshRequested.emit
         )
+
+    def configure_player_editor(self) -> None:
+        """Present the compact Players editor footer without deleting legacy actions."""
+        self.new_button.setText("New")
+        self.save_button.setText("Save")
+
+        try:
+            self.delete_button.clicked.disconnect()
+        except (RuntimeError, TypeError):
+            pass
+        self.delete_button.setText("Cancel")
+        self.delete_button.setToolTip("Discard unsaved changes to the current player record.")
+        self.delete_button.clicked.connect(self.cancelRequested.emit)
+
+        self.refresh_button.hide()
