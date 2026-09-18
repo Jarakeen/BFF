@@ -115,9 +115,11 @@ def _ensure_player_column(page) -> None:
         table.setHorizontalHeaderItem(PLAYER_COLUMN, header_item)
     else:
         header_item.setText("PLAYER")
-    table.horizontalHeader().setSectionResizeMode(
-        PLAYER_COLUMN, QHeaderView.ResizeMode.Stretch
-    )
+    header = table.horizontalHeader()
+    header.setSectionResizeMode(PLAYER_COLUMN, QHeaderView.ResizeMode.Stretch)
+    visual_index = header.visualIndex(PLAYER_COLUMN)
+    if visual_index > 0:
+        header.moveSection(visual_index, 0)
 
 
 def _set_player(page, row: int, member, assignment: dict | None = None) -> None:
