@@ -325,6 +325,12 @@ def _render_raid_plan_scope(page) -> None:
     assigned_unproven = sum(
         review.state == "assigned_unproven" for review in assignment_reviews.values()
     )
+    unassigned_sources = sum(
+        review.state == "unassigned_available" for review in assignment_reviews.values()
+    )
+    backup_only = sum(
+        review.state == "backup_only" for review in assignment_reviews.values()
+    )
     unassigned_gaps = sum(
         review.state == "gap" for review in assignment_reviews.values()
     )
@@ -337,6 +343,8 @@ def _render_raid_plan_scope(page) -> None:
         f"ASSIGNED + PROVEN  {assigned_supported}\n"
         f"ASSIGNED CONDITIONAL  {assigned_conditional}\n"
         f"ASSIGNED UNPROVEN  {assigned_unproven}\n"
+        f"SOURCE FOUND / UNASSIGNED  {unassigned_sources}\n"
+        f"BACKUP ONLY  {backup_only}\n"
         f"UNASSIGNED GAPS  {unassigned_gaps}\n"
         f"DUPLICATE PRIMARY  {duplicate_primary}\n"
         f"UNRESOLVED CHAIRS {unresolved}"
@@ -369,7 +377,13 @@ def _render_raid_plan_scope(page) -> None:
     else:
         page.providers_card.addWidget(QLabel("No static or conditional sources identified."))
 
-    attention = assigned_unproven + unassigned_gaps + duplicate_primary
+    attention = (
+        assigned_unproven
+        + unassigned_sources
+        + backup_only
+        + unassigned_gaps
+        + duplicate_primary
+    )
     if unresolved or attention:
         page.status.warning(
             f"Raid Plan Coverage • {assigned_supported} assigned/proven • "
