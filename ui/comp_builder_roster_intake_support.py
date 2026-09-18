@@ -2,7 +2,9 @@ from __future__ import annotations
 
 """Carry roster-owned player/class/role/job context into Comp Builder without inventing builds."""
 
-from PySide6.QtWidgets import QComboBox, QHeaderView, QTableWidgetItem
+from types import SimpleNamespace
+
+from PySide6.QtWidgets import QComboBox, QHeaderView, QInputDialog, QTableWidgetItem
 
 from services.roster_assignment_context_service import RosterAssignmentContextService
 from services.team_composition_catalog import flexible_raid_slots
@@ -290,6 +292,49 @@ def _send_roster_team_to_comp(page) -> None:
         assignments=assignments,
     )
 
+
+
+
+def _team_list_names(text: str) -> tuple[str, ...]:
+    normalized = str(text or "").replace(",", "\n")
+    return tuple(
+        line.strip()
+        for line in normalized.splitlines()
+        if line.strip()
+    )[:12]
+
+
+def open_team_list_dialog(page) -> None:
+    text, accepted = QInputDialog.getMultiLineText(
+        page,
+        "Load Team List",
+        "One player per line. Use Recruit for any open spot.",
+        "",
+    )
+    if not accepted:
+        return
+    names = _team_list_names(text)
+    if not names:
+        page.status.warning("No player names were entered.")
+        return
+
+    members = tuple(
+        SimpleNamespace(
+            Id=None,
+            PlayerName=name,
+            CharacterName="",
+            PrimaryRole="",
+            EsoClass="",
+        )
+        for name in names
+    )
+    group_size = 4 if len(names) <= 4 else 12
+    apply_roster_team_context(
+        page,
+        "Ad-hoc Team",
+        members,
+        group_size=group_size,
+    )
 
 def _flatten_attention_card(page) -> None:
     card = getattr(page, "attention_card", None)
