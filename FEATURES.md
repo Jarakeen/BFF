@@ -267,3 +267,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Passive Champion Points** covers non-slottable Champion stars shared by every build; slotted Champion Points remain build-specific on the normal CP tab.
 - Character Progression provides global **Buy All Passive Skills** and **Buy All Passive CP** actions, while retaining per-skill-line and per-discipline controls for narrower edits.
 - The old monolithic Build Editor, Character Progression workspace tab, and Scribed Skills workspace tab are hidden from the normal Phase 14 workflow and retained only as compatibility/fallback infrastructure.
+
+
+## Rumors collection ledger
+- Imported UESP Rumors stored in `collectible_rumor` / `collectible_rumor_hint` now populate the **Rumors** Collectibles page instead of showing an empty ledger.
+- Rumor ownership is profile-aware through a separate additive `collectible_rumor_progress` table; the canonical collectible catalog is not rewritten or merged.
+- Rumor detail shows the imported start hint plus ordered rumor-hint text, and Rumors progress is reflected on the Collectibles dashboard.
