@@ -3,7 +3,7 @@ from __future__ import annotations
 """Phase 14 read-first Build inspector.
 
 The Builds library stays a browser. The right pane is a compact dossier with the
-approved Overview/Gear/Skills/CP/Consumables/Scribing/Notes tabs. Heavy canonical
+approved Overview/Gear/Skills/CP/Progression/Consumables/Scribing/Notes tabs. Heavy canonical
 editors remain in the existing workspace tabs and are opened only when requested.
 """
 
@@ -228,6 +228,18 @@ def _cp_tab(page, build) -> QWidget:
     return tab
 
 
+
+def _progression_tab(page, build) -> QWidget:
+    """Compatibility placeholder replaced by the focused Phase 14 editor layer."""
+    tab = QWidget()
+    layout = QVBoxLayout(tab)
+    layout.setContentsMargins(0, 0, 0, 0)
+    card = FoundryCard("Character Progression", "progression")
+    card.addWidget(QLabel("Character-owned passives and passive Champion Points."))
+    layout.addWidget(card)
+    layout.addStretch(1)
+    return tab
+
 def _consumables_tab(page, build) -> QWidget:
     tab = QWidget()
     layout = QVBoxLayout(tab)
@@ -321,6 +333,7 @@ def _render_inspector(page) -> None:
     tabs.addTab(_gear_tab(page, build), "Gear")
     tabs.addTab(_skills_tab(page, build), "Skills")
     tabs.addTab(_cp_tab(page, build), "CP")
+    tabs.addTab(_progression_tab(page, build), "Progression")
     tabs.addTab(_consumables_tab(page, build), "Consumables")
     tabs.addTab(_scribing_tab(page, build), "Scribing")
     tabs.addTab(_notes_tab(page, build), "Notes")
