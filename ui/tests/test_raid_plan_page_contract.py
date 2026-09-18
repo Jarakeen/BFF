@@ -5,6 +5,7 @@ from ui.raid_plan_page import (
     new_personnel_member,
     personnel_player_names,
     raid_plan_member_from_values,
+    role_for_seat,
 )
 
 
@@ -97,3 +98,12 @@ def test_raid_plan_new_personnel_record_requires_gamertag() -> None:
         assert "gamertag" in str(exc).casefold()
     else:
         raise AssertionError("empty gamertag should not create a Personnel record")
+
+
+def test_raid_plan_seat_is_the_role_authority() -> None:
+    assert role_for_seat("Main Tank") == "Tank"
+    assert role_for_seat("Off Tank") == "Tank"
+    assert role_for_seat("Healer 1") == "Healer"
+    assert role_for_seat("Healer 2") == "Healer"
+    assert role_for_seat("DD 1") == "DD"
+    assert role_for_seat("DD 8") == "DD"
