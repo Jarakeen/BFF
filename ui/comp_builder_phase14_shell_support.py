@@ -1167,15 +1167,7 @@ def _materialize_visible_recommendations(page) -> int:
 
 
 def _save_to_originating_raid_plan(page) -> None:
-    """Save the current Comp Builder choices back into the bound Raid Plan."""
-    origin_id = str(getattr(page, "_raid_plan_origin_id", "") or "").strip()
-    if not origin_id:
-        page.status.warning(
-            "This Comp Builder session is not bound to a Raid Plan. "
-            "Open it from Raid Plan first, then Save Plan will update that run."
-        )
-        return
-
+    """Save current Comp Builder choices to the bound or newly named Raid Plan."""
     from ui import comp_builder_build_candidate_support as candidate_support
 
     _materialize_visible_recommendations(page)
@@ -1188,6 +1180,11 @@ def _save_to_originating_raid_plan(page) -> None:
 
     plan = persist(draft.name, navigate=False)
     if plan is not None:
+        page._raid_plan_origin_id = plan.plan_id
+        refresh_names = getattr(page, "_refresh_raid_plan_name_choices", None)
+        if callable(refresh_names):
+            refresh_names()
+            page.plan_name_input.setText(plan.name)
         page.status.success(f"Saved Comp Builder changes to Raid Plan: {plan.name}.")
 
 
