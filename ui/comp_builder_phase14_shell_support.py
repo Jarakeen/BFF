@@ -380,6 +380,9 @@ def _refresh_why(page) -> None:
             frame._comp_candidate = None
             _set_choice_state(frame, selected=False, enabled=False)
         _style_confidence_badge(page.comp_phase14_confidence, None)
+        refresh_sources = getattr(page, "comp_phase14_refresh_sources", None)
+        if refresh_sources is not None:
+            refresh_sources.setVisible(False)
         return
 
     player = page._cell_text(row, 11) or "Recruit"
@@ -427,7 +430,15 @@ def _refresh_why(page) -> None:
             frame._comp_candidate = None
             _set_choice_state(frame, selected=False, enabled=False)
         _style_confidence_badge(page.comp_phase14_confidence, None)
+        refresh_sources = getattr(page, "comp_phase14_refresh_sources", None)
+        if refresh_sources is not None:
+            refresh_sources.setVisible(True)
+            refresh_sources.setText("Load Current Ranked Builds")
         return
+
+    refresh_sources = getattr(page, "comp_phase14_refresh_sources", None)
+    if refresh_sources is not None:
+        refresh_sources.setVisible(False)
 
     page.comp_phase14_recommendation.setText(_candidate_label(preferred))
     set_one, set_two = _candidate_sets(preferred)
@@ -904,6 +915,23 @@ def _build_why(page, card: FoundryCard) -> None:
     page.comp_phase14_why_text.setWordWrap(True)
     page.comp_phase14_why_text.setProperty("compPlanWhyText", True)
     why_layout.addWidget(page.comp_phase14_why_text)
+
+    page.comp_phase14_refresh_sources = QPushButton("Load Current Ranked Builds")
+    page.comp_phase14_refresh_sources.setProperty("primary", True)
+    page.comp_phase14_refresh_sources.setToolTip(
+        "Fetch current ranked-team build evidence for this trial and use it as Recruit build options."
+    )
+    page.comp_phase14_refresh_sources.setVisible(False)
+
+    def refresh_ranked_builds() -> None:
+        source_button = getattr(page, "refresh_esologs_button", None)
+        if source_button is None:
+            page.status.warning("Current ranked build evidence is unavailable on this page.")
+            return
+        source_button.click()
+
+    page.comp_phase14_refresh_sources.clicked.connect(refresh_ranked_builds)
+    why_layout.addWidget(page.comp_phase14_refresh_sources)
     layout.addWidget(why_frame)
 
     alt_title = QLabel("ALTERNATIVES")
