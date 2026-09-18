@@ -174,3 +174,10 @@ def test_phase14_build_overview_restores_context_variant_access() -> None:
     assert '"Edit Context Variants"' in source
     assert "page._open_phase14_legacy_build_editor()" in source
     assert "inspector._overview_tab = overview_with_context_variants" in source
+
+
+def test_phase14_selected_build_identity_uses_compact_hero_title_not_page_title() -> None:
+    source = _source(phase14_build_focused_editors_support)
+
+    assert 'title.setProperty("heroTitle", True)' in source
+    assert 'title.setProperty("pageTitle", True)' not in source
