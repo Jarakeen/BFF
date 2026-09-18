@@ -82,4 +82,4 @@ def test_character_class_does_not_guess_when_sources_conflict() -> None:
 
 
 def test_raid_plan_main_working_columns_fill_available_width() -> None:
-    assert raid_plan_stretch_columns() == (1, 2, 3, 4, 5)
+    assert raid_plan_stretch_columns() == (1, 2, 3, 4)
