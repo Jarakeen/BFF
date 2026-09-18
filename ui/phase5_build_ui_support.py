@@ -439,14 +439,38 @@ def _finish_endgame_gear(editor) -> None:
 
 
 def _character_id_for_page(page, build: PlayerBuild) -> str | None:
+    catalog = page.build_service.canonical.catalog_service
+
     direct = _clean(getattr(build, "CharacterId", ""))
-    if direct:
+    if direct and catalog.get_character(direct) is not None:
         return direct
-    progression = CharacterProgressionService(page.build_service.canonical.catalog_service)
+
+    build_id = _clean(getattr(build, "BuildId", ""))
+    if build_id:
+        build_record = catalog.get_build(build_id)
+        if build_record is not None:
+            character_id = _clean(build_record.get("character_id"))
+            if character_id and catalog.get_character(character_id) is not None:
+                return character_id
+
+    progression = CharacterProgressionService(catalog)
     found = progression.find_character_id(name=build.Name, gamertag=build.Gamertag)
     if found:
         return found
+
     page.build_service.canonical.sync_from_roster(page.roster)
+
+    direct = _clean(getattr(build, "CharacterId", ""))
+    if direct and catalog.get_character(direct) is not None:
+        return direct
+    build_id = _clean(getattr(build, "BuildId", ""))
+    if build_id:
+        build_record = catalog.get_build(build_id)
+        if build_record is not None:
+            character_id = _clean(build_record.get("character_id"))
+            if character_id and catalog.get_character(character_id) is not None:
+                return character_id
+
     return progression.find_character_id(name=build.Name, gamertag=build.Gamertag)
 
 
