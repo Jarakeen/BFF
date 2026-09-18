@@ -403,10 +403,16 @@ class RaidRosterWorkspacePage(FoundryPage):
         self.team_timezone.setPlaceholderText("America/New_York")
         self.team_focus = QLineEdit()
         self.team_focus.setPlaceholderText("Current progression focus")
+        self.team_discord = QLineEdit()
+        self.team_discord.setPlaceholderText("https://discord.gg/... or team Discord/channel link")
+        self.team_discord.setToolTip(
+            "Optional Discord invite, server, or channel link for this team."
+        )
         form.addRow("Raid days", self.team_days)
         form.addRow("Start time", self.team_time)
         form.addRow("Timezone", self.team_timezone)
         form.addRow("Current focus", self.team_focus)
+        form.addRow("Discord", self.team_discord)
         schedule_card.addLayout(form)
         save = QPushButton("Save Team Defaults")
         save.setProperty("primary", True)
@@ -841,6 +847,7 @@ class RaidRosterWorkspacePage(FoundryPage):
         self.team_time.setText(schedule.RaidTime if schedule else "")
         self.team_timezone.setText(schedule.TimeZone if schedule else "")
         self.team_focus.setText(schedule.CurrentFocus if schedule else "")
+        self.team_discord.setText(schedule.DiscordUrl if schedule else "")
         self.team_schedule_summary.setText(schedule.display_text if schedule else "No recurring schedule saved yet.")
         tanks = sum(1 for item in members if "tank" in _clean(item.PrimaryRole).casefold())
         healers = sum(1 for item in members if "heal" in _clean(item.PrimaryRole).casefold())
@@ -862,6 +869,7 @@ class RaidRosterWorkspacePage(FoundryPage):
                 RaidTime=_clean(self.team_time.text()),
                 TimeZone=_clean(self.team_timezone.text()),
                 CurrentFocus=_clean(self.team_focus.text()),
+                DiscordUrl=_clean(self.team_discord.text()),
             )
         )
         self._refresh_team_detail()
