@@ -35,7 +35,6 @@ def bootstrap_workspace_extensions() -> None:
     from ui.roster_import_match_preview_support import install as install_roster_import_match_preview_support
     from ui.roster_import_build_confirmation_support import install as install_roster_import_build_confirmation_support
     from ui.coverage_capability_gap_visibility_support import install as install_coverage_capability_gap_visibility_support
-    from ui.build_rotation_artifact_support import install as install_build_rotation_artifact_support
     from ui.roster_team_assignment_filter_support import install as install_roster_team_assignment_filter_support
     from ui.roster_encounter_assignment_context_support import install as install_roster_encounter_assignment_context_support
     from ui.roster_characters_header_context_support import install as install_roster_characters_header_context_support
@@ -55,7 +54,6 @@ def bootstrap_workspace_extensions() -> None:
     from ui.phase14_build_icon_polish_support import install as install_phase14_build_icon_polish_support
     from ui.phase14_build_edit_return_support import install as install_phase14_build_edit_return_support
     from ui.phase14_build_focused_editors_support import install as install_phase14_build_focused_editors_support
-    from ui.phase14_rotation_visual_target_support import install as install_phase14_rotation_visual_target_support
 
     # Personnel is player-level identity. Repair duplicates left by older imports
     # before any roster page reads them. The merge unions teams and moves legacy
@@ -77,7 +75,6 @@ def bootstrap_workspace_extensions() -> None:
     install_roster_import_match_preview_support()
     install_roster_import_build_confirmation_support()
     install_coverage_capability_gap_visibility_support()
-    install_build_rotation_artifact_support()
     install_roster_team_assignment_filter_support()
     install_roster_encounter_assignment_context_support()
     install_roster_characters_header_context_support()
@@ -104,11 +101,6 @@ def bootstrap_workspace_extensions() -> None:
     install_phase14_build_icon_polish_support()
     install_phase14_build_edit_return_support()
     install_phase14_build_focused_editors_support()
-
-    # Rotation gets the same final presentation pass before MainWindow constructs
-    # CanonicalRotationDashboardPage. It preserves the old hidden builder shell so
-    # older refresh helpers cannot dereference deleted QLabel wrappers.
-    install_phase14_rotation_visual_target_support()
 
     _BOOTSTRAPPED = True
 
