@@ -260,3 +260,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Merge Players…** consolidates two user-confirmed Personnel identities, preserves their teams and assignment state, moves canonical characters/builds under the kept player identity, creates backups, and remembers discarded names as future import aliases
 - Future roster imports reuse exact learned aliases as player identity evidence, including all canonical characters already known for that player
 - Assignments persist separately for each **roster member + team**, so one character can have different normal jobs on different teams
+
+## Phase 14 Builds progression ownership
+- The Builds dossier now owns character progression access through a dedicated **Progression** tab.
+- **Passive Skills** covers character-owned skill-line access and purchased passive ranks shared by every build for that character.
+- **Passive Champion Points** covers non-slottable Champion stars shared by every build; slotted Champion Points remain build-specific on the normal CP tab.
+- The old monolithic Build Editor, Character Progression workspace tab, and Scribed Skills workspace tab are hidden from the normal Phase 14 workflow and retained only as compatibility/fallback infrastructure.
