@@ -588,6 +588,17 @@ def _build_plan_table(page, card: FoundryCard) -> None:
     card.body_layout.addWidget(table)
 
 
+def _why_section_frame(kind: str) -> tuple[QFrame, QVBoxLayout]:
+    frame = QFrame()
+    frame.setProperty("compWhySection", True)
+    frame.setProperty("whySectionKind", kind)
+    frame.setFrameShape(QFrame.Shape.StyledPanel)
+    layout = QVBoxLayout(frame)
+    layout.setContentsMargins(12, 10, 12, 10)
+    layout.setSpacing(5)
+    return frame, layout
+
+
 def _build_why(page, card: FoundryCard) -> None:
     for child in card.body.findChildren(QWidget):
         child.hide()
@@ -596,7 +607,7 @@ def _build_why(page, card: FoundryCard) -> None:
     host.setProperty("compWhyPlanBody", True)
     layout = QVBoxLayout(host)
     layout.setContentsMargins(2, 0, 2, 0)
-    layout.setSpacing(8)
+    layout.setSpacing(10)
 
     page.comp_phase14_why_header = QLabel("Select a player")
     page.comp_phase14_why_header.setProperty("sidebarHeading", True)
@@ -606,33 +617,73 @@ def _build_why(page, card: FoundryCard) -> None:
     recommendation_title.setProperty("sidebarHeading", True)
     layout.addWidget(recommendation_title)
 
-    page.comp_phase14_confidence = QLabel("Evidence pending")
-    page.comp_phase14_confidence.setProperty("compPlanConfidence", True)
-    layout.addWidget(page.comp_phase14_confidence)
+    recommendation_frame, recommendation_layout = _why_section_frame("recommendation")
+    recommendation_top = QHBoxLayout()
+    recommendation_top.setContentsMargins(0, 0, 0, 0)
+    recommendation_top.setSpacing(8)
 
     page.comp_phase14_recommendation = QLabel("No recommendation available.")
     page.comp_phase14_recommendation.setWordWrap(True)
     page.comp_phase14_recommendation.setProperty("compPlanRecommendation", True)
-    layout.addWidget(page.comp_phase14_recommendation)
+    recommendation_top.addWidget(page.comp_phase14_recommendation, 1)
+
+    page.comp_phase14_confidence = QLabel("Evidence pending")
+    page.comp_phase14_confidence.setProperty("compPlanConfidence", True)
+    page.comp_phase14_confidence.setAlignment(
+        Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+    )
+    recommendation_top.addWidget(page.comp_phase14_confidence, 0)
+
+    recommendation_layout.addLayout(recommendation_top)
+    layout.addWidget(recommendation_frame)
 
     why_title = QLabel("WHY")
     why_title.setProperty("sidebarHeading", True)
     layout.addWidget(why_title)
+
+    why_frame, why_layout = _why_section_frame("why")
     page.comp_phase14_why_text = QLabel()
     page.comp_phase14_why_text.setWordWrap(True)
-    layout.addWidget(page.comp_phase14_why_text)
+    page.comp_phase14_why_text.setProperty("compPlanWhyText", True)
+    why_layout.addWidget(page.comp_phase14_why_text)
+    layout.addWidget(why_frame)
 
     alt_title = QLabel("ALTERNATIVES")
     alt_title.setProperty("sidebarHeading", True)
     layout.addWidget(alt_title)
+
+    alt_one_frame, alt_one_layout = _why_section_frame("alternative")
     page.comp_phase14_alt_one = QLabel()
     page.comp_phase14_alt_one.setWordWrap(True)
     page.comp_phase14_alt_one.setProperty("compPlanAlternative", True)
-    layout.addWidget(page.comp_phase14_alt_one)
+    alt_one_layout.addWidget(page.comp_phase14_alt_one)
+    layout.addWidget(alt_one_frame)
+
+    alt_two_frame, alt_two_layout = _why_section_frame("alternative")
     page.comp_phase14_alt_two = QLabel()
     page.comp_phase14_alt_two.setWordWrap(True)
     page.comp_phase14_alt_two.setProperty("compPlanAlternative", True)
-    layout.addWidget(page.comp_phase14_alt_two)
+    alt_two_layout.addWidget(page.comp_phase14_alt_two)
+    layout.addWidget(alt_two_frame)
+
+    info_frame, info_layout = _why_section_frame("info")
+    info_row = QHBoxLayout()
+    info_row.setContentsMargins(0, 0, 0, 0)
+    info_row.setSpacing(8)
+    info_icon = QLabel("i")
+    info_icon.setProperty("compWhyInfoIcon", True)
+    info_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    info_icon.setFixedSize(22, 22)
+    info_text = QLabel(
+        "Alternatives are evidence-backed options. Choose based on team coverage, "
+        "available gear, and progression needs."
+    )
+    info_text.setWordWrap(True)
+    info_text.setProperty("compWhyInfoText", True)
+    info_row.addWidget(info_icon, 0, Qt.AlignmentFlag.AlignTop)
+    info_row.addWidget(info_text, 1)
+    info_layout.addLayout(info_row)
+    layout.addWidget(info_frame)
     layout.addStretch(1)
 
     card.body_layout.addWidget(host)
