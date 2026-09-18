@@ -124,6 +124,16 @@ def reset_user_planning_state(data_dir: Path) -> dict[str, object]:
             before = _row_count(connection, table)
             connection.execute(f'DELETE FROM "{table}"')
             report["sqlite_deleted"][table] = before
+
+        # Make the user-owned tables behave like a true first-run database.
+        # sqlite_sequence itself is schema metadata maintained by SQLite; deleting
+        # selected rows resets only the AUTOINCREMENT counters for records we cleared.
+        if _table_exists(connection, "sqlite_sequence"):
+            for table in SQLITE_CLEAR_ORDER:
+                connection.execute(
+                    "DELETE FROM sqlite_sequence WHERE name = ?",
+                    (table,),
+                )
         connection.commit()
     except Exception:
         connection.rollback()
