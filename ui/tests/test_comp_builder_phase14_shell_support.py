@@ -203,3 +203,16 @@ def test_comp_to_raid_plan_bridge_verifies_exact_repository_round_trip() -> None
     assert "persisted is None or persisted != plan" in source
     assert "the app is refusing to report success" in source
     assert "raid_plans.apply_plan(persisted)" in source
+
+
+def test_raid_plan_class_map_is_authoritative_in_visible_comp_shell() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+    handoff = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+    intake = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+
+    assert '_raid_plan_class_by_seat' in handoff
+    assert 'apply_raid_plan_class_constraints(comp, class_by_seat)' in handoff
+    assert 'def apply_raid_plan_class_constraints(page, class_by_seat' in intake
+    assert 'page._comp_class_constraint_by_slot = dict(cleaned)' in intake
+    assert 'raid_classes = dict(getattr(page, "_raid_plan_class_by_seat", {}) or {})' in source
+    assert 'apply_raid_plan_class_constraints(page, raid_classes)' in source
