@@ -193,27 +193,28 @@ class RotationBuilderPage(FoundryPage):
         self.set_header(self.header)
 
         context = FoundryCard("Rotation Context", "rotations")
-        context_grid = QGridLayout()
-        context_grid.setContentsMargins(0, 0, 0, 0)
-        context_grid.setHorizontalSpacing(8)
-        context_grid.setVerticalSpacing(6)
+        context_row = QHBoxLayout()
+        context_row.setContentsMargins(0, 0, 0, 0)
+        context_row.setSpacing(7)
         context_controls = (
-            ("CHARACTER", "user", self.character_combo),
-            ("BUILD", "builds", self.build_combo),
-            ("TEAM", "roster", self.team_combo),
-            ("TRIAL", "trial", self.content_combo),
-            ("BOSS", "boss", self.boss_combo),
-            ("DIFFICULTY", "crossed-swords", self.difficulty_combo),
+            ("CHARACTER", "user", self.character_combo, 2, 185),
+            ("BUILD", "builds", self.build_combo, 2, 210),
+            ("TEAM", "roster", self.team_combo, 1, 165),
+            ("TRIAL", "trial", self.content_combo, 1, 175),
+            ("BOSS", "boss", self.boss_combo, 1, 175),
+            ("DIFFICULTY", "crossed-swords", self.difficulty_combo, 1, 135),
         )
-        for column in range(3):
-            context_grid.setColumnStretch(column, 1)
-        for index, (title, icon_name, control) in enumerate(context_controls):
-            context_grid.addWidget(
-                self._field(title, control, icon_name),
-                index // 3,
-                index % 3,
-            )
-        context.addLayout(context_grid)
+        for title, icon_name, control, stretch, maximum_width in context_controls:
+            control.setMinimumWidth(0)
+            control.setMaximumWidth(maximum_width)
+            control.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            if isinstance(control, QComboBox):
+                control.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+                control.setMinimumContentsLength(8)
+            field = self._field(title, control, icon_name)
+            field.setMinimumWidth(0)
+            context_row.addWidget(field, stretch)
+        context.addLayout(context_row)
         self.workspace_layout.addWidget(context)
 
         command_row = QHBoxLayout()
@@ -251,6 +252,7 @@ class RotationBuilderPage(FoundryPage):
         self.result_tabs.setMovable(False)
         self.result_tabs.setUsesScrollButtons(False)
         self.result_tabs.setProperty("workspaceTabs", True)
+        self.result_tabs.tabBar().hide()
 
         self.timeline_table = QTableWidget(0, 6)
         self.timeline_table.setHorizontalHeaderLabels(
@@ -377,7 +379,47 @@ class RotationBuilderPage(FoundryPage):
         save_layout.addStretch(1)
         self.result_tabs.addTab(save_host, "Save & Export")
 
-        self.workspace_layout.addWidget(self.result_tabs)
+        self.result_shell = QFrame()
+        self.result_shell.setProperty("rotationResultsShell", True)
+        result_shell_layout = QVBoxLayout(self.result_shell)
+        result_shell_layout.setContentsMargins(6, 6, 6, 6)
+        result_shell_layout.setSpacing(6)
+
+        result_nav = QHBoxLayout()
+        result_nav.setContentsMargins(0, 0, 0, 0)
+        result_nav.setSpacing(5)
+        self.result_nav_buttons: list[QPushButton] = []
+        result_nav_items = (
+            ("Timeline", "hourglass"),
+            ("Uptime & Resources", "filter"),
+            ("Explanations", "binoculars"),
+            ("Compare", "scales"),
+            ("Save / Export", "download"),
+        )
+        for index, (title, icon_name) in enumerate(result_nav_items):
+            button = QPushButton(title)
+            button.setCheckable(True)
+            button.setProperty("rotationResultNav", True)
+            button.setMinimumHeight(50)
+            set_button_icon(button, icon_name, size=22)
+            button.clicked.connect(
+                lambda _checked=False, target=index: self._show_result_tab(target)
+            )
+            result_nav.addWidget(button, 1)
+            self.result_nav_buttons.append(button)
+        result_shell_layout.addLayout(result_nav)
+
+        self.results_locked_label = QLabel("ⓘ  Generate a rotation to unlock results.")
+        self.results_locked_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.results_locked_label.setProperty("rotationResultsLocked", True)
+        self.results_locked_label.setMinimumHeight(56)
+        result_shell_layout.addWidget(self.results_locked_label)
+
+        self.result_tabs.hide()
+        result_shell_layout.addWidget(self.result_tabs)
+        self.workspace_layout.addWidget(self.result_shell)
+
+        self._set_results_unlocked(False)
 
         self.status = FoundryStatusBar()
         self.set_status(self.status)
@@ -398,10 +440,10 @@ class RotationBuilderPage(FoundryPage):
             button.setText(f"{name}\n{values['description']}")
             button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
             button.setCheckable(True)
-            button.setMinimumHeight(118)
-            button.setMaximumHeight(132)
+            button.setMinimumHeight(104)
+            button.setMaximumHeight(112)
             button.setProperty("rotationIntentChoice", True)
-            set_button_icon(button, values["icon"], size=36)
+            set_button_icon(button, values["icon"], size=28)
             button.clicked.connect(
                 lambda checked=False, intent=name: self._apply_intent(intent) if checked else None
             )
@@ -1076,7 +1118,7 @@ class RotationBuilderPage(FoundryPage):
             f"{heavy_count} Heavy Attacks • {len(result.plan.unresolved)} unresolved"
         )
         self._refresh_compare()
-        self.result_tabs.setCurrentIndex(0)
+        self._set_results_unlocked(True)
         self.status.success(
             f"Generated {len(result.plan.actions)} actions over {result.plan.duration_seconds:g}s."
         )
@@ -1166,6 +1208,25 @@ class RotationBuilderPage(FoundryPage):
             lines.extend(["", "Needs review:"])
             lines.extend(f"• {item}" for item in projection.unresolved[:6])
         self.sustain_label.setText("\n".join(lines))
+
+    def _show_result_tab(self, index: int) -> None:
+        if not 0 <= index < self.result_tabs.count():
+            return
+        self.result_tabs.setCurrentIndex(index)
+        for button_index, button in enumerate(self.result_nav_buttons):
+            button.blockSignals(True)
+            button.setChecked(button_index == index)
+            button.blockSignals(False)
+
+    def _set_results_unlocked(self, unlocked: bool) -> None:
+        if not hasattr(self, "result_nav_buttons"):
+            return
+        for button in self.result_nav_buttons:
+            button.setEnabled(unlocked)
+        self.results_locked_label.setVisible(not unlocked)
+        self.result_tabs.setVisible(unlocked)
+        if unlocked:
+            self._show_result_tab(0)
 
     def _show_visual_timeline(self) -> None:
         self.timeline_visual_button.setChecked(True)
@@ -1360,6 +1421,8 @@ class RotationBuilderPage(FoundryPage):
             self.compare_label.setText(
                 "Generate a rotation to compare it with the last rotation saved to this Build."
             )
+        if hasattr(self, "result_nav_buttons"):
+            self._set_results_unlocked(False)
 
 
 __all__ = ["RotationBuilderPage"]
