@@ -2,9 +2,9 @@ from __future__ import annotations
 
 """One-time user planning-state reset for FoundryDock.
 
-This deliberately preserves the ESO reference database schema/content and Personnel
-(roster_member) identities. It clears only user-owned team/build/plan state so the
-application can be exercised from a clean planning workflow.
+This deliberately preserves the ESO reference database schema/content while clearing
+user-owned people, character/build identity, team, Comp Maker, and Raid Plan state so
+the application behaves like a fresh install ready for its first team.
 
 The reset always creates a timestamped backup before changing anything.
 """
@@ -26,6 +26,13 @@ from engine.config import get_data_dir
 
 JSON_RESETS = {
     "builds.json": {"Members": []},
+    "characters.json": {
+        "schema_version": 4,
+        "players": [],
+        "characters": [],
+        "builds": [],
+        "team_assignments": [],
+    },
     "raid_plans.json": {"schema_version": 1, "plans": []},
     "team_composition_user_templates.json": {"schema_version": 1, "templates": []},
 }
@@ -40,14 +47,18 @@ SQLITE_CLEAR_ORDER = (
     "generated_roster_recruit_prescription",
     "generated_roster_plan_slot",
     "generated_roster_plan",
+    "roster_assignment_context",
     "roster_member_assignment",
+    "roster_member_availability",
+    "roster_player_alias",
+    "roster_recruitment_candidate",
+    "roster_archive_record",
     "team_member",
     "team",
-)
-
-PRESERVED_TABLES = (
     "roster_member",
 )
+
+PRESERVED_TABLES = ()
 
 
 def _table_exists(connection: sqlite3.Connection, table: str) -> bool:
@@ -106,10 +117,6 @@ def reset_user_planning_state(data_dir: Path) -> dict[str, object]:
     try:
         connection.execute("PRAGMA foreign_keys = ON")
 
-        for table in PRESERVED_TABLES:
-            if _table_exists(connection, table):
-                report["preserved"][table] = _row_count(connection, table)
-
         connection.execute("BEGIN")
         for table in SQLITE_CLEAR_ORDER:
             if not _table_exists(connection, table):
@@ -140,11 +147,7 @@ def reset_user_planning_state(data_dir: Path) -> dict[str, object]:
         if nonzero:
             raise RuntimeError(f"Reset verification failed; rows remain: {nonzero}")
         report["verified_empty_tables"] = tuple(remaining)
-        report["preserved_after"] = {
-            table: _row_count(connection, table)
-            for table in PRESERVED_TABLES
-            if _table_exists(connection, table)
-        }
+        report["preserved_after"] = {}
     finally:
         connection.close()
 
@@ -159,9 +162,9 @@ def reset_user_planning_state(data_dir: Path) -> dict[str, object]:
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Back up and clear FoundryDock user Builds, Teams, Comp drafts, "
-            "Raid Plans, and planning assignments while preserving roster people "
-            "and ESO reference data."
+            "Back up and clear FoundryDock user people, characters, Builds, Teams, "
+            "Comp drafts, Raid Plans, and planning assignments while preserving "
+            "the ESO reference database schema and game data."
         )
     )
     parser.add_argument(
@@ -197,9 +200,7 @@ def main() -> None:
 
     print("")
     print("PRESERVED")
-    preserved = report["preserved_after"]
-    for table, count in preserved.items():
-        print(f"  {table}: {count}")
+    print("  ESO reference/game tables and database schema")
 
     print("")
     print("RESULT=PASS")
