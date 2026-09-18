@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 import json
+from types import SimpleNamespace
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
@@ -23,6 +24,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.eso_database import EsoDatabase
+from services.raid_plan_repository import RaidPlanRepository
 from services.generated_roster_plan_service import (
     GeneratedRosterDraftService,
     GeneratedRosterDraftSlot,
@@ -52,6 +54,24 @@ ESO_CLASSES = (
     "Warden",
 )
 
+class EditablePlanNameCombo(QComboBox):
+    """Editable Raid Plan picker that preserves the old QLineEdit API."""
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self.setEditable(True)
+        self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        if self.lineEdit() is not None:
+            self.lineEdit().setPlaceholderText("Choose a saved plan or type a new name…")
+            self.lineEdit().setClearButtonEnabled(True)
+
+    def text(self) -> str:
+        return self.currentText()
+
+    def setText(self, value: object) -> None:
+        self.setEditText(str(value or ""))
+
+
 GOAL_TRIALS = {
     "Swashbuckler Supreme": "Dreadsail Reef",
     "Godslayer": "Sunspire",
@@ -74,10 +94,105 @@ class CompBuilderPage(FoundryPage):
         self.snapshot = self.catalog.load()
         self.user_template_path = data_dir / "team_composition_user_templates.json"
         self.plan_service = GeneratedRosterDraftService(EsoDatabase(data_dir / "eso.db"))
+        self.raid_plan_repository = RaidPlanRepository(data_dir / "raid_plans.json")
         self.current_template: TeamCompositionTemplate | None = None
         self.current_slots: tuple[CompositionSlot, ...] = ()
         self._build_ui()
         self._load_for_goal()
+        self._refresh_raid_plan_name_choices()
+
+    @staticmethod
+    def _seat_label(seat_id: object) -> str:
+        key = str(seat_id or "").strip().casefold()
+        labels = {
+            "tank-1": "Tank 1",
+            "tank-2": "Tank 2",
+            "healer-1": "Healer 1",
+            "healer-2": "Healer 2",
+            **{f"dd-{index}": f"DD {index}" for index in range(1, 9)},
+        }
+        return labels.get(key, str(seat_id or "").strip())
+
+    def _refresh_raid_plan_name_choices(self) -> None:
+        current = self.plan_name_input.text().strip()
+        self.plan_name_input.blockSignals(True)
+        self.plan_name_input.clear()
+        self.plan_name_input.addItem("", None)
+        try:
+            plans = self.raid_plan_repository.list_plans()
+        except Exception:
+            plans = ()
+        for plan in plans:
+            self.plan_name_input.addItem(plan.name, plan.plan_id)
+        if current:
+            self.plan_name_input.setText(current)
+        else:
+            self.plan_name_input.setCurrentIndex(0)
+        self.plan_name_input.blockSignals(False)
+
+    def _raid_plan_name_selected(self, index: int) -> None:
+        plan_id = self.plan_name_input.itemData(index)
+        if not plan_id:
+            return
+        plan = self.raid_plan_repository.get(str(plan_id))
+        if plan is None:
+            return
+
+        trial_key = str(plan.trial_id or "").replace("-", " ").casefold()
+        for combo_index in range(self.goal_combo.count()):
+            label = self.goal_combo.itemText(combo_index)
+            if label.replace("-", " ").casefold() == trial_key:
+                self.goal_combo.setCurrentIndex(combo_index)
+                break
+        if plan.difficulty:
+            difficulty_index = self.difficulty_combo.findText(
+                str(plan.difficulty),
+                Qt.MatchFlag.MatchFixedString,
+            )
+            if difficulty_index >= 0:
+                self.difficulty_combo.setCurrentIndex(difficulty_index)
+
+        members = tuple(
+            SimpleNamespace(
+                Id=None,
+                RaidSeatId=self._seat_label(member.seat_id),
+                PlayerName=str(member.gamertag or "").strip() or "Recruit",
+                CharacterName=str(member.character_name or "").strip(),
+                PrimaryRole=str(member.role or "").strip(),
+                EsoClass=str(member.eso_class or "").strip(),
+            )
+            for member in plan.members
+        )
+        self._raid_plan_origin_id = plan.plan_id
+        self._raid_plan_class_by_seat = {
+            self._seat_label(member.seat_id): str(member.eso_class or "").strip()
+            for member in plan.members
+            if str(member.eso_class or "").strip()
+        }
+        self._comp_class_constraint_by_slot = dict(self._raid_plan_class_by_seat)
+        self._comp_manual_gear_sets_by_slot = {
+            self._seat_label(member.seat_id): tuple(member.planned_gear_sets or ())
+            for member in plan.members
+            if tuple(member.planned_gear_sets or ())
+        }
+
+        apply_context = getattr(self, "apply_roster_team_context", None)
+        if callable(apply_context):
+            apply_context(plan.name, members, group_size=12)
+
+        try:
+            from ui.comp_builder_roster_intake_support import apply_raid_plan_class_constraints
+            apply_raid_plan_class_constraints(self, self._raid_plan_class_by_seat)
+        except (AttributeError, TypeError, ValueError):
+            pass
+
+        self.plan_name_input.setText(plan.name)
+        try:
+            from ui.comp_builder_phase14_shell_support import refresh_phase14_presentation
+            refresh_phase14_presentation(self)
+        except (AttributeError, TypeError, ValueError):
+            pass
+        self.status.success(f"Loaded Raid Plan into Comp Maker: {plan.name}.")
 
     def _build_ui(self) -> None:
         self.header = FoundryHeader(
@@ -148,7 +263,8 @@ class CompBuilderPage(FoundryPage):
         actions_card.setMaximumHeight(178)
         name_row = QHBoxLayout()
         name_row.addWidget(QLabel("PLAN NAME"))
-        self.plan_name_input = QLineEdit()
+        self.plan_name_input = EditablePlanNameCombo()
+        self.plan_name_input.activated.connect(self._raid_plan_name_selected)
         name_row.addWidget(self.plan_name_input, 1)
         actions_card.addLayout(name_row)
 
