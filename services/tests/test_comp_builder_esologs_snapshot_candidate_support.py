@@ -55,6 +55,7 @@ def test_matching_esologs_tank_snapshot_becomes_selectable_candidate() -> None:
     assert candidate.eso_class == "Dragonknight"
     assert candidate.role == "Tank"
     assert candidate.gear_sets == ("Turning Tide", "Pearlescent Ward")
+    assert candidate.five_piece_sets == ("Turning Tide", "Pearlescent Ward")
     assert candidate.skills == ("Pierce Armor", "Frost Clench")
     assert candidate.complete_build is False
     assert "Oaxiltso" in candidate.name
