@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -601,6 +602,48 @@ def _refresh_shell(page) -> None:
     _refresh_health(page)
 
 
+def _apply_plan_geometry(page, size: int) -> None:
+    """Keep 4-player plans compact while allowing full 12-player plans to grow.
+
+    The page-level scroll area remains the fallback for short windows, while the
+    table keeps its own vertical scrollbar for roster rows that still exceed the
+    available middle-panel height.
+    """
+    plan_card = getattr(page, "comp_phase14_plan_card", None)
+    why_card = getattr(page, "comp_phase14_why_card", None)
+    plan_table = getattr(page, "comp_phase14_plan_table", None)
+
+    if size == 4:
+        card_minimum = 520
+        card_maximum = 640
+        table_minimum = 360
+        table_maximum = 600
+        card_policy = QSizePolicy.Policy.Preferred
+        table_policy = QSizePolicy.Policy.Preferred
+    else:
+        card_minimum = 620
+        card_maximum = QWIDGETSIZE_MAX
+        table_minimum = 540
+        table_maximum = QWIDGETSIZE_MAX
+        card_policy = QSizePolicy.Policy.Expanding
+        table_policy = QSizePolicy.Policy.Expanding
+
+    for card in (plan_card, why_card):
+        if card is None:
+            continue
+        card.setMinimumHeight(card_minimum)
+        card.setMaximumHeight(card_maximum)
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, card_policy)
+
+    if plan_table is not None:
+        plan_table.setMinimumHeight(table_minimum)
+        plan_table.setMaximumHeight(table_maximum)
+        plan_table.setSizePolicy(QSizePolicy.Policy.Expanding, table_policy)
+        plan_table.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+
+
 def _set_group_size(page, size: int) -> None:
     from ui import comp_builder_roster_intake_support as intake
 
@@ -609,20 +652,8 @@ def _set_group_size(page, size: int) -> None:
     intake._load_roster_shape(page, size)
 
     # The roster helper still owns legacy 4/12 matrix sizing. The Phase 14 shell
-    # owns visible geometry, so immediately remove those old clamps.
-    plan_card = getattr(page, "comp_phase14_plan_card", None)
-    why_card = getattr(page, "comp_phase14_why_card", None)
-    if plan_card is not None:
-        plan_card.setMinimumHeight(520)
-        plan_card.setMaximumHeight(640)
-    if why_card is not None:
-        why_card.setMinimumHeight(520)
-        why_card.setMaximumHeight(640)
-    plan_table = getattr(page, "comp_phase14_plan_table", None)
-    if plan_table is not None:
-        plan_table.setMinimumHeight(360 if size == 4 else 500)
-        plan_table.setMaximumHeight(600)
-
+    # owns visible geometry, so reassert the compact/expanding presentation.
+    _apply_plan_geometry(page, size)
     _refresh_shell(page)
 
 
@@ -722,8 +753,14 @@ def _build_plan_table(page, card: FoundryCard) -> None:
     table.verticalHeader().setDefaultSectionSize(31)
     table.setAlternatingRowColors(False)
     table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+    table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
     table.setMinimumHeight(500)
-    table.setMaximumHeight(600)
+    table.setMaximumHeight(QWIDGETSIZE_MAX)
+    table.setSizePolicy(
+        QSizePolicy.Policy.Expanding,
+        QSizePolicy.Policy.Expanding,
+    )
     header = table.horizontalHeader()
     header.setStretchLastSection(False)
     header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -974,24 +1011,36 @@ def _install_shell(page) -> None:
     matrix.set_title("Recommended Team Plan")
     matrix.setProperty("compRecommendedTeamPlan", True)
     matrix.setMinimumHeight(520)
-    matrix.setMaximumHeight(640)
+    matrix.setMaximumHeight(QWIDGETSIZE_MAX)
+    matrix.setSizePolicy(
+        QSizePolicy.Policy.Expanding,
+        QSizePolicy.Policy.Expanding,
+    )
     page.comp_phase14_plan_card = matrix
     _build_plan_table(page, matrix)
 
     details.set_title("Why This Plan")
     details.setProperty("compWhyThisPlan", True)
     details.setMinimumHeight(520)
-    details.setMaximumHeight(640)
+    details.setMaximumHeight(QWIDGETSIZE_MAX)
+    details.setSizePolicy(
+        QSizePolicy.Policy.Expanding,
+        QSizePolicy.Policy.Expanding,
+    )
     page.comp_phase14_why_card = details
     _build_why(page, details)
 
     middle = QHBoxLayout()
     middle.setContentsMargins(0, 0, 0, 0)
     middle.setSpacing(10)
-    middle.setAlignment(Qt.AlignmentFlag.AlignTop)
-    middle.addWidget(matrix, 5, Qt.AlignmentFlag.AlignTop)
-    middle.addWidget(details, 3, Qt.AlignmentFlag.AlignTop)
-    root.addLayout(middle)
+    middle.addWidget(matrix, 5)
+    middle.addWidget(details, 3)
+    root.addLayout(middle, 1)
+
+    _apply_plan_geometry(
+        page,
+        4 if getattr(page, "_comp_group_size", 12) == 4 else 12,
+    )
 
     coverage.set_title("Team Health")
     coverage.setProperty("compTeamHealth", True)
