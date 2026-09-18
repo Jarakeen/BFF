@@ -38,6 +38,7 @@ class TeamSchedule:
     TimeZone: str = ""
     Slots: tuple[TeamScheduleSlot, ...] = ()
     CurrentFocus: str = ""
+    DiscordUrl: str = ""
 
     @property
     def effective_slots(self) -> tuple[TeamScheduleSlot, ...]:
@@ -53,7 +54,12 @@ class TeamSchedule:
 
     @property
     def is_configured(self) -> bool:
-        return bool(self.effective_slots or self.TimeZone.strip() or self.CurrentFocus.strip())
+        return bool(
+            self.effective_slots
+            or self.TimeZone.strip()
+            or self.CurrentFocus.strip()
+            or self.DiscordUrl.strip()
+        )
 
     @property
     def display_text(self) -> str:
