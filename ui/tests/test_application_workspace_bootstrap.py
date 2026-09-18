@@ -25,7 +25,7 @@ def test_workspace_bootstrap_owns_cross_feature_install_order() -> None:
     assert "def bootstrap_workspace_extensions()" in source
     assert "install_roster_import_support()" in source
     assert "install_rotation_dashboard_layout_support()" not in source
-    assert "install_build_rotation_artifact_support()" not in source
+    assert "install_build_rotation_artifact_support()" in source
     assert "install_phase14_rotation_visual_target_support()" not in source
     assert "install_build_context_variant_support()" in source
     assert source.index("install_roster_assignment_persistence_support()") < source.index(
