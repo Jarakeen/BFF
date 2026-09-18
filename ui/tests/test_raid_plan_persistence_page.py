@@ -359,3 +359,11 @@ def test_raid_plan_save_links_named_players_to_loaded_plan_team() -> None:
     assert "def _active_team_name(self)" in source
     assert "self.roster_service.add_member_to_team(member_id, team_name)" in source
     assert "def save_player_to_personnel(self, row: int)" in source
+
+
+def test_loaded_comp_plan_surfaces_planned_sets_in_build_picker() -> None:
+    source = Path(raid_plan_persistence_page.__file__).read_text(encoding="utf-8")
+
+    assert '" + ".join(member.planned_gear_sets[:2])' in source
+    assert 'f"Planned • {planned_sets}"' in source
+    assert "Qt.ItemDataRole.ToolTipRole" in source
