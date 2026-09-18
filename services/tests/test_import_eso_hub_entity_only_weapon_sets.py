@@ -132,3 +132,40 @@ def test_build_plan_fails_closed_when_set_already_exists(tmp_path):
 
     assert plan.proven is False
     assert any("already exists" in issue for issue in plan.unresolved)
+
+
+def test_build_plan_prefers_single_supported_weapon_line_over_same_name_class_collision(tmp_path):
+    db_path = tmp_path / "eso.db"
+    source = tmp_path / "sets.json"
+    _database(db_path)
+
+    with sqlite3.connect(db_path) as db:
+        db.execute(
+            "INSERT INTO entity VALUES ('gear_set:disciplined_slash', 'gear_set', 'Disciplined Slash')"
+        )
+        db.execute("INSERT INTO skill VALUES (10, 'Executioner', 'Assassination')")
+        db.execute("INSERT INTO skill VALUES (11, 'Executioner', 'Two Handed')")
+        db.execute("INSERT INTO skill VALUES (12, 'Reverse Slash', 'Two Handed')")
+        db.execute("INSERT INTO skill VALUES (13, 'Reverse Slice', 'Two Handed')")
+
+    source.write_text(
+        json.dumps(
+            [
+                {
+                    "name": "Disciplined Slash",
+                    "type": "Trial",
+                    "location": "Asylum Sanctorium",
+                    "bonuses": ["(2 items) Reverse Slash generates Ultimate."],
+                    "modified_skills": ["Reverse Slash", "Reverse Slice", "Executioner"],
+                    "unresolved": [],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    plan = build_plan(db_path, source)
+
+    assert plan.proven is True
+    assert len(plan.rows) == 1
+    assert plan.rows[0].skill_line == "Two Handed"
