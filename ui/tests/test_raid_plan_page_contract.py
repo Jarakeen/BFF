@@ -117,3 +117,10 @@ def test_raid_plan_class_column_uses_searchable_contains_autocomplete() -> None:
     assert "class_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)" in source
     assert "class_completer.setFilterMode(Qt.MatchFlag.MatchContains)" in source
     assert "class_combo.setCompleter(class_completer)" in source
+
+
+def test_personnel_refresh_preserves_blank_player_chairs() -> None:
+    source = Path("ui/raid_plan_page.py").read_text(encoding="utf-8")
+    assert "combo.setCurrentIndex(-1)" in source
+    assert "combo.lineEdit().clear()" in source
+    assert "Blank Raid Plan chairs" in source
