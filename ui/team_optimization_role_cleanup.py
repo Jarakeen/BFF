@@ -9,6 +9,7 @@ from services.generated_roster_plan_service import (
 )
 from services.roster_service import RosterService
 from services.team_role_autofill import build_role_compatible_autofill
+from services.team_prescription_slot_constraints import build_gear_set_names
 from PySide6.QtWidgets import QComboBox, QLabel, QTableWidgetItem
 
 
@@ -332,7 +333,45 @@ def _original_slot_by_name(page) -> dict[str, GeneratedRosterDraftSlot]:
     }
 
 
-def _slot_from_optimization_row(row: dict[str, str], original=None) -> GeneratedRosterDraftSlot:
+def _visible_saved_build(page, row: dict[str, str]):
+    wanted_people = {
+        str(row.get("player", "") or "").strip().casefold(),
+        str(row.get("character", "") or "").strip().casefold(),
+    }
+    wanted_people.discard("")
+    wanted_build = str(row.get("build", "") or "").strip().casefold()
+    for build in page.roster.Members:
+        if wanted_people and not (_identity_values(build) & wanted_people):
+            continue
+        build_name = str(getattr(build, "BuildName", "") or "").strip().casefold()
+        if wanted_build and build_name != wanted_build:
+            continue
+        return build
+    return None
+
+
+def _build_skills(build) -> tuple[str, ...]:
+    if build is None:
+        return ()
+    result: list[str] = []
+    seen: set[str] = set()
+    for raw in (
+        *tuple(getattr(build, "FrontBarSkills", ()) or ()),
+        *tuple(getattr(build, "BackBarSkills", ()) or ()),
+    ):
+        text = str(raw or "").strip()
+        key = text.casefold()
+        if text and key not in seen:
+            seen.add(key)
+            result.append(text)
+    return tuple(result)
+
+
+def _slot_from_optimization_row(
+    page,
+    row: dict[str, str],
+    original=None,
+) -> GeneratedRosterDraftSlot:
     slot_name = row.get("slot", "")
     is_saved = row.get("kind") == "saved"
     player_name = row.get("player", "") or "Recruitment Needed"
@@ -370,14 +409,40 @@ def _slot_from_optimization_row(row: dict[str, str], original=None) -> Generated
             mundus=original.mundus,
         )
 
+    build = _visible_saved_build(page, row) if is_saved else None
+    gear_sets = tuple(build_gear_set_names(build)) if build is not None else ()
+    skills = _build_skills(build)
+    mundus = (
+        str(getattr(build, "Mundus", "") or "").strip()
+        if build is not None
+        else ""
+    )
+    character_name = (
+        str(getattr(build, "CharacterName", "") or "").strip()
+        if build is not None
+        else row.get("character", "")
+    )
+    eso_class = (
+        str(getattr(build, "EsoClass", "") or "").strip()
+        if build is not None
+        else row.get("class", "")
+    )
+
     return GeneratedRosterDraftSlot(
         slot_name=slot_name,
         kind=("saved" if is_saved else "open_recruit"),
         player_name=player_name,
-        character_name=row.get("character", ""),
-        eso_class=row.get("class", "") or "Any class",
+        character_name=character_name,
+        eso_class=eso_class or "Any class",
         build_name=build_name,
+        gear_summary=" + ".join(gear_sets),
         role=slot_name,
+        source_kind="optimizer_visible_team",
+        source_name=str(_loaded_team_name(page) or "Optimizer").strip(),
+        candidate_id=f"optimizer-visible:{slot_name}",
+        gear_sets=gear_sets,
+        skills=skills,
+        mundus=mundus,
         unresolved=(
             "Open recruitment requirement from Optimization."
             if not is_saved
@@ -386,54 +451,74 @@ def _slot_from_optimization_row(row: dict[str, str], original=None) -> Generated
     )
 
 
-def _send_visible_optimization_team_to_roster(window) -> None:
-    """Persist the visible Optimization team back under its loaded team identity."""
+def _send_visible_optimization_team_to_raid_plan(window) -> None:
+    """Persist the visible Optimization team into Raid Plan ownership."""
+
+    from services.team_plan_to_raid_plan import raid_plan_from_generated_slots
 
     optimization_page = window.pages.get("console:6")
     plan_rows = window._current_optimized_team_plan()
     if not plan_rows:
         if optimization_page is not None:
             optimization_page.status.warning(
-                "No team slots are selected. Load a Roster team before sending it back to Roster."
+                "No team slots are selected. Load a team before sending it to Raid Plan."
             )
         return
 
     originals = _original_slot_by_name(optimization_page)
     slots = tuple(
         _slot_from_optimization_row(
+            optimization_page,
             row,
             originals.get(str(row.get("slot", "")).strip().casefold()),
         )
         for row in plan_rows
     )
 
+    raid_plans = window.pages.get("raid_plans")
+    if raid_plans is None:
+        optimization_page.status.error("Raid Plan workspace is unavailable.")
+        return
+
+    origin_id = str(
+        getattr(optimization_page, "_raid_plan_origin_id", "") or ""
+    ).strip()
+    base_plan = raid_plans.plan_repository.get(origin_id) if origin_id else None
+
     goal = optimization_page.goal_combo.currentText().strip() or "Custom Goal"
-    team_name = _loaded_team_name(optimization_page) or f"{goal} Optimized Team"
-    roster_page = window.pages["roster_page"]
-    plan = roster_page.generated_plan_service.save_plan(
-        name=team_name,
-        goal=goal,
+    team_name = _loaded_team_name(optimization_page) or (
+        base_plan.team_name if base_plan is not None else ""
+    )
+    plan_name = (
+        base_plan.name
+        if base_plan is not None
+        else team_name or f"{goal} Optimized Team"
+    )
+
+    plan = raid_plan_from_generated_slots(
+        name=plan_name,
+        trial_name=(base_plan.trial_id if base_plan is not None else goal),
         difficulty=optimization_page.difficulty_combo.currentText(),
         slots=slots,
+        team_name=team_name or None,
+        base_plan=base_plan,
     )
-    _remember_loaded_team(
-        optimization_page,
-        _active_team_table(optimization_page),
-        plan.name,
-        plan,
-    )
-    roster_page._refresh_generated_plan_choices(plan.name)
-    roster_page.view_combo.setCurrentText("Generated Team")
-    roster_page.tabs.setCurrentIndex(0)
-    roster_page._populate_assignment_table()
+    raid_plans.plan_repository.save(plan)
+    raid_plans.apply_plan(plan)
+    raid_plans._refresh_overview()
+    raid_plans._show_local_view(0)
 
     saved = sum(1 for slot in slots if slot.kind == "saved")
     recruits = len(slots) - saved
     optimization_page.status.success(
-        f"Updated team {plan.name!r} in Roster: {saved} saved player(s), "
-        f"{recruits} open recruit slot(s)."
+        f"Sent {plan.name!r} to Raid Plan: {saved} saved player(s), "
+        f"{recruits} open recruit slot(s). Current Optimizer build choices "
+        "were preserved as plan-owned evidence."
     )
-    window.show_page("roster_page")
+    raid_plans.status.success(
+        f"Optimizer changes loaded into Raid Plan: {plan.name}."
+    )
+    window.show_page("raid_plans")
 
 
 def install() -> None:
@@ -452,5 +537,5 @@ def install() -> None:
 
     _ORIGINAL_INIT = OptimizationPage.__init__
     OptimizationPage.__init__ = _init_refocused
-    MainWindow._send_optimized_team_to_roster = _send_visible_optimization_team_to_roster
+    MainWindow._send_optimized_team_to_roster = _send_visible_optimization_team_to_raid_plan
     _INSTALLED = True
