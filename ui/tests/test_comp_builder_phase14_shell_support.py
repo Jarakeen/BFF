@@ -67,3 +67,32 @@ def test_phase14_comp_builder_shell_installs_after_legacy_extensions() -> None:
     assert bootstrap.index("install_coverage_group_effect_catalog_support()") < bootstrap.index(
         "install_comp_builder_phase14_shell()"
     )
+
+
+def test_phase14_why_plan_top_matches_two_set_recommendation_card() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert 'setProperty("confidenceBadge", True)' in source
+    assert 'setProperty("compRecommendedSetName", True)' in source
+    assert 'page.comp_phase14_set_plus = QLabel("+")' in source
+    assert 'setProperty("compRecommendedSetCount", True)' in source
+    assert 'page.comp_phase14_role_footer' in source
+    assert 'f"{selected_class}  •  {role}"' in source
+
+
+def test_phase14_four_player_shell_reasserts_owned_geometry() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert 'plan_card.setMinimumHeight(520)' in source
+    assert 'plan_table.setMinimumHeight(360 if size == 4 else 500)' in source
+    assert 'middle.setAlignment(Qt.AlignmentFlag.AlignTop)' in source
+
+
+def test_phase14_team_health_uses_mockup_status_indicators() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert '("COVERED", "✓", "covered"' in source
+    assert '("MISSING", "×", "missing"' in source
+    assert '("DUPLICATE", "!", "duplicate"' in source
+    assert '("RECRUIT NEED", "i", "recruit"' in source
+    assert 'setProperty("compHealthIndicator", True)' in source
