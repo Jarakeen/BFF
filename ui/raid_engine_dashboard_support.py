@@ -236,14 +236,9 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
     comp._raid_plan_origin_name = str(getattr(plan, "name", "") or "").strip()
     comp._raid_plan_origin_team_name = str(getattr(plan, "team_name", "") or "").strip()
 
-    comp.apply_roster_team_context(
-        str(getattr(plan, "name", "") or trial_name or "Raid Plan"),
-        members,
-        group_size=12,
-    )
-
     # Raid Plan owns explicit per-chair class requirements, including Recruit chairs.
-    # Carry them as seat-scoped planning state instead of relying on roster identity.
+    # Replace stale Comp-session state BEFORE roster intake renders anything, otherwise
+    # the final Phase 14 shell can briefly reapply the previous Raid Plan's class map.
     class_by_seat = {
         next(
             (
@@ -257,9 +252,26 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
         for member in getattr(plan, "members", ()) or ()
         if str(getattr(member, "eso_class", "") or "").strip()
     }
-    comp._raid_plan_class_by_seat = class_by_seat
+    comp._raid_plan_class_by_seat = dict(class_by_seat)
+    comp._comp_class_constraint_by_slot = dict(class_by_seat)
+
+    comp.apply_roster_team_context(
+        str(getattr(plan, "name", "") or trial_name or "Raid Plan"),
+        members,
+        group_size=12,
+    )
+
     from ui.comp_builder_roster_intake_support import apply_raid_plan_class_constraints
     apply_raid_plan_class_constraints(comp, class_by_seat)
+
+    # The backend chair selectors now contain the new Raid Plan values. Refresh the
+    # visible Phase 14 projection immediately so it cannot continue showing the
+    # previous Comp session's class labels.
+    try:
+        from ui.comp_builder_phase14_shell_support import refresh_phase14_presentation
+        refresh_phase14_presentation(comp)
+    except (AttributeError, TypeError, ValueError):
+        pass
     return True
 
 
