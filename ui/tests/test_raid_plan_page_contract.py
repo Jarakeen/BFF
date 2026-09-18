@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 from ui.raid_plan_page import (
@@ -107,3 +108,12 @@ def test_raid_plan_seat_is_the_role_authority() -> None:
     assert role_for_seat("Healer 2") == "Healer"
     assert role_for_seat("DD 1") == "DD"
     assert role_for_seat("DD 8") == "DD"
+
+
+def test_raid_plan_class_column_uses_searchable_contains_autocomplete() -> None:
+    source = Path("ui/raid_plan_page.py").read_text(encoding="utf-8")
+    assert '("SEAT", "GAMERTAG", "CHARACTER", "CLASS", "BUILD", "PERSONNEL")' in source
+    assert "class_combo.setEditable(True)" in source
+    assert "class_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)" in source
+    assert "class_completer.setFilterMode(Qt.MatchFlag.MatchContains)" in source
+    assert "class_combo.setCompleter(class_completer)" in source
