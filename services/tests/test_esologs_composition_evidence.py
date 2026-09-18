@@ -45,12 +45,12 @@ def test_aggregate_builds_deterministic_two_two_eight_chairs_from_observed_teams
     assert evidence.report_fights == ("AAA#7", "BBB#7")
     assert len(evidence.slots) == 12
     assert [slot.slot_name for slot in evidence.slots[:4]] == [
-        "Main Tank",
-        "Off Tank",
+        "Tank 1",
+        "Tank 2",
         "Healer 1",
         "Healer 2",
     ]
-    assert evidence.slot("Main Tank").preferred_class == "Dragonknight"
+    assert evidence.slot("Tank 1").preferred_class == "Dragonknight"
     assert evidence.slot("Healer 1").preferred_class == "Warden"
     assert evidence.slot("Healer 1").confidence == 1.0
 
