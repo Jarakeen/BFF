@@ -114,6 +114,13 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self._loading_plan = False
         self._loaded_plan_snapshot: RaidPlan | None = None
         super().__init__(parent)
+        lower_save = getattr(self, "lower_save_plan_button", None)
+        if lower_save is not None:
+            try:
+                lower_save.clicked.disconnect()
+            except (RuntimeError, TypeError):
+                pass
+            lower_save.clicked.connect(self.save_current_plan)
         self.refresh_saved_plan_picker()
 
     def _build_ui(self) -> None:
