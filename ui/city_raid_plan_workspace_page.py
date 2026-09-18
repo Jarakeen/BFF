@@ -2,10 +2,7 @@ from __future__ import annotations
 
 """Urban Wilderness shell over the canonical Raid Plan editor."""
 
-from pathlib import Path
-
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
@@ -13,79 +10,15 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
-    QSizePolicy,
     QStackedWidget,
     QTableWidget,
     QVBoxLayout,
     QWidget,
 )
 
-from engine.config import get_resource_path
 from ui.components.foundry_card import FoundryCard
 from ui.raid_plan_adviser_page import RaidPlanAdviserPage
-
-
-_TRIAL_BANNER_FILENAMES = (
-    ("aetherian archive", "aetherian_archive.webp"),
-    ("asylum sanctorium", "asylum_sanctorium.webp"),
-    ("cloudrest", "cloudrest.webp"),
-    ("dreadsail reef", "dreadsail_reef.webp"),
-    ("halls of fabrication", "halls_of_fabrication.webp"),
-    ("hel ra citadel", "hel_ra_citadel.webp"),
-    ("kyne's aegis", "kynes_aegis.webp"),
-    ("lucent citadel", "lucent_citadel.webp"),
-    ("maw of lorkhaj", "maw_of_lorkhaj.webp"),
-    ("rockgrove", "rockgrove.webp"),
-    ("sanctum ophidia", "sanctum_ophidia.webp"),
-    ("sanity's edge", "sanitys_edge.webp"),
-    ("sunspire", "sunspire.webp"),
-)
-
-_TRIAL_BANNER_ALIASES = {
-    "aa": "aetherian_archive.webp",
-    "as": "asylum_sanctorium.webp",
-    "cr": "cloudrest.webp",
-    "dsr": "dreadsail_reef.webp",
-    "hof": "halls_of_fabrication.webp",
-    "hrc": "hel_ra_citadel.webp",
-    "ka": "kynes_aegis.webp",
-    "lc": "lucent_citadel.webp",
-    "mol": "maw_of_lorkhaj.webp",
-    "rg": "rockgrove.webp",
-    "so": "sanctum_ophidia.webp",
-    "se": "sanitys_edge.webp",
-    "ss": "sunspire.webp",
-}
-
-
-def _clean(value: object) -> str:
-    return str(value or "").strip()
-
-
-def _normalize_trial_identity(value: object) -> str:
-    text = _clean(value).casefold().replace("’", "'").replace("_", " ").replace("-", " ")
-    return " ".join(text.split())
-
-
-def _trial_banner_filename(*values: object) -> str | None:
-    """Resolve a trial-specific Raid Plan banner from stable identity text."""
-    identities = tuple(_normalize_trial_identity(value) for value in values if _clean(value))
-    for identity in identities:
-        if identity in _TRIAL_BANNER_ALIASES:
-            return _TRIAL_BANNER_ALIASES[identity]
-    identity = " ".join(identities)
-    for trial_key, filename in _TRIAL_BANNER_FILENAMES:
-        if trial_key in identity:
-            return filename
-    return None
-
-
-def _trial_banner_path(*values: object) -> Path | None:
-    filename = _trial_banner_filename(*values)
-    if filename is None:
-        return None
-    path = Path(get_resource_path("assets", "raid_plans", "trial_banners", filename))
-    return path if path.is_file() else None
+from ui.raid_trial_banner_support import TrialBannerLabel, trial_banner_path
 
 
 def _foundry_card_ancestor(widget: QWidget | None) -> QWidget | None:
@@ -204,6 +137,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.local_stack.addWidget(roles_surface)
         self.workspace_layout.addWidget(self.local_stack, 1)
         self._show_local_view(0)
+        self.trial_combo.currentTextChanged.connect(lambda _text: self._refresh_overview())
 
     def _build_overview_surface(self) -> QWidget:
         page = QWidget()
@@ -231,7 +165,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         hero_layout = QHBoxLayout(hero_row)
         hero_layout.setContentsMargins(0, 0, 0, 0)
         hero_layout.setSpacing(12)
-        self.overview_art = _TrialBannerLabel()
+        self.overview_art = TrialBannerLabel()
         self.overview_art.hide()
         hero_layout.addWidget(self.overview_art, 3)
         self.overview_hero = QLabel("No saved plan selected.")
@@ -347,14 +281,15 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         if plan is None and plans:
             plan = plans[0]
         if plan is None:
-            self.overview_art.set_source(None)
+            selected_trial = self.trial_combo.currentText() if hasattr(self, "trial_combo") else ""
+            self.overview_art.set_source(trial_banner_path(selected_trial))
             self.overview_hero.setText("No saved Raid Plan yet. Use Roles to assemble one without inventing missing identity.")
             for card in (self.team_snapshot, self.encounter_snapshot, self.strategy_snapshot, self.progress_snapshot):
                 card.value_label.setText("—")
             return
         assigned = sum(1 for member in plan.members if member.primary_assignment or member.secondary_assignment)
         builds = sum(1 for member in plan.members if member.build_selected)
-        self.overview_art.set_source(_trial_banner_path(plan.trial_id, plan.name))
+        self.overview_art.set_source(trial_banner_path(plan.trial_id, plan.name))
         self.overview_hero.setText(
             f"{plan.name}\n{plan.trial_id} · {plan.difficulty or 'Difficulty not set'} · {len(plan.members)} players\nStatus: {plan.status.title()}"
         )
