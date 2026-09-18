@@ -394,6 +394,32 @@ class RosterService:
             result.append(name)
         return result
 
+    def add_member_to_team(self, member_id: int, team_name: str) -> None:
+        """Add one Personnel record to one Team without disturbing other memberships."""
+        member_id = int(member_id)
+        name = str(team_name or "").strip()
+        if member_id <= 0:
+            raise ValueError("member_id must be positive")
+        if not name:
+            return
+        if self.get_member(member_id) is None:
+            raise ValueError(f"roster member {member_id} does not exist")
+        self.db.execute("INSERT OR IGNORE INTO team (name) VALUES (?)", (name,))
+        row = self.db.execute(
+            "SELECT id FROM team WHERE name = ? COLLATE NOCASE",
+            (name,),
+        ).fetchone()
+        if row is None:
+            raise RuntimeError("team identity could not be resolved")
+        self.db.execute(
+            """
+            INSERT OR IGNORE INTO team_member (roster_member_id, team_id)
+            VALUES (?, ?)
+            """,
+            (member_id, int(row["id"])),
+        )
+        self.db.commit()
+
     def _set_member_teams(self, member_id: int, team_names: str):
         self.db.execute("DELETE FROM team_member WHERE roster_member_id = ?", (member_id,))
         for team_name in self._parse_team_names(team_names):
