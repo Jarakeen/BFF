@@ -53,6 +53,7 @@ def test_build_menu_owns_build_workspaces():
 def test_raid_menu_owns_run_specific_planning_workflow():
     section = _section("Raid")
     assert section["children"] == [
+        ("Raid Dashboard", "raid_engine_dashboard"),
         ("Raid Plans", "raid_plans"),
         ("Assignments", "assignments"),
         ("Readiness", "readiness"),
