@@ -188,8 +188,8 @@ def install() -> None:
     """Install the Builds-side saved-rotation viewer only.
 
     Rotation Builder now uses an owned Phase 14 page. Existing saved rotation artifacts
-    remain readable from Builds, and this adapter still must not import or patch the
-    legacy CanonicalRotationDashboardPage.
+    remain readable from Builds, and this adapter must remain independent from the
+    retired Rotation dashboard implementation.
     """
     global _INSTALLED
     if _INSTALLED:
