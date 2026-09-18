@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from models.raid_plan import RaidPlan, RaidPlanMember, RaidPlanTriggeredResponsibility
+from services.raid_plan_repository import RaidPlanRepository
 from ui import raid_plan_persistence_page
 from ui.raid_plan_persistence_page import merge_visible_plan_with_loaded_snapshot
 
@@ -275,3 +276,45 @@ def test_hidden_state_is_not_carried_across_trial_change() -> None:
     )
 
     assert merge_visible_plan_with_loaded_snapshot(visible, loaded) == visible
+
+
+def test_repository_round_trip_preserves_character_role_and_planned_build(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "raid_plans.json")
+    plan = RaidPlan(
+        plan_id="sunspire-gs",
+        trial_id="sunspire",
+        name="GS",
+        difficulty="Veteran Hardmode",
+        members=(
+            RaidPlanMember(
+                seat_id="healer-1",
+                gamertag="Jarakeen",
+                character_name="Magrat",
+                role="Healer",
+                eso_class="Warden",
+                selected_build_name="DF Healer",
+                planned_gear_sets=("Spell Power Cure", "Pillager's Profit"),
+                planned_mundus="The Ritual",
+            ),
+        ),
+    )
+
+    repository.save(plan)
+    loaded = repository.get(plan.plan_id)
+
+    assert loaded == plan
+    assert loaded.member("healer-1").character_name == "Magrat"
+    assert loaded.member("healer-1").role == "Healer"
+    assert loaded.member("healer-1").planned_gear_sets == (
+        "Spell Power Cure",
+        "Pillager's Profit",
+    )
+
+
+def test_save_current_plan_verifies_repository_round_trip() -> None:
+    source = Path(raid_plan_persistence_page.__file__).read_text(encoding="utf-8")
+
+    assert "persisted = self.plan_repository.get(plan.plan_id)" in source
+    assert "saved Raid Plan did not round-trip exactly" in source
+    assert "character(s)" in source
+    assert "role(s)" in source
