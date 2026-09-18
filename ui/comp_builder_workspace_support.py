@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLineEdit,
+    QPushButton,
     QScrollArea,
     QTableWidgetItem,
     QVBoxLayout,
@@ -223,8 +224,27 @@ def _install_selected_chair_editor(page) -> None:
     grid.setColumnStretch(0, 1)
     grid.setColumnStretch(1, 1)
 
+    page.comp_advanced_assignment_button = QPushButton("Advanced Assignment Details ▸")
+    page.comp_advanced_assignment_button.setCheckable(True)
+    page.comp_advanced_assignment_button.setProperty("compAdvancedAssignmentToggle", True)
+    page.comp_advanced_assignment_button.setToolTip(
+        "Show required/flex responsibilities, provider obligations, and mechanic jobs "
+        "for the selected player slot."
+    )
+    editor_host.setVisible(False)
+
+    def _set_advanced_visible(checked: bool) -> None:
+        editor_host.setVisible(bool(checked))
+        page.comp_advanced_assignment_button.setText(
+            "Advanced Assignment Details ▾" if checked
+            else "Advanced Assignment Details ▸"
+        )
+
+    page.comp_advanced_assignment_button.toggled.connect(_set_advanced_visible)
+
     layout.insertWidget(0, page.comp_chair_title_label)
-    layout.insertWidget(1, editor_host)
+    layout.insertWidget(1, page.comp_advanced_assignment_button)
+    layout.insertWidget(2, editor_host)
 
     gear_label = getattr(page, "comp_required_gear_sets_label", None)
     gear_input = getattr(page, "comp_required_gear_sets_input", None)
@@ -233,8 +253,8 @@ def _install_selected_chair_editor(page) -> None:
         gear_input.setProperty("compMakerConstraintInput", True)
         layout.removeWidget(gear_label)
         layout.removeWidget(gear_input)
-        layout.insertWidget(2, gear_label)
-        layout.insertWidget(3, gear_input)
+        layout.insertWidget(3, gear_label)
+        layout.insertWidget(4, gear_input)
 
     page.comp_chair_required_input.textChanged.connect(
         lambda text: _copy_detail_value_to_hidden(page, 4, text)
@@ -288,6 +308,8 @@ def _configure_overview_table(page) -> None:
         header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
     for column in (SUMMARY_CANDIDATE_COLUMN, SUMMARY_CONSTRAINT_COLUMN, SUMMARY_JOB_COLUMN):
         header.setSectionResizeMode(column, QHeaderView.ResizeMode.Stretch)
+    if table.columnCount() > 11:
+        header.setSectionResizeMode(11, QHeaderView.ResizeMode.Stretch)
 
     table.setMinimumHeight(430)
     table.setMaximumHeight(430)
