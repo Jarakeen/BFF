@@ -270,10 +270,87 @@ def _candidate_source(candidate) -> str:
 def _alternative_text(candidate) -> str:
     if candidate is None:
         return "No alternate recommendation resolved."
-    gear = tuple(getattr(candidate, "gear_sets", ()) or ())
-    name = " + ".join(gear[:2]) if gear else str(getattr(candidate, "name", "") or "Alternative")
+    name = _candidate_label(candidate)
     reasons = tuple(getattr(candidate, "score_reasons", ()) or ())
     return name if not reasons else f"{name}\n{reasons[0]}"
+
+
+def _confidence_level(candidate) -> tuple[str, str, str, str]:
+    if candidate is None:
+        return ("review", "Needs review", "#243E4A", "#59AEB3")
+
+    score = float(getattr(candidate, "score", 0.0) or 0.0)
+    unresolved = tuple(getattr(candidate, "unresolved", ()) or ())
+    complete = bool(getattr(candidate, "complete_build", False))
+
+    if unresolved and not complete:
+        return ("review", "Needs review", "#243E4A", "#59AEB3")
+    if score >= 80.0:
+        return ("high", "High confidence", "#183F35", "#2F8C74")
+    if score >= 60.0:
+        return ("medium", "Medium confidence", "#4A3B1B", "#C8A46A")
+    return ("low", "Low confidence", "#472828", "#B86A6A")
+
+
+def _style_confidence_badge(label: QLabel, candidate) -> None:
+    level, title, background, border = _confidence_level(candidate)
+    score = float(getattr(candidate, "score", 0.0) or 0.0) if candidate is not None else 0.0
+    source = _candidate_source(candidate) if candidate is not None else "No evidence"
+    label.setProperty("confidenceLevel", level)
+    label.setText(
+        f"{title} • {source} • relevance {score:.1f}"
+        if candidate is not None
+        else title
+    )
+    label.setStyleSheet(
+        "QLabel {"
+        f"background: {background};"
+        f"border: 1px solid {border};"
+        "border-radius: 7px;"
+        "padding: 5px 10px;"
+        "font-weight: 600;"
+        "}"
+    )
+
+
+def _set_choice_state(frame: QFrame, *, selected: bool, enabled: bool) -> None:
+    frame.setEnabled(enabled)
+    frame.setProperty("choiceSelected", selected)
+    frame.setCursor(
+        Qt.CursorShape.PointingHandCursor
+        if enabled
+        else Qt.CursorShape.ArrowCursor
+    )
+    border = "#C8A46A" if selected else "#50666A"
+    width = "2px" if selected else "1px"
+    background = "#13262B" if selected else "#0F1B1F"
+    frame.setStyleSheet(
+        "QFrame[compCandidateChoice=\"true\"] {"
+        f"border: {width} solid {border};"
+        "border-radius: 7px;"
+        f"background: {background};"
+        "}"
+        "QFrame[compCandidateChoice=\"true\"]:hover {"
+        "border: 2px solid #C8A46A;"
+        "background: #13262B;"
+        "}"
+    )
+
+
+def _apply_choice(page, frame: QFrame) -> None:
+    candidate = getattr(frame, "_comp_candidate", None)
+    row = _selected_backend_row(page)
+    if candidate is None or row < 0:
+        return
+
+    from ui import comp_builder_build_candidate_support as candidate_support
+
+    slot_name = candidate_support._set_candidate_for_row(page, row, candidate)
+    page.status.success(
+        f"Applied {_candidate_label(candidate)} to {slot_name}. "
+        "The plan now uses this gear recommendation."
+    )
+    _refresh_shell(page)
 
 
 def _refresh_why(page) -> None:
@@ -292,6 +369,14 @@ def _refresh_why(page) -> None:
         page.comp_phase14_why_text.setText("Select a player in Recommended Team Plan.")
         page.comp_phase14_alt_one.setText("—")
         page.comp_phase14_alt_two.setText("—")
+        for frame in (
+            page.comp_phase14_recommendation_frame,
+            page.comp_phase14_alt_one_frame,
+            page.comp_phase14_alt_two_frame,
+        ):
+            frame._comp_candidate = None
+            _set_choice_state(frame, selected=False, enabled=False)
+        _style_confidence_badge(page.comp_phase14_confidence, None)
         return
 
     player = page._cell_text(row, 11) or "Recruit"
@@ -329,6 +414,14 @@ def _refresh_why(page) -> None:
         page.comp_phase14_alt_two.setText(
             "No alternate recommendation resolved."
         )
+        for frame in (
+            page.comp_phase14_recommendation_frame,
+            page.comp_phase14_alt_one_frame,
+            page.comp_phase14_alt_two_frame,
+        ):
+            frame._comp_candidate = None
+            _set_choice_state(frame, selected=False, enabled=False)
+        _style_confidence_badge(page.comp_phase14_confidence, None)
         return
 
     page.comp_phase14_recommendation.setText(_candidate_label(candidate))
@@ -339,12 +432,7 @@ def _refresh_why(page) -> None:
     )
     page.comp_phase14_set_plus.setVisible(bool(set_two))
 
-    score = float(getattr(candidate, "score", 0.0) or 0.0)
-    page.comp_phase14_confidence.setText(
-        f"High confidence • {_candidate_source(candidate)} • relevance {score:.1f}"
-        if score >= 80.0
-        else f"{_candidate_source(candidate)} • relevance {score:.1f}"
-    )
+    _style_confidence_badge(page.comp_phase14_confidence, candidate)
     page.comp_phase14_role_footer.setText(f"{selected_class}  •  {role}")
 
     reasons = tuple(getattr(candidate, "score_reasons", ()) or ())
@@ -369,8 +457,28 @@ def _refresh_why(page) -> None:
     page.comp_phase14_alt_one.setText(
         _alternative_text(alternatives[0] if alternatives else None)
     )
-    page.comp_phase14_alt_two.setText(
-        _alternative_text(alternatives[1] if len(alternatives) > 1 else None)
+    alt_one = alternatives[0] if alternatives else None
+    alt_two = alternatives[1] if len(alternatives) > 1 else None
+    page.comp_phase14_alt_one.setText(_alternative_text(alt_one))
+    page.comp_phase14_alt_two.setText(_alternative_text(alt_two))
+
+    page.comp_phase14_recommendation_frame._comp_candidate = candidate
+    page.comp_phase14_alt_one_frame._comp_candidate = alt_one
+    page.comp_phase14_alt_two_frame._comp_candidate = alt_two
+    _set_choice_state(
+        page.comp_phase14_recommendation_frame,
+        selected=True,
+        enabled=True,
+    )
+    _set_choice_state(
+        page.comp_phase14_alt_one_frame,
+        selected=False,
+        enabled=alt_one is not None,
+    )
+    _set_choice_state(
+        page.comp_phase14_alt_two_frame,
+        selected=False,
+        enabled=alt_two is not None,
     )
 
 def _health_tile(
@@ -665,6 +773,11 @@ def _build_why(page, card: FoundryCard) -> None:
     layout.addWidget(recommendation_title)
 
     recommendation_frame, recommendation_layout = _why_section_frame("recommendation")
+    recommendation_frame.setProperty("compCandidateChoice", True)
+    recommendation_frame.mousePressEvent = (
+        lambda event, frame=recommendation_frame: _apply_choice(page, frame)
+    )
+    page.comp_phase14_recommendation_frame = recommendation_frame
 
     confidence_row = QHBoxLayout()
     confidence_row.setContentsMargins(0, 0, 0, 0)
@@ -738,6 +851,11 @@ def _build_why(page, card: FoundryCard) -> None:
     layout.addWidget(alt_title)
 
     alt_one_frame, alt_one_layout = _why_section_frame("alternative")
+    alt_one_frame.setProperty("compCandidateChoice", True)
+    alt_one_frame.mousePressEvent = (
+        lambda event, frame=alt_one_frame: _apply_choice(page, frame)
+    )
+    page.comp_phase14_alt_one_frame = alt_one_frame
     page.comp_phase14_alt_one = QLabel()
     page.comp_phase14_alt_one.setWordWrap(True)
     page.comp_phase14_alt_one.setProperty("compPlanAlternative", True)
@@ -745,11 +863,24 @@ def _build_why(page, card: FoundryCard) -> None:
     layout.addWidget(alt_one_frame)
 
     alt_two_frame, alt_two_layout = _why_section_frame("alternative")
+    alt_two_frame.setProperty("compCandidateChoice", True)
+    alt_two_frame.mousePressEvent = (
+        lambda event, frame=alt_two_frame: _apply_choice(page, frame)
+    )
+    page.comp_phase14_alt_two_frame = alt_two_frame
     page.comp_phase14_alt_two = QLabel()
     page.comp_phase14_alt_two.setWordWrap(True)
     page.comp_phase14_alt_two.setProperty("compPlanAlternative", True)
     alt_two_layout.addWidget(page.comp_phase14_alt_two)
     layout.addWidget(alt_two_frame)
+
+    for choice_frame in (
+        recommendation_frame,
+        alt_one_frame,
+        alt_two_frame,
+    ):
+        choice_frame._comp_candidate = None
+        _set_choice_state(choice_frame, selected=False, enabled=False)
 
     info_frame, info_layout = _why_section_frame("info")
     info_row = QHBoxLayout()
