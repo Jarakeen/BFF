@@ -7,8 +7,24 @@ ROLES = [
     "",
     "Tank",
     "Healer",
-    "Damage Dealer",
+    "DD",
+    "Support DD",
 ]
+
+
+def normalize_roster_role(value: object) -> str:
+    """Return the canonical user-facing roster role label."""
+    raw = " ".join(str(value or "").strip().split())
+    folded = raw.casefold().replace("_", " ")
+    if folded in {"dd", "dps", "damage", "damage dealer"}:
+        return "DD"
+    if folded in {"support dd", "support dps", "support damage", "support damage dealer"}:
+        return "Support DD"
+    if folded == "tank":
+        return "Tank"
+    if folded in {"healer", "heal", "heals", "healing"}:
+        return "Healer"
+    return raw
 
 STATUSES = [
     "Active",
@@ -40,6 +56,10 @@ class RosterMember:
     Team: str = ""
     CanonicalPlayerId: str = ""
     CanonicalCharacterId: str = ""
+
+    def __post_init__(self) -> None:
+        self.PrimaryRole = normalize_roster_role(self.PrimaryRole)
+        self.SecondaryRole = normalize_roster_role(self.SecondaryRole)
 
     def to_dict(self) -> dict:
         return asdict(self)
