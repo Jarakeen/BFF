@@ -643,7 +643,19 @@ def _apply_plan_geometry(page, size: int) -> None:
         plan_table.setSizePolicy(QSizePolicy.Policy.Expanding, table_policy)
         plan_table.setVerticalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            if size == 4
+            else Qt.ScrollBarPolicy.ScrollBarAlwaysOn
         )
+
+
+def refresh_phase14_presentation(page) -> None:
+    """Reassert the visible Phase 14 shell after legacy Comp Builder refreshes."""
+    size = 4 if getattr(page, "_comp_group_size", 12) == 4 else 12
+    _apply_plan_geometry(page, size)
+    table = getattr(page, "comp_phase14_plan_table", None)
+    if table is not None:
+        table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+    _refresh_shell(page)
 
 
 def _set_group_size(page, size: int) -> None:
