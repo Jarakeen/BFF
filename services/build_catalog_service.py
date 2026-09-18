@@ -123,6 +123,7 @@ class BuildCatalogService:
         player["display_name"] = str(player.get("display_name") or "").strip()
         player["notes"] = str(player.get("notes") or "").strip()
         player["status"] = str(player.get("status") or "Active").strip() or "Active"
+        player["avatar_path"] = str(player.get("avatar_path") or "").strip()
         return player
 
     @classmethod
@@ -405,6 +406,25 @@ class BuildCatalogService:
         for player in self.load()["players"]:
             if player.get("player_id") == player_id:
                 return copy.deepcopy(player)
+        return None
+
+    def set_player_avatar(
+        self,
+        *,
+        player_id: str,
+        avatar_path: str,
+    ) -> dict[str, Any] | None:
+        """Persist one player-owned avatar reference without touching eso.db."""
+        normalized_path = str(avatar_path or "").strip()
+        catalog = self.load()
+        for index, player in enumerate(catalog["players"]):
+            if player.get("player_id") != player_id:
+                continue
+            updated = copy.deepcopy(player)
+            updated["avatar_path"] = normalized_path
+            catalog["players"][index] = updated
+            self.save(catalog)
+            return copy.deepcopy(updated)
         return None
 
     def characters_for_player(self, player_id: str) -> list[dict[str, Any]]:
