@@ -28,6 +28,12 @@ from services.extreme_actual_heal_class_route_catalog_service import (
 from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationService,
 )
+from services.extreme_actual_heal_package_admission_denominator_service import (
+    ExtremeActualHealPackageAdmissionDenominatorService,
+)
+from services.extreme_actual_heal_special_gear_denominator_service import (
+    ExtremeActualHealSpecialGearDenominatorService,
+)
 from services.extreme_actual_heal_trait_denominator_service import (
     ExtremeActualHealTraitDenominatorService,
 )
@@ -38,6 +44,10 @@ from services.extreme_healing_class_passive_coverage_inventory import (
     ExtremeHealingClassPassiveCoverageInventory,
 )
 from engine.config import get_data_dir
+from minmax.gear_set_repository import GearSetRepository
+from tools.audit_extreme_e2_actual_heal_ordinary_gear_denominator import (
+    build_ordinary_gear_denominator,
+)
 from services.extreme_canonical_actual_heal_optimization_service import (
     ExtremeCanonicalActualHealOptimizationService,
 )
@@ -162,10 +172,9 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         E2DimensionCoverage(
             "gear_packages_procs",
             "Gear sets / mythics / monster sets / arena weapons / procs",
-            E2DimensionStatus.PARTIAL,
-            "ExtremeActualHealGearDenominatorService + actual-heal gear package services + runtime gear-proc evidence",
-            "The complete canonical ordinary-set corpus now receives one reconciled H1 disposition and accepted rows are cross-checked against the authoritative five-piece candidate pool; reviewed monster, double-five, mythic, non-ring mythic, arena-weapon, and explicit runtime proc paths also exist.",
-            "Ordinary five-piece accounting is explicit, but monster/mythic/arena/proc package families do not yet each expose a complete canonical denominator and disposition reconciliation for H1.",
+            E2DimensionStatus.COVERED,
+            "ordinary gear denominator + ExtremeActualHealSpecialGearDenominatorService + ExtremeActualHealPackageAdmissionDenominatorService + runtime gear-proc evidence",
+            "The ordinary five-piece H1 screen is exhaustive and mechanic-complete; all 70 monster sets, 36 mythics, and 60 normalized arena-weapon sets receive explicit H1 dispositions with zero unresolved special rows; exhaustive standing/package admission reconciles all 60 arena structures plus every H1-relevant monster, ring-mythic, and non-ring-mythic package. Triggered/conditional proc activation remains explicitly owned by runtime_event_state rather than being invented as standing uptime.",
         ),
         E2DimensionCoverage(
             "traits",
@@ -248,6 +257,70 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         "legal heal-relevant Champion Point loadout search"
     ):
         raise AssertionError("Extreme H1 Champion Point search contract changed without E2 ledger review")
+
+    database = get_data_dir() / "eso.db"
+
+    ordinary_rows = build_ordinary_gear_denominator(
+        GearSetRepository(database),
+    )
+    ordinary_five_piece = tuple(
+        row for row in ordinary_rows if row.useful_piece_count >= 5
+    )
+    ordinary_unresolved = tuple(
+        row for row in ordinary_five_piece if row.unresolved_objectives
+    )
+    ordinary_omitted_positive = tuple(
+        row
+        for row in ordinary_five_piece
+        if row.reviewed_positive
+        and row.mechanic_complete_for_h1_screen
+        and not row.selected_by_authoritative_search
+    )
+    if ordinary_unresolved or ordinary_omitted_positive:
+        raise AssertionError(
+            "Extreme H1 ordinary gear denominator is not closed: "
+            f"unresolved={len(ordinary_unresolved)}, "
+            f"omitted_positive={len(ordinary_omitted_positive)}"
+        )
+
+    special_gear = ExtremeActualHealSpecialGearDenominatorService(database).build()
+    if not special_gear.denominator_proven:
+        raise AssertionError(
+            "Extreme H1 special gear denominator is not proven: "
+            f"unresolved={len(special_gear.unresolved_rows)}"
+        )
+    if (
+        special_gear.monster_count != 70
+        or special_gear.mythic_count != 36
+        or special_gear.arena_weapon_count != 60
+        or special_gear.entity_only_count != 0
+    ):
+        raise AssertionError(
+            "Extreme H1 canonical special-gear counts changed without E2 ledger review: "
+            f"monster={special_gear.monster_count}, "
+            f"mythic={special_gear.mythic_count}, "
+            f"arena={special_gear.arena_weapon_count}, "
+            f"entity_only={special_gear.entity_only_count}"
+        )
+
+    package_admission = ExtremeActualHealPackageAdmissionDenominatorService(
+        database
+    ).build()
+    if not package_admission.denominator_proven:
+        raise AssertionError(
+            "Extreme H1 package admission denominator is not proven: "
+            f"missing={package_admission.missing}, "
+            f"unexpected={package_admission.unexpected}"
+        )
+    if tuple(row.family for row in package_admission.families) != (
+        "arena_weapon_structure",
+        "monster",
+        "ring_mythic",
+        "non_ring_mythic",
+    ):
+        raise AssertionError(
+            "Extreme H1 package-admission family denominator changed without ledger review"
+        )
 
     trait_denominator = ExtremeActualHealTraitDenominatorService().build()
     if not trait_denominator.denominator_proven:
