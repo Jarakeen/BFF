@@ -224,29 +224,6 @@ class RotationBuilderPage(FoundryPage):
         command_row.addWidget(self._build_obligations_card(), 2)
         self.workspace_layout.addLayout(command_row)
 
-        generate_card = FoundryCard("Generate & Results", "optimization")
-        action_row = QHBoxLayout()
-        action_row.setContentsMargins(0, 0, 0, 0)
-        action_row.setSpacing(8)
-
-        self.generate_button = QPushButton("Generate Rotation")
-        self.generate_button.setProperty("primary", True)
-        self.generate_button.setMinimumHeight(40)
-        self.generate_button.setEnabled(False)
-        self.generate_button.clicked.connect(self.generate_rotation)
-        action_row.addWidget(self.generate_button)
-
-        self.clear_button = QPushButton("Clear Result")
-        self.clear_button.clicked.connect(self.clear_result)
-        action_row.addWidget(self.clear_button)
-        action_row.addStretch(1)
-
-        self.result_summary = QLabel("Generate a rotation to populate the result workspace.")
-        self.result_summary.setProperty("resultSummary", True)
-        action_row.addWidget(self.result_summary)
-        generate_card.addLayout(action_row)
-        self.workspace_layout.addWidget(generate_card)
-
         self.result_tabs = QTabWidget()
         self.result_tabs.setDocumentMode(True)
         self.result_tabs.setMovable(False)
@@ -589,6 +566,29 @@ class RotationBuilderPage(FoundryPage):
             )
         )
         card.addStretch(1)
+
+        action_row = QHBoxLayout()
+        action_row.setContentsMargins(0, 8, 0, 0)
+        action_row.setSpacing(8)
+
+        self.generate_button = QPushButton("Generate Rotation")
+        self.generate_button.setProperty("primary", True)
+        self.generate_button.setMinimumHeight(40)
+        self.generate_button.setEnabled(False)
+        self.generate_button.clicked.connect(self.generate_rotation)
+        action_row.addWidget(self.generate_button, 2)
+
+        self.clear_button = QPushButton("Clear Results")
+        self.clear_button.setMinimumHeight(40)
+        self.clear_button.clicked.connect(self.clear_result)
+        action_row.addWidget(self.clear_button, 1)
+
+        card.addLayout(action_row)
+
+        self.result_summary = QLabel("Generate a rotation to populate the result workspace.")
+        self.result_summary.setProperty("resultSummary", True)
+        self.result_summary.setWordWrap(True)
+        card.addWidget(self.result_summary)
         return card
 
     def _obligation_row(
