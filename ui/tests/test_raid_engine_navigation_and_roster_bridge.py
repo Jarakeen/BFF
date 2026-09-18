@@ -12,40 +12,70 @@ def _section(label: str):
     )
 
 
-def test_roster_menu_is_people_and_team_workspace():
-    section = _section("Roster")
-    assert section.get("page") == "roster_page"
-    assert section["children"] == []
-
-
-def test_builds_gets_its_own_top_level_workspace():
-    section = _section("Builds")
-    assert section.get("page") == "console:2"
-    assert section["children"] == [
-        ("Rotations", "rotations"),
-        ("Extreme Build Lab", "extreme_optimization"),
+def test_sidebar_uses_requested_workflow_domain_order():
+    labels = [
+        item.get("label")
+        for item in CORE_NAV_SECTIONS
+        if isinstance(item, dict)
     ]
-    assert ("Extreme Build Lab", "extreme_optimization") not in _section("Tool")["children"]
+    assert labels == [
+        "Raid",
+        "Team",
+        "Build",
+        "Encounter",
+        "Review",
+        "Achievement",
+        "Collectibles",
+        "Tools",
+        "Settings",
+    ]
 
 
-def test_raid_engine_menu_matches_raid_lead_workflow():
-    section = _section("Raid Engine")
-    assert section.get("page") == "raid_engine_dashboard"
+def test_team_menu_owns_people_and_team_planning_tools():
+    section = _section("Team")
     assert section["children"] == [
+        ("Roster", "roster_workspace"),
         ("Comp Builder", "comp_builder"),
-        ("Optimization", "console:6"),
+        ("Optimizer Adviser", "console:6"),
         ("Coverage", "console:7"),
-        ("Encounters", "console:1"),
-        ("Mechanics", "console:4"),
+    ]
+
+
+def test_build_menu_owns_build_workspaces():
+    section = _section("Build")
+    assert section["children"] == [
+        ("Builds", "console:2"),
+        ("Rotation Builder", "rotations"),
+        ("Extreme Builder", "extreme_optimization"),
+    ]
+
+
+def test_raid_menu_owns_run_specific_planning_workflow():
+    section = _section("Raid")
+    assert section["children"] == [
+        ("Raid Plans", "raid_plans"),
+        ("Assignments", "assignments"),
+        ("Readiness", "readiness"),
+        ("Live Raid", "live_raid"),
+    ]
+
+
+def test_encounter_and_reference_data_remain_separate_destinations():
+    encounter = _section("Encounter")
+    assert ("Mechanics & Timelines", "console:4") in encounter["children"]
+    assert not any(
+        page == "tools:reference_data"
+        for _label, page in encounter["children"]
+    )
+    assert ("Reference Data", "tools:reference_data") in _section("Tools")["children"]
+
+
+def test_review_menu_owns_raid_review_and_top_gear():
+    assert _section("Review")["children"] == [
+        ("Raid Review", "raid_review"),
         ("Top Gear", "console:3"),
     ]
 
-
-def test_mechanics_and_reference_data_remain_separate_destinations():
-    raid = _section("Raid Engine")
-    assert ("Mechanics", "console:4") in raid["children"]
-    assert not any(page == "tools:reference_data" for _label, page in raid["children"])
-    assert ("Reference Data", "tools:reference_data") in _section("Tool")["children"]
 
 
 def test_encounters_boss_index_uses_same_canonical_guide_rows_as_mechanics():
@@ -97,7 +127,7 @@ def test_encounters_boss_selection_updates_shared_expedition_objective():
 
 
 def test_help_guide_is_not_a_global_sidebar_destination():
-    assert ("Settings", "settings") in CORE_NAV_SECTIONS
+    assert _section("Settings").get("page") == "settings"
     assert not any(
         (
             isinstance(item, tuple)
