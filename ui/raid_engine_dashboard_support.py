@@ -31,6 +31,7 @@ def _install_canonical_sidebar_routes() -> None:
         {
             "label": "Raid",
             "children": [
+                ("Raid Dashboard", "raid_engine_dashboard"),
                 ("Raid Plans", "raid_plans"),
                 ("Assignments", "assignments"),
                 ("Readiness", "readiness"),
