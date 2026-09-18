@@ -418,9 +418,9 @@ def _set_group_size(page, size: int) -> None:
 
 
 def _generate_plan(page) -> None:
-    button = getattr(page, "apply_all_comp_candidates_button", None)
-    if button is not None and button.isEnabled():
-        button.click()
+    from ui import comp_builder_build_candidate_support as candidate_support
+
+    candidate_support._apply_best_candidates_to_all(page)
     _refresh_shell(page)
 
 
