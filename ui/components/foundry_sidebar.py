@@ -39,21 +39,32 @@ BROADCAST_NAV_SECTION = {
 # Raid-lead-first navigation. Existing routes remain registered in MainWindow;
 # this is a workspace simplification, not feature deletion.
 CORE_NAV_SECTIONS = [
-    {"label": "Roster", "page": "roster_page", "children": []},
-    {"label": "Builds", "page": "console:2", "children": [
-        ("Rotations", "rotations"),
-        ("Extreme Build Lab", "extreme_optimization"),
+    {"label": "Raid", "children": [
+        ("Raid Plans", "raid_plans"),
+        ("Assignments", "assignments"),
+        ("Readiness", "readiness"),
+        ("Live Raid", "live_raid"),
     ]},
-    {"label": "Raid Engine", "page": "raid_engine_dashboard", "children": [
-        ("Comp Maker", "comp_builder"),
-        ("Optimization", "console:6"),
+    {"label": "Team", "children": [
+        ("Roster", "roster_workspace"),
+        ("Comp Builder", "comp_builder"),
+        ("Optimizer Adviser", "console:6"),
         ("Coverage", "console:7"),
-        ("Encounters", "console:1"),
-        ("Mechanics", "console:4"),
-        ("Top Gear", "console:3"),
-        ("Review", "raid_review"),
     ]},
-    ("Achievements", "achievements"),
+    {"label": "Build", "children": [
+        ("Builds", "console:2"),
+        ("Rotation Builder", "rotations"),
+        ("Extreme Builder", "extreme_optimization"),
+    ]},
+    {"label": "Encounter", "children": [
+        ("Encounters", "console:1"),
+        ("Mechanics & Timelines", "console:4"),
+    ]},
+    {"label": "Review", "children": [
+        ("Raid Review", "raid_review"),
+        ("Top Gear", "console:3"),
+    ]},
+    {"label": "Achievement", "page": "achievements", "children": []},
     {"label": "Collectibles", "page": "collectibles", "children": [
         ("Stickerbook", "stickerbook"),
         ("Mounts", "collectibles:Mounts"),
@@ -80,12 +91,12 @@ CORE_NAV_SECTIONS = [
         ("Fragments", "collectibles:Fragments"),
         ("Tools & Upgrades", "collectibles:Tools & Upgrades"),
     ]},
-    {"label": "Tool", "children": [
+    {"label": "Tools", "children": [
         ("Reference Data", "tools:reference_data"),
         ("Gear Lookup", "gear_lookup"),
         ("vAS2 Timer", "timers"),
     ]},
-    ("Settings", "settings"),
+    {"label": "Settings", "page": "settings", "children": []},
 ]
 
 
