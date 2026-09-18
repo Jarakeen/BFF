@@ -48,11 +48,7 @@ def _unknown() -> str:
 
 
 class _ReadinessArt(QLabel):
-    """Fixed-height field-journal sketch for parchment cards.
-
-    Parchment cards deliberately use the monochrome/pencil field-journal family only.
-    Full-color city artwork belongs on dark surfaces and never controls card geometry.
-    """
+    """Fixed-height Urban Wilderness pencil art that never owns layout geometry."""
 
     def __init__(self, filename: str, fallback: str, parent=None) -> None:
         super().__init__(parent)
@@ -61,13 +57,14 @@ class _ReadinessArt(QLabel):
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setWordWrap(True)
         self.setFixedHeight(150)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setMinimumWidth(0)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
         self.setProperty("readinessNoteArt", True)
         self._refresh_pixmap()
 
     def _refresh_pixmap(self) -> None:
         path = get_resource_path(
-            "assets", "themes", "bff", "field_journal", "roster", self.filename
+            "assets", "themes", "bff", "urban_wilderness", "notes", self.filename
         )
         pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
         self.clear()
@@ -75,12 +72,23 @@ class _ReadinessArt(QLabel):
             self.setText(self.fallback)
             self.setToolTip("")
             return
+
+        target_width = max(1, self.width())
+        target_height = 138
+        scaled = pixmap.scaled(
+            target_width,
+            target_height,
+            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        x = max(0, (scaled.width() - target_width) // 2)
+        y = max(0, (scaled.height() - target_height) // 2)
         self.setPixmap(
-            pixmap.scaled(
-                max(240, self.width() or 320),
-                138,
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
+            scaled.copy(
+                x,
+                y,
+                min(target_width, scaled.width()),
+                min(target_height, scaled.height()),
             )
         )
         self.setToolTip(self.fallback)
@@ -148,7 +156,7 @@ class CityRaidReadinessPage(FoundryPage):
         field_note.setProperty("parchment", True)
         field_note.addWidget(
             _ReadinessArt(
-                "roster_people.jpg",
+                "note1.png",
                 "Ready means proven or explicitly confirmed. Unknown is allowed to stay unknown.",
             )
         )
@@ -214,7 +222,7 @@ class CityRaidReadinessPage(FoundryPage):
         fun_note.setProperty("parchment", True)
         fun_note.addWidget(
             _ReadinessArt(
-                "roster_team.jpg",
+                "note4.png",
                 "A ready group is just panic that has been alphabetized.",
             )
         )
