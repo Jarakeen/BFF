@@ -262,6 +262,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         """Build detail pages with a real Players list instead of a form-only dead end."""
         self.record = RosterRecord()
         self.actions = RosterActions()
+        self.actions.configure_player_editor()
 
         player_page = QWidget()
         player_layout = QVBoxLayout(player_page)
@@ -280,12 +281,12 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         record_card = FoundryCard("Player Record", "person")
         record_card.addWidget(self.record)
         record_card.addStretch(1)
+        record_card.addWidget(self.actions)
         split.addWidget(record_card)
         split.setStretchFactor(0, 3)
         split.setStretchFactor(1, 2)
 
         player_layout.addWidget(split, 1)
-        player_layout.addWidget(self.actions)
 
         self._install_detail_dialog("players", "Players", player_page, (1180, 760))
 
@@ -389,6 +390,30 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         if updated is None:
             return
         self._set_profile_avatar("character", str(updated.get("avatar_path") or ""))
+
+    def _connect_signals(self) -> None:
+        super()._connect_signals()
+        self.actions.cancelRequested.connect(self._cancel_player_edit)
+
+    def _cancel_player_edit(self) -> None:
+        selected_id = (
+            self.player_detail_table.selected_member_id()
+            if hasattr(self, "player_detail_table")
+            else None
+        )
+        if selected_id is None:
+            self.record.clear()
+            self.status.info("Player edit cancelled.")
+            return
+
+        member = self.roster_service.get_member(int(selected_id))
+        if member is None:
+            self.record.clear()
+            self.status.info("Player edit cancelled.")
+            return
+
+        self.record.load(member)
+        self.status.info(f"Discarded unsaved changes for {_clean(member.PlayerName)}.")
 
     def refresh(self) -> None:
         super().refresh()
