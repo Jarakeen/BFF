@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import QComboBox, QHeaderView, QTableWidgetItem
 
 from services.roster_assignment_context_service import RosterAssignmentContextService
+from services.team_composition_catalog import flexible_raid_slots
 from ui.roster_encounter_assignment_context_support import (
     selected_encounter_id,
     selected_encounter_name,
@@ -39,6 +40,58 @@ def _player_label(member) -> str:
     if player and character:
         return f"{player} • {character}"
     return player or character or "Unnamed"
+
+
+def _is_recruit_member(member) -> bool:
+    values = (
+        getattr(member, "PlayerName", ""),
+        getattr(member, "CharacterName", ""),
+    )
+    normalized = {
+        " ".join(str(value or "").strip().casefold().split())
+        for value in values
+        if str(value or "").strip()
+    }
+    return any(
+        value == "recruit"
+        or value == "recruitment needed"
+        or value.startswith("recruit ")
+        for value in normalized
+    )
+
+
+def _group_size_for_members(members) -> int:
+    """Roster intake supports the two ESO group sizes Comp Maker is meant to plan."""
+    return 4 if len(tuple(members)) <= 4 else 12
+
+
+def _load_roster_shape(page, group_size: int) -> None:
+    """Load a neutral 4- or 12-player skeleton without asserting a trial template."""
+    page.current_template = None
+    page.current_slots = flexible_raid_slots(group_size)
+    page._render_slots(page.current_slots)
+
+    goal = page.goal_combo.currentText().strip() or "Custom Goal"
+    page.plan_name_input.setText(f"{goal} Composition")
+    if hasattr(page, "trial_label"):
+        page.trial_label.setText(
+            f"GROUP SIZE\n{group_size}\n\nGOAL\n{goal}"
+        )
+    if hasattr(page, "summary_label"):
+        shape = "1 Tank • 1 Healer • 2 Damage Dealers" if group_size == 4 else (
+            "2 Tanks • 2 Healers • 8 Damage Dealers"
+        )
+        page.summary_label.setText(
+            f"Roster-driven composition\n{shape}\n\n"
+            "Players are fixed by the loaded roster. Builds remain recommendations until assigned."
+        )
+    if hasattr(page, "evidence_text"):
+        page.evidence_text.setPlainText(
+            "Roster intake preserves player identity and opens only build/provider decisions. "
+            "Recruit placeholders remain open prescription slots rather than invented players."
+        )
+    if hasattr(page, "_refresh_coverage"):
+        page._refresh_coverage()
 
 
 def _ensure_player_column(page) -> None:
@@ -141,15 +194,21 @@ def apply_roster_team_context(
     page._roster_team_context_members = members
     page._roster_team_context_assignments = assignments
 
-    # Keep the obvious 2/2/8 starting shape. Team/boss assignment is context,
-    # not a reason to reshuffle a healer into a DD chair or invent a build.
-    page._load_flexible(show_status=False)
+    # Roster size owns the neutral group shape. Four-person groups stay four-person;
+    # trial rosters stay twelve-person. Team/boss assignment remains context and must
+    # never invent extra people or silently expand a dungeon group into a trial.
+    group_size = _group_size_for_members(members)
+    page._comp_group_size = group_size
+    _load_roster_shape(page, group_size)
     _clear_player_rows(page)
 
     matched = _match_rows(page, members)
+    page._comp_roster_member_by_slot = {}
     for row, member in matched:
         member_id = int(member.Id) if getattr(member, "Id", None) is not None else -1
         _set_player(page, row, member, assignments.get(member_id))
+        slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+        page._comp_roster_member_by_slot[slot_name] = None if _is_recruit_member(member) else member
 
     if hasattr(page, "plan_name_input") and page._roster_team_context_name:
         suffix = f" • {page._roster_encounter_context_name}" if page._roster_encounter_context_name else ""
@@ -166,7 +225,7 @@ def apply_roster_team_context(
     if page._roster_encounter_context_name:
         context_label = f"{context_label} • {page._roster_encounter_context_name}"
     page.status.info(
-        f"Loaded {len(matched)} roster player(s) from {context_label} into Comp Maker: "
+        f"Loaded {len(matched)} roster slot(s) from {context_label} into a {group_size}-player Comp Maker plan: "
         f"{role_counts['tank']} tank, {role_counts['healer']} healer, "
         f"{role_counts['damage']} DD, {role_counts['unresolved']} unresolved. "
         "Classes and raid jobs are carried over; empty builds remain intentionally unresolved."
