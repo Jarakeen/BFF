@@ -30,13 +30,57 @@ H1_GEAR_OBJECTIVES = (
 )
 
 
+# Reviewed H1 dispositions for ability-altering weapon sets whose composite
+# two-piece text is intentionally broader than the generic static set resolver.
+# These rows are source-reviewed from the normalized ESO-Hub corpus. "standing"
+# means the set has an always-on H1-relevant stat contribution, "conditional"
+# means the contribution belongs to runtime/event-state evaluation, and
+# "standing_and_conditional" carries both. "irrelevant" means the mechanic does
+# not alter the selected H1 heal-event magnitude for that objective.
+_ARENA_H1_DISPOSITIONS: dict[tuple[str, str], str] = {
+    ("caustic arrow", "spell_damage"): "irrelevant",
+    ("caustic arrow", "weapon_damage"): "irrelevant",
+    ("perfected caustic arrow", "spell_damage"): "standing",
+    ("perfected caustic arrow", "weapon_damage"): "standing",
+    ("chaotic whirlwind", "spell_damage"): "conditional",
+    ("chaotic whirlwind", "weapon_damage"): "conditional",
+    ("perfected chaotic whirlwind", "spell_damage"): "conditional",
+    ("perfected chaotic whirlwind", "weapon_damage"): "conditional",
+    ("cruel flurry", "spell_damage"): "irrelevant",
+    ("cruel flurry", "weapon_damage"): "irrelevant",
+    ("perfected cruel flurry", "spell_damage"): "standing",
+    ("perfected cruel flurry", "weapon_damage"): "standing",
+    ("destructive impact", "spell_damage"): "conditional",
+    ("destructive impact", "weapon_damage"): "conditional",
+    ("perfected destructive impact", "spell_damage"): "standing_and_conditional",
+    ("perfected destructive impact", "weapon_damage"): "standing_and_conditional",
+    ("perfected concentrated force", "spell_damage"): "standing",
+    ("perfected concentrated force", "weapon_damage"): "standing",
+    ("frenzied momentum", "spell_damage"): "conditional",
+    ("frenzied momentum", "weapon_damage"): "conditional",
+    ("perfected frenzied momentum", "spell_damage"): "conditional",
+    ("perfected frenzied momentum", "weapon_damage"): "conditional",
+    ("perfected frenzied momentum", "max_stamina"): "standing",
+    ("perfected disciplined slash", "max_stamina"): "standing",
+    ("perfected force overflow", "max_magicka"): "standing",
+    ("perfected grand rejuvenation", "max_magicka"): "standing",
+    ("perfected timeless blessing", "max_magicka"): "standing",
+    ("perfected void bash", "max_health"): "standing",
+    ("perfected point-blank snipe", "spell_damage"): "standing",
+    ("perfected point-blank snipe", "weapon_damage"): "standing",
+    ("puncturing remedy", "healing_done"): "irrelevant",
+    ("perfected puncturing remedy", "healing_done"): "irrelevant",
+}
+
+
 @dataclass(frozen=True)
 class ExtremeActualHealSpecialGearDisposition:
     set_id: int
     set_name: str
     family: str
     relevant_objectives: tuple[str, ...]
-    unresolved: tuple[str, ...]
+    conditional_objectives: tuple[str, ...] = ()
+    unresolved: tuple[str, ...] = ()
 
     @property
     def mechanic_complete(self) -> bool:
@@ -44,7 +88,7 @@ class ExtremeActualHealSpecialGearDisposition:
 
     @property
     def h1_relevant(self) -> bool:
-        return bool(self.relevant_objectives)
+        return bool(self.relevant_objectives or self.conditional_objectives)
 
 
 @dataclass(frozen=True)
@@ -129,6 +173,14 @@ class ExtremeActualHealSpecialGearDenominatorService:
                     arena.add(int(set_id))
         return frozenset(arena)
 
+    @staticmethod
+    def arena_h1_disposition(set_name: str, objective: str) -> str | None:
+        key = (
+            " ".join(str(set_name or "").strip().casefold().split()),
+            str(objective or "").strip().casefold(),
+        )
+        return _ARENA_H1_DISPOSITIONS.get(key)
+
     def _family(self, gear_set, arena_ids: frozenset[int]) -> str | None:
         category = self.categories.resolve(
             gear_set.id,
@@ -184,6 +236,7 @@ class ExtremeActualHealSpecialGearDenominatorService:
                     set_name=name,
                     family="entity_only",
                     relevant_objectives=(),
+                    conditional_objectives=(),
                     unresolved=(
                         "canonical gear-set entity is selectable but lacks normalized "
                         "gear_set / gear_set_piece / gear_set_bonus evidence",
@@ -202,6 +255,7 @@ class ExtremeActualHealSpecialGearDenominatorService:
                 continue
 
             relevant: list[str] = []
+            conditional: list[str] = []
             unresolved: list[str] = []
             for objective in H1_GEAR_OBJECTIVES:
                 candidate = ExtremeGearSetObjectiveService.candidate_for_set(
@@ -209,6 +263,25 @@ class ExtremeActualHealSpecialGearDenominatorService:
                     gear_set.name,
                     objective,
                 )
+
+                if family == "arena_weapon":
+                    disposition = self.arena_h1_disposition(
+                        gear_set.name,
+                        objective,
+                    )
+                    if disposition == "irrelevant":
+                        continue
+                    if disposition == "standing":
+                        relevant.append(objective)
+                        continue
+                    if disposition == "conditional":
+                        conditional.append(objective)
+                        continue
+                    if disposition == "standing_and_conditional":
+                        relevant.append(objective)
+                        conditional.append(objective)
+                        continue
+
                 if candidate.unresolved:
                     unresolved.extend(
                         f"{objective}: {message}"
@@ -223,6 +296,7 @@ class ExtremeActualHealSpecialGearDenominatorService:
                     set_name=str(gear_set.name),
                     family=family,
                     relevant_objectives=tuple(dict.fromkeys(relevant)),
+                    conditional_objectives=tuple(dict.fromkeys(conditional)),
                     unresolved=tuple(dict.fromkeys(unresolved)),
                 )
             )
