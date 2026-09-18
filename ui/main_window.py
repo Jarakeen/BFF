@@ -397,6 +397,14 @@ class MainWindow(QMainWindow):
         if not self._confirm_collectible_navigation(page_name):
             return
 
+        if page_name == "comp_builder":
+            comp = self.pages.get("comp_builder")
+            if comp is not None:
+                from ui.comp_builder_phase14_shell_support import (
+                    refresh_phase14_presentation,
+                )
+                refresh_phase14_presentation(comp)
+
         if page_name == "console:2":
             builds_page = self.pages.get("console:2")
             clear_filter = getattr(builds_page, "clear_player_build_filter", None)
