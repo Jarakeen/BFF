@@ -40,17 +40,16 @@ BROADCAST_NAV_SECTION = {
 # this is a workspace simplification, not feature deletion.
 CORE_NAV_SECTIONS = [
     {"label": "Raid", "children": [
-        ("Raid Dashboard", "raid_engine_dashboard"),
+        ("Roster", "roster_workspace"),
         ("Raid Plans", "raid_plans"),
         ("Assignments", "assignments"),
         ("Readiness", "readiness"),
         ("Live Raid", "live_raid"),
     ]},
     {"label": "Team", "children": [
-        ("Roster", "roster_workspace"),
+        ("Coverage", "console:7"),
         ("Comp Builder", "comp_builder"),
         ("Optimizer Adviser", "console:6"),
-        ("Coverage", "console:7"),
     ]},
     {"label": "Build", "children": [
         ("Builds", "console:2"),
@@ -62,7 +61,6 @@ CORE_NAV_SECTIONS = [
         ("Mechanics & Timelines", "console:4"),
     ]},
     {"label": "Review", "children": [
-        ("Raid Review", "raid_review"),
         ("Top Gear", "console:3"),
     ]},
     {"label": "Achievement", "page": "achievements", "children": []},
