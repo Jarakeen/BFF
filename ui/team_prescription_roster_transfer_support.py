@@ -36,6 +36,36 @@ def _change_value(assignment, dimension: PrescriptionDimension) -> str:
     return "" if change is None else str(change.prescribed_value or "").strip()
 
 
+def _split_prescribed_values(value: str) -> tuple[str, ...]:
+    normalized = str(value or "").replace(";", ",").replace("\n", ",")
+    result: list[str] = []
+    seen: set[str] = set()
+    for raw in normalized.split(","):
+        text = raw.strip()
+        key = text.casefold()
+        if text and key not in seen:
+            seen.add(key)
+            result.append(text)
+    return tuple(result)
+
+
+def _known_build_skills(build) -> tuple[str, ...]:
+    if build is None:
+        return ()
+    result: list[str] = []
+    seen: set[str] = set()
+    for raw in (
+        *tuple(getattr(build, "FrontBarSkills", ()) or ()),
+        *tuple(getattr(build, "BackBarSkills", ()) or ()),
+    ):
+        text = str(raw or "").strip()
+        key = text.casefold()
+        if text and key not in seen:
+            seen.add(key)
+            result.append(text)
+    return tuple(result)
+
+
 def _saved_build_for_assignment(page, assignment):
     target_player = str(assignment.player_name or "").strip().casefold()
     target_build = str(assignment.source_build_name or "").strip().casefold()
@@ -103,6 +133,38 @@ def prescription_plan_slots(page) -> tuple[GeneratedRosterDraftSlot, ...]:
         unresolved = "; ".join(
             str(item).strip() for item in assignment.unresolved if str(item).strip()
         )
+        gear_sets = (
+            tuple(build_gear_set_names(build))
+            if build is not None
+            else ()
+        )
+        prescribed_gear = _change_value(
+            assignment,
+            PrescriptionDimension.GEAR,
+        )
+        if prescribed_gear:
+            gear_sets = _split_prescribed_values(prescribed_gear)
+
+        skills = _known_build_skills(build)
+        prescribed_skills = _change_value(
+            assignment,
+            PrescriptionDimension.SKILLS,
+        )
+        if prescribed_skills:
+            skills = _split_prescribed_values(prescribed_skills)
+
+        mundus = (
+            str(getattr(build, "Mundus", "") or "").strip()
+            if build is not None
+            else ""
+        )
+        prescribed_mundus = _change_value(
+            assignment,
+            PrescriptionDimension.MUNDUS,
+        )
+        if prescribed_mundus:
+            mundus = prescribed_mundus
+
         rows.append(
             GeneratedRosterDraftSlot(
                 slot_name=assignment.slot_name,
@@ -113,6 +175,13 @@ def prescription_plan_slots(page) -> tuple[GeneratedRosterDraftSlot, ...]:
                 build_name=build_name or "Open requirement",
                 gear_summary=gear_summary,
                 unresolved=unresolved,
+                role=str(assignment.prescribed_role or "").strip(),
+                source_kind="optimizer_prescription",
+                source_name=str(prescription.name or "").strip(),
+                candidate_id=f"optimizer:{assignment.slot_name}",
+                gear_sets=gear_sets,
+                skills=skills,
+                mundus=mundus,
             )
         )
     return tuple(rows)
@@ -453,41 +522,81 @@ def _populate_assignment_table_with_generated_plan(self, *_args) -> None:
         self._refresh_summary_cards()
 
 
-def _send_generated_prescription_to_roster(window) -> None:
+def _send_generated_prescription_to_raid_plan(window) -> None:
+    """Promote the current Optimizer prescription into Raid Plan ownership."""
+
+    from services.team_plan_to_raid_plan import raid_plan_from_generated_slots
+
     optimization_page = window.pages.get("console:6")
     prescription = getattr(optimization_page, "current_prescription", None)
     if prescription is None:
         optimization_page.status.warning(
-            "Generate Best Team first. Send to Roster uses the generated prescription, "
-            "not whatever happens to be visible in the dropdowns."
+            "Generate Best Team first. Send to Raid Plan uses the current "
+            "Optimizer prescription, not whatever happens to be visible in dropdowns."
         )
         return
 
     slots = prescription_plan_slots(optimization_page)
     if not slots:
-        optimization_page.status.warning("The generated prescription contains no roster slots.")
+        optimization_page.status.warning(
+            "The generated prescription contains no team slots."
+        )
         return
 
-    roster_page = window.pages["roster_page"]
-    plan = roster_page.generated_plan_service.save_plan(
-        name=prescription.name,
-        goal=prescription.goal,
-        difficulty=optimization_page.difficulty_combo.currentText(),
-        slots=slots,
+    raid_plans = window.pages.get("raid_plans")
+    if raid_plans is None:
+        optimization_page.status.error("Raid Plan workspace is unavailable.")
+        return
+
+    origin_id = str(
+        getattr(optimization_page, "_raid_plan_origin_id", "") or ""
+    ).strip()
+    base_plan = raid_plans.plan_repository.get(origin_id) if origin_id else None
+
+    difficulty_combo = getattr(optimization_page, "difficulty_combo", None)
+    difficulty = (
+        str(difficulty_combo.currentText() or "").strip()
+        if difficulty_combo is not None
+        else ""
     )
-    _refresh_generated_plan_choices(roster_page, plan.name)
-    roster_page.view_combo.setCurrentText("Generated Team")
-    roster_page.tabs.setCurrentIndex(0)
-    _render_generated_plan(roster_page)
+
+    plan = raid_plan_from_generated_slots(
+        name=(
+            base_plan.name
+            if base_plan is not None
+            else prescription.name
+        ),
+        trial_name=(
+            base_plan.trial_id
+            if base_plan is not None
+            else prescription.goal
+        ),
+        difficulty=difficulty,
+        slots=slots,
+        team_name=(
+            base_plan.team_name
+            if base_plan is not None
+            else None
+        ),
+        base_plan=base_plan,
+    )
+    raid_plans.plan_repository.save(plan)
+    raid_plans.apply_plan(plan)
+    raid_plans._refresh_overview()
+    raid_plans._show_local_view(0)
 
     unresolved = sum(1 for slot in slots if slot.kind == "open_recruit")
     prescribed = sum(1 for slot in slots if slot.kind == "prescribed_recruit")
     saved = sum(1 for slot in slots if slot.kind == "saved")
     optimization_page.status.success(
-        f"Sent {plan.name} to Roster: {saved} saved player(s), "
-        f"{prescribed} prescribed recruit(s), {unresolved} unresolved recruit slot(s)."
+        f"Sent {plan.name} to Raid Plan: {saved} saved player(s), "
+        f"{prescribed} prescribed recruit(s), {unresolved} unresolved slot(s). "
+        "Optimizer build changes were preserved as plan-owned evidence."
     )
-    window.show_page("roster_page")
+    raid_plans.status.success(
+        f"Optimizer changes loaded into Raid Plan: {plan.name}."
+    )
+    window.show_page("raid_plans")
 
 
 def install() -> None:
@@ -515,5 +624,5 @@ def install() -> None:
     RosterPage._generated_plan_changed = _generated_plan_changed
     RosterPage._populate_assignment_table = _populate_assignment_table_with_generated_plan
 
-    MainWindow._send_optimized_team_to_roster = _send_generated_prescription_to_roster
+    MainWindow._send_optimized_team_to_roster = _send_generated_prescription_to_raid_plan
     _INSTALLED = True
