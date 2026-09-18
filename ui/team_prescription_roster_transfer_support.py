@@ -20,7 +20,10 @@ from services.generated_roster_plan_service import (
     GeneratedRosterDraftSlot,
 )
 from services.team_prescription import PrescriptionDimension
-from services.team_prescription_slot_constraints import build_gear_set_names
+from services.team_prescription_slot_constraints import (
+    build_gear_set_names,
+    parse_required_gear_sets,
+)
 from services.team_prescription_template_inspector import find_team_template_inspection
 
 
@@ -143,7 +146,9 @@ def prescription_plan_slots(page) -> tuple[GeneratedRosterDraftSlot, ...]:
             PrescriptionDimension.GEAR,
         )
         if prescribed_gear:
-            gear_sets = _split_prescribed_values(prescribed_gear)
+            gear_sets = parse_required_gear_sets(
+                prescribed_gear.replace(" + ", ",")
+            )
 
         skills = _known_build_skills(build)
         prescribed_skills = _change_value(
