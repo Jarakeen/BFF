@@ -128,8 +128,14 @@ def test_personnel_refresh_preserves_blank_player_chairs() -> None:
 
 def test_raid_plan_lower_action_row_exposes_save_next_to_comp_builder() -> None:
     source = Path("ui/raid_plan_page.py").read_text(encoding="utf-8")
-    assert 'FoundryButton("Save", role=ButtonRole.SECONDARY, compact=True)' in source
-    assert 'save_plan.clicked.connect(lambda *_: self.save_current_plan())' in source
-    assert source.index('FoundryButton("Save", role=ButtonRole.SECONDARY, compact=True)') < source.index(
+    assert 'self.lower_save_plan_button = FoundryButton(' in source
+    assert '"Save",' in source
+    assert source.index('self.lower_save_plan_button = FoundryButton(') < source.index(
         'FoundryButton("Open Comp Maker", role=ButtonRole.SECONDARY, compact=True)'
     )
+
+
+def test_lower_raid_plan_save_is_bound_by_persistence_page() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+    assert 'lower_save = getattr(self, "lower_save_plan_button", None)' in source
+    assert "lower_save.clicked.connect(self.save_current_plan)" in source
