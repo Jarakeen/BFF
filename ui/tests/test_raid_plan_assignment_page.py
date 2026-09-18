@@ -118,3 +118,32 @@ def test_raid_engine_registers_assignment_aware_raid_plan_page() -> None:
     assert "class RaidPlanRotationPage(RaidPlanCoveragePage):" in rotation_source
     assert "from ui.raid_plan_assignment_page import RaidPlanAssignmentPage" in coverage_source
     assert "class RaidPlanCoveragePage(RaidPlanAssignmentPage):" in coverage_source
+
+
+def test_raid_plan_member_persists_utility_assignments_separately() -> None:
+    member = RaidPlanMember(
+        seat_id="healer-1",
+        gamertag="Jarakeen",
+        primary_assignment="Major Courage",
+        secondary_assignment="Major Slayer",
+        utility_assignments=("Kite", "Interrupts"),
+        notes="Watch the left edge.",
+    )
+
+    assert member.primary_assignment == "Major Courage"
+    assert member.secondary_assignment == "Major Slayer"
+    assert member.utility_assignments == ("Kite", "Interrupts")
+    assert member.notes == "Watch the left edge."
+
+
+def test_city_assignments_uses_separate_support_and_utility_surfaces() -> None:
+    from pathlib import Path
+
+    source = Path("ui/city_raid_assignments_page.py").read_text(encoding="utf-8")
+
+    assert "GROUP_COVERAGE_NAMES" in source
+    assert "UTILITY_CHOICES" in source
+    assert "self._utility_by_seat" in source
+    assert "utility_assignments=tuple(utilities)" in source
+    assert 'FoundryCard("Plan Snapshot", "compass")' in source
+    assert 'FoundryCard("Mechanic Coverage", "shield")' not in source
