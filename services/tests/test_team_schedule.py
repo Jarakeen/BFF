@@ -1,3 +1,4 @@
+from models.roster_model import RosterMember
 from models.team_schedule import TeamSchedule
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
