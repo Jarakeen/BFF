@@ -31,4 +31,4 @@ def test_parse_set_page_extracts_arena_metadata_bonus_and_modified_skills() -> N
         "(2 items) Adds 877 Maximum Magicka, The initial heal restores resources."
     ]
     assert result["modified_skills"] == ["Grand Healing", "Healing Springs"]
-    assert result["unresolved"] == ()
+    assert result["unresolved"] == []
