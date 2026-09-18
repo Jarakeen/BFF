@@ -194,6 +194,13 @@ def install() -> None:
         scribed_layout.addLayout(scribed_actions)
         tabs.addTab(scribed_tab, "Scribed Skills")
 
+        # Legacy compatibility tabs stay hidden in the normal Phase 14 Builds
+        # workspace. Focused dossier editors now own ordinary editing,
+        # character progression, and scribing access. The monolithic editor can
+        # still be surfaced explicitly through the fallback action.
+        for legacy_index in (1, 2, 3):
+            tabs.setTabVisible(legacy_index, False)
+
         self.workspace_layout.addWidget(tabs, 1)
         self.build_tabs = tabs
         self._build_editor = None
