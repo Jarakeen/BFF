@@ -289,7 +289,7 @@ def test_route_catalog_searches_all_five_ordinary_slots_and_preserves_ultimate(m
     assert budding.candidate_build.FrontBarSkills == ["A", "B", "C", "Budding Seeds", "E", "Ultimate"]
 
 
-def test_route_catalog_keeps_global_proof_false_while_class_passive_scope_is_incomplete(monkeypatch):
+def test_route_catalog_keeps_global_proof_false_after_class_passive_scope_closes(monkeypatch):
     _install_progression(monkeypatch)
     service = _service(
         optimizer=_Optimizer(),
@@ -303,7 +303,7 @@ def test_route_catalog_keeps_global_proof_false_while_class_passive_scope_is_inc
     assert result.best_complete is not None
     assert result.global_maximum_proven is False
     assert "base-class change" in result.omitted_scope
-    assert "complete class-line passive/proc coverage for every equipped route" in result.omitted_scope
+    assert "complete class-line passive/proc coverage for every equipped route" not in result.omitted_scope
     assert "hypothetical selected-class-line max progression normalization" in result.search_scope
     assert "active-bar weapon-skill legality for HEAL candidates" in result.search_scope
     assert "selected heal replacement across the five ordinary active-bar slots" in result.search_scope
