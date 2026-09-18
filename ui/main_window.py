@@ -209,11 +209,21 @@ class MainWindow(QMainWindow):
             self.show_page("raid_plans")
             return
 
+        comp = self.pages.get("comp_builder")
+        origin_id = str(
+            getattr(comp, "_raid_plan_origin_id", "") or ""
+        ).strip()
+        base_plan = raid_plans.plan_repository.get(origin_id) if origin_id else None
+
         plan = raid_plan_from_generated_slots(
             name=draft.name,
             trial_name=draft.goal,
             difficulty=draft.difficulty,
             slots=draft.slots,
+            team_name=str(
+                getattr(comp, "_raid_plan_origin_team_name", "") or ""
+            ).strip(),
+            base_plan=base_plan,
         )
         raid_plans.plan_repository.save(plan)
         raid_plans.apply_plan(plan)
