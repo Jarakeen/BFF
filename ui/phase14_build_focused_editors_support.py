@@ -780,6 +780,122 @@ def _notes_tab(page, build) -> QWidget:
     return tab
 
 
+def _character_progression_dialog(page, build, *, tab_index: int = 0) -> None:
+    """Open the character-owned passive/CP editor from the Phase 14 dossier."""
+    from services.character_progression_service import CharacterProgressionService
+    from ui.phase5_build_ui_support import CharacterProgressionDialog, _character_id_for_page
+
+    character_id = _character_id_for_page(page, build)
+    if not character_id:
+        page.status.error("Character progression could not resolve a canonical character identity.")
+        return
+
+    catalog_service = page.build_service.canonical.catalog_service
+    character = catalog_service.get_character(character_id)
+    if character is None:
+        page.status.error("Canonical character record was not found.")
+        return
+
+    dialog = CharacterProgressionDialog(
+        reference=page.reference,
+        character=character,
+        parent=page,
+    )
+    tabs = dialog.findChild(QTabWidget)
+    if tabs is not None and 0 <= int(tab_index) < tabs.count():
+        tabs.setCurrentIndex(int(tab_index))
+
+    if dialog.exec() != QDialog.DialogCode.Accepted:
+        return
+
+    saved = CharacterProgressionService(catalog_service).save(
+        character_id=character_id,
+        owned_skill_lines=dialog.owned_skill_lines,
+        passive_ranks=dialog.passive_ranks,
+        passive_cp_points=dialog.passive_cp_points,
+    )
+    if saved is None:
+        page.status.error("Character progression could not be saved.")
+        return
+
+    page.status.success("Character progression saved. All builds for this character share it.")
+    page._refresh_detail()
+
+
+def _progression_tab(page, build) -> QWidget:
+    """Character-owned non-slotted progression beside the build-owned Skills/CP tabs."""
+    from ui.phase5_build_ui_support import _character_id_for_page
+
+    tab = QWidget()
+    layout = QGridLayout(tab)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(8)
+
+    character_id = _character_id_for_page(page, build)
+    character = (
+        page.build_service.canonical.catalog_service.get_character(character_id)
+        if character_id
+        else None
+    ) or {}
+
+    owned_lines = [
+        str(value).strip()
+        for value in character.get("owned_skill_lines", ())
+        if str(value or "").strip()
+    ]
+    passive_ranks = {
+        str(name).strip(): int(rank)
+        for name, rank in dict(character.get("passive_ranks") or {}).items()
+        if str(name or "").strip()
+    }
+    passive_cp = {
+        str(name).strip(): int(points)
+        for name, points in dict(character.get("passive_cp_points") or {}).items()
+        if str(name or "").strip()
+    }
+
+    skills = FoundryCard("Passive Skills", "book-open-text")
+    note = QLabel(
+        "Character-owned skill-line access and purchased passive ranks. "
+        "These apply to every build for this character and are not bar slots."
+    )
+    note.setWordWrap(True)
+    note.setProperty("muted", True)
+    skills.addWidget(note)
+    skills.addWidget(QLabel(f"Unlocked optional skill lines: {len(owned_lines)}"))
+    skills.addWidget(QLabel(f"Recorded passive ranks: {len(passive_ranks)}"))
+    if owned_lines:
+        preview = QLabel(" • ".join(owned_lines[:6]) + (" …" if len(owned_lines) > 6 else ""))
+        preview.setWordWrap(True)
+        skills.addWidget(preview)
+    edit_skills = FoundryButton("Edit Passive Skills", role=ButtonRole.SECONDARY, compact=True)
+    edit_skills.clicked.connect(lambda: _character_progression_dialog(page, build, tab_index=0))
+    skills.addWidget(edit_skills)
+    layout.addWidget(skills, 0, 0)
+
+    cp = FoundryCard("Passive Champion Points", "progression")
+    cp_note = QLabel(
+        "Non-slottable Champion stars owned by the character. "
+        "The normal CP tab remains the build-specific slotted Champion bar."
+    )
+    cp_note.setWordWrap(True)
+    cp_note.setProperty("muted", True)
+    cp.addWidget(cp_note)
+    cp.addWidget(QLabel(f"Recorded passive Champion stars: {len(passive_cp)}"))
+    if passive_cp:
+        bought = sum(1 for points in passive_cp.values() if points > 0)
+        cp.addWidget(QLabel(f"Purchased / ranked stars: {bought}"))
+    edit_cp = FoundryButton("Edit Passive CP", role=ButtonRole.SECONDARY, compact=True)
+    edit_cp.clicked.connect(lambda: _character_progression_dialog(page, build, tab_index=1))
+    cp.addWidget(edit_cp)
+    layout.addWidget(cp, 0, 1)
+
+    layout.setColumnStretch(0, 1)
+    layout.setColumnStretch(1, 1)
+    layout.setRowStretch(1, 1)
+    return tab
+
+
 def _scribing_tab(page, build) -> QWidget:
     tab = QWidget()
     layout = QVBoxLayout(tab)
@@ -864,6 +980,7 @@ def _install_overrides() -> None:
     inspector._gear_card = _gear_card
     inspector._skills_tab = _skills_tab
     inspector._cp_tab = _cp_tab
+    inspector._progression_tab = _progression_tab
     inspector._consumables_tab = _consumables_tab
     inspector._scribing_tab = _scribing_tab
     inspector._notes_tab = _notes_tab
