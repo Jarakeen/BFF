@@ -58,8 +58,8 @@ def install() -> None:
             service.set_active_profile(self.service.active_profile)
         return service
 
-    def init_with_antiquities(self, parent=None):
-        original_init(self, parent)
+    def init_with_antiquities(self, parent=None, service=None):
+        original_init(self, parent, service=service)
         self.antiquity_service = AntiquityService(self.data_dir)
 
     def set_category_with_antiquities(self, category: str):
