@@ -112,10 +112,18 @@ HIDDEN_WORKSPACE_TABS = {
 
 
 def nav_sections(include_broadcast: bool) -> list:
-    sections = list(CORE_NAV_SECTIONS)
+    sections = [
+        dict(section) if isinstance(section, dict) else section
+        for section in CORE_NAV_SECTIONS
+    ]
     if include_broadcast:
-        settings_index = len(sections) - 1
-        sections.insert(settings_index - 1, BROADCAST_NAV_SECTION)
+        for section in sections:
+            if isinstance(section, dict) and section.get("label") == "Tools":
+                section["children"] = [
+                    *section.get("children", []),
+                    *BROADCAST_NAV_SECTION["children"],
+                ]
+                break
     return sections
 
 
