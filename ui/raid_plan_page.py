@@ -280,6 +280,11 @@ class RaidPlanPage(FoundryPage):
         research.clicked.connect(lambda *_: self.pageRequested.emit("console:3"))
         actions.addWidget(research)
 
+        save_plan = FoundryButton("Save", role=ButtonRole.SECONDARY, compact=True)
+        save_plan.setToolTip("Save the current Raid Plan using the same persistence path as Plan Controls.")
+        save_plan.clicked.connect(lambda *_: self.save_current_plan())
+        actions.addWidget(save_plan)
+
         comp = FoundryButton("Open Comp Maker", role=ButtonRole.SECONDARY, compact=True)
         comp.clicked.connect(lambda *_: self.pageRequested.emit("comp_builder"))
         actions.addWidget(comp)
