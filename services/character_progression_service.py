@@ -99,16 +99,42 @@ class CharacterProgressionService:
         return None
 
     def find_character_id(self, *, name: str, gamertag: str) -> str | None:
-        wanted = (
-            str(gamertag or "").strip().casefold(),
-            str(name or "").strip().casefold(),
-        )
-        for character in self.catalog_service.load()["characters"]:
-            candidate = (
-                str(character.get("gamertag") or "").strip().casefold(),
-                str(character.get("name") or "").strip().casefold(),
-            )
-            if candidate == wanted:
-                value = str(character.get("character_id") or "").strip()
-                return value or None
+        """Resolve one character using canonical Player ownership when available.
+
+        Character.gamertag is a compatibility mirror from the pre-player schema and
+        may be blank or stale after a player rename. Player.gamertag is authoritative
+        from catalog schema v4 onward, so resolution checks that relationship before
+        giving up. Exact character-name matching remains required.
+        """
+        wanted_name = str(name or "").strip().casefold()
+        wanted_tag = str(gamertag or "").strip().casefold()
+        if not wanted_name:
+            return None
+
+        catalog = self.catalog_service.load()
+        players = {
+            str(player.get("player_id") or "").strip(): str(
+                player.get("gamertag") or ""
+            ).strip().casefold()
+            for player in catalog["players"]
+            if isinstance(player, dict)
+            and str(player.get("player_id") or "").strip()
+        }
+
+        for character in catalog["characters"]:
+            candidate_name = str(character.get("name") or "").strip().casefold()
+            if candidate_name != wanted_name:
+                continue
+
+            mirrored_tag = str(character.get("gamertag") or "").strip().casefold()
+            player_id = str(character.get("player_id") or "").strip()
+            authoritative_tag = players.get(player_id, "")
+
+            if wanted_tag and wanted_tag not in {mirrored_tag, authoritative_tag}:
+                continue
+            if not wanted_tag and (mirrored_tag or authoritative_tag):
+                continue
+
+            value = str(character.get("character_id") or "").strip()
+            return value or None
         return None
