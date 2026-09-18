@@ -59,3 +59,14 @@ def test_raid_plan_coverage_action_emits_current_plan() -> None:
     assert 'FoundryButton(\n            "Check Plan Coverage"' in source
     assert "plan = self.current_plan()" in source
     assert "self.coverageRequested.emit(plan)" in source
+
+
+def test_raid_plan_coverage_overlays_reviewed_planned_set_evidence() -> None:
+    source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
+
+    assert "def _overlay_planned_gear(snapshot, scope)" in source
+    assert "NonAbilityEffectProviderReferenceService(DEFAULT_DATABASE).gear()" in source
+    assert "canonical_identity(name)" in source
+    assert "for row in scope.planned_gear:" in source
+    assert "planned-set evidence is therefore Conditional" in source
+    assert "snapshot = _overlay_planned_gear(snapshot, scope)" in source
