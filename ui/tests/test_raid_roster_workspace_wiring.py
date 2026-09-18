@@ -250,3 +250,17 @@ def test_comp_builder_handoff_targets_current_roster_workspace() -> None:
     assert 'def load_external_team_plan(' in roster
     assert 'def load_optimizer_plan(self, plan)' in roster
     assert 'FoundryCard("Incoming Team Plan", "compass")' in roster
+
+
+def test_navigation_has_app_wide_unsaved_change_contract() -> None:
+    main = Path("ui/main_window.py").read_text(encoding="utf-8")
+    plan = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+
+    assert "def _confirm_unsaved_navigation(self, target_page: str) -> bool:" in main
+    assert "QMessageBox.StandardButton.Save" in main
+    assert "QMessageBox.StandardButton.Discard" in main
+    assert "QMessageBox.StandardButton.Cancel" in main
+    assert "if not self._confirm_unsaved_navigation(page_name):" in main
+    assert "def has_pending_changes(self) -> bool:" in plan
+    assert "def save_pending_changes(self) -> bool:" in plan
+    assert "def discard_pending_changes(self) -> bool:" in plan
