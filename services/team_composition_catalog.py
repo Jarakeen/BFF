@@ -13,6 +13,15 @@ def _clean(value: object) -> str:
     return " ".join(str(value or "").strip().split())
 
 
+def _canonical_slot_name(value: object) -> str:
+    text = _clean(value)
+    legacy = {
+        "main tank": "Tank 1",
+        "off tank": "Tank 2",
+    }
+    return legacy.get(text.casefold(), text)
+
+
 def _strings(values: Iterable[object] | None) -> tuple[str, ...]:
     if values is None:
         return ()
@@ -139,7 +148,7 @@ class TeamCompositionCatalog:
             )
             slots = tuple(
                 CompositionSlot(
-                    slot_name=_clean(slot.get("slot_name")),
+                    slot_name=_canonical_slot_name(slot.get("slot_name")),
                     role=_clean(slot.get("role")),
                     preferred_class=_clean(slot.get("preferred_class")) or "Any class",
                     alternative_classes=_strings(slot.get("alternative_classes") or ()),
