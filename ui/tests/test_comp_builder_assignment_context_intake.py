@@ -33,6 +33,7 @@ def test_comp_maker_send_preserves_known_player_without_forcing_recruitment() ->
     source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
 
     assert 'roster_members = getattr(self, "_comp_roster_member_by_slot", {})' in source
+    assert "if not applied and not roster_members:" in source
     assert "known_player = bool(roster_context_active and roster_member is not None)" in source
     assert 'player_name=roster_player if known_player else "Recruitment Needed"' in source
     assert 'character_name=roster_character if known_player else ""' in source
