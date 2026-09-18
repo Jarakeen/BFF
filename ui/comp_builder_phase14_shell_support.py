@@ -954,6 +954,30 @@ def _build_why(page, card: FoundryCard) -> None:
     host.show()
 
 
+def _save_to_originating_raid_plan(page) -> None:
+    """Save the current Comp Builder choices back into the bound Raid Plan."""
+    origin_id = str(getattr(page, "_raid_plan_origin_id", "") or "").strip()
+    if not origin_id:
+        page.status.warning(
+            "This Comp Builder session is not bound to a Raid Plan. "
+            "Open it from Raid Plan first, then Save Plan will update that run."
+        )
+        return
+
+    from ui import comp_builder_build_candidate_support as candidate_support
+
+    draft = candidate_support.save_generated_plan(page)
+    window = page.window()
+    persist = getattr(window, "_persist_generated_comp_plan_to_raid_plan", None)
+    if not callable(persist):
+        page.status.error("Raid Plan save bridge is unavailable.")
+        return
+
+    plan = persist(draft.name, navigate=False)
+    if plan is not None:
+        page.status.success(f"Saved Comp Builder changes to Raid Plan: {plan.name}.")
+
+
 def _build_health(page, card: FoundryCard) -> None:
     for child in card.body.findChildren(QWidget):
         child.hide()
@@ -983,6 +1007,11 @@ def _build_health(page, card: FoundryCard) -> None:
     save = getattr(page, "save_template_button", None)
     if save is not None:
         save.setText("Save Plan")
+        try:
+            save.clicked.disconnect()
+        except (RuntimeError, TypeError):
+            pass
+        save.clicked.connect(lambda *_: _save_to_originating_raid_plan(page))
         _rehome(save, row)
 
     send = getattr(page, "send_button", None)
