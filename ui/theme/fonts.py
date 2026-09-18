@@ -26,6 +26,13 @@ class Fonts:
         return Fonts._font("Cinzel", 17, bold=True)
 
     @staticmethod
+    def page_heading():
+        """Primary app-page heading, matching the Collectibles dashboard treatment."""
+        font = Fonts._font("Montserrat", 21, bold=True)
+        font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 2.0)
+        return font
+
+    @staticmethod
     def section_title():
         return Fonts._font("Cormorant Garamond", 13, bold=True)
 
