@@ -188,18 +188,19 @@ def build_plan(database: Path, source_json: Path) -> NormalizationPlan:
                 continue
 
             lines = _skill_lines_for_names(db, skills)
-            if len(lines) != 1:
+            weapon_lines = tuple(
+                line
+                for line in lines
+                if _norm(line) in WEAPON_ROWS_BY_SKILL_LINE
+            )
+            if len(weapon_lines) != 1:
                 unresolved.append(
-                    f"{name}: modified skills resolve to {len(lines)} canonical skill lines: {lines}"
+                    f"{name}: modified skills resolve to {len(lines)} canonical skill lines "
+                    f"{lines}, with {len(weapon_lines)} supported weapon lines {weapon_lines}"
                 )
                 continue
-            skill_line = lines[0]
-            weapon_rows = WEAPON_ROWS_BY_SKILL_LINE.get(_norm(skill_line))
-            if not weapon_rows:
-                unresolved.append(
-                    f"{name}: unsupported weapon skill line {skill_line!r}"
-                )
-                continue
+            skill_line = weapon_lines[0]
+            weapon_rows = WEAPON_ROWS_BY_SKILL_LINE[_norm(skill_line)]
 
             plans.append(
                 WeaponSetPlan(
