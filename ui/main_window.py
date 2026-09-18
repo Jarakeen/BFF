@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_data_dir
+from services.achievement_progress_service import AchievementProgressService
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.encounter_runtime_guide_projection_service import EncounterRuntimeGuideProjectionService
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
@@ -65,6 +66,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         data_dir = get_data_dir()
         self.eso_data_service = EsoAchievementDatabaseService(data_dir / "eso.db")
+        self.achievement_progress_service = AchievementProgressService(
+            data_dir / "achievement_progress.json"
+        )
         self.encounter_boss_guide_service = EncounterBossGuideService(data_dir / "eso.db")
         self.encounter_runtime_guide_service = EncounterRuntimeGuideProjectionService(data_dir)
         self.expedition_service = expedition if expedition is not None else ExpeditionService()
@@ -227,16 +231,18 @@ class MainWindow(QMainWindow):
 
     def _refresh_collectibles_for_active_profile(self) -> None:
         """Keep collection browser/dashboard/stickerbook aligned with the achievement profile."""
-        achievements_page = self.pages.get("achievements")
         collectibles_page = self.pages.get("collectibles_browser")
         dashboard = self.pages.get("collectibles")
         stickerbook = self.pages.get("stickerbook")
         service = getattr(collectibles_page, "service", None)
-        progress = getattr(achievements_page, "achievement_progress_service", None)
-        active_profile = ""
 
-        if progress is not None:
-            active_profile = str(progress.active_profile or "").strip()
+        # Active-profile state is lightweight persisted application state. Do not
+        # force the full Achievements page to exist just so Collectibles can learn
+        # which profile is active.
+        self.achievement_progress_service.reload(preserve_active_profile=False)
+        active_profile = str(
+            self.achievement_progress_service.active_profile or ""
+        ).strip()
 
         if service is not None and active_profile and hasattr(service, "set_active_profile"):
             service.set_active_profile(active_profile)
