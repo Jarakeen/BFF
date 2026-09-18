@@ -120,6 +120,7 @@ def install() -> None:
                 "Furnishing Plans": recipe_service.progress_summary("Furnishing Plans"),
                 "Recipes": recipe_service.progress_summary("Recipes"),
                 "Lorebooks": lorebook_service.progress_summary(),
+                "Rumors": self.service.progress_summary("Rumors"),
             }
 
             for tile in self._tiles:
@@ -128,8 +129,9 @@ def install() -> None:
                     tile.set_progress(*progress)
 
             base_owned, base_total = self.service.progress_summary()
-            special_owned = sum(owned for owned, _total in special.values())
-            special_total = sum(total for _owned, total in special.values())
+            additive_routes = ("Furnishing Plans", "Recipes", "Lorebooks")
+            special_owned = sum(special[route][0] for route in additive_routes)
+            special_total = sum(special[route][1] for route in additive_routes)
             overall_owned = base_owned + special_owned
             overall_total = base_total + special_total
             overall_percent = collectibles_dashboard_page._percent(overall_owned, overall_total)
