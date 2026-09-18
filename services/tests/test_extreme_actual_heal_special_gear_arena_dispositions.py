@@ -31,3 +31,34 @@ def test_conditional_objective_counts_as_h1_relevant_without_becoming_unresolved
 
     assert row.h1_relevant is True
     assert row.mechanic_complete is True
+
+
+def test_special_h1_dispositions_split_runtime_package_and_self_irrelevant() -> None:
+    resolve = ExtremeActualHealSpecialGearDenominatorService.special_h1_disposition
+
+    assert resolve("monster", "Balorgh", "spell_damage") == "conditional"
+    assert resolve("mythic", "Markyn Ring of Majesty", "weapon_damage") == "package"
+    assert (
+        resolve("mythic", "Oakensoul Ring", "healing_done")
+        == "standing_and_package"
+    )
+    assert resolve("mythic", "Spaulder of Ruin", "spell_damage") == "irrelevant"
+    assert (
+        resolve("mythic", "Torc of the Last Ayleid King", "spell_damage")
+        == "standing_and_package"
+    )
+
+
+def test_package_objective_counts_as_h1_relevant_without_becoming_unresolved() -> None:
+    row = ExtremeActualHealSpecialGearDisposition(
+        set_id=2,
+        set_name="Markyn Ring of Majesty",
+        family="mythic",
+        relevant_objectives=(),
+        conditional_objectives=(),
+        package_objectives=("spell_damage", "weapon_damage"),
+        unresolved=(),
+    )
+
+    assert row.h1_relevant is True
+    assert row.mechanic_complete is True
