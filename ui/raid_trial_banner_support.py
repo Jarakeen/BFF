@@ -22,6 +22,8 @@ _TRIAL_BANNER_FILENAMES = (
     ("lucent citadel", "lucent_citadel.webp"),
     ("maw of lorkhaj", "maw_of_lorkhaj.webp"),
     ("ossein cage", "ossein_cage.webp"),
+    ("ossein's cage", "ossein_cage.webp"),
+    ("osseins cage", "ossein_cage.webp"),
     ("rockgrove", "rockgrove.webp"),
     ("sanctum ophidia", "sanctum_ophidia.webp"),
     ("sanity's edge", "sanitys_edge.webp"),
