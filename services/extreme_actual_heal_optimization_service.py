@@ -28,6 +28,9 @@ from services.extreme_actual_heal_non_ring_mythic_package_service import (
 from services.extreme_actual_heal_reviewed_bar_candidate_service import (
     ExtremeActualHealReviewedBarCandidateService,
 )
+from services.extreme_actual_heal_weapon_candidate_service import (
+    ExtremeActualHealWeaponCandidateService,
+)
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_healing_event_service import (
     ExtremeHealingEventResult,
@@ -147,6 +150,7 @@ class ExtremeActualHealOptimizationService:
         non_ring_mythic_packages: ExtremeActualHealNonRingMythicPackageService | None = None,
         arena_weapon_packages: ExtremeActualHealArenaWeaponPackageService | None = None,
         reviewed_bar_candidates: ExtremeActualHealReviewedBarCandidateService | None = None,
+        weapon_candidates: ExtremeActualHealWeaponCandidateService | None = None,
     ) -> None:
         self.optimizer = optimizer or ExtremeCompleteOptimizationService()
         self.healing_events = healing_events or ExtremeHealingEventService(
@@ -191,6 +195,7 @@ class ExtremeActualHealOptimizationService:
             if database_path
             else None
         )
+        self.weapon_candidates = weapon_candidates or ExtremeActualHealWeaponCandidateService()
 
     def optimize(
         self,
@@ -276,6 +281,15 @@ class ExtremeActualHealOptimizationService:
                         character_id=character_id,
                         baseline_build_id=candidate_build_id,
                         protected_entity_id=normalized_entity,
+                        active_bar=active_bar,
+                    )
+                )
+            if self.weapon_candidates is not None:
+                candidates.extend(
+                    self.weapon_candidates.build_candidates(
+                        current,
+                        character_id=character_id,
+                        baseline_build_id=candidate_build_id,
                         active_bar=active_bar,
                     )
                 )
