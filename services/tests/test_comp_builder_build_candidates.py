@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 
-from services.comp_builder_build_candidates import CompBuilderBuildCandidateService
+from services.comp_builder_build_candidates import (
+    CompBuilderBuildCandidateService,
+    _five_piece_set_names,
+)
 
 
 def _saved_build(name: str, eso_class: str, role: str) -> dict:
@@ -146,3 +150,39 @@ def test_role_and_class_boundaries_exclude_unrelated_saved_builds(tmp_path) -> N
     )
 
     assert [candidate.name for candidate in candidates] == ["Warden Healer"]
+
+
+def test_five_piece_projection_excludes_monster_and_mythic_sets(tmp_path) -> None:
+    database = tmp_path / "eso.db"
+    with sqlite3.connect(database) as db:
+        db.execute(
+            """
+            CREATE TABLE gear_set (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                category TEXT,
+                max_equip_count INTEGER
+            )
+            """
+        )
+        db.executemany(
+            "INSERT INTO gear_set(id, name, category, max_equip_count) VALUES (?, ?, ?, ?)",
+            (
+                (1, "Spell Power Cure", "standard", 5),
+                (2, "Pillager's Profit", "standard", 5),
+                (3, "Magma Incarnate", "monster", 2),
+                (4, "Spaulder of Ruin", "mythic", 1),
+            ),
+        )
+
+    projected = _five_piece_set_names(
+        database,
+        (
+            "Spell Power Cure",
+            "Magma Incarnate",
+            "Pillager's Profit",
+            "Spaulder of Ruin",
+        ),
+    )
+
+    assert projected == ("Spell Power Cure", "Pillager's Profit")
