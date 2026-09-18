@@ -265,3 +265,11 @@ def test_raid_plan_class_only_recruit_chair_is_handed_to_comp_maker() -> None:
     assert 'str(getattr(member, "eso_class", "") or "").strip()' in source
     assert 'tuple(getattr(member, "planned_gear_sets", ()) or ())' in source
     assert '"Tank 1", "Tank 2", "Healer 1", "Healer 2"' in source
+
+
+def test_recruit_with_applied_or_manual_sets_is_not_labeled_needs_gear() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert 'planned_gear = bool(manual_sets or applied_sets)' in source
+    assert 'return "Planned gear" if planned_gear else "Needs gear"' in source
+    assert 'if applied or manual_sets:' in source
