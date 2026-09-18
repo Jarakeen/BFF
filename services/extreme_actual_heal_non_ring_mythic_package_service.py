@@ -13,6 +13,9 @@ from services.extreme_actual_heal_mythic_package_service import (
 )
 from services.extreme_complete_optimization_service import ExtremeCompleteOptimizationService
 from services.extreme_gear_set_objective_service import ExtremeGearSetObjectiveService
+from services.extreme_actual_heal_special_gear_denominator_service import (
+    ExtremeActualHealSpecialGearDenominatorService,
+)
 
 
 class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackageService):
@@ -32,27 +35,27 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
 
     EQUIP_TYPE_TO_SLOT = {
         1: "Head",
-        2: "Chest",
-        3: "Feet",
+        2: "Necklace",
+        3: "Chest",
         4: "Shoulders",
-        5: "Hands",
-        6: "Legs",
-        7: "Waist",
-        8: "Necklace",
+        8: "Waist",
+        9: "Legs",
+        10: "Feet",
+        13: "Hands",
     }
-    TWO_HAND_EQUIP_TYPE = 11
+    TWO_HAND_EQUIP_TYPE = 6
 
     NON_WEAPON_POSITIONS = (
         ("Head", 1, 1),
-        ("Chest", 2, 1),
-        ("Feet", 3, 1),
+        ("Necklace", 2, 1),
+        ("Chest", 3, 1),
         ("Shoulders", 4, 1),
-        ("Hands", 5, 1),
-        ("Legs", 6, 1),
-        ("Waist", 7, 1),
-        ("Necklace", 8, 1),
-        ("Ring1", 9, 1),
-        ("Ring2", 9, 1),
+        ("Waist", 8, 1),
+        ("Legs", 9, 1),
+        ("Feet", 10, 1),
+        ("Ring1", 12, 1),
+        ("Ring2", 12, 1),
+        ("Hands", 13, 1),
     )
     TWO_SLOT_WEAPON_POSITION = ("ActiveWeapon", TWO_HAND_EQUIP_TYPE, 2)
     PAIRED_MAIN_POSITION = ("ActiveMainHand", 0, 1)
@@ -107,7 +110,21 @@ class ExtremeActualHealNonRingMythicPackageService(ExtremeActualHealMythicPackag
                 self.repository,
                 objective,
             ):
-                if not row.mechanic_complete or row.reviewed_delta <= 0:
+                disposition = (
+                    ExtremeActualHealSpecialGearDenominatorService.special_h1_disposition(
+                        "mythic",
+                        row.set_name,
+                        objective,
+                    )
+                )
+                special_admitted = disposition in {
+                    "standing",
+                    "package",
+                    "standing_and_package",
+                }
+                if not special_admitted and (
+                    not row.mechanic_complete or row.reviewed_delta <= 0
+                ):
                     continue
                 gear_set = self.repository.get_set_by_id(row.set_id)
                 if gear_set is None:
