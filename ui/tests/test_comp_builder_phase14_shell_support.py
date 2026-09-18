@@ -148,12 +148,15 @@ def test_phase14_why_choices_use_five_piece_projection_and_confidence_levels() -
     assert '("review", "Needs review"' in source
 
 
-def test_phase14_comp_builder_save_updates_bound_raid_plan_not_template_file() -> None:
+def test_phase14_comp_builder_save_updates_or_creates_raid_plan_not_template_file() -> None:
     source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
 
     assert "def _save_to_originating_raid_plan(page)" in source
     assert "candidate_support.save_generated_plan(page)" in source
     assert '"_persist_generated_comp_plan_to_raid_plan"' in source
+    assert "page._raid_plan_origin_id = plan.plan_id" in source
+    assert 'refresh_names = getattr(page, "_refresh_raid_plan_name_choices", None)' in source
+    assert "Open it from Raid Plan first" not in source
     assert "save.clicked.disconnect()" in source
 
 
