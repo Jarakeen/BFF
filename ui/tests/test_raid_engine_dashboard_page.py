@@ -8,8 +8,8 @@ from ui.raid_engine_dashboard_page import (
 
 
 def test_dashboard_normalizes_raid_chair_names() -> None:
-    assert _normalize_slot_name("MainTank") == "Main Tank"
-    assert _normalize_slot_name("Off Tank") == "Off Tank"
+    assert _normalize_slot_name("MainTank") == "Tank 1"
+    assert _normalize_slot_name("Off Tank") == "Tank 2"
     assert _normalize_slot_name("Healer2") == "Healer 2"
     assert _normalize_slot_name("DPS 7") == "DD 7"
     assert _normalize_slot_name("DD8") == "DD 8"
@@ -44,8 +44,8 @@ def test_dashboard_readiness_improves_with_assignments_and_coverage() -> None:
 
 def test_dashboard_declares_exact_twelve_player_trial_shape() -> None:
     assert RAID_SLOTS == (
-        "Main Tank",
-        "Off Tank",
+        "Tank 1",
+        "Tank 2",
         "Healer 1",
         "Healer 2",
         "DD 1",
