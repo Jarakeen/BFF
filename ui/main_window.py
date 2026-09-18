@@ -256,6 +256,55 @@ class MainWindow(QMainWindow):
             navigate=True,
         )
 
+    def _current_page_for_navigation(self):
+        current = self.stack.currentWidget()
+        for route, container in self.page_containers.items():
+            if container is current:
+                return self.pages.get(route), container
+        return None, current
+
+    def _confirm_unsaved_navigation(self, target_page: str) -> bool:
+        target_container = self.page_containers.get(target_page)
+        page, current_container = self._current_page_for_navigation()
+        if page is None or target_container is current_container:
+            return True
+
+        has_pending = getattr(page, "has_pending_changes", None)
+        if not callable(has_pending) or not has_pending():
+            return True
+
+        title = "this page"
+        header = getattr(page, "header", None)
+        title_widget = getattr(header, "title", None)
+        if title_widget is not None and hasattr(title_widget, "text"):
+            title = str(title_widget.text() or title).strip() or title
+
+        box = QMessageBox(self)
+        box.setWindowTitle("Unsaved Changes")
+        box.setText(f"You have unsaved changes on {title}.")
+        box.setInformativeText(
+            "Save them before leaving, discard them, or cancel navigation."
+        )
+        box.setStandardButtons(
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel
+        )
+        box.setDefaultButton(QMessageBox.StandardButton.Save)
+        answer = box.exec()
+
+        if answer == QMessageBox.StandardButton.Save:
+            save_pending = getattr(page, "save_pending_changes", None)
+            if not callable(save_pending):
+                return False
+            return bool(save_pending())
+        if answer == QMessageBox.StandardButton.Discard:
+            discard_pending = getattr(page, "discard_pending_changes", None)
+            if callable(discard_pending):
+                discard_pending()
+            return True
+        return False
+
     def _confirm_collectible_navigation(self, target_page: str) -> bool:
         collectibles_page = self.pages.get("collectibles_browser")
         has_pending = getattr(collectibles_page, "has_pending_changes", None)
@@ -415,7 +464,7 @@ class MainWindow(QMainWindow):
             show_player(gamertag)
 
     def show_page(self, page_name: str):
-        if not self._confirm_collectible_navigation(page_name):
+        if not self._confirm_unsaved_navigation(page_name):
             return
 
         if page_name == "comp_builder":
