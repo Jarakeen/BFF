@@ -256,3 +256,12 @@ def test_raid_plan_handoff_copies_class_directly_into_comp_selector() -> None:
     assert 'wanted_class = str(class_by_seat.get(slot_name, "") or "").strip()' in source
     assert "selector = comp.matrix_table.cellWidget(comp_row, 2)" in source
     assert "selector.setCurrentIndex(match)" in source
+
+
+def test_raid_plan_class_only_recruit_chair_is_handed_to_comp_maker() -> None:
+    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+
+    assert 'or "Recruit"' in source
+    assert 'str(getattr(member, "eso_class", "") or "").strip()' in source
+    assert 'tuple(getattr(member, "planned_gear_sets", ()) or ())' in source
+    assert '"Tank 1", "Tank 2", "Healer 1", "Healer 2"' in source
