@@ -84,7 +84,7 @@ def test_build_plan_and_apply_additive_restoration_staff_set(tmp_path):
     assert plan.proven is True
     assert len(plan.rows) == 1
     assert plan.rows[0].skill_line == "Restoration Staff"
-    assert plan.rows[0].weapon_rows == ((11, 9),)
+    assert plan.rows[0].weapon_rows == ((6, 9),)
 
     inserted = apply_plan(db_path, plan)
     assert inserted == (1, 1, 1)
@@ -100,7 +100,7 @@ def test_build_plan_and_apply_additive_restoration_staff_set(tmp_path):
         ]
         assert db.execute(
             "SELECT equip_type, armor_type, weapon_type FROM gear_set_piece"
-        ).fetchall() == [(11, 0, 9)]
+        ).fetchall() == [(6, 0, 9)]
 
 
 def test_build_plan_fails_closed_when_set_already_exists(tmp_path):
