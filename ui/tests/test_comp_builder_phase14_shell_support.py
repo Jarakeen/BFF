@@ -83,9 +83,23 @@ def test_phase14_why_plan_top_matches_two_set_recommendation_card() -> None:
 def test_phase14_four_player_shell_reasserts_owned_geometry() -> None:
     source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
 
-    assert 'plan_card.setMinimumHeight(520)' in source
-    assert 'plan_table.setMinimumHeight(360 if size == 4 else 500)' in source
-    assert 'middle.setAlignment(Qt.AlignmentFlag.AlignTop)' in source
+    assert 'card_minimum = 520' in source
+    assert 'table_minimum = 360' in source
+    assert 'card_maximum = 640' in source
+    assert 'table_maximum = 600' in source
+
+
+def test_phase14_twelve_player_plan_expands_and_scrolls_when_needed() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert 'card_minimum = 620' in source
+    assert 'table_minimum = 540' in source
+    assert 'card_maximum = MAX_WIDGET_HEIGHT' in source
+    assert 'table_maximum = MAX_WIDGET_HEIGHT' in source
+    assert 'Qt.ScrollBarPolicy.ScrollBarAsNeeded' in source
+    assert 'QAbstractItemView.ScrollMode.ScrollPerPixel' in source
+    assert 'root.addLayout(middle, 1)' in source
+    assert 'middle.setAlignment(Qt.AlignmentFlag.AlignTop)' not in source
 
 
 def test_phase14_team_health_uses_mockup_status_indicators() -> None:
