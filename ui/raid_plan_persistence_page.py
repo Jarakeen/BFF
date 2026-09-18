@@ -151,7 +151,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         """Read stable BuildIds from the exact saved-build rows selected in the UI."""
         selected: dict[str, str] = {}
         for row, seat in enumerate(RAID_PLAN_SEATS):
-            combo = self.team_table.cellWidget(row, 5)
+            combo = self.team_table.cellWidget(row, 4)
             if not isinstance(combo, QComboBox):
                 continue
             saved_index = combo.currentData()
@@ -341,19 +341,11 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 self._set_item_text(row, 2, member.character_name if member else "")
                 self._apply_character_class(row)
 
-                role_combo = self.team_table.cellWidget(row, 3)
-                if isinstance(role_combo, QComboBox):
-                    role_combo.setCurrentIndex(0)
-                    if member and member.role:
-                        role_index = role_combo.findText(member.role, Qt.MatchFlag.MatchFixedString)
-                        if role_index < 0 and member.role.casefold() in {"dd", "dps", "damage dealer"}:
-                            role_index = role_combo.findText("Damage Dealer")
-                        if role_index >= 0:
-                            role_combo.setCurrentIndex(role_index)
-
-                self._set_item_text(row, 4, member.eso_class if member else "")
+                class_combo = self.team_table.cellWidget(row, 3)
+                if isinstance(class_combo, QComboBox):
+                    class_combo.setCurrentText(member.eso_class if member and member.eso_class else "")
                 self._refresh_build_options(row)
-                build_combo = self.team_table.cellWidget(row, 5)
+                build_combo = self.team_table.cellWidget(row, 4)
                 if isinstance(build_combo, QComboBox):
                     build_combo.setCurrentIndex(0)
                     if member:
