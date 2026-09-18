@@ -44,7 +44,6 @@ from ui.operations_console import OperationsConsole
 from ui.optimization_page import OptimizationPage
 from ui.reference_data_page import ReferenceDataPage
 from ui.themed_roster_page import RosterPage
-from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage
 from ui.settings_page import SettingsPage
 from ui.stickerbook_page import StickerbookPage
 
@@ -124,7 +123,6 @@ class MainWindow(QMainWindow):
             "operations_console": OperationsConsole(expedition=self.expedition_service),
             "console:1": EncountersPage(expedition=self.expedition_service),
             "console:2": BuildsPage(),
-            "rotations": CanonicalRotationDashboardPage(),
             "console:3": CapabilitiesPage(),
             "console:4": RuntimeMechanicsPage(
                 expedition=self.expedition_service,
