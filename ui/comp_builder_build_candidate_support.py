@@ -436,31 +436,30 @@ def _candidate_unresolved(candidate: CompBuildCandidate, base_detail: str) -> st
     return " ".join(details)
 
 
-def _send_to_roster_with_candidates(self, *_args) -> None:
-    applied = getattr(self, "_comp_applied_candidates", {})
-    roster_members = getattr(self, "_comp_roster_member_by_slot", {})
-    if not applied and not roster_members:
-        assert _ORIGINAL_SEND_TO_ROSTER is not None
-        _ORIGINAL_SEND_TO_ROSTER(self)
-        return
+def save_generated_plan(page):
+    """Persist the exact visible Comp Builder state as one generated team draft."""
+    applied = getattr(page, "_comp_applied_candidates", {})
+    roster_members = getattr(page, "_comp_roster_member_by_slot", {})
 
-    goal = self.goal_combo.currentText().strip() or "Custom Goal"
-    plan_name = self.plan_name_input.text().strip() or f"{goal} Composition"
+    goal = page.goal_combo.currentText().strip() or "Custom Goal"
+    plan_name = page.plan_name_input.text().strip() or f"{goal} Composition"
     slots: list[GeneratedRosterDraftSlot] = []
-    for row in range(self.matrix_table.rowCount()):
-        slot_name = self._cell_text(row, 0)
-        role = self._cell_text(row, 1)
-        selected_class = self._selected_class(row)
-        alternatives = self._cell_text(row, 3) or "Flexible"
-        required = self._cell_text(row, 4) or "Open responsibility"
-        optional = self._cell_text(row, 5) or "None declared"
-        providers = self._cell_text(row, 6) or "None declared"
-        mechanic_jobs = self._cell_text(row, 7) or "None declared"
+
+    for row in range(page.matrix_table.rowCount()):
+        slot_name = page._cell_text(row, 0)
+        role = page._cell_text(row, 1)
+        selected_class = page._selected_class(row)
+        alternatives = page._cell_text(row, 3) or "Flexible"
+        required = page._cell_text(row, 4) or "Open responsibility"
+        optional = page._cell_text(row, 5) or "None declared"
+        providers = page._cell_text(row, 6) or "None declared"
+        mechanic_jobs = page._cell_text(row, 7) or "None declared"
         detail = (
             f"Composition requirement. Alternatives: {alternatives}. "
             f"Required: {required}. Optional/flex: {optional}. "
             f"Providers: {providers}. Mechanic jobs: {mechanic_jobs}."
         )
+
         candidate = applied.get(slot_name)
         roster_context_active = slot_name in roster_members
         roster_member = roster_members.get(slot_name)
@@ -522,15 +521,23 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
             )
         )
 
-    plan = self.plan_service.save_plan(
+    return page.plan_service.save_plan(
         name=plan_name,
         goal=goal,
-        difficulty=self.difficulty_combo.currentText(),
+        difficulty=page.difficulty_combo.currentText(),
         slots=tuple(slots),
     )
-    applied_count = sum(1 for slot in slots if slot.build_name != "Composition requirement")
+
+
+def _send_to_roster_with_candidates(self, *_args) -> None:
+    plan = save_generated_plan(self)
+    applied_count = sum(
+        1
+        for slot in plan.slots
+        if slot.build_name != "Composition requirement"
+    )
     self.status.success(
-        f"Sent {plan.name} to Roster with {len(plan.slots)} composition chair(s); "
+        f"Prepared {plan.name} for Raid Plan with {len(plan.slots)} composition chair(s); "
         f"preserved {applied_count} applied build candidate(s)."
     )
     self.rosterPlanSent.emit(plan.name)
