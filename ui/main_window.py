@@ -94,7 +94,9 @@ class MainWindow(QMainWindow):
         # The dashboard is intentionally eager because it is the lightweight,
         # visual Collections landing page. The heavier category browser may be
         # lazy-loaded, so MainWindow owns the one shared profile-aware service.
-        self.collectible_service = ProfiledCollectibleService(data_dir / "eso.db")
+        self.collectible_service = ProfiledCollectibleService(
+            get_data_dir() / "eso.db"
+        )
         self.collectible_service.set_active_profile(
             self.achievement_progress_service.active_profile
         )
