@@ -289,7 +289,10 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             return
         assigned = sum(1 for member in plan.members if member.primary_assignment or member.secondary_assignment)
         builds = sum(1 for member in plan.members if member.build_selected)
-        self.overview_art.set_source(trial_banner_path(plan.trial_id, plan.name))
+        selected_trial = self.trial_combo.currentText() if hasattr(self, "trial_combo") else ""
+        self.overview_art.set_source(
+            trial_banner_path(selected_trial, plan.trial_id, plan.name)
+        )
         self.overview_hero.setText(
             f"{plan.name}\n{plan.trial_id} · {plan.difficulty or 'Difficulty not set'} · {len(plan.members)} players\nStatus: {plan.status.title()}"
         )
