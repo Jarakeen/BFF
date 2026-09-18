@@ -280,3 +280,4 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 ## Team Discord links
 - Teams can store an optional Discord invite/server/channel URL alongside raid schedule, time zone, and current focus.
 - The Discord URL is persisted additively on the existing `team` record and reloads with the selected team.
+\n\n## Raid Plan\n\n- Trial-specific artwork banners appear in Raid Plan Selected Plan and Live Raid Current Encounter hero surfaces.\n
