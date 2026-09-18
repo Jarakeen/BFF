@@ -20,6 +20,9 @@ from services.raid_group_effect_catalog import (
     GROUP_COVERAGE_BY_NAME,
     GROUP_COVERAGE_NAMES,
 )
+from services.raid_plan_coverage_assignment_service import (
+    RaidPlanCoverageAssignmentService,
+)
 from services.raid_plan_coverage_scope_service import RaidPlanCoverageScopeService
 from services.raid_plan_repository import RaidPlanRepository
 from services.raid_unique_support_set_catalog import (
@@ -230,17 +233,25 @@ def _render_raid_plan_scope(page) -> None:
     )
 
     page.table.setRowCount(0)
+    assignment_service = RaidPlanCoverageAssignmentService()
+    assignment_reviews = {}
     for effect in _effect_names(page):
         row = page.table.rowCount()
         page.table.insertRow(row)
         names = snapshot.providers.get(effect, [])
         conditional = snapshot.conditional_providers.get(effect, [])
         state = snapshot.status.get(effect, "unverified")
+        review = assignment_service.review(
+            effect_name=effect,
+            scope=scope,
+            snapshot=snapshot,
+        )
+        assignment_reviews[effect] = review
         source_text = ", ".join(names) if names else (
             f"Conditional: {', '.join(conditional)}" if conditional else "—"
         )
-        primary = ", ".join(scope.primary_for(effect)) or "—"
-        backup = ", ".join(scope.secondary_for(effect)) or "—"
+        primary = ", ".join(review.primary) or "—"
+        backup = ", ".join(review.backup) or "—"
         values = [
             effect,
             _type_text(effect),
@@ -250,24 +261,41 @@ def _render_raid_plan_scope(page) -> None:
             backup,
             "—",
             "—",
-            {
-                "available": "Available (static)",
-                "conditional": "Conditional",
-                "not_found": "Not identified",
-                "unverified": "Unverified",
-            }.get(state, "Unverified"),
+            review.label,
         ]
         for column, value in enumerate(values):
             item = QTableWidgetItem(str(value))
             if column == 8:
-                item.setData(Qt.ItemDataRole.UserRole, state)
+                item.setData(Qt.ItemDataRole.UserRole, review.state)
+                details = []
+                if review.supported_primary:
+                    details.append(
+                        "Assigned provider confirmed by static evidence: "
+                        + ", ".join(review.supported_primary)
+                    )
+                if review.conditional_primary:
+                    details.append(
+                        "Assigned provider has conditional evidence only: "
+                        + ", ".join(review.conditional_primary)
+                    )
+                if review.unsupported_primary:
+                    details.append(
+                        "Assigned provider is not proven by current static/planned evidence: "
+                        + ", ".join(review.unsupported_primary)
+                    )
+                if review.duplicate_primary:
+                    details.append("More than one primary provider owns this effect.")
+                item.setToolTip(
+                    "\n".join(details)
+                    or "No explicit primary provider is currently confirmed for this effect."
+                )
             if column == 3:
                 item.setData(Qt.ItemDataRole.UserRole, len(names) + len(conditional))
             if column in (4, 5):
                 item.setToolTip(
-                    "Explicit Raid Plan assignment label. This is planning intent, not proof that the effect is available or maintained."
+                    "Explicit Raid Plan ownership. Coverage checks this provider against static/planned evidence before considering generic sources."
                 )
-            elif column >= 3:
+            elif column >= 3 and column != 8:
                 item.setToolTip(
                     "Saved-build static evidence plus reviewed planned-set evidence. "
                     "Planned gear is conditional because exact slotting/proc uptime is not inferred."
@@ -288,13 +316,29 @@ def _render_raid_plan_scope(page) -> None:
     conditional_count = sum(snapshot.status.get(name) == "conditional" for name in visible_effects)
     not_found = sum(snapshot.status.get(name) == "not_found" for name in visible_effects)
     unverified = sum(snapshot.status.get(name, "unverified") == "unverified" for name in visible_effects)
+    assigned_supported = sum(
+        review.state == "assigned_supported" for review in assignment_reviews.values()
+    )
+    assigned_conditional = sum(
+        review.state == "assigned_conditional" for review in assignment_reviews.values()
+    )
+    assigned_unproven = sum(
+        review.state == "assigned_unproven" for review in assignment_reviews.values()
+    )
+    unassigned_gaps = sum(
+        review.state == "gap" for review in assignment_reviews.values()
+    )
+    duplicate_primary = sum(
+        review.duplicate_primary for review in assignment_reviews.values()
+    )
     page.summary_card.clear()
     page.summary_card.addWidget(QLabel(
         f"TOTAL EFFECTS   {len(visible_effects)}\n"
-        f"STATIC SOURCES  {available}\n"
-        f"CONDITIONAL     {conditional_count}\n"
-        f"NOT IDENTIFIED  {not_found}\n"
-        f"UNVERIFIED      {unverified}\n"
+        f"ASSIGNED + PROVEN  {assigned_supported}\n"
+        f"ASSIGNED CONDITIONAL  {assigned_conditional}\n"
+        f"ASSIGNED UNPROVEN  {assigned_unproven}\n"
+        f"UNASSIGNED GAPS  {unassigned_gaps}\n"
+        f"DUPLICATE PRIMARY  {duplicate_primary}\n"
         f"UNRESOLVED CHAIRS {unresolved}"
     ))
     page.providers_card.clear()
@@ -325,15 +369,18 @@ def _render_raid_plan_scope(page) -> None:
     else:
         page.providers_card.addWidget(QLabel("No static or conditional sources identified."))
 
-    if unresolved:
+    attention = assigned_unproven + unassigned_gaps + duplicate_primary
+    if unresolved or attention:
         page.status.warning(
-            f"Raid Plan Coverage • {available} static + {conditional_count} conditional "
-            f"of {len(visible_effects)} effects; {unresolved} chair(s) unresolved."
+            f"Raid Plan Coverage • {assigned_supported} assigned/proven • "
+            f"{assigned_conditional} assigned/conditional • {attention} ownership issue(s) • "
+            f"{unresolved} unresolved chair(s)."
         )
     else:
         page.status.info(
-            f"Raid Plan Coverage • {available} static + {conditional_count} conditional "
-            f"of {len(visible_effects)} effects; uptime unknown."
+            f"Raid Plan Coverage • {assigned_supported} assigned/proven • "
+            f"{assigned_conditional} assigned/conditional • no assignment gaps detected; "
+            "runtime uptime remains unproven."
         )
 
 
