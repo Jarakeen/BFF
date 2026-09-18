@@ -46,6 +46,13 @@ class RaidPlanMember:
     eso_class: str | None = None
     selected_build_id: str | None = None
     selected_build_name: str | None = None
+    build_source_kind: str | None = None
+    build_source_name: str | None = None
+    build_source_url: str | None = None
+    candidate_id: str | None = None
+    planned_gear_sets: tuple[str, ...] = field(default_factory=tuple)
+    planned_skills: tuple[str, ...] = field(default_factory=tuple)
+    planned_mundus: str | None = None
     primary_assignment: str | None = None
     secondary_assignment: str | None = None
     notes: str | None = None
@@ -64,6 +71,16 @@ class RaidPlanMember:
             if roster_member_id <= 0:
                 raise ValueError("roster_member_id must be positive when supplied")
             object.__setattr__(self, "roster_member_id", roster_member_id)
+        object.__setattr__(
+            self,
+            "planned_gear_sets",
+            tuple(dict.fromkeys(_clean(value) for value in self.planned_gear_sets if _clean(value))),
+        )
+        object.__setattr__(
+            self,
+            "planned_skills",
+            tuple(dict.fromkeys(_clean(value) for value in self.planned_skills if _clean(value))),
+        )
         for name in (
             "player_id",
             "character_id",
@@ -72,6 +89,11 @@ class RaidPlanMember:
             "eso_class",
             "selected_build_id",
             "selected_build_name",
+            "build_source_kind",
+            "build_source_name",
+            "build_source_url",
+            "candidate_id",
+            "planned_mundus",
             "primary_assignment",
             "secondary_assignment",
             "notes",
