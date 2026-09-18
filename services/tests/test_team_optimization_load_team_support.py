@@ -51,13 +51,16 @@ def test_roster_only_team_fallback_still_consumes_each_player_once() -> None:
     assert "team.casefold() in _team_names_for_member(member)" in source
 
 
-def test_optimization_updates_loaded_team_under_same_name() -> None:
+def test_optimization_preserves_loaded_team_identity_when_sending_to_raid_plan() -> None:
     source = Path("ui/team_optimization_role_cleanup.py").read_text(encoding="utf-8")
 
     assert "team_name = _loaded_team_name(optimization_page)" in source
-    assert 'or f"{goal} Optimized Team"' in source
-    assert "name=team_name" in source
-    assert 'f"Updated team {plan.name!r} in Roster' in source
+    assert "base_plan.team_name if base_plan is not None else" in source
+    assert 'else team_name or f"{goal} Optimized Team"' in source
+    assert "team_name=team_name or None" in source
+    assert "base_plan=base_plan" in source
+    assert 'f"Sent {plan.name!r} to Raid Plan' in source
+    assert 'f"Optimizer changes loaded into Raid Plan: {plan.name}."' in source
     assert '"required_slot_combo", "required_class_combo", "required_gear_input"' in source
 
 
