@@ -21,3 +21,8 @@ def test_mechanics_header_is_group_only_and_child_opens_boss_mechanics():
     mechanics = _section("Mechanics")
     assert "page" not in mechanics
     assert ("Mechanics", "console:4") in mechanics["children"]
+
+
+def test_comp_builder_sidebar_child_opens_comp_builder_page():
+    raid_engine = _section("Raid Engine")
+    assert ("Comp Builder", "comp_builder") in raid_engine["children"]
