@@ -59,7 +59,6 @@ ROLE_OPTIONS: tuple[str, ...] = (
     "Tank",
     "Healer",
     "DD",
-    "Support DD",
 )
 
 
