@@ -190,22 +190,43 @@ class MainWindow(QMainWindow):
         self.sidebar.pageRequested.connect(self.show_page)
 
     def _show_generated_roster_plan(self, plan_name: str) -> None:
-        """Open the generated Roster view after Comp Builder persists a plan."""
+        """Open a persisted Comp Builder draft in the rebuilt Roster workspace."""
+        from services.eso_database import EsoDatabase
+        from services.generated_roster_draft_service import GeneratedRosterDraftService
 
-        roster_page = self.pages.get("roster_page")
-        if roster_page is None:
+        roster_workspace = self.pages.get("roster_workspace")
+        if roster_workspace is None:
             return
-        refresh = getattr(roster_page, "_refresh_generated_plan_choices", None)
-        if callable(refresh):
-            refresh(plan_name)
-        if hasattr(roster_page, "view_combo"):
-            roster_page.view_combo.setCurrentText("Generated Team")
-        if hasattr(roster_page, "tabs"):
-            roster_page.tabs.setCurrentIndex(0)
-        populate = getattr(roster_page, "_populate_assignment_table", None)
-        if callable(populate):
-            populate()
-        self.show_page("roster_page")
+
+        plan = GeneratedRosterDraftService(
+            EsoDatabase(get_data_dir() / "eso.db")
+        ).load_plan(plan_name)
+        if plan is None:
+            status = getattr(roster_workspace, "status", None)
+            if status is not None:
+                status.warning(f'Could not reload Comp Builder plan "{plan_name}".')
+            self.show_page("roster_workspace")
+            return
+
+        rows = tuple(
+            {
+                "kind": slot.kind,
+                "slot": slot.slot_name,
+                "player": slot.player_name,
+                "character": slot.character_name,
+                "class": slot.eso_class,
+                "build": slot.build_name,
+            }
+            for slot in plan.slots
+        )
+        load_plan = getattr(roster_workspace, "load_external_team_plan", None)
+        if callable(load_plan):
+            load_plan(
+                rows,
+                source="Comp Builder",
+                plan_name=plan.name,
+            )
+        self.show_page("roster_workspace")
 
     def _confirm_collectible_navigation(self, target_page: str) -> bool:
         collectibles_page = self.pages.get("collectibles_browser")
