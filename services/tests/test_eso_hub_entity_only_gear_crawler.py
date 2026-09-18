@@ -38,3 +38,36 @@ def test_parse_set_page_extracts_focal_arena_bonus_and_modified_skills_only() ->
     ]
     assert result["modified_skills"] == ["Grand Healing", "Healing Springs"]
     assert result["unresolved"] == []
+
+
+def test_parse_set_page_reconstructs_multi_fragment_perfected_bonus() -> None:
+    html = """
+    <html><body>
+      <h1>Perfected Chaotic Whirlwind Set ESO - Stats & Location</h1>
+      <div class="tooltip">
+        <span>(2 items)</span>
+        <span>Adds</span>
+        <span>526 Critical Chance,</span>
+        <span>When you cast Whirlwind while in combat, you gain a stack.</span>
+      </div>
+      <div>Weapons</div>
+      <div><strong>Type:</strong><span>Trial</span></div>
+      <div><strong>Location:</strong><span>Asylum Sanctorium</span></div>
+      <div>This armor set modifies the following skills</div>
+      <div><a href="/en/skills/dual-wield/whirlwind">Whirlwind</a></div>
+      <div><a href="/en/skills/dual-wield/steel-tornado">Steel Tornado</a></div>
+      <div><a href="/en/skills/dual-wield/whirling-blades">Whirling Blades</a></div>
+      <div>Champion Points that buff this armor set</div>
+    </body></html>
+    """
+
+    result = parse_set_page(
+        html,
+        expected_name="Perfected Chaotic Whirlwind",
+        url="https://eso-hub.com/en/sets/perfected-chaotic-whirlwind",
+    )
+
+    assert result["bonuses"] == [
+        "(2 items) Adds 526 Critical Chance, When you cast Whirlwind while in combat, you gain a stack."
+    ]
+    assert result["unresolved"] == []
