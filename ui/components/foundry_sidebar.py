@@ -40,6 +40,7 @@ BROADCAST_NAV_SECTION = {
 # this is a workspace simplification, not feature deletion.
 CORE_NAV_SECTIONS = [
     {"label": "Raid", "children": [
+        ("Raid Dashboard", "raid_engine_dashboard"),
         ("Raid Plans", "raid_plans"),
         ("Assignments", "assignments"),
         ("Readiness", "readiness"),
