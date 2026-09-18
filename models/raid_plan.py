@@ -3,9 +3,9 @@ from __future__ import annotations
 """Planning-layer ownership contracts for one team in one trial.
 
 Raid plans own raid decisions. They do not own reusable player, character, or saved-build
-identity. A member may intentionally be incomplete while the raid lead is still assembling
-the group: gamertag can be known before stable player identity, character, class, role, or
-build selection.
+identity. A chair may intentionally be incomplete while the raid lead is still assembling
+the group: class/build planning can exist before a gamertag, and a gamertag can exist before
+stable player identity, character, or build selection.
 
 Triggered responsibilities are planning instructions, not scheduled Rotation actions. They
 record who owns a response when a reviewed runtime condition becomes true without inventing
@@ -37,7 +37,7 @@ class RaidPlanMember:
     """One chair in a raid plan, allowed to remain partially specified."""
 
     seat_id: str
-    gamertag: str
+    gamertag: str = ""
     roster_member_id: int | None = None
     player_id: str | None = None
     character_id: str | None = None
@@ -62,8 +62,6 @@ class RaidPlanMember:
         gamertag = _clean(self.gamertag)
         if not seat_id:
             raise ValueError("raid plan member seat_id must be non-empty")
-        if not gamertag:
-            raise ValueError("raid plan member gamertag must be non-empty")
         object.__setattr__(self, "seat_id", seat_id)
         object.__setattr__(self, "gamertag", gamertag)
         if self.roster_member_id is not None:
