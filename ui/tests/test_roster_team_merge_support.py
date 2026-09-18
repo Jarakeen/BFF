@@ -161,3 +161,17 @@ def test_team_merge_installs_after_multi_time_team_schedule_surface() -> None:
     merge_source = Path("ui/roster_team_merge_support.py").read_text(encoding="utf-8")
     assert 'QPushButton("Merge Teams…")' in merge_source
     assert "People, characters, and saved builds are never deleted" in merge_source
+
+
+def test_team_schedule_has_persisted_discord_link_field() -> None:
+    ui_source = Path("ui/team_schedule_multi_time_support.py").read_text(encoding="utf-8")
+    service_source = Path("services/roster_service.py").read_text(encoding="utf-8")
+    model_source = Path("models/team_schedule.py").read_text(encoding="utf-8")
+
+    assert 'QLabel("DISCORD")' in ui_source
+    assert "self.schedule_discord_edit = QLineEdit()" in ui_source
+    assert 'DiscordUrl=self.schedule_discord_edit.text().strip()' in ui_source
+    assert 'self.schedule_discord_edit.setText(schedule.DiscordUrl if schedule else "")' in ui_source
+    assert 'discord_url TEXT NOT NULL DEFAULT' in service_source
+    assert 'str(schedule.DiscordUrl or "").strip()' in service_source
+    assert 'DiscordUrl: str = ""' in model_source
