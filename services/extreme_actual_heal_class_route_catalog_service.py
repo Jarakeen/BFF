@@ -66,8 +66,9 @@ class ExtremeActualHealClassRouteCatalogResult:
 
     @property
     def global_maximum_proven(self) -> bool:
-        # Route scoring remains a lower-bound comparison until every class-line
-        # passive/proc family and the remaining runtime/group surfaces are modeled.
+        # Route scoring remains a lower-bound comparison until the remaining
+        # multi-skill, runtime, group, gear-package, CP, and other E2/E4 surfaces
+        # are closed. Class-line passive coverage itself is now fully reviewed.
         return bool(
             self.entries
             and not self.omitted_scope
@@ -93,9 +94,11 @@ class ExtremeActualHealClassRouteCatalogService:
     That exact progression snapshot is then passed through every whole-build
     candidate context rebuild.
 
-    This progression normalization proves ownership/rank availability only. It
-    does not pretend every passive effect/proc is modeled, so incomplete mechanic
-    families remain explicit omitted scope and prevent a false global-proof claim.
+    This progression normalization proves ownership/rank availability. The H1
+    class-passive inventory separately proves all 21 canonical class families:
+    16 healing-relevant families have implemented hooks and five reviewed families
+    are objective-irrelevant. Conditional passive effects still require their
+    explicit runtime/target evidence rather than being invented by standing search.
 
     The five ordinary skill positions are searched because the selected heal
     must be present for slot-counted passive math. Weapon-skill heals are filtered
@@ -115,7 +118,6 @@ class ExtremeActualHealClassRouteCatalogService:
     )
     OMITTED_SCOPE = (
         "full multi-skill active/back-bar combinatorial search",
-        "complete class-line passive/proc coverage for every equipped route",
         "group-only buffs",
         "runtime conditional stacks/procs",
     )
