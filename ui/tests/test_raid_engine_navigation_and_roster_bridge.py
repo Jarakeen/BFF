@@ -32,7 +32,7 @@ def test_raid_engine_menu_matches_raid_lead_workflow():
     section = _section("Raid Engine")
     assert section.get("page") == "raid_engine_dashboard"
     assert section["children"] == [
-        ("Comp Maker", "comp_builder"),
+        ("Comp Builder", "comp_builder"),
         ("Optimization", "console:6"),
         ("Coverage", "console:7"),
         ("Encounters", "console:1"),
