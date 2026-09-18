@@ -199,7 +199,10 @@ QLabel[headerIcon="true"] {
 
 QLabel[pageTitle="true"] {
     color: #C89B5A;
-    letter-spacing: 1px;
+    font-family: "Montserrat";
+    font-size: 21pt;
+    font-weight: 700;
+    letter-spacing: 2px;
 }
 
 QLabel[pageSubtitle="true"] {
@@ -594,4 +597,69 @@ QListWidget::item:selected {
 
 QListWidget::item:hover:!selected {
     background-color: #232A2F;
+}
+
+
+/* Phase 14 Rotation command center */
+QToolButton[rotationIntentChoice="true"] {
+    background-color: #171E23;
+    color: #DCE2E2;
+    border: 1px solid #515D64;
+    border-radius: 4px;
+    padding: 10px 8px 8px 8px;
+}
+QToolButton[rotationIntentChoice="true"]:hover {
+    background-color: #263640;
+    color: #EEF3F5;
+    border: 1px solid #8EA6B2;
+}
+QToolButton[rotationIntentChoice="true"]:checked {
+    background-color: #24343D;
+    color: #FFFFFF;
+    border: 1px solid #8EA6B2;
+    border-bottom: 3px solid #A9BBC4;
+}
+
+QFrame[rotationResultsShell="true"] {
+    background-color: #0E1519;
+    border: 1px solid #465057;
+    border-radius: 4px;
+}
+QPushButton[rotationResultNav="true"] {
+    min-height: 46px;
+    background-color: #141C21;
+    color: #AEB8BC;
+    border: 1px solid #3D464C;
+    border-radius: 3px;
+    text-align: left;
+    padding: 6px 14px;
+}
+QPushButton[rotationResultNav="true"]:hover {
+    background-color: #223039;
+    color: #E5ECEF;
+    border-color: #7E97A3;
+}
+QPushButton[rotationResultNav="true"]:checked {
+    background-color: #24343D;
+    color: #FFFFFF;
+    border-color: #8EA6B2;
+    border-bottom: 3px solid #9FB6C1;
+}
+QLabel[rotationResultsLocked="true"] {
+    color: #C7D1D5;
+    font-family: "Montserrat";
+    font-size: 10pt;
+}
+
+QPlainTextEdit[parchmentEditor="true"] {
+    background-color: rgba(199, 177, 132, 0.82);
+    color: #28251F;
+    border: 1px solid #88734B;
+    border-radius: 3px;
+    padding: 10px;
+    font-family: "Cormorant Garamond";
+    font-size: 12pt;
+}
+QPlainTextEdit[parchmentEditor="true"]:focus {
+    border: 2px solid #6F8290;
 }
