@@ -35,7 +35,7 @@ from ui.components.foundry_button import ButtonRole, FoundryButton
 
 _INSTALLED = False
 
-_ROLES = ("DD", "Healer", "Tank", "Support DD")
+_ROLES = ("DD", "Healer", "Tank")
 _ALLIANCES = ("", "Aldmeri Dominion", "Daggerfall Covenant", "Ebonheart Pact")
 _EDITOR_OWNED_BUILD_FIELDS = (
     "Name",
