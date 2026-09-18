@@ -178,6 +178,13 @@ def _refresh_plan_table(page) -> None:
     if table is None:
         return
 
+    # Raid Plan seat classes are authoritative for a Raid Plan-bound Comp session.
+    # Reapply before rendering so later candidate/source refreshes cannot erase them.
+    raid_classes = dict(getattr(page, "_raid_plan_class_by_seat", {}) or {})
+    if raid_classes:
+        from ui.comp_builder_roster_intake_support import apply_raid_plan_class_constraints
+        apply_raid_plan_class_constraints(page, raid_classes)
+
     groups = _group_rows(page)
     ordered = (
         ("tank", "TANKS"),
