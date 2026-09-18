@@ -38,6 +38,18 @@ class MinmaxCharacterProgressionAdapter:
         direct = str(getattr(build, "CharacterId", "") or "").strip()
         if direct and self.catalog_service.get_character(direct) is not None:
             return direct
+
+        build_id = str(getattr(build, "BuildId", "") or "").strip()
+        if build_id:
+            build_record = self.catalog_service.get_build(build_id)
+            if build_record is not None:
+                character_id = str(build_record.get("character_id") or "").strip()
+                if (
+                    character_id
+                    and self.catalog_service.get_character(character_id) is not None
+                ):
+                    return character_id
+
         return self.progression_service.find_character_id(
             name=str(build.Name or ""),
             gamertag=str(build.Gamertag or ""),
