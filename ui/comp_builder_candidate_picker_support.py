@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ui.components.foundry_card import FoundryCard
 
@@ -213,8 +213,33 @@ def _install_picker(page) -> None:
     )
     page.comp_candidate_details_label.setProperty("compCandidateDetails", True)
 
+    page.comp_candidate_evidence_button = QPushButton("Why / Build Details ▸")
+    page.comp_candidate_evidence_button.setCheckable(True)
+    page.comp_candidate_evidence_button.setProperty("compCandidateEvidenceToggle", True)
+
+    evidence_widgets = [
+        page.comp_candidate_details_label,
+        getattr(page, "comp_build_candidates_label", None),
+        getattr(page, "esologs_selected_chair_label", None),
+        getattr(page, "esologs_evidence_label", None),
+    ]
+    for widget in evidence_widgets:
+        if widget is not None:
+            widget.hide()
+
+    def _set_evidence_visible(checked: bool) -> None:
+        page.comp_candidate_evidence_button.setText(
+            "Why / Build Details ▾" if checked else "Why / Build Details ▸"
+        )
+        for widget in evidence_widgets:
+            if widget is not None:
+                widget.setVisible(bool(checked))
+
+    page.comp_candidate_evidence_button.toggled.connect(_set_evidence_visible)
+
     picker_layout.addWidget(page.comp_candidate_choice_label)
     picker_layout.addWidget(page.comp_candidate_choice_combo)
+    picker_layout.addWidget(page.comp_candidate_evidence_button)
     picker_layout.addWidget(page.comp_candidate_details_label)
     details.body_layout.insertWidget(0, picker_host)
 
