@@ -7,6 +7,7 @@ from ui.main_window_lazy_page_support import LAZY_PAGE_SPECS
 
 def test_lazy_page_set_is_limited_to_dependency_light_pages():
     assert LAZY_PAGE_SPECS == {
+        "achievements": "AchievementsPage",
         "gear_lookup": "GearLookupPage",
         "stickerbook": "StickerbookPage",
         "timers": "AsylumPerfectaTimerPage",
@@ -19,7 +20,6 @@ def test_lazy_page_set_is_limited_to_dependency_light_pages():
     for eager_page in (
         "operations_console",
         "rotations",
-        "achievements",
         "collectibles",
         "collectibles_browser",
         "roster_page",
@@ -202,3 +202,55 @@ def test_other_lazy_page_constructor_refresh_is_not_suppressed():
 
     lazy_support._construct_lazy_page(Page, "community_news")
     assert calls == ["refresh"]
+
+
+def test_first_lazy_achievements_reuses_constructor_refresh_then_refreshes_later(monkeypatch):
+    calls = []
+
+    class Placeholder:
+        pass
+
+    class Page:
+        def refresh(self):
+            calls.append("refresh")
+
+    page = Page()
+    window = SimpleNamespace(
+        pages={"achievements": Placeholder()},
+        _lazy_page_factories={"achievements": object()},
+        _operations_console_initial_navigation_pending=False,
+    )
+
+    def materialize(self, page_name):
+        self.pages[page_name] = page
+        self._lazy_page_factories.pop(page_name, None)
+        return page
+
+    def original_show_page(self, page_name):
+        if page_name == "achievements":
+            self.pages[page_name].refresh()
+        return page_name
+
+    monkeypatch.setattr(lazy_support, "_LazyPagePlaceholder", Placeholder)
+    monkeypatch.setattr(lazy_support, "_materialize_page", materialize)
+    monkeypatch.setattr(lazy_support, "_ORIGINAL_SHOW_PAGE", original_show_page)
+
+    assert lazy_support._show_page_with_lazy_materialization(
+        window, "achievements"
+    ) == "achievements"
+    assert calls == []
+
+    assert lazy_support._show_page_with_lazy_materialization(
+        window, "achievements"
+    ) == "achievements"
+    assert calls == ["refresh"]
+
+
+def test_collectibles_profile_sync_does_not_require_achievements_page_object() -> None:
+    source = Path("ui/main_window.py").read_text(encoding="utf-8")
+
+    assert "self.achievement_progress_service = AchievementProgressService(" in source
+    assert "self.achievement_progress_service.reload(preserve_active_profile=False)" in source
+    assert 'self.pages.get("achievements")' not in source.split(
+        "def _refresh_collectibles_for_active_profile", 1
+    )[1].split("@staticmethod", 1)[0]
