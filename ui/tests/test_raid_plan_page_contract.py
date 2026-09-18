@@ -12,8 +12,8 @@ from ui.raid_plan_page import (
 
 def test_raid_plan_workspace_exposes_twelve_standard_trial_chairs() -> None:
     assert RAID_PLAN_SEATS == (
-        "Main Tank",
-        "Off Tank",
+        "Tank 1",
+        "Tank 2",
         "Healer 1",
         "Healer 2",
         "DD 1",
@@ -102,8 +102,8 @@ def test_raid_plan_new_personnel_record_requires_gamertag() -> None:
 
 
 def test_raid_plan_seat_is_the_role_authority() -> None:
-    assert role_for_seat("Main Tank") == "Tank"
-    assert role_for_seat("Off Tank") == "Tank"
+    assert role_for_seat("Tank 1") == "Tank"
+    assert role_for_seat("Tank 2") == "Tank"
     assert role_for_seat("Healer 1") == "Healer"
     assert role_for_seat("Healer 2") == "Healer"
     assert role_for_seat("DD 1") == "DD"
@@ -145,3 +145,23 @@ def test_lower_raid_plan_save_binding_does_not_disconnect_empty_signal() -> None
     source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
     assert "lower_save.clicked.connect(self.save_current_plan)" in source
     assert "lower_save.clicked.disconnect()" not in source
+
+
+def test_class_only_recruit_chair_is_persistable_without_gamertag() -> None:
+    member = raid_plan_member_from_values(
+        seat_id="Tank 1",
+        gamertag="",
+        role="Tank",
+        eso_class="Dragonknight",
+    )
+
+    assert member is not None
+    assert member.seat_id == "tank-1"
+    assert member.gamertag == ""
+    assert member.role == "Tank"
+    assert member.eso_class == "Dragonknight"
+
+
+def test_raid_plan_player_picker_uses_seat_as_empty_placeholder() -> None:
+    source = Path("ui/raid_plan_page.py").read_text(encoding="utf-8")
+    assert 'player_combo.lineEdit().setPlaceholderText(seat)' in source
