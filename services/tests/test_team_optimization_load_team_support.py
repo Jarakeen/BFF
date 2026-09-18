@@ -74,3 +74,44 @@ def test_optimization_round_trip_preserves_unchanged_structured_assignment_evide
     assert "skills=original.skills" in source
     assert "mundus=original.mundus" in source
     assert "elif not is_saved and original.kind != \"saved\"" in source
+
+
+def test_final_optimizer_send_handler_targets_raid_plan_not_roster() -> None:
+    source = Path("ui/team_optimization_role_cleanup.py").read_text(
+        encoding="utf-8"
+    )
+
+    handler = source.split(
+        "def _send_visible_optimization_team_to_raid_plan", 1
+    )[1].split("def install()", 1)[0]
+
+    assert "raid_plan_from_generated_slots" in handler
+    assert 'window.pages.get("raid_plans")' in handler
+    assert "raid_plans.plan_repository.save(plan)" in handler
+    assert "raid_plans.apply_plan(plan)" in handler
+    assert 'window.show_page("raid_plans")' in handler
+    assert 'window.show_page("roster_page")' not in handler
+    assert "base_plan=base_plan" in handler
+
+
+def test_final_optimizer_override_installs_raid_plan_sender() -> None:
+    source = Path("ui/team_optimization_role_cleanup.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert (
+        "MainWindow._send_optimized_team_to_roster = "
+        "_send_visible_optimization_team_to_raid_plan"
+    ) in source
+
+
+def test_visible_optimizer_slot_carries_saved_build_evidence() -> None:
+    source = Path("ui/team_optimization_role_cleanup.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "build_gear_set_names(build)" in source
+    assert "skills = _build_skills(build)" in source
+    assert 'getattr(build, "Mundus", "")' in source
+    assert 'source_kind="optimizer_visible_team"' in source
+    assert 'candidate_id=f"optimizer-visible:{slot_name}"' in source
