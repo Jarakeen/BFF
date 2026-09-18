@@ -124,3 +124,12 @@ def test_personnel_refresh_preserves_blank_player_chairs() -> None:
     assert "combo.setCurrentIndex(-1)" in source
     assert "combo.lineEdit().clear()" in source
     assert "Blank Raid Plan chairs" in source
+
+
+def test_raid_plan_lower_action_row_exposes_save_next_to_comp_builder() -> None:
+    source = Path("ui/raid_plan_page.py").read_text(encoding="utf-8")
+    assert 'FoundryButton("Save", role=ButtonRole.SECONDARY, compact=True)' in source
+    assert 'save_plan.clicked.connect(lambda *_: self.save_current_plan())' in source
+    assert source.index('FoundryButton("Save", role=ButtonRole.SECONDARY, compact=True)') < source.index(
+        'FoundryButton("Open Comp Maker", role=ButtonRole.SECONDARY, compact=True)'
+    )
