@@ -51,3 +51,15 @@ def test_support_wraps_rotation_after_native_layout_construction() -> None:
     assert "install_build_rotation_artifact_support()" in bootstrap
     assert "install_rotation_dashboard_layout(self)" in dashboard
     assert "install_rotation_dashboard_layout_support()" not in bootstrap
+
+
+def test_phase14_build_dossier_labels_base_skills_and_cp_as_inherited_baseline() -> None:
+    source = Path("ui/phase14_build_focused_editors_support.py").read_text(encoding="utf-8")
+
+    assert '"Base Front Bar"' in source
+    assert '"Base Back Bar"' in source
+    assert '"Edit Base Skills"' in source
+    assert '"Base Champion Points"' in source
+    assert '"Edit Base CP"' in source
+    assert "Context variants inherit these base skill bars until overridden." in source
+    assert "Context variants inherit these base Champion Points until overridden." in source
