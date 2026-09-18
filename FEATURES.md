@@ -86,8 +86,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Character Progression interface
 - Skill-passive purchasing controls
 - Bulk **Buy All** controls for progression sections
-- Build comparison
-- Build performance information
+- Saved-build comparison is available in Rotation Builder's generated **Compare** workflow; full encounter-aware build comparison remains future optimization work
+- Build-linked performance evidence is surfaced through the Performance Dashboard rather than a separate Builds performance panel
 - Save generated or modified builds for later reuse
 - **Copy Build To...** creates an independent same-class build for another canonical character without copying player identity, character progression, team assignments, or Ready state
 - **Save as Template** stores reusable role-level build setup with explicit class overlays; Templates are browsable from the Builds view and can be applied to another character
@@ -107,10 +107,10 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 ## Exports & Sharing
 
-- CSV exports
-- Custom themed CSV exports
-- Theme-aware export presentation
-- Build / analysis data export workflows
+- Neutral CSV exports for spreadsheet / structured-data interchange
+- Theme-aware human-facing PDF exports for Builds and Roster
+- Build / roster export workflows
+- Discord-formatted roster sharing
 - Shareable local app builds
 
 ---
@@ -125,7 +125,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Raid schedule panel
 - Pinned Performance Focus goals
 - Saved Gear Lookup bookmarks by profile
-- Ready checkbox on each saved build, shown on the Raid Engine Overview
+- Ready checkbox on each saved build in the Phase 14 Builds inspector; the saved readiness state is also reflected on the Raid Engine Overview
 - Saved-build static capability evidence with unverified and conditional states
 - Active expedition and encounter labels refresh with the overview
 - Compact visual progress indicators
@@ -144,7 +144,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - All Build Editor dropdowns use searchable autocomplete combo boxes with case-insensitive contains matching and clear controls
 - Mundus / food / potion configuration
 - Scribed Skills interface
-- Build-specific performance information
+- Build-linked performance context is available through the Performance Dashboard; the Builds inspector itself remains build/configuration focused
 - Role-aware build information
 - Context Variants provide sparse **Team**, **Boss**, and **Team + Boss** gear, weapon, Mundus, Champion Point, skill-bar, food, potion, and note overrides while unchanged fields inherit automatically
 - Matching build variants resolve field-by-field as **Team + Boss -> Team -> Boss -> base build**, so a boss-specific tweak does not require cloning an entire build
@@ -160,6 +160,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Focused Build editors open only the requested section (identity, Armor, Jewelry, Front Bar, Back Bar, Skills, Champion Points, Consumables, Notes, and existing Scribing access) from the right-side dossier; the monolithic legacy editor is retained only as a compatibility fallback
 - The Phase 14 right-side dossier uses compact grouped Gear cards, slot/class/role/consumable icon vocabulary, collapsible per-slot detail, a compact baseline/exception strip, More Actions menu, and a single gold Save action
 - Base skill bars and Base Champion Points are labeled explicitly in the Phase 14 dossier; Team/Boss context variants inherit those base values until a sparse override is recorded
+- The Phase 14 Overview visibly summarizes saved **Context Variants** and provides direct access to the canonical Team / Boss / Team + Boss variant editor instead of hiding it behind the legacy-editor fallback
 - Build Gear popups and dossier summaries use the reviewed ESO trait icon vocabulary for weapon, armor, and jewelry traits while retaining the trait text as the accessible source of meaning
 - Phase 14 uses a user-extensible semantic icon resolver that tolerates spaces, hyphens, underscores, capitalization, and localized Windows filename display quirks, then reasserts Builds icons at the final visible-page boundary
 
@@ -195,9 +196,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Performance data loading from saved player/build context
 - Role-specific metric visibility
 - Group support / buff analysis
-- Skills to Work On recommendations
-- Performance history / comparison surfaces
-- Build-linked performance context
+- Role-aware Performance Focus recommendations and pin-able improvement goals; Raid Engine Overview also exposes its Skills to Work On summary
+- Build-linked performance context and ESO Logs build evidence
 
 ---
 
@@ -285,7 +285,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 ## Team Discord links
-- Teams can store an optional Discord invite/server/channel URL alongside raid schedule, time zone, and current focus.
+- Teams visibly expose an optional Discord invite/server/channel URL alongside raid schedule, time zone, and current focus on the current Phase 14 Teams editor.
 - The Discord URL is persisted additively on the existing `team` record and reloads with the selected team.
 \n\n## Raid Plan\n\n- Trial-specific artwork banners appear in Raid Plan Selected Plan and Live Raid Current Encounter hero surfaces.\n\n\n## UI\n\n- Shared app page headers use the Collectibles-style uppercase Montserrat treatment with muted-gold text and restrained letter spacing; page-specific subtitles and context controls remain unchanged.
 
