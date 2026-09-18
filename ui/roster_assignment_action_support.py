@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Polish Assignments layout and add simple raid-lead actions.
 
-The action card deliberately stays small: Save, Clear, Send to Comp Maker, and
+The action card deliberately stays small: Save, Clear, Send to Comp Builder, and
 Evaluate. Assignment context comes from the selected Team + optional Boss.
 """
 
@@ -157,12 +157,12 @@ def _clear_assignments(page) -> None:
 def _send_to_comp_maker(page) -> None:
     team_name = _selected_team_name(page)
     if not team_name:
-        page.status.warning("Choose a team before sending it to Comp Maker.")
+        page.status.warning("Choose a team before sending it to Comp Builder.")
         return
 
     members = _team_members(page, team_name)
     if not members:
-        page.status.warning(f"{team_name} has no roster members to send to Comp Maker.")
+        page.status.warning(f"{team_name} has no roster members to send to Comp Builder.")
         return
 
     window = page.window()
@@ -345,7 +345,7 @@ def _install_attention_actions(page) -> None:
     clear = QPushButton("Clear")
     clear.clicked.connect(lambda *_: _clear_assignments(page))
 
-    send = QPushButton("Send to Comp Maker")
+    send = QPushButton("Send to Comp Builder")
     send.clicked.connect(lambda *_: _send_to_comp_maker(page))
 
     evaluate = QPushButton("Evaluate")
