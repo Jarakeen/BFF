@@ -51,6 +51,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Main character overview dashboard
 - Role-aware application surfaces
 - Archive page / archived data access
+- Startup defers heavy independent pages including Achievements and the Collectibles category browser until first use; the visual Collectibles dashboard and Rotation Builder remain eager, and the lazy Collectibles browser reuses the dashboard's shared profile-aware service
 
 ---
 
