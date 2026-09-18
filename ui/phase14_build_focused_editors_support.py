@@ -945,6 +945,7 @@ def _footer(page) -> QWidget:
         ("Save as Template", lambda: _proxy(page, "template_build_button")),
         ("Copy Build To…", lambda: _proxy(page, "copy_build_button")),
         ("Export Builds…", page._export_csv),
+        ("Legacy Build Editor (Fallback)", lambda: page._open_phase14_legacy_build_editor()),
         ("Delete Build", lambda: _proxy(page, "delete_build_button")),
     )
     for label, callback in actions:
@@ -1004,7 +1005,16 @@ def install() -> None:
         # monolithic editor reachable only as an explicit compatibility fallback.
         _edit_identity(self)
 
+    def open_phase14_legacy_build_editor(self) -> None:
+        """Explicit escape hatch for the superseded monolithic editor."""
+        tabs = getattr(self, "build_tabs", None)
+        if tabs is None or tabs.count() <= 1:
+            return
+        tabs.setTabVisible(1, True)
+        self._phase14_legacy_edit_selected()
+
     BuildsPage._phase14_legacy_edit_selected = original_edit_selected
+    BuildsPage._open_phase14_legacy_build_editor = open_phase14_legacy_build_editor
     BuildsPage._edit_selected = edit_selected_phase14
     _INSTALLED = True
 
