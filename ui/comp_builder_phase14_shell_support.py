@@ -975,7 +975,7 @@ def _build_health(page, card: FoundryCard) -> None:
 
     send = getattr(page, "send_button", None)
     if send is not None:
-        send.setText("Send to Roster")
+        send.setText("Send to Raid Plan")
         send.setProperty("primary", True)
         _rehome(send, row)
 
