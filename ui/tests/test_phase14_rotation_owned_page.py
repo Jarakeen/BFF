@@ -18,11 +18,38 @@ def test_owned_rotation_page_preserves_command_center_visual_contract() -> None:
     assert 'self.result_tabs.addTab(save_host, "Save & Export")' in source
 
 
-def test_owned_rotation_page_calls_existing_engine_services_directly() -> None:
+def test_owned_rotation_page_uses_direct_stable_service_boundaries() -> None:
     source = Path("ui/phase14_rotation_page.py").read_text(encoding="utf-8")
 
-    assert "self.rotation_generation = RotationGenerationSupport()" in source
+    assert "self.rotation_runtime = Phase14RotationRuntimeService(" in source
     assert "self.rotation_sustain = RotationSustainService" in source
-    assert "self.rotation_generation.generate_with_evidence(" in source
+    assert "self.rotation_artifacts = BuildRotationArtifactService(" in source
+    assert "self.timeline_projector = RotationTimelineProjectionService()" in source
+    assert "self.rotation_pdf_exporter = RotationPdfExportService()" in source
+    assert "self.rotation_runtime.generate(" in source
     assert "self.rotation_sustain.evaluate(" in source
     assert "resolve_build_context(" in source
+
+
+def test_owned_rotation_page_wires_safe_runtime_features_without_legacy_dashboard() -> None:
+    source = Path("ui/phase14_rotation_page.py").read_text(encoding="utf-8")
+
+    assert "reserve_fraction=float(self.minimum_reserve_spin.value()) / 100.0" in source
+    assert "heavy_behavior=self.heavy_attack_combo.currentText()" in source
+    assert "self.timeline_widget.set_projection(projection)" in source
+    assert "self.rotation_artifacts.save_rotation(" in source
+    assert "self.rotation_pdf_exporter.export(" in source
+    assert "self.encounter_demand_registry.entry_for(encounter_id)" in source
+    assert "CURRENT GENERATED" in source
+    assert "LAST SAVED" in source
+
+    forbidden = (
+        "CanonicalRotationDashboardPage",
+        "install_rotation_dashboard_layout",
+        "install_phase14_rotation_command_center",
+        "install_rotation_builder_v2_layout",
+        "install_rotation_builder_v2_finish",
+        "install_rotation_builder_v2_runtime_repairs",
+    )
+    for value in forbidden:
+        assert value not in source
