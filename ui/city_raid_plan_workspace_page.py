@@ -141,7 +141,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.local_stack.addWidget(roles_surface)
         self.workspace_layout.addWidget(self.local_stack, 1)
         self._show_local_view(0)
-        self.trial_combo.currentTextChanged.connect(lambda _text: self._refresh_overview())
+        self.trial_combo.currentTextChanged.connect(self._trial_selection_changed)
 
     def _build_overview_surface(self) -> QWidget:
         page = QWidget()
@@ -262,6 +262,17 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         card.value_label = label
         return card
 
+    def _refresh_trial_banner(self) -> None:
+        if not hasattr(self, "overview_art") or not hasattr(self, "trial_combo"):
+            return
+        self.overview_art.set_source(trial_banner_path(self.trial_combo.currentText()))
+
+    def _trial_selection_changed(self, _text: str = "") -> None:
+        # Trial selection owns the hero art immediately. The full overview refresh
+        # can then update plan metadata without making image selection incidental.
+        self._refresh_trial_banner()
+        self._refresh_overview()
+
     def _show_local_view(self, index: int) -> None:
         self.local_stack.setCurrentIndex(index)
         self.context_buttons["Overview"].setChecked(index == 0)
@@ -288,8 +299,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         if plan is None and plans:
             plan = plans[0]
         if plan is None:
-            selected_trial = self.trial_combo.currentText() if hasattr(self, "trial_combo") else ""
-            self.overview_art.set_source(trial_banner_path(selected_trial))
+            self._refresh_trial_banner()
             self.overview_hero.setText("No saved Raid Plan yet. Use Roles to assemble one without inventing missing identity.")
             for card in (self.team_snapshot, self.encounter_snapshot, self.strategy_snapshot, self.progress_snapshot):
                 card.value_label.setText("—")
