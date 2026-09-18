@@ -11,6 +11,9 @@ explicit runtime/proc scenario layer and are not required in the standing search
 from dataclasses import dataclass
 from pathlib import Path
 
+from services.extreme_actual_heal_arena_weapon_package_service import (
+    ExtremeActualHealArenaWeaponPackageService,
+)
 from services.extreme_actual_heal_monster_package_service import (
     ExtremeActualHealMonsterPackageService,
 )
@@ -75,6 +78,7 @@ class ExtremeActualHealPackageAdmissionDenominatorService:
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
         self.special = ExtremeActualHealSpecialGearDenominatorService(self.database_path)
+        self.arena = ExtremeActualHealArenaWeaponPackageService(self.database_path)
         self.monster = ExtremeActualHealMonsterPackageService(self.database_path)
         self.ring_mythic = ExtremeActualHealMythicPackageService(self.database_path)
         self.slot_mythic = ExtremeActualHealNonRingMythicPackageService(self.database_path)
@@ -82,6 +86,13 @@ class ExtremeActualHealPackageAdmissionDenominatorService:
     @staticmethod
     def _standing_or_package(row) -> bool:
         return bool(row.relevant_objectives or row.package_objectives)
+
+    def _expected_arena_weapons(self, rows) -> tuple[str, ...]:
+        return tuple(
+            row.set_name
+            for row in rows
+            if row.family == "arena_weapon"
+        )
 
     def _expected_monsters(self, rows) -> tuple[str, ...]:
         return tuple(
@@ -128,6 +139,11 @@ class ExtremeActualHealPackageAdmissionDenominatorService:
         special = self.special.build()
         rows = special.rows
 
+        arena_expected = self._expected_arena_weapons(rows)
+        arena_admitted = tuple(
+            name for name, _piece_rows in self.arena._arena_set_piece_rows()
+        )
+
         monster_expected = self._expected_monsters(rows)
         monster_admitted = self.monster._reviewed_names(
             monster=True,
@@ -149,6 +165,11 @@ class ExtremeActualHealPackageAdmissionDenominatorService:
         )
 
         families = (
+            ExtremeActualHealPackageAdmissionFamily(
+                family="arena_weapon_structure",
+                expected=arena_expected,
+                admitted=arena_admitted,
+            ),
             ExtremeActualHealPackageAdmissionFamily(
                 family="monster",
                 expected=monster_expected,
