@@ -89,6 +89,7 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
                 planned_mundus=prior.planned_mundus,
                 primary_assignment=prior.primary_assignment,
                 secondary_assignment=prior.secondary_assignment,
+                utility_assignments=prior.utility_assignments,
                 notes=prior.notes,
             )
         members.append(member)
