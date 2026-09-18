@@ -353,6 +353,7 @@ def install() -> None:
 
     def refresh_with_raid_plan(self) -> None:
         _refresh_scope_plan_choices(self)
+        data = str(self.scope_combo.currentData() or "")
         plan_id = _selected_plan_id(self)
         if plan_id:
             try:
@@ -365,6 +366,17 @@ def install() -> None:
                 return
             _render_raid_plan_scope(self)
             return
+
+        if data.startswith("roster_team:"):
+            from ui.coverage_health_check_support import run_team_health_check
+
+            run_team_health_check(
+                self,
+                data.split(":", 1)[1],
+                use_context=False,
+            )
+            return
+
         self._raid_plan_coverage_scope = None
         _ORIGINAL_REFRESH(self)
 
