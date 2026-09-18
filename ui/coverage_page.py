@@ -550,7 +550,10 @@ class CoveragePage(FoundryPage):
             searchable = f"{name} {self.table.item(row, 3).text()}".casefold()
             visible = (
                 (effect_type == "All Effects" or effect_type == category)
-                and (not self.missing_only.isChecked() or evidence != "available")
+                and (
+                    not self.missing_only.isChecked()
+                    or evidence not in {"available", "assigned_supported"}
+                )
                 and (not self.redundant_only.isChecked() or source_count > 1)
                 and (not query or query in searchable)
             )
