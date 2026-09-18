@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+import sqlite3
 
 from models.build_model import PlayerBuild
 from services.canonical_build_bridge import CanonicalBuildBridge
@@ -43,6 +44,38 @@ def _class_matches(build_class: str, chair_class: str) -> bool:
     return _clean(build_class).casefold() == requested.casefold()
 
 
+def _five_piece_set_names(
+    database_path: Path,
+    names: Iterable[str],
+) -> tuple[str, ...]:
+    """Project full build evidence down to ordinary five-piece sets.
+
+    Comp Builder's two large recommendation slots are for standard five-piece
+    packages. Monster sets, mythics, arena weapons, and other non-5pc evidence
+    remain part of the saved build itself but do not occupy those slots.
+    """
+    cleaned = tuple(_clean(name) for name in names if _clean(name))
+    if not cleaned or not database_path.exists():
+        return ()
+
+    placeholders = ",".join("?" for _ in cleaned)
+    with sqlite3.connect(database_path) as connection:
+        rows = connection.execute(
+            f"""
+            SELECT name
+            FROM gear_set
+            WHERE name IN ({placeholders})
+              AND max_equip_count = 5
+              AND COALESCE(category, 'standard') NOT LIKE '%monster%'
+              AND COALESCE(category, 'standard') NOT LIKE '%mythic%'
+            """,
+            cleaned,
+        ).fetchall()
+
+    eligible = {str(row[0]).casefold() for row in rows}
+    return tuple(name for name in cleaned if name.casefold() in eligible)
+
+
 @dataclass(frozen=True)
 class CompBuildCandidate:
     candidate_id: str
@@ -53,6 +86,7 @@ class CompBuildCandidate:
     eso_class: str
     role: str
     gear_sets: tuple[str, ...]
+    five_piece_sets: tuple[str, ...]
     skills: tuple[str, ...]
     mundus: str
     complete_build: bool
@@ -146,6 +180,11 @@ class CompBuilderBuildCandidateService:
             )
             name = _clean(build.BuildName) or _clean(build.Name) or f"Saved build {index + 1}"
             identity = _clean(build.Name) or _clean(build.Gamertag) or "Saved character"
+            all_gear_sets = tuple(build_gear_set_names(build))
+            five_piece_sets = _five_piece_set_names(
+                self.data_dir / "eso.db",
+                all_gear_sets,
+            )
             results.append(
                 CompBuildCandidate(
                     candidate_id=f"saved:{index}:{name}",
@@ -155,7 +194,8 @@ class CompBuilderBuildCandidateService:
                     source_url="",
                     eso_class=_clean(build.EsoClass),
                     role=_clean(build.Role),
-                    gear_sets=tuple(build_gear_set_names(build)),
+                    gear_sets=all_gear_sets,
+                    five_piece_sets=five_piece_sets,
                     skills=_known_skills(build),
                     mundus=_clean(build.Mundus),
                     complete_build=bool(
@@ -200,7 +240,14 @@ class CompBuilderBuildCandidateService:
                 observed_skills=observed_skills,
                 base=50.0 + template.score_for(goal=goal, slot_name=slot_name),
             )
-            results.append(self._from_template(template, score=score, reasons=reasons))
+            results.append(
+                self._from_template(
+                    template,
+                    score=score,
+                    reasons=reasons,
+                    database_path=self.data_dir / "eso.db",
+                )
+            )
         return results
 
     @staticmethod
@@ -209,8 +256,11 @@ class CompBuilderBuildCandidateService:
         *,
         score: float,
         reasons: tuple[str, ...],
+        database_path: Path,
     ) -> CompBuildCandidate:
         build = template.build
+        all_gear_sets = tuple(build_gear_set_names(build))
+        five_piece_sets = _five_piece_set_names(database_path, all_gear_sets)
         return CompBuildCandidate(
             candidate_id=f"template:{template.template_id}",
             name=template.name,
@@ -219,7 +269,8 @@ class CompBuilderBuildCandidateService:
             source_url=template.source_url,
             eso_class=_clean(build.EsoClass),
             role=_clean(build.Role),
-            gear_sets=tuple(build_gear_set_names(build)),
+            gear_sets=all_gear_sets,
+            five_piece_sets=five_piece_sets,
             skills=_known_skills(build),
             mundus=_clean(build.Mundus),
             complete_build=template.complete_build,
