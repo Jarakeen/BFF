@@ -15,7 +15,7 @@ _INSTALLED = False
 
 
 def _install_canonical_sidebar_routes() -> None:
-    """Expose the audited raid-lead navigation using only currently real routes."""
+    """Expose the canonical workflow-domain navigation in a stable order."""
     from ui.components import foundry_sidebar
 
     def existing_dict(label: str):
@@ -24,26 +24,26 @@ def _install_canonical_sidebar_routes() -> None:
                 return section
         return None
 
-    def existing_leaf(label: str):
-        for section in foundry_sidebar.CORE_NAV_SECTIONS:
-            if isinstance(section, tuple) and section and section[0] == label:
-                return section
-        return None
-
     collectibles = existing_dict("Collectibles")
-    tools = existing_dict("Tool") or existing_dict("Tools")
-    achievements = existing_leaf("Achievements") or ("Achievements", "achievements")
-    settings = existing_leaf("Settings") or ("Settings", "settings")
+    tools = existing_dict("Tools") or existing_dict("Tool")
 
     sections: list = [
         {
             "label": "Raid",
             "children": [
-                ("Roster", "roster_workspace"),
                 ("Raid Plans", "raid_plans"),
                 ("Assignments", "assignments"),
                 ("Readiness", "readiness"),
                 ("Live Raid", "live_raid"),
+            ],
+        },
+        {
+            "label": "Team",
+            "children": [
+                ("Roster", "roster_workspace"),
+                ("Comp Builder", "comp_builder"),
+                ("Optimizer Adviser", "console:6"),
+                ("Coverage", "console:7"),
             ],
         },
         {
@@ -62,31 +62,24 @@ def _install_canonical_sidebar_routes() -> None:
             ],
         },
         {
-            "label": "Team",
-            "children": [
-                ("Coverage", "console:7"),
-                ("Comp Builder", "comp_builder"),
-                ("Optimizer Adviser", "console:6"),
-            ],
-        },
-        {
             "label": "Review",
             "children": [
+                ("Raid Review", "raid_review"),
                 ("Top Gear", "console:3"),
             ],
         },
-        achievements,
+        {"label": "Achievement", "page": "achievements", "children": []},
     ]
     if collectibles is not None:
         sections.append(collectibles)
     if tools is not None:
-        tools = dict(tools)
-        tools["label"] = "Tools"
-        sections.append(tools)
-    sections.append(settings)
+        normalized_tools = dict(tools)
+        normalized_tools["label"] = "Tools"
+        sections.append(normalized_tools)
+    sections.append({"label": "Settings", "page": "settings", "children": []})
 
     # Community News remains registered for compatibility, but is intentionally
-    # absent from navigation while the feature is disabled. Humanity survived.
+    # absent from navigation while the feature is disabled.
     foundry_sidebar.CORE_NAV_SECTIONS[:] = sections
 
 
