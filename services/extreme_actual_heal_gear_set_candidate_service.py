@@ -110,6 +110,39 @@ _DAGONS_DOMINION_BLOCKER = re.compile(
     r"^Dagon's Dominion \(5\): relevant set effect requires condition ability_scope:area_of_effect$",
     re.IGNORECASE,
 )
+
+_BRIARHEART_BLOCKER = re.compile(
+    r"^Briarheart \(5\): active set bonus is not yet mechanic-mapped:.*Weapon and Spell Damage.*$",
+    re.IGNORECASE | re.DOTALL,
+)
+_MONOLITH_OF_STORMS_BLOCKER = re.compile(
+    r"^Monolith of Storms \(5\): active set bonus is not yet mechanic-mapped:.*Each Monolith active grants you\s+\d+(?:-\d+)?\s+Weapon and Spell Damage\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+_MOON_HUNTER_BLOCKER = re.compile(
+    r"^Moon Hunter \(5\): active set bonus is not yet mechanic-mapped:.*alchemical poison.*Weapon and Spell Damage.*$",
+    re.IGNORECASE | re.DOTALL,
+)
+_MOONDANCER_BLOCKER = re.compile(
+    r"^Moondancer \(5\): active set bonus is not yet mechanic-mapped:.*shadow blessing.*Weapon and Spell Damage.*lunar blessing.*Magicka Recovery.*$",
+    re.IGNORECASE | re.DOTALL,
+)
+_RALLYING_CRY_BLOCKER = re.compile(
+    r"^Rallying Cry \(5\): active set bonus is not yet mechanic-mapped:.*healing critically strikes.*Battle Spirit.*Weapon and Spell Damage.*$",
+    re.IGNORECASE | re.DOTALL,
+)
+_SALVATION_BLOCKER = re.compile(
+    r"^Salvation \(5\): active set bonus is not yet mechanic-mapped:.*Werewolf form.*Weapon and Spell Damage.*$",
+    re.IGNORECASE | re.DOTALL,
+)
+_SCATHING_MAGE_BLOCKER = re.compile(
+    r"^Scathing Mage \(5\): active set bonus is not yet mechanic-mapped:.*deal direct damage.*chance to increase your Weapon and Spell Damage.*$",
+    re.IGNORECASE | re.DOTALL,
+)
+_SCORIONS_FEAST_BLOCKER = re.compile(
+    r"^Scorion's Feast \(5\): active set bonus is not yet mechanic-mapped:.*fully-charged Heavy Attack.*Overflow Aura.*Weapon and Spell Damage.*$",
+    re.IGNORECASE | re.DOTALL,
+)
 _RED_EAGLES_FURY_BLOCKER = re.compile(
     r"^Red Eagle's Fury \(5\): active set bonus is not yet mechanic-mapped:.*"
     r"Adds\s+(?:\d[\d,]*\s*-\s*)?469\s+Weapon and Spell Damage to your Weapon Skill abilities\.\s*"
@@ -163,6 +196,14 @@ class ExtremeActualHealGearSetCandidateService:
             "innate axiom": _INNATE_AXIOM_BLOCKER,
             "dagon's dominion": _DAGONS_DOMINION_BLOCKER,
             "red eagle's fury": _RED_EAGLES_FURY_BLOCKER,
+            "briarheart": _BRIARHEART_BLOCKER,
+            "monolith of storms": _MONOLITH_OF_STORMS_BLOCKER,
+            "moon hunter": _MOON_HUNTER_BLOCKER,
+            "moondancer": _MOONDANCER_BLOCKER,
+            "rallying cry": _RALLYING_CRY_BLOCKER,
+            "salvation": _SALVATION_BLOCKER,
+            "scathing mage": _SCATHING_MAGE_BLOCKER,
+            "scorion's feast": _SCORIONS_FEAST_BLOCKER,
         }.get(set_name)
         if set_name == "armor master":
             reviewed_objectives = {"max_health"}
