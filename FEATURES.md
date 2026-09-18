@@ -287,4 +287,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Teams can store an optional Discord invite/server/channel URL alongside raid schedule, time zone, and current focus.
 - The Discord URL is persisted additively on the existing `team` record and reloads with the selected team.
 \n\n## Raid Plan\n\n- Trial-specific artwork banners appear in Raid Plan Selected Plan and Live Raid Current Encounter hero surfaces.\n\n\n## UI\n\n- Shared app page headers use the Collectibles-style uppercase Montserrat treatment with muted-gold text and restrained letter spacing; page-specific subtitles and context controls remain unchanged.
+
+- **Rotation command-center visual contract** — Rotation Context stays on one compact row, intent tiles use restrained blue/silver hover/selected treatment, and generated results use the five-button icon navigator with a locked pre-generation state instead of exposed raw Qt tabs.
+
+- **Raid Plan note** — the parchment Plan Note on Raid Plan Overview is editable and persists with the exact `RaidPlan` snapshot; loading another plan restores that plan's own note.
 \n- **Rotation Builder Phase 14 shell** — Rotations are restored through an owned command-center page that preserves the current presentation while calling the existing generation and sustain engines directly; the legacy patched dashboard is not constructed at startup.\n
