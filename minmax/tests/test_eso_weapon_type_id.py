@@ -14,7 +14,7 @@ def test_maps_canonical_weapon_types_to_imported_eso_ids():
     assert eso_weapon_type_id(WeaponType.GREATSWORD) == 4
     assert eso_weapon_type_id(WeaponType.BATTLEAXE) == 5
     assert eso_weapon_type_id(WeaponType.MAUL) == 6
-    assert eso_weapon_type_id(WeaponType.SHIELD) == 7
+    assert eso_weapon_type_id(WeaponType.SHIELD) == 14
     assert eso_weapon_type_id(WeaponType.BOW) == 8
     assert eso_weapon_type_id(WeaponType.RESTORATION_STAFF) == 9
     assert eso_weapon_type_id(WeaponType.DAGGER) == 11
