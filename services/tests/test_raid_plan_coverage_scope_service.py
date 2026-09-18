@@ -108,3 +108,31 @@ def test_ambiguous_saved_build_selection_stays_unresolved() -> None:
     assert scope.members == ()
     assert len(scope.unresolved) == 1
     assert "ambiguous" in scope.unresolved[0].casefold()
+
+
+def test_scope_carries_planned_gear_without_saved_build() -> None:
+    plan = RaidPlan(
+        plan_id="planned-gear",
+        trial_id="sunspire",
+        name="Planned Gear",
+        members=(
+            RaidPlanMember(
+                seat_id="tank-1",
+                gamertag="",
+                role="Tank",
+                eso_class="Dragonknight",
+                planned_gear_sets=("Powerful Assault", "Turning Tide"),
+            ),
+        ),
+    )
+
+    scope = RaidPlanCoverageScopeService().compose(
+        raid_plan=plan,
+        saved_builds=(),
+        coverage_effect_names=("Powerful Assault", "Major Vulnerability"),
+    )
+
+    assert scope.members == ()
+    assert len(scope.planned_gear) == 1
+    assert scope.planned_gear[0].seat_id == "tank-1"
+    assert scope.planned_gear[0].gear_sets == ("Powerful Assault", "Turning Tide")
