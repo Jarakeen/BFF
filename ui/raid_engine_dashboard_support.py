@@ -9,6 +9,7 @@ Readiness -> Live Raid.
 """
 
 import warnings
+from types import SimpleNamespace
 
 _INSTALLED = False
 
@@ -161,6 +162,68 @@ def _open_raid_plan_adviser(window, plan) -> None:
     window.show_page("console:6")
 
 
+
+def _open_plan_comp_builder(window, source_page) -> None:
+    """Load the current Raid Plan people into Comp Builder before navigation."""
+    comp = window.pages.get("comp_builder")
+    if comp is None or not hasattr(comp, "apply_roster_team_context"):
+        window.show_page("comp_builder")
+        return
+
+    try:
+        plan = source_page.current_plan()
+    except (AttributeError, OSError, TypeError, ValueError):
+        window.show_page("comp_builder")
+        return
+
+    trial_combo = getattr(source_page, "trial_combo", None)
+    trial_name = (
+        str(trial_combo.currentText() or "").strip()
+        if trial_combo is not None
+        else ""
+    )
+    difficulty_combo = getattr(source_page, "difficulty_combo", None)
+    difficulty = (
+        str(difficulty_combo.currentText() or "").strip()
+        if difficulty_combo is not None
+        else ""
+    )
+
+    if trial_name:
+        index = comp.goal_combo.findText(trial_name)
+        if index >= 0:
+            comp.goal_combo.setCurrentIndex(index)
+    if difficulty:
+        index = comp.difficulty_combo.findText(difficulty)
+        if index >= 0:
+            comp.difficulty_combo.setCurrentIndex(index)
+
+    members = tuple(
+        SimpleNamespace(
+            Id=None,
+            PlayerName=str(getattr(member, "gamertag", "") or "").strip(),
+            CharacterName=str(getattr(member, "character_name", "") or "").strip(),
+            PrimaryRole=str(getattr(member, "role", "") or "").strip(),
+            EsoClass=str(getattr(member, "eso_class", "") or "").strip(),
+        )
+        for member in getattr(plan, "members", ()) or ()
+        if str(getattr(member, "gamertag", "") or "").strip()
+    )
+    comp.apply_roster_team_context(
+        str(getattr(plan, "name", "") or trial_name or "Raid Plan"),
+        members,
+        group_size=12,
+    )
+    window.show_page("comp_builder")
+
+
+def _route_plan_page(window, source_page, target: str) -> None:
+    if target == "comp_builder":
+        _open_plan_comp_builder(window, source_page)
+        return
+    window.show_page(target)
+
+
 def _register_page(window, route: str, page) -> None:
     window.pages[route] = page
     container = window.wrap_page(page)
@@ -200,7 +263,9 @@ def register_raid_engine_pages(window) -> None:
     _register_roster_workspace_refresh(window, roster_workspace)
 
     assignments = CityRaidAssignmentsPage()
-    assignments.pageRequested.connect(window.show_page)
+    assignments.pageRequested.connect(
+        lambda target: _route_plan_page(window, assignments, target)
+    )
     _register_page(window, "assignments", assignments)
 
     readiness = CityRaidReadinessPage()
@@ -225,7 +290,9 @@ def register_raid_engine_pages(window) -> None:
     _register_page(window, "raid_engine_dashboard", dashboard)
 
     raid_plans = CityRaidPlanWorkspacePage()
-    raid_plans.pageRequested.connect(window.show_page)
+    raid_plans.pageRequested.connect(
+        lambda target: _route_plan_page(window, raid_plans, target)
+    )
     raid_plans.coverageRequested.connect(lambda plan: _open_raid_plan_coverage(window, plan))
     raid_plans.rotationRequested.connect(
         lambda plan, seat_id: _open_raid_plan_rotation(window, plan, seat_id)
