@@ -124,6 +124,38 @@ def _ensure_player_column(page) -> None:
         header.moveSection(visual_index, 0)
 
 
+def _set_class_constraint(page, row: int, eso_class: str) -> None:
+    text = str(eso_class or "").strip()
+    if not text:
+        return
+    class_combo = page.matrix_table.cellWidget(row, 2)
+    if not isinstance(class_combo, QComboBox):
+        return
+    match = next(
+        (
+            index
+            for index in range(class_combo.count())
+            if str(class_combo.itemText(index) or "").strip().casefold() == text.casefold()
+        ),
+        -1,
+    )
+    if match >= 0:
+        class_combo.setCurrentIndex(match)
+
+
+def _reapply_class_constraints(page) -> None:
+    constraints = dict(getattr(page, "_comp_class_constraint_by_slot", {}) or {})
+    if not constraints:
+        return
+    for row in range(page.matrix_table.rowCount()):
+        slot_name = str(page._cell_text(row, 0) or "").strip()
+        if not slot_name:
+            continue
+        eso_class = constraints.get(slot_name)
+        if eso_class:
+            _set_class_constraint(page, row, eso_class)
+
+
 def _set_player(page, row: int, member, assignment: dict | None = None) -> None:
     _ensure_player_column(page)
     item = page.matrix_table.item(row, PLAYER_COLUMN)
@@ -138,11 +170,8 @@ def _set_player(page, row: int, member, assignment: dict | None = None) -> None:
     item.setToolTip(tooltip)
 
     eso_class = str(getattr(member, "EsoClass", "") or "").strip()
-    class_combo = page.matrix_table.cellWidget(row, 2)
-    if isinstance(class_combo, QComboBox) and eso_class:
-        index = class_combo.findText(eso_class)
-        if index >= 0:
-            class_combo.setCurrentIndex(index)
+    if eso_class:
+        _set_class_constraint(page, row, eso_class)
 
 
 def _clear_player_rows(page) -> None:
@@ -244,11 +273,17 @@ def apply_roster_team_context(
 
     matched = _match_rows(page, members)
     page._comp_roster_member_by_slot = {}
+    page._comp_class_constraint_by_slot = {}
     for row, member in matched:
         member_id = int(member.Id) if getattr(member, "Id", None) is not None else -1
         _set_player(page, row, member, assignments.get(member_id))
         slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+        eso_class = str(getattr(member, "EsoClass", "") or "").strip()
+        if eso_class:
+            page._comp_class_constraint_by_slot[slot_name] = eso_class
         page._comp_roster_member_by_slot[slot_name] = None if _is_recruit_member(member) else member
+
+    _reapply_class_constraints(page)
 
     if hasattr(page, "plan_name_input") and page._roster_team_context_name:
         suffix = f" • {page._roster_encounter_context_name}" if page._roster_encounter_context_name else ""
@@ -378,12 +413,19 @@ def install() -> None:
     from ui import roster_assignment_action_support as assignment_actions
 
     original_init = CompBuilderPage.__init__
+    original_render_slots = CompBuilderPage._render_slots
 
     def init_with_roster_intake(self, parent=None):
         original_init(self, parent)
         _ensure_player_column(self)
+        self._comp_class_constraint_by_slot = {}
+
+    def render_slots_with_class_constraints(self, slots) -> None:
+        original_render_slots(self, slots)
+        _reapply_class_constraints(self)
 
     CompBuilderPage.__init__ = init_with_roster_intake
+    CompBuilderPage._render_slots = render_slots_with_class_constraints
     CompBuilderPage.apply_roster_team_context = apply_roster_team_context
 
     assignment_actions._send_to_comp_maker = _send_roster_team_to_comp
