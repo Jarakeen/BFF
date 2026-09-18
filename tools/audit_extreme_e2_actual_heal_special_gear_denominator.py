@@ -24,12 +24,13 @@ def main() -> int:
     print(f"monster_set_count={report.monster_count}")
     print(f"mythic_count={report.mythic_count}")
     print(f"arena_weapon_set_count={report.arena_weapon_count}")
+    print(f"entity_only_set_count={report.entity_only_count}")
     print(f"special_gear_row_count={len(report.rows)}")
     print(f"h1_relevant_row_count={len(report.relevant_rows)}")
     print(f"unresolved_row_count={len(report.unresolved_rows)}")
     print(f"special_gear_denominator_proven={report.denominator_proven}")
 
-    for family in ("monster", "mythic", "arena_weapon"):
+    for family in ("monster", "mythic", "arena_weapon", "entity_only"):
         family_rows = tuple(row for row in report.rows if row.family == family)
         unresolved = tuple(row for row in family_rows if row.unresolved)
         relevant = tuple(row for row in family_rows if row.h1_relevant)
@@ -50,9 +51,10 @@ def main() -> int:
 
     print()
     print(
-        "NOTE=This reconciles canonical special-set mechanic dispositions. "
-        "Package-shape enumeration/search completeness and runtime proc activation "
-        "remain separate proof layers."
+        "NOTE=This reconciles normalized special-set mechanic dispositions and "
+        "also exposes canonical entity-only gear-set rows that still lack normalized "
+        "slot/bonus evidence. Package-shape enumeration/search completeness and "
+        "runtime proc activation remain separate proof layers."
     )
     return 0
 
