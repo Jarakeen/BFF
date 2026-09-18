@@ -21,6 +21,7 @@ _TRIAL_BANNER_FILENAMES = (
     ("kyne's aegis", "kynes_aegis.webp"),
     ("lucent citadel", "lucent_citadel.webp"),
     ("maw of lorkhaj", "maw_of_lorkhaj.webp"),
+    ("ossein cage", "ossein_cage.webp"),
     ("rockgrove", "rockgrove.webp"),
     ("sanctum ophidia", "sanctum_ophidia.webp"),
     ("sanity's edge", "sanitys_edge.webp"),
@@ -37,6 +38,7 @@ _TRIAL_BANNER_ALIASES = {
     "ka": "kynes_aegis.webp",
     "lc": "lucent_citadel.webp",
     "mol": "maw_of_lorkhaj.webp",
+    "oc": "ossein_cage.webp",
     "rg": "rockgrove.webp",
     "so": "sanctum_ophidia.webp",
     "se": "sanitys_edge.webp",
@@ -66,11 +68,33 @@ def trial_banner_filename(*values: object) -> str | None:
 
 
 def trial_banner_path(*values: object) -> Path | None:
+    """Resolve committed or locally-added trial art without letting filenames leak into UI."""
     filename = trial_banner_filename(*values)
-    if filename is None:
-        return None
-    path = Path(get_resource_path("assets", "raid_plans", "trial_banners", filename))
-    return path if path.is_file() else None
+    banner_dir = Path(get_resource_path("assets", "raid_plans", "trial_banners"))
+    if filename is not None:
+        path = banner_dir / filename
+        if path.is_file():
+            return path
+
+    # Local art may arrive as PNG/JPG before being converted to the normal WebP
+    # release asset. Resolve by normalized stem so the page can still use it.
+    identities = {
+        normalize_trial_identity(value)
+        for value in values
+        if _clean(value)
+    }
+    wanted_stems = {
+        identity.replace("'", "").replace(" ", "_")
+        for identity in identities
+    }
+    if banner_dir.is_dir():
+        for candidate in banner_dir.iterdir():
+            if candidate.suffix.casefold() not in {".webp", ".png", ".jpg", ".jpeg"}:
+                continue
+            stem = normalize_trial_identity(candidate.stem).replace("'", "").replace(" ", "_")
+            if stem in wanted_stems:
+                return candidate
+    return None
 
 
 class TrialBannerLabel(QLabel):
