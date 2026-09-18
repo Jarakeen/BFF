@@ -167,6 +167,30 @@ def _match_rows(page, members) -> list[tuple[int, object]]:
     matches: list[tuple[int, object]] = []
     members = list(members)
 
+    # Raid Plan handoffs carry the exact canonical chair. Honor that before role
+    # matching so Main Tank/Off Tank and numbered DD chairs survive a round trip.
+    remaining: list[object] = []
+    for member in members:
+        wanted_seat = str(getattr(member, "RaidSeatId", "") or "").strip().casefold()
+        if not wanted_seat:
+            remaining.append(member)
+            continue
+        row = next(
+            (
+                candidate_row
+                for candidate_row in available
+                if str(page._cell_text(candidate_row, 0) or "").strip().casefold()
+                == wanted_seat
+            ),
+            None,
+        )
+        if row is None:
+            remaining.append(member)
+            continue
+        available.remove(row)
+        matches.append((row, member))
+
+    members = remaining
     known = [member for member in members if _role_key(getattr(member, "PrimaryRole", ""))]
     unknown = [member for member in members if not _role_key(getattr(member, "PrimaryRole", ""))]
 
