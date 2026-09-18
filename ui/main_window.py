@@ -26,6 +26,7 @@ from services.encounter_runtime_guide_projection_service import EncounterRuntime
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
 from services.expedition_service import ExpeditionService
 from services.optional_modules import broadcast_enabled
+from services.profiled_collectible_service import ProfiledCollectibleService
 from ui.achievements_page import AchievementsPage
 from ui.asylum_perfecta_timer_page import AsylumPerfectaTimerPage
 from ui.themed_builds_page import BuildsPage
@@ -90,12 +91,11 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         layout.addWidget(self.stack, 1)
 
-        # Keep the historical constructor contract intact because the runtime
-        # antiquities compatibility layer patches CollectiblesPage.__init__.
-        # The dashboard shares the browser's already-created service instead
-        # of injecting a new keyword argument into that patched constructor.
-        collectible_browser = CollectiblesPage()
-        self.collectible_service = collectible_browser.service
+        # The dashboard is intentionally eager because it is the lightweight,
+        # visual Collections landing page. The heavier category browser may be
+        # lazy-loaded, so MainWindow owns the one shared profile-aware service.
+        self.collectible_service = ProfiledCollectibleService(data_dir / "eso.db")
+        collectible_browser = CollectiblesPage(service=self.collectible_service)
         collectible_dashboard = CollectiblesDashboardPage(self.collectible_service)
         collectible_dashboard.categoryRequested.connect(
             lambda category: self.show_page(f"collectibles:{category}")
@@ -204,7 +204,8 @@ class MainWindow(QMainWindow):
 
     def _confirm_collectible_navigation(self, target_page: str) -> bool:
         collectibles_page = self.pages.get("collectibles_browser")
-        if collectibles_page is None or not collectibles_page.has_pending_changes():
+        has_pending = getattr(collectibles_page, "has_pending_changes", None)
+        if not callable(has_pending) or not has_pending():
             return True
         if self.stack.currentWidget() is not self.page_containers.get("collectibles_browser"):
             return True
@@ -229,12 +230,12 @@ class MainWindow(QMainWindow):
             return True
         return False
 
-    def _refresh_collectibles_for_active_profile(self) -> None:
+    def _refresh_collectibles_for_active_profile(self, *, refresh_browser: bool = True) -> None:
         """Keep collection browser/dashboard/stickerbook aligned with the achievement profile."""
         collectibles_page = self.pages.get("collectibles_browser")
         dashboard = self.pages.get("collectibles")
         stickerbook = self.pages.get("stickerbook")
-        service = getattr(collectibles_page, "service", None)
+        service = self.collectible_service
 
         # Active-profile state is lightweight persisted application state. Do not
         # force the full Achievements page to exist just so Collectibles can learn
@@ -253,8 +254,9 @@ class MainWindow(QMainWindow):
         if stickerbook is not None and active_profile and hasattr(stickerbook, "set_profile"):
             stickerbook.set_profile(active_profile)
 
-        if collectibles_page is not None:
-            collectibles_page.refresh()
+        browser_refresh = getattr(collectibles_page, "refresh", None)
+        if refresh_browser and callable(browser_refresh):
+            browser_refresh()
         if dashboard is not None:
             dashboard.refresh()
 
@@ -408,7 +410,7 @@ class MainWindow(QMainWindow):
         if page_name.startswith("collectibles:"):
             category = page_name.split(":", 1)[1]
             collectibles_page = self.pages["collectibles_browser"]
-            self._refresh_collectibles_for_active_profile()
+            self._refresh_collectibles_for_active_profile(refresh_browser=False)
             collectibles_page.set_category(category)
             self.sidebar.set_current(page_name)
             self.stack.setCurrentWidget(self.page_containers["collectibles_browser"])
