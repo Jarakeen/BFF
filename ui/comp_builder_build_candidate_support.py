@@ -78,8 +78,17 @@ def _roster_member_for_row(page, row: int):
     return getattr(page, "_comp_roster_member_by_slot", {}).get(slot_name)
 
 
-def _candidate_matches_roster_member(candidate: CompBuildCandidate, member) -> bool:
+def _row_is_recruit(page, row: int) -> bool:
+    if row < 0 or page.matrix_table.columnCount() <= 11:
+        return False
+    value = page._cell_text(row, 11).casefold()
+    return value in {"recruit", "recruitment needed"} or value.startswith("recruit ")
+
+
+def _candidate_matches_roster_member(candidate: CompBuildCandidate, member, *, recruit: bool = False) -> bool:
     """Saved-build candidates must belong to the loaded player; references remain advice."""
+    if recruit and candidate.source_kind == "saved_build":
+        return False
     if member is None or candidate.source_kind != "saved_build":
         return True
     identities = {
@@ -123,10 +132,11 @@ def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
         observed_skills=observed_skills,
     )
     member = _roster_member_for_row(page, row)
+    recruit = _row_is_recruit(page, row)
     return tuple(
         candidate
         for candidate in candidates
-        if _candidate_matches_roster_member(candidate, member)
+        if _candidate_matches_roster_member(candidate, member, recruit=recruit)
     )
 
 
