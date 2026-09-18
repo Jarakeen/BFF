@@ -45,6 +45,15 @@ from services.extreme_gear_set_objective_service import (
             "Scorion's Feast",
             "(5 items) When you deal damage with a fully-charged Heavy Attack, you gain an Imbued Aura. If you deal damage with a fully-charged Heavy Attack with an Imbued Aura active, consume it and gain an Overflow Aura for 10 seconds, granting Weapon and Spell Damage.",
         ),
+
+        (
+            "Vykand's Soulfury",
+            "(5 items) While in combat, completing a fully-charged Heavy Attack grants you either Major Force, Major Berserk, or Major Courage for 12 seconds, increasing your Critical Damage done by 20%, your damage done by 10%, or your Weapon and Spell Damage by 430. This effect can occur once every 9 seconds.",
+        ),
+        (
+            "Yandir's Might",
+            "(5 items) Dealing Critical Damage increases your Weapon and Spell Damage by 2-86, stacking up to 5 times. This effect can occur once every 0.5 seconds. Completing a fully-charged Heavy Attack removes all stacks and increases your Weapon and Spell Damage by 3-136 per stack removed. You cannot have both effects active at the same time.",
+        ),
     ),
 )
 def test_reviewed_conditional_power_set_blockers_are_owned_by_runtime(
