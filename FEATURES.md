@@ -268,6 +268,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Merge Players…** consolidates two user-confirmed Personnel identities, preserves their teams and assignment state, moves canonical characters/builds under the kept player identity, creates backups, and remembers discarded names as future import aliases
 - Future roster imports reuse exact learned aliases as player identity evidence, including all canonical characters already known for that player
 - Assignments persist separately for each **roster member + team**, so one character can have different normal jobs on different teams
+- **Comp Builder roster-first planning** keeps imported/selected groups at their real ESO size (4 or 12), treats `Recruit` as an open prescription slot, scopes saved-build choices to the loaded player, and preserves known player/character identity when a build decision is still unresolved
 
 ## Phase 14 Builds progression ownership
 - The Builds dossier now owns character progression access through a dedicated **Progression** tab.
