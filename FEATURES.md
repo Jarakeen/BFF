@@ -245,6 +245,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 ## Roster
 
+- **Teams decorative art** — the Teams lower-left panel uses the Urban Wilderness full-color night rectangle in a fixed-height crop; artwork cannot expand or reshape the surrounding workspace/cards.
+
 - **Player avatar picker** — clicking the Character detail portrait opens the bundled `assets/avatar` choices; the selected portrait is stored on the canonical Player and follows all of that player's characters/builds.
 
 - Player roster
