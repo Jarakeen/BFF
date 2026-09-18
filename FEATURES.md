@@ -35,7 +35,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - FoundryCard headings resolve semantic heading icons from the canonical `assets/icons` library before compatibility icon locations
 - Semantic icon lookup accepts space, hyphen, underscore, singular/plural, and reviewed alias variants so theme-aware UI surfaces can use one meaning-oriented icon vocabulary without leaking missing filename text into card headings
 - BFF sidebar branding uses the compact **BFF / RAID OPERATIONS** lockup and compass mark
-- Sidebar navigation is organized by workflow ownership in this order: **Raid → Team → Build → Encounter → Review → Achievement → Collectibles → Tools → Settings**; Roster lives under Team, Raid Review lives under Review, and optional Broadcast tools stay inside Tools instead of creating another top-level section
+- Sidebar top-level groups are ordered **Raid → Team → Build → Encounter → Review → Achievement → Collectibles → Tools → Settings** while preserving the existing child destinations within those groups; optional Broadcast tools stay inside Tools instead of creating another top-level section
 - Urban Wilderness uses a single low-stimulation, red/green-independent raid-lead workflow with static artwork, no flashing UI effects, Roster as the landing surface, and Community News hidden while disabled
 - Raid Engine overview accents and New Build entry adapt to Foundry teal/amber or Rylo's squared steel palette, with text and numeric progress cues alongside color
 - Main overview keeps four cards in each dashboard row at desktop widths; compact labeled attribute meters use red Health, green Stamina, and blue Magicka in both visual themes
