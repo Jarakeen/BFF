@@ -174,11 +174,11 @@ def test_assignment_selected_spot_is_structured_profile_card_with_drawn_role_mar
     assert 'setProperty("semanticRoleMark", role_key)' in source
     assert 'form.addRow("Player", self.selected_player)' in source
     assert 'form.addRow("Character", self.selected_character)' in source
-    assert 'form.addRow("Primary Assignment", self.selected_primary)' in source
-    assert 'form.addRow("Secondary Assignment", self.selected_secondary)' in source
-    assert 'form.addRow("Gear Needed", self.selected_gear)' in source
+    assert 'form.addRow("Buffs / Debuffs", self.selected_support)' in source
+    assert 'form.addRow("Utility / Mechanics", self.selected_utility)' in source
+    assert 'form.addRow("Planned Gear", self.selected_gear)' in source
     assert 'form.addRow("Linked Build", self.selected_build)' in source
-    assert 'edit_roles = QPushButton("Edit Duties")' in source
+    assert 'form.addRow("Notes", self.selected_notes)' in source
 
 
 def test_city_key_remains_the_compatibility_storage_key_for_urban_wilderness() -> None:
