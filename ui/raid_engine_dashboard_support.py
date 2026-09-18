@@ -165,6 +165,10 @@ def _open_plan_comp_builder(window, source_page) -> None:
 
     try:
         plan = source_page.current_plan()
+        repository = getattr(source_page, "plan_repository", None)
+        if repository is not None:
+            repository.save(plan)
+        source_page._loaded_plan_snapshot = plan
     except (AttributeError, OSError, TypeError, ValueError):
         window.show_page("comp_builder")
         return
@@ -194,6 +198,18 @@ def _open_plan_comp_builder(window, source_page) -> None:
     members = tuple(
         SimpleNamespace(
             Id=None,
+            RaidSeatId=next(
+                (
+                    seat
+                    for seat in (
+                        "Main Tank", "Off Tank", "Healer 1", "Healer 2",
+                        "DD 1", "DD 2", "DD 3", "DD 4",
+                        "DD 5", "DD 6", "DD 7", "DD 8",
+                    )
+                    if "-".join(seat.casefold().split()) == str(getattr(member, "seat_id", "") or "").strip().casefold()
+                ),
+                str(getattr(member, "seat_id", "") or "").strip(),
+            ),
             PlayerName=str(getattr(member, "gamertag", "") or "").strip(),
             CharacterName=str(getattr(member, "character_name", "") or "").strip(),
             PrimaryRole=str(getattr(member, "role", "") or "").strip(),
@@ -202,6 +218,11 @@ def _open_plan_comp_builder(window, source_page) -> None:
         for member in getattr(plan, "members", ()) or ()
         if str(getattr(member, "gamertag", "") or "").strip()
     )
+    comp._raid_plan_origin_id = str(getattr(plan, "plan_id", "") or "").strip()
+    comp._raid_plan_origin_trial_id = str(getattr(plan, "trial_id", "") or "").strip()
+    comp._raid_plan_origin_name = str(getattr(plan, "name", "") or "").strip()
+    comp._raid_plan_origin_team_name = str(getattr(plan, "team_name", "") or "").strip()
+
     comp.apply_roster_team_context(
         str(getattr(plan, "name", "") or trial_name or "Raid Plan"),
         members,
