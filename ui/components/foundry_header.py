@@ -15,6 +15,13 @@ from ui.theme.fonts import Fonts
 from ui.ux_icons import icon as themed_icon, semantic_icon
 
 
+class _PageHeadingLabel(QLabel):
+    """Uppercase app-page heading with stable Collectibles-style typography."""
+
+    def setText(self, text: str) -> None:
+        super().setText(str(text or "").upper())
+
+
 class FoundryHeader(QWidget):
     """Compact page header with semantic asset icon and right-side context controls."""
 
@@ -37,9 +44,10 @@ class FoundryHeader(QWidget):
         self.icon.setScaledContents(True)
         self._set_icon(self._icon_name)
 
-        self.title = QLabel(title)
+        self.title = _PageHeadingLabel(title)
         self.title.setProperty("pageTitle", True)
-        self.title.setFont(Fonts.page_title())
+        self.title.setProperty("foundryPageHeading", True)
+        self.title.setFont(Fonts.page_heading())
         self.subtitle = QLabel(subtitle)
         self.subtitle.setProperty("pageSubtitle", True)
         self.subtitle.setFont(Fonts.subtitle())
