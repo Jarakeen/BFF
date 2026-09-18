@@ -273,3 +273,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Imported UESP Rumors stored in `collectible_rumor` / `collectible_rumor_hint` now populate the **Rumors** Collectibles page instead of showing an empty ledger.
 - Rumor ownership is profile-aware through a separate additive `collectible_rumor_progress` table; the canonical collectible catalog is not rewritten or merged.
 - Rumor detail shows the imported start hint plus ordered rumor-hint text, and Rumors progress is reflected on the Collectibles dashboard.
+
+
+## Team Discord links
+- Teams can store an optional Discord invite/server/channel URL alongside raid schedule, time zone, and current focus.
+- The Discord URL is persisted additively on the existing `team` record and reloads with the selected team.
