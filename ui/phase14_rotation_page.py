@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 """Phase 14 Rotation Builder.
 
 This page deliberately owns its widgets and signals. It uses the established rotation
@@ -9,10 +7,11 @@ services directly and does not import, instantiate, decorate, or monkey-patch th
 legacy Rotation Dashboard.
 """
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QCheckBox,
     QComboBox,
     QFrame,
     QFileDialog,
@@ -44,6 +43,9 @@ from services.build_rotation_artifact_service import (
 from services.build_service import BuildService
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.phase14_rotation_runtime_service import Phase14RotationRuntimeService
+from services.rotation_encounter_demand_policy_registry_service import (
+    RotationEncounterDemandPolicyRegistryService,
+)
 from services.rotation_pdf_export_service import (
     RotationPdfExportContext,
     RotationPdfExportService,
@@ -119,6 +121,7 @@ class RotationBuilderPage(FoundryPage):
         self.timeline_projection = None
         self.last_generation_result = None
         self.encounter_service = EncounterBossGuideService(get_data_dir() / "eso.db")
+        self.encounter_demand_registry = RotationEncounterDemandPolicyRegistryService()
         self.roster = self.build_service.load()
         self.rotation_plan: RotationPlan | None = None
         self._encounter_rows = tuple()
@@ -335,12 +338,14 @@ class RotationBuilderPage(FoundryPage):
         compare_host = QWidget()
         compare_layout = QVBoxLayout(compare_host)
         compare_layout.setContentsMargins(6, 6, 6, 6)
-        compare_layout.addWidget(
-            _muted(
-                "Compare remains a result destination. Candidate comparison will be reconnected "
-                "after the stable generation path is proven."
-            )
+        compare_card = FoundryCard("Current vs Saved", "scales")
+        self.compare_label = QLabel(
+            "Generate a rotation to compare it with the last rotation saved to this Build."
         )
+        self.compare_label.setWordWrap(True)
+        self.compare_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        compare_card.addWidget(self.compare_label)
+        compare_layout.addWidget(compare_card)
         compare_layout.addStretch(1)
         self.result_tabs.addTab(compare_host, "Compare")
 
@@ -515,12 +520,22 @@ class RotationBuilderPage(FoundryPage):
                 None,
             )
         )
+        pressure_host = QWidget()
+        pressure_layout = QVBoxLayout(pressure_host)
+        pressure_layout.setContentsMargins(8, 4, 8, 8)
+        self.pressure_detail_label = QLabel(
+            "Select a reviewed encounter to inspect its Rotation demand policy."
+        )
+        self.pressure_detail_label.setWordWrap(True)
+        self.pressure_detail_label.setProperty("muted", True)
+        pressure_layout.addWidget(self.pressure_detail_label)
+        pressure_host.hide()
         card.addWidget(
             self._obligation_row(
                 "Pressure windows",
-                "Encounter demand windows when reviewed.",
+                "Reviewed clock and health-threshold demand policies.",
                 "0",
-                None,
+                pressure_host,
             )
         )
         card.addWidget(
@@ -768,6 +783,7 @@ class RotationBuilderPage(FoundryPage):
             self.back_skills.setText("Back: —")
             self.generate_button.setEnabled(False)
             self.obligation_counts["Build skills"].setText("0")
+            self._refresh_pressure_obligations()
             return
 
         front = self._ordinary_skills(getattr(build, "FrontBarSkills", []))
@@ -808,9 +824,124 @@ class RotationBuilderPage(FoundryPage):
         self.front_skills.setText("Front: " + (" · ".join(front) if front else "No ordinary skills"))
         self.back_skills.setText("Back: " + (" · ".join(back) if back else "No ordinary skills"))
         self.obligation_counts["Build skills"].setText(str(len(front) + len(back)))
+        self._refresh_pressure_obligations()
         self.generate_button.setEnabled(bool(front or back))
         self.status.info(
             f"Loaded {self._character_name(build)} · {self._build_name(build)}."
+        )
+
+    def _refresh_pressure_obligations(self) -> None:
+        if not hasattr(self, "obligation_counts"):
+            return
+        encounter_id = _clean(self.boss_combo.currentData())
+        if not encounter_id:
+            self.obligation_counts["Pressure windows"].setText("0")
+            if hasattr(self, "pressure_detail_label"):
+                self.pressure_detail_label.setText(
+                    "Select a reviewed encounter to inspect its Rotation demand policy."
+                )
+            return
+
+        try:
+            entry = self.encounter_demand_registry.entry_for(encounter_id)
+        except (OSError, ValueError) as exc:
+            self.obligation_counts["Pressure windows"].setText("!")
+            self.pressure_detail_label.setText(
+                "Encounter demand policy could not be read: " + str(exc)
+            )
+            return
+
+        if entry is None:
+            self.obligation_counts["Pressure windows"].setText("—")
+            self.pressure_detail_label.setText(
+                "No reviewed Rotation demand policy is stored for this encounter. "
+                "Nothing is inferred from boss prose or display names."
+            )
+            return
+
+        clock = tuple(entry.clock_policies)
+        threshold = tuple(entry.threshold_policies)
+        blockers = tuple(entry.review_blockers)
+        self.obligation_counts["Pressure windows"].setText(
+            str(len(clock) + len(threshold))
+        )
+
+        lines = []
+        for policy in clock:
+            lines.append(
+                f"Clock · {policy.fact_key} · {policy.kind.value.replace('_', ' ').title()}"
+            )
+        for policy in threshold:
+            lines.append(
+                f"Health {policy.threshold_fraction * 100:g}% · {policy.fact_key} · "
+                f"{policy.kind.value.replace('_', ' ').title()}"
+            )
+        for blocker in blockers:
+            lines.append(f"Needs review · {blocker.summary}")
+        self.pressure_detail_label.setText(
+            "\n".join(lines)
+            if lines
+            else "This encounter was explicitly reviewed with no Rotation demand policies."
+        )
+
+    @staticmethod
+    def _artifact_metrics(artifact: dict | None) -> dict[str, int | float]:
+        actions = list((artifact or {}).get("actions") or [])
+        kinds = [
+            _clean(action.get("kind")).casefold()
+            for action in actions
+            if isinstance(action, dict)
+        ]
+        return {
+            "actions": len(actions),
+            "heavy": sum(kind == "heavy_attack" for kind in kinds),
+            "swaps": sum(kind == "bar_swap" for kind in kinds),
+            "unresolved": len(list((artifact or {}).get("unresolved") or [])),
+            "duration": float((artifact or {}).get("duration_seconds") or 0.0),
+        }
+
+    def _refresh_compare(self) -> None:
+        if not hasattr(self, "compare_label"):
+            return
+        if self.rotation_plan is None:
+            self.compare_label.setText(
+                "Generate a rotation to compare it with the last rotation saved to this Build."
+            )
+            return
+
+        base_build = self._base_build()
+        build_id = (
+            resolve_canonical_build_id(
+                self.build_service.canonical.catalog_service,
+                base_build,
+            )
+            if base_build is not None
+            else None
+        )
+        saved = self.rotation_artifacts.get_rotation(build_id or "")
+        current = jsonable(self.rotation_plan)
+        current_metrics = self._artifact_metrics(current)
+
+        if not saved:
+            self.compare_label.setText(
+                "CURRENT GENERATED\n"
+                f"{current_metrics['duration']:g}s · {current_metrics['actions']} actions · "
+                f"{current_metrics['heavy']} Heavy Attacks · {current_metrics['swaps']} bar swaps · "
+                f"{current_metrics['unresolved']} unresolved\n\n"
+                "No previously saved rotation exists for this Build."
+            )
+            return
+
+        saved_metrics = self._artifact_metrics(saved)
+        self.compare_label.setText(
+            "CURRENT GENERATED\n"
+            f"{current_metrics['duration']:g}s · {current_metrics['actions']} actions · "
+            f"{current_metrics['heavy']} Heavy Attacks · {current_metrics['swaps']} bar swaps · "
+            f"{current_metrics['unresolved']} unresolved\n\n"
+            "LAST SAVED\n"
+            f"{saved_metrics['duration']:g}s · {saved_metrics['actions']} actions · "
+            f"{saved_metrics['heavy']} Heavy Attacks · {saved_metrics['swaps']} bar swaps · "
+            f"{saved_metrics['unresolved']} unresolved"
         )
 
     def _apply_intent(self, name: str) -> None:
@@ -944,6 +1075,7 @@ class RotationBuilderPage(FoundryPage):
             f"{result.plan.duration_seconds:g}s • {len(result.plan.actions)} actions • "
             f"{heavy_count} Heavy Attacks • {len(result.plan.unresolved)} unresolved"
         )
+        self._refresh_compare()
         self.result_tabs.setCurrentIndex(0)
         self.status.success(
             f"Generated {len(result.plan.actions)} actions over {result.plan.duration_seconds:g}s."
@@ -1130,6 +1262,7 @@ class RotationBuilderPage(FoundryPage):
             self.status.error(f"Save rotation to build failed: {exc}")
             return
 
+        self._refresh_compare()
         self.status.success(
             f"Saved rotation to {self._character_name(base_build)} · "
             f"{self._build_name(base_build)}."
@@ -1222,6 +1355,10 @@ class RotationBuilderPage(FoundryPage):
         if hasattr(self, "result_summary"):
             self.result_summary.setText(
                 "Generate a rotation to populate the result workspace."
+            )
+        if hasattr(self, "compare_label"):
+            self.compare_label.setText(
+                "Generate a rotation to compare it with the last rotation saved to this Build."
             )
 
 
