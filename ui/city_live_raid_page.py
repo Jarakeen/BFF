@@ -301,6 +301,8 @@ class CityLiveRaidPage(FoundryPage):
             plan_name=self._plan.name,
             attempt=attempt,
             notes=notes,
+            started_at=_clean(state.get("started_at")),
+            ended_at=_clean(state.get("ended_at")),
         )
         if archived is None:
             self.status.info("Blank notes cleared from the active Raid Plan.")
