@@ -26,6 +26,11 @@ class RaidPlanCoveragePage(RaidPlanAssignmentPage):
         self.check_plan_coverage_button.clicked.connect(self._request_plan_coverage)
         self.header.add_context_widget(self.check_plan_coverage_button)
 
+    def _open_coverage(self, *_args) -> None:
+        # The lower Raid Plan button must use the same exact-plan handoff as the
+        # header Coverage action. Generic navigation would silently drop planned gear.
+        self._request_plan_coverage()
+
     def _request_plan_coverage(self) -> None:
         try:
             plan = self.current_plan()
