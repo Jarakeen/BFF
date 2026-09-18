@@ -182,9 +182,24 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
     )
 
     if trial_name:
-        index = comp.goal_combo.findText(trial_name)
-        if index >= 0:
-            comp.goal_combo.setCurrentIndex(index)
+        from ui.comp_builder_page import GOAL_TRIALS
+
+        matching_goals = [
+            goal
+            for goal, mapped_trial in GOAL_TRIALS.items()
+            if str(mapped_trial or "").strip().casefold() == trial_name.casefold()
+        ]
+        current_goal = str(comp.goal_combo.currentText() or "").strip()
+        current_trial = str(GOAL_TRIALS.get(current_goal, "") or "").strip()
+        preferred_goal = (
+            current_goal
+            if current_trial.casefold() == trial_name.casefold()
+            else matching_goals[0] if matching_goals else ""
+        )
+        if preferred_goal:
+            index = comp.goal_combo.findText(preferred_goal)
+            if index >= 0:
+                comp.goal_combo.setCurrentIndex(index)
     if difficulty:
         index = comp.difficulty_combo.findText(difficulty)
         if index >= 0:
