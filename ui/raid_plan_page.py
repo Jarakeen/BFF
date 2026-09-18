@@ -322,7 +322,12 @@ class RaidPlanPage(FoundryPage):
             return
         text = _clean(value)
         combo.blockSignals(True)
-        combo.setCurrentText(text)
+        if text:
+            combo.setCurrentText(text)
+        else:
+            combo.setCurrentIndex(-1)
+            if combo.lineEdit() is not None:
+                combo.lineEdit().clear()
         combo.blockSignals(False)
 
     def _set_item_text(self, row: int, column: int, value: object) -> None:
@@ -370,7 +375,15 @@ class RaidPlanPage(FoundryPage):
             combo.blockSignals(True)
             combo.clear()
             combo.addItems(names)
-            combo.setCurrentText(current)
+            # QComboBox selects item 0 after addItems(). Blank Raid Plan chairs
+            # must remain genuinely blank rather than inheriting the first
+            # alphabetic Personnel name.
+            if current:
+                combo.setCurrentText(current)
+            else:
+                combo.setCurrentIndex(-1)
+                if combo.lineEdit() is not None:
+                    combo.lineEdit().clear()
             completer = QCompleter(combo.model(), combo)
             completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             completer.setFilterMode(Qt.MatchFlag.MatchContains)
