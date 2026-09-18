@@ -83,6 +83,30 @@ VERIFIED_WEAPON_PASSIVE_RULES: tuple[WeaponPassiveRule, ...] = (
     ),
     WeaponPassiveRule(
         "Bow",
+        "Accuracy",
+        WeaponPassiveLayer.SHARED_STANDING,
+        "Increases Critical Chance rating while a Bow is equipped; H1 Actual Heal does not use critical chance to scale a proven critical event.",
+    ),
+    WeaponPassiveRule(
+        "Bow",
+        "Vinedusk Training",
+        WeaponPassiveLayer.COMBAT_STATE,
+        "Distance-dependent damage-done or Critical Chance bonuses affect enemy damage/crit probability, not one H1 healing-event magnitude.",
+    ),
+    WeaponPassiveRule(
+        "Bow",
+        "Hawk Eye",
+        WeaponPassiveLayer.COMBAT_STATE,
+        "Light/Heavy Attack stacks increase Bow ability damage only; they do not scale healing events.",
+    ),
+    WeaponPassiveRule(
+        "Bow",
+        "Hasty Retreat",
+        WeaponPassiveLayer.COMBAT_STATE,
+        "Roll Dodge grants Major Expedition; movement speed does not scale one healing event.",
+    ),
+    WeaponPassiveRule(
+        "Bow",
         "Ranger",
         WeaponPassiveLayer.ABILITY_FAMILY,
         "Reduces the Stamina cost of Bow abilities; does not modify Max Stamina.",
@@ -92,6 +116,12 @@ VERIFIED_WEAPON_PASSIVE_RULES: tuple[WeaponPassiveRule, ...] = (
         "Ambidextrous",
         WeaponPassiveLayer.SHARED_STANDING,
         "Increases Weapon and Spell Damage from the off-hand weapon; does not modify maximum resources.",
+    ),
+    WeaponPassiveRule(
+        "Dual Wield",
+        "Twin Blade and Blunt",
+        WeaponPassiveLayer.SHARED_STANDING,
+        "Weapon-subtype standing bonuses include sword Weapon/Spell Damage and therefore can change H1 heal scaling; subtype search must preserve this passive.",
     ),
     WeaponPassiveRule(
         "Dual Wield",
@@ -113,6 +143,30 @@ VERIFIED_WEAPON_PASSIVE_RULES: tuple[WeaponPassiveRule, ...] = (
     ),
     WeaponPassiveRule(
         "One Hand and Shield",
+        "Deadly Bash",
+        WeaponPassiveLayer.ABILITY_FAMILY,
+        "Improves Bash damage/cost only; it does not scale a healing event.",
+    ),
+    WeaponPassiveRule(
+        "One Hand and Shield",
+        "Deflect Bolts",
+        WeaponPassiveLayer.BLOCK_STATE,
+        "Changes blocked projectile/ranged damage only; it does not scale a healing event.",
+    ),
+    WeaponPassiveRule(
+        "One Hand and Shield",
+        "Fortress",
+        WeaponPassiveLayer.BLOCK_STATE,
+        "Reduces One Hand and Shield ability cost and block cost; neither changes one H1 heal magnitude.",
+    ),
+    WeaponPassiveRule(
+        "One Hand and Shield",
+        "Sword and Board",
+        WeaponPassiveLayer.SHARED_STANDING,
+        "Increases Weapon and Spell Damage while One Hand and Shield is equipped; this can change H1 heal scaling and must remain in weapon-configuration search.",
+    ),
+    WeaponPassiveRule(
+        "One Hand and Shield",
         "Battlefield Mobility",
         WeaponPassiveLayer.BLOCK_STATE,
         "Reduces the Movement Speed penalty while bracing; does not modify maximum resources.",
@@ -122,6 +176,24 @@ VERIFIED_WEAPON_PASSIVE_RULES: tuple[WeaponPassiveRule, ...] = (
         "Balanced Blade",
         WeaponPassiveLayer.ABILITY_FAMILY,
         "Reduces the Stamina cost of Two-Handed abilities; does not modify Max Stamina.",
+    ),
+    WeaponPassiveRule(
+        "Two Handed",
+        "Heavy Weapons",
+        WeaponPassiveLayer.SHARED_STANDING,
+        "Weapon-subtype standing bonuses include sword Weapon/Spell Damage and therefore can change H1 heal scaling; subtype search must preserve this passive.",
+    ),
+    WeaponPassiveRule(
+        "Two Handed",
+        "Follow Up",
+        WeaponPassiveLayer.COMBAT_STATE,
+        "After a fully charged Heavy Attack it increases Two Handed attack damage only; it does not scale healing events.",
+    ),
+    WeaponPassiveRule(
+        "Two Handed",
+        "Battle Rush",
+        WeaponPassiveLayer.COMBAT_STATE,
+        "Kill-triggered Stamina Recovery does not change one H1 heal magnitude.",
     ),
     WeaponPassiveRule(
         "Two Handed",
