@@ -138,6 +138,7 @@ def _details_card(page) -> FoundryCard | None:
         "Selected Chair Setup & Evidence",
         "ESO Logs Catalog & Chair Evidence",
         "Build Catalog",
+        "Selected Player / Build Recommendation",
     }
     for card in page.findChildren(FoundryCard):
         if card.title_label.text().strip() in wanted:
@@ -153,7 +154,7 @@ def _polish_visible_controls(page) -> None:
 
     details = _details_card(page)
     if details is not None:
-        details.set_title("Build Catalog")
+        details.set_title("Selected Player / Build Recommendation")
 
     combo = getattr(page, "comp_candidate_choice_combo", None)
     if combo is not None:
@@ -205,6 +206,9 @@ def _sync_role_language(page) -> None:
 def _comp_init_with_polish(self, parent=None) -> None:
     assert _ORIGINAL_COMP_INIT is not None
     _ORIGINAL_COMP_INIT(self, parent)
+    self.header.subtitle.setText(
+        "Load the team, select a player or Recruit slot, then choose what that slot should run."
+    )
     _polish_visible_controls(self)
     _refresh_comp_progress_from_assignments(self)
 
