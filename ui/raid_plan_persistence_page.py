@@ -68,6 +68,15 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
                     member.character_id
                     or (prior.character_id if same_character else None)
                 ),
+                selected_build_id=member.selected_build_id or prior.selected_build_id,
+                selected_build_name=member.selected_build_name or prior.selected_build_name,
+                build_source_kind=prior.build_source_kind,
+                build_source_name=prior.build_source_name,
+                build_source_url=prior.build_source_url,
+                candidate_id=prior.candidate_id,
+                planned_gear_sets=prior.planned_gear_sets,
+                planned_skills=prior.planned_skills,
+                planned_mundus=prior.planned_mundus,
                 primary_assignment=prior.primary_assignment,
                 secondary_assignment=prior.secondary_assignment,
                 notes=prior.notes,
@@ -347,7 +356,24 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                                 build_name = _clean(getattr(self.saved_builds[saved_index], "BuildName", ""))
                                 if build_name.casefold() == member.selected_build_name.casefold():
                                     build_combo.setCurrentIndex(combo_index)
+                                    matched = True
                                     break
+                        if (
+                            not matched
+                            and member.selected_build_name
+                            and (
+                                member.planned_gear_sets
+                                or member.planned_skills
+                                or member.planned_mundus
+                                or member.candidate_id
+                                or member.build_source_kind
+                            )
+                        ):
+                            build_combo.addItem(
+                                f"Planned • {member.selected_build_name}",
+                                f"planned:{member.seat_id}",
+                            )
+                            build_combo.setCurrentIndex(build_combo.count() - 1)
                 self._refresh_personnel_button(row)
         finally:
             self.team_table.blockSignals(False)
