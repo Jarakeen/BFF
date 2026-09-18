@@ -33,6 +33,9 @@ WEAPON_POWER_CP160_GOLD: dict[str, float] = {
     "Dagger": 1335.0,
     "One Hand and Shield": 1335.0,
     "Two-Handed": 1571.0,
+    "Greatsword": 1571.0,
+    "Battleaxe": 1571.0,
+    "Maul": 1571.0,
 }
 
 NAKED_LEVEL_50_POWER = 1000.0
@@ -57,6 +60,9 @@ TWO_SLOT_WEAPON_TYPES = {
     "Ice Staff",
     "Restoration Staff",
     "Two-Handed",
+    "Greatsword",
+    "Battleaxe",
+    "Maul",
 }
 ONE_HANDED_WEAPON_TYPES = {"Sword", "Axe", "Mace", "Dagger"}
 
