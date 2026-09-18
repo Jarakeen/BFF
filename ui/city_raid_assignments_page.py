@@ -573,6 +573,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
                     utility.setCurrentText(value)
                     utility.blockSignals(False)
             self._refresh_city_assignment_rows()
+        self._navigation_baseline_plan = self.current_plan()
 
     def clear_plan(self) -> None:
         super().clear_plan()
