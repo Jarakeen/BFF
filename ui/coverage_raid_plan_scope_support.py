@@ -10,7 +10,7 @@ falls back to all saved builds when a plan chair cannot be resolved.
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QTableWidgetItem
 
-from engine.config import DEFAULT_DATABASE
+from engine.config import DEFAULT_DATABASE, get_data_dir
 from models.raid_plan import RaidPlan
 from services.nonability_effect_provider_reference_service import (
     NonAbilityEffectProviderReferenceService,
@@ -21,6 +21,7 @@ from services.raid_group_effect_catalog import (
     GROUP_COVERAGE_NAMES,
 )
 from services.raid_plan_coverage_scope_service import RaidPlanCoverageScopeService
+from services.raid_plan_repository import RaidPlanRepository
 from services.raid_unique_support_set_catalog import (
     UNIQUE_SUPPORT_SET_BY_NAME,
     UNIQUE_SUPPORT_SET_NAMES,
@@ -28,6 +29,7 @@ from services.raid_unique_support_set_catalog import (
 
 _INSTALLED = False
 _ORIGINAL_REFRESH = None
+_ORIGINAL_INIT = None
 
 # Raid Plan scope must render the same raid-facing effect universe as ordinary Coverage,
 # not only the older default-required profile. Unique-set references override duplicate
@@ -36,6 +38,66 @@ REFERENCE_BY_NAME = {**GROUP_COVERAGE_BY_NAME, **UNIQUE_SUPPORT_SET_BY_NAME}
 RAID_PLAN_COVERAGE_NAMES = tuple(
     dict.fromkeys((*GROUP_COVERAGE_NAMES, *UNIQUE_SUPPORT_SET_NAMES))
 )
+
+
+def _plan_item_data(plan_id: object) -> str:
+    return f"raid_plan:{str(plan_id or '').strip()}"
+
+
+def _selected_plan_id(page) -> str:
+    combo = getattr(page, "scope_combo", None)
+    if combo is None:
+        return ""
+    data = str(combo.currentData() or "")
+    return data.split(":", 1)[1] if data.startswith("raid_plan:") else ""
+
+
+def _refresh_scope_plan_choices(page) -> None:
+    combo = getattr(page, "scope_combo", None)
+    if combo is None:
+        return
+
+    current_data = combo.currentData()
+    combo.blockSignals(True)
+    try:
+        for index in range(combo.count() - 1, -1, -1):
+            if str(combo.itemData(index) or "").startswith("raid_plan:"):
+                combo.removeItem(index)
+
+        try:
+            plans = RaidPlanRepository(get_data_dir() / "raid_plans.json").list_plans()
+        except Exception:
+            plans = ()
+
+        for plan in plans:
+            combo.addItem(f"Raid Plan: {plan.name}", _plan_item_data(plan.plan_id))
+
+        if current_data is not None:
+            target = combo.findData(current_data)
+            if target >= 0:
+                combo.setCurrentIndex(target)
+    finally:
+        combo.blockSignals(False)
+
+
+def _load_selected_plan_scope(page):
+    plan_id = _selected_plan_id(page)
+    if not plan_id:
+        return None
+
+    plan = RaidPlanRepository(get_data_dir() / "raid_plans.json").get(plan_id)
+    if plan is None:
+        return None
+
+    roster = page.build_service.load()
+    saved_builds = tuple(getattr(roster, "Members", ()) or ())
+    scope = RaidPlanCoverageScopeService().compose(
+        raid_plan=plan,
+        saved_builds=saved_builds,
+        coverage_effect_names=_effect_names(page),
+    )
+    page._raid_plan_coverage_scope = scope
+    return scope
 
 
 def _effect_names(page) -> tuple[str, ...]:
@@ -276,51 +338,51 @@ def _render_raid_plan_scope(page) -> None:
 
 
 def install() -> None:
-    global _INSTALLED, _ORIGINAL_REFRESH
+    global _INSTALLED, _ORIGINAL_REFRESH, _ORIGINAL_INIT
     if _INSTALLED:
         return
 
     from ui.coverage_page import CoveragePage
 
+    _ORIGINAL_INIT = CoveragePage.__init__
     _ORIGINAL_REFRESH = CoveragePage.refresh
 
+    def init_with_raid_plan_picker(self, *args, **kwargs) -> None:
+        _ORIGINAL_INIT(self, *args, **kwargs)
+        _refresh_scope_plan_choices(self)
+
     def refresh_with_raid_plan(self) -> None:
-        if (
-            getattr(self, "scope_combo", None) is not None
-            and self.scope_combo.currentData() == "raid_plan"
-            and getattr(self, "_raid_plan_coverage_scope", None) is not None
-        ):
+        _refresh_scope_plan_choices(self)
+        plan_id = _selected_plan_id(self)
+        if plan_id:
+            try:
+                scope = _load_selected_plan_scope(self)
+            except Exception as exc:
+                self.status.error(f"Could not build Raid Plan Coverage scope: {exc}")
+                return
+            if scope is None:
+                self.status.warning("Selected Raid Plan is no longer available.")
+                return
             _render_raid_plan_scope(self)
             return
+        self._raid_plan_coverage_scope = None
         _ORIGINAL_REFRESH(self)
 
     def set_raid_plan_scope(self, raid_plan: RaidPlan) -> None:
+        """Compatibility helper: choose the plan in Coverage's own scope menu."""
         if not isinstance(raid_plan, RaidPlan):
             raise TypeError("Coverage Raid Plan scope requires RaidPlan")
-        try:
-            roster = self.build_service.load()
-            saved_builds = tuple(getattr(roster, "Members", ()) or ())
-            scope = RaidPlanCoverageScopeService().compose(
-                raid_plan=raid_plan,
-                saved_builds=saved_builds,
-                coverage_effect_names=_effect_names(self),
-            )
-        except Exception as exc:
-            self.status.error(f"Could not build Raid Plan Coverage scope: {exc}")
-            return
-
-        self._raid_plan_coverage_scope = scope
-        self.scope_combo.blockSignals(True)
-        index = self.scope_combo.findData("raid_plan")
+        _refresh_scope_plan_choices(self)
+        data = _plan_item_data(raid_plan.plan_id)
+        index = self.scope_combo.findData(data)
         if index < 0:
-            self.scope_combo.addItem("Raid Plan", "raid_plan")
-            index = self.scope_combo.findData("raid_plan")
-        self.scope_combo.setItemText(index, f"Raid Plan: {raid_plan.name}")
+            self.scope_combo.addItem(f"Raid Plan: {raid_plan.name}", data)
+            index = self.scope_combo.findData(data)
         self.scope_combo.setCurrentIndex(index)
-        self.scope_combo.blockSignals(False)
         self.tabs.setCurrentIndex(0)
         self.refresh()
 
+    CoveragePage.__init__ = init_with_raid_plan_picker
     CoveragePage.refresh = refresh_with_raid_plan
     CoveragePage.set_raid_plan_scope = set_raid_plan_scope
     _INSTALLED = True
