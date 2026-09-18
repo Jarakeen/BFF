@@ -327,6 +327,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         super().apply_plan(plan)
         if hasattr(self, "plan_notes"):
             self.plan_notes.setPlainText(str(getattr(plan, "plan_note", "") or ""))
+        self._navigation_baseline_plan = self.current_plan()
 
     def clear_plan(self) -> None:
         super().clear_plan()
