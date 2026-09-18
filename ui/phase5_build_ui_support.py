@@ -210,7 +210,22 @@ class CharacterProgressionDialog(QDialog):
         note.setWordWrap(True)
         layout.addWidget(note)
 
+        global_actions = QHBoxLayout()
+        global_actions.addStretch()
+        buy_all_skills = FoundryButton(
+            "Buy All Passive Skills",
+            role=ButtonRole.PRIMARY,
+            compact=True,
+        )
+        buy_all_skills.setToolTip(
+            "Unlock every optional skill line shown here and set every passive rank "
+            "to its database-backed maximum for this character."
+        )
+        global_actions.addWidget(buy_all_skills)
+        layout.addLayout(global_actions)
+
         toolbox = QToolBox()
+        all_skill_spins: list[QSpinBox] = []
         for line, rows in self._passive_rows_by_line().items():
             page = QWidget()
             page_layout = QVBoxLayout(page)
@@ -264,6 +279,7 @@ class CharacterProgressionDialog(QDialog):
                 grid.addWidget(spin, row_index, 1)
                 self._passive_spins[name.casefold()] = (name, spin)
                 line_spins.append(spin)
+                all_skill_spins.append(spin)
             grid.setColumnStretch(0, 1)
             page_layout.addLayout(grid)
 
@@ -283,6 +299,13 @@ class CharacterProgressionDialog(QDialog):
             unknown.clicked.connect(unknown_line)
             toolbox.addItem(page, line)
 
+        def buy_all_passive_skills(*_args) -> None:
+            for check in self._line_checks.values():
+                check.setChecked(True)
+            _set_progression_spins(all_skill_spins, "max")
+
+        buy_all_skills.clicked.connect(buy_all_passive_skills)
+
         layout.addWidget(toolbox)
         layout.addStretch()
         return host
@@ -300,7 +323,21 @@ class CharacterProgressionDialog(QDialog):
         note.setWordWrap(True)
         layout.addWidget(note)
 
+        global_actions = QHBoxLayout()
+        global_actions.addStretch()
+        buy_all_cp = FoundryButton(
+            "Buy All Passive CP",
+            role=ButtonRole.PRIMARY,
+            compact=True,
+        )
+        buy_all_cp.setToolTip(
+            "Set every non-slottable Champion star shown here to its database-backed maximum."
+        )
+        global_actions.addWidget(buy_all_cp)
+        layout.addLayout(global_actions)
+
         grouped: dict[int, list[dict]] = defaultdict(list)
+        all_cp_spins: list[QSpinBox] = []
         for cp in self.reference.list_champion_points():
             if not isinstance(cp, dict) or _int(cp.get("skill_type"), -1) != 0:
                 continue
@@ -344,6 +381,7 @@ class CharacterProgressionDialog(QDialog):
                 grid.addWidget(spin, row_index, 1)
                 self._cp_spins[name.casefold()] = (name, spin)
                 discipline_spins.append(spin)
+                all_cp_spins.append(spin)
             grid.setColumnStretch(0, 1)
             page_layout.addLayout(grid)
 
@@ -357,6 +395,10 @@ class CharacterProgressionDialog(QDialog):
                 lambda *_args, spins=discipline_spins: _set_progression_spins(spins, "unknown")
             )
             toolbox.addItem(page, _DISCIPLINE_NAMES.get(discipline, f"Discipline {discipline}"))
+
+        buy_all_cp.clicked.connect(
+            lambda *_args: _set_progression_spins(all_cp_spins, "max")
+        )
 
         layout.addWidget(toolbox)
         layout.addStretch()
