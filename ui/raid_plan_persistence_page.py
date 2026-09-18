@@ -125,6 +125,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         if lower_save is not None:
             lower_save.clicked.connect(self.save_current_plan)
         self.refresh_saved_plan_picker()
+        self._navigation_baseline_plan = self.current_plan()
 
     def _build_ui(self) -> None:
         super()._build_ui()
@@ -218,6 +219,32 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             for member in merged.members
         )
         return replace(merged, members=validated)
+
+    def has_pending_changes(self) -> bool:
+        """Return whether visible Raid Plan state differs from the last clean snapshot."""
+        baseline = getattr(self, "_navigation_baseline_plan", None)
+        if baseline is None:
+            return False
+        try:
+            return self.current_plan() != baseline
+        except Exception:
+            # A page that cannot currently assemble its plan should not silently
+            # allow navigation and lose whatever the user was editing.
+            return True
+
+    def save_pending_changes(self) -> bool:
+        self.save_current_plan()
+        return not self.has_pending_changes()
+
+    def discard_pending_changes(self) -> bool:
+        loaded = getattr(self, "_loaded_plan_snapshot", None)
+        if loaded is not None:
+            self.apply_plan(loaded)
+        else:
+            super().clear_plan()
+            self.refresh_saved_plan_picker(select_plan_id=None)
+            self._navigation_baseline_plan = self.current_plan()
+        return True
 
     def refresh_saved_plan_picker(self, *, select_plan_id: str | None = None) -> None:
         if not hasattr(self, "saved_plan_combo"):
@@ -512,6 +539,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self._loaded_plan_snapshot = plan
         self.refresh_saved_plan_picker(select_plan_id=plan.plan_id)
         self._update_summary()
+        self._navigation_baseline_plan = self.current_plan()
 
 
 __all__ = ["RaidPlanPersistencePage", "merge_visible_plan_with_loaded_snapshot"]
