@@ -24,12 +24,12 @@ def test_raid_lead_navigation_exposes_current_planning_workspaces() -> None:
         )
 
         assert raid.get("children", [])[:4] == [
-            ("Raid Dashboard", "raid_engine_dashboard"),
+            ("Roster", "roster_workspace"),
             ("Raid Plans", "raid_plans"),
             ("Assignments", "assignments"),
             ("Readiness", "readiness"),
         ]
-        assert ("Roster", "roster_workspace") in team.get("children", [])
+        assert ("Roster", "roster_workspace") in raid.get("children", [])
         assert ("Rotation Builder", "rotations") in build.get("children", [])
         assert ("Extreme Builder", "extreme_optimization") in build.get("children", [])
         assert ("Coverage", "console:7") in team.get("children", [])
