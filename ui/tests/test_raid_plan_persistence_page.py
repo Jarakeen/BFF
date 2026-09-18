@@ -318,3 +318,44 @@ def test_save_current_plan_verifies_repository_round_trip() -> None:
     assert "saved Raid Plan did not round-trip exactly" in source
     assert "character(s)" in source
     assert "role(s)" in source
+
+
+def test_save_merge_keeps_new_visible_class_instead_of_old_blank_snapshot() -> None:
+    loaded = RaidPlan(
+        plan_id="rg-plan",
+        trial_id="rockgrove",
+        name="RG",
+        members=(
+            RaidPlanMember(
+                seat_id="healer-1",
+                gamertag="Recruit",
+                role="Healer",
+                eso_class=None,
+            ),
+        ),
+    )
+    visible = RaidPlan(
+        plan_id="rg-plan",
+        trial_id="rockgrove",
+        name="RG",
+        members=(
+            RaidPlanMember(
+                seat_id="healer-1",
+                gamertag="Recruit",
+                role="Healer",
+                eso_class="Warden",
+            ),
+        ),
+    )
+
+    merged = merge_visible_plan_with_loaded_snapshot(visible, loaded)
+
+    assert merged.member("healer-1").eso_class == "Warden"
+
+
+def test_raid_plan_save_links_named_players_to_loaded_plan_team() -> None:
+    source = Path(raid_plan_persistence_page.__file__).read_text(encoding="utf-8")
+
+    assert "def _active_team_name(self)" in source
+    assert "self.roster_service.add_member_to_team(member_id, team_name)" in source
+    assert "def save_player_to_personnel(self, row: int)" in source
