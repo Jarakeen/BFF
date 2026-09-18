@@ -34,11 +34,20 @@ def main() -> int:
         family_rows = tuple(row for row in report.rows if row.family == family)
         unresolved = tuple(row for row in family_rows if row.unresolved)
         relevant = tuple(row for row in family_rows if row.h1_relevant)
+        conditional = tuple(
+            row for row in family_rows if row.conditional_objectives
+        )
         print()
         print(f"[{family.upper()}]")
         print(f"canonical_count={len(family_rows)}")
         print(f"h1_relevant_count={len(relevant)}")
+        print(f"conditional_count={len(conditional)}")
         print(f"unresolved_count={len(unresolved)}")
+        for row in conditional:
+            print(
+                f"CONDITIONAL family={family} set={row.set_name!r} "
+                f"objectives={row.conditional_objectives}"
+            )
         for row in unresolved:
             print(
                 f"UNRESOLVED family={family} set={row.set_name!r} "
