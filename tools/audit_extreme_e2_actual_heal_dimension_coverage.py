@@ -172,9 +172,10 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         E2DimensionCoverage(
             "gear_packages_procs",
             "Gear sets / mythics / monster sets / arena weapons / procs",
-            E2DimensionStatus.COVERED,
+            E2DimensionStatus.PARTIAL,
             "ordinary gear denominator + ExtremeActualHealSpecialGearDenominatorService + ExtremeActualHealPackageAdmissionDenominatorService + runtime gear-proc evidence",
-            "The ordinary five-piece H1 screen is exhaustive and mechanic-complete; all 70 monster sets, 36 mythics, and 60 normalized arena-weapon sets receive explicit H1 dispositions with zero unresolved special rows; exhaustive standing/package admission reconciles all 60 arena structures plus every H1-relevant monster, ring-mythic, and non-ring-mythic package. Triggered/conditional proc activation remains explicitly owned by runtime_event_state rather than being invented as standing uptime.",
+            "Ordinary five-piece H1 admission is exhaustive with zero omitted mechanic-complete positive sets. The special-family denominator is closed across 70 monster sets, 36 mythics, and 60 normalized arena-weapon sets, and exhaustive package admission reconciles all four special package families. Triggered/conditional proc activation remains explicitly owned by runtime_event_state rather than being invented as standing uptime.",
+            "A residual ordinary five-piece mechanic set remains unresolved in the H1 objective screen; gear cannot be promoted to COVERED until those ordinary-set blockers are dispositioned.",
         ),
         E2DimensionCoverage(
             "traits",
@@ -276,11 +277,10 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         and row.mechanic_complete_for_h1_screen
         and not row.selected_by_authoritative_search
     )
-    if ordinary_unresolved or ordinary_omitted_positive:
+    if ordinary_omitted_positive:
         raise AssertionError(
-            "Extreme H1 ordinary gear denominator is not closed: "
-            f"unresolved={len(ordinary_unresolved)}, "
-            f"omitted_positive={len(ordinary_omitted_positive)}"
+            "Extreme H1 ordinary gear authoritative admission omitted "
+            f"{len(ordinary_omitted_positive)} mechanic-complete positive set(s)"
         )
 
     special_gear = ExtremeActualHealSpecialGearDenominatorService(database).build()
