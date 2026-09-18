@@ -164,6 +164,8 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
             ("Spot", "Player", "Buffs / Debuffs", "Gear / Build", "Source")
         )
         self.support_table.verticalHeader().setVisible(False)
+        self.support_table.verticalHeader().setDefaultSectionSize(58)
+        self.support_table.setMinimumHeight(430)
         self.support_table.setSelectionBehavior(
             self.support_table.SelectionBehavior.SelectRows
         )
