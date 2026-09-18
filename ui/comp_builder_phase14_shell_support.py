@@ -129,7 +129,7 @@ def _candidate_sets(candidate) -> tuple[str, str]:
         return (gear[0], gear[1])
     if len(gear) == 1:
         return (gear[0], "")
-    return (str(getattr(candidate, "name", "") or "Build recommendation"), "")
+    return ("No five-piece sets resolved", "")
 
 
 def _candidate_label(candidate) -> str:
@@ -454,9 +454,6 @@ def _refresh_why(page) -> None:
         for item in candidates
         if item.candidate_id != candidate.candidate_id
     ]
-    page.comp_phase14_alt_one.setText(
-        _alternative_text(alternatives[0] if alternatives else None)
-    )
     alt_one = alternatives[0] if alternatives else None
     alt_two = alternatives[1] if len(alternatives) > 1 else None
     page.comp_phase14_alt_one.setText(_alternative_text(alt_one))
