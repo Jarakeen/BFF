@@ -141,3 +141,53 @@ def test_repository_fails_closed_on_unknown_schema(tmp_path) -> None:
 
     with pytest.raises(RaidPlanRepositoryError, match="unsupported"):
         RaidPlanRepository(path).list_plans()
+
+
+def test_repository_round_trips_playerless_class_planning_chair(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "raid_plans.json")
+    plan = RaidPlan(
+        plan_id="class-only",
+        trial_id="rockgrove",
+        name="Class Only",
+        members=(
+            RaidPlanMember(
+                seat_id="tank-1",
+                gamertag="",
+                role="Tank",
+                eso_class="Dragonknight",
+            ),
+        ),
+    )
+
+    repository.save(plan)
+    restored = repository.get("class-only")
+
+    assert restored == plan
+    assert restored.member("tank-1").gamertag == ""
+    assert restored.member("tank-1").eso_class == "Dragonknight"
+
+
+def test_repository_migrates_legacy_main_off_tank_seat_ids(tmp_path) -> None:
+    path = tmp_path / "raid_plans.json"
+    payload = {
+        "schema_version": 1,
+        "plans": [
+            {
+                "plan_id": "legacy-tanks",
+                "trial_id": "rockgrove",
+                "name": "Legacy Tanks",
+                "members": [
+                    {"seat_id": "main-tank", "gamertag": "", "role": "Tank", "eso_class": "Dragonknight"},
+                    {"seat_id": "off-tank", "gamertag": "Friend", "role": "Tank", "eso_class": "Necromancer"},
+                ],
+                "triggered_responsibilities": [],
+            }
+        ],
+    }
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    plan = RaidPlanRepository(path).get("legacy-tanks")
+
+    assert plan is not None
+    assert plan.member("tank-1").eso_class == "Dragonknight"
+    assert plan.member("tank-2").gamertag == "Friend"
