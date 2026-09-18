@@ -163,6 +163,9 @@ class FoundrySidebar(QWidget):
         self.brand_mark.setFixedSize(54, 54)
         self.brand_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.brand_mark.setProperty("sidebarBrandMark", True)
+        self.brand_mark.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.brand_mark.setToolTip("Return to Main Page")
+        self.brand_mark.mousePressEvent = self._brand_mark_mouse_press
         self.refresh_brand_mark()
         brand_layout.addWidget(self.brand_mark, 0, Qt.AlignmentFlag.AlignVCenter)
 
@@ -245,6 +248,13 @@ class FoundrySidebar(QWidget):
         plaque_text.setProperty("sidebarFooter", True)
         plaque_layout.addWidget(plaque_text, 1)
         layout.addWidget(plaque)
+
+    def _brand_mark_mouse_press(self, event) -> None:
+        """Treat the persistent Foundry logo as a Home/Main Page control."""
+        if event is None or event.button() == Qt.MouseButton.LeftButton:
+            self.pageRequested.emit("operations_console")
+            return
+        event.ignore()
 
     @staticmethod
     def divider() -> QFrame:
