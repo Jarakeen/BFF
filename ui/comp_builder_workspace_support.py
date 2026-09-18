@@ -150,7 +150,10 @@ def _sync_selected_chair(page) -> None:
     slot = _slot_name(page, row)
     role = page._cell_text(row, 1) or "Unresolved role"
     selected_class = page._selected_class(row) or "Any class"
-    page.comp_chair_title_label.setText(f"{slot}  •  {role}  •  {selected_class}")
+    player = page._cell_text(row, PLAYER_COLUMN) or "Recruit"
+    page.comp_chair_title_label.setText(
+        f"{player}  •  {slot}  •  {role}  •  {selected_class}"
+    )
 
     _copy_hidden_value_to_detail(page, row, 4, page.comp_chair_required_input)
     _copy_hidden_value_to_detail(page, row, 5, page.comp_chair_optional_input)
