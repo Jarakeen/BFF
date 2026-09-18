@@ -6,9 +6,10 @@ Read-only. This audit does not change mechanic status and does not infer missing
 set behavior. It exists to turn the remaining ordinary-set denominator debt into
 reviewable families instead of one long list of set names.
 
-Rows are gathered from the same canonical objective projection used by Extreme H1.
-The audit reports objective counts, coarse description-pattern families, and a
-bounded set of concrete unresolved examples for the largest families.
+Rows are gathered from the same canonical objective projection and then passed
+through the H1 specialist review. Blockers already proven safe by H1-specific
+rules are excluded, so this drilldown reports only the residual blockers that
+actually keep the ordinary denominator open.
 """
 
 import argparse
@@ -84,7 +85,8 @@ def build_unresolved_rows(repository: GearSetRepository) -> tuple[UnresolvedGear
                 objective,
                 equipped_piece_count=useful,
             )
-            for message in candidate.unresolved:
+            review = ExtremeActualHealGearSetCandidateService._h1_review(candidate)
+            for message in review.remaining_blockers:
                 rows.append(
                     UnresolvedGearRow(
                         set_name=str(gear_set.name),
