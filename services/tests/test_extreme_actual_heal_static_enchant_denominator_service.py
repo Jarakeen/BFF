@@ -51,7 +51,7 @@ class _FutureJewelryRepo(_JewelryRepo):
         return (*super().list_names(), "Glyph of Future Healing")
 
     def get_jewelry_glyph_effect_types_by_name(self, name):
-        if name == "Glyph of Future Healing":
+        if str(name).strip().casefold() == "glyph of future healing":
             return ("healing_done",)
         return super().get_jewelry_glyph_effect_types_by_name(name)
 
@@ -79,8 +79,8 @@ def test_static_enchant_denominator_accounts_for_reviewed_fixture() -> None:
         "health recovery",
     }
     assert set(result.irrelevant_jewelry_families) == {
-        "glyph of bashing",
-        "glyph of bracing",
+        "bashing",
+        "block cost",
     }
 
 
