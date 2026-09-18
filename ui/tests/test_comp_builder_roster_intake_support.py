@@ -8,7 +8,7 @@ def test_roster_intake_carries_players_classes_and_roles_into_comp_maker():
     assert 'getattr(member, "EsoClass"' in source
     assert 'getattr(member, "PrimaryRole"' in source
     assert "class_combo.setCurrentIndex(index)" in source
-    assert "page._load_flexible(show_status=False)" in source
+    assert "_load_roster_shape(page, group_size)" in source
     assert "CompBuilderPage.apply_roster_team_context = apply_roster_team_context" in source
 
 
@@ -63,3 +63,10 @@ def test_roster_intake_treats_recruit_as_open_prescription_slot():
     assert "def _is_recruit_member(member) -> bool:" in source
     assert 'value == "recruit"' in source
     assert "page._comp_roster_member_by_slot[slot_name] = None if _is_recruit_member(member) else member" in source
+
+
+def test_roster_intake_places_player_first_in_visible_table():
+    source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+
+    assert "header.visualIndex(PLAYER_COLUMN)" in source
+    assert "header.moveSection(visual_index, 0)" in source
