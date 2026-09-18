@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 
 from ui.components.foundry_card import FoundryCard
 
@@ -115,9 +115,21 @@ def _install_main_controls(page) -> None:
             "Assign the selected candidate build to the highlighted player/chair."
         )
 
+    # Team intake is the first normal action. Roster and Raid Plan handoffs still
+    # use the same bridge, but an ad-hoc raid lead can paste names directly here.
+    from ui import comp_builder_roster_intake_support as intake_support
+
+    load_team = QPushButton("Load Team List")
+    load_team.setProperty("compLoadTeam", True)
+    load_team.setToolTip("Paste 4 or 12 player names. Use Recruit for open spots.")
+    load_team.clicked.connect(lambda *_: intake_support.open_team_list_dialog(page))
+    page.comp_load_team_button = load_team
+
     # With plan identity and style moved to the header, the remaining controls can
     # begin at the top of the card instead of leaving dead form rows above them.
     insert_at = 0
+    actions.body_layout.insertWidget(insert_at, load_team)
+    insert_at += 1
 
     primary = tuple(widget for widget in (generate, apply_chair) if widget is not None)
     if primary:
