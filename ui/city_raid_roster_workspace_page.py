@@ -171,7 +171,7 @@ class _CharacterAvatarDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.selected_reference = ""
-        self.setWindowTitle("Choose Character Avatar")
+        self.setWindowTitle("Choose Player Avatar")
         self.setModal(True)
         self.setMinimumWidth(560)
 
@@ -226,7 +226,7 @@ class _CharacterAvatarDialog(QDialog):
     def _browse_custom(self) -> None:
         path_text, _selected_filter = QFileDialog.getOpenFileName(
             self,
-            "Choose Character Avatar",
+            "Choose Player Avatar",
             "",
             "Images (*.png *.jpg *.jpeg *.webp)",
         )
@@ -248,7 +248,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         install_urban_wilderness_accessibility_polish()
         self._embedded_detail_indexes: dict[str, int] = {}
         self._embedded_stack: QStackedWidget | None = None
-        self._active_character_avatar_id: str = ""
+        self._active_avatar_player_id: str = ""
         super().__init__(parent)
         self._remove_legacy_city_art()
         self._polish_urban_wilderness_roster()
@@ -331,7 +331,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self.character_detail_avatar.setFixedSize(92, 92)
         self.character_detail_avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.character_detail_avatar.setToolTip(
-            "Click to choose a character avatar."
+            "Click to choose this player's avatar. The choice is shared by all of their characters and builds."
         )
         self.character_detail_avatar.setCursor(Qt.CursorShape.PointingHandCursor)
         self.character_detail_avatar.setStyleSheet(
@@ -375,15 +375,15 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         event.ignore()
 
     def _edit_character_avatar(self) -> None:
-        character_id = str(getattr(self, "_active_character_avatar_id", "") or "").strip()
-        if not character_id:
+        player_id = str(getattr(self, "_active_avatar_player_id", "") or "").strip()
+        if not player_id:
             return
         dialog = _CharacterAvatarDialog(self)
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         catalog = self.build_library.canonical.catalog_service
-        updated = catalog.set_character_avatar(
-            character_id=character_id,
+        updated = catalog.set_player_avatar(
+            player_id=player_id,
             avatar_path=dialog.selected_reference,
         )
         if updated is None:
@@ -492,7 +492,7 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
     def _show_character_detail(self, item, _previous=None) -> None:
         """Present player/character/build identity as a compact human-facing profile card."""
         if item is None:
-            self._active_character_avatar_id = ""
+            self._active_avatar_player_id = ""
             self.character_detail.set_title("Character")
             self._set_profile_avatar("character")
             self.character_detail_body.setText("Select a player, character, or build.")
@@ -508,9 +508,9 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self.character_detail_body.setTextFormat(Qt.TextFormat.RichText)
 
         if kind == "player":
-            self._active_character_avatar_id = ""
-            self._set_profile_avatar("player")
             player = catalog.get_player(identity) or {}
+            self._active_avatar_player_id = str(identity or "").strip()
+            self._set_profile_avatar("player", str(player.get("avatar_path") or ""))
             characters = catalog.characters_for_player(identity)
             gamertag = _clean(player.get("gamertag")) or "Player"
             roster = next(
@@ -533,12 +533,12 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
 
         if kind == "character":
             character = catalog.get_character(identity) or {}
-            self._active_character_avatar_id = str(identity or "").strip()
+            player = catalog.player_for_character(identity) or {}
+            self._active_avatar_player_id = str(player.get("player_id") or "").strip()
             self._set_profile_avatar(
                 "character",
-                str(character.get("avatar_path") or ""),
+                str(player.get("avatar_path") or character.get("avatar_path") or ""),
             )
-            player = catalog.player_for_character(identity) or {}
             builds = catalog.builds_for_character(identity)
             name = _clean(character.get("name")) or "Character"
             gamertag = _clean(player.get("gamertag")) or "Unknown"
@@ -573,10 +573,11 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         payload = build.get("payload") if isinstance(build.get("payload"), dict) else {}
         character_id = _clean(build.get("character_id"))
         character = catalog.get_character(character_id) or {}
-        self._active_character_avatar_id = character_id
+        player = catalog.player_for_character(character_id) or {}
+        self._active_avatar_player_id = str(player.get("player_id") or "").strip()
         self._set_profile_avatar(
             "build",
-            str(character.get("avatar_path") or ""),
+            str(player.get("avatar_path") or character.get("avatar_path") or ""),
         )
         name = _clean(build.get("name")) or "Build"
         self.character_detail.set_title(name)
