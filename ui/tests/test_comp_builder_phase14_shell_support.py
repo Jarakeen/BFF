@@ -290,3 +290,14 @@ def test_comp_maker_plan_name_is_editable_saved_raid_plan_picker() -> None:
     assert "self.plan_name_input.activated.connect(self._raid_plan_name_selected)" in source
     assert "apply_context(plan.name, members, group_size=12)" in source
     assert "self._raid_plan_origin_id = plan.plan_id" in source
+
+
+def test_comp_maker_navigation_refreshes_plan_picker_without_route_based_binding() -> None:
+    source = Path("ui/main_window.py").read_text(encoding="utf-8")
+
+    block = source.split('if page_name == "comp_builder":', 1)[1].split(
+        'if page_name == "console:6":', 1
+    )[0]
+    assert '_refresh_raid_plan_name_choices' in block
+    assert "_bind_plan_comp_builder" not in block
+    assert "refresh_phase14_presentation(comp)" in block
