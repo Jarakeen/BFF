@@ -130,7 +130,15 @@ def install() -> None:
         self.schedule_focus_edit.setPlaceholderText("e.g. Godslayer cleanup, Gryphon Heart, Xalvakka HM...")
         form.addWidget(self.schedule_focus_edit, 1, 1, 1, 3)
 
-        form.addWidget(QLabel("DAY"), 2, 0)
+        form.addWidget(QLabel("DISCORD"), 2, 0)
+        self.schedule_discord_edit = QLineEdit()
+        self.schedule_discord_edit.setPlaceholderText("https://discord.gg/... or team Discord/channel link")
+        self.schedule_discord_edit.setToolTip(
+            "Optional Discord invite, server, or channel link for this team."
+        )
+        form.addWidget(self.schedule_discord_edit, 2, 1, 1, 3)
+
+        form.addWidget(QLabel("DAY"), 3, 0)
         form.addWidget(QLabel("START"), 2, 1)
         form.addWidget(QLabel("END"), 2, 2)
 
@@ -138,7 +146,7 @@ def install() -> None:
         self.schedule_start_edits = {}
         self.schedule_end_edits = {}
 
-        for index, (short, long_name) in enumerate(_DAY_ORDER, start=3):
+        for index, (short, long_name) in enumerate(_DAY_ORDER, start=4):
             check = QCheckBox(short)
             check.setToolTip(long_name)
             start = _time_edit(20, 0)
@@ -160,7 +168,7 @@ def install() -> None:
             form.addWidget(start, index, 1)
             form.addWidget(end, index, 2)
 
-        form.addWidget(QLabel("TIME ZONE"), 10, 0)
+        form.addWidget(QLabel("TIME ZONE"), 11, 0)
         self.schedule_timezone_combo = QComboBox()
         self.schedule_timezone_combo.setEditable(True)
         zones = list(_COMMON_TIMEZONES)
@@ -170,7 +178,7 @@ def install() -> None:
         self.schedule_timezone_combo.setCurrentText("America/New_York")
         self.schedule_timezone_combo.setMinimumWidth(240)
         self.schedule_timezone_combo.currentTextChanged.connect(self._update_schedule_preview)
-        form.addWidget(self.schedule_timezone_combo, 10, 1, 1, 2)
+        form.addWidget(self.schedule_timezone_combo, 11, 1, 1, 2)
         card.addLayout(form)
 
         self.schedule_time_edit = self.schedule_start_edits["Mon"]
@@ -246,6 +254,7 @@ def install() -> None:
             TimeZone=self.schedule_timezone_combo.currentText().strip(),
             Slots=tuple(slots),
             CurrentFocus=self.schedule_focus_edit.text().strip(),
+            DiscordUrl=self.schedule_discord_edit.text().strip(),
         )
 
     def update_preview(self, *_args) -> None:
@@ -293,13 +302,16 @@ def install() -> None:
 
         self.schedule_timezone_combo.blockSignals(True)
         self.schedule_focus_edit.blockSignals(True)
+        self.schedule_discord_edit.blockSignals(True)
         try:
             timezone = schedule.TimeZone if schedule and schedule.TimeZone else "America/New_York"
             self.schedule_timezone_combo.setCurrentText(timezone)
             self.schedule_focus_edit.setText(schedule.CurrentFocus if schedule else "")
+            self.schedule_discord_edit.setText(schedule.DiscordUrl if schedule else "")
         finally:
             self.schedule_timezone_combo.blockSignals(False)
             self.schedule_focus_edit.blockSignals(False)
+            self.schedule_discord_edit.blockSignals(False)
         update_preview(self)
 
     def save_schedule(self) -> None:
