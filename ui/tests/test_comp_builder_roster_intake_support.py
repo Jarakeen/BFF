@@ -46,3 +46,20 @@ def test_roster_intake_installs_after_assignment_actions():
     assert source.index("install_roster_assignment_action_support()") < source.index(
         "install_comp_builder_roster_intake_support()"
     )
+
+
+def test_roster_intake_preserves_four_or_twelve_player_group_shape():
+    source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+
+    assert "return 4 if len(tuple(members)) <= 4 else 12" in source
+    assert "flexible_raid_slots(group_size)" in source
+    assert "page._comp_group_size = group_size" in source
+    assert "_load_roster_shape(page, group_size)" in source
+
+
+def test_roster_intake_treats_recruit_as_open_prescription_slot():
+    source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+
+    assert "def _is_recruit_member(member) -> bool:" in source
+    assert 'value == "recruit"' in source
+    assert "page._comp_roster_member_by_slot[slot_name] = None if _is_recruit_member(member) else member" in source
