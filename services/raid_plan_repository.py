@@ -23,6 +23,17 @@ from models.raid_plan import (
 _SCHEMA_VERSION = 1
 
 
+_LEGACY_SEAT_IDS = {
+    "main-tank": "tank-1",
+    "off-tank": "tank-2",
+}
+
+
+def _canonical_seat_id(value: object) -> str:
+    seat = str(value or "").strip()
+    return _LEGACY_SEAT_IDS.get(seat.casefold(), seat)
+
+
 class RaidPlanRepositoryError(ValueError):
     """Raised when persisted Raid Plan data cannot be trusted."""
 
@@ -102,9 +113,23 @@ class RaidPlanRepository:
                 raise RaidPlanRepositoryError(
                     "persisted Raid Plan members and triggered responsibilities must be lists"
                 )
-            members = tuple(RaidPlanMember(**dict(row)) for row in members_raw)
+            members = tuple(
+                RaidPlanMember(
+                    **{
+                        **dict(row),
+                        "seat_id": _canonical_seat_id(dict(row).get("seat_id", "")),
+                    }
+                )
+                for row in members_raw
+            )
             triggered = tuple(
-                RaidPlanTriggeredResponsibility(**dict(row)) for row in triggered_raw
+                RaidPlanTriggeredResponsibility(
+                    **{
+                        **dict(row),
+                        "seat_id": _canonical_seat_id(dict(row).get("seat_id", "")),
+                    }
+                )
+                for row in triggered_raw
             )
             return RaidPlan(
                 plan_id=raw.get("plan_id", ""),
