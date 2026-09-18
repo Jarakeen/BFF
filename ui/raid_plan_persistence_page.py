@@ -265,8 +265,9 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             if team_name and member_id > 0:
                 self.roster_service.add_member_to_team(member_id, team_name)
 
-        if created or team_name:
-            self.refresh_personnel()
+        # Do not refresh Raid Plan widgets here. Character/build refresh can
+        # legitimately auto-fill from Personnel, but Save must snapshot the user's
+        # visible chair edits before any such UI normalization runs.
         return created
 
     def save_player_to_personnel(self, row: int) -> None:
@@ -287,8 +288,41 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
 
     def save_current_plan(self) -> None:
         try:
+            # Capture the visible Raid Plan before Personnel synchronization can
+            # rebuild character/build widgets or auto-derive class values.
+            visible_before_sync = super().current_plan()
             created_players = self._ensure_named_players_in_personnel()
+
+            # Re-run the persistence/stable-identity layer after Personnel creation,
+            # but restore the captured visible chair values as authoritative.
             plan = self.current_plan()
+            captured_by_seat = {
+                member.seat_id.casefold(): member
+                for member in visible_before_sync.members
+            }
+            plan = replace(
+                plan,
+                members=tuple(
+                    member.with_selection(
+                        gamertag=captured_by_seat.get(
+                            member.seat_id.casefold(), member
+                        ).gamertag,
+                        character_name=captured_by_seat.get(
+                            member.seat_id.casefold(), member
+                        ).character_name,
+                        role=captured_by_seat.get(
+                            member.seat_id.casefold(), member
+                        ).role,
+                        eso_class=captured_by_seat.get(
+                            member.seat_id.casefold(), member
+                        ).eso_class,
+                        selected_build_name=captured_by_seat.get(
+                            member.seat_id.casefold(), member
+                        ).selected_build_name,
+                    )
+                    for member in plan.members
+                ),
+            )
             self.plan_repository.save(plan)
             persisted = self.plan_repository.get(plan.plan_id)
             if persisted is None:
@@ -304,7 +338,14 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             return
 
         self._loaded_plan_snapshot = persisted
+
+        # Personnel can be refreshed safely only after the durable snapshot exists.
+        # Reapply that snapshot afterward so autocomplete/source-backed defaults
+        # cannot alter the just-saved chair values.
+        self.refresh_personnel()
+        self.apply_plan(persisted)
         self.refresh_saved_plan_picker(select_plan_id=persisted.plan_id)
+
         characters = sum(1 for member in persisted.members if member.character_name)
         roles = sum(1 for member in persisted.members if member.role)
         planned = sum(
