@@ -139,8 +139,8 @@ def install() -> None:
         form.addWidget(self.schedule_discord_edit, 2, 1, 1, 3)
 
         form.addWidget(QLabel("DAY"), 3, 0)
-        form.addWidget(QLabel("START"), 2, 1)
-        form.addWidget(QLabel("END"), 2, 2)
+        form.addWidget(QLabel("START"), 3, 1)
+        form.addWidget(QLabel("END"), 3, 2)
 
         self.schedule_day_checks = {}
         self.schedule_start_edits = {}
