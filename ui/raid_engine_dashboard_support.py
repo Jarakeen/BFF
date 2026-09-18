@@ -284,6 +284,31 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
     apply_raid_plan_class_constraints(comp, class_by_seat)
     comp._comp_manual_gear_sets_by_slot = dict(planned_sets_by_seat)
 
+    # Final authoritative handoff: copy the current Raid Plan chair class directly
+    # into the matching Comp Maker class selector after all roster/template rebuilds.
+    # This deliberately bypasses Personnel/character identity. Raid Plan owns this
+    # per-run chair choice, including Recruit chairs.
+    from PySide6.QtWidgets import QComboBox
+    for comp_row in range(comp.matrix_table.rowCount()):
+        slot_name = str(comp._cell_text(comp_row, 0) or "").strip()
+        wanted_class = str(class_by_seat.get(slot_name, "") or "").strip()
+        if not wanted_class:
+            continue
+        selector = comp.matrix_table.cellWidget(comp_row, 2)
+        if not isinstance(selector, QComboBox):
+            continue
+        match = next(
+            (
+                index
+                for index in range(selector.count())
+                if str(selector.itemText(index) or "").strip().casefold()
+                == wanted_class.casefold()
+            ),
+            -1,
+        )
+        if match >= 0:
+            selector.setCurrentIndex(match)
+
     # The backend chair selectors now contain the new Raid Plan values. Refresh the
     # visible Phase 14 projection immediately so it cannot continue showing the
     # previous Comp session's class labels.
