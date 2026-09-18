@@ -57,3 +57,12 @@ def test_rylo_styles_explicit_build_choice_with_assignment_accent() -> None:
     assert 'QLabel[compCandidateChoiceLabel="true"]' in source
     assert 'QComboBox[compCandidateChoice="true"]' in source
     assert "#B88A3C" in source
+
+
+def test_candidate_picker_collapses_long_evidence_by_default() -> None:
+    source = Path("ui/comp_builder_candidate_picker_support.py").read_text(encoding="utf-8")
+
+    assert 'QPushButton("Why / Build Details ▸")' in source
+    assert 'setProperty("compCandidateEvidenceToggle", True)' in source
+    assert "widget.hide()" in source
+    assert '"Why / Build Details ▾" if checked else "Why / Build Details ▸"' in source
