@@ -300,7 +300,7 @@ def _apply_top_candidate(page, *_args) -> None:
     status = "complete build" if candidate.complete_build else "partial build evidence"
     page.status.success(
         f"Applied {candidate.name} to {slot_name} as {status}. "
-        "Send to Roster will preserve this candidate evidence."
+        "Raid Plan handoff will preserve this candidate evidence."
     )
     _refresh_candidates(page)
 
@@ -411,9 +411,18 @@ def _comp_init_with_build_candidates(self, parent=None) -> None:
 
 def _render_slots_with_candidate_refresh(self, slots) -> None:
     assert _ORIGINAL_RENDER_SLOTS is not None
+    prior_applied = dict(getattr(self, "_comp_applied_candidates", {}) or {})
     _ORIGINAL_RENDER_SLOTS(self, slots)
     if hasattr(self, "_comp_applied_candidates"):
-        self._comp_applied_candidates.clear()
+        current_slots = {
+            self._cell_text(row, 0) or f"Slot {row + 1}"
+            for row in range(self.matrix_table.rowCount())
+        }
+        self._comp_applied_candidates = {
+            slot_name: candidate
+            for slot_name, candidate in prior_applied.items()
+            if slot_name in current_slots
+        }
         _wire_class_selectors(self)
         _refresh_candidates(self)
 
