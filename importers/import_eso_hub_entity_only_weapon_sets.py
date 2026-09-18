@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "research" / "raw" / "eso_hub_entity_only_gear_sets.json"
 DEFAULT_DATABASE = get_data_dir() / "eso.db"
 
-TWO_HAND_EQUIP_TYPE = 11
+TWO_HAND_EQUIP_TYPE = 6
 ONE_HAND_EQUIP_TYPE = 5
 OFF_HAND_EQUIP_TYPE = 7
 
@@ -54,7 +54,7 @@ WEAPON_ROWS_BY_SKILL_LINE: dict[str, tuple[tuple[int, int], ...]] = {
         (ONE_HAND_EQUIP_TYPE, 2),
         (ONE_HAND_EQUIP_TYPE, 3),
         (ONE_HAND_EQUIP_TYPE, 11),
-        (OFF_HAND_EQUIP_TYPE, 7),
+        (OFF_HAND_EQUIP_TYPE, 14),
     ),
 }
 
