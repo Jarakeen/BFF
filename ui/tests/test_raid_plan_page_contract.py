@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 from ui.raid_plan_page import (
     RAID_PLAN_SEATS,
+    is_seat_placeholder,
     new_personnel_member,
     personnel_player_names,
     raid_plan_member_from_values,
@@ -165,3 +166,25 @@ def test_class_only_recruit_chair_is_persistable_without_gamertag() -> None:
 def test_raid_plan_player_picker_uses_seat_as_empty_placeholder() -> None:
     source = Path("ui/raid_plan_page.py").read_text(encoding="utf-8")
     assert 'player_combo.lineEdit().setPlaceholderText(seat)' in source
+
+
+def test_raid_plan_seat_placeholders_are_never_personnel_players() -> None:
+    for seat in RAID_PLAN_SEATS:
+        assert is_seat_placeholder(seat)
+        assert is_seat_placeholder(f"  {seat.lower()}  ")
+        try:
+            new_personnel_member(seat)
+        except ValueError as exc:
+            assert "seat placeholders" in str(exc)
+        else:
+            raise AssertionError(f"{seat} was incorrectly accepted as a Personnel player")
+
+    assert not is_seat_placeholder("DDDestroyer")
+    assert new_personnel_member("DDDestroyer").PlayerName == "DDDestroyer"
+
+
+def test_raid_plan_auto_promotion_skips_seat_placeholders() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+
+    assert "if not gamertag or is_seat_placeholder(gamertag):" in source
+    assert "Raid Plan seat placeholders cannot be saved as players." in source
