@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QProgressBar,
+    QSizePolicy,
     QSplitter,
     QTabWidget,
     QTableWidget,
@@ -168,6 +169,55 @@ class _ThemeSketch(QLabel):
                 220,
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+
+class _TeamColorArt(QLabel):
+    """Fixed-height full-color art for the Teams lower-left slot.
+
+    The image is cropped into the widget's current width. It never contributes
+    an image-driven size hint that can enlarge the Teams workspace.
+    """
+
+    _ASSET = ("assets", "themes", "bff", "urban_wilderness", "notes", "color_night_rect_1.png")
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self._source = QPixmap(str(get_resource_path(*self._ASSET)))
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setFixedHeight(165)
+        self.setMinimumWidth(0)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+        self.setProperty("rosterTeamColorArt", True)
+        self.setToolTip("Same people. Better prepared.")
+        self._refresh_pixmap()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._refresh_pixmap()
+
+    def _refresh_pixmap(self) -> None:
+        if self._source.isNull() or self.width() <= 0:
+            self.clear()
+            if self._source.isNull():
+                self.setText("Same people. Better prepared.")
+            return
+
+        scaled = self._source.scaled(
+            max(1, self.width()),
+            self.height(),
+            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        x = max(0, (scaled.width() - self.width()) // 2)
+        y = max(0, (scaled.height() - self.height()) // 2)
+        self.setPixmap(
+            scaled.copy(
+                x,
+                y,
+                min(self.width(), scaled.width()),
+                min(self.height(), scaled.height()),
             )
         )
 
@@ -369,7 +419,7 @@ class RaidRosterWorkspacePage(FoundryPage):
         root.addLayout(upper, 3)
 
         lower = QHBoxLayout()
-        self.team_sketch = _ThemeSketch()
+        self.team_sketch = _TeamColorArt()
         lower.addWidget(self.team_sketch, 2)
         self.team_stats = FoundryCard("Team Snapshot", "compass")
         self.team_stats_label = QLabel("")
