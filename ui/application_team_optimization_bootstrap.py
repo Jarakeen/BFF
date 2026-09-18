@@ -155,6 +155,13 @@ def bootstrap_team_optimization_extensions() -> None:
     )
     install_coverage_group_effect_catalog_support()
 
+    # Phase 14 Comp Builder presentation owns the final visible surface after all
+    # legacy services and compatibility wrappers finish installing.
+    from ui.comp_builder_phase14_shell_support import (
+        install as install_comp_builder_phase14_shell,
+    )
+    install_comp_builder_phase14_shell()
+
     _BOOTSTRAPPED = True
 
 
