@@ -37,17 +37,17 @@ def _write_db(path: Path) -> None:
                 (7, 'Sword Dagger Arena', 'standard', 2);
 
             INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES
-                (1, 11, 0, 9),
-                (2, 11, 0, 12),
-                (3, 11, 0, 9),
+                (1, 6, 0, 9),
+                (2, 6, 0, 12),
+                (3, 6, 0, 9),
                 (4, 1, 1, 0),
                 (4, 4, 1, 0),
-                (5, 11, 0, 9),
-                (5, 8, 0, 0),
-                (6, 13, 0, 3),
-                (6, 14, 0, 7),
-                (7, 13, 0, 3),
-                (7, 14, 0, 11);
+                (5, 6, 0, 9),
+                (5, 2, 0, 0),
+                (6, 5, 0, 3),
+                (6, 7, 0, 14),
+                (7, 5, 0, 3),
+                (7, 5, 0, 11);
             """
         )
 
@@ -115,9 +115,9 @@ def test_paired_arena_set_requires_both_exact_weapon_subtypes(tmp_path: Path) ->
     _write_db(database)
     service = ExtremeActualHealArenaWeaponPackageService(database)
 
-    assert service._matching_paired_sets(3, 7) == ("Sword Shield Arena",)
+    assert service._matching_paired_sets(3, 14) == ("Sword Shield Arena",)
     assert service._matching_paired_sets(3, 11) == ("Sword Dagger Arena",)
-    assert service._matching_paired_sets(11, 7) == ()
+    assert service._matching_paired_sets(11, 14) == ()
 
 
 def test_ambiguous_active_weapon_fails_closed(tmp_path: Path) -> None:
