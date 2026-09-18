@@ -158,8 +158,8 @@ class ExtremeActualHealMonsterPackageService:
         *,
         character_id: str,
         baseline_build_id: str,
-        ordinary_per_objective: int = 8,
-        monster_per_objective: int = 6,
+        ordinary_per_objective: int | None = None,
+        monster_per_objective: int | None = None,
     ) -> tuple[BuildCandidate, ...]:
         ordinary_names = self._reviewed_names(
             monster=False,
