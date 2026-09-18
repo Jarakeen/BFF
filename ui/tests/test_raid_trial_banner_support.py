@@ -8,9 +8,11 @@ def test_raid_plan_and_live_raid_share_trial_banner_support() -> None:
     manifest = Path("packaging/release_manifest.py").read_text(encoding="utf-8")
 
     assert "TrialBannerLabel" in plan
-    assert "trial_banner_path(selected_trial)" in plan
+    assert "self.overview_art.set_source(trial_banner_path(self.trial_combo.currentText()))" in plan
     assert "TrialBannerLabel" in live
     assert "trial_banner_path(plan.trial_id, plan.name)" in live
-    assert '"rockgrove": "rockgrove.webp"' in support
+    assert '("rockgrove", "rockgrove.webp")' in support
+    assert '("cloudrest", "cloudrest.webp")' in support
+    assert '("ossein cage", "ossein_cage.webp")' in support
     assert '"dsr": "dreadsail_reef.webp"' in support
     assert '("assets/raid_plans/trial_banners", "assets/raid_plans/trial_banners")' in manifest
