@@ -241,19 +241,46 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         wanted = plan.trial_id.casefold()
         return next((name for name in COMP_MAKER_TRIALS if _slug(name) == wanted), plan.trial_id)
 
+    def _active_team_name(self) -> str:
+        loaded = getattr(self, "_loaded_plan_snapshot", None)
+        return _clean(getattr(loaded, "team_name", "")) if loaded is not None else ""
+
     def _ensure_named_players_in_personnel(self) -> int:
-        """Promote typed Raid Plan gamertags into minimal Personnel identities."""
+        """Promote typed Raid Plan gamertags and attach them to the plan's Team."""
         created = 0
+        team_name = self._active_team_name()
         for row in range(self.team_table.rowCount()):
             gamertag = self._player_text(row)
-            if not gamertag or self._personnel_match(gamertag) is not None:
+            if not gamertag:
                 continue
-            self.roster_service.create_member(new_personnel_member(gamertag))
-            created += 1
+            existing = self._personnel_match(gamertag)
+            if existing is None:
+                member_id = self.roster_service.create_member(new_personnel_member(gamertag))
+                created += 1
+            else:
+                member_id = int(existing.Id) if existing.Id is not None else 0
+            if team_name and member_id > 0:
+                self.roster_service.add_member_to_team(member_id, team_name)
 
-        if created:
+        if created or team_name:
             self.refresh_personnel()
         return created
+
+    def save_player_to_personnel(self, row: int) -> None:
+        """Save one player and, when this plan owns a Team, add that player to it."""
+        gamertag = self._player_text(row)
+        super().save_player_to_personnel(row)
+        member = self._personnel_match(gamertag)
+        team_name = self._active_team_name()
+        if member is None or member.Id is None or not team_name:
+            return
+        try:
+            self.roster_service.add_member_to_team(int(member.Id), team_name)
+            self.refresh_personnel()
+        except (OSError, TypeError, ValueError, RuntimeError) as exc:
+            self.status.error(f"Player saved, but Team membership could not be updated: {exc}")
+            return
+        self.status.success(f"{gamertag} is in Personnel and on Team {team_name}.")
 
     def save_current_plan(self) -> None:
         try:
