@@ -164,6 +164,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 ## Rotation Builder
 
+- **Temporarily disabled from Phase 14 application startup and packaged builds** while the Qt/runtime crash path is isolated; the underlying engine and research code remain in the repository for later re-entry.
+
 - Phase 14 keeps Rotation Builder as its own workspace, separate from Builds, while accepting the selected saved build as input
 - Pre-generation command center exposes **Safe Progression**, **Balanced**, and **Maximum Output** intent presets over the existing canonical rotation controls rather than inventing a second planner state
 - Preset-selected execution/sustain values remain visible, editable, show a **Customized** state after manual changes, and can be reset to the active preset defaults
