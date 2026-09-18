@@ -34,16 +34,37 @@ def test_remaining_reviewed_weapon_passives_are_classified_by_effect_layer():
         (rule.skill_line, rule.passive): rule.layer
         for rule in VERIFIED_WEAPON_PASSIVE_RULES
     }
+    assert by_identity[("Bow", "Accuracy")] is WeaponPassiveLayer.SHARED_STANDING
+    assert by_identity[("Bow", "Vinedusk Training")] is WeaponPassiveLayer.COMBAT_STATE
+    assert by_identity[("Bow", "Hawk Eye")] is WeaponPassiveLayer.COMBAT_STATE
+    assert by_identity[("Bow", "Hasty Retreat")] is WeaponPassiveLayer.COMBAT_STATE
     assert by_identity[("Bow", "Ranger")] is WeaponPassiveLayer.ABILITY_FAMILY
     assert by_identity[("Dual Wield", "Ambidextrous")] is WeaponPassiveLayer.SHARED_STANDING
+    assert by_identity[("Dual Wield", "Twin Blade and Blunt")] is WeaponPassiveLayer.SHARED_STANDING
     assert by_identity[("Dual Wield", "Controlled Fury")] is WeaponPassiveLayer.ABILITY_FAMILY
     assert by_identity[("Dual Wield", "Focused Killer")] is WeaponPassiveLayer.COMBAT_STATE
     assert by_identity[("Dual Wield", "Ruffian")] is WeaponPassiveLayer.COMBAT_STATE
+    assert by_identity[("One Hand and Shield", "Deadly Bash")] is WeaponPassiveLayer.ABILITY_FAMILY
+    assert by_identity[("One Hand and Shield", "Deflect Bolts")] is WeaponPassiveLayer.BLOCK_STATE
+    assert by_identity[("One Hand and Shield", "Fortress")] is WeaponPassiveLayer.BLOCK_STATE
+    assert by_identity[("One Hand and Shield", "Sword and Board")] is WeaponPassiveLayer.SHARED_STANDING
     assert by_identity[("One Hand and Shield", "Battlefield Mobility")] is WeaponPassiveLayer.BLOCK_STATE
     assert by_identity[("Two Handed", "Balanced Blade")] is WeaponPassiveLayer.ABILITY_FAMILY
+    assert by_identity[("Two Handed", "Heavy Weapons")] is WeaponPassiveLayer.SHARED_STANDING
+    assert by_identity[("Two Handed", "Follow Up")] is WeaponPassiveLayer.COMBAT_STATE
+    assert by_identity[("Two Handed", "Battle Rush")] is WeaponPassiveLayer.COMBAT_STATE
     assert by_identity[("Two Handed", "Forceful")] is WeaponPassiveLayer.COMBAT_STATE
 
 
-def test_ambidextrous_is_the_only_reviewed_new_shared_standing_weapon_passive():
-    rows = shared_standing_weapon_passives("Dual Wield")
-    assert [(row.skill_line, row.passive) for row in rows] == [("Dual Wield", "Ambidextrous")]
+def test_reviewed_shared_standing_weapon_passives_are_explicit_by_line():
+    assert [row.passive for row in shared_standing_weapon_passives("Bow")] == ["Accuracy"]
+    assert [row.passive for row in shared_standing_weapon_passives("Dual Wield")] == [
+        "Ambidextrous",
+        "Twin Blade and Blunt",
+    ]
+    assert [row.passive for row in shared_standing_weapon_passives("One Hand and Shield")] == [
+        "Sword and Board",
+    ]
+    assert [row.passive for row in shared_standing_weapon_passives("Two Handed")] == [
+        "Heavy Weapons",
+    ]
