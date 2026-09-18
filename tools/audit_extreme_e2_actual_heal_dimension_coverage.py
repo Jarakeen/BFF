@@ -22,6 +22,9 @@ from services.extreme_actual_heal_class_route_catalog_service import (
 from services.extreme_actual_heal_optimization_service import (
     ExtremeActualHealOptimizationService,
 )
+from services.extreme_actual_heal_trait_denominator_service import (
+    ExtremeActualHealTraitDenominatorService,
+)
 from services.extreme_canonical_actual_heal_optimization_service import (
     ExtremeCanonicalActualHealOptimizationService,
 )
@@ -155,10 +158,9 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         E2DimensionCoverage(
             "traits",
             "Armor / jewelry / weapon traits",
-            E2DimensionStatus.PARTIAL,
-            "ExtremeCompleteOptimizationService",
-            "Armor, jewelry, and weapon traits are explicit H1 search axes.",
-            "E2 search-space reporting does not yet prove the full legal trait denominator and disposition counts.",
+            E2DimensionStatus.COVERED,
+            "ExtremeActualHealTraitDenominatorService + ExtremeCompleteOptimizationService",
+            "All 27 canonical nonblank trait values are dispositioned for H1: 24 are searched directly and Sturdy, Well-Fitted, and Training are explicitly pruned as unable to change one reviewed healing-event magnitude. The proof is per-slot/value; Cartesian-product proof remains an E4 search-space concern.",
         ),
         E2DimensionCoverage(
             "glyphs_enchantments",
@@ -236,6 +238,17 @@ def build_dimension_coverage() -> tuple[E2DimensionCoverage, ...]:
         "legal heal-relevant Champion Point loadout search"
     ):
         raise AssertionError("Extreme H1 Champion Point search contract changed without E2 ledger review")
+
+    trait_denominator = ExtremeActualHealTraitDenominatorService().build()
+    if not trait_denominator.denominator_proven:
+        raise AssertionError(
+            "Extreme H1 trait denominator is not proven: "
+            + "; ".join(trait_denominator.unresolved)
+        )
+    if trait_denominator.legal_trait_value_count != 27:
+        raise AssertionError(
+            "Extreme H1 canonical trait-value denominator changed without E2 ledger review"
+        )
 
     return rows
 
