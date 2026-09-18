@@ -36,7 +36,9 @@ def test_assignment_cue_links_selected_build_to_selected_player_chair() -> None:
     assert 'cue.setProperty("compAssignmentCue", True)' in source
     assert 'picker_support._selected_candidate(page)' in source
     assert 'f"SELECTED BUILD: {candidate_name}\\n"' in source
-    assert 'f"TARGET PLAYER / CHAIR: {slot_name} • {role} • {selected_class}"' in source
+    assert 'player = page._cell_text(row, 11)' in source
+    assert 'target = player or slot_name' in source
+    assert 'f"TARGET PLAYER / SLOT: {target} • {role} • {selected_class}"' in source
 
 
 def test_assignment_layout_gives_space_back_to_both_main_cards() -> None:
