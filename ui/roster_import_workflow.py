@@ -140,16 +140,20 @@ def _role_from_text(value: Any, *, default_damage: bool = False) -> str:
         return "Healer"
     if "tank" in raw or " mt " in raw or " ot " in raw or raw.strip().startswith(("mt", "ot")):
         return "Tank"
-    if any(token in raw for token in (" dps", " dd ", "zens", "z'en", "brittle", "werewolf", " ww ", "banner", "knife", "force", "colorless")):
-        return "Damage Dealer"
-    return "Damage Dealer" if default_damage else ""
+    if any(token in raw for token in ("support dd", "support dps", "zens", "z'en", "brittle")):
+        return "Support DD"
+    if any(token in raw for token in (" dps", " dd ", "werewolf", " ww ", "banner", "knife", "force", "colorless")):
+        return "DD"
+    return "DD" if default_damage else ""
 
 
 def _normalize_role(value: Any) -> str:
     raw = _text(value)
     folded = raw.casefold()
     if folded in {"dd", "dps", "damage", "damage dealer"}:
-        return "Damage Dealer"
+        return "DD"
+    if folded in {"support dd", "support dps", "support damage", "support damage dealer"}:
+        return "Support DD"
     if folded in {"heal", "heals", "healer"}:
         return "Healer"
     if folded in {"tank", "mt", "ot", "main tank", "off tank"}:
