@@ -273,3 +273,17 @@ def test_recruit_with_applied_or_manual_sets_is_not_labeled_needs_gear() -> None
     assert 'planned_gear = bool(manual_sets or applied_sets)' in source
     assert 'return "Planned gear" if planned_gear else "Needs gear"' in source
     assert 'if applied or manual_sets:' in source
+
+
+def test_comp_maker_plan_name_is_editable_saved_raid_plan_picker() -> None:
+    source = Path("ui/comp_builder_page.py").read_text(encoding="utf-8")
+
+    assert "class EditablePlanNameCombo(QComboBox):" in source
+    assert "self.setEditable(True)" in source
+    assert "def text(self) -> str:" in source
+    assert "def setText(self, value: object) -> None:" in source
+    assert "self.raid_plan_repository = RaidPlanRepository" in source
+    assert "self._refresh_raid_plan_name_choices()" in source
+    assert "self.plan_name_input.activated.connect(self._raid_plan_name_selected)" in source
+    assert "apply_context(plan.name, members, group_size=12)" in source
+    assert "self._raid_plan_origin_id = plan.plan_id" in source
