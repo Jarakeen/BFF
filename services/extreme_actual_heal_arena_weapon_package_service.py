@@ -27,7 +27,7 @@ class ExtremeActualHealArenaWeaponPackageService:
     skill-line label.
     """
 
-    TWO_HAND_EQUIP_TYPE = 11
+    TWO_HAND_EQUIP_TYPE = 6
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
