@@ -4,7 +4,7 @@ from __future__ import annotations
 
 Raid Plans own trial-specific chair decisions. Personnel remains global player identity,
 Characters and Builds remain reusable global records, and a Raid Plan may still contain an
-incomplete chair whose only known fact is a gamertag.
+incomplete chair with only class/build planning and no assigned player yet.
 
 This UI deliberately does not invent characters or builds when a new player is saved. An
 unknown gamertag may be promoted explicitly into Personnel as a player-only Roster record;
@@ -40,8 +40,8 @@ from ui.foundry_page import FoundryPage
 
 
 RAID_PLAN_SEATS: tuple[str, ...] = (
-    "Main Tank",
-    "Off Tank",
+    "Tank 1",
+    "Tank 2",
     "Healer 1",
     "Healer 2",
     "DD 1",
@@ -218,7 +218,7 @@ class RaidPlanPage(FoundryPage):
             player_combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
             player_combo.setMinimumWidth(155)
             if player_combo.lineEdit() is not None:
-                player_combo.lineEdit().setPlaceholderText("Type gamertag…")
+                player_combo.lineEdit().setPlaceholderText(seat)
                 player_combo.lineEdit().setClearButtonEnabled(True)
             player_combo.currentTextChanged.connect(
                 lambda _text, row_index=row: self._player_text_changed(row_index)
