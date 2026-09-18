@@ -32,6 +32,7 @@ from services.build_service import BuildService
 from services.comp_builder_trial_scope import COMP_MAKER_TRIALS
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
+from services.roster_placeholder_identity import is_personnel_placeholder
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -64,9 +65,8 @@ def _slug(value: object) -> str:
 
 
 def is_seat_placeholder(value: object) -> bool:
-    """Return True for neutral Raid Plan chair labels, never real player identities."""
-    text = _clean(value).casefold()
-    return text in {seat.casefold() for seat in RAID_PLAN_SEATS}
+    """Compatibility alias for canonical Personnel placeholder detection."""
+    return is_personnel_placeholder(value)
 
 
 def role_for_seat(seat: str) -> str:
