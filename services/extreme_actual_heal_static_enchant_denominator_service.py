@@ -42,9 +42,40 @@ _H1_IRRELEVANT_JEWELRY_EFFECT_TYPES = frozenset(
         "bash_damage",
         "block_cost_reduction",
         "potion_cooldown_reduction",
+        "potion_duration",
         "magicka_cost_reduction",
         "stamina_cost_reduction",
         "health_cost_reduction",
+        "resource_cost_reduction",
+        "physical_resistance",
+        "spell_resistance",
+        "disease_resistance",
+        "flame_resistance",
+        "frost_resistance",
+        "poison_resistance",
+        "shock_resistance",
+    }
+)
+
+# A few legacy Build labels are presentation aliases rather than canonical glyph
+# family names.  These are mechanically reviewed as irrelevant to the magnitude
+# of one instantaneous H1 healing event, so they may be dispositioned without
+# asking the repository to resolve a display alias as if it were canonical data.
+_H1_IRRELEVANT_JEWELRY_LABELS = frozenset(
+    {
+        "bashing",
+        "block cost",
+        "glyph of bashing",
+        "glyph of bracing",
+        "glyph of disease resist",
+        "glyph of flame resist",
+        "glyph of frost resist",
+        "glyph of poison resist",
+        "glyph of shock resist",
+        "glyph of potion boost",
+        "glyph of reduce skill cost",
+        "glyph of decrease physical harm",
+        "glyph of decrease spell harm",
     }
 )
 
@@ -141,6 +172,9 @@ class ExtremeActualHealStaticEnchantDenominatorService:
         for family in jewelry:
             if family in _H1_SEARCHED_JEWELRY_LABELS:
                 searched_jewelry.append(family)
+                continue
+            if family in _H1_IRRELEVANT_JEWELRY_LABELS:
+                irrelevant_jewelry.append(family)
                 continue
 
             effect_types = tuple(
