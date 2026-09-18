@@ -2,8 +2,9 @@ from __future__ import annotations
 
 """Phase 14 Rotation Builder.
 
-A deliberately owned UI boundary over the existing rotation engine. This page does
-not import, instantiate, decorate, or monkey-patch the legacy Rotation Dashboard.
+This page deliberately owns its widgets and signals. It uses the established rotation
+services directly and does not import, instantiate, decorate, or monkey-patch the
+legacy Rotation Dashboard.
 """
 
 from PySide6.QtCore import Qt
@@ -11,148 +12,216 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
     QComboBox,
+    QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
     QPlainTextEdit,
     QPushButton,
+    QSizePolicy,
     QSpinBox,
+    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from engine.config import get_data_dir
 from minmax.resource_costs import ResourceType
+from minmax.rotation_ability_priority import AbilityPriorityEntry
 from minmax.rotation_plan import RotationActionKind, RotationPlan
+from services.build_context_variant_service import resolve_build_context
 from services.build_service import BuildService
+from services.encounter_boss_guide import EncounterBossGuideService
 from services.rotation_sustain_service import RotationSustainService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
-from ui.rotation_generation_support import (
-    RotationGenerationRequest,
-    RotationGenerationSupport,
-)
+from ui.rotation_generation_support import RotationGenerationRequest, RotationGenerationSupport
+from ui.ux_icons import icon_label, set_button_icon
+
+
+_INTENTS = {
+    "Safe Progression": {
+        "weaving": "Usually",
+        "bar_swapping": "Prefer fewer swaps",
+        "heavy_attacks": "Prefer safe windows",
+        "reserve": 25,
+        "description": "Consistent, forgiving, reliable performance.",
+        "icon": "shield",
+    },
+    "Balanced": {
+        "weaving": "Usually",
+        "bar_swapping": "Comfortable",
+        "heavy_attacks": "Use when needed",
+        "reserve": 20,
+        "description": "A balance of safety, sustain, and output.",
+        "icon": "scales",
+    },
+    "Maximum Output": {
+        "weaving": "Reliable",
+        "bar_swapping": "Comfortable",
+        "heavy_attacks": "Avoid unless mandatory",
+        "reserve": 10,
+        "description": "Aggressive settings for experienced execution.",
+        "icon": "optimization",
+    },
+}
 
 
 def _clean(value: object) -> str:
     return str(value or "").strip()
 
 
+def _muted(text: str) -> QLabel:
+    label = QLabel(text)
+    label.setWordWrap(True)
+    label.setProperty("muted", True)
+    return label
+
+
 class RotationBuilderPage(FoundryPage):
-    """Stable Phase 14 front end for the canonical rotation services."""
+    """Owned Phase 14 command-center front end for the existing Rotation engine."""
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.build_service = BuildService(get_data_dir() / "builds.json")
         self.rotation_generation = RotationGenerationSupport()
         self.rotation_sustain = RotationSustainService(get_data_dir() / "eso.db")
+        self.encounter_service = EncounterBossGuideService(get_data_dir() / "eso.db")
         self.roster = self.build_service.load()
         self.rotation_plan: RotationPlan | None = None
+        self._encounter_rows = tuple()
+        self._intent_name = "Balanced"
 
+        self._build_controls()
         self._build_ui()
         self.refresh_saved_builds()
+        self._refresh_encounters()
+        self._apply_intent("Balanced")
 
-    def _build_ui(self) -> None:
-        self.header = FoundryHeader(
-            title="Rotation Builder",
-            subtitle="Build the schedule first. Add cleverness only when the evidence earns it.",
-            department="RAID ENGINE • ROTATION",
-            icon="rotation",
-        )
-        self.set_header(self.header)
-
+    def _build_controls(self) -> None:
         self.character_combo = QComboBox()
-        self.character_combo.setMinimumWidth(190)
-        self.character_combo.currentIndexChanged.connect(self._character_changed)
-        self.header.add_context_widget(self._context_field("CHARACTER", self.character_combo))
-
         self.build_combo = QComboBox()
-        self.build_combo.setMinimumWidth(220)
-        self.build_combo.currentIndexChanged.connect(self._build_changed)
-        self.header.add_context_widget(self._context_field("BUILD", self.build_combo))
+        self.team_combo = QComboBox()
+        self.content_combo = QComboBox()
+        self.boss_combo = QComboBox()
+        self.difficulty_combo = QComboBox()
+        self.difficulty_combo.addItems(["Normal", "Veteran", "Hard Mode"])
 
-        refresh = QPushButton("Refresh Builds")
-        refresh.clicked.connect(self.refresh_saved_builds)
-        self.header.add_context_widget(refresh)
+        self.rotation_type_combo = QComboBox()
+        self.rotation_type_combo.addItem("Semi-static", "Semi-static")
+        self.execute_spin = QSpinBox()
+        self.execute_spin.setRange(0, 100)
+        self.execute_spin.setValue(25)
+        self.execute_spin.setSuffix("%")
 
-        top = QGridLayout()
-        top.setContentsMargins(0, 0, 0, 0)
-        top.setHorizontalSpacing(8)
-        top.setVerticalSpacing(8)
-        top.setColumnStretch(0, 3)
-        top.setColumnStretch(1, 2)
-
-        build_card = FoundryCard("Build Context", "builds")
-        self.build_summary = QLabel("No saved build selected.")
-        self.build_summary.setWordWrap(True)
-        build_card.addWidget(self.build_summary)
-
-        self.front_skills = QLabel("Front: —")
-        self.front_skills.setWordWrap(True)
-        self.front_skills.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        build_card.addWidget(self.front_skills)
-
-        self.back_skills = QLabel("Back: —")
-        self.back_skills.setWordWrap(True)
-        self.back_skills.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        build_card.addWidget(self.back_skills)
-        top.addWidget(build_card, 0, 0)
-
-        generation_card = FoundryCard("Generation", "cog")
-        generation_grid = QGridLayout()
-        generation_grid.setContentsMargins(0, 0, 0, 0)
-        generation_grid.setHorizontalSpacing(8)
-        generation_grid.setVerticalSpacing(6)
-
-        self.duration_spin = QSpinBox()
-        self.duration_spin.setRange(15, 300)
-        self.duration_spin.setValue(60)
-        self.duration_spin.setSuffix(" s")
-
-        self.mode_combo = QComboBox()
-        self.mode_combo.addItem("Semi-static", "Semi-static")
-        self.mode_combo.setToolTip(
-            "Phase 14 starts with the engine's currently supported deterministic semi-static planner."
+        self.weaving_combo = QComboBox()
+        self.weaving_combo.addItems(["Reliable", "Usually", "Inconsistent", "Do not rely on it"])
+        self.bar_swap_combo = QComboBox()
+        self.bar_swap_combo.addItems(["Prefer fewer swaps", "Comfortable"])
+        self.heavy_attack_combo = QComboBox()
+        self.heavy_attack_combo.addItems(
+            ["Avoid unless mandatory", "Use when needed", "Prefer safe windows"]
         )
-
         self.resource_combo = QComboBox()
+        self.resource_combo.addItem("Automatic", "")
         self.resource_combo.addItem("Magicka", ResourceType.MAGICKA.value)
         self.resource_combo.addItem("Stamina", ResourceType.STAMINA.value)
-
-        self.weave_check = QCheckBox("Light-attack weave")
-        self.weave_check.setChecked(True)
-        self.weave_check.setToolTip(
-            "Schedules the engine's LA + skill weave model. It does not insert a separate one-second LA gap."
-        )
+        self.minimum_reserve_spin = QSpinBox()
+        self.minimum_reserve_spin.setRange(0, 100)
+        self.minimum_reserve_spin.setSuffix("%")
+        self.minimum_reserve_spin.setValue(20)
 
         self.ultimate_combo = QComboBox()
         self.ultimate_combo.addItem("Do not schedule Ultimate", "")
 
-        generation_grid.addWidget(self._field_label("DURATION"), 0, 0)
-        generation_grid.addWidget(self._field_label("PLANNER"), 0, 1)
-        generation_grid.addWidget(self.duration_spin, 1, 0)
-        generation_grid.addWidget(self.mode_combo, 1, 1)
-        generation_grid.addWidget(self._field_label("SUSTAIN"), 2, 0)
-        generation_grid.addWidget(self._field_label("ULTIMATE"), 2, 1)
-        generation_grid.addWidget(self.resource_combo, 3, 0)
-        generation_grid.addWidget(self.ultimate_combo, 3, 1)
-        generation_grid.addWidget(self.weave_check, 4, 0, 1, 2)
-        generation_card.addLayout(generation_grid)
+        self.character_combo.currentIndexChanged.connect(self._character_changed)
+        self.build_combo.currentIndexChanged.connect(self._build_changed)
+        self.team_combo.currentIndexChanged.connect(self._build_changed)
+        self.content_combo.currentIndexChanged.connect(self._content_changed)
+        self.boss_combo.currentIndexChanged.connect(self._build_changed)
+
+        for combo in (
+            self.weaving_combo,
+            self.bar_swap_combo,
+            self.heavy_attack_combo,
+        ):
+            combo.currentTextChanged.connect(self._refresh_setting_summary)
+        self.minimum_reserve_spin.valueChanged.connect(self._refresh_setting_summary)
+
+    def _build_ui(self) -> None:
+        self.header = FoundryHeader(
+            title="Rotation Builder",
+            subtitle="Build smarter. Play longer. Survive the hard parts.",
+            department="RAID ENGINE • ROTATIONS",
+            icon="rotations",
+        )
+        self.set_header(self.header)
+
+        context = FoundryCard("Rotation Context", "rotations")
+        context_grid = QGridLayout()
+        context_grid.setContentsMargins(0, 0, 0, 0)
+        context_grid.setHorizontalSpacing(8)
+        context_grid.setVerticalSpacing(6)
+        context_controls = (
+            ("CHARACTER", "user", self.character_combo),
+            ("BUILD", "builds", self.build_combo),
+            ("TEAM", "roster", self.team_combo),
+            ("TRIAL", "trial", self.content_combo),
+            ("BOSS", "boss", self.boss_combo),
+            ("DIFFICULTY", "crossed-swords", self.difficulty_combo),
+        )
+        for column in range(3):
+            context_grid.setColumnStretch(column, 1)
+        for index, (title, icon_name, control) in enumerate(context_controls):
+            context_grid.addWidget(
+                self._field(title, control, icon_name),
+                index // 3,
+                index % 3,
+            )
+        context.addLayout(context_grid)
+        self.workspace_layout.addWidget(context)
+
+        command_row = QHBoxLayout()
+        command_row.setContentsMargins(0, 0, 0, 0)
+        command_row.setSpacing(8)
+        command_row.addWidget(self._build_intent_card(), 3)
+        command_row.addWidget(self._build_obligations_card(), 2)
+        self.workspace_layout.addLayout(command_row)
+
+        generate_card = FoundryCard("Generate & Results", "optimization")
+        action_row = QHBoxLayout()
+        action_row.setContentsMargins(0, 0, 0, 0)
+        action_row.setSpacing(8)
 
         self.generate_button = QPushButton("Generate Rotation")
         self.generate_button.setProperty("primary", True)
+        self.generate_button.setMinimumHeight(40)
         self.generate_button.setEnabled(False)
         self.generate_button.clicked.connect(self.generate_rotation)
-        generation_card.addWidget(self.generate_button)
-        top.addWidget(generation_card, 0, 1)
+        action_row.addWidget(self.generate_button)
 
-        self.workspace_layout.addLayout(top)
+        self.clear_button = QPushButton("Clear Result")
+        self.clear_button.clicked.connect(self.clear_result)
+        action_row.addWidget(self.clear_button)
+        action_row.addStretch(1)
 
-        timeline_card = FoundryCard("Rotation Timeline", "hourglass")
+        self.result_summary = QLabel("Generate a rotation to populate the result workspace.")
+        self.result_summary.setProperty("resultSummary", True)
+        action_row.addWidget(self.result_summary)
+        generate_card.addLayout(action_row)
+        self.workspace_layout.addWidget(generate_card)
+
+        self.result_tabs = QTabWidget()
+        self.result_tabs.setDocumentMode(True)
+        self.result_tabs.setMovable(False)
+        self.result_tabs.setUsesScrollButtons(False)
+        self.result_tabs.setProperty("workspaceTabs", True)
+
         self.timeline_table = QTableWidget(0, 6)
         self.timeline_table.setHorizontalHeaderLabels(
             ["Time", "Bar", "Action", "Type", "Target", "Sequence"]
@@ -162,19 +231,41 @@ class RotationBuilderPage(FoundryPage):
         self.timeline_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.timeline_table.horizontalHeader().setStretchLastSection(True)
         self.timeline_table.setMinimumHeight(330)
-        timeline_card.addWidget(self.timeline_table)
-        self.timeline_hint = QLabel(
-            "Select a saved build and generate. Nothing is fabricated before the engine returns a plan."
+        timeline_host = QWidget()
+        timeline_layout = QVBoxLayout(timeline_host)
+        timeline_layout.setContentsMargins(6, 6, 6, 6)
+        self.timeline_hint = _muted(
+            "Nothing is fabricated before the engine returns an authoritative schedule."
         )
-        self.timeline_hint.setWordWrap(True)
-        self.timeline_hint.setProperty("muted", True)
-        timeline_card.addWidget(self.timeline_hint)
-        self.workspace_layout.addWidget(timeline_card)
+        timeline_layout.addWidget(self.timeline_table)
+        timeline_layout.addWidget(self.timeline_hint)
+        self.result_tabs.addTab(timeline_host, "Timeline")
 
-        lower = QHBoxLayout()
-        lower.setContentsMargins(0, 0, 0, 0)
-        lower.setSpacing(8)
+        uptime_host = QWidget()
+        uptime_layout = QHBoxLayout(uptime_host)
+        uptime_layout.setContentsMargins(6, 6, 6, 6)
+        sustain_card = FoundryCard("Sustain Snapshot", "drop")
+        self.sustain_label = QLabel("Awaiting a generated rotation.")
+        self.sustain_label.setWordWrap(True)
+        self.sustain_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        sustain_card.addWidget(self.sustain_label)
+        uptime_layout.addWidget(sustain_card, 1)
+        build_card = FoundryCard("Build Context", "builds")
+        self.build_summary = QLabel("No saved build selected.")
+        self.build_summary.setWordWrap(True)
+        build_card.addWidget(self.build_summary)
+        self.front_skills = QLabel("Front: —")
+        self.front_skills.setWordWrap(True)
+        build_card.addWidget(self.front_skills)
+        self.back_skills = QLabel("Back: —")
+        self.back_skills.setWordWrap(True)
+        build_card.addWidget(self.back_skills)
+        uptime_layout.addWidget(build_card, 1)
+        self.result_tabs.addTab(uptime_host, "Uptime & Resources")
 
+        explanation_host = QWidget()
+        explanation_layout = QVBoxLayout(explanation_host)
+        explanation_layout.setContentsMargins(6, 6, 6, 6)
         evidence_card = FoundryCard("Engine Evidence", "binoculars")
         self.evidence_label = QLabel(
             "Assumptions and unresolved engine facts will appear after generation."
@@ -182,46 +273,273 @@ class RotationBuilderPage(FoundryPage):
         self.evidence_label.setWordWrap(True)
         self.evidence_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         evidence_card.addWidget(self.evidence_label)
-        lower.addWidget(evidence_card, 3)
-
-        sustain_card = FoundryCard("Sustain Snapshot", "drop")
-        self.sustain_label = QLabel("Awaiting a generated rotation.")
-        self.sustain_label.setWordWrap(True)
-        self.sustain_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        sustain_card.addWidget(self.sustain_label)
-        lower.addWidget(sustain_card, 2)
-
+        explanation_layout.addWidget(evidence_card)
         notes_card = FoundryCard("Personal Notes", "feather")
         self.notes_edit = QPlainTextEdit()
         self.notes_edit.setPlaceholderText(
             "Execution reminders only. Notes do not alter engine evidence."
         )
-        self.notes_edit.setMaximumHeight(120)
+        self.notes_edit.setMaximumHeight(110)
         notes_card.addWidget(self.notes_edit)
-        lower.addWidget(notes_card, 2)
+        explanation_layout.addWidget(notes_card)
+        self.result_tabs.addTab(explanation_host, "Explanations")
 
-        self.workspace_layout.addLayout(lower)
+        compare_host = QWidget()
+        compare_layout = QVBoxLayout(compare_host)
+        compare_layout.setContentsMargins(6, 6, 6, 6)
+        compare_layout.addWidget(
+            _muted(
+                "Compare remains a result destination. Candidate comparison will be reconnected "
+                "after the stable generation path is proven."
+            )
+        )
+        compare_layout.addStretch(1)
+        self.result_tabs.addTab(compare_host, "Compare")
+
+        save_host = QWidget()
+        save_layout = QVBoxLayout(save_host)
+        save_layout.setContentsMargins(6, 6, 6, 6)
+        save_layout.addWidget(
+            _muted(
+                "Save & Export remains visible, but saving is disabled until the new page has "
+                "a generated authoritative plan to persist."
+            )
+        )
+        save_layout.addStretch(1)
+        self.result_tabs.addTab(save_host, "Save & Export")
+
+        self.workspace_layout.addWidget(self.result_tabs)
 
         self.status = FoundryStatusBar()
         self.set_status(self.status)
 
-    @staticmethod
-    def _context_field(title: str, widget: QWidget) -> QWidget:
+    def _build_intent_card(self) -> FoundryCard:
+        card = FoundryCard("Rotation Intent", "rotations")
+        card.addWidget(
+            _muted(
+                "Choose a focus. FoundryDock configures sensible defaults, which you can adjust."
+            )
+        )
+
+        buttons = QHBoxLayout()
+        buttons.setSpacing(8)
+        self.intent_buttons: dict[str, QToolButton] = {}
+        for name, values in _INTENTS.items():
+            button = QToolButton()
+            button.setText(f"{name}\n{values['description']}")
+            button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+            button.setCheckable(True)
+            button.setMinimumHeight(118)
+            button.setMaximumHeight(132)
+            button.setProperty("rotationIntentChoice", True)
+            set_button_icon(button, values["icon"], size=36)
+            button.clicked.connect(
+                lambda checked=False, intent=name: self._apply_intent(intent) if checked else None
+            )
+            self.intent_buttons[name] = button
+            buttons.addWidget(button, 1)
+        card.addLayout(buttons)
+
+        heading = QHBoxLayout()
+        heading.setContentsMargins(0, 4, 0, 2)
+        label = QLabel("Generated Settings")
+        label.setProperty("phase14SectionHeading", True)
+        heading.addWidget(label)
+        heading.addStretch(1)
+        self.customized_label = QLabel("Preset defaults")
+        self.customized_label.setProperty("cardBadge", True)
+        heading.addWidget(self.customized_label)
+        card.addLayout(heading)
+
+        self.setting_labels = {
+            "Weaving": QLabel(),
+            "Bar swapping": QLabel(),
+            "Heavy attacks": QLabel(),
+            "Resource reserve": QLabel(),
+        }
+        icons = {
+            "Weaving": "cog",
+            "Bar swapping": "swapping",
+            "Heavy attacks": "sword",
+            "Resource reserve": "drop",
+        }
+        for name, value in self.setting_labels.items():
+            row = QFrame()
+            row.setProperty("rotationSummaryRow", True)
+            row.setMinimumHeight(48)
+            row.setMaximumHeight(54)
+            layout = QHBoxLayout(row)
+            layout.setContentsMargins(12, 5, 12, 5)
+            layout.setSpacing(9)
+            layout.addWidget(icon_label(icons[name], 22))
+            title = QLabel(name)
+            title.setProperty("rotationSettingTitle", True)
+            layout.addWidget(title)
+            layout.addStretch(1)
+            layout.addWidget(value)
+            card.addWidget(row)
+
+        self.advanced_panel = QFrame()
+        self.advanced_panel.setProperty("foundryCard", True)
+        advanced = QGridLayout(self.advanced_panel)
+        advanced.setContentsMargins(10, 8, 10, 8)
+        advanced.setSpacing(7)
+        advanced.addWidget(self._field("WEAVING", self.weaving_combo, "cog"), 0, 0)
+        advanced.addWidget(self._field("BAR SWAPPING", self.bar_swap_combo, "swapping"), 0, 1)
+        advanced.addWidget(self._field("HEAVY ATTACKS", self.heavy_attack_combo, "sword"), 1, 0)
+        advanced.addWidget(self._field("PRIMARY RESOURCE", self.resource_combo, "drop"), 1, 1)
+        advanced.addWidget(self._field("MINIMUM RESERVE", self.minimum_reserve_spin, "drop"), 2, 0)
+        advanced.addWidget(self._field("ROTATION TYPE", self.rotation_type_combo, "rotations"), 2, 1)
+        advanced.addWidget(self._field("EXECUTE STARTS", self.execute_spin, "sword"), 3, 0)
+        advanced.addWidget(self._field("ULTIMATE", self.ultimate_combo, "optimization"), 3, 1)
+        self.advanced_panel.hide()
+
+        advanced_button = QPushButton(
+            "Advanced execution & sustain\nCustom rules, conditionals, and resource management."
+        )
+        advanced_button.setMinimumHeight(54)
+        set_button_icon(advanced_button, "uptime", size=19)
+        advanced_button.clicked.connect(
+            lambda: self.advanced_panel.setVisible(not self.advanced_panel.isVisible())
+        )
+        card.addWidget(advanced_button)
+        card.addWidget(self.advanced_panel)
+        return card
+
+    def _build_obligations_card(self) -> FoundryCard:
+        card = FoundryCard("Inputs & Obligations", "field-office")
+        card.addWidget(
+            _muted(
+                "Detected from your build, team setup, and encounter. Missing evidence stays missing."
+            )
+        )
+
+        self.obligation_counts: dict[str, QLabel] = {}
+        self.priority_table = QTableWidget(0, 4)
+        self.priority_table.setHorizontalHeaderLabels(["Bar", "Slot", "Ability", "Priority"])
+        self.priority_table.verticalHeader().setVisible(False)
+        self.priority_table.horizontalHeader().setStretchLastSection(True)
+        self.priority_table.setMinimumHeight(190)
+
+        priority_host = QWidget()
+        priority_layout = QVBoxLayout(priority_host)
+        priority_layout.setContentsMargins(8, 4, 8, 8)
+        priority_layout.addWidget(self.priority_table)
+        priority_host.hide()
+
+        build_skills = self._obligation_row(
+            "Build skills",
+            "Saved bars, passives, and priorities.",
+            "0",
+            priority_host,
+        )
+        card.addWidget(build_skills)
+
+        card.addWidget(
+            self._obligation_row(
+                "Gear procs",
+                "Resolved from the selected saved build.",
+                "AUTO",
+                None,
+            )
+        )
+        card.addWidget(
+            self._obligation_row(
+                "Team duties",
+                "Assignment evidence when available.",
+                "AUTO",
+                None,
+            )
+        )
+        card.addWidget(
+            self._obligation_row(
+                "Pressure windows",
+                "Encounter demand windows when reviewed.",
+                "0",
+                None,
+            )
+        )
+        card.addWidget(
+            self._obligation_row(
+                "Advanced rules",
+                "Conditionals remain fail-closed until canonical.",
+                "—",
+                None,
+            )
+        )
+        card.addStretch(1)
+        return card
+
+    def _obligation_row(
+        self,
+        title: str,
+        description: str,
+        count_text: str,
+        detail: QWidget | None,
+    ) -> QWidget:
         host = QWidget()
-        layout = QVBoxLayout(host)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
-        label = QLabel(title)
-        label.setProperty("sidebarHeading", True)
-        layout.addWidget(label)
-        layout.addWidget(widget)
+        outer = QVBoxLayout(host)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        button = QPushButton()
+        button.setProperty("rotationObligationRow", True)
+        button.setMinimumHeight(54)
+        button.setMaximumHeight(58)
+        row = QHBoxLayout(button)
+        row.setContentsMargins(11, 6, 10, 6)
+        row.setSpacing(8)
+
+        icon_names = {
+            "Build skills": "book-open-text",
+            "Gear procs": "cog",
+            "Team duties": "roster",
+            "Pressure windows": "warning",
+            "Advanced rules": "uptime",
+        }
+        row.addWidget(icon_label(icon_names[title], 23))
+        title_label = QLabel(title)
+        title_label.setMinimumWidth(112)
+        title_label.setProperty("rotationObligationTitle", True)
+        row.addWidget(title_label)
+        description_label = _muted(description)
+        description_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        row.addWidget(description_label, 1)
+        count = QLabel(count_text)
+        count.setProperty("cardBadge", True)
+        count.setMinimumWidth(34)
+        self.obligation_counts[title] = count
+        row.addWidget(count)
+        row.addWidget(QLabel("›"))
+        outer.addWidget(button)
+
+        if detail is None:
+            button.setEnabled(False)
+        else:
+            outer.addWidget(detail)
+            button.clicked.connect(lambda _checked=False: detail.setVisible(not detail.isVisible()))
         return host
 
     @staticmethod
-    def _field_label(title: str) -> QLabel:
+    def _field(title: str, widget: QWidget, icon_name: str = "") -> QWidget:
+        host = QWidget()
+        layout = QVBoxLayout(host)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(3)
+        heading = QHBoxLayout()
+        heading.setContentsMargins(0, 0, 0, 0)
+        heading.setSpacing(5)
+        if icon_name:
+            heading.addWidget(icon_label(icon_name, 14))
         label = QLabel(title)
         label.setProperty("sidebarHeading", True)
-        return label
+        heading.addWidget(label)
+        heading.addStretch(1)
+        layout.addLayout(heading)
+        widget.setMinimumHeight(32)
+        widget.setMaximumHeight(32)
+        layout.addWidget(widget)
+        return host
 
     @staticmethod
     def _character_name(build) -> str:
@@ -238,34 +556,43 @@ class RotationBuilderPage(FoundryPage):
 
     @staticmethod
     def _ordinary_skills(values) -> list[str]:
-        return [
-            _clean(value)
-            for value in list(values or [])[:5]
-            if _clean(value)
-        ]
+        return [_clean(value) for value in list(values or [])[:5] if _clean(value)]
 
     @staticmethod
     def _ultimate(values) -> str:
-        skills = list(values or [])
-        return _clean(skills[5]) if len(skills) > 5 else ""
+        values = list(values or [])
+        return _clean(values[5]) if len(values) > 5 else ""
+
+    def _base_build(self):
+        index = self.build_combo.currentData()
+        if not isinstance(index, int) or not 0 <= index < len(self.roster.Members):
+            return None
+        return self.roster.Members[index]
+
+    def _selected_build(self):
+        base = self._base_build()
+        if base is None:
+            return None
+        return resolve_build_context(
+            base,
+            team_name=_clean(self.team_combo.currentData()),
+            boss_name=_clean(self.boss_combo.currentText()),
+        )
 
     def refresh_saved_builds(self) -> None:
         selected_character = _clean(self.character_combo.currentData())
         selected_build = _clean(self.build_combo.currentText())
-
         self.roster = self.build_service.load()
+
         self.character_combo.blockSignals(True)
         self.character_combo.clear()
-
         seen: set[str] = set()
         for build in self.roster.Members:
             name = self._character_name(build)
-            key = name.casefold()
-            if key in seen:
+            if name.casefold() in seen:
                 continue
-            seen.add(key)
+            seen.add(name.casefold())
             self.character_combo.addItem(name, name)
-
         self.character_combo.blockSignals(False)
 
         index = self.character_combo.findData(selected_character)
@@ -275,15 +602,11 @@ class RotationBuilderPage(FoundryPage):
             self.character_combo.setCurrentIndex(index)
 
         self._character_changed()
-
         if selected_build:
             build_index = self.build_combo.findText(selected_build)
             if build_index >= 0:
                 self.build_combo.setCurrentIndex(build_index)
-                self._build_changed()
-
-        if not self.roster.Members:
-            self.status.warning("No saved builds are available for Rotation Builder.")
+        self._build_changed()
 
     def _character_changed(self, *_args) -> None:
         character = _clean(self.character_combo.currentData())
@@ -295,19 +618,81 @@ class RotationBuilderPage(FoundryPage):
         self.build_combo.blockSignals(False)
         if self.build_combo.count():
             self.build_combo.setCurrentIndex(0)
+        self._refresh_team_choices()
         self._build_changed()
 
-    def _selected_build(self):
-        index = self.build_combo.currentData()
-        if not isinstance(index, int):
-            return None
-        if not 0 <= index < len(self.roster.Members):
-            return None
-        return self.roster.Members[index]
+    def _refresh_team_choices(self) -> None:
+        previous = _clean(self.team_combo.currentData())
+        base = self._base_build()
+        teams: list[str] = []
+        if base is not None:
+            for variant in tuple(getattr(base, "ContextVariants", ()) or ()):
+                team = _clean(getattr(variant, "TeamName", ""))
+                if team and team.casefold() not in {value.casefold() for value in teams}:
+                    teams.append(team)
+
+        self.team_combo.blockSignals(True)
+        self.team_combo.clear()
+        self.team_combo.addItem("No team context", "")
+        for team in sorted(teams, key=str.casefold):
+            self.team_combo.addItem(team, team)
+        if previous:
+            index = self.team_combo.findData(previous)
+            if index >= 0:
+                self.team_combo.setCurrentIndex(index)
+        elif len(teams) == 1:
+            self.team_combo.setCurrentIndex(1)
+        self.team_combo.blockSignals(False)
+
+    def _refresh_encounters(self) -> None:
+        self._encounter_rows = tuple(self.encounter_service.encounter_summaries())
+        previous = self.content_combo.currentData()
+        self.content_combo.blockSignals(True)
+        self.content_combo.clear()
+        self.content_combo.addItem("All Content", None)
+        seen: set[str] = set()
+        for row in self._encounter_rows:
+            content_id = _clean(row.content_id)
+            if not content_id or content_id in seen:
+                continue
+            seen.add(content_id)
+            self.content_combo.addItem(_clean(row.content_name) or content_id, content_id)
+        self.content_combo.blockSignals(False)
+        if previous is not None:
+            index = self.content_combo.findData(previous)
+            if index >= 0:
+                self.content_combo.setCurrentIndex(index)
+        self._content_changed()
+
+    def _content_changed(self, *_args) -> None:
+        content_id = self.content_combo.currentData()
+        previous = self.boss_combo.currentData()
+        self.boss_combo.blockSignals(True)
+        self.boss_combo.clear()
+        rows = [
+            row
+            for row in self._encounter_rows
+            if content_id is None or row.content_id == content_id
+        ]
+        for row in rows:
+            encounter_id = _clean(row.encounter_id)
+            if encounter_id:
+                self.boss_combo.addItem(_clean(row.name) or encounter_id, encounter_id)
+        if previous is not None:
+            index = self.boss_combo.findData(previous)
+            if index >= 0:
+                self.boss_combo.setCurrentIndex(index)
+        if self.boss_combo.count() and self.boss_combo.currentIndex() < 0:
+            self.boss_combo.setCurrentIndex(0)
+        self.boss_combo.blockSignals(False)
+        self._build_changed()
 
     def _build_changed(self, *_args) -> None:
         self.clear_result()
+        self._refresh_team_choices()
         build = self._selected_build()
+        self.priority_table.setRowCount(0)
+
         self.ultimate_combo.blockSignals(True)
         self.ultimate_combo.clear()
         self.ultimate_combo.addItem("Do not schedule Ultimate", "")
@@ -318,13 +703,29 @@ class RotationBuilderPage(FoundryPage):
             self.front_skills.setText("Front: —")
             self.back_skills.setText("Back: —")
             self.generate_button.setEnabled(False)
+            self.obligation_counts["Build skills"].setText("0")
             return
 
         front = self._ordinary_skills(getattr(build, "FrontBarSkills", []))
         back = self._ordinary_skills(getattr(build, "BackBarSkills", []))
+        for bar_name, values in (
+            ("Front", list(getattr(build, "FrontBarSkills", []) or [])[:5]),
+            ("Back", list(getattr(build, "BackBarSkills", []) or [])[:5]),
+        ):
+            for slot, skill in enumerate(values, start=1):
+                skill = _clean(skill)
+                if not skill:
+                    continue
+                row = self.priority_table.rowCount()
+                self.priority_table.insertRow(row)
+                for column, value in enumerate((bar_name, str(slot), skill, "100")):
+                    item = QTableWidgetItem(value)
+                    if column < 3:
+                        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                    self.priority_table.setItem(row, column, item)
+
         front_ultimate = self._ultimate(getattr(build, "FrontBarSkills", []))
         back_ultimate = self._ultimate(getattr(build, "BackBarSkills", []))
-
         if front_ultimate:
             self.ultimate_combo.addItem(f"Front · {front_ultimate}", "front")
         if back_ultimate:
@@ -336,18 +737,79 @@ class RotationBuilderPage(FoundryPage):
         race = _clean(getattr(build, "Race", "")) or "Unspecified race"
         food = _clean(getattr(build, "Food", "")) or "Not selected"
         potion = _clean(getattr(build, "Potion", "")) or "Not selected"
-
         self.build_summary.setText(
             f"{self._character_name(build)} · {self._build_name(build)}\n"
-            f"{eso_class} · {race} · {role}\n"
-            f"Food: {food}\nPotion: {potion}"
+            f"{eso_class} · {race} · {role}\nFood: {food}\nPotion: {potion}"
         )
         self.front_skills.setText("Front: " + (" · ".join(front) if front else "No ordinary skills"))
         self.back_skills.setText("Back: " + (" · ".join(back) if back else "No ordinary skills"))
+        self.obligation_counts["Build skills"].setText(str(len(front) + len(back)))
         self.generate_button.setEnabled(bool(front or back))
         self.status.info(
             f"Loaded {self._character_name(build)} · {self._build_name(build)}."
         )
+
+    def _apply_intent(self, name: str) -> None:
+        values = _INTENTS[name]
+        self._intent_name = name
+        self.weaving_combo.setCurrentText(values["weaving"])
+        self.bar_swap_combo.setCurrentText(values["bar_swapping"])
+        self.heavy_attack_combo.setCurrentText(values["heavy_attacks"])
+        self.minimum_reserve_spin.setValue(int(values["reserve"]))
+        for button_name, button in self.intent_buttons.items():
+            button.blockSignals(True)
+            button.setChecked(button_name == name)
+            button.blockSignals(False)
+        self._refresh_setting_summary()
+
+    def _refresh_setting_summary(self, *_args) -> None:
+        if not hasattr(self, "setting_labels"):
+            return
+        self.setting_labels["Weaving"].setText(self.weaving_combo.currentText())
+        self.setting_labels["Bar swapping"].setText(self.bar_swap_combo.currentText())
+        self.setting_labels["Heavy attacks"].setText(self.heavy_attack_combo.currentText())
+        self.setting_labels["Resource reserve"].setText(
+            f"{self.minimum_reserve_spin.value()}%"
+        )
+        values = _INTENTS.get(self._intent_name)
+        customized = bool(
+            values
+            and (
+                self.weaving_combo.currentText() != values["weaving"]
+                or self.bar_swap_combo.currentText() != values["bar_swapping"]
+                or self.heavy_attack_combo.currentText() != values["heavy_attacks"]
+                or self.minimum_reserve_spin.value() != int(values["reserve"])
+            )
+        )
+        self.customized_label.setText("Customized" if customized else "Preset defaults")
+
+    def ability_priorities(self) -> tuple[AbilityPriorityEntry, ...]:
+        entries: list[AbilityPriorityEntry] = []
+        for row in range(self.priority_table.rowCount()):
+            bar = _clean(self.priority_table.item(row, 0).text()).casefold()
+            slot = int(_clean(self.priority_table.item(row, 1).text()))
+            skill = _clean(self.priority_table.item(row, 2).text())
+            priority = int(_clean(self.priority_table.item(row, 3).text()))
+            entries.append(
+                AbilityPriorityEntry(
+                    bar=bar,
+                    slot=slot,
+                    skill_name=skill,
+                    priority=priority,
+                )
+            )
+        return tuple(entries)
+
+    def _selected_resource(self, build) -> ResourceType:
+        explicit = _clean(self.resource_combo.currentData())
+        if explicit:
+            return ResourceType(explicit)
+        role = _clean(getattr(build, "Role", "")).casefold()
+        if role == "dd":
+            front_weapon = _clean(getattr(getattr(build, "FrontBarWeapon", None), "WeaponType", ""))
+            if any(token in front_weapon.casefold() for token in ("bow", "two-handed", "sword", "axe", "mace", "dagger")):
+                return ResourceType.STAMINA
+        return ResourceType.MAGICKA
 
     def generate_rotation(self) -> None:
         build = self._selected_build()
@@ -355,15 +817,23 @@ class RotationBuilderPage(FoundryPage):
             self.status.warning("Select a saved build before generating a rotation.")
             return
 
+        weave = self.weaving_combo.currentText() != "Do not rely on it"
+        try:
+            priorities = self.ability_priorities()
+        except (AttributeError, TypeError, ValueError) as exc:
+            self.status.warning(f"Ability priority is invalid: {exc}")
+            return
+
         request = RotationGenerationRequest(
-            duration_seconds=float(self.duration_spin.value()),
-            rotation_type=str(self.mode_combo.currentData() or "Semi-static"),
+            duration_seconds=60.0,
+            rotation_type=_clean(self.rotation_type_combo.currentData()) or "Semi-static",
             potion=_clean(getattr(build, "Potion", "")),
             potion_on_cooldown=False,
-            weave_light_attacks=self.weave_check.isChecked(),
+            weave_light_attacks=weave,
             ultimate_bar=_clean(self.ultimate_combo.currentData()),
             starting_ultimate=0.0,
-            use_scheduled_combat_attacks_for_ultimate=self.weave_check.isChecked(),
+            use_scheduled_combat_attacks_for_ultimate=weave,
+            ability_priorities=priorities,
         )
 
         try:
@@ -380,6 +850,15 @@ class RotationBuilderPage(FoundryPage):
         self._render_plan(result.plan)
         self._render_evidence(result.plan)
         self._evaluate_sustain(build, result.plan)
+        heavy_count = sum(
+            1 for action in result.plan.actions
+            if action.kind is RotationActionKind.HEAVY_ATTACK
+        )
+        self.result_summary.setText(
+            f"{result.plan.duration_seconds:g}s • {len(result.plan.actions)} actions • "
+            f"{heavy_count} Heavy Attacks • {len(result.plan.unresolved)} unresolved"
+        )
+        self.result_tabs.setCurrentIndex(0)
         self.status.success(
             f"Generated {len(result.plan.actions)} actions over {result.plan.duration_seconds:g}s."
         )
@@ -399,7 +878,6 @@ class RotationBuilderPage(FoundryPage):
             )
             for column, value in enumerate(values):
                 self.timeline_table.setItem(row, column, QTableWidgetItem(value))
-
         self.timeline_hint.setText(
             f"Authoritative engine schedule · {len(plan.actions)} actions · {plan.duration_seconds:g}s"
         )
@@ -427,16 +905,16 @@ class RotationBuilderPage(FoundryPage):
                 "UNRESOLVED\n" + "\n".join(f"• {item}" for item in plan.unresolved)
             )
         self.evidence_label.setText(
-            "\n\n".join(sections) or "No assumptions or unresolved evidence were reported."
+            "\n\n".join(sections)
+            or "No assumptions or unresolved evidence were reported."
         )
 
     def _evaluate_sustain(self, build, plan: RotationPlan) -> None:
         try:
-            resource = ResourceType(str(self.resource_combo.currentData()))
             projection = self.rotation_sustain.evaluate(
                 build=build,
                 plan=plan,
-                resource=resource,
+                resource=self._selected_resource(build),
             )
         except Exception as exc:
             self.sustain_label.setText(
@@ -449,17 +927,14 @@ class RotationBuilderPage(FoundryPage):
         start = values[0] if values else None
         minimum = min(values) if values else None
         end = values[-1] if values else None
-        resource_name = projection.resource.value.title()
-
         lines = [
-            resource_name,
+            projection.resource.value.title(),
             f"Start: {start:g}" if start is not None else "Start: —",
             f"Minimum: {minimum:g}" if minimum is not None else "Minimum: —",
             f"End: {end:g}" if end is not None else "End: —",
         ]
         if projection.unresolved:
-            lines.append("")
-            lines.append("Needs review:")
+            lines.extend(["", "Needs review:"])
             lines.extend(f"• {item}" for item in projection.unresolved[:6])
         self.sustain_label.setText("\n".join(lines))
 
@@ -469,7 +944,7 @@ class RotationBuilderPage(FoundryPage):
             self.timeline_table.setRowCount(0)
         if hasattr(self, "timeline_hint"):
             self.timeline_hint.setText(
-                "Select a saved build and generate. Nothing is fabricated before the engine returns a plan."
+                "Nothing is fabricated before the engine returns an authoritative schedule."
             )
         if hasattr(self, "evidence_label"):
             self.evidence_label.setText(
@@ -477,6 +952,10 @@ class RotationBuilderPage(FoundryPage):
             )
         if hasattr(self, "sustain_label"):
             self.sustain_label.setText("Awaiting a generated rotation.")
+        if hasattr(self, "result_summary"):
+            self.result_summary.setText(
+                "Generate a rotation to populate the result workspace."
+            )
 
 
 __all__ = ["RotationBuilderPage"]
