@@ -58,28 +58,29 @@ def _write_db(path: Path) -> None:
             """
         )
         for set_id in (1, 2):
-            for equip_type in range(1, 10):
-                armor_type = 1 if equip_type <= 7 else 0
+            for equip_type in (1, 3, 4, 8, 9, 10, 13):
                 db.execute(
-                    "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, ?, ?, 0)",
-                    (set_id, equip_type, armor_type),
+                    "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, ?, 1, 0)",
+                    (set_id, equip_type),
                 )
             db.executemany(
                 "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, ?, 0, ?)",
                 (
-                    (set_id, 11, 9),
-                    (set_id, 10, 3),
-                    (set_id, 10, 7),
+                    (set_id, 2, 0),
+                    (set_id, 12, 0),
+                    (set_id, 6, 9),
+                    (set_id, 5, 3),
+                    (set_id, 7, 14),
                 ),
             )
         db.executemany(
             "INSERT INTO gear_set_piece(set_id, equip_type, armor_type, weapon_type) VALUES (?, ?, ?, ?)",
             (
                 (3, 4, 1, 0),
-                (4, 6, 1, 0),
-                (5, 8, 0, 0),
-                (6, 9, 0, 0),
-                (7, 11, 0, 9),
+                (4, 9, 1, 0),
+                (5, 2, 0, 0),
+                (6, 12, 0, 0),
+                (7, 6, 0, 9),
             ),
         )
         db.executemany(
@@ -97,8 +98,8 @@ def test_discovers_non_ring_mythics_by_canonical_slot(tmp_path: Path) -> None:
 
     assert set(mythics) == {
         ("Shoulder Mythic", "Shoulders", 4),
-        ("Legs Mythic", "Legs", 6),
-        ("Neck Mythic", "Necklace", 8),
+        ("Legs Mythic", "Legs", 9),
+        ("Neck Mythic", "Necklace", 2),
     }
     assert not any(name == "Ring Mythic" for name, _slot, _equip in mythics)
     assert not any(name == "Weapon One Piece" for name, _slot, _equip in mythics)
