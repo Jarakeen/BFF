@@ -138,3 +138,16 @@ def test_phase14_team_health_reads_canonical_comp_state_before_legacy_fallback()
     assert health.index("CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)") < health.index(
         "Compatibility fallback for ad-hoc/unbound Comp sessions"
     )
+
+
+def test_phase14_team_health_surfaces_assignment_proof_and_duplicate_primary() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    health = source.split("def _refresh_health(page) -> None:", 1)[1].split(
+        "def _refresh_shell(page) -> None:", 1
+    )[0]
+    assert 'review.state == "assigned_unproven"' in health
+    assert '"Assigned to "' in health
+    assert '" • source not proven"' in health
+    assert "review.duplicate_primary" in health
+    assert '"Multiple primary assignments: "' in health
