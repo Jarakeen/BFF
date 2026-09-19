@@ -1998,32 +1998,21 @@ def _reload_bound_raid_plan(page) -> bool:
 def _save_to_originating_raid_plan(page) -> bool:
     """Save current Comp choices without silently applying recommendations.
 
-    Raid Plan-bound sessions persist canonical CompPlanState directly. The generated
-    draft path remains only as a compatibility fallback for ad-hoc/unbound sessions.
+    Bound sessions update their Raid Plan; unbound sessions finalize into a new Raid
+    Plan. Supported Phase 14 saves never require a generated-roster draft.
     """
     try:
         window = page.window()
         _sync_context_into_comp_state(page)
         state = getattr(page, "_comp_plan_state", None)
-        if state is not None:
-            persist_state = getattr(window, "_persist_comp_plan_state_to_raid_plan", None)
-            if not callable(persist_state):
-                page.status.error("Canonical Raid Plan save bridge is unavailable.")
-                return
-            plan = persist_state(navigate=False)
-        else:
-            from ui import comp_builder_build_candidate_support as candidate_support
-
-            draft = candidate_support.save_generated_plan(page)
-            persist_legacy = getattr(
-                window,
-                "_persist_generated_comp_plan_to_raid_plan",
-                None,
-            )
-            if not callable(persist_legacy):
-                page.status.error("Legacy Comp save bridge is unavailable.")
-                return
-            plan = persist_legacy(draft.name, navigate=False)
+        if state is None:
+            page.status.error("Canonical Comp planning state is unavailable.")
+            return False
+        persist_state = getattr(window, "_persist_comp_plan_state_to_raid_plan", None)
+        if not callable(persist_state):
+            page.status.error("Canonical Raid Plan save bridge is unavailable.")
+            return False
+        plan = persist_state(navigate=False)
     except Exception as exc:
         page.status.error(
             f"Could not save Comp Builder plan: {type(exc).__name__}: {exc}"
@@ -2044,6 +2033,16 @@ def _save_to_originating_raid_plan(page) -> bool:
 def _has_pending_changes(page) -> bool:
     state = getattr(page, "_comp_plan_state", None)
     return bool(state is not None and getattr(state, "dirty", False))
+
+
+def _send_to_raid_plan(page) -> bool:
+    if not _save_to_originating_raid_plan(page):
+        return False
+    window = page.window()
+    show_page = getattr(window, "show_page", None)
+    if callable(show_page):
+        show_page("raid_plans")
+    return True
 
 
 def _save_pending_changes(page) -> bool:
@@ -2110,6 +2109,11 @@ def _build_health(page, card: FoundryCard) -> None:
     if send is not None:
         send.setText("Send to Raid Plan")
         send.setProperty("primary", True)
+        try:
+            send.clicked.disconnect()
+        except (RuntimeError, TypeError):
+            pass
+        send.clicked.connect(lambda *_: _send_to_raid_plan(page))
         _rehome(send, row)
 
     card.body_layout.addWidget(body)
