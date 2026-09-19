@@ -12,10 +12,6 @@ from PySide6.QtWidgets import QLabel, QTableWidgetItem
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from models.raid_plan import RaidPlan
-from services.nonability_effect_provider_reference_service import (
-    NonAbilityEffectProviderReferenceService,
-    canonical_identity,
-)
 from services.raid_group_effect_catalog import (
     GROUP_COVERAGE_BY_NAME,
     GROUP_COVERAGE_NAMES,
@@ -28,6 +24,10 @@ from services.raid_plan_repository import RaidPlanRepository
 from services.raid_unique_support_set_catalog import (
     UNIQUE_SUPPORT_SET_BY_NAME,
     UNIQUE_SUPPORT_SET_NAMES,
+)
+from services.raid_planned_gear_coverage_service import (
+    PlannedGearCoverageProvider,
+    RaidPlannedGearCoverageService,
 )
 
 _INSTALLED = False
@@ -145,71 +145,21 @@ def _apply_filters(page) -> None:
         page._apply_coverage_filters()
 
 
-def _planned_gear_provider_label(row, set_name: str) -> str:
-    return f"{row.player_label} [planned: {set_name}]"
-
-
 def _overlay_planned_gear(snapshot, scope):
-    """Project only reviewed set relationships from Raid Plan planned gear.
-
-    Planned sets prove raid-lead intent, not exact slotting, piece counts, bar state,
-    proc activation, or uptime. All planned-set evidence is therefore Conditional.
-    """
-    status = dict(snapshot.status)
-    providers = {name: list(values) for name, values in snapshot.providers.items()}
-    conditional = {
-        name: list(values)
-        for name, values in snapshot.conditional_providers.items()
-    }
-
-    display_by_effect_key = {
-        canonical_identity(name): name
-        for name in RAID_PLAN_COVERAGE_NAMES
-    }
-    reviewed_rows = NonAbilityEffectProviderReferenceService(DEFAULT_DATABASE).gear()
-    reviewed_by_set: dict[str, list[object]] = {}
-    for item in reviewed_rows:
-        reviewed_by_set.setdefault(item.source_name.casefold(), []).append(item)
-
-    unique_by_set = {
-        name.casefold(): reference
-        for name, reference in UNIQUE_SUPPORT_SET_BY_NAME.items()
-    }
-
-    for row in scope.planned_gear:
-        for set_name in row.gear_sets:
-            key = str(set_name or "").strip().casefold()
-            if not key:
-                continue
-            label = _planned_gear_provider_label(row, set_name)
-
-            unique = unique_by_set.get(key)
-            if unique is not None:
-                effect_name = unique.name
-                status.setdefault(effect_name, "unverified")
-                providers.setdefault(effect_name, [])
-                conditional.setdefault(effect_name, [])
-                if label not in conditional[effect_name]:
-                    conditional[effect_name].append(label)
-
-            for reference in reviewed_by_set.get(key, ()):
-                effect_name = display_by_effect_key.get(reference.effect_key)
-                if effect_name is None:
-                    continue
-                status.setdefault(effect_name, "unverified")
-                providers.setdefault(effect_name, [])
-                conditional.setdefault(effect_name, [])
-                if label not in conditional[effect_name]:
-                    conditional[effect_name].append(label)
-
-    for name in tuple(status):
-        if providers.get(name):
-            status[name] = "available"
-        elif conditional.get(name):
-            status[name] = "conditional"
-
-    return type(snapshot)(status, providers, conditional)
-
+    """Share the canonical planned-gear evaluator with Comp Maker."""
+    providers = tuple(
+        PlannedGearCoverageProvider(
+            seat_id=row.seat_id,
+            provider_label=row.player_label,
+            gear_sets=row.gear_sets,
+        )
+        for row in scope.planned_gear
+    )
+    return RaidPlannedGearCoverageService(DEFAULT_DATABASE).overlay(
+        snapshot,
+        providers,
+        effect_names=RAID_PLAN_COVERAGE_NAMES,
+    )
 
 def _render_raid_plan_scope(page) -> None:
     scope = getattr(page, "_raid_plan_coverage_scope", None)
