@@ -9,7 +9,7 @@ Saved Builds, Team records, and Rotation runtime state remain independently owne
 
 from dataclasses import replace
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from engine.config import get_data_dir
@@ -115,6 +115,8 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
 
 class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
     """Raid Plan editor with durable named-plan save/load controls."""
+
+    assignmentsRequested = Signal(str)
 
     def __init__(self, parent=None) -> None:
         self.plan_repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
@@ -323,7 +325,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             return
         self.status.success(f"{gamertag} is in Personnel and on Team {team_name}.")
 
-    def save_current_plan(self) -> None:
+    def save_current_plan(self) -> RaidPlan | None:
         try:
             # Capture the visible Raid Plan before Personnel synchronization can
             # rebuild character/build widgets or auto-derive class values.
@@ -372,7 +374,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 )
         except (RaidPlanRepositoryError, ValueError, TypeError) as exc:
             self.status.error(f"Could not save Raid Plan: {exc}")
-            return
+            return None
 
         self._loaded_plan_snapshot = persisted
 
@@ -399,6 +401,32 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             f"Saved Raid Plan: {persisted.name} • "
             f"{len(persisted.members)} player(s) • {characters} character(s) • "
             f"{roles} role(s) • {planned} planned build(s){created_note}"
+        )
+        return persisted
+
+    def _open_assignments(self, *_args) -> None:
+        """Persist this plan, then explicitly hand its stable id to Assignments."""
+        persisted = self.save_current_plan()
+        if persisted is None:
+            return
+        self.assignmentsRequested.emit(persisted.plan_id)
+
+    def load_plan_by_id(self, plan_id: str) -> bool:
+        """Load one exact saved Raid Plan without relying on navigation history."""
+        wanted = _clean(plan_id)
+        if not wanted:
+            return False
+        self.refresh_saved_plan_picker(select_plan_id=wanted)
+        index = self.saved_plan_combo.findData(wanted)
+        if index < 0:
+            self.status.warning("That saved Raid Plan is no longer available.")
+            return False
+        self.saved_plan_combo.setCurrentIndex(index)
+        self.load_selected_plan()
+        loaded = getattr(self, "_loaded_plan_snapshot", None)
+        return bool(
+            loaded is not None
+            and loaded.plan_id.casefold() == wanted.casefold()
         )
 
     def load_selected_plan(self) -> None:
