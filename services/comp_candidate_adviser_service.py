@@ -126,13 +126,15 @@ class CompCandidateAdviserService:
         state: CompPlanState,
         seat_id: str,
         candidate: CompBuildCandidate,
+        proposal: CompCandidateProposal | None = None,
     ) -> tuple[CompPlanState, CompCandidateProposal]:
-        """Apply only unlocked proposal fields and return the exact evaluated proposal."""
-        proposal = self.evaluate(
-            state=state,
-            seat_id=seat_id,
-            candidate=candidate,
-        )
+        """Apply only unlocked proposal fields and reuse an already-rendered proposal."""
+        if proposal is None:
+            proposal = self.evaluate(
+                state=state,
+                seat_id=seat_id,
+                candidate=candidate,
+            )
         chair = state.chair(seat_id)
         if chair is None:
             raise ValueError(f"unknown Comp chair: {seat_id}")
@@ -147,6 +149,7 @@ class CompCandidateAdviserService:
         state: CompPlanState,
         seat_id: str,
         candidate: CompBuildCandidate,
+        current_health: CompPlanHealth | None = None,
     ) -> CompCandidateProposal:
         if not isinstance(state, CompPlanState):
             raise TypeError("Comp adviser requires CompPlanState")
@@ -157,7 +160,7 @@ class CompCandidateAdviserService:
         if chair is None:
             raise ValueError(f"unknown Comp chair: {seat_id}")
 
-        current_health = self.health.evaluate(state)
+        current_health = current_health or self.health.evaluate(state)
         changes, blocked = self._proposal_changes(chair, candidate)
 
         # Locks are sacred. A blocked proposal is still explainable, but the comparison
