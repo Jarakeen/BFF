@@ -9,7 +9,7 @@ or ultimate percentage.
 
 from datetime import datetime, timezone
 
-from PySide6.QtCore import QTimer, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -311,6 +311,8 @@ class CityLiveRaidPage(FoundryPage):
         if plan is None:
             self.hero_art.set_source(None)
             self.hero_title.setText("No Raid Plan selected")
+            self.phase_label.setText("Current Phase\n—")
+            self.alive_label.setText("Planned roster")
             self.callouts_label.setText("No planned callouts for this Raid Plan.")
             self.events_label.setText("No manual run events yet.")
             self.run_notes_edit.clear()
