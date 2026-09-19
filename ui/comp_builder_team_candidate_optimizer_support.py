@@ -40,6 +40,7 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     used_saved_players = tuple(support._used_saved_players(page))
     pools: list[CompTeamCandidatePool] = []
     rows_by_slot: dict[str, int] = {}
+    visible_slot_by_seat: dict[str, str] = {}
     provider_ids_by_candidate: dict[str, tuple[str, ...]] = {}
     novelty_by_candidate: dict[str, float] = {}
     novelty_evidence_by_candidate: dict[str, object] = {}
@@ -111,19 +112,11 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
 
     for row in range(page.matrix_table.rowCount()):
         slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
-        chair_state = None
-        if state is not None:
-            try:
-                chair_state = next(
-                    (
-                        chair
-                        for chair in state.chairs
-                        if support._state_chair_for_row(page, row) is chair
-                    ),
-                    support._state_chair_for_row(page, row),
-                )
-            except Exception:
-                chair_state = support._state_chair_for_row(page, row)
+        chair_state = (
+            support._state_chair_for_row(page, row)
+            if state is not None
+            else None
+        )
 
         if state is None and slot_name in applied:
             continue
@@ -185,6 +178,8 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
             )
         )
         rows_by_slot[slot_name] = row
+        if chair_state is not None:
+            visible_slot_by_seat[str(chair_state.seat_id)] = slot_name
 
     page._comp_novelty_by_candidate = dict(novelty_by_candidate)
     page._comp_novelty_evidence_by_candidate = dict(novelty_evidence_by_candidate)
@@ -214,11 +209,12 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         }
         for change in result.changes:
             candidate = candidate_by_id.get(change.candidate_id)
-            row = rows_by_slot.get(change.seat_id)
+            visible_slot = visible_slot_by_seat.get(change.seat_id, change.seat_id)
+            row = rows_by_slot.get(visible_slot)
             if candidate is not None and row is not None:
                 # Compatibility mirror only. Canonical CompPlanState already owns the
                 # applied decision and Save never reads this mirror.
-                page._comp_applied_candidates[change.seat_id] = candidate
+                page._comp_applied_candidates[visible_slot] = candidate
 
         support._refresh_candidates(page)
         message = (
