@@ -120,17 +120,15 @@ class CompBuilderProviderEvidenceService:
 
         result: tuple[str, ...] = ()
         if candidate.source_kind == "saved_build":
-            target_name = _clean(candidate.name).casefold()
-            target_owner = _clean(candidate.source_name).casefold()
-            matches: list[PlayerBuild] = []
-            for build in self.build_service.load().Members:
-                build_name = _clean(build.BuildName).casefold()
-                owner = (_clean(build.Name) or _clean(build.Gamertag)).casefold()
-                if build_name == target_name and owner == target_owner:
-                    matches.append(build)
-
-            if len(matches) == 1:
-                result = self.provider_ids_for_build(matches[0])
+            target_build_id = _clean(candidate.saved_build_id).casefold()
+            if target_build_id:
+                matches = [
+                    build
+                    for build in self.build_service.load().Members
+                    if _clean(getattr(build, "BuildId", "")).casefold() == target_build_id
+                ]
+                if len(matches) == 1:
+                    result = self.provider_ids_for_build(matches[0])
         elif candidate.source_kind == "reference_template" and candidate.complete_build:
             prefix = "template:"
             candidate_id = _clean(candidate.candidate_id)
