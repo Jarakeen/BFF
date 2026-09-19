@@ -206,5 +206,7 @@ def test_recruit_adoption_ui_keeps_encounter_future_boundary_explicit() -> None:
     assert '"ORIGINAL RECRUIT PRESCRIPTION"' in details
     assert '"ENCOUNTER BOUNDARY"' in details
     assert "service.prescription_evidence(plan.name, slot.slot_name)" in details
-    assert "install_roster_recruit_adoption()" in installer
-    assert "install_roster_recruit_prescription_details()" in installer
+    assert "install_roster_recruit_adoption()" not in installer
+    assert "install_roster_recruit_prescription_details()" not in installer
+    assert "roster_recruit_adoption_support" not in installer
+    assert "roster_recruit_prescription_details_support" not in installer
