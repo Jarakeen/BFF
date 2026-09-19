@@ -79,7 +79,8 @@ def test_comp_maker_bulk_optimizer_enforces_raid_wide_provider_coverage():
     assert "required_team_provider_ids = list(dict.fromkeys(required_team_provider_ids))" in source
     assert "already_covered_team_provider_ids.update(" in source
     assert "required_team_provider_ids=tuple(required_team_provider_ids)" in source
-    assert "already_covered_team_provider_ids=tuple(sorted(already_covered_team_provider_ids))" in source
+    assert "already_covered_team_provider_ids=tuple(" in source
+    assert "sorted(already_covered_team_provider_ids)" in source
     assert "raid-wide provider still uncovered" in source
 
 
