@@ -90,6 +90,7 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
                 primary_assignment=prior.primary_assignment,
                 secondary_assignment=prior.secondary_assignment,
                 utility_assignments=prior.utility_assignments,
+                comp_locked_fields=prior.comp_locked_fields,
                 notes=prior.notes,
             )
         members.append(member)
