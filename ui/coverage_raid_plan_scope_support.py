@@ -29,6 +29,10 @@ from services.raid_planned_gear_coverage_service import (
     PlannedGearCoverageProvider,
     RaidPlannedGearCoverageService,
 )
+from services.raid_planned_skill_coverage_service import (
+    PlannedSkillCoverageProvider,
+    RaidPlannedSkillCoverageService,
+)
 
 _INSTALLED = False
 _ORIGINAL_REFRESH = None
@@ -161,6 +165,23 @@ def _overlay_planned_gear(snapshot, scope):
         effect_names=RAID_PLAN_COVERAGE_NAMES,
     )
 
+def _overlay_planned_skills(snapshot, scope):
+    """Count explicit planned skills/class support as conditional planned coverage."""
+    providers = tuple(
+        PlannedSkillCoverageProvider(
+            seat_id=row.seat_id,
+            provider_label=row.player_label,
+            eso_class=row.eso_class,
+            skills=row.skills,
+        )
+        for row in scope.planned_skills
+    )
+    return RaidPlannedSkillCoverageService(DEFAULT_DATABASE).overlay(
+        snapshot,
+        providers,
+        effect_names=RAID_PLAN_COVERAGE_NAMES,
+    )
+
 def _render_raid_plan_scope(page) -> None:
     scope = getattr(page, "_raid_plan_coverage_scope", None)
     if scope is None:
@@ -168,9 +189,11 @@ def _render_raid_plan_scope(page) -> None:
 
     snapshot = page.snapshot_for_builds(scope.resolved_builds)
     snapshot = _overlay_planned_gear(snapshot, scope)
+    snapshot = _overlay_planned_skills(snapshot, scope)
     page.scope_card.set_title(f"Raid Plan: {scope.plan_name}")
     resolved = len(scope.members)
     planned = len(scope.planned_gear)
+    planned_skill_chairs = len(scope.planned_skills)
     unresolved = len(scope.unresolved)
     member_bits = [
         f"{row.seat_id}: {row.player_label} ({row.build.BuildName or 'Saved Build'})"
@@ -191,6 +214,7 @@ def _render_raid_plan_scope(page) -> None:
     page.scope_note.setText(
         f"{scope.named_members}/{scope.total_chairs} planned chair(s) • "
         f"{resolved} saved build(s) resolved • {planned} chair(s) with planned gear • "
+        f"{planned_skill_chairs} chair(s) with planned skill/class evidence • "
         f"{unresolved} unresolved full-build chair(s)\n"
         f"{member_text}{unresolved_text}\n"
         "Raid Plan snapshot. Coverage answers whether the planned group has a source. "
