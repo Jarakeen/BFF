@@ -302,7 +302,7 @@ def test_selected_chair_adviser_renders_canonical_group_impact_and_applies_same_
         "def _refresh_why", 1
     )[0]
 
-    assert "CompCandidateAdviserService(DEFAULT_DATABASE).evaluate(" in why
+    assert "_cached_candidate_proposal(" in why
     assert "proposal.gained_planned_required" in why
     assert "proposal.assignment_proof_improved" in why
     assert "proposal.gained_effect_evidence" in why
@@ -313,6 +313,7 @@ def test_selected_chair_adviser_renders_canonical_group_impact_and_applies_same_
     assert "proposal.blocked_fields" in why
 
     assert "CompCandidateAdviserService(DEFAULT_DATABASE).apply(" in apply
+    assert "proposal=cached_proposal" in apply
     assert "page._comp_plan_state = updated" in apply
     assert "proposal.blocked_fields" in apply
     assert "candidate_support._set_candidate_for_row" in apply  # legacy-only fallback
