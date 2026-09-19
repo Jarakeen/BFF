@@ -161,23 +161,12 @@ class CoveragePage(FoundryPage):
     def set_team_scope(
         self, name: str, members: tuple[tuple[str, PlayerBuild], ...], *, total_slots: int = 12
     ) -> None:
-        """Use explicit selected builds from the dashboard, never infer a roster from names."""
-        if not members:
-            self.status.warning("Select saved builds in Team Optimization before sending a team to Coverage.")
-            return
-        self._team_scope = tuple((slot, PlayerBuild.from_dict(build.to_dict())) for slot, build in members)
-        self._team_scope_name = name.strip() or "Selected Team"
-        self._team_total_slots = total_slots
-        self.scope_combo.blockSignals(True)
-        index = self.scope_combo.findData("team")
-        if index < 0:
-            self.scope_combo.addItem("Selected Team", "team")
-            index = self.scope_combo.findData("team")
-        self.scope_combo.setItemText(index, self._team_scope_name)
-        self.scope_combo.setCurrentIndex(index)
-        self.scope_combo.blockSignals(False)
-        self.tabs.setCurrentIndex(0)
-        self.refresh()
+        """Compatibility boundary: Coverage no longer exposes transient team scopes."""
+        del name, members, total_slots
+        self.status.warning(
+            "Coverage evaluates saved Raid Plans only. Save the team as a trial-specific "
+            "Raid Plan, then select that plan here."
+        )
 
     def _raid_review_tab(self) -> QWidget:
         page = QWidget()
