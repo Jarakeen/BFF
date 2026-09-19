@@ -365,24 +365,37 @@ def _wire_class_selectors(page) -> None:
 def _set_candidate_for_row(page, row: int, candidate: CompBuildCandidate) -> str:
     slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
     chair = _state_chair_for_row(page, row)
-    if chair is not None and chair.is_locked("build"):
-        page.status.warning(
-            f"{slot_name} build is locked in this Raid Plan; recommendation was not applied."
-        )
-        return slot_name
+    changes: dict[str, object] = {}
+    blocked_fields: tuple[str, ...] = ()
 
-    page._comp_applied_candidates[slot_name] = candidate
     if chair is not None:
         changes = _candidate_state_changes(chair, candidate)
+        blocked_fields = tuple(
+            field
+            for field in ("class", "build", "gear", "mundus")
+            if chair.is_locked(field)
+        )
         if changes:
             _replace_state_chair(page, chair.with_changes(**changes))
+            page._comp_applied_candidates[slot_name] = candidate
+    else:
+        # Unsupported state-less legacy compatibility only.
+        page._comp_applied_candidates[slot_name] = candidate
+        changes = {"legacy": True}
+
+    page._comp_last_candidate_apply_changed = bool(changes)
+    page._comp_last_candidate_apply_blocked_fields = blocked_fields
 
     if candidate.eso_class and not (chair is not None and chair.is_locked("class")):
         selector = page.matrix_table.cellWidget(row, 2)
         if isinstance(selector, QComboBox):
             index = selector.findText(candidate.eso_class)
             if index >= 0:
-                selector.setCurrentIndex(index)
+                selector.blockSignals(True)
+                try:
+                    selector.setCurrentIndex(index)
+                finally:
+                    selector.blockSignals(False)
     return slot_name
 
 
@@ -417,10 +430,31 @@ def _apply_top_candidate(page, *_args) -> None:
         return
 
     slot_name = _set_candidate_for_row(page, row, candidate)
+    changed = bool(getattr(page, "_comp_last_candidate_apply_changed", False))
+    blocked = tuple(
+        getattr(page, "_comp_last_candidate_apply_blocked_fields", ()) or ()
+    )
+    if not changed:
+        detail = (
+            " Locked fields: " + ", ".join(blocked) + "."
+            if blocked
+            else ""
+        )
+        page.status.warning(
+            f"{slot_name}: this recommendation did not change any unlocked field.{detail}"
+        )
+        _refresh_candidates(page)
+        return
+
     status = "complete build" if candidate.complete_build else "partial build evidence"
+    preserved = (
+        " Preserved locked " + ", ".join(blocked) + "."
+        if blocked
+        else ""
+    )
     page.status.success(
-        f"Applied {candidate.name} to {slot_name} as {status}. "
-        "Raid Plan handoff will preserve this candidate evidence."
+        f"Applied unlocked parts of {candidate.name} to {slot_name} as {status}."
+        + preserved
     )
     _refresh_candidates(page)
 
@@ -440,9 +474,6 @@ def _apply_best_candidates_to_all(page, *_args) -> None:
     for row in range(page.matrix_table.rowCount()):
         slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
         chair = _state_chair_for_row(page, row)
-        if chair is not None and chair.is_locked("build"):
-            skipped_existing += 1
-            continue
         if slot_name in page._comp_applied_candidates:
             skipped_existing += 1
             continue
@@ -458,6 +489,9 @@ def _apply_best_candidates_to_all(page, *_args) -> None:
             continue
 
         _set_candidate_for_row(page, row, candidate)
+        if not bool(getattr(page, "_comp_last_candidate_apply_changed", False)):
+            skipped_existing += 1
+            continue
         player_key = _saved_player_key(candidate)
         if player_key:
             used_saved_players.add(player_key)
