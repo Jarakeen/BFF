@@ -43,6 +43,23 @@ COMP_MAKER_LOCAL_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes="Planned gear is conditional capability evidence only; assignment ownership remains intent and is reviewed separately from provider proof; runtime uptime and exact slotting remain unproven.",
     ),
     ServiceDescriptor(
+        service_id="comp.builder.selected_chair_adviser",
+        domain="comp",
+        purpose="Compare one explicit build candidate against canonical CompPlanState and explain group-level planning impact before applying it.",
+        implementation_path="services.comp_candidate_adviser_service",
+        inputs=("CompPlanState", "CompBuildCandidate", "CompPlanHealth"),
+        outputs=("CompCandidateProposal", "CompPlanState"),
+        dependencies=(
+            "comp.builder.plan_state",
+            "comp.builder.plan_health",
+            "comp.builder.build_candidates",
+        ),
+        responsibilities=("comp_builder_selected_chair_adviser",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        evidence_class=EvidenceClass.MIXED,
+        notes="Proposal comparison reports planned coverage, evidence-strength changes, duplicate effects, lock preservation, and unresolved evidence; candidate skills remain evidence-only and runtime uptime belongs downstream.",
+    ),
+    ServiceDescriptor(
         service_id="comp.builder.plan_autofill",
         domain="comp",
         purpose="Apply whole-team candidate optimization only to unresolved canonical CompPlanState build decisions while preserving locked or already-planned choices.",
