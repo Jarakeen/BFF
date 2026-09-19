@@ -75,7 +75,11 @@ remain temporarily for compatibility, migration, or historical tooling.
       unrelated Comp/Roster application bootstrap code.
 - [x] focused structural tests guard that legacy Optimization constructors and provider
       hooks do not return to application startup.
-- [ ] record local Windows before/after timing output in this file after profiling.
+- [x] Local Windows constructor timing evidence recorded on 2026-09-19 using five offscreen Qt samples:
+      - legacy Optimization chain at `1bc2351c`: min 65.497 ms, median 74.399 ms, max 315.663 ms;
+      - Phase 14 lightweight Workbench: min 28.125 ms, median 30.177 ms, max 140.512 ms;
+      - median constructor time reduced by approximately 59.4% (74.399 -> 30.177 ms), with saved-build resolution still deferred at startup.
+      - Both runs emitted the same PySide6 offscreen font-directory warning, so the comparison is retained as relative constructor evidence rather than a packaged-app benchmark.
 - [ ] run focused Phase 14 Comp + Optimization regression gates.
 - [ ] after green proof, delete dead compatibility ownership paths rather than leaving
       duplicate implementations indefinitely.
