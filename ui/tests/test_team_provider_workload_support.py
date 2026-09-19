@@ -17,28 +17,25 @@ def test_shared_workload_card_is_installed_after_comp_maker_polish():
     assert polish < workload
 
 
-def test_workload_support_targets_both_surfaces_and_invalidates_stale_results():
+def test_workload_support_keeps_comp_hooks_but_not_legacy_optimization_hooks():
     source = (ROOT / "ui" / "team_provider_workload_support.py").read_text(
         encoding="utf-8"
     )
 
     assert 'FoundryCard("Provider Rotation Workload", "↻")' in source
     assert "CompBuilderPage.set_provider_workload_evidence" in source
-    assert "OptimizationPage.set_provider_workload_evidence" in source
     assert "CompBuilderPage.generate_provider_workload_candidates" in source
-    assert "OptimizationPage.generate_provider_workload_candidates" in source
     assert "CompBuilderPage.set_provider_workload_policy" in source
-    assert "OptimizationPage.set_provider_workload_policy" in source
     assert "_comp_selected_saved_builds(page)" in source
     assert 'state = getattr(page, "_comp_plan_state", None)' in source
     assert 'getattr(chair, "selected_build_id", "")' in source
-    assert 'getattr(page, "_comp_applied_candidates", {})' not in source.split("def _comp_selected_saved_builds", 1)[1].split("def _optimization_selected_saved_builds", 1)[0]
-    assert "_optimization_selected_saved_builds(page)" in source
-    assert "CompBuilderPage._refresh_coverage = _comp_refresh_with_provider_invalidation" in source
-    assert (
-        "OptimizationPage._update_team_analysis = "
-        "_optimization_update_with_provider_invalidation"
-    ) in source
+    assert 'getattr(page, "_comp_applied_candidates", {})' not in source.split(
+        "def _comp_selected_saved_builds", 1
+    )[1].split("def _optimization_selected_saved_builds", 1)[0]
+    install = source.split("def install() -> None:", 1)[1]
+    assert "OptimizationPage.__init__ =" not in install
+    assert "OptimizationPage._update_team_analysis =" not in install
+    assert "OptimizationPage.set_provider_workload_evidence" not in install
     assert "page._provider_workload_decision_result = None" in source
     assert "page._provider_workload_policy_result = None" in source
     assert "setStyleSheet" not in source
