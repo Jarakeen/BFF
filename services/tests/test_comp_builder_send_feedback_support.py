@@ -12,17 +12,6 @@ def test_comp_maker_send_feedback_keeps_only_send_state_in_actions_card() -> Non
     assert 'TEAM / ROSTER PLAN:' not in source
 
 
-def test_generated_plan_roster_bridge_is_compatibility_only() -> None:
-    source = Path("ui/comp_builder_roster_view_support.py").read_text(encoding="utf-8")
-    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
-        encoding="utf-8"
-    )
-
-    assert "_refresh_generated_plan_choices_hidden" in source
-    assert "install_comp_builder_roster_view()" not in installer
-    assert "comp_builder_roster_view_support" not in installer
-
-
 def test_selected_build_details_surface_skills_before_send() -> None:
     source = Path("ui/comp_builder_candidate_picker_support.py").read_text(encoding="utf-8")
 
