@@ -67,6 +67,59 @@ def _group_size_for_members(members) -> int:
     return 4 if len(tuple(members)) <= 4 else 12
 
 
+def _canonical_seat_id(value: object) -> str:
+    return "-".join(
+        str(value or "")
+        .strip()
+        .casefold()
+        .replace("_", " ")
+        .replace("-", " ")
+        .split()
+    )
+
+
+def _ensure_unbound_comp_state(
+    page,
+    *,
+    team_name: str,
+    encounter_name: str,
+) -> None:
+    """Create canonical Comp state when roster/assignments arrive before Raid Plan."""
+    if getattr(page, "_comp_plan_state", None) is not None:
+        return
+
+    from models.comp_plan_state import CompChairState
+    from services.comp_plan_state_service import CompPlanStateService
+    from ui.comp_builder_page import GOAL_TRIALS
+
+    goal = str(page.goal_combo.currentText() or "").strip() or "Custom Goal"
+    trial = str(
+        GOAL_TRIALS.get(goal)
+        or encounter_name
+        or "Custom Trial"
+    ).strip()
+    suffix = f" • {encounter_name}" if encounter_name else ""
+    name = f"{team_name or 'Ad-hoc Team'}{suffix}".strip()
+
+    chairs = tuple(
+        CompChairState(
+            seat_id=_canonical_seat_id(
+                page._cell_text(row, 0) or f"slot-{row + 1}"
+            ),
+            role=str(page._cell_text(row, 1) or "").strip() or None,
+        )
+        for row in range(page.matrix_table.rowCount())
+    )
+    page._comp_plan_state = CompPlanStateService.new_unbound(
+        raid_plan_name=name or f"{goal} Composition",
+        trial_id=trial,
+        team_name=str(team_name or "").strip() or None,
+        difficulty=str(page.difficulty_combo.currentText() or "").strip() or None,
+        achievement_goal=goal,
+        chairs=chairs,
+    )
+
+
 def _load_roster_shape(page, group_size: int) -> None:
     """Load a neutral 4- or 12-player skeleton without asserting a trial template."""
     page.current_template = None
@@ -258,12 +311,13 @@ def _match_rows(page, members) -> list[tuple[int, object]]:
     return matches
 
 
-def _sync_comp_state_from_matches(page, matched) -> None:
+def _sync_comp_state_from_matches(page, matched, assignments: dict[int, dict] | None = None) -> None:
     state = getattr(page, "_comp_plan_state", None)
     if state is None:
         return
 
     current = state
+    assignments = dict(assignments or {})
     for row, member in matched:
         slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
         wanted = "-".join(
@@ -311,6 +365,18 @@ def _sync_comp_state_from_matches(page, matched) -> None:
         if eso_class and not chair.is_locked("class"):
             changes["eso_class"] = eso_class
 
+        member_id = int(member.Id) if getattr(member, "Id", None) is not None else -1
+        assignment = assignments.get(member_id, {})
+        primary = str(assignment.get("primary_assignment", "") or "").strip()
+        secondary = str(assignment.get("secondary_assignment", "") or "").strip()
+        note = str(assignment.get("notes", "") or "").strip()
+        if primary and not chair.is_locked("primary_assignment"):
+            changes["primary_assignment"] = primary
+        if secondary and not chair.is_locked("secondary_assignment"):
+            changes["secondary_assignment"] = secondary
+        if note and not chair.notes:
+            changes["notes"] = note
+
         if changes:
             current = current.with_chair(chair.with_changes(**changes))
 
@@ -345,6 +411,11 @@ def apply_roster_team_context(
     page._comp_group_size = group_size
     _load_roster_shape(page, group_size)
     _clear_player_rows(page)
+    _ensure_unbound_comp_state(
+        page,
+        team_name=page._roster_team_context_name,
+        encounter_name=page._roster_encounter_context_name,
+    )
 
     matched = _match_rows(page, members)
     page._comp_roster_member_by_slot = {}
@@ -358,12 +429,23 @@ def apply_roster_team_context(
             page._comp_class_constraint_by_slot[slot_name] = eso_class
         page._comp_roster_member_by_slot[slot_name] = None if _is_recruit_member(member) else member
 
-    _sync_comp_state_from_matches(page, matched)
+    _sync_comp_state_from_matches(page, matched, assignments)
     _reapply_class_constraints(page)
 
     if hasattr(page, "plan_name_input") and page._roster_team_context_name:
         suffix = f" • {page._roster_encounter_context_name}" if page._roster_encounter_context_name else ""
         page.plan_name_input.setText(f"{page._roster_team_context_name}{suffix}")
+
+    state = getattr(page, "_comp_plan_state", None)
+    if state is not None and not state.is_raid_plan_bound:
+        from dataclasses import replace
+
+        page._comp_plan_state = replace(
+            state,
+            raid_plan_name=str(page.plan_name_input.text() or state.raid_plan_name).strip(),
+            team_name=page._roster_team_context_name or state.team_name,
+            dirty=True,
+        )
 
     if hasattr(page, "_refresh_coverage"):
         page._refresh_coverage()
