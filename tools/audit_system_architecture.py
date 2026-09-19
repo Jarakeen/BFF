@@ -14,6 +14,7 @@ is present. Use ``--strict`` when the goal is to fail on ERROR findings.
 
 import argparse
 import ast
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -92,13 +93,39 @@ def _relative(root: Path, path: Path) -> str:
         return path.as_posix()
 
 
+def _git_tracked_paths(root: Path) -> set[str] | None:
+    """Return tracked repository paths when this is a Git checkout.
+
+    Architecture closeout is a repository contract. Local untracked scratch or
+    retired adapter files can still exist after a pull, but they are not part of
+    the branch being audited and must not become release blockers.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "-z"],
+            check=True,
+            capture_output=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return {
+        entry.decode("utf-8", errors="surrogateescape").replace("\\", "/")
+        for entry in result.stdout.split(b"\0")
+        if entry
+    }
+
+
 def _runtime_python_files(root: Path) -> tuple[Path, ...]:
     files: list[Path] = []
+    tracked = _git_tracked_paths(root)
     for name in _RUNTIME_ROOTS:
         base = root / name
         if not base.exists():
             continue
         for path in base.rglob("*.py"):
+            rel = path.relative_to(root).as_posix()
+            if tracked is not None and rel not in tracked:
+                continue
             rel_parts = path.relative_to(root).parts
             if any(part in _SKIP_PARTS for part in rel_parts):
                 continue
