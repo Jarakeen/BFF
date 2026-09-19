@@ -472,15 +472,13 @@ def install() -> None:
         install as install_build_screenshot_import_disable_support,
     )
     from ui.coverage_raid_plan_scope_support import install as install_coverage_raid_plan_scope_support
-    from ui.raid_plan_optimizer_adviser_support import install as install_raid_plan_optimizer_adviser_support
     from ui.team_optimization_phase14_shell_support import (
         install as install_team_optimization_phase14_shell_support,
     )
 
     install_coverage_raid_plan_scope_support()
-    install_raid_plan_optimizer_adviser_support()
-    # The Phase 14 shell must wrap the plan-scoped adviser after that adapter has
-    # installed its exact RaidPlan handoff.
+    # Phase 14 owns the exact RaidPlan handoff directly. The legacy adviser adapter
+    # remains compatibility code but is no longer imported/constructed at startup.
     install_team_optimization_phase14_shell_support()
     _install_canonical_sidebar_routes()
     from ui.raid_engine_dashboard_polish_support import install as install_dashboard_polish
