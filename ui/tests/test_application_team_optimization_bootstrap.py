@@ -27,15 +27,16 @@ def test_application_startup_owns_team_optimization_composition() -> None:
     )
 
 
-def test_team_optimization_bootstrap_preserves_extension_order() -> None:
+def test_team_optimization_bootstrap_preserves_phase14_extension_order() -> None:
     source = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
     assert "def bootstrap_team_optimization_extensions()" in source
-    assert source.index("install_role_cleanup()") < source.index(
-        "install_team_optimization_canonical_analysis()"
-    )
+    assert "install_role_cleanup()" not in source
+    assert "install_team_optimization_canonical_analysis()" not in source
+    assert "team_optimization_role_cleanup" not in source
+    assert "team_optimization_canonical_analysis_support" not in source
     assert source.index("install_comp_builder_build_candidates()") < source.index(
         "install_comp_builder_candidate_picker()"
     )
