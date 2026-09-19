@@ -65,6 +65,8 @@ class RaidPlannedGearCoverageService:
 
     def __init__(self, database_path: Path) -> None:
         self.database_path = Path(database_path)
+        self._reviewed_by_set_cache: dict[str, tuple[object, ...]] | None = None
+        self._unique_by_set_cache: dict[str, object] | None = None
 
     @staticmethod
     def empty_snapshot(effect_names: Iterable[str]) -> RaidCoverageSnapshot:
@@ -84,6 +86,32 @@ class RaidPlannedGearCoverageService:
     @staticmethod
     def _provider_label(row: PlannedGearCoverageProvider, set_name: str) -> str:
         return f"{row.provider_label} [planned: {set_name}]"
+
+    def _reviewed_by_set(self) -> dict[str, tuple[object, ...]]:
+        cached = self._reviewed_by_set_cache
+        if cached is not None:
+            return cached
+        grouped: dict[str, list[object]] = {}
+        for item in NonAbilityEffectProviderReferenceService(
+            self.database_path
+        ).gear():
+            grouped.setdefault(item.source_name.casefold(), []).append(item)
+        cached = {
+            key: tuple(values)
+            for key, values in grouped.items()
+        }
+        self._reviewed_by_set_cache = cached
+        return cached
+
+    def _unique_by_set(self) -> dict[str, object]:
+        cached = self._unique_by_set_cache
+        if cached is None:
+            cached = {
+                name.casefold(): reference
+                for name, reference in UNIQUE_SUPPORT_SET_BY_NAME.items()
+            }
+            self._unique_by_set_cache = cached
+        return cached
 
     def effects_for_provider(
         self,
@@ -132,20 +160,8 @@ class RaidPlannedGearCoverageService:
             for name in effect_names
             if _clean(name)
         }
-        reviewed_rows = NonAbilityEffectProviderReferenceService(
-            self.database_path
-        ).gear()
-        reviewed_by_set: dict[str, list[object]] = {}
-        for item in reviewed_rows:
-            reviewed_by_set.setdefault(
-                item.source_name.casefold(),
-                [],
-            ).append(item)
-
-        unique_by_set = {
-            name.casefold(): reference
-            for name, reference in UNIQUE_SUPPORT_SET_BY_NAME.items()
-        }
+        reviewed_by_set = self._reviewed_by_set()
+        unique_by_set = self._unique_by_set()
 
         for row in tuple(providers):
             if not isinstance(row, PlannedGearCoverageProvider):
