@@ -93,6 +93,9 @@ class CompBuildCandidate:
     score: float
     score_reasons: tuple[str, ...]
     five_piece_sets: tuple[str, ...] = ()
+    saved_player_id: str = ""
+    saved_character_id: str = ""
+    saved_build_id: str = ""
 
 
 class CompBuilderBuildCandidateService:
@@ -180,6 +183,9 @@ class CompBuilderBuildCandidateService:
             )
             name = _clean(build.BuildName) or _clean(build.Name) or f"Saved build {index + 1}"
             identity = _clean(build.Name) or _clean(build.Gamertag) or "Saved character"
+            saved_player_id = _clean(getattr(build, "PlayerId", ""))
+            saved_character_id = _clean(getattr(build, "CharacterId", ""))
+            saved_build_id = _clean(getattr(build, "BuildId", ""))
             all_gear_sets = tuple(build_gear_set_names(build))
             five_piece_sets = _five_piece_set_names(
                 self.data_dir / "eso.db",
@@ -187,7 +193,7 @@ class CompBuilderBuildCandidateService:
             )
             results.append(
                 CompBuildCandidate(
-                    candidate_id=f"saved:{index}:{name}",
+                    candidate_id=(f"saved:{saved_build_id}" if saved_build_id else f"saved:{index}:{name}"),
                     name=name,
                     source_kind="saved_build",
                     source_name=identity,
@@ -207,6 +213,9 @@ class CompBuilderBuildCandidateService:
                     unresolved=(),
                     score=score,
                     score_reasons=reasons,
+                    saved_player_id=saved_player_id,
+                    saved_character_id=saved_character_id,
+                    saved_build_id=saved_build_id,
                 )
             )
         return results
