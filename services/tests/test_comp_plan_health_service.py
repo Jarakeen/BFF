@@ -190,6 +190,8 @@ def test_comp_assignment_review_distinguishes_planned_source_from_unproven_assig
         if row.effect_name == "Major Slayer"
     )
     assert supported_review.state == "assigned_conditional"
+    assert "Major Slayer" in supported_health.planned_required
+    assert "Major Slayer" not in supported_health.missing_required
     assert supported_review.supported_primary == ("healer-1",)
     assert supported_review.unsupported_primary == ()
 
@@ -212,6 +214,9 @@ def test_comp_assignment_review_distinguishes_planned_source_from_unproven_assig
         if row.effect_name == "Major Slayer"
     )
     assert unproven_review.state == "assigned_unproven"
+    assert unproven_review.label == "Covered • Planned"
+    assert "Major Slayer" in unproven_health.planned_required
+    assert "Major Slayer" not in unproven_health.missing_required
     assert unproven_review.unsupported_primary == ("healer-1",)
 
 
