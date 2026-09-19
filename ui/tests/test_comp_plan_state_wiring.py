@@ -499,3 +499,48 @@ def test_roster_intake_is_state_first_then_renders_accepted_values() -> None:
     assert "chair.character_name" in setter
     assert "chair.eso_class" in setter
     assert "chair.primary_assignment" in setter
+
+
+def test_selected_chair_exposes_planned_coverage_assignments_and_source() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert 'QLabel("PLANNED COVERAGE")' in source
+    assert "page.comp_phase14_primary_coverage = QComboBox()" in source
+    assert "page.comp_phase14_backup_coverage = QComboBox()" in source
+    assert "page.comp_phase14_coverage_source = QLineEdit()" in source
+    assert '"primary_assignment"' in source
+    assert '"secondary_assignment"' in source
+    assert '"assignment_source"' in source
+    assert "GROUP_COVERAGE_NAMES" in source
+    assert "UNIQUE_SUPPORT_SET_NAMES" in source
+    assert "state.with_chair(chair.with_changes(**{field_name: clean}))" in source
+
+
+def test_selected_chair_planned_skills_are_visible_even_without_candidate() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert "def _refresh_skill_summary(page, chair, *, fallback: str) -> None:" in source
+    assert 'f"Planned Skills ({len(skills)}): {preview}{suffix}"' in source
+    assert '"Planned skills:\\n"' in source
+
+    no_candidate = source.split("if preferred is None:", 1)[1].split(
+        "refresh_sources = getattr", 1
+    )[0]
+    assert "_refresh_skill_summary(" in no_candidate
+    assert 'page.comp_phase14_skill_seed_label.setText("Skills: no eligible source")' not in no_candidate
+
+
+def test_selected_coverage_controls_respect_assignment_locks() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    setter = source.split("def _set_selected_coverage_field", 1)[1].split(
+        "def _refresh_skill_summary", 1
+    )[0]
+    refresh = source.split("def _refresh_selected_planning_controls", 1)[1].split(
+        "def _skill_seed_proposal", 1
+    )[0]
+
+    assert 'chair.is_locked(field_name)' in setter
+    assert 'field_name in {"primary_assignment", "secondary_assignment"}' in setter
+    assert 'primary.setEnabled(not chair.is_locked("primary_assignment"))' in refresh
+    assert 'backup.setEnabled(not chair.is_locked("secondary_assignment"))' in refresh
