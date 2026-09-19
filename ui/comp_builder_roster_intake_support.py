@@ -85,7 +85,8 @@ def _ensure_unbound_comp_state(
     encounter_name: str,
 ) -> None:
     """Create canonical Comp state when roster/assignments arrive before Raid Plan."""
-    if getattr(page, "_comp_plan_state", None) is not None:
+    existing = getattr(page, "_comp_plan_state", None)
+    if existing is not None and existing.is_raid_plan_bound:
         return
 
     from models.comp_plan_state import CompChairState
@@ -110,6 +111,8 @@ def _ensure_unbound_comp_state(
         )
         for row in range(page.matrix_table.rowCount())
     )
+    if existing is not None:
+        page._comp_unbound_baseline_state = existing.mark_saved()
     page._comp_plan_state = CompPlanStateService.new_unbound(
         raid_plan_name=name or f"{goal} Composition",
         trial_id=trial,
