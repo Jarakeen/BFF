@@ -959,6 +959,36 @@ Next Action
 
 **Hardened exit criteria:** BFF can model combat over time with explicit event ordering, resource/state changes, supported target behavior, deterministic replay from identical deterministic inputs, and auditable unresolved boundaries.
 
+### Parked Live Raid integration — encounter intelligence
+
+Route the canonical **boss encounter information and encounter timelines** into the
+**Live Raid** workspace wherever that information is useful during an active run.
+
+Target behavior:
+
+- Live Raid consumes the active Raid Plan's selected trial / encounter context rather
+  than maintaining a separate boss-data selection or duplicate encounter model.
+- Surface concise boss/phase information, mechanic timing, phase transitions, add or
+  priority windows, and other reviewed encounter timeline facts on the Live Raid page
+  where they help raid-leading decisions.
+- Reuse the existing canonical encounter/timeline services and any reviewed
+  position/timeline data rather than copying encounter prose into Live Raid.
+- Keep the display contextual: show information appropriate to the selected boss and,
+  when an explicit current phase is available, the relevant phase/window rather than
+  dumping an entire guide into the run surface.
+- Live Raid remains a **consumer**, not an encounter editor. Strategy/mechanic edits
+  continue to belong to their owning planning/reference surfaces.
+- Do not infer live telemetry, boss health, elapsed phase, or current mechanic from the
+  mere existence of a timeline. Automatic "what is happening now" behavior requires a
+  real/manual runtime clock or another explicit live-state source.
+- Preserve unresolved/conflicting encounter evidence as unresolved rather than turning
+  it into a confident live callout.
+- Prefer compact, raid-lead-readable presentation with the detailed boss/encounter
+  pages remaining available for deeper reference.
+
+**Status:** PARKED / TODO. This is a Live Raid product integration item, not a reason to
+duplicate encounter truth or reopen canonical encounter ownership.
+
 ---
 
 # PHASE 15 · Encounter-Aware Optimization
