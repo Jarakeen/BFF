@@ -210,6 +210,64 @@ def _format_candidates(page) -> str:
     return "\n".join(lines)
 
 
+def _state_chair_for_row(page, row: int):
+    state = getattr(page, "_comp_plan_state", None)
+    if state is None or row < 0:
+        return None
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    wanted = "-".join(
+        str(slot_name or "")
+        .strip()
+        .casefold()
+        .replace("_", " ")
+        .replace("-", " ")
+        .split()
+    )
+    return next(
+        (
+            chair
+            for chair in tuple(getattr(state, "chairs", ()) or ())
+            if "-".join(
+                str(getattr(chair, "seat_id", "") or "")
+                .strip()
+                .casefold()
+                .replace("_", " ")
+                .replace("-", " ")
+                .split()
+            )
+            == wanted
+        ),
+        None,
+    )
+
+
+def _replace_state_chair(page, chair) -> None:
+    state = getattr(page, "_comp_plan_state", None)
+    if state is not None and chair is not None:
+        page._comp_plan_state = state.with_chair(chair)
+
+
+def _candidate_state_changes(chair, candidate: CompBuildCandidate) -> dict:
+    changes: dict[str, object] = {}
+    if not chair.is_locked("class") and candidate.eso_class:
+        changes["eso_class"] = candidate.eso_class
+    if not chair.is_locked("build"):
+        changes.update(
+            selected_build_name=candidate.name,
+            build_source_kind=candidate.source_kind,
+            build_source_name=candidate.source_name,
+            build_source_url=candidate.source_url,
+            candidate_id=candidate.candidate_id,
+        )
+    if not chair.is_locked("gear"):
+        changes["planned_gear_sets"] = tuple(candidate.gear_sets)
+    if not chair.is_locked("skills"):
+        changes["planned_skills"] = tuple(candidate.skills)
+    if not chair.is_locked("mundus"):
+        changes["planned_mundus"] = candidate.mundus or None
+    return changes
+
+
 def _refresh_candidates(page) -> None:
     label = getattr(page, "comp_build_candidates_label", None)
     if label is not None:
@@ -227,9 +285,32 @@ def _refresh_candidates(page) -> None:
 
 def _class_changed(page, row: int) -> None:
     slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    selected = page._selected_class(row)
+    chair = _state_chair_for_row(page, row)
+    if chair is not None and chair.is_locked("class"):
+        current = str(chair.eso_class or "Any class")
+        if selected.casefold() != current.casefold():
+            selector = page.matrix_table.cellWidget(row, 2)
+            if isinstance(selector, QComboBox):
+                selector.blockSignals(True)
+                try:
+                    index = selector.findText(current)
+                    if index >= 0:
+                        selector.setCurrentIndex(index)
+                finally:
+                    selector.blockSignals(False)
+            page.status.warning(f"{slot_name} class is locked in this Raid Plan.")
+            return
+    elif chair is not None:
+        _replace_state_chair(
+            page,
+            chair.with_changes(
+                eso_class=None if selected.casefold() == "any class" else selected
+            ),
+        )
+
     applied = getattr(page, "_comp_applied_candidates", {}).get(slot_name)
     if applied is not None:
-        selected = page._selected_class(row)
         if (
             selected
             and selected.casefold() != "any class"
@@ -255,9 +336,20 @@ def _wire_class_selectors(page) -> None:
 
 def _set_candidate_for_row(page, row: int, candidate: CompBuildCandidate) -> str:
     slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
-    page._comp_applied_candidates[slot_name] = candidate
+    chair = _state_chair_for_row(page, row)
+    if chair is not None and chair.is_locked("build"):
+        page.status.warning(
+            f"{slot_name} build is locked in this Raid Plan; recommendation was not applied."
+        )
+        return slot_name
 
-    if candidate.eso_class:
+    page._comp_applied_candidates[slot_name] = candidate
+    if chair is not None:
+        changes = _candidate_state_changes(chair, candidate)
+        if changes:
+            _replace_state_chair(page, chair.with_changes(**changes))
+
+    if candidate.eso_class and not (chair is not None and chair.is_locked("class")):
         selector = page.matrix_table.cellWidget(row, 2)
         if isinstance(selector, QComboBox):
             index = selector.findText(candidate.eso_class)
@@ -319,6 +411,10 @@ def _apply_best_candidates_to_all(page, *_args) -> None:
 
     for row in range(page.matrix_table.rowCount()):
         slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+        chair = _state_chair_for_row(page, row)
+        if chair is not None and chair.is_locked("build"):
+            skipped_existing += 1
+            continue
         if slot_name in page._comp_applied_candidates:
             skipped_existing += 1
             continue
