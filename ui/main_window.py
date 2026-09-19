@@ -189,6 +189,58 @@ class MainWindow(QMainWindow):
     def connect_signals(self):
         self.sidebar.pageRequested.connect(self.show_page)
 
+    def _persist_comp_plan_state_to_raid_plan(
+        self,
+        *,
+        navigate: bool,
+    ):
+        """Persist the bound canonical Comp working state directly to Raid Plan."""
+        from services.comp_plan_state_service import CompPlanStateService
+
+        raid_plans = self.pages.get("raid_plans")
+        comp = self.pages.get("comp_builder")
+        if raid_plans is None or comp is None:
+            return None
+
+        state = getattr(comp, "_comp_plan_state", None)
+        if state is None:
+            raid_plans.status.warning(
+                "Comp Maker is not bound to a Raid Plan; direct Raid Plan save is unavailable."
+            )
+            return None
+
+        base_plan = raid_plans.plan_repository.get(state.raid_plan_id)
+        if base_plan is None:
+            raid_plans.status.error(
+                f'Could not reload originating Raid Plan "{state.raid_plan_name}".'
+            )
+            return None
+
+        plan = CompPlanStateService.to_raid_plan(state, base_plan=base_plan)
+        raid_plans.plan_repository.save(plan)
+        persisted = raid_plans.plan_repository.get(plan.plan_id)
+        if persisted is None or persisted != plan:
+            raid_plans.status.error(
+                "Comp Maker state did not round-trip through Raid Plan storage exactly; "
+                "the app is refusing to report success."
+            )
+            return None
+
+        comp._comp_plan_state = CompPlanStateService.from_raid_plan(
+            persisted,
+            achievement_goal=state.achievement_goal,
+        )
+        comp._raid_plan_origin_id = persisted.plan_id
+        raid_plans.apply_plan(persisted)
+        raid_plans._refresh_overview()
+        raid_plans.status.success(
+            f"Comp Maker changes saved directly to Raid Plan: {persisted.name}."
+        )
+        if navigate:
+            raid_plans._show_local_view(0)
+            self.show_page("raid_plans")
+        return persisted
+
     def _persist_generated_comp_plan_to_raid_plan(
         self,
         plan_name: str,
