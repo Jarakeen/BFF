@@ -161,11 +161,6 @@ class BuildContextVariant:
     TeamName: str = ""
     BossName: str = ""
     TransformedForm: str = ""
-    # Stable canonical identity mirrored from characters.json for compatibility consumers.
-    # Appended to preserve historical positional-constructor ordering.
-    PlayerId: str = ""
-    CharacterId: str = ""
-    BuildId: str = ""
     Mundus: str = ""
     SecondMundus: str = ""
     Armor: dict[str, dict[str, str]] = field(default_factory=dict)
@@ -221,9 +216,6 @@ class BuildContextVariant:
             TeamName=str(data.get("TeamName", "") or ""),
             BossName=str(data.get("BossName", data.get("Boss", "")) or ""),
             TransformedForm=str(data.get("TransformedForm", "") or "").strip().casefold(),
-            PlayerId=str(data.get("PlayerId", "") or ""),
-            CharacterId=str(data.get("CharacterId", "") or ""),
-            BuildId=str(data.get("BuildId", "") or ""),
             Mundus=str(data.get("Mundus", "") or ""),
             SecondMundus=str(data.get("SecondMundus", "") or ""),
             Armor=armor,
@@ -314,6 +306,11 @@ class PlayerBuild:
     # Empty means the ordinary mortal bar. Context resolution may set this when
     # an explicit variant selects a transformed skill-bar state.
     TransformedForm: str = ""
+    # Stable canonical identity mirrored from characters.json for compatibility consumers.
+    # Appended to preserve historical positional-constructor ordering.
+    PlayerId: str = ""
+    CharacterId: str = ""
+    BuildId: str = ""
 
     @property
     def attribute_points_total(self) -> int:
@@ -442,6 +439,9 @@ class PlayerBuild:
             ReadyForRaid=bool(data.get("ReadyForRaid", False)),
             ContextVariants=variants,
             TransformedForm=str(data.get("TransformedForm", "") or "").strip().casefold(),
+            PlayerId=str(data.get("PlayerId", "") or ""),
+            CharacterId=str(data.get("CharacterId", "") or ""),
+            BuildId=str(data.get("BuildId", "") or ""),
         )
 
     def display_label(self, fallback: str) -> str:
