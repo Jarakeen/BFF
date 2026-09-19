@@ -56,6 +56,7 @@ class RaidPlanMember:
     primary_assignment: str | None = None
     secondary_assignment: str | None = None
     utility_assignments: tuple[str, ...] = field(default_factory=tuple)
+    comp_locked_fields: tuple[str, ...] = field(default_factory=tuple)
     notes: str | None = None
 
     def __post_init__(self) -> None:
@@ -87,6 +88,17 @@ class RaidPlanMember:
                 dict.fromkeys(
                     _clean(value)
                     for value in self.utility_assignments
+                    if _clean(value)
+                )
+            ),
+        )
+        object.__setattr__(
+            self,
+            "comp_locked_fields",
+            tuple(
+                dict.fromkeys(
+                    _clean(value).casefold()
+                    for value in self.comp_locked_fields
                     if _clean(value)
                 )
             ),
