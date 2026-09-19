@@ -1894,6 +1894,52 @@ def _materialize_visible_recommendations(page) -> int:
     return committed
 
 
+def _canonical_comp_seat_id(value: object, row: int) -> str:
+    text = "-".join(
+        str(value or "")
+        .strip()
+        .casefold()
+        .replace("_", " ")
+        .replace("-", " ")
+        .split()
+    )
+    if text == "tank":
+        return "tank-1"
+    if text == "healer":
+        return "healer-1"
+    return text or f"slot-{row + 1}"
+
+
+def _ensure_default_comp_state(page) -> None:
+    """Every supported Phase 14 Comp session owns canonical state, even before Raid Plan."""
+    if getattr(page, "_comp_plan_state", None) is not None:
+        return
+
+    from models.comp_plan_state import CompChairState
+    from services.comp_plan_state_service import CompPlanStateService
+    from ui.comp_builder_page import GOAL_TRIALS
+
+    goal = str(page.goal_combo.currentText() or "").strip() or "Custom Goal"
+    trial = str(GOAL_TRIALS.get(goal, "Custom Trial") or "Custom Trial").strip()
+    name = str(page.plan_name_input.text() or "").strip() or f"{goal} Composition"
+    chairs = tuple(
+        CompChairState(
+            seat_id=_canonical_comp_seat_id(page._cell_text(row, 0), row),
+            role=str(page._cell_text(row, 1) or "").strip() or None,
+        )
+        for row in range(page.matrix_table.rowCount())
+    )
+    state = CompPlanStateService.new_unbound(
+        raid_plan_name=name,
+        trial_id=trial,
+        difficulty=str(page.difficulty_combo.currentText() or "").strip() or None,
+        achievement_goal=goal,
+        chairs=chairs,
+    ).mark_saved()
+    page._comp_plan_state = state
+    page._comp_unbound_baseline_state = state
+
+
 def _mark_comp_state_dirty(page) -> None:
     state = getattr(page, "_comp_plan_state", None)
     if state is None or getattr(state, "dirty", False):
@@ -2009,8 +2055,19 @@ def _save_pending_changes(page) -> bool:
 def _discard_pending_changes(page) -> None:
     if not _has_pending_changes(page):
         return
+    state = getattr(page, "_comp_plan_state", None)
+    if state is not None and not state.is_raid_plan_bound:
+        baseline = getattr(page, "_comp_unbound_baseline_state", None)
+        if baseline is not None:
+            page._comp_plan_state = baseline
+            page._comp_phase14_health_cache = None
+            page._comp_phase14_proposal_cache = None
+            page._comp_phase14_skill_seed_cache = None
+            _refresh_shell(page)
+            page.status.info("Discarded unbound Comp planning changes.")
+            return
     if not _reload_bound_raid_plan(page):
-        page.status.warning("Could not reload the bound Raid Plan to discard Comp changes.")
+        page.status.warning("Could not restore Comp planning state.")
 
 
 def _build_health(page, card: FoundryCard) -> None:
@@ -2143,6 +2200,7 @@ def _install_shell(page) -> None:
 
     page.workspace_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     page._comp_phase14_selected_backend_row = 0
+    _ensure_default_comp_state(page)
     page.has_pending_changes = lambda: _has_pending_changes(page)
     page.save_pending_changes = lambda: _save_pending_changes(page)
     page.discard_pending_changes = lambda: _discard_pending_changes(page)
