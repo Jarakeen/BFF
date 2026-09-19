@@ -963,3 +963,10 @@ number.
 **For BFF:** H1 admits the 15% branch only through an explicit no-permanent-pet,
 Battle-Spirit-inactive witness. Equipping the set alone never activates the bonus,
 and the 7% PvP value cannot leak into the PvE maximum.
+
+
+## Jorvuld's Guidance is provider-local
+- Jorvuld's Guidance extends eligible Major/Minor buffs and damage shields applied by the wearer.
+- It is not a generic group-wide duration extender.
+- Comp Maker / Coverage / Rotation must preserve provider identity when evaluating Jorvuld: the relevant question is which effects that wearer applies, not merely whether the group contains the set.
+- Static set presence can prove the modifier is available to that wearer; it does not by itself prove uptime or that another player's buffs are extended.
