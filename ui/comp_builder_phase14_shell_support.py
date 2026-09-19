@@ -1338,51 +1338,6 @@ def _health_tile(
     return tile, value, detail
 
 
-def _effective_sets_for_row(page, row: int) -> tuple[str, ...]:
-    """Return the exact gear package represented by the current visible plan row."""
-    slot = page._cell_text(row, 0) or f"Slot {row + 1}"
-    manual = _manual_sets_for_slot(page, slot)
-    if manual:
-        return manual
-
-    applied = (getattr(page, "_comp_applied_candidates", {}) or {}).get(slot)
-    if applied is None:
-        return ()
-    return tuple(
-        str(value).strip()
-        for value in (
-            getattr(applied, "five_piece_sets", ())
-            or getattr(applied, "gear_sets", ())
-            or ()
-        )
-        if str(value).strip()
-    )
-
-
-def _effective_coverage_rows(page) -> tuple[tuple[str, object], ...]:
-    """Project current chair state for Team Health, including manual gear overrides."""
-    from types import SimpleNamespace
-
-    rows: list[tuple[str, object]] = []
-    applied = getattr(page, "_comp_applied_candidates", {}) or {}
-    for row in range(page.matrix_table.rowCount()):
-        slot = page._cell_text(row, 0) or f"Slot {row + 1}"
-        manual = _manual_sets_for_slot(page, slot)
-        candidate = applied.get(slot)
-        if manual:
-            candidate = SimpleNamespace(
-                name=slot,
-                source_name="Manual Comp plan",
-                eso_class=page._selected_class(row),
-                role=page._cell_text(row, 1),
-                gear_sets=manual,
-                five_piece_sets=manual,
-                skills=tuple(getattr(candidate, "skills", ()) or ()) if candidate is not None else (),
-            )
-        if candidate is not None:
-            rows.append((slot, candidate))
-    return tuple(rows)
-
 
 def _refresh_health(page) -> None:
     if not hasattr(page, "comp_phase14_health_covered"):
@@ -1961,26 +1916,6 @@ def _build_why(page, card: FoundryCard) -> None:
     card.body_layout.addWidget(host)
     host.show()
 
-
-def _materialize_visible_recommendations(page) -> int:
-    """Commit each chair's visible recommendation unless the user chose another candidate."""
-    from ui import comp_builder_build_candidate_support as candidate_support
-
-    applied = getattr(page, "_comp_applied_candidates", {})
-    committed = 0
-    for row in range(page.matrix_table.rowCount()):
-        slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
-        if slot_name in applied:
-            continue
-        try:
-            candidates = tuple(candidate_support._chair_candidates(page, row))
-        except (AttributeError, OSError, TypeError, ValueError):
-            candidates = ()
-        if not candidates:
-            continue
-        candidate_support._set_candidate_for_row(page, row, candidates[0])
-        committed += 1
-    return committed
 
 
 def _canonical_comp_seat_id(value: object, row: int) -> str:
