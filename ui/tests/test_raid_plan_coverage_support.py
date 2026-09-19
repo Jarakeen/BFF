@@ -31,7 +31,9 @@ def test_coverage_owns_saved_raid_plan_scope_selection() -> None:
 
     assert 'return f"raid_plan:{str(plan_id or '').strip()}"' in source
     assert "RaidPlanRepository(get_data_dir() / \"raid_plans.json\").list_plans()" in source
-    assert 'combo.addItem(f"Raid Plan: {plan.name}", _plan_item_data(plan.plan_id))' in source
+    assert 'label = f"{plan.name} • {trial} • {difficulty}"' in source
+    assert "combo.addItem(label, _plan_item_data(plan.plan_id))" in source
+    assert 'combo.addItem("No saved Raid Plans", None)' in source
     assert "def _selected_plan_id(page) -> str:" in source
     assert "def _load_selected_plan_scope(page):" in source
     assert "RaidPlanCoverageScopeService().compose" in source
@@ -84,11 +86,14 @@ def test_raid_plan_footer_keeps_only_primary_save_on_the_right() -> None:
     assert "Open Optimizer" not in action_block
 
 
-def test_raid_plan_coverage_refresh_wrapper_preserves_call_signature() -> None:
+def test_raid_plan_coverage_refresh_wrapper_rejects_non_plan_visible_scopes() -> None:
     source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
 
     assert "def refresh_with_raid_plan(self, *args, **kwargs):" in source
-    assert "return _ORIGINAL_REFRESH(self, *args, **kwargs)" in source
+    assert 'self.scope_card.set_title("Choose a saved Raid Plan")' in source
+    assert "Coverage evaluates one saved trial plan at a time." in source
+    assert 'data.startswith("roster_team:")' not in source
+    assert "return _ORIGINAL_REFRESH(self, *args, **kwargs)" not in source
 
 
 def test_raid_plan_coverage_reconciles_explicit_assignment_ownership() -> None:
@@ -108,3 +113,21 @@ def test_coverage_needs_review_filter_accepts_assignment_aware_evidence_state() 
     source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
 
     assert 'evidence not in {"available", "assigned_supported"}' in source
+
+
+def test_coverage_scope_picker_contains_saved_raid_plans_only() -> None:
+    scope = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
+    health = Path("ui/coverage_health_check_support.py").read_text(encoding="utf-8")
+    base = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    refresh = scope.split("def _refresh_scope_plan_choices", 1)[1].split(
+        "def _load_selected_plan_scope", 1
+    )[0]
+    enhance = health.split("def enhance_coverage_page", 1)[1]
+
+    assert "combo.clear()" in refresh
+    assert "_plan_item_data(plan.plan_id)" in refresh
+    assert "Roster Team:" not in refresh
+    assert "All Saved Builds" not in refresh
+    assert "_sync_team_choices(page)" not in enhance
+    assert "Coverage evaluates saved Raid Plans only." in base
