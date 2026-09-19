@@ -214,7 +214,13 @@ def _render_raid_plan_scope(page) -> None:
         )
         assignment_reviews[effect] = review
         source_text = ", ".join(names) if names else (
-            f"Conditional: {', '.join(conditional)}" if conditional else "—"
+            f"Conditional: {', '.join(conditional)}"
+            if conditional
+            else (
+                "Planned: " + ", ".join(review.primary)
+                if review.primary
+                else "—"
+            )
         )
         primary = ", ".join(review.primary) or "—"
         backup = ", ".join(review.backup) or "—"
