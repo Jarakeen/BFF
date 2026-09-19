@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+"""Compatibility-only adapter for the retired editable Team Optimization workflow.
+
+Phase 14 does not install this module during normal startup. Generated-roster draft
+loading/sending remains here only for historical tooling and migration review.
+"""
+
 from engine.config import get_data_dir
 from minmax.optimization_mode import OptimizationMode
 from services.eso_database import EsoDatabase
