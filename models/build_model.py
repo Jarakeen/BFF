@@ -350,7 +350,6 @@ class PlayerBuild:
         scribed_names = [recipe.ResultName.strip() for recipe in recipes] or list(self.ScribedSkills)
         payload = {
             "Name": self.Name, "Gamertag": self.Gamertag, "BuildName": self.BuildName,
-            "PlayerId": self.PlayerId, "CharacterId": self.CharacterId, "BuildId": self.BuildId,
             "ImagePath": self.ImagePath, "Race": self.Race, "EsoClass": self.EsoClass,
             "Role": self.Role, "Alliance": self.Alliance, "Mundus": self.Mundus,
             "Vampire": self.Vampire, "Werewolf": self.Werewolf,
@@ -371,6 +370,12 @@ class PlayerBuild:
             "ScribedSkillRecipes": [recipe.to_dict() for recipe in recipes],
             "ReadyForRaid": bool(self.ReadyForRaid),
         }
+        if str(self.PlayerId or "").strip():
+            payload["PlayerId"] = self.PlayerId
+        if str(self.CharacterId or "").strip():
+            payload["CharacterId"] = self.CharacterId
+        if str(self.BuildId or "").strip():
+            payload["BuildId"] = self.BuildId
         if str(self.SecondMundus or "").strip():
             payload["SecondMundus"] = self.SecondMundus
         if str(self.TransformedForm or "").strip():
