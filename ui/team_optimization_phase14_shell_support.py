@@ -8,6 +8,8 @@ read-only: it renders canonical adviser findings, lets the raid lead select item
 for review, and never applies or fabricates a build/team change.
 """
 
+from time import perf_counter
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -27,6 +29,9 @@ from PySide6.QtWidgets import (
 
 from models.raid_plan import RaidPlan
 from ui.components.foundry_card import FoundryCard
+from ui.components.foundry_header import FoundryHeader
+from ui.components.foundry_status_bar import FoundryStatusBar
+from ui.foundry_page import FoundryPage
 
 
 _INSTALLED = False
@@ -513,14 +518,26 @@ def _refresh_posture(page) -> None:
 
 
 def _init_with_phase14_workbench(self, parent=None) -> None:
-    assert _ORIGINAL_INIT is not None
-    _ORIGINAL_INIT(self, parent)
-    _hide_legacy_surface(self)
-    self.header.title.setText("Team Optimization")
-    self.header.subtitle.setText(
-        "Audit and refine one saved Raid Plan. Composition creation lives in Comp Maker."
+    """Construct only the lightweight Phase 14 plan-scoped Optimization surface."""
+    started = perf_counter()
+    FoundryPage.__init__(self, parent)
+
+    self.header = FoundryHeader(
+        title="Team Optimization",
+        subtitle="Audit and refine one saved Raid Plan. Composition creation lives in Comp Maker.",
+        department="RAID ENGINE • OPTIMIZATION",
     )
-    self.header.department.setText("RAID ENGINE • OPTIMIZATION")
+    self.set_header(self.header)
+
+    self.workspace = QWidget()
+    self.layout = QVBoxLayout(self.workspace)
+    self.layout.setContentsMargins(0, 0, 0, 0)
+    self.layout.setSpacing(10)
+    self.add_workspace(self.workspace)
+
+    self.status = FoundryStatusBar()
+    self.set_status(self.status)
+
     _build_header_context(self)
     _build_scope_message(self)
     _build_team_snapshot(self)
@@ -529,6 +546,17 @@ def _init_with_phase14_workbench(self, parent=None) -> None:
 
     self._optimizer_rendered_findings = ()
     self._optimizer_table_guard = False
+    self._raid_plan_adviser_scope = None
+    self._raid_plan_adviser_review = None
+    self._raid_plan_optimizer_adviser_service = None
+    self._optimizer_saved_build_service = None
+    self._optimizer_startup_profile = {
+        "legacy_constructor_invoked": False,
+        "build_resolution_deferred": True,
+        "adviser_service_deferred": True,
+        "phase14_constructor_ms": (perf_counter() - started) * 1000.0,
+    }
+
     self.optimizer_recommendation_table.itemChanged.connect(
         lambda *_: _update_selected_count(self)
     )
@@ -541,12 +569,45 @@ def _init_with_phase14_workbench(self, parent=None) -> None:
     )
 
 
+def _ensure_adviser_services(page) -> None:
+    """Create expensive saved-build/adviser services only for an explicit Raid Plan."""
+    if page._raid_plan_optimizer_adviser_service is not None:
+        return
+
+    from engine.config import get_data_dir
+    from services.build_service import BuildService
+    from services.raid_plan_optimizer_adviser_service import RaidPlanOptimizerAdviserService
+    from services.saved_build_capability_service import SavedBuildCapabilityService
+
+    data_dir = get_data_dir()
+    builds = BuildService(data_dir / "builds.json")
+    capability = SavedBuildCapabilityService(builds, data_dir / "eso.db")
+    page._optimizer_saved_build_service = builds
+    page._raid_plan_optimizer_adviser_service = RaidPlanOptimizerAdviserService(capability)
+    page._optimizer_startup_profile["adviser_service_deferred"] = False
+
+
 def _set_scope_with_phase14_workbench(self, raid_plan: RaidPlan) -> None:
-    assert _ORIGINAL_SET_SCOPE is not None
-    _ORIGINAL_SET_SCOPE(self, raid_plan)
-    review = getattr(self, "_raid_plan_adviser_review", None)
-    if review is None:
-        raise ValueError("Optimizer Adviser did not produce a Raid Plan review")
+    """Load one exact saved Raid Plan without constructing the legacy Optimization UI."""
+    if not isinstance(raid_plan, RaidPlan):
+        raise TypeError("Optimizer Adviser Raid Plan scope requires RaidPlan")
+
+    started = perf_counter()
+    _ensure_adviser_services(self)
+    roster = self._optimizer_saved_build_service.load()
+    saved_builds = tuple(getattr(roster, "Members", ()) or ())
+    self._optimizer_startup_profile["build_resolution_deferred"] = False
+
+    review = self._raid_plan_optimizer_adviser_service.review(
+        raid_plan=raid_plan,
+        saved_builds=saved_builds,
+        total_chairs=len(_CANONICAL_SEATS),
+    )
+    self._raid_plan_adviser_scope = raid_plan
+    self._raid_plan_adviser_review = review
+    self._optimizer_startup_profile["last_plan_scope_ms"] = (
+        perf_counter() - started
+    ) * 1000.0
     _render_workbench(self, raid_plan, review)
 
 
@@ -557,8 +618,10 @@ def install() -> None:
 
     from ui.optimization_page import OptimizationPage
 
+    # Keep references only for compatibility diagnostics. Normal Phase 14 startup
+    # never calls either legacy implementation.
     _ORIGINAL_INIT = OptimizationPage.__init__
-    _ORIGINAL_SET_SCOPE = OptimizationPage.set_raid_plan_adviser_scope
+    _ORIGINAL_SET_SCOPE = getattr(OptimizationPage, "set_raid_plan_adviser_scope", None)
     OptimizationPage.__init__ = _init_with_phase14_workbench
     OptimizationPage.set_raid_plan_adviser_scope = _set_scope_with_phase14_workbench
     _INSTALLED = True
