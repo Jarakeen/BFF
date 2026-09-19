@@ -186,15 +186,29 @@ def _candidate_for_row(page, row: int):
     if row < 0:
         return None
     slot = page._cell_text(row, 0) or f"Slot {row + 1}"
-    applied = getattr(page, "_comp_applied_candidates", {}).get(slot)
-    if applied is not None:
-        return applied
+    chair = _state_chair_for_row(page, row)
     try:
         from ui import comp_builder_build_candidate_support as candidate_support
 
-        candidates = candidate_support._chair_candidates(page, row)
+        candidates = tuple(candidate_support._chair_candidates(page, row))
     except (AttributeError, OSError, TypeError, ValueError):
-        return None
+        candidates = ()
+
+    if chair is not None and chair.candidate_id:
+        canonical = next(
+            (
+                candidate
+                for candidate in candidates
+                if candidate.candidate_id == chair.candidate_id
+            ),
+            None,
+        )
+        if canonical is not None:
+            return canonical
+
+    applied = getattr(page, "_comp_applied_candidates", {}).get(slot)
+    if applied is not None:
+        return applied
     return candidates[0] if candidates else None
 
 
@@ -639,11 +653,7 @@ def _refresh_plan_table(page) -> None:
 
             chair_state = _state_chair_for_row(page, backend_row)
             slot_name = page._cell_text(backend_row, 0) or f"Slot {backend_row + 1}"
-            candidate = (
-                getattr(page, "_comp_applied_candidates", {}).get(slot_name)
-                if chair_state is not None
-                else _candidate_for_row(page, backend_row)
-            )
+            candidate = _candidate_for_row(page, backend_row)
             player = (
                 str(getattr(chair_state, "player_name", "") or "").strip()
                 if chair_state is not None
