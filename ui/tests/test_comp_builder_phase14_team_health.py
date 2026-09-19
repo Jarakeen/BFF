@@ -51,3 +51,19 @@ def test_raid_plan_comp_handoff_filters_manual_picker_to_five_piece_sets() -> No
     assert "_five_piece_set_names(get_data_dir() / \"eso.db\", planned)" in handoff
     assert "tuple(five_piece[:2])" in handoff
     assert ")[:2]" not in handoff
+
+
+def test_team_health_covered_tile_hover_lists_required_effects_from_service() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+    service = Path("services/comp_plan_health_service.py").read_text(encoding="utf-8")
+
+    assert "def required_effect_names() -> tuple[str, ...]:" in service
+    build = source.split("def _build_health(page, card: FoundryCard) -> None:", 1)[1].split(
+        "def _install_shell", 1
+    )[0]
+    assert "from services.comp_plan_health_service import required_effect_names" in build
+    assert "required = required_effect_names()" in build
+    assert "Team Health currently measures these default-required planned effects:" in build
+    assert "tile.setToolTip(tooltip)" in build
+    assert "value.setToolTip(tooltip)" in build
+    assert "detail.setToolTip(tooltip)" in build
