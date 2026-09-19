@@ -114,6 +114,26 @@ class CompBuilderPage(FoundryPage):
         return labels.get(key, str(seat_id or "").strip())
 
     @staticmethod
+    def _raid_plan_group_size(plan) -> int:
+        """Infer 4/12 from canonical planning chairs, not named-player count."""
+        seats = {
+            str(member.seat_id or "").strip().casefold()
+            for member in tuple(plan.members or ())
+            if str(member.seat_id or "").strip()
+        }
+        twelve_player_only = {
+            "tank-2",
+            "healer-2",
+            *{f"dd-{index}" for index in range(3, 9)},
+        }
+        if seats & twelve_player_only:
+            return 12
+        four_player_seats = {"tank-1", "healer-1", "dd-1", "dd-2"}
+        if seats and seats.issubset(four_player_seats):
+            return 4
+        return 12
+
+    @staticmethod
     def _planned_five_piece_sets_by_seat(plan) -> dict[str, tuple[str, ...]]:
         """Classify all planned set names in one DB query, then project by seat."""
         from services.comp_builder_build_candidates import _five_piece_set_names
@@ -226,7 +246,11 @@ class CompBuilderPage(FoundryPage):
         self._comp_loading_plan = True
         try:
             if callable(apply_context):
-                apply_context(plan.name, members, group_size=12)
+                apply_context(
+                    plan.name,
+                    members,
+                    group_size=self._raid_plan_group_size(plan),
+                )
         finally:
             self._comp_loading_plan = False
 
