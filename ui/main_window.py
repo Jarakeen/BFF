@@ -194,7 +194,7 @@ class MainWindow(QMainWindow):
         *,
         navigate: bool,
     ):
-        """Persist the bound canonical Comp working state directly to Raid Plan."""
+        """Persist canonical Comp state, finalizing a new Raid Plan when unbound."""
         from services.comp_plan_state_service import CompPlanStateService
 
         raid_plans = self.pages.get("raid_plans")
@@ -209,14 +209,27 @@ class MainWindow(QMainWindow):
             )
             return None
 
-        base_plan = raid_plans.plan_repository.get(state.raid_plan_id)
-        if base_plan is None:
-            raid_plans.status.error(
-                f'Could not reload originating Raid Plan "{state.raid_plan_name}".'
+        if state.is_raid_plan_bound:
+            base_plan = raid_plans.plan_repository.get(str(state.raid_plan_id))
+            if base_plan is None:
+                raid_plans.status.error(
+                    f'Could not reload originating Raid Plan "{state.raid_plan_name}".'
+                )
+                return None
+            plan = CompPlanStateService.to_raid_plan(state, base_plan=base_plan)
+        else:
+            existing_ids = tuple(
+                plan.plan_id
+                for plan in raid_plans.plan_repository.list_plans()
             )
-            return None
-
-        plan = CompPlanStateService.to_raid_plan(state, base_plan=base_plan)
+            plan_id = CompPlanStateService.unique_raid_plan_id(
+                state,
+                existing_ids=existing_ids,
+            )
+            plan = CompPlanStateService.to_new_raid_plan(
+                state,
+                plan_id=plan_id,
+            )
         raid_plans.plan_repository.save(plan)
         persisted = raid_plans.plan_repository.get(plan.plan_id)
         if persisted is None or persisted != plan:
