@@ -184,3 +184,133 @@ def test_comp_state_requires_matching_base_raid_plan() -> None:
         assert "does not belong" in str(exc)
     else:
         raise AssertionError("mismatched Raid Plan should be rejected")
+
+
+def test_comp_state_can_exist_before_a_raid_plan() -> None:
+    state = CompPlanStateService.new_unbound(
+        raid_plan_name="Performance Mode GS",
+        trial_id="sunspire",
+        team_name="Performance Mode",
+        difficulty="Veteran Hardmode",
+        achievement_goal="Godslayer",
+        chairs=(
+            CompChairState(
+                seat_id="healer-1",
+                player_name="Jarakeen",
+                role="Healer",
+                eso_class="Warden",
+                primary_assignment="Major Courage",
+                assignment_source="WW",
+            ),
+            CompChairState(
+                seat_id="dd-1",
+                role="Damage",
+            ),
+        ),
+    )
+
+    assert state.raid_plan_id is None
+    assert state.is_raid_plan_bound is False
+    assert state.dirty is True
+    assert state.chair("healer-1").assignment_source == "WW"
+
+
+def test_unbound_comp_state_finalizes_directly_into_new_raid_plan() -> None:
+    state = CompPlanStateService.new_unbound(
+        raid_plan_name="Performance Mode GS",
+        trial_id="sunspire",
+        team_name="Performance Mode",
+        difficulty="Veteran Hardmode",
+        chairs=(
+            CompChairState(
+                seat_id="healer-1",
+                player_name="Jarakeen",
+                role="Healer",
+                eso_class="Warden",
+                planned_gear_sets=("Spell Power Cure", "Ozezan the Inferno"),
+                planned_skills=("Combat Prayer", "Energy Orb"),
+                primary_assignment="Major Courage",
+                assignment_source="WW",
+                locked_fields=("player", "gear"),
+            ),
+            CompChairState(
+                seat_id="dd-1",
+                role="Damage",
+                eso_class="Necromancer",
+            ),
+        ),
+    )
+
+    plan = CompPlanStateService.to_new_raid_plan(
+        state,
+        plan_id="sunspire-performance-mode-gs",
+    )
+
+    assert plan.plan_id == "sunspire-performance-mode-gs"
+    assert plan.team_name == "Performance Mode"
+    healer = plan.member("healer-1")
+    assert healer is not None
+    assert healer.planned_skills == ("Combat Prayer", "Energy Orb")
+    assert healer.primary_assignment == "Major Courage"
+    assert healer.assignment_source == "WW"
+    assert healer.comp_locked_fields == ("player", "gear")
+    assert plan.member("dd-1") is not None
+
+
+def test_new_raid_plan_id_does_not_overwrite_existing_plan() -> None:
+    state = CompPlanStateService.new_unbound(
+        raid_plan_name="Performance Mode GS",
+        trial_id="Sunspire",
+        chairs=(CompChairState(seat_id="tank-1", role="Tank"),),
+    )
+
+    assert CompPlanStateService.unique_raid_plan_id(
+        state,
+        existing_ids=("sunspire-performance-mode-gs",),
+    ) == "sunspire-performance-mode-gs-2"
+    assert CompPlanStateService.unique_raid_plan_id(
+        state,
+        existing_ids=(
+            "sunspire-performance-mode-gs",
+            "sunspire-performance-mode-gs-2",
+        ),
+    ) == "sunspire-performance-mode-gs-3"
+
+
+def test_bound_and_unbound_comp_state_use_distinct_raid_plan_paths() -> None:
+    plan = _plan()
+    bound = CompPlanStateService.from_raid_plan(plan)
+    assert bound.is_raid_plan_bound is True
+
+    unbound = CompPlanStateService.new_unbound(
+        raid_plan_name="New Plan",
+        trial_id="sunspire",
+        chairs=(CompChairState(seat_id="tank-1", role="Tank"),),
+    )
+    try:
+        CompPlanStateService.to_raid_plan(unbound, base_plan=plan)
+    except ValueError as exc:
+        assert "finalization" in str(exc)
+    else:
+        raise AssertionError("unbound Comp state must not merge into an arbitrary Raid Plan")
+
+
+def test_assignment_source_round_trips_through_canonical_comp_state() -> None:
+    plan = _plan()
+    healer = plan.member("healer-1")
+    assert healer is not None
+    plan = replace(
+        plan,
+        members=tuple(
+            member.with_selection(assignment_source="class skill")
+            if member.seat_id == "healer-1"
+            else member
+            for member in plan.members
+        ),
+    )
+
+    state = CompPlanStateService.from_raid_plan(plan)
+    assert state.chair("healer-1").assignment_source == "class skill"
+
+    rebuilt = CompPlanStateService.to_raid_plan(state, base_plan=plan)
+    assert rebuilt.member("healer-1").assignment_source == "class skill"
