@@ -62,6 +62,7 @@ class RaidPlanCoverageScope:
     unresolved: tuple[str, ...]
     primary_providers: tuple[tuple[str, tuple[str, ...]], ...]
     secondary_providers: tuple[tuple[str, tuple[str, ...]], ...]
+    provider_source_notes: tuple[tuple[str, str, str], ...]
 
     @property
     def resolved_builds(self) -> tuple[PlayerBuild, ...]:
@@ -74,6 +75,19 @@ class RaidPlanCoverageScope:
     def secondary_for(self, effect_name: str) -> tuple[str, ...]:
         wanted = _key(effect_name)
         return next((values for key, values in self.secondary_providers if key == wanted), ())
+
+
+    def source_note_for(self, effect_name: str, provider_label: str) -> str:
+        effect_key = _key(effect_name)
+        provider_key = _key(provider_label)
+        return next(
+            (
+                note
+                for key, provider, note in self.provider_source_notes
+                if key == effect_key and _key(provider) == provider_key
+            ),
+            "",
+        )
 
 
 class RaidPlanCoverageScopeService:
@@ -105,6 +119,7 @@ class RaidPlanCoverageScopeService:
         unresolved: list[str] = []
         primary: dict[str, list[str]] = {key: [] for key in effect_labels}
         secondary: dict[str, list[str]] = {key: [] for key in effect_labels}
+        source_notes: list[tuple[str, str, str]] = []
 
         for member in raid_plan.members:
             player_label = member.character_name or member.gamertag or member.seat_id
@@ -156,9 +171,17 @@ class RaidPlanCoverageScopeService:
             primary_key = _key(member.primary_assignment)
             if primary_key in primary:
                 primary[primary_key].append(player_label)
+                if _clean(member.assignment_source):
+                    source_notes.append(
+                        (primary_key, player_label, _clean(member.assignment_source))
+                    )
             secondary_key = _key(member.secondary_assignment)
             if secondary_key in secondary:
                 secondary[secondary_key].append(player_label)
+                if _clean(member.assignment_source):
+                    source_notes.append(
+                        (secondary_key, player_label, _clean(member.assignment_source))
+                    )
 
         return RaidPlanCoverageScope(
             plan_id=raid_plan.plan_id,
@@ -176,6 +199,7 @@ class RaidPlanCoverageScopeService:
             secondary_providers=tuple(
                 (key, tuple(values)) for key, values in secondary.items() if values
             ),
+            provider_source_notes=tuple(dict.fromkeys(source_notes)),
         )
 
 
