@@ -582,8 +582,13 @@ def _refresh_plan_table(page) -> None:
             if backend_row == prior_backend:
                 selected_display = display_row
 
-            candidate = _candidate_for_row(page, backend_row)
             chair_state = _state_chair_for_row(page, backend_row)
+            slot_name = page._cell_text(backend_row, 0) or f"Slot {backend_row + 1}"
+            candidate = (
+                getattr(page, "_comp_applied_candidates", {}).get(slot_name)
+                if chair_state is not None
+                else _candidate_for_row(page, backend_row)
+            )
             player = (
                 str(getattr(chair_state, "player_name", "") or "").strip()
                 if chair_state is not None
@@ -600,7 +605,6 @@ def _refresh_plan_table(page) -> None:
                 else page._selected_class(backend_row)
             ) or "Any class"
             role_class = role if selected_class == "Any class" else f"{role} • {selected_class}"
-            slot_name = page._cell_text(backend_row, 0) or f"Slot {backend_row + 1}"
             state_sets = tuple(
                 str(value).strip()
                 for value in (getattr(chair_state, "planned_gear_sets", ()) or ())
