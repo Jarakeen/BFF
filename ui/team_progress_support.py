@@ -66,10 +66,7 @@ def install() -> None:
     CompBuilderPage.__init__ = _comp_init_with_progress
     CompBuilderPage._refresh_coverage = _comp_refresh_coverage_with_progress
 
-    # Optimization deliberately stays free of the extra progress furniture. Its
-    # job is to operate on the selected team, while Comp Builder owns the planning
-    # coverage scoreboard and composition-detail surfaces.
-    from ui.team_optimization_gap_guidance_support import install as install_gap_guidance
-
-    install_gap_guidance()
+    # Phase 14 Team Optimization no longer installs the legacy canonical-analysis
+    # presentation stack at startup. Gap guidance remains available to compatibility
+    # tooling but is not part of the normal Workbench construction path.
     _INSTALLED = True
