@@ -81,14 +81,24 @@ class CompPlanAutoFillService:
         ):
             changes["eso_class"] = _clean(candidate.eso_class)
 
-        # A saved build may be bound as the chair's selected build only when its owner
-        # matches the already-selected player or character. Candidate source identity
-        # is still a compatibility field and may contain either one.
-        can_bind_saved_build = (
-            candidate.source_kind == "saved_build"
-            and (
-                _same_identity(chair.player_name, candidate.source_name)
-                or _same_identity(chair.character_name, candidate.source_name)
+        # A saved build may be bound only to the canonical player/character already
+        # assigned to the chair. Display/source labels are a historical fallback only.
+        can_bind_saved_build = candidate.source_kind == "saved_build" and (
+            (
+                bool(chair.player_id and candidate.saved_player_id)
+                and _same_identity(chair.player_id, candidate.saved_player_id)
+            )
+            or (
+                bool(chair.character_id and candidate.saved_character_id)
+                and _same_identity(chair.character_id, candidate.saved_character_id)
+            )
+            or (
+                not chair.player_id
+                and not chair.character_id
+                and (
+                    _same_identity(chair.player_name, candidate.source_name)
+                    or _same_identity(chair.character_name, candidate.source_name)
+                )
             )
         )
         if (
@@ -97,6 +107,7 @@ class CompPlanAutoFillService:
             and not chair.selected_build_id
             and not chair.selected_build_name
         ):
+            changes["selected_build_id"] = candidate.saved_build_id or None
             changes["selected_build_name"] = candidate.name
 
         if (
