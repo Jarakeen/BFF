@@ -193,9 +193,10 @@ def _render_raid_plan_scope(page) -> None:
         f"{resolved} saved build(s) resolved • {planned} chair(s) with planned gear • "
         f"{unresolved} unresolved full-build chair(s)\n"
         f"{member_text}{unresolved_text}\n"
-        "Raid Plan snapshot. Saved builds use full static capability evidence; planned "
-        "sets contribute reviewed set-only capability as Conditional evidence. "
-        "Primary/Secondary labels show planning intent only and do not prove uptime."
+        "Raid Plan snapshot. Coverage answers whether the planned group has a source. "
+        "Saved builds, planned gear, and explicit provider assignments can all count as "
+        "Covered; Conditional/Planned labels describe proof strength, trigger requirements, "
+        "or unresolved runtime evidence. Uptime is evaluated later."
     )
 
     page.table.setRowCount(0)
@@ -316,7 +317,7 @@ def _render_raid_plan_scope(page) -> None:
     page.summary_card.clear()
     page.summary_card.addWidget(QLabel(
         f"TOTAL EFFECTS   {len(visible_effects)}\n"
-        f"COVERED / PLANNED  {planned_present}\n"
+        f"COVERED  {planned_present}\n"
         f"ASSIGNED + PROVEN  {assigned_supported}\n"
         f"ASSIGNED CONDITIONAL  {assigned_conditional}\n"
         f"ASSIGNED • RUNTIME UNPROVEN  {assigned_unproven}\n"
