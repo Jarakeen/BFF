@@ -29,6 +29,7 @@ def _plan(*, plan_id: str = "performance-mode-rockgrove", name: str = "Performan
                 selected_build_id="df-healer-build-id",
                 selected_build_name="DF Healer",
                 primary_assignment="Group Healer",
+                assignment_source="WW",
                 notes="Top-left pool",
             ),
             RaidPlanMember(seat_id="dd-1", gamertag="FriendName"),
@@ -55,6 +56,7 @@ def test_repository_round_trips_complete_plan_snapshot(tmp_path) -> None:
     restored = repository.get(plan.plan_id)
     assert restored == plan
     assert restored.member("healer-1").selected_build_id == "df-healer-build-id"
+    assert restored.member("healer-1").assignment_source == "WW"
     assert restored.plan_note == "Keep portal group stacked after transition."
     assert repository.list_plans() == (plan,)
 
