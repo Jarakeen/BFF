@@ -298,6 +298,17 @@ class RaidPlanPage(FoundryPage):
         )
         actions.addWidget(self.lower_save_plan_button)
 
+        self.lower_assignments_button = FoundryButton(
+            "Assignments →",
+            role=ButtonRole.SECONDARY,
+            compact=True,
+        )
+        self.lower_assignments_button.setToolTip(
+            "Save this Raid Plan, then continue with the same saved plan in Assignments."
+        )
+        self.lower_assignments_button.clicked.connect(self._open_assignments)
+        actions.addWidget(self.lower_assignments_button)
+
         root.addLayout(actions)
         self.add_workspace(workspace)
 
@@ -307,6 +318,10 @@ class RaidPlanPage(FoundryPage):
         self.trial_combo.currentTextChanged.connect(self._update_summary)
         self.difficulty_combo.currentTextChanged.connect(self._update_summary)
         self.plan_name_edit.textChanged.connect(self._update_summary)
+
+    def _open_assignments(self, *_args) -> None:
+        """Open Assignments when no persistence-aware subclass owns the handoff."""
+        self.pageRequested.emit("assignments")
 
     def _open_coverage(self, *_args) -> None:
         """Open generic Coverage when no plan-aware subclass owns the handoff."""
@@ -418,6 +433,13 @@ class RaidPlanPage(FoundryPage):
         if not gamertag:
             button.setText("Save Player")
             button.setEnabled(False)
+            return
+        if is_seat_placeholder(gamertag):
+            button.setText("Open Seat")
+            button.setEnabled(False)
+            button.setToolTip(
+                "Recruitment Needed is a planning placeholder, not a Personnel player."
+            )
             return
         if known is not None:
             button.setText("In Personnel")
@@ -552,7 +574,11 @@ class RaidPlanPage(FoundryPage):
 
         characters = sum(member.character_selected for member in plan.members)
         builds = sum(member.build_selected for member in plan.members)
-        named_players = sum(bool(_clean(member.gamertag)) for member in plan.members)
+        named_players = sum(
+            bool(_clean(member.gamertag))
+            and not is_seat_placeholder(member.gamertag)
+            for member in plan.members
+        )
         known_people = sum(
             bool(_clean(member.gamertag))
             and self._personnel_match(member.gamertag) is not None
