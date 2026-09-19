@@ -3,6 +3,7 @@ from __future__ import annotations
 from engine.config import get_data_dir
 from services.comp_builder_composition_style import CompCompositionStyle
 from services.comp_builder_novelty_evidence import CompBuilderNoveltyEvidenceService
+from services.comp_builder_provider_evidence import CompBuilderProviderEvidenceService
 from services.comp_builder_team_candidate_optimizer import (
     CompTeamCandidatePool,
     optimize_comp_team_candidates,
@@ -21,7 +22,7 @@ def _selected_style(page) -> CompCompositionStyle:
 
 
 def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
-    """Fill open roster/build decisions without performing buff/debuff optimization."""
+    """Fill open roster/build decisions while satisfying assigned provider jobs."""
     from ui import comp_builder_build_candidate_support as support
     from ui.comp_builder_page import GOAL_TRIALS
     from services.comp_plan_autofill_service import CompPlanAutoFillService
@@ -38,13 +39,39 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         )
         return
 
-    # Comp Maker owns roster/build fit. Raid-wide buff/debuff optimization belongs
-    # to Optimizer; Team Health remains read-only feedback about the current roster.
+    provider_service = getattr(page, "_comp_provider_evidence_service", None)
+    if provider_service is None:
+        provider_service = CompBuilderProviderEvidenceService(get_data_dir())
+        page._comp_provider_evidence_service = provider_service
+
+    # Assignments owns WHO. Comp Maker owns HOW. Therefore only explicit
+    # primary/backup responsibilities become provider constraints here.
+    required_by_seat: dict[str, tuple[str, ...]] = {}
+    unresolved_provider_mappings: list[str] = []
+    for chair in state.chairs:
+        labels = tuple(
+            label
+            for label in (
+                str(chair.primary_assignment or "").strip(),
+                str(chair.secondary_assignment or "").strip(),
+            )
+            if label
+        )
+        if not labels:
+            continue
+        resolution = provider_service.resolve_requirement_labels(labels)
+        required_by_seat[chair.seat_id] = resolution.provider_ids
+        unresolved_provider_mappings.extend(
+            f"{chair.seat_id}: {message}"
+            for message in resolution.unresolved
+        )
+
     used_saved_players = tuple(sorted(support._used_saved_players(page)))
     novelty_service = CompBuilderNoveltyEvidenceService(get_data_dir())
     pools: list[CompTeamCandidatePool] = []
     rows_by_slot: dict[str, int] = {}
     visible_slot_by_seat: dict[str, str] = {}
+    provider_ids_by_candidate: dict[str, tuple[str, ...]] = {}
     novelty_by_candidate: dict[str, float] = {}
     novelty_evidence_by_candidate: dict[str, object] = {}
     unresolved_reads: list[str] = []
@@ -72,6 +99,19 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         ):
             candidates = ()
 
+        for candidate in candidates:
+            if candidate.candidate_id in provider_ids_by_candidate:
+                continue
+            try:
+                provider_ids_by_candidate[candidate.candidate_id] = (
+                    provider_service.provider_ids_for_candidate(candidate)
+                )
+            except (OSError, TypeError, ValueError) as exc:
+                provider_ids_by_candidate[candidate.candidate_id] = ()
+                unresolved_reads.append(
+                    f"{slot_name}: provider evidence for {candidate.name} could not be resolved: {exc}"
+                )
+
         try:
             novelty_result = novelty_service.evaluate_candidates(
                 candidates,
@@ -87,10 +127,16 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
                 f"{slot_name}: roster/build evidence could not be resolved: {exc}"
             )
 
+        local_required = (
+            required_by_seat.get(chair_state.seat_id, ())
+            if chair_state is not None
+            else ()
+        )
         pools.append(
             CompTeamCandidatePool(
                 slot_name=slot_name,
                 candidates=candidates,
+                required_provider_ids=tuple(local_required),
             )
         )
         rows_by_slot[slot_name] = row
@@ -105,6 +151,7 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         state=state,
         pools=tuple(pools),
         already_used_saved_players=used_saved_players,
+        provider_ids_by_candidate=provider_ids_by_candidate,
         composition_style=style,
         novelty_by_candidate=novelty_by_candidate,
     )
@@ -125,13 +172,22 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
             page._comp_applied_candidates[visible_slot] = candidate
 
     support._refresh_candidates(page)
+    blocked = tuple(result.optimization.provider_blocked_slots)
     message = (
         f"Filled {result.applied_count} open roster/build decision(s) in "
         f"{style.value.replace('_', ' ')} mode; preserved "
         f"{len(result.skipped_existing)} existing/locked chair(s)."
     )
-    if unresolved_reads:
-        page.status.warning(message + " " + " • ".join(unresolved_reads[:5]))
+    warnings = [
+        *(
+            f"{slot}: no candidate currently proves the assigned provider job"
+            for slot in blocked
+        ),
+        *unresolved_provider_mappings,
+        *unresolved_reads,
+    ]
+    if warnings:
+        page.status.warning(message + " " + " • ".join(warnings[:5]))
     else:
         page.status.success(message)
     return
