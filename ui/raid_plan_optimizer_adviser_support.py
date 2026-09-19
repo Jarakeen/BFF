@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+"""Compatibility-only Raid Plan adapter for the retired Optimization editor.
+
+The Phase 14 Recommendation Workbench owns the live set_raid_plan_adviser_scope path
+directly and lazy-loads the reusable adviser service only when a plan is handed in.
+"""
+
 """Bind an explicit RaidPlan to the existing Optimization workspace as read-only advice.
 
 The existing Optimization page remains available for legacy/manual workflows. When opened
