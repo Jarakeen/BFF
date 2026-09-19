@@ -28,6 +28,7 @@ def _candidate(
         unresolved=(),
         score=score,
         score_reasons=(),
+        saved_player_id=player if source_kind == "saved_build" else "",
     )
 
 
@@ -230,3 +231,54 @@ def test_off_meta_style_never_prefers_novelty_over_filling_a_chair() -> None:
 
     assert result.assignments[0].candidate.candidate_id == "usable"
     assert result.applied_count == 1
+
+
+def test_optimizer_uses_stable_player_id_not_display_source_name() -> None:
+    first = CompBuildCandidate(
+        candidate_id="first-build",
+        name="First",
+        source_kind="saved_build",
+        source_name="Same Display Name",
+        source_url="",
+        eso_class="Warden",
+        role="Healer",
+        gear_sets=(),
+        skills=(),
+        mundus="",
+        complete_build=True,
+        unresolved=(),
+        score=100,
+        score_reasons=(),
+        saved_player_id="player-one",
+        saved_build_id="build-one",
+    )
+    second = CompBuildCandidate(
+        candidate_id="second-build",
+        name="Second",
+        source_kind="saved_build",
+        source_name="Same Display Name",
+        source_url="",
+        eso_class="Warden",
+        role="Healer",
+        gear_sets=(),
+        skills=(),
+        mundus="",
+        complete_build=True,
+        unresolved=(),
+        score=90,
+        score_reasons=(),
+        saved_player_id="player-two",
+        saved_build_id="build-two",
+    )
+
+    result = optimize_comp_team_candidates(
+        pools=(
+            CompTeamCandidatePool("Healer 1", (first,)),
+            CompTeamCandidatePool("Healer 2", (second,)),
+        )
+    )
+
+    assert [row.candidate.candidate_id for row in result.assignments] == [
+        "first-build",
+        "second-build",
+    ]
