@@ -129,3 +129,33 @@ def test_comp_maker_manual_five_piece_override_preserves_non_five_piece_candidat
     assert "effective_gear_sets = _effective_candidate_gear_sets(" in source
     assert 'gear_summary=" + ".join(effective_gear_sets)' in source
     assert "gear_sets=effective_gear_sets" in source
+
+
+def test_candidate_helpers_use_canonical_state_before_compatibility_mirror() -> None:
+    source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+
+    used = source.split("def _used_saved_players(page)", 1)[1].split(
+        "def _format_candidates", 1
+    )[0]
+    assert 'state = getattr(page, "_comp_plan_state", None)' in used
+    assert "chair.build_source_kind" in used
+    assert "chair.build_source_name" in used
+    assert "return canonical | mirror" in used
+
+    formatted = source.split("def _format_candidates(page)", 1)[1].split(
+        "def _state_chair_for_row", 1
+    )[0]
+    assert "chair = _state_chair_for_row(page, row)" in formatted
+    assert "chair.candidate_id" in formatted
+    assert "candidate.candidate_id == chair.candidate_id" in formatted
+
+
+def test_candidate_apply_has_no_state_less_write_path() -> None:
+    source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+    apply = source.split("def _set_candidate_for_row", 1)[1].split(
+        "def _apply_top_candidate", 1
+    )[0]
+
+    assert 'if chair is None:' in apply
+    assert "requires canonical Comp planning state" in apply
+    assert 'changes = {"legacy": True}' not in apply
