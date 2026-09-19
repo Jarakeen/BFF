@@ -86,6 +86,8 @@ def test_comp_maker_autofill_uses_assignments_as_provider_constraints() -> None:
     assert "provider_ids_by_candidate=provider_ids_by_candidate" in source
     assert "health.missing_required" not in source
     assert "CompPlanHealthService" not in source
+    assert "provider_sources_for_candidate" in source
+    assert "assignment_source" in source
 
 
 def test_comp_maker_team_health_reports_coverage_without_assigning_jobs() -> None:
