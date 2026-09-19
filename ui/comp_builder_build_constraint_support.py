@@ -199,7 +199,7 @@ def _send_to_roster_with_constraint_validation(self, *_args) -> None:
 
 
 def install() -> None:
-    global _INSTALLED, _ORIGINAL_CHAIR_CANDIDATES, _ORIGINAL_RENDER_SLOTS, _ORIGINAL_SEND_TO_ROSTER
+    global _INSTALLED, _ORIGINAL_CHAIR_CANDIDATES, _ORIGINAL_RENDER_SLOTS
     if _INSTALLED:
         return
 
@@ -212,8 +212,8 @@ def install() -> None:
     _ORIGINAL_RENDER_SLOTS = CompBuilderPage._render_slots
     CompBuilderPage._render_slots = _render_slots_with_constraint_reset
 
-    _ORIGINAL_SEND_TO_ROSTER = CompBuilderPage._send_to_roster
-    CompBuilderPage._send_to_roster = _send_to_roster_with_constraint_validation
+    # The old send-time validator is retained for compatibility archaeology only.
+    # Canonical Phase 14 constraints are enforced before state persistence instead.
 
     original_init = CompBuilderPage.__init__
 
