@@ -42,12 +42,18 @@ class RaidPlanCoverageAssignmentReview:
     label: str
 
     @property
+    def counts_as_planned_coverage(self) -> bool:
+        """Planning presence is broader than static/runtime proof."""
+        return self.state != "gap"
+
+    @property
     def needs_attention(self) -> bool:
+        # Attention means the plan deserves explanation/review, not that the effect is
+        # absent. Assigned/conditional/unproven effects can still count as planned.
         return self.state in {
             "assigned_unproven",
             "backup_only",
             "unassigned_available",
-            "gap",
         } or self.duplicate_primary
 
 
@@ -132,13 +138,13 @@ class RaidPlanCoverageAssignmentService:
             label = "Assigned • Conditional"
         elif primary:
             state = "assigned_unproven"
-            label = "Assigned • Unproven"
+            label = "Assigned • Planned"
         elif supported_backup or conditional_backup:
             state = "backup_only"
             label = "Backup only"
         elif any_evidence:
             state = "unassigned_available"
-            label = "Source found • Unassigned"
+            label = "Present • Unassigned"
         else:
             state = "gap"
             label = "Gap • No provider"
