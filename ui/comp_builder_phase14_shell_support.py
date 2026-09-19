@@ -14,6 +14,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QButtonGroup,
+    QComboBox,
     QFrame,
     QHeaderView,
     QHBoxLayout,
@@ -169,6 +170,117 @@ def _manual_sets_for_slot(page, slot_name: str) -> tuple[str, ...]:
     )
 
 
+def _catalog_set_names(page) -> tuple[str, ...]:
+    cached = getattr(page, "_comp_gear_catalog_names", None)
+    if cached is not None:
+        return tuple(cached)
+
+    try:
+        from engine.config import DEFAULT_DATABASE
+        from minmax.gear_set_repository import GearSetRepository
+
+        names = tuple(
+            dict.fromkeys(
+                str(row.name or "").strip()
+                for row in GearSetRepository(DEFAULT_DATABASE).list_sets()
+                if str(row.name or "").strip()
+            )
+        )
+    except Exception:
+        names = ()
+    page._comp_gear_catalog_names = names
+    return names
+
+
+def _canonical_catalog_set_name(page, value: object) -> str:
+    wanted = str(value or "").strip()
+    if not wanted:
+        return ""
+    return next(
+        (
+            name
+            for name in _catalog_set_names(page)
+            if name.casefold() == wanted.casefold()
+        ),
+        "",
+    )
+
+
+def _add_planned_gear_set(page, set_name: str) -> None:
+    row = _selected_backend_row(page)
+    if row < 0:
+        return
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    chair_state = _state_chair_for_row(page, row)
+    if chair_state is not None and chair_state.is_locked("gear"):
+        page.status.warning(f"{slot_name} gear is locked in this Raid Plan.")
+        return
+
+    canonical = _canonical_catalog_set_name(page, set_name)
+    if not canonical:
+        page.status.warning("Choose a set from the Gear Catalog before adding it.")
+        return
+
+    if chair_state is not None:
+        existing = tuple(chair_state.planned_gear_sets or ())
+        if any(value.casefold() == canonical.casefold() for value in existing):
+            page.status.info(f"{canonical} is already planned for {slot_name}.")
+            return
+        page._comp_plan_state = page._comp_plan_state.with_chair(
+            chair_state.with_changes(planned_gear_sets=(*existing, canonical))
+        )
+    else:
+        store = getattr(page, "_comp_manual_gear_sets_by_slot", None)
+        if store is None:
+            page._comp_manual_gear_sets_by_slot = {}
+            store = page._comp_manual_gear_sets_by_slot
+        existing = list(_manual_sets_for_slot(page, slot_name))
+        if any(value.casefold() == canonical.casefold() for value in existing):
+            return
+        existing.append(canonical)
+        store[slot_name] = tuple(existing)
+
+    page.status.success(f"Added {canonical} to {slot_name}.")
+    _refresh_shell(page)
+
+
+def _remove_planned_gear_set(page, set_name: str) -> None:
+    row = _selected_backend_row(page)
+    if row < 0:
+        return
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    chair_state = _state_chair_for_row(page, row)
+    if chair_state is not None and chair_state.is_locked("gear"):
+        page.status.warning(f"{slot_name} gear is locked in this Raid Plan.")
+        return
+
+    wanted = str(set_name or "").strip().casefold()
+    if chair_state is not None:
+        remaining = tuple(
+            value
+            for value in tuple(chair_state.planned_gear_sets or ())
+            if value.casefold() != wanted
+        )
+        page._comp_plan_state = page._comp_plan_state.with_chair(
+            chair_state.with_changes(planned_gear_sets=remaining)
+        )
+    else:
+        store = getattr(page, "_comp_manual_gear_sets_by_slot", None)
+        if store is not None:
+            remaining = tuple(
+                value
+                for value in _manual_sets_for_slot(page, slot_name)
+                if value.casefold() != wanted
+            )
+            if remaining:
+                store[slot_name] = remaining
+            else:
+                store.pop(slot_name, None)
+
+    page.status.success(f"Removed {set_name} from {slot_name}.")
+    _refresh_shell(page)
+
+
 def _toggle_manual_set(page, set_name: str) -> None:
     row = _selected_backend_row(page)
     if row < 0:
@@ -247,56 +359,121 @@ def _refresh_manual_set_picker(page, candidates) -> None:
     if row < 0:
         host.setVisible(False)
         return
-    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
-    selected = {
-        value.casefold()
-        for value in _manual_sets_for_slot(page, slot_name)
-    }
 
-    names: list[str] = []
-    seen: set[str] = set()
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    chair_state = _state_chair_for_row(page, row)
+    planned_sets = (
+        tuple(chair_state.planned_gear_sets or ())
+        if chair_state is not None
+        else _manual_sets_for_slot(page, slot_name)
+    )
+
+    heading = QLabel("ASSIGN GEAR")
+    heading.setProperty("sidebarHeading", True)
+    layout.addWidget(heading)
+
+    help_text = QLabel(
+        "Search the full Gear Catalog and assign sets directly. "
+        "Recommendations below are suggestions, not restrictions."
+    )
+    help_text.setWordWrap(True)
+    help_text.setProperty("compManualSetSummary", True)
+    layout.addWidget(help_text)
+
+    if planned_sets:
+        current_label = QLabel("CURRENT PLAN")
+        current_label.setProperty("sidebarHeading", True)
+        layout.addWidget(current_label)
+        for name in planned_sets:
+            row_host = QWidget()
+            row_layout = QHBoxLayout(row_host)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(6)
+            label = QLabel(name)
+            label.setWordWrap(True)
+            row_layout.addWidget(label, 1)
+            remove = QPushButton("Remove")
+            remove.setProperty("compManualSetChoice", True)
+            remove.setEnabled(
+                not (
+                    chair_state is not None
+                    and chair_state.is_locked("gear")
+                )
+            )
+            remove.clicked.connect(
+                lambda _checked=False, set_name=name: _remove_planned_gear_set(
+                    page, set_name
+                )
+            )
+            row_layout.addWidget(remove)
+            layout.addWidget(row_host)
+    else:
+        empty = QLabel("Current plan: no gear assigned yet.")
+        empty.setProperty("compManualSetSummary", True)
+        layout.addWidget(empty)
+
+    search_row = QWidget()
+    search_layout = QHBoxLayout(search_row)
+    search_layout.setContentsMargins(0, 0, 0, 0)
+    search_layout.setSpacing(6)
+
+    picker = QComboBox()
+    picker.setEditable(True)
+    picker.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+    picker.addItems(list(_catalog_set_names(page)))
+    picker.setCurrentIndex(-1)
+    picker.setPlaceholderText("Search all gear sets…")
+    picker.setProperty("compDirectGearPicker", True)
+    if picker.completer() is not None:
+        picker.completer().setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        picker.completer().setFilterMode(Qt.MatchFlag.MatchContains)
+    picker.setEnabled(
+        not (
+            chair_state is not None
+            and chair_state.is_locked("gear")
+        )
+    )
+    search_layout.addWidget(picker, 1)
+
+    add = QPushButton("Add Set")
+    add.setProperty("compManualSetChoice", True)
+    add.setEnabled(picker.isEnabled())
+    add.clicked.connect(
+        lambda *_: _add_planned_gear_set(page, picker.currentText())
+    )
+    search_layout.addWidget(add)
+    layout.addWidget(search_row)
+
+    suggestions: list[str] = []
+    seen = {value.casefold() for value in planned_sets}
     for candidate in candidates:
-        for name in getattr(candidate, "five_piece_sets", ()) or ():
+        for name in getattr(candidate, "gear_sets", ()) or ():
             text = str(name or "").strip()
             key = text.casefold()
             if text and key not in seen:
                 seen.add(key)
-                names.append(text)
+                suggestions.append(text)
 
-    if not names:
-        host.setVisible(False)
-        return
-
-    heading = QLabel("CHOOSE SETS FOR THIS CHAIR • pick up to 2")
-    heading.setProperty("sidebarHeading", True)
-    layout.addWidget(heading)
-
-    selected_label = QLabel(
-        "Selected: "
-        + (
-            " + ".join(_manual_sets_for_slot(page, slot_name))
-            or "Automatic pair"
-        )
-    )
-    selected_label.setWordWrap(True)
-    selected_label.setProperty("compManualSetSummary", True)
-    layout.addWidget(selected_label)
-
-    for name in names:
-        button = QPushButton(name)
-        button.setCheckable(True)
-        button.setChecked(name.casefold() in selected)
-        button.setProperty("compManualSetChoice", True)
-        button.setToolTip(
-            "Choose this five-piece set independently of the observed two-set pairing."
-        )
-        button.clicked.connect(
-            lambda _checked=False, set_name=name: _toggle_manual_set(page, set_name)
-        )
-        layout.addWidget(button)
+    if suggestions:
+        suggested_label = QLabel("SUGGESTED BY COMP MAKER")
+        suggested_label.setProperty("sidebarHeading", True)
+        layout.addWidget(suggested_label)
+        for name in suggestions[:8]:
+            button = QPushButton(f"+ {name}")
+            button.setProperty("compManualSetChoice", True)
+            button.setEnabled(picker.isEnabled())
+            button.setToolTip(
+                "Add this recommendation to the current chair. "
+                "You can also search any Gear Catalog set above."
+            )
+            button.clicked.connect(
+                lambda _checked=False, set_name=name: _add_planned_gear_set(
+                    page, set_name
+                )
+            )
+            layout.addWidget(button)
 
     host.setVisible(True)
-
 
 def _responsibility_for_row(page, row: int) -> str:
     for column in (4, 6, 7):
@@ -312,6 +489,8 @@ def _responsibility_for_row(page, row: int) -> str:
 def _status_for_row(page, row: int, candidate) -> str:
     player = page._cell_text(row, 11).strip()
     slot = page._cell_text(row, 0) or f"Slot {row + 1}"
+    chair_state = _state_chair_for_row(page, row)
+    state_sets = tuple(chair_state.planned_gear_sets or ()) if chair_state is not None else ()
     manual_sets = _manual_sets_for_slot(page, slot)
     applied_candidate = getattr(page, "_comp_applied_candidates", {}).get(slot)
     applied = applied_candidate is not None
@@ -324,7 +503,7 @@ def _status_for_row(page, row: int, candidate) -> str:
         )
         if str(value).strip()
     )
-    planned_gear = bool(manual_sets or applied_sets)
+    planned_gear = bool(state_sets or manual_sets or applied_sets)
 
     if not player or player.casefold().startswith("recruit"):
         return "Planned gear" if planned_gear else "Needs gear"
