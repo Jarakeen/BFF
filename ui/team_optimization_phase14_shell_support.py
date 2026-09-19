@@ -2,10 +2,10 @@ from __future__ import annotations
 
 """Phase 14 Recommendation Workbench for one exact saved Raid Plan.
 
-The legacy Optimization editor remains intact behind this presentation layer for
-older handoffs.  The visible Phase 14 surface is deliberately plan-scoped and
-read-only: it renders canonical adviser findings, lets the raid lead select items
-for review, and never applies or fabricates a build/team change.
+The normal Phase 14 route constructs only this plan-scoped, read-only workbench.
+Legacy Optimization editor code remains compatibility-only and is not initialized
+or analyzed during application startup. Expensive saved-build/capability services
+are created only after an exact saved Raid Plan is handed to this page.
 """
 
 from time import perf_counter
