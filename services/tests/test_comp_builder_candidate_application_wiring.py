@@ -29,13 +29,13 @@ def test_comp_maker_bulk_application_does_not_clone_saved_players():
     assert "used_saved_players.add(player_key)" in source
 
 
-def test_fill_from_roster_uses_saved_build_candidates_only():
+def test_canonical_autofill_can_consider_saved_and_reference_build_evidence():
     source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(encoding="utf-8")
 
-    assert 'if candidate.source_kind == "saved_build"' in source
-    assert "Reference templates remain" in source
-    assert "Filled {result.applied_count} open chair(s) from saved roster builds" in source
-    assert "no matching saved roster build" in source
+    assert 'candidate.source_kind in {"saved_build", "reference_template"}' in source
+    assert "CompPlanAutoFillService" in source
+    assert "Auto-filled {result.applied_count} open build decision(s)" in source
+    assert "Compatibility mirror only" in source
 
 
 def test_comp_maker_send_to_roster_preserves_structured_candidate_evidence():
@@ -83,14 +83,17 @@ def test_comp_maker_bulk_optimizer_enforces_raid_wide_provider_coverage():
     assert "raid-wide provider still uncovered" in source
 
 
-def test_comp_maker_raid_wide_provider_scope_comes_from_active_template_rows():
+def test_canonical_comp_provider_scope_comes_from_team_health_and_assignments():
     source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(encoding="utf-8")
 
+    canonical = source.split("if state is not None:", 1)[1].split("else:", 1)[0]
+    assert "CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)" in source
+    assert "health.missing_required" in source
+    assert "chair.primary_assignment" in source
+    assert "provider_resolution_by_slot[chair.seat_id]" in source
+    assert "assignment_resolution.provider_ids" in source
     assert "provider_labels = page._split_values(page._cell_text(row, 6))" in source
-    assert "provider_resolution_by_slot[slot_name] = provider_resolution" in source
-    assert "for row in provider_service.profile.mapped_required" not in source.split(
-        "already_covered_team_provider_ids", 1
-    )[0]
+    assert "Legacy/unbound sessions" in source
 
 
 def test_comp_maker_materializes_optimizer_choices_before_roster_transfer():
