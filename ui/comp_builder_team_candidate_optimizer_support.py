@@ -3,7 +3,6 @@ from __future__ import annotations
 from engine.config import get_data_dir
 from services.comp_builder_composition_style import CompCompositionStyle
 from services.comp_builder_novelty_evidence import CompBuilderNoveltyEvidenceService
-from services.comp_builder_provider_evidence import CompBuilderProviderEvidenceService
 from services.comp_builder_team_candidate_optimizer import (
     CompTeamCandidatePool,
     optimize_comp_team_candidates,
@@ -22,18 +21,14 @@ def _selected_style(page) -> CompCompositionStyle:
 
 
 def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
+    """Fill open roster/build decisions without performing buff/debuff optimization."""
     from ui import comp_builder_build_candidate_support as support
     from ui.comp_builder_page import GOAL_TRIALS
+    from services.comp_plan_autofill_service import CompPlanAutoFillService
 
     if page.matrix_table.rowCount() <= 0:
         page.status.warning("There are no composition chairs to fill.")
         return
-
-    provider_service = getattr(page, "_comp_provider_evidence_service", None)
-    if provider_service is None:
-        provider_service = CompBuilderProviderEvidenceService(get_data_dir())
-        page._comp_provider_evidence_service = provider_service
-    novelty_service = CompBuilderNoveltyEvidenceService(get_data_dir())
 
     state = getattr(page, "_comp_plan_state", None)
     if state is None:
@@ -43,68 +38,16 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         )
         return
 
-    canonical_saved_players = {
-        str(chair.build_source_name or "").strip().casefold()
-        for chair in state.chairs
-        if str(chair.build_source_kind or "").strip().casefold() == "saved_build"
-        and str(chair.build_source_name or "").strip()
-    }
-    used_saved_players = tuple(
-        sorted(canonical_saved_players | set(support._used_saved_players(page)))
-    )
+    # Comp Maker owns roster/build fit. Raid-wide buff/debuff optimization belongs
+    # to Optimizer; Team Health remains read-only feedback about the current roster.
+    used_saved_players = tuple(sorted(support._used_saved_players(page)))
+    novelty_service = CompBuilderNoveltyEvidenceService(get_data_dir())
     pools: list[CompTeamCandidatePool] = []
     rows_by_slot: dict[str, int] = {}
     visible_slot_by_seat: dict[str, str] = {}
-    provider_ids_by_candidate: dict[str, tuple[str, ...]] = {}
     novelty_by_candidate: dict[str, float] = {}
     novelty_evidence_by_candidate: dict[str, object] = {}
     unresolved_reads: list[str] = []
-    unresolved_provider_mappings: list[str] = []
-
-    required_team_provider_ids: list[str] = []
-    provider_resolution_by_slot: dict[str, object] = {}
-
-    # Canonical bound and unbound sessions derive provider needs from CompPlanState
-    # Team Health plus explicit chair assignments.
-    from engine.config import DEFAULT_DATABASE
-    from services.comp_plan_health_service import CompPlanHealthService
-
-    health = CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)
-
-    # General missing required effects are raid-wide optimization goals. Not every
-    # raid-facing label has a canonical provider id yet, so unmapped general goals
-    # remain visible in Team Health without turning Auto-Fill into warning spam.
-    missing_resolution = provider_service.resolve_requirement_labels(
-        tuple(health.missing_required)
-    )
-    required_team_provider_ids.extend(missing_resolution.provider_ids)
-
-    # Explicit primary Assignments are stronger: if the provider identity is
-    # canonically mapped, the assigned chair must satisfy it rather than allowing
-    # another chair to accidentally "cover" the raid-wide requirement.
-    for chair in state.chairs:
-        assignment = str(chair.primary_assignment or "").strip()
-        if not assignment:
-            continue
-        assignment_resolution = provider_service.resolve_requirement_labels(
-            (assignment,)
-        )
-        provider_resolution_by_slot[chair.seat_id] = assignment_resolution
-        required_team_provider_ids.extend(assignment_resolution.provider_ids)
-        unresolved_provider_mappings.extend(
-            f"{chair.seat_id}: {message}"
-            for message in assignment_resolution.unresolved
-        )
-    required_team_provider_ids = list(dict.fromkeys(required_team_provider_ids))
-
-    already_covered_team_provider_ids: set[str] = set()
-    covered_labels = tuple(
-        dict.fromkeys(
-            (*health.covered_required, *health.conditional_required)
-        )
-    )
-    covered_resolution = provider_service.resolve_requirement_labels(covered_labels)
-    already_covered_team_provider_ids.update(covered_resolution.provider_ids)
 
     goal = page.goal_combo.currentText().strip()
     trial_name = GOAL_TRIALS.get(goal, "")
@@ -123,24 +66,11 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
             unresolved_reads.append(f"{slot_name}: {exc}")
             continue
 
-        if chair_state is not None:
-            from services.comp_plan_autofill_service import CompPlanAutoFillService
-
-            if not CompPlanAutoFillService.chair_is_open_for_build_autofill(chair_state):
-                candidates = ()
-
-        for candidate in candidates:
-            if candidate.candidate_id in provider_ids_by_candidate:
-                continue
-            try:
-                provider_ids_by_candidate[candidate.candidate_id] = (
-                    provider_service.provider_ids_for_candidate(candidate)
-                )
-            except Exception as exc:
-                provider_ids_by_candidate[candidate.candidate_id] = ()
-                unresolved_reads.append(
-                    f"{slot_name}: provider evidence for {candidate.name} could not be resolved: {exc}"
-                )
+        if (
+            chair_state is not None
+            and not CompPlanAutoFillService.chair_is_open_for_build_autofill(chair_state)
+        ):
+            candidates = ()
 
         try:
             novelty_result = novelty_service.evaluate_candidates(
@@ -154,20 +84,13 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
             )
         except (OSError, ValueError) as exc:
             unresolved_reads.append(
-                f"{slot_name}: novelty evidence could not be resolved: {exc}"
+                f"{slot_name}: roster/build evidence could not be resolved: {exc}"
             )
-
-        local_required = ()
-        if chair_state is not None:
-            provider_resolution = provider_resolution_by_slot.get(chair_state.seat_id)
-            if provider_resolution is not None:
-                local_required = provider_resolution.provider_ids
 
         pools.append(
             CompTeamCandidatePool(
                 slot_name=slot_name,
                 candidates=candidates,
-                required_provider_ids=local_required,
             )
         )
         rows_by_slot[slot_name] = row
@@ -178,17 +101,10 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     page._comp_novelty_evidence_by_candidate = dict(novelty_evidence_by_candidate)
     style = _selected_style(page)
 
-    from services.comp_plan_autofill_service import CompPlanAutoFillService
-
     result = CompPlanAutoFillService().apply(
         state=state,
         pools=tuple(pools),
         already_used_saved_players=used_saved_players,
-        provider_ids_by_candidate=provider_ids_by_candidate,
-        required_team_provider_ids=tuple(required_team_provider_ids),
-        already_covered_team_provider_ids=tuple(
-            sorted(already_covered_team_provider_ids)
-        ),
         composition_style=style,
         novelty_by_candidate=novelty_by_candidate,
     )
@@ -210,20 +126,12 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
 
     support._refresh_candidates(page)
     message = (
-        f"Auto-filled {result.applied_count} open build decision(s) in "
+        f"Filled {result.applied_count} open roster/build decision(s) in "
         f"{style.value.replace('_', ' ')} mode; preserved "
         f"{len(result.skipped_existing)} existing/locked chair(s)."
     )
-    unresolved = [
-        *(
-            f"raid-wide provider still uncovered: {provider_id}"
-            for provider_id in result.optimization.uncovered_team_provider_ids
-        ),
-        *unresolved_provider_mappings,
-        *unresolved_reads,
-    ]
-    if unresolved:
-        page.status.warning(message + " " + " • ".join(unresolved[:5]))
+    if unresolved_reads:
+        page.status.warning(message + " " + " • ".join(unresolved_reads[:5]))
     else:
         page.status.success(message)
     return
