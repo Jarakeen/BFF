@@ -175,3 +175,30 @@ def test_canonical_autofill_uses_primary_assignments_as_chair_local_constraints(
     assert "provider_resolution_by_slot[chair.seat_id] = assignment_resolution" in source
     assert "local_required = provider_resolution.provider_ids" in source
     assert "Explicit primary Assignments are stronger" in source
+
+
+def test_comp_selected_chair_can_assign_any_gear_catalog_set_directly() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert "def _catalog_set_names(page) -> tuple[str, ...]:" in source
+    assert "GearSetRepository(DEFAULT_DATABASE).list_sets()" in source
+    assert "def _add_planned_gear_set(page, set_name: str) -> None:" in source
+    assert "def _remove_planned_gear_set(page, set_name: str) -> None:" in source
+    assert 'heading = QLabel("ASSIGN GEAR")' in source
+    assert 'picker.setProperty("compDirectGearPicker", True)' in source
+    assert "picker.completer().setFilterMode(Qt.MatchFlag.MatchContains)" in source
+    assert 'add = QPushButton("Add Set")' in source
+    assert "Recommendations below are suggestions, not restrictions." in source
+    assert "chair_state.with_changes(planned_gear_sets=(*existing, canonical))" in source
+    assert "chair_state.is_locked(\"gear\")" in source
+
+
+def test_comp_row_status_uses_canonical_planned_gear_not_only_legacy_picker_state() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    status = source.split("def _status_for_row", 1)[1].split(
+        "def _group_rows", 1
+    )[0]
+    assert "chair_state = _state_chair_for_row(page, row)" in status
+    assert "state_sets = tuple(chair_state.planned_gear_sets or ())" in status
+    assert "planned_gear = bool(state_sets or manual_sets or applied_sets)" in status
