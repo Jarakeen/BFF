@@ -265,6 +265,8 @@ class CompBuilderPage(FoundryPage):
             pass
 
         self.plan_name_input.setText(plan.name)
+        self._comp_plan_state = self._comp_plan_state.mark_saved()
+        self._comp_unbound_baseline_state = None
         try:
             from ui.comp_builder_phase14_shell_support import refresh_phase14_presentation
             refresh_phase14_presentation(self)
