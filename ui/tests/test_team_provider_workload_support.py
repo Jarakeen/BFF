@@ -30,6 +30,9 @@ def test_workload_support_targets_both_surfaces_and_invalidates_stale_results():
     assert "CompBuilderPage.set_provider_workload_policy" in source
     assert "OptimizationPage.set_provider_workload_policy" in source
     assert "_comp_selected_saved_builds(page)" in source
+    assert 'state = getattr(page, "_comp_plan_state", None)' in source
+    assert 'getattr(chair, "selected_build_id", "")' in source
+    assert 'getattr(page, "_comp_applied_candidates", {})' not in source.split("def _comp_selected_saved_builds", 1)[1].split("def _optimization_selected_saved_builds", 1)[0]
     assert "_optimization_selected_saved_builds(page)" in source
     assert "CompBuilderPage._refresh_coverage = _comp_refresh_with_provider_invalidation" in source
     assert (
