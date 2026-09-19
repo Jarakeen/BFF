@@ -120,3 +120,21 @@ def test_comp_page_participates_in_app_wide_unsaved_navigation_contract() -> Non
     assert "page.discard_pending_changes = lambda: _discard_pending_changes(page)" in source
     assert "def _mark_comp_state_dirty(page) -> None:" in source
     assert "editTextChanged" in source
+
+
+def test_phase14_team_health_reads_canonical_comp_state_before_legacy_fallback() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    health = source.split("def _refresh_health(page) -> None:", 1)[1].split(
+        "def _refresh_shell(page) -> None:", 1
+    )[0]
+    assert 'state = getattr(page, "_comp_plan_state", None)' in health
+    assert "CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)" in health
+    assert "health.conditional_required" in health
+    assert "health.missing_required" in health
+    assert "health.duplicate_effects" in health
+    assert "health.open_player_seats" in health
+    assert "Compatibility fallback for ad-hoc/unbound Comp sessions" in health
+    assert health.index("CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)") < health.index(
+        "Compatibility fallback for ad-hoc/unbound Comp sessions"
+    )
