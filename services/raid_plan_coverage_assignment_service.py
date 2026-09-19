@@ -144,7 +144,7 @@ class RaidPlanCoverageAssignmentService:
             label = "Backup only"
         elif any_evidence:
             state = "unassigned_available"
-            label = "Present • Unassigned"
+            label = "Covered • Unassigned"
         else:
             state = "gap"
             label = "Gap • No provider"
