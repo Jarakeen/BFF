@@ -71,3 +71,16 @@ def test_roster_intake_creates_canonical_comp_state_before_raid_plan_exists() ->
     assert "_sync_comp_state_from_matches(page, matched, assignments)" in apply
     assert 'changes["primary_assignment"] = primary' in sync
     assert 'changes["secondary_assignment"] = secondary' in sync
+
+
+def test_comp_roster_intake_renders_only_after_lock_aware_state_sync() -> None:
+    source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+    apply = source.split("def apply_roster_team_context", 1)[1].split(
+        "def _send_roster_team_to_comp", 1
+    )[0]
+
+    assert apply.index("_sync_comp_state_from_matches(page, matched, assignments)") < apply.index(
+        "_set_player(page, row, member, assignments.get(member_id))"
+    )
+    setter = source.split("def _set_player", 1)[1].split("def _clear_player_rows", 1)[0]
+    assert "Canonical Comp state accepted this roster context." in setter
