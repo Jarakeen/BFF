@@ -340,23 +340,23 @@ def _sync_team_choices(page) -> None:
 
 
 def enhance_coverage_page(page) -> None:
-    """Add Roster teams to Coverage's canonical Build Scope selector.
+    """Retain legacy team-health helpers without exposing them as Coverage scopes.
 
-    Raid Plans and Roster teams share one selector. No second Team picker or
-    route-specific Health Check button is created.
+    Coverage's visible selector is owned by the Raid Plan adapter and contains saved
+    Raid Plans only. Roster-team health checks remain callable by legacy/internal
+    workflows, but they no longer inject competing scope choices into the page.
     """
     if bool(getattr(page, "_health_check_enhanced", False)):
-        _sync_team_choices(page)
         return
 
     page._health_check_enhanced = True
     page.health_check_roster_service = RosterService(EsoDatabase(get_data_dir() / "eso.db"))
 
     if hasattr(page.header, "title"):
-        page.header.title.setText("Coverage & Team Health")
+        page.header.title.setText("Coverage")
     if hasattr(page.header, "subtitle"):
         page.header.subtitle.setText(
-            "Choose All Saved Builds, a Roster Team, or a Raid Plan from Build Scope."
+            "Audit one saved Raid Plan for buff, debuff, utility, and provider coverage."
         )
 
     scope_combo = getattr(page, "scope_combo", None)
@@ -365,11 +365,9 @@ def enhance_coverage_page(page) -> None:
         if parent is not None:
             parent.setVisible(True)
         scope_combo.setToolTip(
-            "Choose all saved builds, a saved Roster team, or a Raid Plan. "
-            "Raid Plans include reviewed planned-set evidence."
+            "Choose one saved Raid Plan. Roster teams seed plans elsewhere; "
+            "Coverage evaluates the trial-specific plan."
         )
-
-    _sync_team_choices(page)
 
 
 __all__ = ["enhance_coverage_page", "run_team_health_check", "select_team_builds"]
