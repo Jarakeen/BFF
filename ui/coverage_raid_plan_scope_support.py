@@ -56,29 +56,45 @@ def _selected_plan_id(page) -> str:
 
 
 def _refresh_scope_plan_choices(page) -> None:
+    """Coverage exposes saved Raid Plans only.
+
+    Roster teams may seed plans elsewhere, and library-wide build audits remain useful
+    internally, but neither is a valid user-facing Coverage scope in the Raid workflow.
+    """
     combo = getattr(page, "scope_combo", None)
     if combo is None:
         return
 
-    current_data = combo.currentData()
+    current_data = str(combo.currentData() or "")
+    current_plan_id = (
+        current_data.split(":", 1)[1]
+        if current_data.startswith("raid_plan:")
+        else ""
+    )
+
+    try:
+        plans = RaidPlanRepository(get_data_dir() / "raid_plans.json").list_plans()
+    except Exception:
+        plans = ()
+
     combo.blockSignals(True)
     try:
-        for index in range(combo.count() - 1, -1, -1):
-            if str(combo.itemData(index) or "").startswith("raid_plan:"):
-                combo.removeItem(index)
+        combo.clear()
+        if not plans:
+            combo.addItem("No saved Raid Plans", None)
+            combo.setEnabled(False)
+            return
 
-        try:
-            plans = RaidPlanRepository(get_data_dir() / "raid_plans.json").list_plans()
-        except Exception:
-            plans = ()
-
+        combo.setEnabled(True)
+        selected_index = 0
         for plan in plans:
-            combo.addItem(f"Raid Plan: {plan.name}", _plan_item_data(plan.plan_id))
-
-        if current_data is not None:
-            target = combo.findData(current_data)
-            if target >= 0:
-                combo.setCurrentIndex(target)
+            trial = str(plan.trial_id or "").replace("-", " ").title()
+            difficulty = str(plan.difficulty or "Difficulty not set")
+            label = f"{plan.name} • {trial} • {difficulty}"
+            combo.addItem(label, _plan_item_data(plan.plan_id))
+            if current_plan_id and plan.plan_id.casefold() == current_plan_id.casefold():
+                selected_index = combo.count() - 1
+        combo.setCurrentIndex(selected_index)
     finally:
         combo.blockSignals(False)
 
@@ -428,18 +444,19 @@ def install() -> None:
             _render_raid_plan_scope(self)
             return
 
-        if data.startswith("roster_team:"):
-            from ui.coverage_health_check_support import run_team_health_check
-
-            run_team_health_check(
-                self,
-                data.split(":", 1)[1],
-                use_context=False,
-            )
-            return
-
         self._raid_plan_coverage_scope = None
-        return _ORIGINAL_REFRESH(self, *args, **kwargs)
+        self.table.setRowCount(0)
+        self.scope_card.set_title("Choose a saved Raid Plan")
+        self.scope_note.setText(
+            "Coverage evaluates one saved trial plan at a time. "
+            "Create or save a Raid Plan first, then return here."
+        )
+        self.summary_card.clear()
+        self.summary_card.addWidget(QLabel("No Raid Plan selected."))
+        self.providers_card.clear()
+        self.providers_card.addWidget(QLabel("No plan-scoped provider evidence loaded."))
+        self.status.info("Coverage is waiting for a saved Raid Plan.")
+        return
 
     def set_raid_plan_scope(self, raid_plan: RaidPlan) -> None:
         """Compatibility helper: choose the plan in Coverage's own scope menu."""
