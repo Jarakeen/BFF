@@ -127,6 +127,60 @@ def _state_chair_for_row(page, row: int):
     )
 
 
+def _cached_comp_health(page, state):
+    cache = getattr(page, "_comp_phase14_health_cache", None)
+    if cache is not None:
+        cached_state, cached_health = cache
+        if cached_state == state:
+            return cached_health
+
+    from engine.config import DEFAULT_DATABASE
+    from services.comp_plan_health_service import CompPlanHealthService
+
+    service = getattr(page, "_comp_phase14_health_service", None)
+    if service is None:
+        service = CompPlanHealthService(DEFAULT_DATABASE)
+        page._comp_phase14_health_service = service
+    health = service.evaluate(state)
+    page._comp_phase14_health_cache = (state, health)
+    return health
+
+
+def _candidate_proposal_cache_key(state, chair, candidate) -> tuple:
+    return (
+        state,
+        str(getattr(chair, "seat_id", "") or "").casefold(),
+        str(getattr(candidate, "candidate_id", "") or ""),
+        str(getattr(candidate, "name", "") or ""),
+        tuple(getattr(candidate, "gear_sets", ()) or ()),
+        str(getattr(candidate, "eso_class", "") or ""),
+        str(getattr(candidate, "mundus", "") or ""),
+    )
+
+
+def _cached_candidate_proposal(page, state, chair, candidate):
+    key = _candidate_proposal_cache_key(state, chair, candidate)
+    cache = getattr(page, "_comp_phase14_proposal_cache", None)
+    if cache is not None and cache[0] == key:
+        return cache[1]
+
+    from engine.config import DEFAULT_DATABASE
+    from services.comp_candidate_adviser_service import CompCandidateAdviserService
+
+    service = getattr(page, "_comp_phase14_adviser_service", None)
+    if service is None:
+        service = CompCandidateAdviserService(DEFAULT_DATABASE)
+        page._comp_phase14_adviser_service = service
+    proposal = service.evaluate(
+        state=state,
+        seat_id=chair.seat_id,
+        candidate=candidate,
+        current_health=_cached_comp_health(page, state),
+    )
+    page._comp_phase14_proposal_cache = (key, proposal)
+    return proposal
+
+
 def _candidate_for_row(page, row: int):
     if row < 0:
         return None
@@ -766,12 +820,16 @@ def _apply_choice(page, frame: QFrame) -> None:
         from engine.config import DEFAULT_DATABASE
         from services.comp_candidate_adviser_service import CompCandidateAdviserService
 
+        cached_proposal = getattr(frame, "_comp_proposal", None)
         updated, proposal = CompCandidateAdviserService(DEFAULT_DATABASE).apply(
             state=state,
             seat_id=chair.seat_id,
             candidate=candidate,
+            proposal=cached_proposal,
         )
         page._comp_plan_state = updated
+        page._comp_phase14_health_cache = None
+        page._comp_phase14_proposal_cache = None
         if proposal.changes_anything:
             page._comp_applied_candidates[slot_name] = candidate
             bits = [f"Applied {_candidate_label(candidate)} to {slot_name}."]
@@ -914,15 +972,14 @@ def _refresh_why(page) -> None:
     why_parts: list[str] = []
     state = getattr(page, "_comp_plan_state", None)
     chair = _state_chair_for_row(page, row)
+    proposal = None
     if state is not None and chair is not None:
         try:
-            from engine.config import DEFAULT_DATABASE
-            from services.comp_candidate_adviser_service import CompCandidateAdviserService
-
-            proposal = CompCandidateAdviserService(DEFAULT_DATABASE).evaluate(
-                state=state,
-                seat_id=chair.seat_id,
-                candidate=preferred,
+            proposal = _cached_candidate_proposal(
+                page,
+                state,
+                chair,
+                preferred,
             )
         except (AttributeError, OSError, TypeError, ValueError):
             proposal = None
@@ -998,8 +1055,13 @@ def _refresh_why(page) -> None:
     page.comp_phase14_alt_two.setText(_alternative_text(alt_two))
 
     page.comp_phase14_recommendation_frame._comp_candidate = preferred
+    page.comp_phase14_recommendation_frame._comp_proposal = (
+        proposal if state is not None and chair is not None else None
+    )
     page.comp_phase14_alt_one_frame._comp_candidate = alt_one
+    page.comp_phase14_alt_one_frame._comp_proposal = None
     page.comp_phase14_alt_two_frame._comp_candidate = alt_two
+    page.comp_phase14_alt_two_frame._comp_proposal = None
 
     selected_id = (
         str(getattr(applied, "candidate_id", "") or "")
@@ -1134,10 +1196,7 @@ def _refresh_health(page) -> None:
     state = getattr(page, "_comp_plan_state", None)
     if state is not None:
         try:
-            from engine.config import DEFAULT_DATABASE
-            from services.comp_plan_health_service import CompPlanHealthService
-
-            health = CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)
+            health = _cached_comp_health(page, state)
         except (AttributeError, ImportError, OSError, TypeError, ValueError):
             health = None
 
@@ -1669,6 +1728,7 @@ def _build_why(page, card: FoundryCard) -> None:
         alt_two_frame,
     ):
         choice_frame._comp_candidate = None
+        choice_frame._comp_proposal = None
         _set_choice_state(choice_frame, selected=False, enabled=False)
 
     info_frame, info_layout = _why_section_frame("info")
