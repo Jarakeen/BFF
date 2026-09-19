@@ -261,8 +261,9 @@ def _candidate_state_changes(chair, candidate: CompBuildCandidate) -> dict:
         )
     if not chair.is_locked("gear"):
         changes["planned_gear_sets"] = tuple(candidate.gear_sets)
-    if not chair.is_locked("skills"):
-        changes["planned_skills"] = tuple(candidate.skills)
+    # Skill-package adoption is intentionally deferred to the later Comp skill-evidence
+    # pass. Existing planned skills survive state round-trips but candidate application
+    # does not overwrite or populate them yet.
     if not chair.is_locked("mundus"):
         changes["planned_mundus"] = candidate.mundus or None
     return changes
