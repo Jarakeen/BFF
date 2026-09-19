@@ -3,6 +3,7 @@ from __future__ import annotations
 """Canonical Comp planning-state boundaries before and after Raid Plan binding."""
 
 from dataclasses import replace
+import re
 
 from models.comp_plan_state import CompChairState, CompPlanState
 from models.raid_plan import RaidPlan, RaidPlanMember
@@ -12,8 +13,29 @@ def _clean(value: object) -> str:
     return " ".join(str(value or "").strip().split())
 
 
+def _slug(value: object) -> str:
+    text = re.sub(r"[^a-z0-9]+", "-", _clean(value).casefold()).strip("-")
+    return text or "raid-plan"
+
+
 class CompPlanStateService:
     """Create, bind, and translate one canonical Comp Maker working state."""
+
+    @staticmethod
+    def unique_raid_plan_id(
+        state: CompPlanState,
+        *,
+        existing_ids: tuple[str, ...] = (),
+    ) -> str:
+        """Choose a readable Raid Plan id without overwriting an existing plan."""
+        base = f"{_slug(state.trial_id)}-{_slug(state.raid_plan_name)}"
+        used = {_clean(value).casefold() for value in existing_ids if _clean(value)}
+        if base.casefold() not in used:
+            return base
+        index = 2
+        while f"{base}-{index}".casefold() in used:
+            index += 1
+        return f"{base}-{index}"
 
     @staticmethod
     def new_unbound(
