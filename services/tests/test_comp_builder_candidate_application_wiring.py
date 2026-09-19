@@ -7,7 +7,9 @@ def test_comp_maker_can_apply_top_ranked_candidate_to_selected_chair():
     assert '"Apply Top Candidate"' in source
     assert "_first_unused_candidate(candidates, used_saved_players)" in source
     assert "page._comp_applied_candidates[slot_name] = candidate" in source
-    assert "Applied {candidate.name} to {slot_name}" in source
+    assert "Applied unlocked parts of {candidate.name} to {slot_name}" in source
+    assert "_comp_last_candidate_apply_changed" in source
+    assert "_comp_last_candidate_apply_blocked_fields" in source
 
 
 def test_comp_maker_can_apply_best_candidates_across_unassigned_chairs():
@@ -87,14 +89,14 @@ def test_comp_maker_bulk_optimizer_enforces_raid_wide_provider_coverage():
 def test_canonical_comp_provider_scope_comes_from_team_health_and_assignments():
     source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(encoding="utf-8")
 
-    canonical = source.split("if state is not None:", 1)[1].split("else:", 1)[0]
     assert "CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)" in source
+    assert source.count("CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)") == 1
     assert "health.missing_required" in source
     assert "chair.primary_assignment" in source
     assert "provider_resolution_by_slot[chair.seat_id]" in source
     assert "assignment_resolution.provider_ids" in source
-    assert "provider_labels = page._split_values(page._cell_text(row, 6))" in source
-    assert "Legacy/unbound sessions" in source
+    assert "provider_labels = page._split_values(page._cell_text(row, 6))" not in source
+    assert "Canonical bound and unbound sessions" in source
 
 
 def test_comp_maker_materializes_optimizer_choices_before_roster_transfer():
