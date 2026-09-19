@@ -14,10 +14,13 @@ replace player decisions or manufacture a full raid from nothing.
 
 Canonical workflow:
 
-Raid Plan -> Comp Maker working state -> Raid Plan
+Team / Roster / Assignments -> CompPlanState -> Builds / Optimizer -> Raid Plan
 
-The Raid Plan is the durable source of truth. Comp Maker owns recommendations and a
-temporary working copy only.
+CompPlanState is the canonical working object and may exist before a Raid Plan record.
+A saved Raid Plan is the durable finalized run snapshot. When Comp Maker is opened from
+an existing Raid Plan, the same CompPlanState is bound to that plan and saves merge back
+into it. When planning starts upstream from Team/Roster/Assignments, the state remains
+unbound until Save/Send finalizes it into a new Raid Plan.
 
 ## Primary user story
 
@@ -129,8 +132,8 @@ Suggested names:
 
 Fields should include at least:
 
-- raid_plan_id
-- raid_plan_name
+- optional raid_plan_id (None before finalization)
+- raid_plan_name / working plan name
 - trial_id
 - difficulty
 - achievement_goal
@@ -404,9 +407,14 @@ Auto-Fill should be deterministic for the same state/evidence/policy.
 
 ## Save behavior
 
-Save must serialize CompPlanState directly back into the same Raid Plan.
+Save must operate directly on CompPlanState.
 
-It must preserve fields Comp Maker does not own, including:
+- bound state updates the same Raid Plan;
+- unbound state finalizes into one new Raid Plan, chooses a non-colliding readable id,
+  then rebinds the current Comp session to the persisted plan;
+- supported Phase 14 save never requires generated-roster draft storage.
+
+A bound save must preserve fields Comp Maker does not own, including:
 
 - notes
 - utility assignments
@@ -421,8 +429,8 @@ Normal Raid Plan save must not:
 - rename the Raid Plan unexpectedly
 - overwrite reusable saved Builds
 
-Generated roster draft storage may remain for compatibility/ad-hoc experiments but is
-not the canonical normal save path.
+Generated roster draft storage may remain behind explicit compatibility tooling but is
+not part of the supported Phase 14 Comp lifecycle.
 
 ## Legacy quarantine rule
 
@@ -443,8 +451,8 @@ Legacy code may remain temporarily for compatibility, but it must obey these rul
   namespace once callers are reduced enough to do so safely;
 - tests must fail if a legacy path mutates Raid Plan or Comp state behind the new
   controller's back;
-- generated-roster draft code remains compatibility/ad-hoc tooling only and must not
-  participate in the normal Raid Plan -> Comp Maker -> Raid Plan save path;
+- generated-roster draft code remains compatibility tooling only and must not
+  participate in the supported Team/Roster/Assignments -> Comp -> Raid Plan lifecycle;
 - final cleanup should delete dead legacy code only after coverage proves no supported
   workflow still depends on it.
 
@@ -455,13 +463,15 @@ The goal is not merely to hide old widgets. The goal is to remove old ownership.
 Do not rewrite all Comp services at once.
 
 ### Stage 1 - canonical working state
-Create typed CompPlanState/CompChairState and adapters:
+Create typed CompPlanState/CompChairState and boundaries:
 
-RaidPlan -> CompPlanState
-CompPlanState -> RaidPlan
+Team/Roster/Assignments -> unbound CompPlanState
+RaidPlan -> bound CompPlanState
+bound CompPlanState -> same RaidPlan
+unbound CompPlanState -> new RaidPlan
 
-Tests prove exact round-trip preservation of assignments, classes, players, planned
-gear, locks, and untouched Raid Plan fields.
+Tests prove exact preservation of assignments, classes, players, planned gear/skills,
+locks, source annotations, and untouched bound Raid Plan fields.
 
 ### Stage 2 - read-only new page shell
 Render current Raid Plan from CompPlanState. No optimization yet.
