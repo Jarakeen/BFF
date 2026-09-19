@@ -16,7 +16,7 @@ def test_comp_maker_keeps_role_chair_matching_separate_from_raid_job() -> None:
 
     assert "_match_rows(page, members)" in source
     assert "Raid job for this context" in source
-    assert "Team/boss assignment is context" in source
+    assert "Team/boss assignment remains context" in source
 
 
 def test_comp_maker_saved_build_candidates_are_scoped_to_loaded_player() -> None:
@@ -29,14 +29,17 @@ def test_comp_maker_saved_build_candidates_are_scoped_to_loaded_player() -> None
     assert "if _candidate_matches_roster_member(candidate, member, recruit=recruit)" in source
 
 
-def test_comp_maker_send_preserves_known_player_without_forcing_recruitment() -> None:
-    source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+def test_comp_maker_roster_intake_preserves_known_player_in_canonical_state() -> None:
+    source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
 
-    assert 'roster_members = getattr(self, "_comp_roster_member_by_slot", {})' in source
-    assert "if not applied and not roster_members:" in source
-    assert "known_player = bool(roster_context_active and roster_member is not None)" in source
-    assert 'player_name=roster_player if known_player else "Recruitment Needed"' in source
-    assert 'character_name=roster_character if known_player else ""' in source
+    sync = source.split("def _sync_comp_state_from_matches", 1)[1].split(
+        "def apply_roster_team_context", 1
+    )[0]
+    assert 'player = str(getattr(member, "PlayerName", "") or "").strip()' in sync
+    assert "recruit = _is_recruit_member(member)" in sync
+    assert 'changes["player_name"] = "" if recruit else player' in sync
+    assert 'changes["character_name"] = character' in sync
+    assert "page._comp_plan_state = current" in sync
 
 
 def test_comp_maker_recruit_slots_do_not_borrow_saved_player_builds() -> None:
