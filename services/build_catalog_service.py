@@ -348,6 +348,7 @@ class BuildCatalogService:
                 }
 
             legacy = member.to_dict()
+            legacy["PlayerId"] = player_id
             legacy["CharacterId"] = character_id
             legacy["BuildId"] = build_id
             catalog["builds"].append(
