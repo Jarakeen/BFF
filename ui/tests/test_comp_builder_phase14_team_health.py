@@ -34,3 +34,15 @@ def test_phase14_save_plan_contains_ui_exception_boundary() -> None:
     assert "except Exception as exc:" in save
     assert "Could not save Comp Builder plan:" in save
     assert 'getattr(window, "_persist_generated_comp_plan_to_raid_plan", None)' in save
+
+
+def test_raid_plan_comp_handoff_filters_manual_picker_to_five_piece_sets() -> None:
+    source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+
+    handoff = source.split("def _bind_plan_comp_builder", 1)[1].split(
+        "def _open_plan_comp_builder", 1
+    )[0]
+    assert "from services.comp_builder_build_candidates import _five_piece_set_names" in handoff
+    assert "_five_piece_set_names(get_data_dir() / \"eso.db\", planned)" in handoff
+    assert "tuple(five_piece[:2])" in handoff
+    assert ")[:2]" not in handoff
