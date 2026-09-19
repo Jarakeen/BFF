@@ -2089,6 +2089,19 @@ def _build_health(page, card: FoundryCard) -> None:
         tile, value, detail = _health_tile(title, symbol, state)
         setattr(page, value_name, value)
         setattr(page, detail_name, detail)
+        if state == "covered":
+            from services.comp_plan_health_service import required_effect_names
+
+            required = required_effect_names()
+            tooltip = (
+                "Team Health currently measures these default-required planned effects:\n\n"
+                + "\n".join(f"• {name}" for name in required)
+                + "\n\nCovered means the current Comp plan contains a planned source; "
+                "runtime uptime is evaluated elsewhere."
+            )
+            tile.setToolTip(tooltip)
+            value.setToolTip(tooltip)
+            detail.setToolTip(tooltip)
         row.addWidget(tile, 1)
 
     divider = QFrame()
