@@ -36,7 +36,8 @@ def test_phase14_save_plan_uses_canonical_state_without_silent_autofill() -> Non
     assert 'getattr(page, "_comp_plan_state", None)' in save
     assert 'getattr(window, "_persist_comp_plan_state_to_raid_plan", None)' in save
     assert "_materialize_visible_recommendations(page)" not in save
-    assert 'getattr(window, "_persist_generated_comp_plan_to_raid_plan",' in save
+    assert '"_persist_generated_comp_plan_to_raid_plan"' in save
+    assert "persist_legacy(draft.name, navigate=False)" in save
 
 
 def test_raid_plan_comp_handoff_filters_manual_picker_to_five_piece_sets() -> None:
