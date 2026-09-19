@@ -114,8 +114,8 @@ def test_reviewed_group_class_passive_requires_planned_trigger_skill_line(tmp_pa
     path = _database(tmp_path)
     db = sqlite3.connect(path)
     db.execute(
-        "INSERT INTO ability VALUES "
-        "(102, 'Radiant Oppression', 'Templar', 'Dawn\'s Wrath', 1, 1)"
+        "INSERT INTO ability VALUES (?, ?, ?, ?, ?, ?)",
+        (102, "Radiant Oppression", "Templar", "Dawn's Wrath", 1, 1),
     )
     db.commit()
     db.close()
