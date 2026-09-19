@@ -43,7 +43,6 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         )
         return
 
-    applied = getattr(page, "_comp_applied_candidates", {})
     canonical_saved_players = {
         str(chair.build_source_name or "").strip().casefold()
         for chair in state.chairs
