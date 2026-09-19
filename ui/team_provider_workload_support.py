@@ -298,31 +298,36 @@ def _clear_provider_workload_evidence(page) -> None:
 
 
 def _comp_selected_saved_builds(page):
-    """Resolve only exact saved candidates currently applied to Comp chairs."""
+    """Resolve exact saved builds from canonical CompPlanState."""
+
+    state = getattr(page, "_comp_plan_state", None)
+    if state is None:
+        return ()
 
     data_dir = get_data_dir()
     roster = CanonicalBuildBridge(
         data_dir / "builds.json",
         data_dir / "characters.json",
     ).load().Members
+    builds_by_id = {
+        str(getattr(build, "BuildId", "") or "").strip(): build
+        for build in roster
+        if str(getattr(build, "BuildId", "") or "").strip()
+    }
+
     resolved = []
     seen: set[str] = set()
-    for candidate in getattr(page, "_comp_applied_candidates", {}).values():
-        if getattr(candidate, "source_kind", "") != "saved_build":
+    for chair in tuple(getattr(state, "chairs", ()) or ()):
+        if str(getattr(chair, "build_source_kind", "") or "").strip().casefold() != "saved_build":
             continue
-        build_id = str(getattr(candidate, "saved_build_id", "") or "").strip()
-        if not build_id:
+        build_id = str(getattr(chair, "selected_build_id", "") or "").strip()
+        if not build_id or build_id in seen:
             continue
-        matches = [
-            build
-            for build in roster
-            if str(getattr(build, "BuildId", "") or "").strip() == build_id
-        ]
-        if len(matches) != 1:
+        build = builds_by_id.get(build_id)
+        if build is None:
             continue
-        if build_id not in seen:
-            seen.add(build_id)
-            resolved.append(matches[0])
+        seen.add(build_id)
+        resolved.append(build)
     return tuple(resolved)
 
 
