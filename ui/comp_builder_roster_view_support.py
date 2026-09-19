@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+"""Compatibility-only bridge for the retired generated-plan Roster dropdown.
+
+Phase 14 Comp Maker persists directly to Raid Plan and does not install this module
+during normal application startup. Keep it only for historical tooling until final
+dead-code deletion proves no external workflow depends on it.
+"""
+
 
 _INSTALLED = False
 _ORIGINAL_ROSTER_INIT = None
