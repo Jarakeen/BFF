@@ -116,13 +116,6 @@ class MainWindow(QMainWindow):
         comp_builder_page.rosterPlanSent.connect(self._show_generated_roster_plan)
 
         optimization_page = OptimizationPage()
-        send_team_button = QPushButton("Send Team to Raid Plan")
-        send_team_button.setProperty("primary", True)
-        send_team_button.setToolTip(
-            "Send the currently selected optimization team into Raid Plan with its current build choices."
-        )
-        send_team_button.clicked.connect(self._send_optimized_team_to_roster)
-        optimization_page.header.add_context_widget(send_team_button)
 
         core_pages = {
             "achievements": AchievementsPage(),
