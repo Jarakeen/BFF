@@ -1,0 +1,156 @@
+from pathlib import Path
+from types import SimpleNamespace
+
+from models.comp_plan_state import CompChairState, CompPlanState
+from services.comp_plan_health_service import CompPlanHealthService
+from services.raid_planned_gear_coverage_service import (
+    PlannedGearCoverageProvider,
+    RaidPlannedGearCoverageService,
+)
+from services.saved_build_capability_service import RaidCoverageSnapshot
+
+
+def test_planned_gear_overlay_resolves_perfected_set_family_name(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (
+            SimpleNamespace(
+                source_name="Roaring Opportunist",
+                effect_key="major_slayer",
+            ),
+        ),
+    )
+
+    service = RaidPlannedGearCoverageService(tmp_path / "eso.db")
+    snapshot = service.empty_snapshot(("Major Slayer",))
+    result = service.overlay(
+        snapshot,
+        (
+            PlannedGearCoverageProvider(
+                seat_id="healer-1",
+                provider_label="Magrat",
+                gear_sets=("Perfected Roaring Opportunist",),
+            ),
+        ),
+        effect_names=("Major Slayer",),
+    )
+
+    assert result.status["Major Slayer"] == "conditional"
+    assert result.providers["Major Slayer"] == []
+    assert result.conditional_providers["Major Slayer"] == [
+        "Magrat [planned: Perfected Roaring Opportunist]"
+    ]
+
+
+def test_planned_unique_support_set_keeps_provider_identity(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (),
+    )
+
+    service = RaidPlannedGearCoverageService(tmp_path / "eso.db")
+    snapshot = service.empty_snapshot(("Jorvuld's Guidance",))
+    result = service.overlay(
+        snapshot,
+        (
+            PlannedGearCoverageProvider(
+                seat_id="healer-1",
+                provider_label="Magrat",
+                gear_sets=("Jorvuld's Guidance",),
+            ),
+        ),
+        effect_names=("Jorvuld's Guidance",),
+    )
+
+    assert result.status["Jorvuld's Guidance"] == "conditional"
+    assert result.conditional_providers["Jorvuld's Guidance"] == [
+        "Magrat [planned: Jorvuld's Guidance]"
+    ]
+
+
+def test_comp_plan_health_uses_canonical_state_for_open_players_and_gear(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (),
+    )
+
+    state = CompPlanState(
+        raid_plan_id="swash",
+        raid_plan_name="Swash",
+        trial_id="Dreadsail Reef",
+        chairs=(
+            CompChairState(
+                seat_id="tank-1",
+                player_name="Tank",
+                role="Tank",
+                planned_gear_sets=("Pearlescent Ward",),
+            ),
+            CompChairState(
+                seat_id="healer-1",
+                player_name="Healer",
+                role="Healer",
+                planned_gear_sets=("Jorvuld's Guidance",),
+            ),
+            CompChairState(
+                seat_id="dd-1",
+                player_name="",
+                role="Damage",
+                planned_gear_sets=("Elemental Catalyst",),
+            ),
+            CompChairState(
+                seat_id="dd-2",
+                player_name="Recruit",
+                role="Damage",
+            ),
+        ),
+    )
+
+    health = CompPlanHealthService(tmp_path / "eso.db").evaluate(state)
+
+    assert health.open_player_seats == ("dd-1", "dd-2")
+    assert health.open_gear_seats == ("dd-2",)
+    assert "Pearlescent Ward" in dict(health.coverage_status)
+    providers = dict(health.providers_by_effect)
+    assert providers["Jorvuld's Guidance"] == (
+        "Healer [planned: Jorvuld's Guidance]",
+    )
+
+
+def test_comp_plan_health_detects_duplicate_effect_sources(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (
+            SimpleNamespace(source_name="Spell Power Cure", effect_key="major_courage"),
+            SimpleNamespace(source_name="Vestment of Olorime", effect_key="major_courage"),
+        ),
+    )
+
+    state = CompPlanState(
+        raid_plan_id="dup",
+        raid_plan_name="Duplicate Test",
+        trial_id="Sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="healer-1",
+                player_name="H1",
+                planned_gear_sets=("Spell Power Cure",),
+            ),
+            CompChairState(
+                seat_id="healer-2",
+                player_name="H2",
+                planned_gear_sets=("Vestment of Olorime",),
+            ),
+        ),
+    )
+
+    health = CompPlanHealthService(tmp_path / "eso.db").evaluate(state)
+
+    assert "Major Courage" in health.duplicate_effects
+    assert "Major Courage" in health.conditional_required
