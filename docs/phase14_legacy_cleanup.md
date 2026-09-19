@@ -44,6 +44,10 @@ remain temporarily for compatibility, migration, or historical tooling.
 - [x] `raid_plan_optimizer_adviser_support` is no longer installed by the Raid Engine
       dashboard; the Phase 14 Workbench owns the exact Raid Plan handoff directly.
 - [x] Optimization-specific provider-workload constructor/update hooks are not installed.
+- [x] the saved-rotation provider bridge installs only on Comp Maker; its historical
+      OptimizationPage methods remain compatibility-only and are not attached at startup.
+- [x] `app.py` no longer installs the retired prescription pipeline, prescription
+      template, mode-default, or hybrid-anchor Optimization decorators before Phase 14.
 - [x] Main Window no longer constructs the legacy editable Optimizer send-to-Raid-Plan
       control.
 - [x] Phase 14 Workbench initialization calls `FoundryPage.__init__` directly and never
