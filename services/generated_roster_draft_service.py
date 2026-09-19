@@ -15,7 +15,6 @@ from dataclasses import dataclass
 import json
 
 from services.eso_database import EsoDatabase
-from services.roster_service import RosterService
 
 
 GENERATED_ROSTER_DRAFT_OWNERSHIP = "composition_recruitment_evidence_only"
@@ -291,10 +290,9 @@ class GeneratedRosterDraftService:
             )
         self.db.commit()
 
-        canonical_name = RosterService(self.db).ensure_team_name(plan_name)
         return GeneratedRosterDraft(
             draft_id=draft_id,
-            name=canonical_name,
+            name=plan_name,
             goal=plan_goal,
             difficulty=str(difficulty or "").strip(),
             slots=tuple(slots),
