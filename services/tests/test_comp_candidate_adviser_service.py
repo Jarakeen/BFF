@@ -173,3 +173,41 @@ def test_adviser_reports_duplicate_effect_change(monkeypatch, tmp_path) -> None:
     )
 
     assert "Major Courage" in proposal.duplicates_added
+
+
+def test_reference_template_does_not_become_selected_saved_build(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (),
+    )
+
+    state = CompPlanState(
+        raid_plan_id="plan",
+        raid_plan_name="Plan",
+        trial_id="Sunspire",
+        chairs=(CompChairState(seat_id="healer-1", player_name="Healer"),),
+    )
+    candidate = _candidate(
+        "reference",
+        name="Reference Healer Package",
+        gear_sets=("Set A", "Set B"),
+        source_kind="reference_template",
+        source_name="Reference Library",
+    )
+
+    service = CompCandidateAdviserService(tmp_path / "eso.db")
+    updated, proposal = service.apply(
+        state=state,
+        seat_id="healer-1",
+        candidate=candidate,
+    )
+
+    chair = updated.chair("healer-1")
+    assert chair is not None
+    assert chair.selected_build_name is None
+    assert chair.build_source_kind == "reference_template"
+    assert chair.build_source_name == "Reference Library"
+    assert chair.candidate_id == "reference"
+    assert chair.planned_gear_sets == ("Set A", "Set B")
+    assert "selected_build_name" not in proposal.changed_fields
