@@ -252,6 +252,13 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
         )
     )
 
+    from services.comp_plan_state_service import CompPlanStateService
+
+    comp._comp_plan_state = CompPlanStateService.from_raid_plan(
+        plan,
+        achievement_goal=str(comp.goal_combo.currentText() or "").strip() or None,
+    )
+
     comp._raid_plan_origin_id = str(getattr(plan, "plan_id", "") or "").strip()
     comp._raid_plan_origin_trial_id = str(getattr(plan, "trial_id", "") or "").strip()
     comp._raid_plan_origin_name = str(getattr(plan, "name", "") or "").strip()
