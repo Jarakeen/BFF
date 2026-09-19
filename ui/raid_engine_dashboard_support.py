@@ -311,11 +311,17 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
     comp._comp_class_constraint_by_slot = dict(class_by_seat)
     comp._comp_manual_gear_sets_by_slot = dict(planned_sets_by_seat)
 
-    comp.apply_roster_team_context(
-        str(getattr(plan, "name", "") or trial_name or "Raid Plan"),
-        members,
-        group_size=12,
-    )
+    from ui.comp_builder_page import CompBuilderPage
+
+    comp._comp_loading_plan = True
+    try:
+        comp.apply_roster_team_context(
+            str(getattr(plan, "name", "") or trial_name or "Raid Plan"),
+            members,
+            group_size=CompBuilderPage._raid_plan_group_size(plan),
+        )
+    finally:
+        comp._comp_loading_plan = False
 
     from ui.comp_builder_roster_intake_support import apply_raid_plan_class_constraints
     apply_raid_plan_class_constraints(comp, class_by_seat)
@@ -349,6 +355,8 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
     # The backend chair selectors now contain the new Raid Plan values. Refresh the
     # visible Phase 14 projection immediately so it cannot continue showing the
     # previous Comp session's class labels.
+    comp._comp_plan_state = comp._comp_plan_state.mark_saved()
+    comp._comp_unbound_baseline_state = None
     try:
         from ui.comp_builder_phase14_shell_support import refresh_phase14_presentation
         refresh_phase14_presentation(comp)
