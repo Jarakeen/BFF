@@ -85,6 +85,31 @@ class RaidPlannedGearCoverageService:
     def _provider_label(row: PlannedGearCoverageProvider, set_name: str) -> str:
         return f"{row.provider_label} [planned: {set_name}]"
 
+    def effects_for_provider(
+        self,
+        provider: PlannedGearCoverageProvider,
+        *,
+        effect_names: Iterable[str],
+    ) -> tuple[str, ...]:
+        """Return reviewed effect names this one planned gear package may provide."""
+        names = tuple(
+            dict.fromkeys(
+                _clean(value)
+                for value in effect_names
+                if _clean(value)
+            )
+        )
+        snapshot = self.overlay(
+            self.empty_snapshot(names),
+            (provider,),
+            effect_names=names,
+        )
+        return tuple(
+            name
+            for name in names
+            if snapshot.status.get(name) in {"available", "conditional"}
+        )
+
     def overlay(
         self,
         snapshot: RaidCoverageSnapshot,
