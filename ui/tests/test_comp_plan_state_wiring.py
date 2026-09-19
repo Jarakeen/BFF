@@ -96,16 +96,21 @@ def test_raid_plan_visible_save_merge_preserves_comp_locks() -> None:
     assert "comp_locked_fields=prior.comp_locked_fields" in merge
 
 
-def test_comp_plan_name_picker_uses_canonical_state_and_five_piece_manual_restore() -> None:
+def test_comp_plan_name_picker_uses_canonical_state_and_bulk_five_piece_restore() -> None:
     source = Path("ui/comp_builder_page.py").read_text(encoding="utf-8")
 
+    helper = source.split("def _planned_five_piece_sets_by_seat", 1)[1].split(
+        "def _refresh_raid_plan_name_choices", 1
+    )[0]
     selected = source.split("def _raid_plan_name_selected", 1)[1].split(
         "def _build_ui", 1
     )[0]
     assert "CompPlanStateService.from_raid_plan(" in selected
-    assert "_five_piece_set_names(" in selected
-    assert "[:2]" in selected
-    assert "tuple(member.planned_gear_sets or ())" in selected
+    assert "planned_five_piece_sets = self._planned_five_piece_sets_by_seat(plan)" in selected
+    assert "self._comp_manual_gear_sets_by_slot = dict(planned_five_piece_sets)" in selected
+    assert "_five_piece_set_names(" in helper
+    assert "all_names" in helper
+    assert "[:2]" in helper
     assert "self._comp_plan_state =" in selected
 
 
@@ -186,7 +191,10 @@ def test_comp_selected_chair_can_assign_any_gear_catalog_set_directly() -> None:
     assert "def _remove_planned_gear_set(page, set_name: str) -> None:" in source
     assert 'heading = QLabel("ASSIGN GEAR")' in source
     assert 'picker.setProperty("compDirectGearPicker", True)' in source
-    assert "picker.completer().setFilterMode(Qt.MatchFlag.MatchContains)" in source
+    assert "def _gear_catalog_completer(page) -> QCompleter:" in source
+    assert "QStringListModel(list(_catalog_set_names(page)), page)" in source
+    assert "completer.setFilterMode(Qt.MatchFlag.MatchContains)" in source
+    assert "picker.setCompleter(_gear_catalog_completer(page))" in source
     assert 'add = QPushButton("Add Set")' in source
     assert "Recommendations below are suggestions, not restrictions." in source
     assert "chair_state.with_changes(planned_gear_sets=(*existing, canonical))" in source
@@ -202,3 +210,66 @@ def test_comp_row_status_uses_canonical_planned_gear_not_only_legacy_picker_stat
     assert "chair_state = _state_chair_for_row(page, row)" in status
     assert "state_sets = tuple(chair_state.planned_gear_sets or ())" in status
     assert "planned_gear = bool(state_sets or manual_sets or applied_sets)" in status
+
+
+def test_comp_raid_plan_switch_suppresses_refresh_storms_during_hydration() -> None:
+    page = Path("ui/comp_builder_page.py").read_text(encoding="utf-8")
+    shell = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+    intake = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+
+    selected = page.split("def _raid_plan_name_selected", 1)[1].split(
+        "def _build_ui", 1
+    )[0]
+    assert "self.goal_combo.blockSignals(True)" in selected
+    assert "self.difficulty_combo.blockSignals(True)" in selected
+    assert "self._comp_loading_plan = True" in selected
+    assert "finally:" in selected
+    assert "self._comp_loading_plan = False" in selected
+
+    refresh_wrapper = shell.split("def refresh_candidates_with_shell", 1)[1].split(
+        "candidate_support._refresh_candidates =", 1
+    )[0]
+    assert 'getattr(page, "_comp_loading_plan", False)' in refresh_wrapper
+    assert "return" in refresh_wrapper
+
+    render_wrapper = shell.split("def _render_slots_with_phase14_shell", 1)[1].split(
+        "def install()", 1
+    )[0]
+    assert 'not getattr(self, "_comp_loading_plan", False)' in render_wrapper
+
+    setter = intake.split("def _set_class_constraint", 1)[1].split(
+        "def _reapply_class_constraints", 1
+    )[0]
+    assert "class_combo.blockSignals(True)" in setter
+    assert "class_combo.blockSignals(False)" in setter
+
+
+def test_bound_comp_plan_table_does_not_recompute_candidates_for_every_row() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    render = source.split("def _refresh_plan_table(page) -> None:", 1)[1].split(
+        "def _selected_backend_row", 1
+    )[0]
+    assert 'chair_state = _state_chair_for_row(page, backend_row)' in render
+    assert 'getattr(page, "_comp_applied_candidates", {}).get(slot_name)' in render
+    assert "else _candidate_for_row(page, backend_row)" in render
+    assert render.index('chair_state = _state_chair_for_row(page, backend_row)') < render.index(
+        "else _candidate_for_row(page, backend_row)"
+    )
+
+
+def test_direct_gear_picker_reuses_one_catalog_completion_model() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    helper = source.split("def _gear_catalog_completer", 1)[1].split(
+        "def _canonical_catalog_set_name", 1
+    )[0]
+    picker = source.split("def _refresh_manual_set_picker", 1)[1].split(
+        "def _responsibility_for_row", 1
+    )[0]
+    assert 'getattr(page, "_comp_gear_catalog_completer", None)' in helper
+    assert "QStringListModel(list(_catalog_set_names(page)), page)" in helper
+    assert "page._comp_gear_catalog_completer = completer" in helper
+    assert "picker = QLineEdit()" in picker
+    assert "picker.setCompleter(_gear_catalog_completer(page))" in picker
+    assert "picker.addItems(" not in picker
