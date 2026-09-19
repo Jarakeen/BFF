@@ -535,6 +535,29 @@ Later behavior should:
 - hand accepted planned skills to Rotation Builder as planning input, where runtime
   cadence/uptime can be evaluated separately.
 
+### Later enhancement: Gear Catalog favorites
+
+Comp Maker should consume the user's existing Gear Catalog favorites as curated
+candidate-discovery evidence.
+
+Favorite gear means "I want this considered", not "this is optimal".
+
+Later behavior should:
+
+- surface favorited sets prominently in the selected-chair adviser;
+- include favorited sets in candidate discovery for open gear decisions;
+- explain whether each favorite contributes missing, duplicated, conditional, or
+  low-priority support;
+- respect role/class/encounter validity and all locked choices before recommending it;
+- allow a favorite to be applied explicitly without requiring it to appear in ESO Logs;
+- never grant mechanical credit merely because a set is favorited;
+- preserve favorite state in the Gear Catalog as the source of truth rather than
+  duplicating that preference inside CompPlanState.
+
+This makes Gear Catalog favorites a user-curated discovery source alongside saved builds,
+saved ESO Logs evidence, live ESO Logs evidence, and reviewed external references.
+
+
 These can be layered in after the state boundary is trustworthy.
 
 ## Architectural principle
