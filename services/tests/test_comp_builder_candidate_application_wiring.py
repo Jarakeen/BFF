@@ -60,8 +60,14 @@ def test_comp_maker_send_to_roster_preserves_structured_candidate_evidence():
 def test_comp_maker_does_not_turn_reference_templates_into_fake_players():
     source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
 
-    assert 'player_name=candidate.source_name if is_saved else "Recruitment Needed"' in source
-    assert 'character_name=candidate.source_name if is_saved else ""' in source
+    save = source.split("def save_generated_plan", 1)[1].split(
+        "def _send_to_roster_with_candidates", 1
+    )[0]
+    assert 'roster_player if known_player else (' in save
+    assert 'candidate.source_name if is_saved else "Recruitment Needed"' in save
+    assert 'roster_character if known_player else (' in save
+    assert 'candidate.source_name if is_saved else ""' in save
+    assert 'is_saved = candidate.source_kind == "saved_build"' in save
     assert "Candidate is partial evidence, not a complete prescribed build." in source
 
 
