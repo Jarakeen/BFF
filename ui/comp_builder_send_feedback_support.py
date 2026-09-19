@@ -84,14 +84,13 @@ def _comp_init_with_send_feedback(self, parent=None) -> None:
 
 
 def install() -> None:
-    global _INSTALLED, _ORIGINAL_COMP_INIT, _ORIGINAL_SEND_TO_ROSTER
+    global _INSTALLED, _ORIGINAL_COMP_INIT
     if _INSTALLED:
         return
 
     from ui.comp_builder_page import CompBuilderPage
 
-    _ORIGINAL_SEND_TO_ROSTER = CompBuilderPage._send_to_roster
-    CompBuilderPage._send_to_roster = _send_to_roster_with_feedback
+    # Do not wrap the send method. The Phase 14 shell owns Raid Plan persistence.
 
     _ORIGINAL_COMP_INIT = CompBuilderPage.__init__
     CompBuilderPage.__init__ = _comp_init_with_send_feedback
