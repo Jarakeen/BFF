@@ -701,6 +701,52 @@ def _health_tile(
     return tile, value, detail
 
 
+def _effective_sets_for_row(page, row: int) -> tuple[str, ...]:
+    """Return the exact gear package represented by the current visible plan row."""
+    slot = page._cell_text(row, 0) or f"Slot {row + 1}"
+    manual = _manual_sets_for_slot(page, slot)
+    if manual:
+        return manual
+
+    applied = (getattr(page, "_comp_applied_candidates", {}) or {}).get(slot)
+    if applied is None:
+        return ()
+    return tuple(
+        str(value).strip()
+        for value in (
+            getattr(applied, "five_piece_sets", ())
+            or getattr(applied, "gear_sets", ())
+            or ()
+        )
+        if str(value).strip()
+    )
+
+
+def _effective_coverage_rows(page) -> tuple[tuple[str, object], ...]:
+    """Project current chair state for Team Health, including manual gear overrides."""
+    from types import SimpleNamespace
+
+    rows: list[tuple[str, object]] = []
+    applied = getattr(page, "_comp_applied_candidates", {}) or {}
+    for row in range(page.matrix_table.rowCount()):
+        slot = page._cell_text(row, 0) or f"Slot {row + 1}"
+        manual = _manual_sets_for_slot(page, slot)
+        candidate = applied.get(slot)
+        if manual:
+            candidate = SimpleNamespace(
+                name=slot,
+                source_name="Manual Comp plan",
+                eso_class=page._selected_class(row),
+                role=page._cell_text(row, 1),
+                gear_sets=manual,
+                five_piece_sets=manual,
+                skills=tuple(getattr(candidate, "skills", ()) or ()) if candidate is not None else (),
+            )
+        if candidate is not None:
+            rows.append((slot, candidate))
+    return tuple(rows)
+
+
 def _refresh_health(page) -> None:
     if not hasattr(page, "comp_phase14_health_covered"):
         return
@@ -710,8 +756,7 @@ def _refresh_health(page) -> None:
         from ui.components.team_progress_panels import coverage_from_declared_text
 
         declared = coverage_from_declared_text(team_progress_support._comp_declared_rows(page))
-        applied = getattr(page, "_comp_applied_candidates", {}) or {}
-        assigned = polish.coverage_from_candidate_rows(tuple(applied.items()))
+        assigned = polish.coverage_from_candidate_rows(_effective_coverage_rows(page))
         merged = polish.merge_coverage(assigned, declared)
     except (AttributeError, ImportError, TypeError, ValueError):
         merged = ()
@@ -729,8 +774,8 @@ def _refresh_health(page) -> None:
     )
 
     set_counts: Counter[str] = Counter()
-    for candidate in (getattr(page, "_comp_applied_candidates", {}) or {}).values():
-        for gear in tuple(getattr(candidate, "gear_sets", ()) or ()):
+    for row in range(page.matrix_table.rowCount()):
+        for gear in _effective_sets_for_row(page, row):
             if gear:
                 set_counts[str(gear)] += 1
     duplicates = [name for name, count in set_counts.items() if count > 1]
@@ -739,18 +784,31 @@ def _refresh_health(page) -> None:
         "Already covered by another player" if duplicates else "No duplicated tracked set"
     )
 
-    recruits: list[tuple[str, str]] = []
+    recruits: list[tuple[str, str, bool]] = []
     for row in range(page.matrix_table.rowCount()):
         player = page._cell_text(row, 11).strip()
         if not player or player.casefold().startswith("recruit"):
             role = page._cell_text(row, 1) or "Open role"
             selected_class = page._selected_class(row)
             need = role if selected_class == "Any class" else f"{selected_class} {role}"
-            recruits.append((player or "Recruit", need))
-    if recruits:
-        page.comp_phase14_health_recruit.setText(recruits[0][1])
+            has_gear = bool(_effective_sets_for_row(page, row))
+            recruits.append((player or "Recruit", need, has_gear))
+
+    unresolved_gear = [row for row in recruits if not row[2]]
+    if unresolved_gear:
+        page.comp_phase14_health_recruit.setText(
+            f"{len(unresolved_gear)} gear gap"
+            if len(unresolved_gear) == 1
+            else f"{len(unresolved_gear)} gear gaps"
+        )
         page.comp_phase14_health_recruit_detail.setText(
-            f"{len(recruits)} Recruit slot(s) need gear / setup"
+            f"{len(recruits)} open player seat(s) • "
+            f"{len(recruits) - len(unresolved_gear)} already have planned gear"
+        )
+    elif recruits:
+        page.comp_phase14_health_recruit.setText(f"{len(recruits)} open player seat(s)")
+        page.comp_phase14_health_recruit_detail.setText(
+            "All open seats already have planned gear / setup"
         )
     else:
         page.comp_phase14_health_recruit.setText("None")
