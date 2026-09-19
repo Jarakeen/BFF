@@ -134,6 +134,14 @@ class CityLiveRaidPage(FoundryPage):
         hero_row.setContentsMargins(0, 0, 0, 0)
         hero_row.setSpacing(12)
 
+        self.hero_art = TrialBannerLabel()
+        self.hero_art.setProperty("liveRaidHeroArt", True)
+        self.hero_art.setMinimumWidth(210)
+        self.hero_art.setMaximumWidth(300)
+        self.hero_art.setMinimumHeight(112)
+        self.hero_art.hide()
+        hero_row.addWidget(self.hero_art, 3)
+
         identity = QWidget()
         identity.setProperty("liveRaidHeroIdentity", True)
         identity_layout = QVBoxLayout(identity)
@@ -173,14 +181,6 @@ class CityLiveRaidPage(FoundryPage):
         bottom_status.addWidget(attempt_tile)
         status_layout.addLayout(bottom_status)
         hero_row.addWidget(status_grid, 3)
-
-        self.hero_art = TrialBannerLabel()
-        self.hero_art.setProperty("liveRaidHeroArt", True)
-        self.hero_art.setMinimumWidth(210)
-        self.hero_art.setMaximumWidth(300)
-        self.hero_art.setMinimumHeight(112)
-        self.hero_art.hide()
-        hero_row.addWidget(self.hero_art, 3)
         hero.addLayout(hero_row)
 
         evidence = QLabel(

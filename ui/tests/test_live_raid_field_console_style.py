@@ -38,6 +38,18 @@ def test_live_raid_status_does_not_claim_unobserved_alive_or_phase_state() -> No
     assert "11/12 Alive" not in source
 
 
+def test_live_raid_hero_leads_with_trial_art_like_raid_plan() -> None:
+    source = Path("ui/city_live_raid_page.py").read_text(encoding="utf-8")
+    hero = source.split(
+        'hero = self._style_live_card(FoundryCard("Current Encounter", "trial")', 1
+    )[1].split("hero.addLayout(hero_row)", 1)[0]
+
+    art = hero.index("self.hero_art = TrialBannerLabel()")
+    identity = hero.index("identity = QWidget()")
+    status = hero.index("status_grid = QWidget()")
+    assert art < identity < status
+
+
 def test_urban_wilderness_styles_live_raid_cards_without_flash_or_animation() -> None:
     source = Path("ui/theme/theme_manager.py").read_text(encoding="utf-8")
 
