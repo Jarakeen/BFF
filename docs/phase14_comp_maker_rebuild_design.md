@@ -417,6 +417,32 @@ Normal Raid Plan save must not:
 Generated roster draft storage may remain for compatibility/ad-hoc experiments but is
 not the canonical normal save path.
 
+## Legacy quarantine rule
+
+The old Comp Maker implementation must be progressively isolated so it cannot silently
+repopulate, overwrite, or reinterpret the new canonical state.
+
+Legacy code may remain temporarily for compatibility, but it must obey these rules:
+
+- old modules are read-only adapters unless explicitly designated otherwise;
+- legacy dictionaries and generated-draft state never become authoritative again;
+- new UI code must not import legacy presentation helpers directly;
+- compatibility bridges may translate old outputs into CompPlanState, but may not write
+  around CompPlanState;
+- installer order must make the new state/controller layer the final owner of visible
+  behavior;
+- each migrated feature removes one legacy write path rather than leaving both active;
+- deprecated modules should be moved or renamed into an explicit legacy/compatibility
+  namespace once callers are reduced enough to do so safely;
+- tests must fail if a legacy path mutates Raid Plan or Comp state behind the new
+  controller's back;
+- generated-roster draft code remains compatibility/ad-hoc tooling only and must not
+  participate in the normal Raid Plan -> Comp Maker -> Raid Plan save path;
+- final cleanup should delete dead legacy code only after coverage proves no supported
+  workflow still depends on it.
+
+The goal is not merely to hide old widgets. The goal is to remove old ownership.
+
 ## Migration strategy
 
 Do not rewrite all Comp services at once.
@@ -448,9 +474,16 @@ Reuse Coverage/provider services to evaluate the current CompPlanState.
 ### Stage 6 - constrained Auto-Fill
 Wire the existing whole-team optimizer to unlocked/open decisions only.
 
-### Stage 7 - retire compatibility state
-Remove page dependence on old parallel dictionaries/generated-draft handoff only after
-round-trip and optimizer acceptance tests are green.
+### Stage 7 - quarantine and retire compatibility state
+Move remaining old Comp Maker UI/controller paths behind an explicit legacy compatibility
+boundary. Remove page dependence on old parallel dictionaries/generated-draft handoff
+only after round-trip and optimizer acceptance tests are green. Add regression tests that
+prove legacy paths cannot mutate canonical CompPlanState or Raid Plan state behind the
+new controller.
+
+### Stage 8 - delete dead legacy ownership
+After supported workflows no longer call legacy write paths, remove the dead ownership
+code rather than leaving dormant duplicate state machinery in place.
 
 ## Acceptance tests
 
