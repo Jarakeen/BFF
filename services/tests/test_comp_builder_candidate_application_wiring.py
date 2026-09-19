@@ -36,7 +36,7 @@ def test_canonical_autofill_can_consider_saved_and_reference_build_evidence():
 
     assert 'candidate.source_kind in {"saved_build", "reference_template"}' in source
     assert "CompPlanAutoFillService" in source
-    assert "Auto-filled {result.applied_count} open build decision(s)" in source
+    assert "Filled {result.applied_count} open roster/build decision(s)" in source
     assert "Compatibility mirror only" in source
 
 
@@ -81,7 +81,7 @@ def test_comp_maker_autofill_uses_assignments_as_provider_constraints() -> None:
     assert "CompBuilderProviderEvidenceService" in source
     assert "chair.primary_assignment" in source
     assert "chair.secondary_assignment" in source
-    assert "required_by_seat[chair.seat_id] = resolution.provider_ids" in source
+    assert "required_by_seat[chair.seat_id] = tuple(dict.fromkeys(provider_ids))" in source
     assert "required_provider_ids=tuple(local_required)" in source
     assert "provider_ids_by_candidate=provider_ids_by_candidate" in source
     assert "health.missing_required" not in source
