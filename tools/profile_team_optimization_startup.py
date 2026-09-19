@@ -28,11 +28,10 @@ from PySide6.QtWidgets import QApplication
 
 from engine.config import get_data_dir
 from services.raid_plan_repository import RaidPlanRepository
-from ui.application_team_optimization_bootstrap import (
-    bootstrap_team_optimization_extensions,
-)
 from ui.optimization_page import OptimizationPage
-from ui.raid_engine_dashboard_support import install as install_raid_engine_dashboard
+from ui.team_optimization_phase14_shell_support import (
+    install as install_team_optimization_phase14_shell,
+)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -58,8 +57,7 @@ def main() -> int:
         raise SystemExit("--repeat must be at least 1")
 
     app = QApplication.instance() or QApplication([])
-    bootstrap_team_optimization_extensions()
-    install_raid_engine_dashboard()
+    install_team_optimization_phase14_shell()
     plan = _load_plan(args.plan_id.strip())
 
     construction_ms: list[float] = []
