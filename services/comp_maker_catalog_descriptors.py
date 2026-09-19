@@ -17,6 +17,19 @@ from services.service_catalog import (
 
 COMP_MAKER_LOCAL_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
+        service_id="comp.builder.plan_state",
+        domain="comp",
+        purpose="Own one canonical Comp Maker working state and losslessly round-trip trial-specific decisions through RaidPlan.",
+        implementation_path="services.comp_plan_state_service",
+        inputs=("RaidPlan", "CompPlanState", "CompChairState"),
+        outputs=("CompPlanState", "RaidPlan"),
+        responsibilities=("comp_builder_canonical_working_state",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes="Raid Plan remains durable authority; Comp locks are trial-specific Raid Plan metadata and normal state conversion preserves unrelated plan fields.",
+    ),
+    ServiceDescriptor(
         service_id="comp.builder.build_candidates",
         domain="comp",
         purpose="Merge saved builds and versioned reference templates into deterministic per-chair Comp Maker candidates.",
