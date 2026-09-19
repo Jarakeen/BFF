@@ -56,6 +56,7 @@ class CompChairState:
     planned_mundus: str | None = None
     primary_assignment: str | None = None
     secondary_assignment: str | None = None
+    assignment_source: str | None = None
     utility_assignments: tuple[str, ...] = field(default_factory=tuple)
     locked_fields: tuple[str, ...] = field(default_factory=tuple)
     notes: str | None = None
@@ -87,6 +88,7 @@ class CompChairState:
             "planned_mundus",
             "primary_assignment",
             "secondary_assignment",
+            "assignment_source",
             "notes",
         ):
             object.__setattr__(self, name, _optional(getattr(self, name)))
@@ -138,7 +140,7 @@ class CompChairState:
 
 @dataclass(frozen=True)
 class CompPlanState:
-    raid_plan_id: str
+    raid_plan_id: str | None
     raid_plan_name: str
     trial_id: str
     team_name: str | None = None
@@ -150,11 +152,9 @@ class CompPlanState:
     dirty: bool = False
 
     def __post_init__(self) -> None:
-        plan_id = _clean(self.raid_plan_id)
+        plan_id = _optional(self.raid_plan_id)
         plan_name = _clean(self.raid_plan_name)
         trial_id = _clean(self.trial_id)
-        if not plan_id:
-            raise ValueError("Comp plan raid_plan_id must be non-empty")
         if not plan_name:
             raise ValueError("Comp plan raid_plan_name must be non-empty")
         if not trial_id:
@@ -193,6 +193,16 @@ class CompPlanState:
         if not replaced:
             updated.append(chair)
         return replace(self, chairs=tuple(updated), dirty=True)
+
+    @property
+    def is_raid_plan_bound(self) -> bool:
+        return self.raid_plan_id is not None
+
+    def bind_to_raid_plan(self, plan_id: str) -> "CompPlanState":
+        value = _clean(plan_id)
+        if not value:
+            raise ValueError("Raid Plan binding id must be non-empty")
+        return replace(self, raid_plan_id=value, dirty=False)
 
     def mark_saved(self) -> "CompPlanState":
         return replace(self, dirty=False)
