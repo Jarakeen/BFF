@@ -71,6 +71,8 @@ class CompPlanAutoFillService:
     def _candidate_changes(
         chair: CompChairState,
         candidate: CompBuildCandidate,
+        *,
+        provider_required: bool = False,
     ) -> dict[str, object]:
         changes: dict[str, object] = {}
 
@@ -127,6 +129,14 @@ class CompPlanAutoFillService:
             and _clean(candidate.mundus)
         ):
             changes["planned_mundus"] = _clean(candidate.mundus)
+
+        if (
+            provider_required
+            and not chair.is_locked("skills")
+            and not chair.planned_skills
+            and tuple(candidate.skills)
+        ):
+            changes["planned_skills"] = tuple(candidate.skills)
 
         # Provenance is attached only when the candidate actually fills a planning
         # field. Thin evidence rows cannot masquerade as completed Auto-Fill work.
@@ -186,6 +196,11 @@ class CompPlanAutoFillService:
             novelty_by_candidate=novelty_by_candidate,
         )
 
+        required_by_slot = {
+            _seat_key(pool.slot_name): bool(pool.required_provider_ids)
+            for pool in open_pools
+        }
+
         updated = state
         changes: list[CompAutoFillChange] = []
         for assignment in optimization.assignments:
@@ -203,7 +218,11 @@ class CompPlanAutoFillService:
             )
             if chair is None:
                 continue
-            field_changes = self._candidate_changes(chair, candidate)
+            field_changes = self._candidate_changes(
+                chair,
+                candidate,
+                provider_required=required_by_slot.get(wanted, False),
+            )
             if not field_changes:
                 continue
             updated = updated.with_chair(chair.with_changes(**field_changes))
