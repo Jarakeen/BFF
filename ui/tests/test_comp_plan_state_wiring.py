@@ -273,3 +273,20 @@ def test_direct_gear_picker_reuses_one_catalog_completion_model() -> None:
     assert "picker = QLineEdit()" in picker
     assert "picker.setCompleter(_gear_catalog_completer(page))" in picker
     assert "picker.addItems(" not in picker
+
+
+def test_comp_raid_plan_group_size_uses_canonical_seats_not_named_player_count() -> None:
+    source = Path("ui/comp_builder_page.py").read_text(encoding="utf-8")
+
+    helper = source.split("def _raid_plan_group_size(plan)", 1)[1].split(
+        "def _planned_five_piece_sets_by_seat", 1
+    )[0]
+    selected = source.split("def _raid_plan_name_selected", 1)[1].split(
+        "def _build_ui", 1
+    )[0]
+    assert '"tank-2"' in helper
+    assert '"healer-2"' in helper
+    assert 'f"dd-{index}" for index in range(3, 9)' in helper
+    assert '"tank-1", "healer-1", "dd-1", "dd-2"' in helper
+    assert "group_size=self._raid_plan_group_size(plan)" in selected
+    assert "group_size=12" not in selected
