@@ -1,12 +1,13 @@
 from pathlib import Path
 
 
-def test_assignment_action_uses_player_facing_language_and_flow_arrows() -> None:
+def test_assignment_action_uses_clear_player_and_build_workflow_language() -> None:
     source = Path("ui/comp_builder_main_controls_support.py").read_text(encoding="utf-8")
 
-    assert 'apply_chair.setText("↰ Assign Build to Player")' in source
+    assert 'apply_chair.setText("Use Selected Build")' in source
     assert 'setProperty("compAssignBuild", True)' in source
-    assert 'generate.setText("↵ Fill from Roster")' in source
+    assert 'generate.setText("Auto-Fill Builds")' in source
+    assert 'QPushButton("Load Players")' in source
 
 
 def test_main_controls_move_plan_identity_and_style_to_header() -> None:
