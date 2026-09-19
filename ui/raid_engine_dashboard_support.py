@@ -112,6 +112,16 @@ def _open_dashboard_help(window) -> None:
         help_page.show_topic("comp_builder")
 
 
+def _open_saved_plan_assignments(window, plan_id: str) -> None:
+    """Open Assignments on one exact persisted Raid Plan."""
+    assignments = window.pages.get("assignments")
+    if assignments is None or not hasattr(assignments, "load_plan_by_id"):
+        return
+    if not assignments.load_plan_by_id(plan_id):
+        return
+    window.show_page("assignments")
+
+
 def _open_raid_plan_coverage(window, plan) -> None:
     coverage = window.pages.get("console:7")
     if coverage is None or not hasattr(coverage, "set_raid_plan_scope"):
@@ -412,6 +422,9 @@ def register_raid_engine_pages(window) -> None:
     raid_plans = CityRaidPlanWorkspacePage()
     raid_plans.pageRequested.connect(
         lambda target: _route_plan_page(window, raid_plans, target)
+    )
+    raid_plans.assignmentsRequested.connect(
+        lambda plan_id: _open_saved_plan_assignments(window, plan_id)
     )
     raid_plans.coverageRequested.connect(lambda plan: _open_raid_plan_coverage(window, plan))
     raid_plans.rotationRequested.connect(
