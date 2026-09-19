@@ -139,19 +139,31 @@ def _refresh_source_notes(page, *_args) -> None:
     name = _selected_effect_name(page)
     reference = REFERENCE_BY_NAME.get(name)
     card.clear()
+    card.set_body_margins(14, 3, 14, 10)
+    card.set_body_spacing(8)
 
     if reference is None:
         intro = QLabel(
             "Select a buff, debuff, or unique support-set effect above to see known sources."
         )
         intro.setWordWrap(True)
+        intro.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        intro_font = intro.font()
+        intro_font.setPointSizeF(max(12.0, intro_font.pointSizeF() + 2.0))
+        intro.setFont(intro_font)
         card.addWidget(intro)
+        card.addStretch(1)
         return
 
     type_label = getattr(reference, "type_label", "") or reference.category
     heading = QLabel(f"{reference.name} • {type_label}")
     heading.setProperty("sidebarHeading", True)
     heading.setWordWrap(True)
+    heading.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+    heading_font = heading.font()
+    heading_font.setPointSizeF(max(13.0, heading_font.pointSizeF() + 2.0))
+    heading_font.setBold(True)
+    heading.setFont(heading_font)
     card.addWidget(heading)
 
     source_label = QLabel(
@@ -160,8 +172,13 @@ def _refresh_source_notes(page, *_args) -> None:
         )
     )
     source_label.setWordWrap(True)
+    source_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+    source_font = source_label.font()
+    source_font.setPointSizeF(max(12.0, source_font.pointSizeF() + 2.0))
+    source_label.setFont(source_font)
     source_label.setTextInteractionFlags(source_label.textInteractionFlags())
     card.addWidget(source_label)
+    card.addStretch(1)
 
 
 def _apply_coverage_filters_with_unique(self, *_args) -> None:
