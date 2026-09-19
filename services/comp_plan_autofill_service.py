@@ -74,15 +74,9 @@ class CompPlanAutoFillService:
     ) -> dict[str, object]:
         changes: dict[str, object] = {}
 
-        if (
-            not chair.is_locked("class")
-            and not _clean(chair.eso_class)
-            and _clean(candidate.eso_class)
-        ):
-            changes["eso_class"] = _clean(candidate.eso_class)
-
-        # A saved build may be bound only to the canonical player/character already
-        # assigned to the chair. Display/source labels are a historical fallback only.
+        # Saved builds are player-owned evidence. A saved build belonging to another
+        # canonical player/character is not a reusable template and may not donate
+        # class, gear, Mundus, or selected-build state to this chair.
         can_bind_saved_build = candidate.source_kind == "saved_build" and (
             (
                 bool(chair.player_id and candidate.saved_player_id)
@@ -101,6 +95,16 @@ class CompPlanAutoFillService:
                 )
             )
         )
+        if candidate.source_kind == "saved_build" and not can_bind_saved_build:
+            return {}
+
+        if (
+            not chair.is_locked("class")
+            and not _clean(chair.eso_class)
+            and _clean(candidate.eso_class)
+        ):
+            changes["eso_class"] = _clean(candidate.eso_class)
+
         if (
             can_bind_saved_build
             and not chair.is_locked("build")
