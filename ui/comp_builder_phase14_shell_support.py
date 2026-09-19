@@ -1391,8 +1391,8 @@ def _refresh_health(page) -> None:
                 page.comp_phase14_health_recruit_detail.setText("All player slots filled")
             return
 
-    # Compatibility fallback for ad-hoc/unbound Comp sessions. This path is not
-    # authoritative for Raid Plan-bound work and will be retired with legacy state.
+    # Compatibility fallback only for unsupported state-less legacy sessions.
+    # Bound and unbound Phase 14 planning both use canonical CompPlanState above.
     try:
         from ui import comp_builder_polish_support as polish
         from ui import team_progress_support
