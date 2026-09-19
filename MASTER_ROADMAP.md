@@ -943,6 +943,14 @@ The `phase14` branch was opened from the completed Phase 13.5 release baseline o
 2026-09-17. Combat Simulation implementation remains planned; the structural and
 architectural prerequisite is now closed.
 
+
+**Comp Maker / Optimizer ownership update (2026-09-19):** Comp Maker is roster-first.
+It owns 4/12-chair construction, real-player uniqueness, Recruit/open-seat handling,
+role/class/build fit, and preservation of locked roster choices. Team Health may report
+coverage, but Comp Maker Auto-Fill does not optimize raid-wide buffs/debuffs. Optimizer
+owns improving the assembled roster's support package, including buff/debuff/provider
+coverage, while preserving the roster and hard assignments supplied by Comp/Raid Plan.
+
 ```text
 CombatState
       ↓
