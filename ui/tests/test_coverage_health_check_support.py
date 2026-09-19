@@ -166,19 +166,20 @@ def test_contextual_coverage_can_apply_team_variant_explicitly():
     assert selected[0][1].Food == "Team Food"
 
 
-def test_coverage_health_check_reuses_canonical_build_scope_selector() -> None:
+def test_coverage_health_check_helpers_no_longer_inject_roster_team_scopes() -> None:
     source = Path("ui/coverage_health_check_support.py").read_text(encoding="utf-8")
 
-    assert 'combo = getattr(page, "scope_combo", None)' in source
-    assert 'combo.addItem(f"Roster Team: {name}", f"roster_team:{name}")' in source
-    assert 'if data.startswith("roster_team:"):' in source
-    assert "health_check_team_combo" not in source
-    assert "Check Base Builds" not in source
-    assert "scope_combo.parentWidget()" not in source
+    enhance = source.split("def enhance_coverage_page", 1)[1]
+    assert "Coverage's visible selector is owned by the Raid Plan adapter" in enhance
+    assert 'combo.addItem(f"Roster Team: {name}", f"roster_team:{name}")' not in enhance
+    assert "_sync_team_choices(page)" not in enhance
+    assert "saved Raid Plans only" in enhance
 
 
-def test_coverage_health_check_does_not_hide_build_scope_control() -> None:
+def test_coverage_health_check_keeps_internal_team_audit_helpers_available() -> None:
     source = Path("ui/coverage_health_check_support.py").read_text(encoding="utf-8")
 
+    assert "def select_team_builds(" in source
+    assert "def _canonical_team_builds(" in source
+    assert "def run_team_health_check(" in source
     assert "parent.setVisible(True)" in source
-    assert "old_scope_parent.setVisible(False)" not in source
