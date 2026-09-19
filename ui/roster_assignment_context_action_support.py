@@ -41,7 +41,7 @@ def install() -> None:
     def evaluate_selected_team(page) -> None:
         team_name = actions._selected_team_name(page)
         if not team_name:
-            page.status.warning("Choose a team before evaluating coverage.")
+            page.status.warning("Choose a team before opening Coverage.")
             return
 
         if not actions._show_page(page, "console:7"):
@@ -53,23 +53,15 @@ def install() -> None:
             page.status.warning("Coverage could not be opened.")
             return
 
-        from ui.coverage_health_check_support import (
-            enhance_coverage_page,
-            run_team_health_check,
-        )
-
-        enhance_coverage_page(coverage)
-        run_team_health_check(
-            coverage,
-            team_name,
-            boss_name=selected_encounter_name(page),
-            use_context=True,
+        coverage.status.info(
+            f"{team_name} is a reusable Roster team. Coverage now evaluates saved "
+            "trial-specific Raid Plans only; choose the matching Raid Plan above."
         )
 
     actions._coverage_builds_for_team = coverage_builds_for_selected_context
-    # Evaluate from Assignments is explicitly contextual: Team Default applies
-    # Team variants, and an optional Boss also applies the matching Boss/Team+Boss
-    # overrides. Direct Coverage remains the simpler base-build health check.
+    # Legacy Roster Assignments may still navigate to Coverage, but they no longer
+    # inject a transient Team/Boss scope. The saved Raid Plan is the visible Coverage
+    # authority for trial-specific provider evaluation.
     actions._evaluate_team = evaluate_selected_team
     actions._selected_assignment_encounter_id = selected_encounter_id
     actions._selected_assignment_encounter_name = selected_encounter_name
