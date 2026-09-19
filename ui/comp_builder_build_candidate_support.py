@@ -123,6 +123,30 @@ def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
         if observed is not None
         else ()
     )
+    member = _roster_member_for_row(page, row)
+    recruit = _row_is_recruit(page, row)
+    member_key = (
+        str(getattr(member, "Gamertag", "") or "").strip().casefold(),
+        str(getattr(member, "Name", "") or "").strip().casefold(),
+        str(getattr(member, "CharacterId", "") or "").strip().casefold(),
+    )
+    cache_key = (
+        goal,
+        slot_name,
+        role,
+        preferred_class,
+        observed_gear,
+        observed_skills,
+        member_key,
+        recruit,
+    )
+    cache = getattr(page, "_comp_chair_candidate_cache", None)
+    if cache is None:
+        cache = {}
+        page._comp_chair_candidate_cache = cache
+    if cache_key in cache:
+        return cache[cache_key]
+
     candidates = page._comp_build_candidate_service.candidates_for_chair(
         goal=goal,
         slot_name=slot_name,
@@ -131,13 +155,16 @@ def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
         observed_gear_sets=observed_gear,
         observed_skills=observed_skills,
     )
-    member = _roster_member_for_row(page, row)
-    recruit = _row_is_recruit(page, row)
-    return tuple(
+    result = tuple(
         candidate
         for candidate in candidates
         if _candidate_matches_roster_member(candidate, member, recruit=recruit)
     )
+    # This cache only avoids duplicate UI repaint work. Keep it small and local.
+    if len(cache) >= 64:
+        cache.clear()
+    cache[cache_key] = result
+    return result
 
 
 def _saved_player_key(candidate: CompBuildCandidate) -> str:
