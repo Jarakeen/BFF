@@ -6,15 +6,16 @@ Status: design contract / implementation target
 
 ## Product definition
 
-Comp Maker is a constrained raid-composition adviser.
+Comp Maker is the roster-construction adviser for a 4- or 12-player run.
 
-It accepts an incomplete trial group, respects choices the raid lead has already made,
-and helps fill only the unresolved parts of the composition. Its purpose is not to
-replace player decisions or manufacture a full raid from nothing.
+It accepts an incomplete group, respects choices the raid lead has already made,
+and helps fill unresolved player/chair/build decisions. Its primary job is deciding
+who is in the roster and what known build context each chair brings. It does not own
+raid-wide buff/debuff optimization; that belongs downstream to Optimizer.
 
 Canonical workflow:
 
-Team / Roster / Assignments -> CompPlanState -> Builds / Optimizer -> Raid Plan
+Team / Roster / Assignments -> CompPlanState -> Raid Plan -> Optimizer
 
 CompPlanState is the canonical working object and may exist before a Raid Plan record.
 A saved Raid Plan is the durable finalized run snapshot. When Comp Maker is opened from
@@ -49,27 +50,30 @@ Example:
 The healer's SPC + Ozezan choice is a constraint. The optimizer must work around it,
 not silently replace it.
 
-## Optimization objective
+## Roster construction objective
 
-Do NOT maximize raw effect count.
+Comp Maker optimizes **roster fit**, not raid-wide buff/debuff coverage.
 
-Optimize for:
+Priorities:
 
 1. hard role/chair validity;
 2. user-locked decisions;
-3. explicitly assigned provider responsibilities;
-4. high-priority raid buff/debuff/support coverage;
-5. recipient coverage where a provider has limited target capacity;
-6. survival/healing constraints;
-7. minimal unnecessary duplicate support;
-8. support concentrated on tanks/healers where mechanically sensible;
-9. at most the support-DD cost actually justified by missing high-value coverage;
-10. maximum remaining ordinary-DD damage opportunity;
-11. evidence quality and confidence;
-12. observed high-end usage as supporting evidence, never as canonical truth.
+3. one real player consumed at most once;
+4. canonical player/character/build ownership;
+5. known role/class fit for each chair;
+6. strongest relevant saved-build evidence for known players;
+7. useful reference-template evidence for Recruit/open chairs without inventing ownership;
+8. preserve explicit assignments and planned gear as constraints, not as a reason to rerank the roster;
+9. minimize unresolved player/build decisions;
+10. evidence quality and confidence;
+11. observed high-end usage as supporting roster/build evidence, never canonical truth.
 
-Encounter-specific optimization can become stricter later when encounter/runtime combat
-knowledge is sufficiently complete.
+Team Health remains visible as feedback about the assembled roster. Missing or duplicated
+buff/debuff coverage does **not** drive Comp Maker Auto-Fill. Optimizer owns the later
+question: "Given these people, how should we improve the group's support package?"
+
+Encounter-specific roster constraints may become stricter later when encounter/runtime
+knowledge establishes that a player/class/build requirement is genuinely mandatory.
 
 ## Non-negotiable behavior
 
@@ -281,32 +285,22 @@ Swashbuckler Supreme can therefore start as:
 and later gain encounter-specific runtime/mechanic constraints without redesigning the
 Comp Maker state model.
 
-## Team evaluation output
+## Roster evaluation output
 
-Comp Maker should produce a team-level explanation with at least:
+Comp Maker should explain the assembled roster with at least:
 
-- high-priority effects covered
-- high-priority effects missing
-- conditional coverage
-- duplicate primary support
-- recipient-capacity problems
-- assigned provider conflicts
-- open player chairs
-- open gear/build decisions
-- DD support tax
-- recommendations that would free an ordinary DD for damage
-- evidence/source for each recommendation
+- filled vs open player chairs;
+- role/class distribution;
+- exact saved build selected for each known player where resolved;
+- Recruit/open-chair status;
+- duplicate-player conflicts;
+- unresolved build/gear decisions;
+- locked decisions preserved;
+- evidence/source for each roster/build recommendation;
+- Team Health coverage as informational downstream context.
 
-The evaluation must distinguish:
-
-- PRESENT
-- ASSIGNED + PROVEN
-- CONDITIONAL
-- MISSING
-- DUPLICATED
-- AVAILABLE BUT UNASSIGNED
-- BLOCKED BY LOCKED CHOICE
-- UNKNOWN / INSUFFICIENT EVIDENCE
+Team Health may still distinguish covered, conditional, missing, duplicated, and unknown
+support evidence, but those states are not Comp Maker roster-selection scores.
 
 ## UI target
 
@@ -581,9 +575,11 @@ These can be layered in after the state boundary is trustworthy.
 
 ## Architectural principle
 
-Comp Maker recommends.
+Comp Maker builds the roster.
 
-Raid Plan decides.
+Raid Plan records the plan.
+
+Optimizer improves the group's buff/debuff and build package.
 
 Coverage audits.
 
