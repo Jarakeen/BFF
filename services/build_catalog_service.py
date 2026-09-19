@@ -347,17 +347,21 @@ class BuildCatalogService:
                     ),
                 }
 
+            # Preserve the compatibility snapshot exactly as the caller supplied it.
+            # Canonical identity lives on the catalog records above; generated IDs
+            # must not leak back into PlayerBuild merely because it was saved once.
             legacy = member.to_dict()
-            legacy["PlayerId"] = player_id
-            legacy["CharacterId"] = character_id
-            legacy["BuildId"] = build_id
+            payload = copy.deepcopy(legacy)
+            payload["PlayerId"] = player_id
+            payload["CharacterId"] = character_id
+            payload["BuildId"] = build_id
             catalog["builds"].append(
                 {
                     "build_id": build_id,
                     "character_id": character_id,
                     "name": member.BuildName,
                     "legacy": legacy,
-                    "payload": copy.deepcopy(legacy),
+                    "payload": payload,
                 }
             )
 
