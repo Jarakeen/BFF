@@ -228,20 +228,50 @@ def apply_raid_plan_class_constraints(page, class_by_seat: dict[str, str]) -> No
     _reapply_class_constraints(page)
 
 
+def _state_chair_for_row(page, row: int):
+    state = getattr(page, "_comp_plan_state", None)
+    if state is None or row < 0:
+        return None
+    wanted = _canonical_seat_id(page._cell_text(row, 0) or f"slot-{row + 1}")
+    return next(
+        (
+            chair
+            for chair in state.chairs
+            if _canonical_seat_id(chair.seat_id) == wanted
+        ),
+        None,
+    )
+
+
 def _set_player(page, row: int, member, assignment: dict | None = None) -> None:
     _ensure_player_column(page)
     item = page.matrix_table.item(row, PLAYER_COLUMN)
     if item is None:
         item = QTableWidgetItem()
         page.matrix_table.setItem(row, PLAYER_COLUMN, item)
-    item.setText(_player_label(member))
-    job = str((assignment or {}).get("primary_assignment", "") or "").strip()
-    tooltip = "Roster player carried into Comp Builder. This does not imply a saved build exists."
+
+    chair = _state_chair_for_row(page, row)
+    if chair is not None:
+        player = str(chair.player_name or "").strip()
+        character = str(chair.character_name or "").strip()
+        label = (
+            f"{player} • {character}"
+            if player and character
+            else player or character or "Recruit"
+        )
+        eso_class = str(chair.eso_class or "").strip()
+        job = str(chair.primary_assignment or "").strip()
+    else:
+        label = _player_label(member)
+        eso_class = str(getattr(member, "EsoClass", "") or "").strip()
+        job = str((assignment or {}).get("primary_assignment", "") or "").strip()
+
+    item.setText(label)
+    tooltip = "Canonical Comp state accepted this roster context."
     if job:
         tooltip += f"\nRaid job for this context: {job}."
     item.setToolTip(tooltip)
 
-    eso_class = str(getattr(member, "EsoClass", "") or "").strip()
     if eso_class:
         _set_class_constraint(page, row, eso_class)
 
@@ -421,18 +451,25 @@ def apply_roster_team_context(
     )
 
     matched = _match_rows(page, members)
+    _sync_comp_state_from_matches(page, matched, assignments)
+
     page._comp_roster_member_by_slot = {}
     page._comp_class_constraint_by_slot = {}
     for row, member in matched:
         member_id = int(member.Id) if getattr(member, "Id", None) is not None else -1
         _set_player(page, row, member, assignments.get(member_id))
         slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
-        eso_class = str(getattr(member, "EsoClass", "") or "").strip()
+        chair = _state_chair_for_row(page, row)
+        eso_class = str(
+            (chair.eso_class if chair is not None else getattr(member, "EsoClass", ""))
+            or ""
+        ).strip()
         if eso_class:
             page._comp_class_constraint_by_slot[slot_name] = eso_class
-        page._comp_roster_member_by_slot[slot_name] = None if _is_recruit_member(member) else member
+        page._comp_roster_member_by_slot[slot_name] = (
+            None if _is_recruit_member(member) else member
+        )
 
-    _sync_comp_state_from_matches(page, matched, assignments)
     _reapply_class_constraints(page)
 
     if hasattr(page, "plan_name_input") and page._roster_team_context_name:
