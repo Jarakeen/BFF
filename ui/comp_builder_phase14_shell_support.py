@@ -104,6 +104,27 @@ def _role_key(value: str) -> str:
     return "other"
 
 
+def _seat_key(value: object) -> str:
+    text = " ".join(str(value or "").strip().casefold().replace("_", " ").replace("-", " ").split())
+    return "-".join(text.split())
+
+
+def _state_chair_for_row(page, row: int):
+    state = getattr(page, "_comp_plan_state", None)
+    if state is None or row < 0:
+        return None
+    slot = page._cell_text(row, 0) or f"Slot {row + 1}"
+    wanted = _seat_key(slot)
+    return next(
+        (
+            chair
+            for chair in tuple(getattr(state, "chairs", ()) or ())
+            if _seat_key(getattr(chair, "seat_id", "")) == wanted
+        ),
+        None,
+    )
+
+
 def _candidate_for_row(page, row: int):
     if row < 0:
         return None
@@ -350,19 +371,56 @@ def _refresh_plan_table(page) -> None:
                 selected_display = display_row
 
             candidate = _candidate_for_row(page, backend_row)
-            player = page._cell_text(backend_row, 11) or "Recruit"
-            role = page._cell_text(backend_row, 1) or "Unresolved"
-            selected_class = page._selected_class(backend_row) or "Any class"
+            chair_state = _state_chair_for_row(page, backend_row)
+            player = (
+                str(getattr(chair_state, "player_name", "") or "").strip()
+                if chair_state is not None
+                else page._cell_text(backend_row, 11)
+            ) or "Recruit"
+            role = (
+                str(getattr(chair_state, "role", "") or "").strip()
+                if chair_state is not None
+                else page._cell_text(backend_row, 1)
+            ) or "Unresolved"
+            selected_class = (
+                str(getattr(chair_state, "eso_class", "") or "").strip()
+                if chair_state is not None
+                else page._selected_class(backend_row)
+            ) or "Any class"
             role_class = role if selected_class == "Any class" else f"{role} • {selected_class}"
             slot_name = page._cell_text(backend_row, 0) or f"Slot {backend_row + 1}"
+            state_sets = tuple(
+                str(value).strip()
+                for value in (getattr(chair_state, "planned_gear_sets", ()) or ())
+                if str(value).strip()
+            ) if chair_state is not None else ()
             manual_sets = _manual_sets_for_slot(page, slot_name)
-            build_label = " + ".join(manual_sets) if manual_sets else _candidate_label(candidate)
+            build_label = (
+                " + ".join(state_sets)
+                if state_sets
+                else " + ".join(manual_sets)
+                if manual_sets
+                else _candidate_label(candidate)
+            )
+            state_responsibility = ""
+            if chair_state is not None:
+                state_responsibility = (
+                    str(getattr(chair_state, "primary_assignment", "") or "").strip()
+                    or next(
+                        (
+                            str(value).strip()
+                            for value in (getattr(chair_state, "utility_assignments", ()) or ())
+                            if str(value).strip()
+                        ),
+                        "",
+                    )
+                )
             values = (
                 str(backend_row + 1),
                 player,
                 role_class,
                 build_label,
-                _responsibility_for_row(page, backend_row),
+                state_responsibility or _responsibility_for_row(page, backend_row),
                 _status_for_row(page, backend_row, candidate),
             )
             for column, value in enumerate(values):
