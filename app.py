@@ -229,10 +229,6 @@ def main() -> int:
     from ui.collectibles_lorebook_support import install as install_collectibles_lorebook_support
     from ui.collectibles_antiquity_support import install as install_collectibles_antiquity_support
     from ui.application_update_support import install as install_application_update_support
-    from ui.team_prescription_pipeline_support import install as install_team_prescription_pipeline_support
-    from ui.team_prescription_template_support import install as install_team_prescription_template_support
-    from ui.team_optimization_mode_defaults import install as install_team_optimization_mode_defaults
-    from ui.team_optimization_hybrid_anchor_support import install as install_team_optimization_hybrid_anchor_support
     from ui.application_team_optimization_bootstrap import bootstrap_team_optimization_extensions
     from ui.application_extreme_optimization_bootstrap import bootstrap_extreme_optimization_extensions
     from ui.extreme_optimization_support import install as install_extreme_optimization_support
@@ -315,16 +311,9 @@ def main() -> int:
     install_collectibles_lorebook_support()
     install_collectibles_antiquity_support()
     install_application_update_support()
-    # Team prescription must be wired before MainWindow constructs OptimizationPage.
-    install_team_prescription_pipeline_support()
-    # Template sources wrap the saved-player prescription and fill remaining chairs.
-    install_team_prescription_template_support()
-    # Optimization modes get editable, mode-specific starting choices.
-    install_team_optimization_mode_defaults()
-    # A visibly partial Hybrid team means keep those selected players and recruit the rest.
-    install_team_optimization_hybrid_anchor_support()
-    # Cross-feature Team Optimization and Comp Maker decorators compose here,
-    # after the Hybrid policy wrapper and before MainWindow construction.
+    # Phase 14 Team Optimization is a plan-scoped read-only Recommendation Workbench.
+    # Do not install the retired editable prescription/mode/hybrid UI stack here.
+    # Cross-feature Comp Maker and lightweight Optimization composition happens below.
     bootstrap_team_optimization_extensions()
     # Extreme profile/result/record surfaces compose before the lab page attaches
     # itself to MainWindow, preserving the feature's established install order.
