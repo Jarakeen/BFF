@@ -214,6 +214,21 @@ def test_assigned_provider_bridge_merges_adapter_blockers_into_shared_candidate_
     assert page.set_calls == [(result, "raid policy")]
 
 
+def test_saved_rotation_installer_targets_comp_only_not_phase14_optimization() -> None:
+    from pathlib import Path
+
+    source = Path("ui/team_provider_saved_rotation_support.py").read_text(
+        encoding="utf-8"
+    )
+    install = source.split("def install() -> None:", 1)[1]
+
+    assert "from ui.optimization_page import OptimizationPage" not in install
+    assert "OptimizationPage.generate_provider_workload_candidates" not in install
+    assert "OptimizationPage.generate_assigned_provider_workload_candidates" not in install
+    assert "CompBuilderPage.generate_provider_workload_candidates" in install
+    assert "CompBuilderPage.generate_assigned_provider_workload_candidates" in install
+
+
 def test_installer_orders_saved_rotation_bridge_after_workload_support():
     from pathlib import Path
 
