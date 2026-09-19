@@ -42,6 +42,14 @@ class RaidPlanPlannedGear:
 
 
 @dataclass(frozen=True)
+class RaidPlanPlannedSkills:
+    seat_id: str
+    player_label: str
+    eso_class: str | None
+    skills: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class RaidPlanCoverageScope:
     plan_id: str
     plan_name: str
@@ -50,6 +58,7 @@ class RaidPlanCoverageScope:
     named_members: int
     members: tuple[RaidPlanCoverageMember, ...]
     planned_gear: tuple[RaidPlanPlannedGear, ...]
+    planned_skills: tuple[RaidPlanPlannedSkills, ...]
     unresolved: tuple[str, ...]
     primary_providers: tuple[tuple[str, tuple[str, ...]], ...]
     secondary_providers: tuple[tuple[str, tuple[str, ...]], ...]
@@ -92,6 +101,7 @@ class RaidPlanCoverageScopeService:
         }
         members: list[RaidPlanCoverageMember] = []
         planned_gear: list[RaidPlanPlannedGear] = []
+        planned_skills: list[RaidPlanPlannedSkills] = []
         unresolved: list[str] = []
         primary: dict[str, list[str]] = {key: [] for key in effect_labels}
         secondary: dict[str, list[str]] = {key: [] for key in effect_labels}
@@ -109,6 +119,21 @@ class RaidPlanCoverageScopeService:
                         seat_id=member.seat_id,
                         player_label=player_label,
                         gear_sets=planned_sets,
+                    )
+                )
+
+            planned_skill_names = tuple(
+                str(value).strip()
+                for value in (member.planned_skills or ())
+                if str(value).strip()
+            )
+            if planned_skill_names or member.eso_class:
+                planned_skills.append(
+                    RaidPlanPlannedSkills(
+                        seat_id=member.seat_id,
+                        player_label=player_label,
+                        eso_class=member.eso_class,
+                        skills=planned_skill_names,
                     )
                 )
 
@@ -143,6 +168,7 @@ class RaidPlanCoverageScopeService:
             named_members=len(raid_plan.members),
             members=tuple(members),
             planned_gear=tuple(planned_gear),
+            planned_skills=tuple(planned_skills),
             unresolved=tuple(dict.fromkeys(unresolved)),
             primary_providers=tuple(
                 (key, tuple(values)) for key, values in primary.items() if values
@@ -156,6 +182,7 @@ class RaidPlanCoverageScopeService:
 __all__ = [
     "RaidPlanCoverageMember",
     "RaidPlanPlannedGear",
+    "RaidPlanPlannedSkills",
     "RaidPlanCoverageScope",
     "RaidPlanCoverageScopeService",
 ]
