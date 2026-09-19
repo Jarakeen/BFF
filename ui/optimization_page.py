@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+"""Compatibility implementation of the pre-Phase-14 editable Optimization page.
+
+Normal application startup replaces this constructor with the lightweight Phase 14
+Recommendation Workbench before MainWindow is created. Keep this implementation readable
+for legacy/manual tooling, but do not add new startup ownership here.
+"""
+
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
