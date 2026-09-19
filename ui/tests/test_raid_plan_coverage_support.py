@@ -162,3 +162,25 @@ def test_coverage_assignment_service_exposes_binary_planning_state() -> None:
     assert 'label = "Covered • Conditional"' in source
     assert 'label = "Covered • Planned"' in source
     assert 'label = "Missing • No provider"' in source
+
+
+def test_raid_plan_coverage_includes_explicit_planned_skill_and_class_evidence() -> None:
+    source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
+    scope = Path("services/raid_plan_coverage_scope_service.py").read_text(encoding="utf-8")
+    planned = Path("services/raid_planned_skill_coverage_service.py").read_text(encoding="utf-8")
+
+    assert "RaidPlannedSkillCoverageService(DEFAULT_DATABASE).overlay(" in source
+    assert "PlannedSkillCoverageProvider(" in source
+    assert "for row in scope.planned_skills" in source
+    assert "snapshot = _overlay_planned_skills(snapshot, scope)" in source
+    assert "planned_skill_chairs = len(scope.planned_skills)" in source
+
+    assert "class RaidPlanPlannedSkills:" in scope
+    assert "planned_skills: tuple[RaidPlanPlannedSkills, ...]" in scope
+    assert "member.planned_skills" in scope
+    assert "eso_class=member.eso_class" in scope
+
+    assert "SupportTargetType.SELF" not in planned.split("_ALLOWED_TARGETS =", 1)[1].split("}", 1)[0]
+    assert "planned_skill_lines" in planned
+    assert "passive.skill_line" in planned
+    assert "class alone" not in planned.casefold()
