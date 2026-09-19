@@ -102,7 +102,7 @@ def _install_main_controls(page) -> None:
     apply_logs = _detach_widget(getattr(page, "apply_esologs_button", None))
 
     if generate is not None:
-        generate.setText("Recommend Team")
+        generate.setText("Auto-Fill Builds")
         generate.setProperty("compPrimaryGenerate", True)
         generate.setToolTip(
             "Choose the best eligible build recommendation for each loaded player or Recruit slot "
@@ -119,9 +119,12 @@ def _install_main_controls(page) -> None:
     # use the same bridge, but an ad-hoc raid lead can paste names directly here.
     from ui import comp_builder_roster_intake_support as intake_support
 
-    load_team = QPushButton("Load Team List")
+    load_team = QPushButton("Load Players")
     load_team.setProperty("compLoadTeam", True)
-    load_team.setToolTip("Paste 4 or 12 player names. Use Recruit for open spots.")
+    load_team.setToolTip(
+        "Load or paste 4 or 12 player names. Use Recruit for open spots. "
+        "This fills player/chair context without choosing builds."
+    )
     load_team.clicked.connect(lambda *_: intake_support.open_team_list_dialog(page))
     page.comp_load_team_button = load_team
 
