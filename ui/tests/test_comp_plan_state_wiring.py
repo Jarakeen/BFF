@@ -158,17 +158,30 @@ def test_phase14_team_health_surfaces_assignment_proof_and_duplicate_primary() -
     assert '"Multiple primary assignments: "' in health
 
 
-def test_canonical_autofill_uses_comp_state_and_preserves_legacy_as_fallback() -> None:
+def test_canonical_autofill_requires_comp_state_and_has_no_state_less_fallback() -> None:
     source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(
         encoding="utf-8"
     )
 
     assert 'state = getattr(page, "_comp_plan_state", None)' in source
+    assert 'if state is None:' in source
+    assert "state-less legacy mode" in source
     assert "CompPlanAutoFillService().apply(" in source
     assert "page._comp_plan_state = result.state" in source
     assert "result.skipped_existing" in source
-    assert "Legacy/ad-hoc path remains temporarily unchanged in ownership." in source
-    assert "support._set_candidate_for_row(page, row, candidate)" in source
+    assert "Legacy/ad-hoc path remains temporarily unchanged in ownership." not in source
+    assert "support._set_candidate_for_row(page, row, candidate)" not in source
+
+
+def test_canonical_autofill_tracks_saved_players_from_comp_state_not_only_mirror() -> None:
+    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "canonical_saved_players = {" in source
+    assert 'chair.build_source_kind' in source
+    assert 'chair.build_source_name' in source
+    assert "canonical_saved_players | set(support._used_saved_players(page))" in source
 
 
 def test_canonical_autofill_uses_primary_assignments_as_chair_local_constraints() -> None:
@@ -449,3 +462,40 @@ def test_unbound_discard_restores_planning_baseline() -> None:
     assert "not state.is_raid_plan_bound" in discard
     assert 'getattr(page, "_comp_unbound_baseline_state", None)' in discard
     assert "page._comp_plan_state = baseline" in discard
+
+
+def test_fallback_candidate_apply_does_not_let_build_lock_block_other_fields() -> None:
+    source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+
+    changes = source.split("def _candidate_state_changes", 1)[1].split(
+        "def _refresh_candidates", 1
+    )[0]
+    apply = source.split("def _set_candidate_for_row", 1)[1].split(
+        "def _apply_top_candidate", 1
+    )[0]
+
+    assert 'if not chair.is_locked("build"):' in changes
+    assert 'if not chair.is_locked("gear"):' in changes
+    assert 'if not chair.is_locked("class")' in changes
+    assert 'if not chair.is_locked("mundus"):' in changes
+    assert 'if chair is not None and chair.is_locked("build"):' not in apply
+    assert "_candidate_state_changes(chair, candidate)" in apply
+    assert "_comp_last_candidate_apply_blocked_fields" in apply
+
+
+def test_roster_intake_is_state_first_then_renders_accepted_values() -> None:
+    source = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+
+    apply = source.split("def apply_roster_team_context", 1)[1].split(
+        "def _send_roster_team_to_comp", 1
+    )[0]
+    sync_index = apply.index("_sync_comp_state_from_matches(page, matched, assignments)")
+    render_index = apply.index("_set_player(page, row, member, assignments.get(member_id))")
+    assert sync_index < render_index
+
+    setter = source.split("def _set_player", 1)[1].split("def _clear_player_rows", 1)[0]
+    assert "chair = _state_chair_for_row(page, row)" in setter
+    assert "chair.player_name" in setter
+    assert "chair.character_name" in setter
+    assert "chair.eso_class" in setter
+    assert "chair.primary_assignment" in setter
