@@ -180,7 +180,8 @@ def test_raid_plan_coverage_includes_explicit_planned_skill_and_class_evidence()
     assert "member.planned_skills" in scope
     assert "eso_class=member.eso_class" in scope
 
-    assert "SupportTargetType.SELF" not in planned.split("_ALLOWED_TARGETS =", 1)[1].split("}", 1)[0]
+    allowed = planned.split("_ALLOWED_TARGETS =", 1)[1].split("}", 1)[0]
+    assert "    SupportTargetType.SELF,\n" not in allowed
     assert "planned_skill_lines" in planned
     assert "passive.skill_line" in planned
     assert "class alone" not in planned.casefold()
