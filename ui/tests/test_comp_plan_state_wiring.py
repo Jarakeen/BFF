@@ -107,3 +107,16 @@ def test_comp_plan_name_picker_uses_canonical_state_and_five_piece_manual_restor
     assert "[:2]" in selected
     assert "tuple(member.planned_gear_sets or ())" in selected
     assert "self._comp_plan_state =" in selected
+
+
+def test_comp_page_participates_in_app_wide_unsaved_navigation_contract() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert "def _has_pending_changes(page) -> bool:" in source
+    assert "def _save_pending_changes(page) -> bool:" in source
+    assert "def _discard_pending_changes(page) -> None:" in source
+    assert "page.has_pending_changes = lambda: _has_pending_changes(page)" in source
+    assert "page.save_pending_changes = lambda: _save_pending_changes(page)" in source
+    assert "page.discard_pending_changes = lambda: _discard_pending_changes(page)" in source
+    assert "def _mark_comp_state_dirty(page) -> None:" in source
+    assert "editTextChanged" in source
