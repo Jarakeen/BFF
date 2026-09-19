@@ -355,3 +355,19 @@ def test_selected_chair_candidate_discovery_is_cached_by_relevant_inputs() -> No
     assert "goal" in chair
     assert "if cache_key in cache:" in chair
     assert "if len(cache) >= 64:" in chair
+
+
+def test_selected_chair_adviser_can_seed_only_empty_planned_skills() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+    service = Path("services/comp_plan_skill_seed_service.py").read_text(encoding="utf-8")
+
+    assert 'QPushButton("Fill Empty Skills")' in source
+    assert "def _fill_empty_skills(page) -> None:" in source
+    assert "CompPlanSkillSeedService().apply(" in source
+    assert "page._comp_plan_state = updated" in source
+    assert "Existing skills were not replaced." in source
+    assert "chair.planned_skills" in source
+    assert 'chair.is_locked("skills")' in service
+    assert "elif chair.planned_skills:" in service
+    assert 'candidate.source_kind == "reference_template"' in service
+    assert "not candidate.complete_build" in service
