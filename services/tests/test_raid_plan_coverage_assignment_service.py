@@ -90,6 +90,8 @@ def test_assignment_is_not_claimed_when_some_other_build_has_the_effect() -> Non
     )
 
     assert review.state == "assigned_unproven"
+    assert review.label == "Assigned • Planned"
+    assert review.counts_as_planned_coverage is True
     assert review.unsupported_primary == ("Werewolf DD",)
 
 
@@ -133,7 +135,8 @@ def test_unassigned_existing_source_is_not_mislabeled_as_a_gap() -> None:
     )
 
     assert review.state == "unassigned_available"
-    assert review.label == "Source found • Unassigned"
+    assert review.label == "Present • Unassigned"
+    assert review.counts_as_planned_coverage is True
 
 
 def test_multiple_primary_assignments_are_flagged_without_treating_backup_as_duplicate() -> None:
@@ -181,4 +184,5 @@ def test_no_assignment_and_no_evidence_is_a_gap() -> None:
     )
 
     assert review.state == "gap"
+    assert review.counts_as_planned_coverage is False
     assert review.needs_attention is True
