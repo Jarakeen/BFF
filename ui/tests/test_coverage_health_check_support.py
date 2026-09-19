@@ -173,7 +173,8 @@ def test_coverage_health_check_helpers_no_longer_inject_roster_team_scopes() -> 
     assert "Coverage's visible selector is owned by the Raid Plan adapter" in enhance
     assert 'combo.addItem(f"Roster Team: {name}", f"roster_team:{name}")' not in enhance
     assert "_sync_team_choices(page)" not in enhance
-    assert "saved Raid Plans only" in enhance
+    assert "Coverage's visible selector is owned by the Raid Plan adapter" in enhance
+    assert "trial-specific plan" in enhance
 
 
 def test_coverage_health_check_keeps_internal_team_audit_helpers_available() -> None:
