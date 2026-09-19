@@ -77,7 +77,8 @@ def test_comp_maker_bulk_optimizer_enforces_raid_wide_provider_coverage():
     source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(encoding="utf-8")
 
     assert "required_team_provider_ids: list[str] = []" in source
-    assert "required_team_provider_ids.extend(provider_resolution.provider_ids)" in source
+    assert "required_team_provider_ids.extend(missing_resolution.provider_ids)" in source
+    assert "required_team_provider_ids.extend(assignment_resolution.provider_ids)" in source
     assert "required_team_provider_ids = list(dict.fromkeys(required_team_provider_ids))" in source
     assert "already_covered_team_provider_ids.update(" in source
     assert "required_team_provider_ids=tuple(required_team_provider_ids)" in source
