@@ -238,12 +238,20 @@ def _render_raid_plan_scope(page) -> None:
             snapshot=snapshot,
         )
         assignment_reviews[effect] = review
+        planned_primary = tuple(
+            (
+                f"{provider} • {scope.source_note_for(effect, provider)}"
+                if scope.source_note_for(effect, provider)
+                else provider
+            )
+            for provider in review.primary
+        )
         source_text = ", ".join(names) if names else (
             f"Conditional: {', '.join(conditional)}"
             if conditional
             else (
-                "Planned: " + ", ".join(review.primary)
-                if review.primary
+                "Planned: " + ", ".join(planned_primary)
+                if planned_primary
                 else "—"
             )
         )
