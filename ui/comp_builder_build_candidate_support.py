@@ -804,7 +804,7 @@ def _send_to_roster_with_candidates(self, *_args) -> None:
 
 
 def install() -> None:
-    global _INSTALLED, _ORIGINAL_COMP_INIT, _ORIGINAL_RENDER_SLOTS, _ORIGINAL_SEND_TO_ROSTER
+    global _INSTALLED, _ORIGINAL_COMP_INIT, _ORIGINAL_RENDER_SLOTS
     if _INSTALLED:
         return
 
@@ -812,8 +812,8 @@ def install() -> None:
 
     _ORIGINAL_COMP_INIT = CompBuilderPage.__init__
     _ORIGINAL_RENDER_SLOTS = CompBuilderPage._render_slots
-    _ORIGINAL_SEND_TO_ROSTER = CompBuilderPage._send_to_roster
     CompBuilderPage.__init__ = _comp_init_with_build_candidates
     CompBuilderPage._render_slots = _render_slots_with_candidate_refresh
-    CompBuilderPage._send_to_roster = _send_to_roster_with_candidates
+    # Legacy generated-roster send remains available as compatibility code only.
+    # Phase 14 owns the runtime send/save path directly to Raid Plan.
     _INSTALLED = True
