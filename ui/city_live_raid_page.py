@@ -313,6 +313,9 @@ class CityLiveRaidPage(FoundryPage):
             self.hero_title.setText("No Raid Plan selected")
             self.phase_label.setText("Current Phase\n—")
             self.alive_label.setText("Planned roster")
+            self.timer_label.setText("00:00")
+            self.attempt_label.setText("#0")
+            self.combat_label.setText("Not in pull")
             self.callouts_label.setText("No planned callouts for this Raid Plan.")
             self.events_label.setText("No manual run events yet.")
             self.run_notes_edit.clear()
@@ -325,7 +328,7 @@ class CityLiveRaidPage(FoundryPage):
         self.hero_title.setText(
             f"{plan.name}\n{plan.trial_id} · {plan.difficulty or 'Difficulty not set'}"
         )
-        self.alive_label.setText(f"{len(plan.members)}/12 planned")
+        self.alive_label.setText(f"{len(plan.members)} planned")
         self.phase_label.setText("Current Phase\nPlanned encounter context")
         for member in plan.members:
             row = self.spots_table.rowCount()
