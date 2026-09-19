@@ -40,6 +40,19 @@ _REQUIRED_EFFECTS = tuple(
 
 
 @dataclass(frozen=True)
+class CompAssignmentHealthReview:
+    effect_name: str
+    primary_seats: tuple[str, ...]
+    backup_seats: tuple[str, ...]
+    supported_primary: tuple[str, ...]
+    unsupported_primary: tuple[str, ...]
+    supported_backup: tuple[str, ...]
+    duplicate_primary: bool
+    state: str
+    label: str
+
+
+@dataclass(frozen=True)
 class CompPlanHealth:
     required_effects: tuple[str, ...]
     covered_required: tuple[str, ...]
@@ -50,6 +63,7 @@ class CompPlanHealth:
     open_gear_seats: tuple[str, ...]
     coverage_status: tuple[tuple[str, str], ...]
     providers_by_effect: tuple[tuple[str, tuple[str, ...]], ...]
+    assignment_reviews: tuple[CompAssignmentHealthReview, ...]
 
     @property
     def planned_or_static_required_count(self) -> int:
@@ -61,6 +75,90 @@ class CompPlanHealthService:
 
     def __init__(self, database_path: Path) -> None:
         self.planned_gear = RaidPlannedGearCoverageService(database_path)
+
+    def _assignment_reviews(
+        self,
+        state: CompPlanState,
+        *,
+        providers_by_effect: tuple[tuple[str, tuple[str, ...]], ...],
+    ) -> tuple[CompAssignmentHealthReview, ...]:
+        available_effects = {name for name, providers in providers_by_effect if providers}
+        effects_by_seat: dict[str, set[str]] = {}
+        for chair in state.chairs:
+            row = PlannedGearCoverageProvider(
+                seat_id=chair.seat_id,
+                provider_label=chair.character_name or chair.player_name or chair.seat_id,
+                gear_sets=chair.planned_gear_sets,
+            )
+            effects_by_seat[chair.seat_id.casefold()] = set(
+                self.planned_gear.effects_for_provider(
+                    row,
+                    effect_names=_EFFECT_NAMES,
+                )
+            )
+
+        reviews: list[CompAssignmentHealthReview] = []
+        for effect_name in _EFFECT_NAMES:
+            primary = tuple(
+                chair.seat_id
+                for chair in state.chairs
+                if _clean(chair.primary_assignment).casefold()
+                == effect_name.casefold()
+            )
+            backup = tuple(
+                chair.seat_id
+                for chair in state.chairs
+                if _clean(chair.secondary_assignment).casefold()
+                == effect_name.casefold()
+            )
+            supported_primary = tuple(
+                seat
+                for seat in primary
+                if effect_name in effects_by_seat.get(seat.casefold(), set())
+            )
+            unsupported_primary = tuple(
+                seat for seat in primary if seat not in supported_primary
+            )
+            supported_backup = tuple(
+                seat
+                for seat in backup
+                if effect_name in effects_by_seat.get(seat.casefold(), set())
+            )
+            duplicate_primary = len(primary) > 1
+
+            if supported_primary:
+                state_name = "assigned_conditional"
+                label = "Assigned • Planned source"
+            elif primary:
+                state_name = "assigned_unproven"
+                label = "Assigned • Unproven"
+            elif supported_backup:
+                state_name = "backup_only"
+                label = "Backup only"
+            elif effect_name in available_effects:
+                state_name = "unassigned_available"
+                label = "Source found • Unassigned"
+            else:
+                state_name = "gap"
+                label = "Gap • No provider"
+
+            if duplicate_primary:
+                label += " • Duplicate primary"
+
+            reviews.append(
+                CompAssignmentHealthReview(
+                    effect_name=effect_name,
+                    primary_seats=primary,
+                    backup_seats=backup,
+                    supported_primary=supported_primary,
+                    unsupported_primary=unsupported_primary,
+                    supported_backup=supported_backup,
+                    duplicate_primary=duplicate_primary,
+                    state=state_name,
+                    label=label,
+                )
+            )
+        return tuple(reviews)
 
     def evaluate(self, state: CompPlanState) -> CompPlanHealth:
         if not isinstance(state, CompPlanState):
@@ -133,6 +231,12 @@ class CompPlanHealthService:
             if chair.is_open_player and not chair.planned_gear_sets
         )
 
+        assignment_reviews = self._assignment_reviews(
+            state,
+            providers_by_effect=tuple(provider_rows),
+            assignment_reviews=assignment_reviews,
+        )
+
         return CompPlanHealth(
             required_effects=_REQUIRED_EFFECTS,
             covered_required=covered_required,
@@ -149,4 +253,8 @@ class CompPlanHealthService:
         )
 
 
-__all__ = ["CompPlanHealth", "CompPlanHealthService"]
+__all__ = [
+    "CompAssignmentHealthReview",
+    "CompPlanHealth",
+    "CompPlanHealthService",
+]
