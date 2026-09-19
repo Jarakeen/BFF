@@ -6,12 +6,14 @@ Status: design contract / implementation target
 
 ## Product definition
 
-Comp Maker is the roster-construction adviser for a 4- or 12-player run.
+Comp Maker is the assignment-aware composition adviser for a 4- or 12-player run.
 
 It accepts an incomplete group, respects choices the raid lead has already made,
-and helps fill unresolved player/chair/build decisions. Its primary job is deciding
-who is in the roster and what known build context each chair brings. It does not own
-raid-wide buff/debuff optimization; that belongs downstream to Optimizer.
+and helps fill unresolved player/chair/build/provider decisions. Assignments remains
+authoritative for WHO owns each required buff/debuff responsibility. Comp Maker owns
+HOW that planned chair can satisfy the responsibility through compatible class, saved
+build, gear, skills, or other proven provider sources. It may report missing or duplicate
+providers while constructing the group, but it must not invent new assignment ownership.
 
 Canonical workflow:
 
@@ -50,30 +52,33 @@ Example:
 The healer's SPC + Ozezan choice is a constraint. The optimizer must work around it,
 not silently replace it.
 
-## Roster construction objective
+## Composition objective
 
-Comp Maker optimizes **roster fit**, not raid-wide buff/debuff coverage.
+Comp Maker optimizes roster fit **and assigned-provider satisfaction**.
 
 Priorities:
 
 1. hard role/chair validity;
 2. user-locked decisions;
-3. one real player consumed at most once;
-4. canonical player/character/build ownership;
-5. known role/class fit for each chair;
-6. strongest relevant saved-build evidence for known players;
-7. useful reference-template evidence for Recruit/open chairs without inventing ownership;
-8. preserve explicit assignments and planned gear as constraints, not as a reason to rerank the roster;
-9. minimize unresolved player/build decisions;
-10. evidence quality and confidence;
-11. observed high-end usage as supporting roster/build evidence, never canonical truth.
+3. explicit Primary/Backup responsibilities imported from Assignments;
+4. one real player consumed at most once;
+5. canonical player/character/build ownership;
+6. known role/class fit for each chair;
+7. proven class/build/gear/skill/provider sources for that chair's assigned responsibilities;
+8. strongest relevant saved-build evidence for known players;
+9. useful reference-template evidence for Recruit/open chairs without inventing ownership;
+10. detect missing and duplicate raid-wide providers while constructing the composition;
+11. minimize unresolved player/build/provider decisions;
+12. evidence quality and confidence;
+13. observed high-end usage as supporting evidence, never canonical truth.
 
-Team Health remains visible as feedback about the assembled roster. Missing or duplicated
-buff/debuff coverage does **not** drive Comp Maker Auto-Fill. Optimizer owns the later
-question: "Given these people, how should we improve the group's support package?"
+A generic Team Health gap may be displayed, but it does not authorize Comp Maker to
+assign that job to a different chair. Provider ownership comes from Assignments. When
+the assigned chair cannot prove a valid source, Comp Maker reports the gap rather than
+quietly transferring the responsibility.
 
-Encounter-specific roster constraints may become stricter later when encounter/runtime
-knowledge establishes that a player/class/build requirement is genuinely mandatory.
+Optimizer starts later from an already valid saved Raid Plan and asks whether the approved
+provider arrangement can be improved with lower opportunity cost or stronger evidence.
 
 ## Non-negotiable behavior
 
@@ -299,8 +304,10 @@ Comp Maker should explain the assembled roster with at least:
 - evidence/source for each roster/build recommendation;
 - Team Health coverage as informational downstream context.
 
-Team Health may still distinguish covered, conditional, missing, duplicated, and unknown
-support evidence, but those states are not Comp Maker roster-selection scores.
+Team Health may distinguish covered, conditional, missing, duplicated, and unknown
+support evidence. Comp Maker uses explicit assigned responsibilities as chair-local
+provider constraints and uses Team Health as composition feedback; Team Health alone
+never creates or transfers responsibility ownership.
 
 ## UI target
 
@@ -575,14 +582,18 @@ These can be layered in after the state boundary is trustworthy.
 
 ## Architectural principle
 
-Comp Maker builds the roster.
+Assignments says who owns it.
 
-Raid Plan records the plan.
+Comp Maker builds the roster and chooses how the assigned chairs supply it.
 
-Optimizer improves the group's buff/debuff and build package.
+Builds stores the exact player configuration and provider source.
 
-Coverage audits.
+Raid Plan preserves the approved plan.
+
+Coverage verifies it.
 
 Rotation proves execution.
+
+Optimizer proposes better arrangements after the plan is already valid.
 
 Those boundaries must remain distinct even when the services share evidence.
