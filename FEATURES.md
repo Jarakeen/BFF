@@ -309,3 +309,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 - **Raid Plan note** — the parchment Plan Note on Raid Plan Overview is editable and persists with the exact `RaidPlan` snapshot; loading another plan restores that plan's own note.
 \n- **Rotation Builder Phase 14 shell** — Rotations are restored through an owned command-center page that preserves the current presentation while calling the existing generation and sustain engines directly; the legacy patched dashboard is not constructed at startup.\n
+- Phase 14 Comp candidate provenance distinguishes **saved Builds** from **reference templates**: only real saved-build candidates may populate `selected_build_name`; reference templates keep source/candidate provenance and may contribute planned gear/class/Mundus without masquerading as an owned Build.
+- Phase 14 selected-chair Apply, Auto-Fill, and Team Health are canonical-state-only. `_comp_applied_candidates` remains a compatibility/presentation cache, while saved-player duplicate detection and applied-candidate recovery prefer `CompPlanState`.
