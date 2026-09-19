@@ -111,7 +111,8 @@ class CompCandidateAdviserService:
             if chair.is_locked("build"):
                 blocked.append("build")
             else:
-                changes["selected_build_name"] = candidate.name
+                changes["selected_build_id"] = candidate.saved_build_id or None
+        changes["selected_build_name"] = candidate.name
 
         if changes:
             changes.update(
