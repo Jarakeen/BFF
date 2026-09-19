@@ -16,13 +16,8 @@ def bootstrap_team_optimization_extensions() -> None:
     if _BOOTSTRAPPED:
         return
 
-    from ui.team_optimization_role_cleanup import install as install_role_cleanup
-    install_role_cleanup()
-
-    from ui.team_optimization_canonical_analysis_support import (
-        install as install_team_optimization_canonical_analysis,
-    )
-    install_team_optimization_canonical_analysis()
+    # Phase 14 Team Optimization is a lightweight saved-Raid-Plan workbench.
+    # Do not install the legacy editable optimizer construction/analysis stack here.
 
     from ui.team_progress_support import install as install_team_progress_support
     install_team_progress_support()
