@@ -416,6 +416,12 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.selected_notes.clear()
         self._loading_selected_notes = False
 
+    def _selected_assignment_source_changed(self, value: str) -> None:
+        if self._loading_assignment_source or not self._selected_note_seat:
+            return
+        self._assignment_source_by_seat[self._selected_note_seat] = _clean(value)
+        self._refresh_city_assignment_rows()
+
     def _selected_notes_changed(self) -> None:
         if self._loading_selected_notes or not self._selected_note_seat:
             return
