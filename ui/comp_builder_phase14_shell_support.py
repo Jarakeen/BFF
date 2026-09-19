@@ -830,6 +830,77 @@ def _effective_coverage_rows(page) -> tuple[tuple[str, object], ...]:
 def _refresh_health(page) -> None:
     if not hasattr(page, "comp_phase14_health_covered"):
         return
+
+    state = getattr(page, "_comp_plan_state", None)
+    if state is not None:
+        try:
+            from engine.config import DEFAULT_DATABASE
+            from services.comp_plan_health_service import CompPlanHealthService
+
+            health = CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)
+        except (AttributeError, ImportError, OSError, TypeError, ValueError):
+            health = None
+
+        if health is not None:
+            total = len(health.required_effects)
+            supported = health.planned_or_static_required_count
+            page.comp_phase14_health_covered.setText(
+                f"Planned {supported} / {total}"
+                if total
+                else "Coverage unresolved"
+            )
+            page.comp_phase14_health_covered_detail.setText(
+                (
+                    f"{len(health.covered_required)} static • "
+                    f"{len(health.conditional_required)} planned/conditional"
+                )
+                if total
+                else "No required effect profile"
+            )
+
+            first_missing = health.missing_required[0] if health.missing_required else "None"
+            page.comp_phase14_health_missing.setText(first_missing)
+            page.comp_phase14_health_missing_detail.setText(
+                "No reviewed source in current Comp plan"
+                if health.missing_required
+                else "No tracked required gaps"
+            )
+
+            first_duplicate = (
+                health.duplicate_effects[0]
+                if health.duplicate_effects
+                else "None"
+            )
+            page.comp_phase14_health_duplicate.setText(first_duplicate)
+            page.comp_phase14_health_duplicate_detail.setText(
+                "Multiple planned sources for the same effect"
+                if health.duplicate_effects
+                else "No duplicated tracked effect"
+            )
+
+            if health.open_gear_seats:
+                count = len(health.open_gear_seats)
+                page.comp_phase14_health_recruit.setText(
+                    f"{count} gear gap" if count == 1 else f"{count} gear gaps"
+                )
+                page.comp_phase14_health_recruit_detail.setText(
+                    f"{len(health.open_player_seats)} open player seat(s) • "
+                    f"{len(health.open_player_seats) - count} already have planned gear"
+                )
+            elif health.open_player_seats:
+                page.comp_phase14_health_recruit.setText(
+                    f"{len(health.open_player_seats)} open player seat(s)"
+                )
+                page.comp_phase14_health_recruit_detail.setText(
+                    "All open seats already have planned gear / setup"
+                )
+            else:
+                page.comp_phase14_health_recruit.setText("None")
+                page.comp_phase14_health_recruit_detail.setText("All player slots filled")
+            return
+
+    # Compatibility fallback for ad-hoc/unbound Comp sessions. This path is not
+    # authoritative for Raid Plan-bound work and will be retired with legacy state.
     try:
         from ui import comp_builder_polish_support as polish
         from ui import team_progress_support
@@ -844,8 +915,10 @@ def _refresh_health(page) -> None:
     covered = [item for item in merged if item.covered]
     missing = [item for item in merged if not item.covered]
     total = len(merged)
-    page.comp_phase14_health_covered.setText(f"Covered {len(covered)} / {total}" if total else "Coverage unresolved")
-    page.comp_phase14_health_covered_detail.setText("Major buffs & debuffs")
+    page.comp_phase14_health_covered.setText(
+        f"Covered {len(covered)} / {total}" if total else "Coverage unresolved"
+    )
+    page.comp_phase14_health_covered_detail.setText("Legacy ad-hoc coverage projection")
 
     first_missing = missing[0].name if missing else "None"
     page.comp_phase14_health_missing.setText(first_missing)
@@ -861,7 +934,7 @@ def _refresh_health(page) -> None:
     duplicates = [name for name, count in set_counts.items() if count > 1]
     page.comp_phase14_health_duplicate.setText(duplicates[0] if duplicates else "None")
     page.comp_phase14_health_duplicate_detail.setText(
-        "Already covered by another player" if duplicates else "No duplicated tracked set"
+        "Legacy duplicate set projection" if duplicates else "No duplicated tracked set"
     )
 
     recruits: list[tuple[str, str, bool]] = []
@@ -893,7 +966,6 @@ def _refresh_health(page) -> None:
     else:
         page.comp_phase14_health_recruit.setText("None")
         page.comp_phase14_health_recruit_detail.setText("All player slots filled")
-
 
 def _refresh_shell(page) -> None:
     if not hasattr(page, "comp_phase14_plan_table"):
