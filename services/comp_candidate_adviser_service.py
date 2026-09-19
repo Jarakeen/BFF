@@ -103,7 +103,11 @@ class CompCandidateAdviserService:
             else:
                 changes["planned_mundus"] = candidate_mundus
 
-        if candidate.name != _clean(chair.selected_build_name):
+        wants_saved_build_binding = candidate.source_kind == "saved_build"
+        if (
+            wants_saved_build_binding
+            and candidate.name != _clean(chair.selected_build_name)
+        ):
             if chair.is_locked("build"):
                 blocked.append("build")
             else:
