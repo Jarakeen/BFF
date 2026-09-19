@@ -109,6 +109,64 @@ class CompBuilderProviderEvidenceService:
             if row.capability_type in supported
         )
 
+    def _build_for_candidate(self, candidate: CompBuildCandidate) -> PlayerBuild | None:
+        if candidate.source_kind == "saved_build":
+            target_build_id = _clean(candidate.saved_build_id).casefold()
+            if not target_build_id:
+                return None
+            matches = [
+                build
+                for build in self.canonical_build_bridge.load().Members
+                if _clean(getattr(build, "BuildId", "")).casefold() == target_build_id
+            ]
+            return matches[0] if len(matches) == 1 else None
+
+        if candidate.source_kind == "reference_template" and candidate.complete_build:
+            prefix = "template:"
+            candidate_id = _clean(candidate.candidate_id)
+            if not candidate_id.casefold().startswith(prefix):
+                return None
+            template_id = candidate_id[len(prefix):].strip().casefold()
+            matches = [
+                template
+                for template in self.template_catalog.load().templates
+                if template.template_id.casefold() == template_id
+                and template.complete_build
+            ]
+            return matches[0].build if len(matches) == 1 else None
+
+        return None
+
+    def provider_sources_for_candidate(
+        self,
+        candidate: CompBuildCandidate,
+        provider_ids: tuple[str, ...],
+    ) -> dict[str, tuple[str, ...]]:
+        """Return exact canonical source names for requested provider effects.
+
+        Missing entries remain unresolved. This deliberately does not infer sources
+        from build names, gear labels, or human-readable descriptions.
+        """
+        build = self._build_for_candidate(candidate)
+        if build is None:
+            return {}
+        wanted = {_clean(value) for value in provider_ids if _clean(value)}
+        if not wanted:
+            return {}
+        audit = self.capability_service.audit_build(build)
+        sources: dict[str, list[str]] = {provider_id: [] for provider_id in wanted}
+        for effect in audit.resolved_effects:
+            if effect.name not in wanted:
+                continue
+            source = _clean(effect.source)
+            if source and source not in sources[effect.name]:
+                sources[effect.name].append(source)
+        return {
+            provider_id: tuple(values)
+            for provider_id, values in sources.items()
+            if values
+        }
+
     def provider_ids_for_candidate(self, candidate: CompBuildCandidate) -> tuple[str, ...]:
         """Return only canonically proven provider identities for one candidate.
 
@@ -124,29 +182,9 @@ class CompBuilderProviderEvidenceService:
             return cached
 
         result: tuple[str, ...] = ()
-        if candidate.source_kind == "saved_build":
-            target_build_id = _clean(candidate.saved_build_id).casefold()
-            if target_build_id:
-                matches = [
-                    build
-                    for build in self.canonical_build_bridge.load().Members
-                    if _clean(getattr(build, "BuildId", "")).casefold() == target_build_id
-                ]
-                if len(matches) == 1:
-                    result = self.provider_ids_for_build(matches[0])
-        elif candidate.source_kind == "reference_template" and candidate.complete_build:
-            prefix = "template:"
-            candidate_id = _clean(candidate.candidate_id)
-            if candidate_id.casefold().startswith(prefix):
-                template_id = candidate_id[len(prefix):].strip().casefold()
-                matches = [
-                    template
-                    for template in self.template_catalog.load().templates
-                    if template.template_id.casefold() == template_id
-                    and template.complete_build
-                ]
-                if len(matches) == 1:
-                    result = self.provider_ids_for_build(matches[0].build)
+        build = self._build_for_candidate(candidate)
+        if build is not None:
+            result = self.provider_ids_for_build(build)
 
         self._candidate_provider_cache[candidate.candidate_id] = result
         return result
