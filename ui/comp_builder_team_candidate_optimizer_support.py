@@ -58,17 +58,31 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         from services.comp_plan_health_service import CompPlanHealthService
 
         health = CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)
-        labels = list(health.missing_required)
-        labels.extend(
-            review.effect_name
-            for review in health.assignment_reviews
-            if review.state == "assigned_unproven"
+
+        # General missing required effects are raid-wide optimization goals. Not every
+        # raid-facing label has a canonical provider id yet, so unmapped general goals
+        # remain visible in Team Health without turning Auto-Fill into warning spam.
+        missing_resolution = provider_service.resolve_requirement_labels(
+            tuple(health.missing_required)
         )
-        resolution = provider_service.resolve_requirement_labels(
-            tuple(dict.fromkeys(labels))
-        )
-        required_team_provider_ids.extend(resolution.provider_ids)
-        unresolved_provider_mappings.extend(resolution.unresolved)
+        required_team_provider_ids.extend(missing_resolution.provider_ids)
+
+        # Explicit primary Assignments are stronger: if the provider identity is
+        # canonically mapped, the assigned chair must satisfy it rather than allowing
+        # another chair to accidentally "cover" the raid-wide requirement.
+        for chair in state.chairs:
+            assignment = str(chair.primary_assignment or "").strip()
+            if not assignment:
+                continue
+            assignment_resolution = provider_service.resolve_requirement_labels(
+                (assignment,)
+            )
+            provider_resolution_by_slot[chair.seat_id] = assignment_resolution
+            required_team_provider_ids.extend(assignment_resolution.provider_ids)
+            unresolved_provider_mappings.extend(
+                f"{chair.seat_id}: {message}"
+                for message in assignment_resolution.unresolved
+            )
     else:
         for row in range(page.matrix_table.rowCount()):
             slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
@@ -95,7 +109,6 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         )
         covered_resolution = provider_service.resolve_requirement_labels(covered_labels)
         already_covered_team_provider_ids.update(covered_resolution.provider_ids)
-        unresolved_provider_mappings.extend(covered_resolution.unresolved)
     else:
         for slot_name, candidate in applied.items():
             try:
@@ -169,6 +182,10 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         if state is None:
             provider_resolution = provider_resolution_by_slot[slot_name]
             local_required = provider_resolution.provider_ids
+        elif chair_state is not None:
+            provider_resolution = provider_resolution_by_slot.get(chair_state.seat_id)
+            if provider_resolution is not None:
+                local_required = provider_resolution.provider_ids
 
         pools.append(
             CompTeamCandidatePool(
