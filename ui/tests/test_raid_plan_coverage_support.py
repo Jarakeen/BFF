@@ -113,7 +113,8 @@ def test_raid_plan_coverage_reconciles_explicit_assignment_ownership() -> None:
     assert '"assigned_supported"' in source
     assert '"assigned_conditional"' in source
     assert '"assigned_unproven"' in source
-    assert '"gap"' in source
+    assert "review.counts_as_planned_coverage" in source
+    assert '"MISSING  {unassigned_gaps}' in source
     assert "DUPLICATE PRIMARY" in source
 
 
@@ -148,7 +149,7 @@ def test_raid_plan_coverage_counts_planned_and_conditional_effects_as_present() 
     assert '"COVERED  {planned_present}' in source
     assert '"ASSIGNED • RUNTIME UNPROVEN  {assigned_unproven}' in source
     assert '"MISSING  {unassigned_gaps}' in source
-    assert '"Planned: " + ", ".join(review.primary)' in source
+    assert '"Planned: " + ", ".join(planned_primary)' in source
     assert "Assigned provider counts as planned coverage" in source
 
 
