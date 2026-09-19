@@ -172,26 +172,34 @@ def test_canonical_autofill_requires_comp_state_and_has_no_state_less_fallback()
     assert "support._set_candidate_for_row(page, row, candidate)" not in source
 
 
-def test_canonical_autofill_tracks_saved_players_from_comp_state_not_only_mirror() -> None:
+def test_canonical_autofill_tracks_saved_players_through_canonical_helper() -> None:
+    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(
+        encoding="utf-8"
+    )
+    helper = Path("ui/comp_builder_build_candidate_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "used_saved_players = tuple(sorted(support._used_saved_players(page)))" in source
+    used = helper.split("def _used_saved_players(page)", 1)[1].split(
+        "def _format_candidates", 1
+    )[0]
+    assert "chair.player_id" in used
+    assert "chair.character_id" in used
+    assert "chair.selected_build_id" in used
+    assert "chair.build_source_name" not in used
+
+
+def test_canonical_autofill_uses_assignment_responsibilities_as_chair_local_constraints() -> None:
     source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(
         encoding="utf-8"
     )
 
-    assert "canonical_saved_players = {" in source
-    assert 'chair.build_source_kind' in source
-    assert 'chair.build_source_name' in source
-    assert "canonical_saved_players | set(support._used_saved_players(page))" in source
-
-
-def test_canonical_autofill_uses_primary_assignments_as_chair_local_constraints() -> None:
-    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(
-        encoding="utf-8"
-    )
-
-    assert "assignment = str(chair.primary_assignment or \"\").strip()" in source
-    assert "provider_resolution_by_slot[chair.seat_id] = assignment_resolution" in source
-    assert "local_required = provider_resolution.provider_ids" in source
-    assert "Explicit primary Assignments are stronger" in source
+    assert "chair.primary_assignment" in source
+    assert "chair.secondary_assignment" in source
+    assert "required_by_seat[chair.seat_id] = tuple(dict.fromkeys(provider_ids))" in source
+    assert "required_provider_ids=tuple(local_required)" in source
+    assert "Assignments owns WHO. Comp Maker owns HOW." in source
 
 
 def test_comp_selected_chair_can_assign_any_gear_catalog_set_directly() -> None:
@@ -256,18 +264,23 @@ def test_comp_raid_plan_switch_suppresses_refresh_storms_during_hydration() -> N
     assert "class_combo.blockSignals(False)" in setter
 
 
-def test_bound_comp_plan_table_does_not_recompute_candidates_for_every_row() -> None:
+def test_bound_comp_plan_table_uses_canonical_candidate_recovery_with_cached_discovery() -> None:
     source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+    candidate_support = Path("ui/comp_builder_build_candidate_support.py").read_text(
+        encoding="utf-8"
+    )
 
     render = source.split("def _refresh_plan_table(page) -> None:", 1)[1].split(
         "def _selected_backend_row", 1
     )[0]
+    candidate = source.split("def _candidate_for_row(page, row: int):", 1)[1].split(
+        "def _candidate_sets", 1
+    )[0]
     assert 'chair_state = _state_chair_for_row(page, backend_row)' in render
-    assert 'getattr(page, "_comp_applied_candidates", {}).get(slot_name)' in render
-    assert "else _candidate_for_row(page, backend_row)" in render
-    assert render.index('chair_state = _state_chair_for_row(page, backend_row)') < render.index(
-        "else _candidate_for_row(page, backend_row)"
-    )
+    assert "candidate = _candidate_for_row(page, backend_row)" in render
+    assert "chair.candidate_id" in candidate
+    assert "candidate_support._chair_candidates(page, row)" in candidate
+    assert 'cache_key in cache' in candidate_support
 
 
 def test_direct_gear_picker_reuses_one_catalog_completion_model() -> None:
