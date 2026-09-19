@@ -960,13 +960,21 @@ def _build_brief(page) -> QWidget:
 
     load_team = getattr(page, "comp_load_team_button", None)
     if load_team is not None:
-        load_team.setText("Load Team")
+        load_team.setText("Load Players")
+        load_team.setToolTip(
+            "Load or paste the players for this plan. This fills player/chair context; "
+            "it does not choose builds."
+        )
         _rehome(load_team, row)
 
     generate = getattr(page, "apply_all_comp_candidates_button", None)
     if generate is not None:
-        generate.setText("Generate Team Plan")
+        generate.setText("Auto-Fill Builds")
         generate.setProperty("primary", True)
+        generate.setToolTip(
+            "Fill unresolved chairs with the best eligible build/gear recommendation "
+            "while preserving choices already made."
+        )
         try:
             generate.clicked.disconnect()
         except (RuntimeError, TypeError):
