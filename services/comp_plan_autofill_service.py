@@ -82,11 +82,14 @@ class CompPlanAutoFillService:
             changes["eso_class"] = _clean(candidate.eso_class)
 
         # A saved build may be bound as the chair's selected build only when its owner
-        # matches the already-selected player. Recruit/open chairs may still consume
-        # its gear/class as planning evidence without fabricating that player identity.
+        # matches the already-selected player or character. Candidate source identity
+        # is still a compatibility field and may contain either one.
         can_bind_saved_build = (
             candidate.source_kind == "saved_build"
-            and _same_identity(chair.player_name, candidate.source_name)
+            and (
+                _same_identity(chair.player_name, candidate.source_name)
+                or _same_identity(chair.character_name, candidate.source_name)
+            )
         )
         if (
             can_bind_saved_build
@@ -94,24 +97,13 @@ class CompPlanAutoFillService:
             and not chair.selected_build_id
             and not chair.selected_build_name
         ):
-            changes.update(
-                selected_build_name=candidate.name,
-                build_source_kind=candidate.source_kind,
-                build_source_name=candidate.source_name,
-                build_source_url=candidate.source_url,
-                candidate_id=candidate.candidate_id,
-            )
-        else:
-            # Preserve candidate provenance without claiming a saved build belongs to
-            # an open Recruit chair.
-            changes.update(
-                build_source_kind=candidate.source_kind,
-                build_source_name=candidate.source_name,
-                build_source_url=candidate.source_url,
-                candidate_id=candidate.candidate_id,
-            )
+            changes["selected_build_name"] = candidate.name
 
-        if not chair.is_locked("gear") and not chair.planned_gear_sets:
+        if (
+            not chair.is_locked("gear")
+            and not chair.planned_gear_sets
+            and tuple(candidate.gear_sets)
+        ):
             changes["planned_gear_sets"] = tuple(candidate.gear_sets)
 
         if (
@@ -120,6 +112,16 @@ class CompPlanAutoFillService:
             and _clean(candidate.mundus)
         ):
             changes["planned_mundus"] = _clean(candidate.mundus)
+
+        # Provenance is attached only when the candidate actually fills a planning
+        # field. Thin evidence rows cannot masquerade as completed Auto-Fill work.
+        if changes:
+            changes.update(
+                build_source_kind=candidate.source_kind,
+                build_source_name=candidate.source_name,
+                build_source_url=candidate.source_url,
+                candidate_id=candidate.candidate_id,
+            )
 
         # Skill-package adoption remains deliberately deferred. Candidate skills are
         # evidence only until the later ESO Logs / skill-evidence pass is implemented.
