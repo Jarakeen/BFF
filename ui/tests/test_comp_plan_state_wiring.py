@@ -94,3 +94,16 @@ def test_raid_plan_visible_save_merge_preserves_comp_locks() -> None:
         "class RaidPlanPersistencePage", 1
     )[0]
     assert "comp_locked_fields=prior.comp_locked_fields" in merge
+
+
+def test_comp_plan_name_picker_uses_canonical_state_and_five_piece_manual_restore() -> None:
+    source = Path("ui/comp_builder_page.py").read_text(encoding="utf-8")
+
+    selected = source.split("def _raid_plan_name_selected", 1)[1].split(
+        "def _build_ui", 1
+    )[0]
+    assert "CompPlanStateService.from_raid_plan(" in selected
+    assert "_five_piece_set_names(" in selected
+    assert "[:2]" in selected
+    assert "tuple(member.planned_gear_sets or ())" in selected
+    assert "self._comp_plan_state =" in selected
