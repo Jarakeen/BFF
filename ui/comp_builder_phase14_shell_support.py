@@ -1898,7 +1898,10 @@ def _render_slots_with_phase14_shell(self, slots) -> None:
     except (AttributeError, TypeError, ValueError):
         pass
 
-    if hasattr(self, "comp_phase14_plan_table"):
+    if (
+        hasattr(self, "comp_phase14_plan_table")
+        and not getattr(self, "_comp_loading_plan", False)
+    ):
         _refresh_shell(self)
 
 
@@ -1920,6 +1923,8 @@ def install() -> None:
     _ORIGINAL_REFRESH_CANDIDATES = candidate_support._refresh_candidates
 
     def refresh_candidates_with_shell(page) -> None:
+        if getattr(page, "_comp_loading_plan", False):
+            return
         assert _ORIGINAL_REFRESH_CANDIDATES is not None
         _ORIGINAL_REFRESH_CANDIDATES(page)
         if hasattr(page, "comp_phase14_plan_table"):
@@ -1938,7 +1943,8 @@ def install() -> None:
                 _reapply_class_constraints(self)
             except (AttributeError, TypeError, ValueError):
                 pass
-            _refresh_shell(self)
+            if not getattr(self, "_comp_loading_plan", False):
+                _refresh_shell(self)
 
         CompBuilderPage.apply_roster_team_context = apply_roster_context_with_shell
 
