@@ -139,8 +139,12 @@ def _set_class_constraint(page, row: int, eso_class: str) -> None:
         ),
         -1,
     )
-    if match >= 0:
-        class_combo.setCurrentIndex(match)
+    if match >= 0 and class_combo.currentIndex() != match:
+        class_combo.blockSignals(True)
+        try:
+            class_combo.setCurrentIndex(match)
+        finally:
+            class_combo.blockSignals(False)
 
 
 def _reapply_class_constraints(page) -> None:
