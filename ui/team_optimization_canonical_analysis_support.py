@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+"""Compatibility-only presentation for the retired Optimization team editor.
+
+The canonical analysis services remain reusable, but Phase 14 does not construct this
+hidden card stack or run its analysis during normal application launch.
+"""
+
 from PySide6.QtWidgets import QComboBox
 
 from engine.config import get_data_dir
