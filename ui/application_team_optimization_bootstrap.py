@@ -90,10 +90,8 @@ def bootstrap_team_optimization_extensions() -> None:
     )
     install_comp_builder_send_feedback()
 
-    from ui.comp_builder_roster_view_support import (
-        install as install_comp_builder_roster_view,
-    )
-    install_comp_builder_roster_view()
+    # The retired generated-plan Roster dropdown is not part of the Phase 14
+    # Comp -> Raid Plan workflow. Keep its compatibility module uninstalled.
 
     from ui.roster_template_button_cleanup_support import (
         install as install_roster_template_button_cleanup,
