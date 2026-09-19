@@ -53,7 +53,16 @@ def _clean_provider_ids(values: tuple[str, ...]) -> frozenset[str]:
 def _saved_player_key(candidate: CompBuildCandidate) -> str:
     if candidate.source_kind != "saved_build":
         return ""
-    return str(candidate.source_name or "").strip().casefold()
+    for value in (
+        candidate.saved_player_id,
+        candidate.saved_character_id,
+        candidate.saved_build_id,
+        candidate.candidate_id,
+    ):
+        key = str(value or "").strip().casefold()
+        if key:
+            return key
+    return ""
 
 
 def _option_value(
