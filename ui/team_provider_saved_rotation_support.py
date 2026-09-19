@@ -26,7 +26,6 @@ from services.team_provider_workload_candidate_service import (
 
 _INSTALLED = False
 _ORIGINAL_COMP_GENERATE = None
-_ORIGINAL_OPTIMIZATION_GENERATE = None
 
 
 def _identity(value: object) -> str:
@@ -219,29 +218,23 @@ def _generate_optimization_assigned_provider_workload_candidates(
 
 
 def install() -> None:
-    global _INSTALLED, _ORIGINAL_COMP_GENERATE, _ORIGINAL_OPTIMIZATION_GENERATE
+    global _INSTALLED, _ORIGINAL_COMP_GENERATE
     if _INSTALLED:
         return
 
     from ui.comp_builder_page import CompBuilderPage
-    from ui.optimization_page import OptimizationPage
 
     _ORIGINAL_COMP_GENERATE = CompBuilderPage.generate_provider_workload_candidates
-    _ORIGINAL_OPTIMIZATION_GENERATE = (
-        OptimizationPage.generate_provider_workload_candidates
-    )
     CompBuilderPage.generate_provider_workload_candidates = (
         _comp_generate_with_saved_rotations
-    )
-    OptimizationPage.generate_provider_workload_candidates = (
-        _optimization_generate_with_saved_rotations
     )
     CompBuilderPage.generate_assigned_provider_workload_candidates = (
         _generate_comp_assigned_provider_workload_candidates
     )
-    OptimizationPage.generate_assigned_provider_workload_candidates = (
-        _generate_optimization_assigned_provider_workload_candidates
-    )
+
+    # Phase 14 Team Optimization is plan-scoped and read-only. The old editable
+    # Optimization provider-workload bridge remains compatibility-only and must not
+    # be attached to OptimizationPage during normal startup.
     _INSTALLED = True
 
 
