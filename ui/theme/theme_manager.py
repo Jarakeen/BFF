@@ -308,6 +308,167 @@ QLabel[evidenceManual="true"] { color: #82B6D1; }
 QLabel[evidenceObserved="true"] { color: #A89BC8; }
 QLabel[evidenceReview="true"] { color: #A8B1B3; }
 
+/* Live Raid: dense nocturnal field-console treatment. */
+QFrame[liveRaidCard="true"] {
+    background-color: #0B171B;
+    border: 1px solid #6B5637;
+    border-radius: 3px;
+}
+QFrame[liveRaidCard="true"] QWidget[cardHeader="true"] {
+    background-color: #0E1C21;
+    border-bottom: 1px solid #4B4E46;
+}
+QFrame[liveRaidCard="true"] QLabel[cardTitle="true"] {
+    color: #D3C8B0;
+    font-family: "Cormorant Garamond";
+    font-size: 12pt;
+    font-weight: 700;
+    letter-spacing: 0px;
+}
+QFrame[liveRaidCard="true"] QLabel[cardIcon="true"] {
+    color: #C79A54;
+}
+QFrame[liveRaidCardRole="hero"] {
+    background-color: #09171B;
+    border-color: #765E3C;
+}
+QWidget[liveRaidHeroIdentity="true"],
+QWidget[liveRaidStatusGrid="true"] {
+    background: transparent;
+}
+QLabel[liveRaidHeroTitle="true"] {
+    color: #E8E5DD;
+    font-family: "Cormorant Garamond";
+    font-size: 18pt;
+    font-weight: 700;
+}
+QLabel[liveRaidHeroPhase="true"] {
+    color: #BDAA88;
+    font-family: "Cormorant Garamond";
+    font-style: italic;
+    font-size: 10pt;
+}
+QLabel[liveRaidEvidenceKey="true"] {
+    color: #74858B;
+    font-size: 8pt;
+    padding-top: 2px;
+}
+QFrame[liveRaidStatusTile="true"] {
+    background-color: #0C181D;
+    border: 1px solid #4A575C;
+    border-radius: 3px;
+}
+QLabel[liveRaidStatusHeading="true"] {
+    color: #9CA9AD;
+    font-size: 8pt;
+    font-weight: 600;
+}
+QLabel[liveRaidStatusValue="true"] {
+    color: #E5E7E2;
+    font-family: "Montserrat";
+    font-size: 10pt;
+    font-weight: 600;
+}
+QLabel[liveRaidStatusValue="true"][liveRaidStatusRole="timer"] {
+    color: #D6B263;
+}
+QLabel[liveRaidStatusValue="true"][liveRaidStatusRole="combat"] {
+    color: #D28A51;
+}
+QLabel[liveRaidStatusValue="true"][liveRaidStatusRole="team"] {
+    color: #82B6D1;
+}
+QLabel[liveRaidStatusValue="true"][liveRaidStatusRole="attempt"] {
+    color: #C9D2D5;
+}
+QLabel[liveRaidCalloutText="true"],
+QLabel[liveRaidEventText="true"],
+QLabel[liveRaidCoverageText="true"],
+QLabel[liveRaidTimelineText="true"] {
+    color: #D9DEDC;
+    background: transparent;
+    font-family: "Segoe UI";
+    font-size: 9pt;
+}
+QLabel[liveRaidCalloutText="true"] {
+    color: #E4DED0;
+    padding: 3px 1px;
+}
+QFrame[liveRaidCardRole="timeline"] QLabel[liveRaidTimelineText="true"] {
+    color: #B9C5C8;
+    border-left: 3px solid #7EA6B8;
+    padding: 6px 8px;
+}
+QFrame[liveRaidCardRole="coverage"] QLabel[liveRaidCoverageText="true"] {
+    color: #B9C9C8;
+}
+QTableWidget[liveRaidRosterTable="true"] {
+    background-color: #0A1418;
+    alternate-background-color: #0A1418;
+    border: none;
+    gridline-color: transparent;
+}
+QTableWidget[liveRaidRosterTable="true"]::item {
+    border-bottom: 1px solid #26343A;
+    padding: 5px 7px;
+}
+QTableWidget[liveRaidRosterTable="true"]::item:selected {
+    background-color: #20343D;
+}
+QPushButton[liveRaidSecondaryAction="true"] {
+    background-color: transparent;
+    border: 1px solid #4D6068;
+    color: #B9C6C9;
+}
+QPushButton[liveRaidSecondaryAction="true"]:hover {
+    background-color: #17252B;
+    border-color: #7EA6B8;
+}
+QPushButton[liveRaidNoteAction="true"] {
+    background-color: rgba(76, 63, 42, 0.14);
+    color: #3B3021;
+    border: 1px solid #7D6843;
+    font-weight: 600;
+}
+QPushButton[liveRaidNoteAction="true"]:hover {
+    background-color: rgba(76, 63, 42, 0.22);
+    border-color: #665536;
+}
+QTextEdit[liveRaidNotesEditor="true"] {
+    background-color: rgba(211, 193, 151, 0.88);
+    color: #2F2A20;
+    border: 1px solid #8C7248;
+    border-radius: 2px;
+    padding: 8px;
+    font-family: "Cormorant Garamond";
+    font-size: 11pt;
+}
+QFrame[liveRaidCardRole="notes"] QWidget[cardHeader="true"] {
+    background-color: rgba(113, 91, 55, 0.10);
+    border-bottom: 1px solid #8C7248;
+}
+QFrame[liveRaidCardRole="notes"] QLabel[cardTitle="true"] {
+    color: #3D3324;
+}
+QFrame[liveRaidCardRole="notes"] QLabel[cardIcon="true"] {
+    color: #6C5737;
+}
+QComboBox[liveRaidContext="true"] {
+    min-height: 30px;
+}
+QPushButton[liveRaidAction="start"] {
+    border-color: #6D9FAF;
+    border-left: 4px solid #7EA6B8;
+}
+QPushButton[liveRaidAction="pause"] {
+    border-color: #8B7448;
+    color: #D6C293;
+}
+QPushButton[liveRaidAction="end"] {
+    border-color: #B56D49;
+    color: #E2B08D;
+}
+
 QScrollBar:vertical, QScrollBar:horizontal { background: #0B0F12; }
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
     background: #465159;
