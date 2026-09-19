@@ -12,6 +12,9 @@ def test_phase14_team_health_uses_canonical_comp_state_not_visible_row_projectio
     assert "coverage_from_candidate_rows" not in health
     assert "_effective_coverage_rows(page)" not in health
     assert "for gear in _effective_sets_for_row(page, row):" not in health
+    assert "def _effective_sets_for_row" not in source
+    assert "def _effective_coverage_rows" not in source
+    assert "def _materialize_visible_recommendations" not in source
 
 
 def test_phase14_recruit_health_uses_canonical_open_player_and_gear_gaps() -> None:
