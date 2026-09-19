@@ -104,6 +104,8 @@ def test_locked_build_does_not_block_unlocked_gear_change(monkeypatch, tmp_path)
         "new-gear",
         name="Different Build Name",
         gear_sets=("New Set A", "New Set B"),
+        source_kind="saved_build",
+        source_name="Healer",
     )
 
     service = CompCandidateAdviserService(tmp_path / "eso.db")
