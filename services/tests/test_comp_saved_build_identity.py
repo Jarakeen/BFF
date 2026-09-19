@@ -123,3 +123,83 @@ def test_comp_autofill_rejects_same_display_label_when_canonical_player_differs(
     assert chair.planned_gear_sets == ()
     assert chair.planned_mundus is None
     assert chair.candidate_id is None
+
+
+def test_comp_autofill_seeds_skills_only_for_assigned_provider_job() -> None:
+    state = CompPlanState(
+        raid_plan_id=None,
+        raid_plan_name="Roster",
+        trial_id="Sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="healer-1",
+                player_name="Healer",
+                player_id="player-1",
+                character_id="character-1",
+                role="Healer",
+                primary_assignment="Major Courage",
+            ),
+        ),
+    )
+    candidate = CompBuildCandidate(
+        candidate_id="saved:build-1",
+        name="Support",
+        source_kind="saved_build",
+        source_name="Healer",
+        source_url="",
+        eso_class="Warden",
+        role="Healer",
+        gear_sets=("Spell Power Cure",),
+        skills=("Combat Prayer", "Energy Orb"),
+        mundus="The Ritual",
+        complete_build=True,
+        unresolved=(),
+        score=100.0,
+        score_reasons=("test",),
+        saved_player_id="player-1",
+        saved_character_id="character-1",
+        saved_build_id="build-1",
+    )
+
+    result = CompPlanAutoFillService().apply(
+        state=state,
+        pools=(
+            CompTeamCandidatePool(
+                "healer-1",
+                (candidate,),
+                required_provider_ids=("major_courage",),
+            ),
+        ),
+        provider_ids_by_candidate={"saved:build-1": ("major_courage",)},
+    )
+
+    chair = result.state.chair("healer-1")
+    assert chair is not None
+    assert chair.planned_skills == ("Combat Prayer", "Energy Orb")
+
+
+def test_comp_autofill_does_not_seed_skills_for_generic_roster_fill() -> None:
+    state = CompPlanState(
+        raid_plan_id=None,
+        raid_plan_name="Roster",
+        trial_id="Sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="healer-1",
+                player_name="Healer",
+                player_id="player-1",
+                character_id="character-1",
+                role="Healer",
+            ),
+        ),
+    )
+    candidate = _saved_candidate()
+
+    result = CompPlanAutoFillService().apply(
+        state=state,
+        pools=(CompTeamCandidatePool("healer-1", (candidate,)),),
+    )
+
+    chair = result.state.chair("healer-1")
+    assert chair is not None
+    assert chair.planned_skills == ()
