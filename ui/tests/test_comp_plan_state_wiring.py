@@ -33,7 +33,9 @@ def test_candidate_application_updates_canonical_state_and_respects_locks() -> N
     assert 'chair.is_locked("class")' in source
     assert 'chair.is_locked("build")' in source
     assert 'chair.is_locked("gear")' in source
-    assert 'chair.is_locked("skills")' in source
+    assert 'changes["planned_skills"]' not in source.split(
+        "def _candidate_state_changes", 1
+    )[1].split("def _refresh_candidates", 1)[0]
     assert 'chair.is_locked("mundus")' in source
     assert "_replace_state_chair(page, chair.with_changes(**changes))" in source
 
