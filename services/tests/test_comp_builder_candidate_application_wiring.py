@@ -73,31 +73,33 @@ def test_comp_maker_does_not_turn_reference_templates_into_fake_players():
     assert "Candidate is partial evidence, not a complete prescribed build." in source
 
 
-def test_comp_maker_bulk_optimizer_enforces_raid_wide_provider_coverage():
-    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(encoding="utf-8")
+def test_comp_maker_autofill_focuses_on_roster_and_build_fit() -> None:
+    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(
+        encoding="utf-8"
+    )
 
-    assert "required_team_provider_ids: list[str] = []" in source
-    assert "required_team_provider_ids.extend(missing_resolution.provider_ids)" in source
-    assert "required_team_provider_ids.extend(assignment_resolution.provider_ids)" in source
-    assert "required_team_provider_ids = list(dict.fromkeys(required_team_provider_ids))" in source
-    assert "already_covered_team_provider_ids.update(" in source
-    assert "required_team_provider_ids=tuple(required_team_provider_ids)" in source
-    assert "already_covered_team_provider_ids=tuple(" in source
-    assert "sorted(already_covered_team_provider_ids)" in source
-    assert "raid-wide provider still uncovered" in source
+    assert "CompPlanAutoFillService().apply(" in source
+    assert "already_used_saved_players=used_saved_players" in source
+    assert "composition_style=style" in source
+    assert "novelty_by_candidate=novelty_by_candidate" in source
+    assert "required_team_provider_ids" not in source
+    assert "already_covered_team_provider_ids" not in source
+    assert "CompPlanHealthService" not in source
+    assert "CompBuilderProviderEvidenceService" not in source
+    assert "raid-wide provider still uncovered" not in source
 
 
-def test_canonical_comp_provider_scope_comes_from_team_health_and_assignments():
-    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(encoding="utf-8")
+def test_comp_maker_team_health_is_feedback_not_autofill_authority() -> None:
+    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(
+        encoding="utf-8"
+    )
+    health = Path("ui/comp_builder_phase14_shell_support.py").read_text(
+        encoding="utf-8"
+    )
 
-    assert "CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)" in source
-    assert source.count("CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)") == 1
-    assert "health.missing_required" in source
-    assert "chair.primary_assignment" in source
-    assert "provider_resolution_by_slot[chair.seat_id]" in source
-    assert "assignment_resolution.provider_ids" in source
-    assert "provider_labels = page._split_values(page._cell_text(row, 6))" not in source
-    assert "Canonical bound and unbound sessions" in source
+    assert "Team Health remains read-only feedback about the current roster" in source
+    assert "_cached_comp_health(page, state)" in health
+    assert "CompPlanHealthService" in health
 
 
 def test_phase14_comp_send_quarantines_generated_draft_writer() -> None:
