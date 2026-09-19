@@ -316,11 +316,11 @@ def _render_raid_plan_scope(page) -> None:
     page.summary_card.clear()
     page.summary_card.addWidget(QLabel(
         f"TOTAL EFFECTS   {len(visible_effects)}\n"
-        f"PLANNED / PRESENT  {planned_present}\n"
+        f"COVERED / PLANNED  {planned_present}\n"
         f"ASSIGNED + PROVEN  {assigned_supported}\n"
         f"ASSIGNED CONDITIONAL  {assigned_conditional}\n"
         f"ASSIGNED • RUNTIME UNPROVEN  {assigned_unproven}\n"
-        f"PRESENT / UNASSIGNED  {unassigned_sources}\n"
+        f"COVERED / UNASSIGNED  {unassigned_sources}\n"
         f"BACKUP ONLY  {backup_only}\n"
         f"MISSING  {unassigned_gaps}\n"
         f"DUPLICATE PRIMARY  {duplicate_primary}\n"
