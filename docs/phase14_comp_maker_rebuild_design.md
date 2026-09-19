@@ -462,7 +462,9 @@ The goal is not merely to hide old widgets. The goal is to remove old ownership.
 
 Do not rewrite all Comp services at once.
 
-### Stage 1 - canonical working state
+Current status: Stages 1–6 are complete and smoke-tested; Stage 7 is the active cleanup boundary. Stage 8 remains gated on proof that no supported workflow depends on the remaining compatibility paths.
+
+### Stage 1 - canonical working state — COMPLETE
 Create typed CompPlanState/CompChairState and boundaries:
 
 Team/Roster/Assignments -> unbound CompPlanState
@@ -473,32 +475,32 @@ unbound CompPlanState -> new RaidPlan
 Tests prove exact preservation of assignments, classes, players, planned gear/skills,
 locks, source annotations, and untouched bound Raid Plan fields.
 
-### Stage 2 - read-only new page shell
+### Stage 2 - read-only new page shell — COMPLETE
 Render current Raid Plan from CompPlanState. No optimization yet.
 
 Prove table, selected-chair detail and Team Health all read the same state.
 
-### Stage 3 - chair edits and locks
+### Stage 3 - chair edits and locks — COMPLETE
 Move player/class/gear/build edits into CompChairState. Add dirty/save contract.
 
-### Stage 4 - candidate adviser
+### Stage 4 - candidate adviser — COMPLETE
 Adapt existing candidate discovery and ESO Logs/reference evidence to produce
 CompCandidateOption records for the selected chair.
 
-### Stage 5 - group evaluation
+### Stage 5 - group evaluation — COMPLETE
 Reuse Coverage/provider services to evaluate the current CompPlanState.
 
-### Stage 6 - constrained Auto-Fill
+### Stage 6 - constrained Auto-Fill — COMPLETE
 Wire the existing whole-team optimizer to unlocked/open decisions only.
 
-### Stage 7 - quarantine and retire compatibility state
+### Stage 7 - quarantine and retire compatibility state — ACTIVE
 Move remaining old Comp Maker UI/controller paths behind an explicit legacy compatibility
 boundary. Remove page dependence on old parallel dictionaries/generated-draft handoff
 only after round-trip and optimizer acceptance tests are green. Add regression tests that
 prove legacy paths cannot mutate canonical CompPlanState or Raid Plan state behind the
 new controller.
 
-### Stage 8 - delete dead legacy ownership
+### Stage 8 - delete dead legacy ownership — PENDING
 After supported workflows no longer call legacy write paths, remove the dead ownership
 code rather than leaving dormant duplicate state machinery in place.
 
