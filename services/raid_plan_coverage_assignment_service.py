@@ -42,9 +42,14 @@ class RaidPlanCoverageAssignmentReview:
     label: str
 
     @property
+    def coverage_state(self) -> str:
+        """Raid-planning answer: covered or missing, independent of proof strength."""
+        return "covered" if self.state != "gap" else "missing"
+
+    @property
     def counts_as_planned_coverage(self) -> bool:
         """Planning presence is broader than static/runtime proof."""
-        return self.state != "gap"
+        return self.coverage_state == "covered"
 
     @property
     def needs_attention(self) -> bool:
@@ -132,22 +137,22 @@ class RaidPlanCoverageAssignmentService:
 
         if supported_primary:
             state = "assigned_supported"
-            label = "Assigned • Supported"
+            label = "Covered • Supported"
         elif conditional_primary:
             state = "assigned_conditional"
-            label = "Assigned • Conditional"
+            label = "Covered • Conditional"
         elif primary:
             state = "assigned_unproven"
-            label = "Assigned • Planned"
+            label = "Covered • Planned"
         elif supported_backup or conditional_backup:
             state = "backup_only"
-            label = "Backup only"
+            label = "Covered • Backup only"
         elif any_evidence:
             state = "unassigned_available"
             label = "Covered • Unassigned"
         else:
             state = "gap"
-            label = "Gap • No provider"
+            label = "Missing • No provider"
 
         if duplicate_primary:
             label += " • Duplicate primary"
