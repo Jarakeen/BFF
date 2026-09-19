@@ -858,25 +858,57 @@ def _refresh_health(page) -> None:
                 else "No required effect profile"
             )
 
-            first_missing = health.missing_required[0] if health.missing_required else "None"
-            page.comp_phase14_health_missing.setText(first_missing)
-            page.comp_phase14_health_missing_detail.setText(
-                "No reviewed source in current Comp plan"
-                if health.missing_required
-                else "No tracked required gaps"
-            )
+            assigned_unproven = [
+                review
+                for review in health.assignment_reviews
+                if review.effect_name in health.required_effects
+                and review.state == "assigned_unproven"
+            ]
+            if assigned_unproven:
+                review = assigned_unproven[0]
+                page.comp_phase14_health_missing.setText(review.effect_name)
+                page.comp_phase14_health_missing_detail.setText(
+                    "Assigned to "
+                    + ", ".join(review.primary_seats)
+                    + " • source not proven"
+                )
+            else:
+                first_missing = (
+                    health.missing_required[0]
+                    if health.missing_required
+                    else "None"
+                )
+                page.comp_phase14_health_missing.setText(first_missing)
+                page.comp_phase14_health_missing_detail.setText(
+                    "No reviewed source in current Comp plan"
+                    if health.missing_required
+                    else "No tracked required gaps"
+                )
 
-            first_duplicate = (
-                health.duplicate_effects[0]
-                if health.duplicate_effects
-                else "None"
-            )
-            page.comp_phase14_health_duplicate.setText(first_duplicate)
-            page.comp_phase14_health_duplicate_detail.setText(
-                "Multiple planned sources for the same effect"
-                if health.duplicate_effects
-                else "No duplicated tracked effect"
-            )
+            duplicate_assignments = [
+                review
+                for review in health.assignment_reviews
+                if review.duplicate_primary
+            ]
+            if duplicate_assignments:
+                review = duplicate_assignments[0]
+                page.comp_phase14_health_duplicate.setText(review.effect_name)
+                page.comp_phase14_health_duplicate_detail.setText(
+                    "Multiple primary assignments: "
+                    + ", ".join(review.primary_seats)
+                )
+            else:
+                first_duplicate = (
+                    health.duplicate_effects[0]
+                    if health.duplicate_effects
+                    else "None"
+                )
+                page.comp_phase14_health_duplicate.setText(first_duplicate)
+                page.comp_phase14_health_duplicate_detail.setText(
+                    "Multiple planned sources for the same effect"
+                    if health.duplicate_effects
+                    else "No duplicated tracked effect"
+                )
 
             if health.open_gear_seats:
                 count = len(health.open_gear_seats)
