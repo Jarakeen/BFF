@@ -134,6 +134,21 @@ def _build_header_context(page) -> None:
     )
 
 
+def _build_scope_message(page) -> None:
+    message = QLabel(
+        "No Raid Plan is loaded. Go to Raid Plans, select and Load the saved plan, "
+        "then choose Open Adviser. An empty or partial team can still be opened; "
+        "Optimization will flag unfilled chairs."
+    )
+    message.setWordWrap(True)
+    message.setProperty("fieldNote", True)
+    message.setToolTip(
+        "The My Plans list does not automatically hand a plan to Team Optimization."
+    )
+    page.optimizer_scope_message = message
+    page.layout.addWidget(message)
+
+
 def _build_team_snapshot(page) -> None:
     card = FoundryCard("Current Team (Read-Only)", "users")
     card.set_badge("0/12")
@@ -270,7 +285,7 @@ def _member_for_aliases(raid_plan: RaidPlan, aliases: tuple[str, ...]):
     return None
 
 
-def _render_team(page, raid_plan: RaidPlan) -> None:
+def _render_team(page, raid_plan: RaidPlan) -> int:
     named = 0
     protected_rows: list[str] = []
     for column, (_seat_id, display, aliases) in enumerate(_CANONICAL_SEATS):
@@ -299,6 +314,26 @@ def _render_team(page, raid_plan: RaidPlan) -> None:
         if protected_rows
         else "No protected Comp Maker choices are recorded on this plan."
     )
+    return named
+
+
+def _render_scope_message(page, raid_plan: RaidPlan, named_chairs: int) -> None:
+    if named_chairs <= 0:
+        page.optimizer_scope_message.setText(
+            f"Raid Plan loaded: {raid_plan.name}. Its team has no filled chairs yet. "
+            "Optimization can report plan-level gaps, but player and build recommendations "
+            "need chairs filled in Raid Plan or Comp Maker and then saved."
+        )
+        page.optimizer_scope_message.show()
+        return
+    if named_chairs < len(_CANONICAL_SEATS):
+        page.optimizer_scope_message.setText(
+            f"Raid Plan loaded with {named_chairs}/12 filled chairs. Optimization will "
+            "review those chairs now and report the remaining open chairs as blockers."
+        )
+        page.optimizer_scope_message.show()
+        return
+    page.optimizer_scope_message.hide()
 
 
 def _tradeoff_for(finding) -> str:
@@ -459,7 +494,8 @@ def _render_plan_context(page, raid_plan: RaidPlan) -> None:
 def _render_workbench(page, raid_plan: RaidPlan, review) -> None:
     _hide_legacy_surface(page)
     _render_plan_context(page, raid_plan)
-    _render_team(page, raid_plan)
+    named_chairs = _render_team(page, raid_plan)
+    _render_scope_message(page, raid_plan, named_chairs)
     _render_recommendations(page, review)
     _render_health(page, review)
     page.optimizer_recommendation_card.set_badge(
@@ -486,6 +522,7 @@ def _init_with_phase14_workbench(self, parent=None) -> None:
     )
     self.header.department.setText("RAID ENGINE • OPTIMIZATION")
     _build_header_context(self)
+    _build_scope_message(self)
     _build_team_snapshot(self)
     _build_recommendation_workspace(self)
     _build_action_bar(self)

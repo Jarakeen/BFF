@@ -58,3 +58,15 @@ def test_phase14_optimizer_shell_installs_after_plan_scope_adapter() -> None:
     adviser = support.index("install_raid_plan_optimizer_adviser_support()")
     shell = support.index("install_team_optimization_phase14_shell_support()")
     assert adviser < shell
+
+
+def test_phase14_optimizer_explains_missing_and_incomplete_plan_scope() -> None:
+    source = _source()
+
+    assert "No Raid Plan is loaded." in source
+    assert "select and Load the saved plan" in source
+    assert "An empty or partial team can still be opened" in source
+    assert "Its team has no filled chairs yet." in source
+    assert "report the remaining open chairs as blockers" in source
+    assert "def _render_scope_message(page, raid_plan: RaidPlan, named_chairs: int)" in source
+    assert "_render_scope_message(page, raid_plan, named_chairs)" in source
