@@ -22,3 +22,15 @@ def test_phase14_recruit_health_separates_open_player_seats_from_gear_gaps() -> 
     assert "open player seat(s)" in health
     assert "already have planned gear" in health
     assert "Recruit slot(s) need gear / setup" not in health
+
+
+def test_phase14_save_plan_contains_ui_exception_boundary() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    save = source.split("def _save_to_originating_raid_plan", 1)[1].split(
+        "def _build_health", 1
+    )[0]
+    assert "try:" in save
+    assert "except Exception as exc:" in save
+    assert "Could not save Comp Builder plan:" in save
+    assert 'getattr(window, "_persist_generated_comp_plan_to_raid_plan", None)' in save
