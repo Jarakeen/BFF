@@ -43,15 +43,15 @@ def test_comp_maker_send_to_roster_preserves_structured_candidate_evidence():
 
     assert "GeneratedRosterDraftSlot(" in source
     assert "GeneratedRosterPlanSlot" not in source
-    assert 'kind="saved" if is_saved else "prescribed_recruit"' in source
+    assert 'kind="saved" if is_saved or known_player else "prescribed_recruit"' in source
     assert '"Manual gear package"' in source
-    assert 'manual_gear_sets or tuple(candidate.gear_sets)' in source
+    assert "_effective_candidate_gear_sets(" in source
     assert "role=candidate.role or role" in source
     assert "source_kind=candidate.source_kind" in source
     assert "source_name=candidate.source_name" in source
     assert "source_url=candidate.source_url" in source
     assert "candidate_id=candidate.candidate_id" in source
-    assert "gear_sets=manual_gear_sets or tuple(candidate.gear_sets)" in source
+    assert "gear_sets=effective_gear_sets" in source
     assert "skills=tuple(candidate.skills)" in source
     assert "mundus=candidate.mundus" in source
     assert "Observed/known skills:" not in source
@@ -106,10 +106,13 @@ def test_comp_maker_materializes_optimizer_choices_before_roster_transfer():
     )
 
 
-def test_comp_maker_manual_set_package_overrides_candidate_pair_on_save():
+def test_comp_maker_manual_five_piece_override_preserves_non_five_piece_candidate_gear():
     source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
 
     assert 'getattr(page, "_comp_manual_gear_sets_by_slot", {})' in source
-    assert 'gear_summary=" + ".join(' in source
-    assert 'manual_gear_sets or tuple(candidate.gear_sets)' in source
-    assert 'gear_sets=manual_gear_sets' in source
+    assert "def _effective_candidate_gear_sets(" in source
+    assert "candidate.five_piece_sets" in source
+    assert "preserved_non_five" in source
+    assert "effective_gear_sets = _effective_candidate_gear_sets(" in source
+    assert 'gear_summary=" + ".join(effective_gear_sets)' in source
+    assert "gear_sets=effective_gear_sets" in source
