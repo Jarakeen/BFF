@@ -57,6 +57,7 @@ class CompPlanHealth:
     required_effects: tuple[str, ...]
     covered_required: tuple[str, ...]
     conditional_required: tuple[str, ...]
+    planned_required: tuple[str, ...]
     missing_required: tuple[str, ...]
     duplicate_effects: tuple[str, ...]
     open_player_seats: tuple[str, ...]
@@ -67,7 +68,7 @@ class CompPlanHealth:
 
     @property
     def planned_or_static_required_count(self) -> int:
-        return len(self.covered_required) + len(self.conditional_required)
+        return len(self.planned_required)
 
 
 class CompPlanHealthService:
@@ -131,13 +132,13 @@ class CompPlanHealthService:
                 label = "Assigned • Planned source"
             elif primary:
                 state_name = "assigned_unproven"
-                label = "Assigned • Unproven"
+                label = "Assigned • Planned"
             elif supported_backup:
                 state_name = "backup_only"
                 label = "Backup only"
             elif effect_name in available_effects:
                 state_name = "unassigned_available"
-                label = "Source found • Unassigned"
+                label = "Present • Unassigned"
             else:
                 state_name = "gap"
                 label = "Gap • No provider"
@@ -194,12 +195,6 @@ class CompPlanHealthService:
             for name in _REQUIRED_EFFECTS
             if snapshot.status.get(name) == "conditional"
         )
-        missing_required = tuple(
-            name
-            for name in _REQUIRED_EFFECTS
-            if snapshot.status.get(name) not in {"available", "conditional"}
-        )
-
         provider_counts = Counter()
         provider_rows: list[tuple[str, tuple[str, ...]]] = []
         for name in _EFFECT_NAMES:
@@ -235,11 +230,26 @@ class CompPlanHealthService:
             state,
             providers_by_effect=tuple(provider_rows),
         )
+        review_by_effect = {
+            review.effect_name: review
+            for review in assignment_reviews
+        }
+        planned_required = tuple(
+            name
+            for name in _REQUIRED_EFFECTS
+            if review_by_effect[name].state != "gap"
+        )
+        missing_required = tuple(
+            name
+            for name in _REQUIRED_EFFECTS
+            if review_by_effect[name].state == "gap"
+        )
 
         return CompPlanHealth(
             required_effects=_REQUIRED_EFFECTS,
             covered_required=covered_required,
             conditional_required=conditional_required,
+            planned_required=planned_required,
             missing_required=missing_required,
             duplicate_effects=duplicate_effects,
             open_player_seats=open_player_seats,
