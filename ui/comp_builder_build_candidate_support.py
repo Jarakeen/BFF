@@ -427,6 +427,36 @@ def _render_slots_with_candidate_refresh(self, slots) -> None:
         _refresh_candidates(self)
 
 
+def _effective_candidate_gear_sets(
+    candidate: CompBuildCandidate,
+    manual_five_piece_sets: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Apply manual five-piece overrides without erasing monster/mythic/arena evidence."""
+    if not manual_five_piece_sets:
+        return tuple(candidate.gear_sets)
+
+    candidate_five = {
+        str(value or "").strip().casefold()
+        for value in tuple(candidate.five_piece_sets or ())
+        if str(value or "").strip()
+    }
+    preserved_non_five = tuple(
+        str(value).strip()
+        for value in tuple(candidate.gear_sets or ())
+        if str(value).strip()
+        and str(value).strip().casefold() not in candidate_five
+    )
+    merged: list[str] = []
+    seen: set[str] = set()
+    for value in (*preserved_non_five, *manual_five_piece_sets):
+        key = value.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(value)
+    return tuple(merged)
+
+
 def _candidate_unresolved(candidate: CompBuildCandidate, base_detail: str) -> str:
     details = [base_detail, f"Candidate source: {_source_label(candidate)}."]
     if not candidate.complete_build:
@@ -506,6 +536,10 @@ def save_generated_plan(page):
 
         is_saved = candidate.source_kind == "saved_build"
         known_player = bool(roster_context_active and roster_member is not None)
+        effective_gear_sets = _effective_candidate_gear_sets(
+            candidate,
+            manual_gear_sets,
+        )
         slots.append(
             GeneratedRosterDraftSlot(
                 slot_name=slot_name,
@@ -522,16 +556,14 @@ def save_generated_plan(page):
                     if manual_gear_sets
                     else candidate.name
                 ),
-                gear_summary=" + ".join(
-                    manual_gear_sets or tuple(candidate.gear_sets)
-                ),
+                gear_summary=" + ".join(effective_gear_sets),
                 unresolved=_candidate_unresolved(candidate, detail),
                 role=candidate.role or role,
                 source_kind=candidate.source_kind,
                 source_name=candidate.source_name,
                 source_url=candidate.source_url,
                 candidate_id=candidate.candidate_id,
-                gear_sets=manual_gear_sets or tuple(candidate.gear_sets),
+                gear_sets=effective_gear_sets,
                 skills=tuple(candidate.skills),
                 mundus=candidate.mundus,
             )
