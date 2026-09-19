@@ -113,6 +113,41 @@ class CompBuilderPage(FoundryPage):
         }
         return labels.get(key, str(seat_id or "").strip())
 
+    @staticmethod
+    def _planned_five_piece_sets_by_seat(plan) -> dict[str, tuple[str, ...]]:
+        """Classify all planned set names in one DB query, then project by seat."""
+        from services.comp_builder_build_candidates import _five_piece_set_names
+
+        all_names = tuple(
+            dict.fromkeys(
+                str(name or "").strip()
+                for member in plan.members
+                for name in tuple(member.planned_gear_sets or ())
+                if str(name or "").strip()
+            )
+        )
+        if not all_names:
+            return {}
+        five_piece_names = {
+            name.casefold()
+            for name in _five_piece_set_names(
+                get_data_dir() / "eso.db",
+                all_names,
+            )
+        }
+        return {
+            CompBuilderPage._seat_label(member.seat_id): tuple(
+                name
+                for name in tuple(member.planned_gear_sets or ())
+                if str(name or "").strip().casefold() in five_piece_names
+            )[:2]
+            for member in plan.members
+            if any(
+                str(name or "").strip().casefold() in five_piece_names
+                for name in tuple(member.planned_gear_sets or ())
+            )
+        }
+
     def _refresh_raid_plan_name_choices(self) -> None:
         current = self.plan_name_input.text().strip()
         self.plan_name_input.blockSignals(True)
@@ -139,19 +174,25 @@ class CompBuilderPage(FoundryPage):
             return
 
         trial_key = str(plan.trial_id or "").replace("-", " ").casefold()
-        for combo_index in range(self.goal_combo.count()):
-            label = self.goal_combo.itemText(combo_index)
-            trial_label = GOAL_TRIALS.get(label, label)
-            if trial_label.replace("-", " ").casefold() == trial_key:
-                self.goal_combo.setCurrentIndex(combo_index)
-                break
-        if plan.difficulty:
-            difficulty_index = self.difficulty_combo.findText(
-                str(plan.difficulty),
-                Qt.MatchFlag.MatchFixedString,
-            )
-            if difficulty_index >= 0:
-                self.difficulty_combo.setCurrentIndex(difficulty_index)
+        self.goal_combo.blockSignals(True)
+        self.difficulty_combo.blockSignals(True)
+        try:
+            for combo_index in range(self.goal_combo.count()):
+                label = self.goal_combo.itemText(combo_index)
+                trial_label = GOAL_TRIALS.get(label, label)
+                if trial_label.replace("-", " ").casefold() == trial_key:
+                    self.goal_combo.setCurrentIndex(combo_index)
+                    break
+            if plan.difficulty:
+                difficulty_index = self.difficulty_combo.findText(
+                    str(plan.difficulty),
+                    Qt.MatchFlag.MatchFixedString,
+                )
+                if difficulty_index >= 0:
+                    self.difficulty_combo.setCurrentIndex(difficulty_index)
+        finally:
+            self.goal_combo.blockSignals(False)
+            self.difficulty_combo.blockSignals(False)
 
         from services.comp_plan_state_service import CompPlanStateService
 
@@ -178,23 +219,8 @@ class CompBuilderPage(FoundryPage):
             if str(member.eso_class or "").strip()
         }
         self._comp_class_constraint_by_slot = dict(self._raid_plan_class_by_seat)
-        from services.comp_builder_build_candidates import _five_piece_set_names
-
-        self._comp_manual_gear_sets_by_slot = {
-            self._seat_label(member.seat_id): tuple(
-                _five_piece_set_names(
-                    get_data_dir() / "eso.db",
-                    tuple(member.planned_gear_sets or ()),
-                )[:2]
-            )
-            for member in plan.members
-            if tuple(
-                _five_piece_set_names(
-                    get_data_dir() / "eso.db",
-                    tuple(member.planned_gear_sets or ()),
-                )
-            )
-        }
+        planned_five_piece_sets = self._planned_five_piece_sets_by_seat(plan)
+        self._comp_manual_gear_sets_by_slot = dict(planned_five_piece_sets)
 
         apply_context = getattr(self, "apply_roster_team_context", None)
         if callable(apply_context):
@@ -202,23 +228,7 @@ class CompBuilderPage(FoundryPage):
 
         # Roster intake may rebuild chair state. Reassert exact Raid Plan ownership
         # after that rebuild so classes and planned gear cannot be replaced by defaults.
-        from services.comp_builder_build_candidates import _five_piece_set_names
-
-        self._comp_manual_gear_sets_by_slot = {
-            self._seat_label(member.seat_id): tuple(
-                _five_piece_set_names(
-                    get_data_dir() / "eso.db",
-                    tuple(member.planned_gear_sets or ()),
-                )[:2]
-            )
-            for member in plan.members
-            if tuple(
-                _five_piece_set_names(
-                    get_data_dir() / "eso.db",
-                    tuple(member.planned_gear_sets or ()),
-                )
-            )
-        }
+        self._comp_manual_gear_sets_by_slot = dict(planned_five_piece_sets)
 
         try:
             from ui.comp_builder_roster_intake_support import apply_raid_plan_class_constraints
