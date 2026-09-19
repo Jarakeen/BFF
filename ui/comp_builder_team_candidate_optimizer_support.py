@@ -47,6 +47,7 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     # Assignments owns WHO. Comp Maker owns HOW. Therefore only explicit
     # primary/backup responsibilities become provider constraints here.
     required_by_seat: dict[str, tuple[str, ...]] = {}
+    provider_label_by_seat: dict[str, dict[str, str]] = {}
     unresolved_provider_mappings: list[str] = []
     for chair in state.chairs:
         labels = tuple(
@@ -59,12 +60,20 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         )
         if not labels:
             continue
-        resolution = provider_service.resolve_requirement_labels(labels)
-        required_by_seat[chair.seat_id] = resolution.provider_ids
-        unresolved_provider_mappings.extend(
-            f"{chair.seat_id}: {message}"
-            for message in resolution.unresolved
-        )
+
+        provider_ids: list[str] = []
+        label_by_provider: dict[str, str] = {}
+        for label in labels:
+            resolution = provider_service.resolve_requirement_labels((label,))
+            provider_ids.extend(resolution.provider_ids)
+            for provider_id in resolution.provider_ids:
+                label_by_provider.setdefault(provider_id, label)
+            unresolved_provider_mappings.extend(
+                f"{chair.seat_id}: {message}"
+                for message in resolution.unresolved
+            )
+        required_by_seat[chair.seat_id] = tuple(dict.fromkeys(provider_ids))
+        provider_label_by_seat[chair.seat_id] = label_by_provider
 
     used_saved_players = tuple(sorted(support._used_saved_players(page)))
     novelty_service = CompBuilderNoveltyEvidenceService(get_data_dir())
@@ -170,6 +179,30 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
             # Compatibility mirror only. Canonical CompPlanState already owns the
             # applied decision and Save never reads this mirror.
             page._comp_applied_candidates[visible_slot] = candidate
+
+            required_ids = required_by_seat.get(change.seat_id, ())
+            if required_ids:
+                source_map = provider_service.provider_sources_for_candidate(
+                    candidate,
+                    tuple(required_ids),
+                )
+                labels = provider_label_by_seat.get(change.seat_id, {})
+                source_notes: list[str] = []
+                for provider_id in required_ids:
+                    sources = source_map.get(provider_id, ())
+                    if not sources:
+                        continue
+                    label = labels.get(provider_id, provider_id)
+                    source_notes.append(f"{label}: {' / '.join(sources)}")
+                chair = page._comp_plan_state.chair(change.seat_id)
+                if (
+                    chair is not None
+                    and source_notes
+                    and not str(chair.assignment_source or "").strip()
+                ):
+                    page._comp_plan_state = page._comp_plan_state.with_chair(
+                        chair.with_changes(assignment_source="; ".join(source_notes))
+                    )
 
     support._refresh_candidates(page)
     blocked = tuple(result.optimization.provider_blocked_slots)
