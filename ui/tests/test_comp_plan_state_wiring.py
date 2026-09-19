@@ -127,7 +127,7 @@ def test_comp_page_participates_in_app_wide_unsaved_navigation_contract() -> Non
     assert "editTextChanged" in source
 
 
-def test_phase14_team_health_reads_canonical_comp_state_before_legacy_fallback() -> None:
+def test_phase14_team_health_is_canonical_only() -> None:
     source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
 
     health = source.split("def _refresh_health(page) -> None:", 1)[1].split(
@@ -139,10 +139,9 @@ def test_phase14_team_health_reads_canonical_comp_state_before_legacy_fallback()
     assert "health.missing_required" in health
     assert "health.duplicate_effects" in health
     assert "health.open_player_seats" in health
-    assert "Compatibility fallback only for unsupported state-less legacy sessions" in health
-    assert health.index("health = _cached_comp_health(page, state)") < health.index(
-        "Compatibility fallback only for unsupported state-less legacy sessions"
-    )
+    assert "Legacy ad-hoc coverage projection" not in health
+    assert "coverage_from_declared_text" not in health
+    assert 'page.comp_phase14_health_covered.setText("Unavailable")' in health
 
 
 def test_phase14_team_health_surfaces_assignment_proof_and_duplicate_primary() -> None:
@@ -329,7 +328,8 @@ def test_selected_chair_adviser_renders_canonical_group_impact_and_applies_same_
     assert "proposal=cached_proposal" in apply
     assert "page._comp_plan_state = updated" in apply
     assert "proposal.blocked_fields" in apply
-    assert "candidate_support._set_candidate_for_row" in apply  # legacy-only fallback
+    assert "candidate_support._set_candidate_for_row" not in apply
+    assert "Selected-chair Apply requires canonical Comp planning state." in apply
 
 
 def test_comp_shell_memoizes_team_health_and_selected_candidate_proposals() -> None:
@@ -544,3 +544,18 @@ def test_selected_coverage_controls_respect_assignment_locks() -> None:
     assert 'field_name in {"primary_assignment", "secondary_assignment"}' in setter
     assert 'primary.setEnabled(not chair.is_locked("primary_assignment"))' in refresh
     assert 'backup.setEnabled(not chair.is_locked("secondary_assignment"))' in refresh
+
+
+def test_reference_template_never_claims_saved_build_identity_in_apply_paths() -> None:
+    adviser = Path("services/comp_candidate_adviser_service.py").read_text(encoding="utf-8")
+    fallback = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+
+    proposal = adviser.split("def _proposal_changes", 1)[1].split("def apply", 1)[0]
+    assert 'wants_saved_build_binding = candidate.source_kind == "saved_build"' in proposal
+    assert 'changes["selected_build_name"] = candidate.name' in proposal
+
+    changes = fallback.split("def _candidate_state_changes", 1)[1].split(
+        "def _refresh_candidates", 1
+    )[0]
+    assert 'if candidate.source_kind == "saved_build":' in changes
+    assert 'changes["selected_build_name"] = candidate.name' in changes
