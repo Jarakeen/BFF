@@ -69,12 +69,15 @@ def test_raid_plan_page_does_not_add_special_coverage_button() -> None:
 
 def test_raid_plan_coverage_overlays_reviewed_planned_set_evidence() -> None:
     source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
+    shared = Path("services/raid_planned_gear_coverage_service.py").read_text(encoding="utf-8")
 
     assert "def _overlay_planned_gear(snapshot, scope)" in source
-    assert "NonAbilityEffectProviderReferenceService(DEFAULT_DATABASE).gear()" in source
-    assert "canonical_identity(name)" in source
-    assert "for row in scope.planned_gear:" in source
-    assert "planned-set evidence is therefore Conditional" in source
+    assert "RaidPlannedGearCoverageService(DEFAULT_DATABASE).overlay(" in source
+    assert "PlannedGearCoverageProvider(" in source
+    assert "for row in scope.planned_gear" in source
+    assert "Planned gear is raid-lead intent" in shared
+    assert "conditional_providers" in shared
+    assert 'prefix = "perfected "' in shared
     assert "snapshot = _overlay_planned_gear(snapshot, scope)" in source
 
 
