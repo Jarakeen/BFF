@@ -55,6 +55,7 @@ class RaidPlanMember:
     planned_mundus: str | None = None
     primary_assignment: str | None = None
     secondary_assignment: str | None = None
+    assignment_source: str | None = None
     utility_assignments: tuple[str, ...] = field(default_factory=tuple)
     comp_locked_fields: tuple[str, ...] = field(default_factory=tuple)
     notes: str | None = None
@@ -118,6 +119,7 @@ class RaidPlanMember:
             "planned_mundus",
             "primary_assignment",
             "secondary_assignment",
+            "assignment_source",
             "notes",
         ):
             object.__setattr__(self, name, _optional(getattr(self, name)))
