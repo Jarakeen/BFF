@@ -9,16 +9,17 @@ Raid Brief -> Recommended Team Plan + Why This Plan -> Team Health.
 
 from collections import Counter
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QStringListModel
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QButtonGroup,
-    QComboBox,
+    QCompleter,
     QFrame,
     QHeaderView,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QSizePolicy,
     QTableWidget,
@@ -190,6 +191,21 @@ def _catalog_set_names(page) -> tuple[str, ...]:
         names = ()
     page._comp_gear_catalog_names = names
     return names
+
+
+def _gear_catalog_completer(page) -> QCompleter:
+    completer = getattr(page, "_comp_gear_catalog_completer", None)
+    if completer is not None:
+        return completer
+
+    model = QStringListModel(list(_catalog_set_names(page)), page)
+    completer = QCompleter(model, page)
+    completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+    completer.setFilterMode(Qt.MatchFlag.MatchContains)
+    completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+    page._comp_gear_catalog_completion_model = model
+    page._comp_gear_catalog_completer = completer
+    return completer
 
 
 def _canonical_catalog_set_name(page, value: object) -> str:
@@ -417,16 +433,11 @@ def _refresh_manual_set_picker(page, candidates) -> None:
     search_layout.setContentsMargins(0, 0, 0, 0)
     search_layout.setSpacing(6)
 
-    picker = QComboBox()
-    picker.setEditable(True)
-    picker.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-    picker.addItems(list(_catalog_set_names(page)))
-    picker.setCurrentIndex(-1)
+    picker = QLineEdit()
     picker.setPlaceholderText("Search all gear sets…")
     picker.setProperty("compDirectGearPicker", True)
-    if picker.completer() is not None:
-        picker.completer().setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-        picker.completer().setFilterMode(Qt.MatchFlag.MatchContains)
+    picker.setCompleter(_gear_catalog_completer(page))
+    picker.setClearButtonEnabled(True)
     picker.setEnabled(
         not (
             chair_state is not None
@@ -439,7 +450,7 @@ def _refresh_manual_set_picker(page, candidates) -> None:
     add.setProperty("compManualSetChoice", True)
     add.setEnabled(picker.isEnabled())
     add.clicked.connect(
-        lambda *_: _add_planned_gear_set(page, picker.currentText())
+        lambda *_: _add_planned_gear_set(page, picker.text())
     )
     search_layout.addWidget(add)
     layout.addWidget(search_row)
