@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+"""Compatibility-only support for the retired generated-roster Roster workflow.
+
+Phase 14 Comp Maker persists directly to Raid Plan, so this module is not installed
+during normal application startup. Keep it only for historical tooling and service
+regression coverage until final dead-code deletion.
+"""
+
 import re
 
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QTextEdit, QVBoxLayout
