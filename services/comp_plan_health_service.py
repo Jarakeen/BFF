@@ -129,19 +129,19 @@ class CompPlanHealthService:
 
             if supported_primary:
                 state_name = "assigned_conditional"
-                label = "Assigned • Planned source"
+                label = "Covered • Planned source"
             elif primary:
                 state_name = "assigned_unproven"
-                label = "Assigned • Planned"
+                label = "Covered • Planned"
             elif supported_backup:
                 state_name = "backup_only"
-                label = "Backup only"
+                label = "Covered • Backup only"
             elif effect_name in available_effects:
                 state_name = "unassigned_available"
                 label = "Covered • Unassigned"
             else:
                 state_name = "gap"
-                label = "Gap • No provider"
+                label = "Missing • No provider"
 
             if duplicate_primary:
                 label += " • Duplicate primary"
