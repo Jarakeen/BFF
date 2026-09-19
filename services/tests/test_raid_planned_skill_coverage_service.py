@@ -13,11 +13,13 @@ from services.saved_build_capability_service import RaidCoverageSnapshot
 
 
 class _Repo:
-    def __init__(self, effects):
+    def __init__(self, effects, *, ability_id: int | None = 101):
         self.effects = effects
+        self.ability_id = ability_id
 
     def resolve(self, ability_id):
-        assert ability_id == 101
+        if self.ability_id is not None:
+            assert ability_id == self.ability_id
         return tuple(self.effects)
 
 
@@ -121,7 +123,7 @@ def test_reviewed_group_class_passive_requires_planned_trigger_skill_line(tmp_pa
     db.close()
 
     service = RaidPlannedSkillCoverageService(path)
-    service.skills = _Repo(())
+    service.skills = _Repo((), ability_id=102)
     service.passives = SimpleNamespace(
         all=lambda: (
             SimpleNamespace(
