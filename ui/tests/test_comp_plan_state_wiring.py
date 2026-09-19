@@ -290,3 +290,29 @@ def test_comp_raid_plan_group_size_uses_canonical_seats_not_named_player_count()
     assert '"tank-1", "healer-1", "dd-1", "dd-2"' in helper
     assert "group_size=self._raid_plan_group_size(plan)" in selected
     assert "group_size=12" not in selected
+
+
+def test_selected_chair_adviser_renders_canonical_group_impact_and_applies_same_proposal() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    why = source.split("def _refresh_why(page) -> None:", 1)[1].split(
+        "def _health_tile", 1
+    )[0]
+    apply = source.split("def _apply_choice(page, frame: QFrame) -> None:", 1)[1].split(
+        "def _refresh_why", 1
+    )[0]
+
+    assert "CompCandidateAdviserService(DEFAULT_DATABASE).evaluate(" in why
+    assert "proposal.gained_planned_required" in why
+    assert "proposal.assignment_proof_improved" in why
+    assert "proposal.gained_effect_evidence" in why
+    assert "proposal.lost_planned_required" in why
+    assert "proposal.assignment_proof_regressed" in why
+    assert "proposal.duplicates_added" in why
+    assert "proposal.duplicates_removed" in why
+    assert "proposal.blocked_fields" in why
+
+    assert "CompCandidateAdviserService(DEFAULT_DATABASE).apply(" in apply
+    assert "page._comp_plan_state = updated" in apply
+    assert "proposal.blocked_fields" in apply
+    assert "candidate_support._set_candidate_for_row" in apply  # legacy-only fallback
