@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QPlainTextEdit,
     QTableWidget,
@@ -122,8 +123,10 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
     def __init__(self, parent=None) -> None:
         self._utility_by_seat: dict[str, tuple[str, ...]] = {}
         self._notes_by_seat: dict[str, str] = {}
+        self._assignment_source_by_seat: dict[str, str] = {}
         self._selected_note_seat = ""
         self._loading_selected_notes = False
+        self._loading_assignment_source = False
         super().__init__(parent)
         self._compose_city_workspace()
         self._refresh_city_assignment_rows()
@@ -238,6 +241,11 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.selected_utility = self._selected_value_label()
         self.selected_gear = self._selected_value_label()
         self.selected_build = self._selected_value_label()
+        self.selected_assignment_source = QLineEdit()
+        self.selected_assignment_source.setPlaceholderText("e.g. WW, class skill, proc set…")
+        self.selected_assignment_source.textChanged.connect(
+            self._selected_assignment_source_changed
+        )
         self.selected_notes = QPlainTextEdit()
         self.selected_notes.setPlaceholderText("Plan notes for this spot…")
         self.selected_notes.setMaximumHeight(92)
@@ -248,6 +256,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         form.addRow("Utility / Mechanics", self.selected_utility)
         form.addRow("Planned Gear", self.selected_gear)
         form.addRow("Linked Build", self.selected_build)
+        form.addRow("Source", self.selected_assignment_source)
         form.addRow("Notes", self.selected_notes)
         detail.addLayout(form)
         detail.addStretch(1)
@@ -400,6 +409,9 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
             self.selected_build,
         ):
             label.setText("—")
+        self._loading_assignment_source = True
+        self.selected_assignment_source.clear()
+        self._loading_assignment_source = False
         self._loading_selected_notes = True
         self.selected_notes.clear()
         self._loading_selected_notes = False
@@ -434,7 +446,15 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
                 if not gear:
                     gear = _clean(member.selected_build_name)
             self.support_table.item(row, 3).setText(gear or "—")
-            self.support_table.item(row, 4).setText("Raid Plan" if member else "Unassigned")
+            source = ""
+            if member is not None:
+                source = self._assignment_source_by_seat.get(
+                    seat_id.casefold(),
+                    _clean(member.assignment_source),
+                )
+            self.support_table.item(row, 4).setText(
+                source or ("Raid Plan" if member else "Unassigned")
+            )
 
         self._refresh_assignment_summary()
         self._refresh_plan_snapshot()
@@ -517,6 +537,13 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.selected_build.setText(_clean(member.selected_build_name) or "Not selected")
 
         self._selected_note_seat = seat_id
+        self._loading_assignment_source = True
+        source = self._assignment_source_by_seat.get(
+            seat_id,
+            _clean(member.assignment_source),
+        )
+        self.selected_assignment_source.setText(source)
+        self._loading_assignment_source = False
         self._loading_selected_notes = True
         note = self._notes_by_seat.get(seat_id, _clean(member.notes))
         self.selected_notes.setPlainText(note)
@@ -537,9 +564,14 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
                 seat_id,
                 _clean(member.notes),
             )
+            assignment_source = self._assignment_source_by_seat.get(
+                seat_id,
+                _clean(member.assignment_source),
+            )
             members.append(
                 member.with_selection(
                     utility_assignments=tuple(utilities),
+                    assignment_source=assignment_source or None,
                     notes=note or None,
                 )
             )
@@ -553,6 +585,10 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         }
         self._notes_by_seat = {
             member.seat_id.casefold(): _clean(member.notes)
+            for member in plan.members
+        }
+        self._assignment_source_by_seat = {
+            member.seat_id.casefold(): _clean(member.assignment_source)
             for member in plan.members
         }
         if hasattr(self, "support_table"):
@@ -581,6 +617,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         super().clear_plan()
         self._utility_by_seat.clear()
         self._notes_by_seat.clear()
+        self._assignment_source_by_seat.clear()
         if hasattr(self, "support_table"):
             for row in range(len(RAID_PLAN_SEATS)):
                 primary, secondary = self._support_combos(row)
