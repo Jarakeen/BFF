@@ -371,3 +371,81 @@ def test_selected_chair_adviser_can_seed_only_empty_planned_skills() -> None:
     assert "elif chair.planned_skills:" in service
     assert 'candidate.source_kind == "reference_template"' in service
     assert "not candidate.complete_build" in service
+
+
+def test_phase14_comp_direct_open_always_has_canonical_state() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert "def _ensure_default_comp_state(page) -> None:" in source
+    ensure = source.split("def _ensure_default_comp_state(page) -> None:", 1)[1].split(
+        "def _mark_comp_state_dirty", 1
+    )[0]
+    assert "CompPlanStateService.new_unbound(" in ensure
+    assert "page._comp_plan_state = state" in ensure
+    install = source.split("def _install_shell(page) -> None:", 1)[1].split(
+        "def _init_with_phase14_shell", 1
+    )[0]
+    assert "_ensure_default_comp_state(page)" in install
+
+
+def test_unbound_comp_save_finalizes_without_generated_draft() -> None:
+    main = Path("ui/main_window.py").read_text(encoding="utf-8")
+    shell = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    direct = main.split("def _persist_comp_plan_state_to_raid_plan", 1)[1].split(
+        "def _persist_generated_comp_plan_to_raid_plan", 1
+    )[0]
+    assert "if state.is_raid_plan_bound:" in direct
+    assert "CompPlanStateService.to_new_raid_plan(" in direct
+    assert "CompPlanStateService.unique_raid_plan_id(" in direct
+
+    save = shell.split("def _save_to_originating_raid_plan", 1)[1].split(
+        "def _has_pending_changes", 1
+    )[0]
+    assert "save_generated_plan" not in save
+    assert "_persist_generated_comp_plan_to_raid_plan" not in save
+    assert "_persist_comp_plan_state_to_raid_plan" in save
+
+
+def test_send_to_raid_plan_uses_same_canonical_save_path() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    helper = source.split("def _send_to_raid_plan(page) -> bool:", 1)[1].split(
+        "def _save_pending_changes", 1
+    )[0]
+    health = source.split("def _build_health(page, card: FoundryCard) -> None:", 1)[1].split(
+        "def _install_shell", 1
+    )[0]
+
+    assert "_save_to_originating_raid_plan(page)" in helper
+    assert 'show_page("raid_plans")' in helper
+    assert "send.clicked.disconnect()" in health
+    assert "send.clicked.connect(lambda *_: _send_to_raid_plan(page))" in health
+
+
+def test_bound_plan_hydration_finishes_clean_on_both_entry_routes() -> None:
+    page = Path("ui/comp_builder_page.py").read_text(encoding="utf-8")
+    dashboard = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+
+    selected = page.split("def _raid_plan_name_selected", 1)[1].split(
+        "def _build_ui", 1
+    )[0]
+    assert "self._comp_plan_state = self._comp_plan_state.mark_saved()" in selected
+
+    bind = dashboard.split("def _bind_plan_comp_builder", 1)[1].split(
+        "def _open_plan_comp_builder", 1
+    )[0]
+    assert "comp._comp_plan_state = comp._comp_plan_state.mark_saved()" in bind
+    assert "CompBuilderPage._raid_plan_group_size(plan)" in bind
+    assert "group_size=12" not in bind
+
+
+def test_unbound_discard_restores_planning_baseline() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    discard = source.split("def _discard_pending_changes(page) -> None:", 1)[1].split(
+        "def _build_health", 1
+    )[0]
+    assert "not state.is_raid_plan_bound" in discard
+    assert 'getattr(page, "_comp_unbound_baseline_state", None)' in discard
+    assert "page._comp_plan_state = baseline" in discard
