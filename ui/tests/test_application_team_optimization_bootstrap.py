@@ -12,16 +12,17 @@ def test_hybrid_anchor_feature_no_longer_owns_application_composition() -> None:
     assert "install_rotation_tank_provider_scope_transfer_support()" not in source
 
 
-def test_application_startup_owns_team_optimization_composition() -> None:
+def test_application_startup_owns_phase14_team_optimization_composition() -> None:
     source = Path("app.py").read_text(encoding="utf-8")
 
     assert (
         "from ui.application_team_optimization_bootstrap "
         "import bootstrap_team_optimization_extensions"
     ) in source
-    assert source.index("install_team_optimization_hybrid_anchor_support()") < source.index(
-        "bootstrap_team_optimization_extensions()"
-    )
+    assert "install_team_prescription_pipeline_support()" not in source
+    assert "install_team_prescription_template_support()" not in source
+    assert "install_team_optimization_mode_defaults()" not in source
+    assert "install_team_optimization_hybrid_anchor_support()" not in source
     assert source.index("bootstrap_team_optimization_extensions()") < source.index(
         "install_extreme_optimization_support()"
     )
