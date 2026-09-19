@@ -1312,6 +1312,14 @@ def _materialize_visible_recommendations(page) -> int:
     return committed
 
 
+def _mark_comp_state_dirty(page) -> None:
+    state = getattr(page, "_comp_plan_state", None)
+    if state is None or getattr(state, "dirty", False):
+        return
+    from dataclasses import replace
+    page._comp_plan_state = replace(state, dirty=True)
+
+
 def _sync_context_into_comp_state(page) -> None:
     state = getattr(page, "_comp_plan_state", None)
     if state is None:
@@ -1558,8 +1566,17 @@ def _install_shell(page) -> None:
     page.discard_pending_changes = lambda: _discard_pending_changes(page)
     _refresh_shell(page)
 
-    page.goal_combo.currentTextChanged.connect(lambda *_: _refresh_shell(page))
-    page.difficulty_combo.currentTextChanged.connect(lambda *_: _refresh_shell(page))
+    page.goal_combo.currentTextChanged.connect(
+        lambda *_: (_mark_comp_state_dirty(page), _refresh_shell(page))
+    )
+    page.difficulty_combo.currentTextChanged.connect(
+        lambda *_: (_mark_comp_state_dirty(page), _refresh_shell(page))
+    )
+    plan_name = getattr(page, "plan_name_input", None)
+    if plan_name is not None:
+        edit_signal = getattr(plan_name, "editTextChanged", None)
+        if edit_signal is not None:
+            edit_signal.connect(lambda *_: _mark_comp_state_dirty(page))
     picker = getattr(page, "comp_candidate_choice_combo", None)
     if picker is not None:
         picker.currentIndexChanged.connect(lambda *_: _refresh_shell(page))
