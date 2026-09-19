@@ -59,6 +59,7 @@ class RaidPlanCoverageAssignmentReview:
             "assigned_unproven",
             "backup_only",
             "unassigned_available",
+            "gap",
         } or self.duplicate_primary
 
 
