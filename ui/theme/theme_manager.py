@@ -443,6 +443,15 @@ QTextEdit[liveRaidNotesEditor="true"] {
     font-family: "Cormorant Garamond";
     font-size: 11pt;
 }
+QFrame[liveRaidCardRole="notes"] {
+    background-color: #C7B184;
+    color: #28251F;
+    border: 1px solid #88734B;
+    border-radius: 3px;
+}
+QFrame[liveRaidCardRole="notes"] QWidget[cardBody="true"] {
+    background-color: transparent;
+}
 QFrame[liveRaidCardRole="notes"] QWidget[cardHeader="true"] {
     background-color: rgba(113, 91, 55, 0.10);
     border-bottom: 1px solid #8C7248;
