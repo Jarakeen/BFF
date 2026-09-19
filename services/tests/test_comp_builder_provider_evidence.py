@@ -1,4 +1,7 @@
 import json
+from types import SimpleNamespace
+
+from models.build_model import PlayerBuild
 
 from services.comp_builder_build_candidates import CompBuildCandidate
 from services.comp_builder_provider_evidence import CompBuilderProviderEvidenceService
@@ -142,3 +145,52 @@ def test_partial_reference_template_never_receives_provider_credit(tmp_path) -> 
     assert service.provider_ids_for_candidate(
         _reference_candidate(complete_build=False)
     ) == ()
+
+
+def test_provider_sources_for_candidate_returns_exact_canonical_effect_sources(tmp_path) -> None:
+    class _CapabilityService:
+        def audit_build(self, _build):
+            return SimpleNamespace(
+                resolved_effects=(
+                    SimpleNamespace(name="major_courage", source="Spell Power Cure"),
+                    SimpleNamespace(name="major_courage", source="Spell Power Cure"),
+                    SimpleNamespace(name="minor_brittle", source="Frost Reach"),
+                )
+            )
+
+    service = CompBuilderProviderEvidenceService(
+        tmp_path,
+        capability_service=_CapabilityService(),
+    )
+    service._build_for_candidate = lambda _candidate: PlayerBuild(
+        Name="Healer",
+        BuildName="Support",
+    )
+
+    candidate = CompBuildCandidate(
+        candidate_id="saved:build-1",
+        name="Support",
+        source_kind="saved_build",
+        source_name="Healer",
+        source_url="",
+        eso_class="Warden",
+        role="Healer",
+        gear_sets=("Spell Power Cure",),
+        skills=("Frost Reach",),
+        mundus="",
+        complete_build=True,
+        unresolved=(),
+        score=100.0,
+        score_reasons=("test",),
+        saved_build_id="build-1",
+    )
+
+    result = service.provider_sources_for_candidate(
+        candidate,
+        ("major_courage", "minor_brittle", "major_slayer"),
+    )
+
+    assert result == {
+        "major_courage": ("Spell Power Cure",),
+        "minor_brittle": ("Frost Reach",),
+    }
