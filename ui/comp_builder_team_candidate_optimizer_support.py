@@ -36,8 +36,23 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     novelty_service = CompBuilderNoveltyEvidenceService(get_data_dir())
 
     state = getattr(page, "_comp_plan_state", None)
+    if state is None:
+        page.status.error(
+            "Auto-Fill requires canonical Comp planning state; state-less legacy mode "
+            "is no longer supported in Phase 14."
+        )
+        return
+
     applied = getattr(page, "_comp_applied_candidates", {})
-    used_saved_players = tuple(support._used_saved_players(page))
+    canonical_saved_players = {
+        str(chair.build_source_name or "").strip().casefold()
+        for chair in state.chairs
+        if str(chair.build_source_kind or "").strip().casefold() == "saved_build"
+        and str(chair.build_source_name or "").strip()
+    }
+    used_saved_players = tuple(
+        sorted(canonical_saved_players | set(support._used_saved_players(page)))
+    )
     pools: list[CompTeamCandidatePool] = []
     rows_by_slot: dict[str, int] = {}
     visible_slot_by_seat: dict[str, str] = {}
@@ -50,89 +65,54 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     required_team_provider_ids: list[str] = []
     provider_resolution_by_slot: dict[str, object] = {}
 
-    # Canonical Raid Plan-bound sessions derive provider needs from CompPlanState Team
-    # Health plus explicit chair assignments. Legacy/unbound sessions retain the old
-    # template-row provider requirements until that compatibility path is retired.
-    if state is not None:
-        from engine.config import DEFAULT_DATABASE
-        from services.comp_plan_health_service import CompPlanHealthService
+    # Canonical bound and unbound sessions derive provider needs from CompPlanState
+    # Team Health plus explicit chair assignments.
+    from engine.config import DEFAULT_DATABASE
+    from services.comp_plan_health_service import CompPlanHealthService
 
-        health = CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)
+    health = CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)
 
-        # General missing required effects are raid-wide optimization goals. Not every
-        # raid-facing label has a canonical provider id yet, so unmapped general goals
-        # remain visible in Team Health without turning Auto-Fill into warning spam.
-        missing_resolution = provider_service.resolve_requirement_labels(
-            tuple(health.missing_required)
+    # General missing required effects are raid-wide optimization goals. Not every
+    # raid-facing label has a canonical provider id yet, so unmapped general goals
+    # remain visible in Team Health without turning Auto-Fill into warning spam.
+    missing_resolution = provider_service.resolve_requirement_labels(
+        tuple(health.missing_required)
+    )
+    required_team_provider_ids.extend(missing_resolution.provider_ids)
+
+    # Explicit primary Assignments are stronger: if the provider identity is
+    # canonically mapped, the assigned chair must satisfy it rather than allowing
+    # another chair to accidentally "cover" the raid-wide requirement.
+    for chair in state.chairs:
+        assignment = str(chair.primary_assignment or "").strip()
+        if not assignment:
+            continue
+        assignment_resolution = provider_service.resolve_requirement_labels(
+            (assignment,)
         )
-        required_team_provider_ids.extend(missing_resolution.provider_ids)
-
-        # Explicit primary Assignments are stronger: if the provider identity is
-        # canonically mapped, the assigned chair must satisfy it rather than allowing
-        # another chair to accidentally "cover" the raid-wide requirement.
-        for chair in state.chairs:
-            assignment = str(chair.primary_assignment or "").strip()
-            if not assignment:
-                continue
-            assignment_resolution = provider_service.resolve_requirement_labels(
-                (assignment,)
-            )
-            provider_resolution_by_slot[chair.seat_id] = assignment_resolution
-            required_team_provider_ids.extend(assignment_resolution.provider_ids)
-            unresolved_provider_mappings.extend(
-                f"{chair.seat_id}: {message}"
-                for message in assignment_resolution.unresolved
-            )
-    else:
-        for row in range(page.matrix_table.rowCount()):
-            slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
-            provider_labels = page._split_values(page._cell_text(row, 6))
-            provider_resolution = provider_service.resolve_requirement_labels(provider_labels)
-            provider_resolution_by_slot[slot_name] = provider_resolution
-            required_team_provider_ids.extend(provider_resolution.provider_ids)
-            unresolved_provider_mappings.extend(
-                f"{slot_name}: {message}"
-                for message in provider_resolution.unresolved
-            )
+        provider_resolution_by_slot[chair.seat_id] = assignment_resolution
+        required_team_provider_ids.extend(assignment_resolution.provider_ids)
+        unresolved_provider_mappings.extend(
+            f"{chair.seat_id}: {message}"
+            for message in assignment_resolution.unresolved
+        )
     required_team_provider_ids = list(dict.fromkeys(required_team_provider_ids))
 
     already_covered_team_provider_ids: set[str] = set()
-    if state is not None:
-        from engine.config import DEFAULT_DATABASE
-        from services.comp_plan_health_service import CompPlanHealthService
-
-        health = CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)
-        covered_labels = tuple(
-            dict.fromkeys(
-                (*health.covered_required, *health.conditional_required)
-            )
+    covered_labels = tuple(
+        dict.fromkeys(
+            (*health.covered_required, *health.conditional_required)
         )
-        covered_resolution = provider_service.resolve_requirement_labels(covered_labels)
-        already_covered_team_provider_ids.update(covered_resolution.provider_ids)
-    else:
-        for slot_name, candidate in applied.items():
-            try:
-                already_covered_team_provider_ids.update(
-                    provider_service.provider_ids_for_candidate(candidate)
-                )
-            except Exception as exc:
-                unresolved_reads.append(
-                    f"{slot_name}: provider evidence for {candidate.name} could not be resolved: {exc}"
-                )
+    )
+    covered_resolution = provider_service.resolve_requirement_labels(covered_labels)
+    already_covered_team_provider_ids.update(covered_resolution.provider_ids)
 
     goal = page.goal_combo.currentText().strip()
     trial_name = GOAL_TRIALS.get(goal, "")
 
     for row in range(page.matrix_table.rowCount()):
         slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
-        chair_state = (
-            support._state_chair_for_row(page, row)
-            if state is not None
-            else None
-        )
-
-        if state is None and slot_name in applied:
-            continue
+        chair_state = support._state_chair_for_row(page, row)
 
         try:
             candidates = tuple(
@@ -144,7 +124,7 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
             unresolved_reads.append(f"{slot_name}: {exc}")
             continue
 
-        if state is not None and chair_state is not None:
+        if chair_state is not None:
             from services.comp_plan_autofill_service import CompPlanAutoFillService
 
             if not CompPlanAutoFillService.chair_is_open_for_build_autofill(chair_state):
@@ -179,10 +159,7 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
             )
 
         local_required = ()
-        if state is None:
-            provider_resolution = provider_resolution_by_slot[slot_name]
-            local_required = provider_resolution.provider_ids
-        elif chair_state is not None:
+        if chair_state is not None:
             provider_resolution = provider_resolution_by_slot.get(chair_state.seat_id)
             if provider_resolution is not None:
                 local_required = provider_resolution.provider_ids
@@ -202,59 +179,10 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
     page._comp_novelty_evidence_by_candidate = dict(novelty_evidence_by_candidate)
     style = _selected_style(page)
 
-    if state is not None:
-        from services.comp_plan_autofill_service import CompPlanAutoFillService
+    from services.comp_plan_autofill_service import CompPlanAutoFillService
 
-        result = CompPlanAutoFillService().apply(
-            state=state,
-            pools=tuple(pools),
-            already_used_saved_players=used_saved_players,
-            provider_ids_by_candidate=provider_ids_by_candidate,
-            required_team_provider_ids=tuple(required_team_provider_ids),
-            already_covered_team_provider_ids=tuple(
-                sorted(already_covered_team_provider_ids)
-            ),
-            composition_style=style,
-            novelty_by_candidate=novelty_by_candidate,
-        )
-        page._comp_plan_state = result.state
-
-        candidate_by_id = {
-            candidate.candidate_id: candidate
-            for pool in pools
-            for candidate in pool.candidates
-        }
-        for change in result.changes:
-            candidate = candidate_by_id.get(change.candidate_id)
-            visible_slot = visible_slot_by_seat.get(change.seat_id, change.seat_id)
-            row = rows_by_slot.get(visible_slot)
-            if candidate is not None and row is not None:
-                # Compatibility mirror only. Canonical CompPlanState already owns the
-                # applied decision and Save never reads this mirror.
-                page._comp_applied_candidates[visible_slot] = candidate
-
-        support._refresh_candidates(page)
-        message = (
-            f"Auto-filled {result.applied_count} open build decision(s) in "
-            f"{style.value.replace('_', ' ')} mode; preserved "
-            f"{len(result.skipped_existing)} existing/locked chair(s)."
-        )
-        unresolved = [
-            *(
-                f"raid-wide provider still uncovered: {provider_id}"
-                for provider_id in result.optimization.uncovered_team_provider_ids
-            ),
-            *unresolved_provider_mappings,
-            *unresolved_reads,
-        ]
-        if unresolved:
-            page.status.warning(message + " " + " • ".join(unresolved[:5]))
-        else:
-            page.status.success(message)
-        return
-
-    # Legacy/ad-hoc path remains temporarily unchanged in ownership.
-    result = optimize_comp_team_candidates(
+    result = CompPlanAutoFillService().apply(
+        state=state,
         pools=tuple(pools),
         already_used_saved_players=used_saved_players,
         provider_ids_by_candidate=provider_ids_by_candidate,
@@ -265,30 +193,32 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         composition_style=style,
         novelty_by_candidate=novelty_by_candidate,
     )
+    page._comp_plan_state = result.state
 
-    for assignment in result.assignments:
-        candidate = assignment.candidate
-        if candidate is None:
-            continue
-        row = rows_by_slot[assignment.slot_name]
-        support._set_candidate_for_row(page, row, candidate)
+    candidate_by_id = {
+        candidate.candidate_id: candidate
+        for pool in pools
+        for candidate in pool.candidates
+    }
+    for change in result.changes:
+        candidate = candidate_by_id.get(change.candidate_id)
+        visible_slot = visible_slot_by_seat.get(change.seat_id, change.seat_id)
+        row = rows_by_slot.get(visible_slot)
+        if candidate is not None and row is not None:
+            # Compatibility mirror only. Canonical CompPlanState already owns the
+            # applied decision and Save never reads this mirror.
+            page._comp_applied_candidates[visible_slot] = candidate
 
     support._refresh_candidates(page)
-    open_count = page.matrix_table.rowCount() - len(page._comp_applied_candidates)
     message = (
-        f"Filled {result.applied_count} open chair(s) from saved/reference candidates in "
-        f"{style.value.replace('_', ' ')} mode; {open_count} chair(s) remain open."
+        f"Auto-filled {result.applied_count} open build decision(s) in "
+        f"{style.value.replace('_', ' ')} mode; preserved "
+        f"{len(result.skipped_existing)} existing/locked chair(s)."
     )
     unresolved = [
-        *(f"raid-wide provider still uncovered: {provider_id}" for provider_id in result.uncovered_team_provider_ids),
         *(
-            f"{slot}: no candidate proved the chair's mapped provider requirement"
-            for slot in result.provider_blocked_slots
-        ),
-        *(
-            f"{slot}: no matching candidate"
-            for slot in result.unresolved_slots
-            if slot not in result.provider_blocked_slots
+            f"raid-wide provider still uncovered: {provider_id}"
+            for provider_id in result.optimization.uncovered_team_provider_ids
         ),
         *unresolved_provider_mappings,
         *unresolved_reads,
@@ -297,6 +227,8 @@ def _apply_best_candidates_to_all_optimized(page, *_args) -> None:
         page.status.warning(message + " " + " • ".join(unresolved[:5]))
     else:
         page.status.success(message)
+    return
+
 
 def install() -> None:
     global _INSTALLED
