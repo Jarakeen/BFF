@@ -412,13 +412,10 @@ def _optimization_update_with_provider_invalidation(self) -> None:
 def install() -> None:
     global _INSTALLED
     global _ORIGINAL_COMP_INIT, _ORIGINAL_COMP_REFRESH
-    global _ORIGINAL_OPTIMIZATION_INIT, _ORIGINAL_OPTIMIZATION_UPDATE
     if _INSTALLED:
         return
 
     from ui.comp_builder_page import CompBuilderPage
-    from ui.optimization_page import OptimizationPage
-
     _ORIGINAL_COMP_INIT = CompBuilderPage.__init__
     _ORIGINAL_COMP_REFRESH = CompBuilderPage._refresh_coverage
     CompBuilderPage.__init__ = _comp_init_with_provider_workload
@@ -433,19 +430,9 @@ def install() -> None:
     )
     CompBuilderPage.clear_provider_workload_evidence = _clear_provider_workload_evidence
 
-    _ORIGINAL_OPTIMIZATION_INIT = OptimizationPage.__init__
-    _ORIGINAL_OPTIMIZATION_UPDATE = OptimizationPage._update_team_analysis
-    OptimizationPage.__init__ = _optimization_init_with_provider_workload
-    OptimizationPage._update_team_analysis = _optimization_update_with_provider_invalidation
-    OptimizationPage.set_provider_workload_evidence = _set_provider_workload_evidence
-    OptimizationPage.set_provider_workload_candidates = _set_provider_workload_candidates
-    OptimizationPage.set_provider_workload_policy = _set_provider_workload_policy
-    OptimizationPage.set_provider_btv_benchmark_corpus = _set_provider_btv_benchmark_corpus
-    OptimizationPage.clear_provider_btv_benchmark_corpus = _clear_provider_btv_benchmark_corpus
-    OptimizationPage.generate_provider_workload_candidates = (
-        _generate_optimization_provider_workload_candidates
-    )
-    OptimizationPage.clear_provider_workload_evidence = _clear_provider_workload_evidence
+    # Phase 14 Team Optimization is plan-scoped and read-only. Provider workload
+    # remains reusable service logic, but its legacy Optimization widgets and
+    # constructor/update hooks are not installed during normal startup.
     _INSTALLED = True
 
 
