@@ -1312,7 +1312,54 @@ def _materialize_visible_recommendations(page) -> int:
     return committed
 
 
-def _save_to_originating_raid_plan(page) -> None:
+def _sync_context_into_comp_state(page) -> None:
+    state = getattr(page, "_comp_plan_state", None)
+    if state is None:
+        return
+
+    from dataclasses import replace
+    from ui.comp_builder_page import GOAL_TRIALS
+
+    goal = str(page.goal_combo.currentText() or "").strip()
+    trial = str(GOAL_TRIALS.get(goal, state.trial_id) or state.trial_id).strip()
+    name = str(page.plan_name_input.text() or "").strip() or state.raid_plan_name
+    difficulty = str(page.difficulty_combo.currentText() or "").strip() or state.difficulty
+    page._comp_plan_state = replace(
+        state,
+        raid_plan_name=name,
+        trial_id=trial,
+        difficulty=difficulty,
+        achievement_goal=goal or state.achievement_goal,
+        dirty=True,
+    )
+
+
+def _reload_bound_raid_plan(page) -> bool:
+    state = getattr(page, "_comp_plan_state", None)
+    if state is None:
+        return False
+
+    plan_id = str(state.raid_plan_id or "").strip()
+    combo = getattr(page, "plan_name_input", None)
+    if combo is None or not hasattr(combo, "findData"):
+        return False
+    index = combo.findData(plan_id)
+    if index < 0:
+        refresh = getattr(page, "_refresh_raid_plan_name_choices", None)
+        if callable(refresh):
+            refresh()
+            index = combo.findData(plan_id)
+    if index < 0:
+        return False
+
+    loader = getattr(page, "_raid_plan_name_selected", None)
+    if not callable(loader):
+        return False
+    loader(index)
+    return True
+
+
+def _save_to_originating_raid_plan(page) -> bool:
     """Save current Comp choices without silently applying recommendations.
 
     Raid Plan-bound sessions persist canonical CompPlanState directly. The generated
@@ -1320,6 +1367,7 @@ def _save_to_originating_raid_plan(page) -> None:
     """
     try:
         window = page.window()
+        _sync_context_into_comp_state(page)
         state = getattr(page, "_comp_plan_state", None)
         if state is not None:
             persist_state = getattr(window, "_persist_comp_plan_state_to_raid_plan", None)
@@ -1353,6 +1401,26 @@ def _save_to_originating_raid_plan(page) -> None:
             refresh_names()
             page.plan_name_input.setText(plan.name)
         page.status.success(f"Saved Comp Builder changes to Raid Plan: {plan.name}.")
+        return True
+    return False
+
+
+def _has_pending_changes(page) -> bool:
+    state = getattr(page, "_comp_plan_state", None)
+    return bool(state is not None and getattr(state, "dirty", False))
+
+
+def _save_pending_changes(page) -> bool:
+    if not _has_pending_changes(page):
+        return True
+    return bool(_save_to_originating_raid_plan(page))
+
+
+def _discard_pending_changes(page) -> None:
+    if not _has_pending_changes(page):
+        return
+    if not _reload_bound_raid_plan(page):
+        page.status.warning("Could not reload the bound Raid Plan to discard Comp changes.")
 
 
 def _build_health(page, card: FoundryCard) -> None:
@@ -1485,6 +1553,9 @@ def _install_shell(page) -> None:
 
     page.workspace_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     page._comp_phase14_selected_backend_row = 0
+    page.has_pending_changes = lambda: _has_pending_changes(page)
+    page.save_pending_changes = lambda: _save_pending_changes(page)
+    page.discard_pending_changes = lambda: _discard_pending_changes(page)
     _refresh_shell(page)
 
     page.goal_combo.currentTextChanged.connect(lambda *_: _refresh_shell(page))
