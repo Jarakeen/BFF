@@ -52,6 +52,7 @@ class RaidPlannedSkillCoverageService:
         self.skills = SkillEffectRepository(self.database_path)
         self.passives = PassiveEffectProviderReferenceService()
         self._ability_id_cache: dict[tuple[str, str], int | None] = {}
+        self._skill_line_cache: dict[tuple[str, str], str | None] = {}
 
     def _ability_id(self, skill_name: str, eso_class: str | None) -> int | None:
         key = (_clean(skill_name).casefold(), _clean(eso_class).casefold())
@@ -93,6 +94,41 @@ class RaidPlannedSkillCoverageService:
         self._ability_id_cache[key] = result
         return result
 
+    def _skill_line(self, skill_name: str, eso_class: str | None) -> str | None:
+        key = (_clean(skill_name).casefold(), _clean(eso_class).casefold())
+        if key in self._skill_line_cache:
+            return self._skill_line_cache[key]
+        if not self.database_path.exists():
+            self._skill_line_cache[key] = None
+            return None
+        try:
+            with sqlite3.connect(self.database_path) as db:
+                columns = {
+                    str(row[1])
+                    for row in db.execute("PRAGMA table_info(ability)").fetchall()
+                }
+                if not {"name", "skill_line"}.issubset(columns):
+                    result = None
+                else:
+                    clauses = ["lower(trim(name)) = lower(trim(?))"]
+                    params: list[object] = [skill_name]
+                    if eso_class and "class_type" in columns:
+                        clauses.append(
+                            "(trim(coalesce(class_type,'')) = '' OR "
+                            "lower(trim(class_type)) = lower(trim(?)))"
+                        )
+                        params.append(eso_class)
+                    row = db.execute(
+                        f"SELECT skill_line FROM ability WHERE {' AND '.join(clauses)} "
+                        "AND trim(coalesce(skill_line,'')) <> '' LIMIT 1",
+                        params,
+                    ).fetchone()
+                    result = _clean(row[0]) if row else None
+        except sqlite3.Error:
+            result = None
+        self._skill_line_cache[key] = result
+        return result
+
     @staticmethod
     def _display_by_key(effect_names: tuple[str, ...]) -> dict[str, str]:
         return {_canonical(name): name for name in effect_names}
@@ -120,9 +156,19 @@ class RaidPlannedSkillCoverageService:
                 found.append((effect_name, f"skill: {_clean(skill_name)}"))
 
         class_name = _clean(provider.eso_class).casefold()
-        if class_name:
+        planned_skill_lines = {
+            _clean(line).casefold()
+            for line in (
+                self._skill_line(skill_name, provider.eso_class)
+                for skill_name in provider.skills
+            )
+            if _clean(line)
+        }
+        if class_name and planned_skill_lines:
             for passive in self.passives.all():
                 if _clean(passive.eso_class).casefold() != class_name:
+                    continue
+                if _clean(passive.skill_line).casefold() not in planned_skill_lines:
                     continue
                 target = _clean(passive.target).casefold()
                 if not any(token in target for token in ("group", "ally", "allies", "enemy")):
