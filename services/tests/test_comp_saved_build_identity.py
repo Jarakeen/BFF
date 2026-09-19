@@ -120,3 +120,6 @@ def test_comp_autofill_rejects_same_display_label_when_canonical_player_differs(
     assert chair is not None
     assert chair.selected_build_id is None
     assert chair.selected_build_name is None
+    assert chair.planned_gear_sets == ()
+    assert chair.planned_mundus is None
+    assert chair.candidate_id is None
