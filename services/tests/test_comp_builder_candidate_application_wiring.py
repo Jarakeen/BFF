@@ -116,6 +116,12 @@ def test_phase14_comp_send_quarantines_generated_draft_writer() -> None:
     assert "CompBuilderPage._send_to_roster = _send_to_raid_plan_method" in shell
     assert "install_comp_builder_authoritative_prescription()" not in bootstrap
     assert "comp_builder_authoritative_prescription_support" not in bootstrap
+    candidates = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+    constraints = Path("ui/comp_builder_build_constraint_support.py").read_text(encoding="utf-8")
+    feedback = Path("ui/comp_builder_send_feedback_support.py").read_text(encoding="utf-8")
+    assert "CompBuilderPage._send_to_roster = _send_to_roster_with_candidates" not in candidates
+    assert "CompBuilderPage._send_to_roster = _send_to_roster_with_constraint_validation" not in constraints
+    assert "CompBuilderPage._send_to_roster = _send_to_roster_with_feedback" not in feedback
 
 
 def test_comp_maker_manual_five_piece_override_preserves_non_five_piece_candidate_gear():
