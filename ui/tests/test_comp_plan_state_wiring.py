@@ -316,3 +316,25 @@ def test_selected_chair_adviser_renders_canonical_group_impact_and_applies_same_
     assert "page._comp_plan_state = updated" in apply
     assert "proposal.blocked_fields" in apply
     assert "candidate_support._set_candidate_for_row" in apply  # legacy-only fallback
+
+
+def test_comp_shell_memoizes_team_health_and_selected_candidate_proposals() -> None:
+    source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+    adviser = Path("services/comp_candidate_adviser_service.py").read_text(encoding="utf-8")
+
+    assert "def _cached_comp_health(page, state):" in source
+    assert 'getattr(page, "_comp_phase14_health_cache", None)' in source
+    assert "if cached_state == state:" in source
+    assert "def _cached_candidate_proposal(page, state, chair, candidate):" in source
+    assert 'getattr(page, "_comp_phase14_proposal_cache", None)' in source
+    assert "current_health=_cached_comp_health(page, state)" in source
+
+    health = source.split("def _refresh_health(page) -> None:", 1)[1].split(
+        "def _refresh_shell(page) -> None:", 1
+    )[0]
+    assert "health = _cached_comp_health(page, state)" in health
+    assert "CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)" not in health
+
+    assert "current_health: CompPlanHealth | None = None" in adviser
+    assert "current_health = current_health or self.health.evaluate(state)" in adviser
+    assert "proposal: CompCandidateProposal | None = None" in adviser
