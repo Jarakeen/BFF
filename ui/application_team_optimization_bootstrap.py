@@ -54,11 +54,6 @@ def bootstrap_team_optimization_extensions() -> None:
     from ui.comp_builder_strategy_support import install as install_comp_builder_strategy
     install_comp_builder_strategy()
 
-    from ui.comp_builder_authoritative_prescription_support import (
-        install as install_comp_builder_authoritative_prescription,
-    )
-    install_comp_builder_authoritative_prescription()
-
     from ui.comp_builder_build_constraint_support import (
         install as install_comp_builder_build_constraints,
     )
