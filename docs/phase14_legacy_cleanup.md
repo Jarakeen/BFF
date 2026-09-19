@@ -23,6 +23,9 @@ remain temporarily for compatibility, migration, or historical tooling.
       `_send_to_roster` validator wrapper.
 - [x] `comp_builder_send_feedback_support` no longer wraps `_send_to_roster`.
 - [x] Phase 14 shell is the final runtime owner of Comp Save/Send to Raid Plan.
+- [x] the retired generated-plan Roster dropdown bridge is not installed.
+- [x] generated-roster assignment-detail, recruit-adoption, and recruit-prescription
+      Roster decorators are not installed during normal Phase 14 startup.
 
 ### Compatibility still present
 
