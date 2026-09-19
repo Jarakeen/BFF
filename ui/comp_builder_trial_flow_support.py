@@ -115,8 +115,29 @@ def _refresh_sources_for_trial(page) -> None:
         page._comp_trial_refresh_in_progress = False
 
 
-def _schedule_trial_refresh(page) -> None:
-    QTimer.singleShot(0, lambda: _refresh_sources_for_trial(page))
+def _refresh_local_sources_for_trial(page) -> None:
+    """Refresh local candidate sources without making a startup network request."""
+    if getattr(page, "_comp_trial_local_refresh_in_progress", False):
+        return
+    page._comp_trial_local_refresh_in_progress = True
+    try:
+        from ui import comp_builder_build_candidate_support as candidate_support
+        from ui import comp_builder_candidate_picker_support as picker_support
+        from ui import comp_builder_esologs_support as esologs_support
+
+        # Live observations belong to the trial for which they were fetched. A
+        # trial change clears that presentation evidence, but fetching replacement
+        # evidence remains an explicit Refresh Build Sources action.
+        page._esologs_top_team_results = ()
+        esologs_support._clear_esologs_evidence(page)
+        candidate_support._refresh_candidates(page)
+        picker_support._refresh_picker(page)
+    finally:
+        page._comp_trial_local_refresh_in_progress = False
+
+
+def _schedule_local_trial_refresh(page) -> None:
+    QTimer.singleShot(0, lambda: _refresh_local_sources_for_trial(page))
 
 
 def _configure_trial_first_flow(page) -> None:
@@ -132,7 +153,9 @@ def _configure_trial_first_flow(page) -> None:
     # Rebuild the composition once using the selected trial after replacing the
     # legacy achievement selector, then make future trial changes refresh sources.
     page._load_for_goal()
-    page.goal_combo.currentTextChanged.connect(lambda *_: _schedule_trial_refresh(page))
+    page.goal_combo.currentTextChanged.connect(
+        lambda *_: _schedule_local_trial_refresh(page)
+    )
 
     send = getattr(page, "send_button", None)
     if send is not None:
@@ -157,7 +180,7 @@ def _configure_trial_first_flow(page) -> None:
     if apply_observed is not None:
         apply_observed.hide()
 
-    _schedule_trial_refresh(page)
+    _schedule_local_trial_refresh(page)
 
 
 def _comp_init_with_trial_flow(self, parent=None) -> None:

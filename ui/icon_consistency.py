@@ -67,12 +67,23 @@ def _apply_settings_icons(button: QPushButton) -> None:
 
 
 class _ButtonIconFilter(QObject):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._processing: set[int] = set()
+
     def eventFilter(self, watched, event):
         if isinstance(watched, QPushButton) and event.type() in {
             QEvent.Type.Polish,
             QEvent.Type.Show,
         }:
-            _strip_legacy_prefix(watched)
+            key = id(watched)
+            if key in self._processing:
+                return False
+            self._processing.add(key)
+            try:
+                _strip_legacy_prefix(watched)
+            finally:
+                self._processing.discard(key)
         return False
 
 

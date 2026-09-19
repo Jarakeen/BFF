@@ -43,14 +43,22 @@ def test_comp_maker_visible_selector_is_replaced_with_trials() -> None:
     assert 'label.setText("TRIAL")' in source
 
 
-def test_trial_selection_refreshes_local_candidates_and_live_esologs() -> None:
+def test_trial_selection_refreshes_local_candidates_without_live_network() -> None:
     source = Path("ui/comp_builder_trial_flow_support.py").read_text(encoding="utf-8")
 
-    assert "candidate_support._refresh_candidates(page)" in source
-    assert "picker_support._refresh_picker(page)" in source
+    local = source.split("def _refresh_local_sources_for_trial", 1)[1].split(
+        "def _schedule_local_trial_refresh", 1
+    )[0]
+    configure = source.split("def _configure_trial_first_flow", 1)[1].split(
+        "def _comp_init_with_trial_flow", 1
+    )[0]
+
+    assert "candidate_support._refresh_candidates(page)" in local
+    assert "picker_support._refresh_picker(page)" in local
+    assert "_refresh_live_esologs" not in local
+    assert "_schedule_local_trial_refresh(page)" in configure
+    assert "refresh.clicked.connect(lambda *_: _refresh_sources_for_trial(page))" in configure
     assert "esologs_support._refresh_live_esologs(page)" in source
-    assert "page.goal_combo.currentTextChanged.connect" in source
-    assert "QTimer.singleShot" in source
 
 
 def test_trial_first_flow_routes_candidate_catalog_through_legacy_goal_mapping() -> None:

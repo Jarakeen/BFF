@@ -28,3 +28,12 @@ def test_settings_uses_real_svg_icon_mapping() -> None:
     assert '"Export Settings"' in source
     assert '"Import Settings"' in source
     assert '"Reset to Defaults"' in source
+
+
+def test_button_icon_filter_guards_reentrant_polish_events() -> None:
+    source = Path(icon_consistency.__file__).read_text(encoding="utf-8")
+
+    assert "self._processing: set[int] = set()" in source
+    assert "if key in self._processing:" in source
+    assert "self._processing.add(key)" in source
+    assert "self._processing.discard(key)" in source
