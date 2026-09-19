@@ -100,23 +100,18 @@ def test_canonical_comp_provider_scope_comes_from_team_health_and_assignments():
     assert "Canonical bound and unbound sessions" in source
 
 
-def test_comp_maker_materializes_optimizer_choices_before_roster_transfer():
-    source = Path("ui/comp_builder_authoritative_prescription_support.py").read_text(
+def test_phase14_comp_send_quarantines_generated_draft_writer() -> None:
+    shell = Path("ui/comp_builder_phase14_shell_support.py").read_text(
+        encoding="utf-8"
+    )
+    bootstrap = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
-    assert "CompBuilderAuthoritativePrescriptionService" in source
-    assert "candidates_by_slot=dict(applied)" in source
-    assert "page._comp_current_prescription = prescription" in source
-    assert "_materialize_current_comp(self)" in source
-    assert "_ORIGINAL_SEND_TO_ROSTER(self)" in source
-
-    send_function = source.split(
-        "def _send_to_roster_with_authoritative_prescription", 1
-    )[1].split("def install", 1)[0]
-    assert send_function.index("_materialize_current_comp(self)") < send_function.index(
-        "_ORIGINAL_SEND_TO_ROSTER(self)"
-    )
+    assert "def _send_to_raid_plan_method(self, *_args) -> None:" in shell
+    assert "CompBuilderPage._send_to_roster = _send_to_raid_plan_method" in shell
+    assert "install_comp_builder_authoritative_prescription()" not in bootstrap
+    assert "comp_builder_authoritative_prescription_support" not in bootstrap
 
 
 def test_comp_maker_manual_five_piece_override_preserves_non_five_piece_candidate_gear():
