@@ -174,6 +174,11 @@ def _toggle_manual_set(page, set_name: str) -> None:
     if row < 0:
         return
     slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+    chair_state = _state_chair_for_row(page, row)
+    if chair_state is not None and chair_state.is_locked("gear"):
+        page.status.warning(f"{slot_name} gear is locked in this Raid Plan.")
+        return
+
     name = str(set_name or "").strip()
     if not name:
         return
@@ -203,6 +208,23 @@ def _toggle_manual_set(page, set_name: str) -> None:
         store[slot_name] = tuple(current)
     else:
         store.pop(slot_name, None)
+
+    if chair_state is not None:
+        from engine.config import get_data_dir
+        from services.comp_builder_build_candidates import _five_piece_set_names
+
+        existing = tuple(chair_state.planned_gear_sets or ())
+        existing_five = {
+            value.casefold()
+            for value in _five_piece_set_names(get_data_dir() / "eso.db", existing)
+        }
+        preserved_non_five = tuple(
+            value for value in existing if value.casefold() not in existing_five
+        )
+        planned = tuple((*preserved_non_five, *current))
+        page._comp_plan_state = page._comp_plan_state.with_chair(
+            chair_state.with_changes(planned_gear_sets=planned)
+        )
 
     package = " + ".join(current) if current else "automatic recommendation"
     page.status.success(f"{slot_name} gear package: {package}.")
