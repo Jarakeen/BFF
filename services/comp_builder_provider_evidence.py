@@ -5,6 +5,7 @@ from pathlib import Path
 
 from models.build_model import PlayerBuild
 from services.build_service import BuildService
+from services.canonical_build_bridge import CanonicalBuildBridge
 from services.comp_builder_build_candidates import CompBuildCandidate
 from services.encounter_build_capability_adapter import SavedBuildEncounterCapabilityAdapter
 from services.raid_coverage_encounter_adapter import RaidCoverageEncounterAdapter
@@ -46,6 +47,10 @@ class CompBuilderProviderEvidenceService:
             self.coverage_adapter.capability_identity_maps()
         )
         self.build_service = BuildService(self.data_dir / "builds.json")
+        self.canonical_build_bridge = CanonicalBuildBridge(
+            self.data_dir / "builds.json",
+            self.data_dir / "characters.json",
+        )
         self.template_catalog = TeamPrescriptionTemplateCatalog(
             self.data_dir / "team_prescription_templates.json"
         )
@@ -124,7 +129,7 @@ class CompBuilderProviderEvidenceService:
             if target_build_id:
                 matches = [
                     build
-                    for build in self.build_service.load().Members
+                    for build in self.canonical_build_bridge.load().Members
                     if _clean(getattr(build, "BuildId", "")).casefold() == target_build_id
                 ]
                 if len(matches) == 1:
