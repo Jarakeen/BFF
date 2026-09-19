@@ -62,11 +62,12 @@ def test_assignment_details_prefer_structured_fields_with_legacy_text_fallback()
     assert "Observed/known skills:" in source
 
 
-def test_assignment_details_are_installed_after_generated_roster_support() -> None:
+def test_generated_assignment_details_are_compatibility_only() -> None:
     source = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
-    roster_view = source.index("install_comp_builder_roster_view()")
-    details = source.index("install_roster_assignment_build_details()")
-    assert roster_view < details
+    assert "install_comp_builder_roster_view()" not in source
+    assert "install_roster_assignment_build_details()" not in source
+    assert "comp_builder_roster_view_support" not in source
+    assert "roster_assignment_build_details_support" not in source
