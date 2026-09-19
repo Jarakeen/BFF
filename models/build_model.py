@@ -161,6 +161,11 @@ class BuildContextVariant:
     TeamName: str = ""
     BossName: str = ""
     TransformedForm: str = ""
+    # Stable canonical identity mirrored from characters.json for compatibility consumers.
+    # Appended to preserve historical positional-constructor ordering.
+    PlayerId: str = ""
+    CharacterId: str = ""
+    BuildId: str = ""
     Mundus: str = ""
     SecondMundus: str = ""
     Armor: dict[str, dict[str, str]] = field(default_factory=dict)
@@ -216,6 +221,9 @@ class BuildContextVariant:
             TeamName=str(data.get("TeamName", "") or ""),
             BossName=str(data.get("BossName", data.get("Boss", "")) or ""),
             TransformedForm=str(data.get("TransformedForm", "") or "").strip().casefold(),
+            PlayerId=str(data.get("PlayerId", "") or ""),
+            CharacterId=str(data.get("CharacterId", "") or ""),
+            BuildId=str(data.get("BuildId", "") or ""),
             Mundus=str(data.get("Mundus", "") or ""),
             SecondMundus=str(data.get("SecondMundus", "") or ""),
             Armor=armor,
@@ -342,6 +350,7 @@ class PlayerBuild:
         scribed_names = [recipe.ResultName.strip() for recipe in recipes] or list(self.ScribedSkills)
         payload = {
             "Name": self.Name, "Gamertag": self.Gamertag, "BuildName": self.BuildName,
+            "PlayerId": self.PlayerId, "CharacterId": self.CharacterId, "BuildId": self.BuildId,
             "ImagePath": self.ImagePath, "Race": self.Race, "EsoClass": self.EsoClass,
             "Role": self.Role, "Alliance": self.Alliance, "Mundus": self.Mundus,
             "Vampire": self.Vampire, "Werewolf": self.Werewolf,
