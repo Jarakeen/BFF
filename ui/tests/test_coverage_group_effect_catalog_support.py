@@ -48,3 +48,18 @@ def test_named_canonical_effects_are_projected_before_unique_set_overlay():
     assert "capability_service = getattr(self, \"capability_service\", None)" in source
     assert "capability_service=capability_service" in source
     assert "RaidUniqueSupportSetCapabilityService().overlay(snapshot, selected_builds)" in source
+
+
+def test_coverage_notes_are_large_and_top_aligned() -> None:
+    source = Path("ui/coverage_group_effect_catalog_support.py").read_text(encoding="utf-8")
+
+    refresh = source.split("def _refresh_source_notes(page, *_args) -> None:", 1)[1].split(
+        "def _apply_coverage_filters_with_unique", 1
+    )[0]
+    assert "card.set_body_margins(14, 3, 14, 10)" in refresh
+    assert "card.set_body_spacing(8)" in refresh
+    assert "heading_font.setPointSizeF(max(13.0" in refresh
+    assert "heading_font.setBold(True)" in refresh
+    assert "source_font.setPointSizeF(max(12.0" in refresh
+    assert "Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop" in refresh
+    assert "card.addStretch(1)" in refresh
