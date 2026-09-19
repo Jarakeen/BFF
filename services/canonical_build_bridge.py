@@ -214,12 +214,8 @@ class CanonicalBuildBridge:
             build = PlayerBuild.from_dict(legacy)
             character_id = str(entry.get("character_id") or build.CharacterId or "").strip()
             character = characters_by_id.get(character_id, {})
-            build.PlayerId = str(
-                character.get("player_id")
-                or getattr(build, "PlayerId", "")
-                or ""
-            ).strip()
-            build.CharacterId = character_id
-            build.BuildId = str(entry.get("build_id") or build.BuildId or "").strip()
+            # Do not manufacture identity fields in the compatibility snapshot.
+            # If legacy already carried IDs, PlayerBuild.from_dict preserved them;
+            # otherwise canonical identity remains available from catalog records.
             members.append(build)
         return BuildRoster(Members=members)
