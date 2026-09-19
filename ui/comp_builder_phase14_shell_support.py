@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QButtonGroup,
     QCompleter,
+    QComboBox,
     QFrame,
     QHeaderView,
     QHBoxLayout,
@@ -806,6 +807,76 @@ def _set_choice_state(frame: QFrame, *, selected: bool, enabled: bool) -> None:
     )
 
 
+def _coverage_assignment_choices() -> tuple[str, ...]:
+    from services.raid_group_effect_catalog import GROUP_COVERAGE_NAMES
+    from services.raid_unique_support_set_catalog import UNIQUE_SUPPORT_SET_NAMES
+
+    return ("", *tuple(dict.fromkeys((*GROUP_COVERAGE_NAMES, *UNIQUE_SUPPORT_SET_NAMES))))
+
+
+def _set_selected_coverage_field(page, field_name: str, value: str) -> None:
+    if getattr(page, "_comp_phase14_loading_planning_controls", False):
+        return
+    row = _selected_backend_row(page)
+    if row < 0:
+        return
+    state = getattr(page, "_comp_plan_state", None)
+    chair = _state_chair_for_row(page, row)
+    if state is None or chair is None:
+        return
+    if field_name in {"primary_assignment", "secondary_assignment"} and chair.is_locked(field_name):
+        page.status.warning(
+            f"{chair.seat_id}: {field_name.replace('_', ' ')} is locked."
+        )
+        _refresh_selected_planning_controls(page, chair)
+        return
+
+    clean = " ".join(str(value or "").strip().split()) or None
+    if getattr(chair, field_name) == clean:
+        return
+    page._comp_plan_state = state.with_chair(chair.with_changes(**{field_name: clean}))
+    page._comp_phase14_health_cache = None
+    page._comp_phase14_proposal_cache = None
+    page._comp_phase14_skill_seed_cache = None
+    _refresh_shell(page)
+
+
+def _refresh_skill_summary(page, chair, *, fallback: str) -> None:
+    skills = tuple(getattr(chair, "planned_skills", ()) or ()) if chair is not None else ()
+    if not skills:
+        page.comp_phase14_skill_seed_label.setText(fallback)
+        page.comp_phase14_skill_seed_label.setToolTip("")
+        return
+    preview = " • ".join(skills[:6])
+    suffix = " • …" if len(skills) > 6 else ""
+    page.comp_phase14_skill_seed_label.setText(
+        f"Planned Skills ({len(skills)}): {preview}{suffix}"
+    )
+    page.comp_phase14_skill_seed_label.setToolTip(
+        "Planned skills:\n" + "\n".join(f"• {skill}" for skill in skills)
+    )
+
+
+def _refresh_selected_planning_controls(page, chair) -> None:
+    page._comp_phase14_loading_planning_controls = True
+    try:
+        primary = getattr(page, "comp_phase14_primary_coverage", None)
+        backup = getattr(page, "comp_phase14_backup_coverage", None)
+        source = getattr(page, "comp_phase14_coverage_source", None)
+
+        if primary is not None:
+            primary.setCurrentText(str(chair.primary_assignment or ""))
+            primary.setEnabled(not chair.is_locked("primary_assignment"))
+        if backup is not None:
+            backup.setCurrentText(str(chair.secondary_assignment or ""))
+            backup.setEnabled(not chair.is_locked("secondary_assignment"))
+        if source is not None:
+            source.setText(str(chair.assignment_source or ""))
+            source.setEnabled(True)
+    finally:
+        page._comp_phase14_loading_planning_controls = False
+
+
 def _skill_seed_proposal(page, state, chair, candidate):
     from services.comp_plan_skill_seed_service import CompPlanSkillSeedService
 
@@ -940,6 +1011,17 @@ def _refresh_why(page) -> None:
         page.comp_phase14_role_footer.setText("No role selected")
         page.comp_phase14_why_text.setText("Select a player in Recommended Team Plan.")
         page.comp_phase14_skill_seed_label.setText("Skills: no plan selected")
+        page.comp_phase14_skill_seed_label.setToolTip("")
+        page.comp_phase14_primary_coverage.setEnabled(False)
+        page.comp_phase14_backup_coverage.setEnabled(False)
+        page.comp_phase14_coverage_source.setEnabled(False)
+        page._comp_phase14_loading_planning_controls = True
+        try:
+            page.comp_phase14_primary_coverage.setCurrentText("")
+            page.comp_phase14_backup_coverage.setCurrentText("")
+            page.comp_phase14_coverage_source.clear()
+        finally:
+            page._comp_phase14_loading_planning_controls = False
         page.comp_phase14_skill_seed_button.setVisible(False)
         page.comp_phase14_skill_seed_button.setEnabled(False)
         page._comp_phase14_skill_seed_candidate = None
@@ -966,6 +1048,14 @@ def _refresh_why(page) -> None:
     page.comp_phase14_why_header.setText(
         f"{player}  •  {slot}  •  {selected_class}"
     )
+    chair = _state_chair_for_row(page, row)
+    if chair is not None:
+        _refresh_selected_planning_controls(page, chair)
+        _refresh_skill_summary(
+            page,
+            chair,
+            fallback="Skills: no planned skills",
+        )
 
     try:
         from ui import comp_builder_build_candidate_support as candidate_support
@@ -990,7 +1080,11 @@ def _refresh_why(page) -> None:
             f"No source-backed recommendation is currently available for {role}. "
             "The slot remains intentionally unresolved."
         )
-        page.comp_phase14_skill_seed_label.setText("Skills: no eligible source")
+        _refresh_skill_summary(
+            page,
+            chair,
+            fallback="Skills: no eligible source",
+        )
         page.comp_phase14_skill_seed_button.setVisible(False)
         page.comp_phase14_skill_seed_button.setEnabled(False)
         page._comp_phase14_skill_seed_candidate = None
@@ -1037,7 +1131,6 @@ def _refresh_why(page) -> None:
 
     why_parts: list[str] = []
     state = getattr(page, "_comp_plan_state", None)
-    chair = _state_chair_for_row(page, row)
     proposal = None
     if state is not None and chair is not None:
         try:
@@ -1120,16 +1213,22 @@ def _refresh_why(page) -> None:
             skill_proposal = None
         current_skill_count = len(tuple(chair.planned_skills or ()))
         if current_skill_count:
-            page.comp_phase14_skill_seed_label.setText(
-                f"Skills: {current_skill_count} planned • preserved"
+            _refresh_skill_summary(
+                page,
+                chair,
+                fallback="Skills: no planned skills",
             )
         elif skill_proposal is not None:
-            page.comp_phase14_skill_seed_label.setText(
-                "Skills: " + skill_proposal.reason
+            _refresh_skill_summary(
+                page,
+                chair,
+                fallback="Skills: " + skill_proposal.reason,
             )
         else:
-            page.comp_phase14_skill_seed_label.setText(
-                "Skills: no complete skill package resolved"
+            _refresh_skill_summary(
+                page,
+                chair,
+                fallback="Skills: no complete skill package resolved",
             )
         can_seed = bool(skill_proposal is not None and skill_proposal.eligible)
         page.comp_phase14_skill_seed_button.setVisible(can_seed)
@@ -1784,6 +1883,57 @@ def _build_why(page, card: FoundryCard) -> None:
         lambda *_: _fill_empty_skills(page)
     )
     why_layout.addWidget(page.comp_phase14_skill_seed_button)
+
+    coverage_title = QLabel("PLANNED COVERAGE")
+    coverage_title.setProperty("sidebarHeading", True)
+    why_layout.addWidget(coverage_title)
+
+    coverage_row = QHBoxLayout()
+    coverage_row.setContentsMargins(0, 0, 0, 0)
+    coverage_row.setSpacing(6)
+
+    page.comp_phase14_primary_coverage = QComboBox()
+    page.comp_phase14_primary_coverage.setToolTip(
+        "Primary buff/debuff or unique support effect this chair is responsible for."
+    )
+    page.comp_phase14_primary_coverage.addItems(_coverage_assignment_choices())
+    page.comp_phase14_primary_coverage.currentTextChanged.connect(
+        lambda value: _set_selected_coverage_field(
+            page, "primary_assignment", value
+        )
+    )
+
+    page.comp_phase14_backup_coverage = QComboBox()
+    page.comp_phase14_backup_coverage.setToolTip(
+        "Backup buff/debuff or unique support effect for this chair."
+    )
+    page.comp_phase14_backup_coverage.addItems(_coverage_assignment_choices())
+    page.comp_phase14_backup_coverage.currentTextChanged.connect(
+        lambda value: _set_selected_coverage_field(
+            page, "secondary_assignment", value
+        )
+    )
+
+    coverage_row.addWidget(page.comp_phase14_primary_coverage, 1)
+    coverage_row.addWidget(page.comp_phase14_backup_coverage, 1)
+    why_layout.addLayout(coverage_row)
+
+    page.comp_phase14_coverage_source = QLineEdit()
+    page.comp_phase14_coverage_source.setPlaceholderText(
+        "Source, e.g. Crusher enchant, WW, class skill…"
+    )
+    page.comp_phase14_coverage_source.setToolTip(
+        "Planning shorthand only. This explains the intended source; it does not "
+        "replace the buff/debuff assignment itself."
+    )
+    page.comp_phase14_coverage_source.editingFinished.connect(
+        lambda: _set_selected_coverage_field(
+            page,
+            "assignment_source",
+            page.comp_phase14_coverage_source.text(),
+        )
+    )
+    why_layout.addWidget(page.comp_phase14_coverage_source)
 
     page.comp_phase14_refresh_sources = QPushButton("Load Current Ranked Builds")
     page.comp_phase14_refresh_sources.setProperty("primary", True)
