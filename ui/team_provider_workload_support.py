@@ -9,7 +9,7 @@ from services.btv_benchmark_evidence_service import (
     BTVBenchmarkEvidenceService,
     UPTIME_DENOMINATOR_UNKNOWN,
 )
-from services.build_service import BuildService
+from services.canonical_build_bridge import CanonicalBuildBridge
 from services.team_provider_rotation_workload_service import (
     TeamProviderRotationWorkload,
     TeamProviderRotationWorkloadComparison,
@@ -300,7 +300,11 @@ def _clear_provider_workload_evidence(page) -> None:
 def _comp_selected_saved_builds(page):
     """Resolve only exact saved candidates currently applied to Comp chairs."""
 
-    roster = BuildService(get_data_dir() / "builds.json").load().Members
+    data_dir = get_data_dir()
+    roster = CanonicalBuildBridge(
+        data_dir / "builds.json",
+        data_dir / "characters.json",
+    ).load().Members
     resolved = []
     seen: set[str] = set()
     for candidate in getattr(page, "_comp_applied_candidates", {}).values():
