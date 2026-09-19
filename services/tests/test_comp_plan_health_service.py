@@ -154,3 +154,108 @@ def test_comp_plan_health_detects_duplicate_effect_sources(monkeypatch, tmp_path
 
     assert "Major Courage" in health.duplicate_effects
     assert "Major Courage" in health.conditional_required
+
+
+def test_comp_assignment_review_distinguishes_planned_source_from_unproven_assignment(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (
+            SimpleNamespace(
+                source_name="Roaring Opportunist",
+                effect_key="major_slayer",
+            ),
+        ),
+    )
+
+    supported = CompPlanState(
+        raid_plan_id="supported",
+        raid_plan_name="Supported",
+        trial_id="Dreadsail Reef",
+        chairs=(
+            CompChairState(
+                seat_id="healer-1",
+                player_name="H1",
+                planned_gear_sets=("Perfected Roaring Opportunist",),
+                primary_assignment="Major Slayer",
+            ),
+        ),
+    )
+    supported_health = CompPlanHealthService(tmp_path / "eso.db").evaluate(supported)
+    supported_review = next(
+        row for row in supported_health.assignment_reviews
+        if row.effect_name == "Major Slayer"
+    )
+    assert supported_review.state == "assigned_conditional"
+    assert supported_review.supported_primary == ("healer-1",)
+    assert supported_review.unsupported_primary == ()
+
+    unproven = CompPlanState(
+        raid_plan_id="unproven",
+        raid_plan_name="Unproven",
+        trial_id="Dreadsail Reef",
+        chairs=(
+            CompChairState(
+                seat_id="healer-1",
+                player_name="H1",
+                planned_gear_sets=("Spell Power Cure",),
+                primary_assignment="Major Slayer",
+            ),
+        ),
+    )
+    unproven_health = CompPlanHealthService(tmp_path / "eso.db").evaluate(unproven)
+    unproven_review = next(
+        row for row in unproven_health.assignment_reviews
+        if row.effect_name == "Major Slayer"
+    )
+    assert unproven_review.state == "assigned_unproven"
+    assert unproven_review.unsupported_primary == ("healer-1",)
+
+
+def test_comp_assignment_review_detects_duplicate_primary_ownership(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (
+            SimpleNamespace(
+                source_name="Spell Power Cure",
+                effect_key="major_courage",
+            ),
+        ),
+    )
+
+    state = CompPlanState(
+        raid_plan_id="dupe-assignment",
+        raid_plan_name="Dupe Assignment",
+        trial_id="Sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="healer-1",
+                player_name="H1",
+                planned_gear_sets=("Spell Power Cure",),
+                primary_assignment="Major Courage",
+            ),
+            CompChairState(
+                seat_id="healer-2",
+                player_name="H2",
+                planned_gear_sets=("Spell Power Cure",),
+                primary_assignment="Major Courage",
+            ),
+        ),
+    )
+
+    health = CompPlanHealthService(tmp_path / "eso.db").evaluate(state)
+    review = next(
+        row for row in health.assignment_reviews
+        if row.effect_name == "Major Courage"
+    )
+
+    assert review.duplicate_primary is True
+    assert review.primary_seats == ("healer-1", "healer-2")
+    assert "Duplicate primary" in review.label
