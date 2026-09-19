@@ -806,6 +806,63 @@ def _set_choice_state(frame: QFrame, *, selected: bool, enabled: bool) -> None:
     )
 
 
+def _skill_seed_proposal(page, state, chair, candidate):
+    from services.comp_plan_skill_seed_service import CompPlanSkillSeedService
+
+    cache_key = (
+        state,
+        str(getattr(chair, "seat_id", "") or "").casefold(),
+        str(getattr(candidate, "candidate_id", "") or ""),
+        tuple(getattr(candidate, "skills", ()) or ()),
+        bool(getattr(candidate, "complete_build", False)),
+    )
+    cache = getattr(page, "_comp_phase14_skill_seed_cache", None)
+    if cache is not None and cache[0] == cache_key:
+        return cache[1]
+
+    proposal = CompPlanSkillSeedService().propose(
+        state=state,
+        seat_id=chair.seat_id,
+        candidate=candidate,
+    )
+    page._comp_phase14_skill_seed_cache = (cache_key, proposal)
+    return proposal
+
+
+def _fill_empty_skills(page) -> None:
+    row = _selected_backend_row(page)
+    if row < 0:
+        return
+    state = getattr(page, "_comp_plan_state", None)
+    chair = _state_chair_for_row(page, row)
+    candidate = getattr(page, "_comp_phase14_skill_seed_candidate", None)
+    if state is None or chair is None or candidate is None:
+        return
+
+    from services.comp_plan_skill_seed_service import CompPlanSkillSeedService
+
+    proposal = _skill_seed_proposal(page, state, chair, candidate)
+    updated, result = CompPlanSkillSeedService().apply(
+        state=state,
+        seat_id=chair.seat_id,
+        candidate=candidate,
+        proposal=proposal,
+    )
+    if updated == state:
+        page.status.warning(result.reason)
+        return
+
+    page._comp_plan_state = updated
+    page._comp_phase14_health_cache = None
+    page._comp_phase14_proposal_cache = None
+    page._comp_phase14_skill_seed_cache = None
+    page.status.success(
+        f"Filled {result.skill_count} planned skill(s) for {chair.seat_id} "
+        f"from {result.candidate_name}. Existing skills were not replaced."
+    )
+    _refresh_shell(page)
+
+
 def _apply_choice(page, frame: QFrame) -> None:
     candidate = getattr(frame, "_comp_candidate", None)
     row = _selected_backend_row(page)
@@ -830,6 +887,7 @@ def _apply_choice(page, frame: QFrame) -> None:
         page._comp_plan_state = updated
         page._comp_phase14_health_cache = None
         page._comp_phase14_proposal_cache = None
+        page._comp_phase14_skill_seed_cache = None
         if proposal.changes_anything:
             page._comp_applied_candidates[slot_name] = candidate
             bits = [f"Applied {_candidate_label(candidate)} to {slot_name}."]
@@ -881,6 +939,10 @@ def _refresh_why(page) -> None:
         page.comp_phase14_confidence.setText("No evidence")
         page.comp_phase14_role_footer.setText("No role selected")
         page.comp_phase14_why_text.setText("Select a player in Recommended Team Plan.")
+        page.comp_phase14_skill_seed_label.setText("Skills: no plan selected")
+        page.comp_phase14_skill_seed_button.setVisible(False)
+        page.comp_phase14_skill_seed_button.setEnabled(False)
+        page._comp_phase14_skill_seed_candidate = None
         page.comp_phase14_alt_one.setText("—")
         page.comp_phase14_alt_two.setText("—")
         for frame in (
@@ -928,6 +990,10 @@ def _refresh_why(page) -> None:
             f"No source-backed recommendation is currently available for {role}. "
             "The slot remains intentionally unresolved."
         )
+        page.comp_phase14_skill_seed_label.setText("Skills: no eligible source")
+        page.comp_phase14_skill_seed_button.setVisible(False)
+        page.comp_phase14_skill_seed_button.setEnabled(False)
+        page._comp_phase14_skill_seed_candidate = None
         page.comp_phase14_alt_one.setText(
             "No alternate recommendation resolved."
         )
@@ -1041,6 +1107,41 @@ def _refresh_why(page) -> None:
             "player, role, class, and trial."
         )
     page.comp_phase14_why_text.setText(" ".join(why_parts))
+
+    if state is not None and chair is not None:
+        try:
+            skill_proposal = _skill_seed_proposal(
+                page,
+                state,
+                chair,
+                preferred,
+            )
+        except (AttributeError, TypeError, ValueError):
+            skill_proposal = None
+        current_skill_count = len(tuple(chair.planned_skills or ()))
+        if current_skill_count:
+            page.comp_phase14_skill_seed_label.setText(
+                f"Skills: {current_skill_count} planned • preserved"
+            )
+        elif skill_proposal is not None:
+            page.comp_phase14_skill_seed_label.setText(
+                "Skills: " + skill_proposal.reason
+            )
+        else:
+            page.comp_phase14_skill_seed_label.setText(
+                "Skills: no complete skill package resolved"
+            )
+        can_seed = bool(skill_proposal is not None and skill_proposal.eligible)
+        page.comp_phase14_skill_seed_button.setVisible(can_seed)
+        page.comp_phase14_skill_seed_button.setEnabled(can_seed)
+        page._comp_phase14_skill_seed_candidate = preferred if can_seed else None
+    else:
+        page.comp_phase14_skill_seed_label.setText(
+            "Skills: canonical Raid Plan state required"
+        )
+        page.comp_phase14_skill_seed_button.setVisible(False)
+        page.comp_phase14_skill_seed_button.setEnabled(False)
+        page._comp_phase14_skill_seed_candidate = None
 
     _refresh_manual_set_picker(page, candidates)
 
@@ -1666,6 +1767,23 @@ def _build_why(page, card: FoundryCard) -> None:
     page.comp_phase14_why_text.setWordWrap(True)
     page.comp_phase14_why_text.setProperty("compPlanWhyText", True)
     why_layout.addWidget(page.comp_phase14_why_text)
+
+    page.comp_phase14_skill_seed_label = QLabel("Skills: no plan selected")
+    page.comp_phase14_skill_seed_label.setWordWrap(True)
+    page.comp_phase14_skill_seed_label.setProperty("compPlanSkillSeed", True)
+    why_layout.addWidget(page.comp_phase14_skill_seed_label)
+
+    page.comp_phase14_skill_seed_button = QPushButton("Fill Empty Skills")
+    page.comp_phase14_skill_seed_button.setVisible(False)
+    page.comp_phase14_skill_seed_button.setEnabled(False)
+    page.comp_phase14_skill_seed_button.setToolTip(
+        "Fill an empty planned-skill package from a saved build or complete reference. "
+        "Existing planned skills are never replaced."
+    )
+    page.comp_phase14_skill_seed_button.clicked.connect(
+        lambda *_: _fill_empty_skills(page)
+    )
+    why_layout.addWidget(page.comp_phase14_skill_seed_button)
 
     page.comp_phase14_refresh_sources = QPushButton("Load Current Ranked Builds")
     page.comp_phase14_refresh_sources.setProperty("primary", True)
