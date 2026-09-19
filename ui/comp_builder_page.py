@@ -153,6 +153,13 @@ class CompBuilderPage(FoundryPage):
             if difficulty_index >= 0:
                 self.difficulty_combo.setCurrentIndex(difficulty_index)
 
+        from services.comp_plan_state_service import CompPlanStateService
+
+        self._comp_plan_state = CompPlanStateService.from_raid_plan(
+            plan,
+            achievement_goal=self.goal_combo.currentText().strip() or None,
+        )
+
         members = tuple(
             SimpleNamespace(
                 Id=None,
@@ -171,10 +178,22 @@ class CompBuilderPage(FoundryPage):
             if str(member.eso_class or "").strip()
         }
         self._comp_class_constraint_by_slot = dict(self._raid_plan_class_by_seat)
+        from services.comp_builder_build_candidates import _five_piece_set_names
+
         self._comp_manual_gear_sets_by_slot = {
-            self._seat_label(member.seat_id): tuple(member.planned_gear_sets or ())
+            self._seat_label(member.seat_id): tuple(
+                _five_piece_set_names(
+                    get_data_dir() / "eso.db",
+                    tuple(member.planned_gear_sets or ()),
+                )[:2]
+            )
             for member in plan.members
-            if tuple(member.planned_gear_sets or ())
+            if tuple(
+                _five_piece_set_names(
+                    get_data_dir() / "eso.db",
+                    tuple(member.planned_gear_sets or ()),
+                )
+            )
         }
 
         apply_context = getattr(self, "apply_roster_team_context", None)
@@ -183,10 +202,22 @@ class CompBuilderPage(FoundryPage):
 
         # Roster intake may rebuild chair state. Reassert exact Raid Plan ownership
         # after that rebuild so classes and planned gear cannot be replaced by defaults.
+        from services.comp_builder_build_candidates import _five_piece_set_names
+
         self._comp_manual_gear_sets_by_slot = {
-            self._seat_label(member.seat_id): tuple(member.planned_gear_sets or ())
+            self._seat_label(member.seat_id): tuple(
+                _five_piece_set_names(
+                    get_data_dir() / "eso.db",
+                    tuple(member.planned_gear_sets or ()),
+                )[:2]
+            )
             for member in plan.members
-            if tuple(member.planned_gear_sets or ())
+            if tuple(
+                _five_piece_set_names(
+                    get_data_dir() / "eso.db",
+                    tuple(member.planned_gear_sets or ()),
+                )
+            )
         }
 
         try:
