@@ -71,7 +71,7 @@ def test_generated_roster_draft_persists_saved_and_recruit_slots(tmp_path) -> No
     assert loaded.slots == slots
     assert service.list_plan_names() == ("Godslayer Prescribed Roster",)
     assert service.latest_plan() == loaded
-    assert RosterService(service.db).list_team_names() == ["Godslayer Prescribed Roster"]
+    assert RosterService(service.db).list_team_names() == []
 
 
 def test_generated_draft_round_trips_structured_candidate_evidence(tmp_path) -> None:
@@ -119,7 +119,7 @@ def test_generated_draft_round_trips_structured_candidate_evidence(tmp_path) -> 
     assert loaded.slots[0].mundus == "The Atronach"
 
 
-def test_generated_draft_team_identity_does_not_fabricate_roster_members(tmp_path) -> None:
+def test_generated_draft_does_not_fabricate_roster_team_identity_or_members(tmp_path) -> None:
     service = _service(tmp_path)
     service.save_plan(
         name="GH Prog",
@@ -138,7 +138,7 @@ def test_generated_draft_team_identity_does_not_fabricate_roster_members(tmp_pat
     )
 
     roster = RosterService(service.db)
-    assert roster.list_team_names() == ["GH Prog"]
+    assert roster.list_team_names() == []
     assert roster.list_members() == []
 
 
@@ -190,4 +190,4 @@ def test_resending_same_named_draft_replaces_slots_instead_of_duplicating(tmp_pa
     assert loaded.difficulty == "Veteran Hardmode"
     assert loaded.slots == replacement
     assert service.list_plan_names() == ("Godslayer Prescribed Roster",)
-    assert RosterService(service.db).list_team_names() == ["Godslayer Prescribed Roster"]
+    assert RosterService(service.db).list_team_names() == []
