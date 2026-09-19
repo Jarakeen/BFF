@@ -147,11 +147,19 @@ class CoveragePage(FoundryPage):
         self.summary_card = FoundryCard("Coverage Summary", "✓").set_watermark("compass", 0.055)
         self.providers_card = FoundryCard("Identified Static Sources", "♜").set_watermark("compass", 0.045)
         notes = FoundryCard("Coverage Notes", "✎").make_parchment().set_watermark("feather", 0.11)
-        notes.addWidget(QLabel(
+        notes.set_body_margins(12, 3, 12, 10)
+        self.coverage_notes_label = QLabel(
             "• This fixed watch list shows only canonically resolved saved-build effects.\n"
             "• Static availability does not assign a player or prove uptime.\n"
             "• Review conditional and unverified effects before planning a pull."
-        ))
+        )
+        self.coverage_notes_label.setProperty("coverageNotesBody", True)
+        self.coverage_notes_label.setWordWrap(True)
+        self.coverage_notes_label.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
+        )
+        notes.addWidget(self.coverage_notes_label)
+        notes.addStretch(1)
         lower.addWidget(self.summary_card, 2)
         lower.addWidget(self.providers_card, 2)
         lower.addWidget(notes, 2)
