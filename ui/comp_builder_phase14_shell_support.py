@@ -986,14 +986,9 @@ def _apply_choice(page, frame: QFrame) -> None:
         _refresh_shell(page)
         return
 
-    from ui import comp_builder_build_candidate_support as candidate_support
-
-    legacy_slot = candidate_support._set_candidate_for_row(page, row, candidate)
-    page.status.success(
-        f"Applied {_candidate_label(candidate)} to {legacy_slot}. "
-        "The plan now uses this gear recommendation."
+    page.status.error(
+        "Selected-chair Apply requires canonical Comp planning state."
     )
-    _refresh_shell(page)
 
 
 def _refresh_why(page) -> None:
@@ -1490,73 +1485,17 @@ def _refresh_health(page) -> None:
                 page.comp_phase14_health_recruit_detail.setText("All player slots filled")
             return
 
-    # Compatibility fallback only for unsupported state-less legacy sessions.
-    # Bound and unbound Phase 14 planning both use canonical CompPlanState above.
-    try:
-        from ui import comp_builder_polish_support as polish
-        from ui import team_progress_support
-        from ui.components.team_progress_panels import coverage_from_declared_text
-
-        declared = coverage_from_declared_text(team_progress_support._comp_declared_rows(page))
-        assigned = polish.coverage_from_candidate_rows(_effective_coverage_rows(page))
-        merged = polish.merge_coverage(assigned, declared)
-    except (AttributeError, ImportError, TypeError, ValueError):
-        merged = ()
-
-    covered = [item for item in merged if item.covered]
-    missing = [item for item in merged if not item.covered]
-    total = len(merged)
-    page.comp_phase14_health_covered.setText(
-        f"Covered {len(covered)} / {total}" if total else "Coverage unresolved"
+    page.comp_phase14_health_covered.setText("Unavailable")
+    page.comp_phase14_health_covered_detail.setText(
+        "Canonical Comp state could not be evaluated"
     )
-    page.comp_phase14_health_covered_detail.setText("Legacy ad-hoc coverage projection")
+    page.comp_phase14_health_missing.setText("—")
+    page.comp_phase14_health_missing_detail.setText("No legacy fallback is used")
+    page.comp_phase14_health_duplicate.setText("—")
+    page.comp_phase14_health_duplicate_detail.setText("Canonical state required")
+    page.comp_phase14_health_recruit.setText("—")
+    page.comp_phase14_health_recruit_detail.setText("Canonical state required")
 
-    first_missing = missing[0].name if missing else "None"
-    page.comp_phase14_health_missing.setText(first_missing)
-    page.comp_phase14_health_missing_detail.setText(
-        "No source in current plan" if missing else "No tracked gaps"
-    )
-
-    set_counts: Counter[str] = Counter()
-    for row in range(page.matrix_table.rowCount()):
-        for gear in _effective_sets_for_row(page, row):
-            if gear:
-                set_counts[str(gear)] += 1
-    duplicates = [name for name, count in set_counts.items() if count > 1]
-    page.comp_phase14_health_duplicate.setText(duplicates[0] if duplicates else "None")
-    page.comp_phase14_health_duplicate_detail.setText(
-        "Legacy duplicate set projection" if duplicates else "No duplicated tracked set"
-    )
-
-    recruits: list[tuple[str, str, bool]] = []
-    for row in range(page.matrix_table.rowCount()):
-        player = page._cell_text(row, 11).strip()
-        if not player or player.casefold().startswith("recruit"):
-            role = page._cell_text(row, 1) or "Open role"
-            selected_class = page._selected_class(row)
-            need = role if selected_class == "Any class" else f"{selected_class} {role}"
-            has_gear = bool(_effective_sets_for_row(page, row))
-            recruits.append((player or "Recruit", need, has_gear))
-
-    unresolved_gear = [row for row in recruits if not row[2]]
-    if unresolved_gear:
-        page.comp_phase14_health_recruit.setText(
-            f"{len(unresolved_gear)} gear gap"
-            if len(unresolved_gear) == 1
-            else f"{len(unresolved_gear)} gear gaps"
-        )
-        page.comp_phase14_health_recruit_detail.setText(
-            f"{len(recruits)} open player seat(s) • "
-            f"{len(recruits) - len(unresolved_gear)} already have planned gear"
-        )
-    elif recruits:
-        page.comp_phase14_health_recruit.setText(f"{len(recruits)} open player seat(s)")
-        page.comp_phase14_health_recruit_detail.setText(
-            "All open seats already have planned gear / setup"
-        )
-    else:
-        page.comp_phase14_health_recruit.setText("None")
-        page.comp_phase14_health_recruit_detail.setText("All player slots filled")
 
 def _refresh_shell(page) -> None:
     if not hasattr(page, "comp_phase14_plan_table"):
