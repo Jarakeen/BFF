@@ -151,3 +151,27 @@ def test_phase14_team_health_surfaces_assignment_proof_and_duplicate_primary() -
     assert '" • source not proven"' in health
     assert "review.duplicate_primary" in health
     assert '"Multiple primary assignments: "' in health
+
+
+def test_canonical_autofill_uses_comp_state_and_preserves_legacy_as_fallback() -> None:
+    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'state = getattr(page, "_comp_plan_state", None)' in source
+    assert "CompPlanAutoFillService().apply(" in source
+    assert "page._comp_plan_state = result.state" in source
+    assert "result.skipped_existing" in source
+    assert "Legacy/ad-hoc path remains temporarily unchanged in ownership." in source
+    assert "support._set_candidate_for_row(page, row, candidate)" in source
+
+
+def test_canonical_autofill_uses_primary_assignments_as_chair_local_constraints() -> None:
+    source = Path("ui/comp_builder_team_candidate_optimizer_support.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "assignment = str(chair.primary_assignment or \"\").strip()" in source
+    assert "provider_resolution_by_slot[chair.seat_id] = assignment_resolution" in source
+    assert "local_required = provider_resolution.provider_ids" in source
+    assert "Explicit primary Assignments are stronger" in source
