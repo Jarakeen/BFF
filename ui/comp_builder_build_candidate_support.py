@@ -188,11 +188,19 @@ def _first_unused_candidate(
 
 
 def _used_saved_players(page) -> set[str]:
-    return {
+    state = getattr(page, "_comp_plan_state", None)
+    canonical = {
+        str(chair.build_source_name or "").strip().casefold()
+        for chair in tuple(getattr(state, "chairs", ()) or ())
+        if str(chair.build_source_kind or "").strip().casefold() == "saved_build"
+        and str(chair.build_source_name or "").strip()
+    }
+    mirror = {
         key
         for candidate in getattr(page, "_comp_applied_candidates", {}).values()
         if (key := _saved_player_key(candidate))
     }
+    return canonical | mirror
 
 
 def _format_candidates(page) -> str:
@@ -217,6 +225,16 @@ def _format_candidates(page) -> str:
         "Saved builds and versioned references are ranked for relevance. This is not yet combat optimization.",
     ]
     applied = getattr(page, "_comp_applied_candidates", {}).get(slot_name)
+    chair = _state_chair_for_row(page, row)
+    if applied is None and chair is not None and chair.candidate_id:
+        applied = next(
+            (
+                candidate
+                for candidate in candidates
+                if candidate.candidate_id == chair.candidate_id
+            ),
+            None,
+        )
     if applied is not None:
         lines.append(f"APPLIED TO CHAIR: {applied.name} • {_source_label(applied)}")
     lines.append("")
@@ -369,7 +387,11 @@ def _set_candidate_for_row(page, row: int, candidate: CompBuildCandidate) -> str
     changes: dict[str, object] = {}
     blocked_fields: tuple[str, ...] = ()
 
-    if chair is not None:
+    if chair is None:
+        page.status.error(
+            f"{slot_name}: candidate application requires canonical Comp planning state."
+        )
+    else:
         changes = _candidate_state_changes(chair, candidate)
         blocked_fields = tuple(
             field
@@ -378,11 +400,8 @@ def _set_candidate_for_row(page, row: int, candidate: CompBuildCandidate) -> str
         )
         if changes:
             _replace_state_chair(page, chair.with_changes(**changes))
+            # Compatibility cache for older presentation helpers only.
             page._comp_applied_candidates[slot_name] = candidate
-    else:
-        # Unsupported state-less legacy compatibility only.
-        page._comp_applied_candidates[slot_name] = candidate
-        changes = {"legacy": True}
 
     page._comp_last_candidate_apply_changed = bool(changes)
     page._comp_last_candidate_apply_blocked_fields = blocked_fields
