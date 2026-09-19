@@ -185,3 +185,18 @@ def test_raid_plan_coverage_includes_explicit_planned_skill_and_class_evidence()
     assert "planned_skill_lines" in planned
     assert "passive.skill_line" in planned
     assert "class alone" not in planned.casefold()
+
+
+def test_coverage_can_display_generic_assignment_source_annotation() -> None:
+    model = Path("models/raid_plan.py").read_text(encoding="utf-8")
+    assignments = Path("ui/city_raid_assignments_page.py").read_text(encoding="utf-8")
+    scope = Path("services/raid_plan_coverage_scope_service.py").read_text(encoding="utf-8")
+    coverage = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
+
+    assert "assignment_source: str | None = None" in model
+    assert 'form.addRow("Source", self.selected_assignment_source)' in assignments
+    assert "assignment_source=assignment_source or None" in assignments
+    assert "_assignment_source_by_seat" in assignments
+    assert "def source_note_for(" in scope
+    assert "member.assignment_source" in scope
+    assert 'f"{provider} • {scope.source_note_for(effect, provider)}"' in coverage
