@@ -90,28 +90,14 @@ def bootstrap_team_optimization_extensions() -> None:
     )
     install_comp_builder_send_feedback()
 
-    # The retired generated-plan Roster dropdown is not part of the Phase 14
-    # Comp -> Raid Plan workflow. Keep its compatibility module uninstalled.
+    # The retired generated-plan Roster workflow is not part of the Phase 14
+    # Comp -> Raid Plan path. Its dropdown, assignment-detail, recruit-adoption,
+    # and recruit-prescription decorators remain compatibility-only and uninstalled.
 
     from ui.roster_template_button_cleanup_support import (
         install as install_roster_template_button_cleanup,
     )
     install_roster_template_button_cleanup()
-
-    from ui.roster_assignment_build_details_support import (
-        install as install_roster_assignment_build_details,
-    )
-    install_roster_assignment_build_details()
-
-    from ui.roster_recruit_adoption_support import (
-        install as install_roster_recruit_adoption,
-    )
-    install_roster_recruit_adoption()
-
-    from ui.roster_recruit_prescription_details_support import (
-        install as install_roster_recruit_prescription_details,
-    )
-    install_roster_recruit_prescription_details()
 
     from ui.comp_builder_rylo_support import install as install_comp_builder_rylo
     install_comp_builder_rylo()
