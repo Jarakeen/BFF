@@ -91,6 +91,22 @@ def _candidate_matches_roster_member(candidate: CompBuildCandidate, member, *, r
         return False
     if member is None or candidate.source_kind != "saved_build":
         return True
+
+    member_player_id = str(
+        getattr(member, "CanonicalPlayerId", "") or ""
+    ).strip().casefold()
+    member_character_id = str(
+        getattr(member, "CanonicalCharacterId", "") or ""
+    ).strip().casefold()
+    candidate_player_id = str(candidate.saved_player_id or "").strip().casefold()
+    candidate_character_id = str(candidate.saved_character_id or "").strip().casefold()
+
+    if member_player_id and candidate_player_id:
+        return member_player_id == candidate_player_id
+    if member_character_id and candidate_character_id:
+        return member_character_id == candidate_character_id
+
+    # Compatibility-only fallback for historical roster rows that predate canonical ids.
     identities = {
         " ".join(str(value or "").strip().casefold().split())
         for value in (
@@ -170,7 +186,16 @@ def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
 def _saved_player_key(candidate: CompBuildCandidate) -> str:
     if candidate.source_kind != "saved_build":
         return ""
-    return str(candidate.source_name or "").strip().casefold()
+    for value in (
+        candidate.saved_player_id,
+        candidate.saved_character_id,
+        candidate.saved_build_id,
+        candidate.candidate_id,
+    ):
+        key = str(value or "").strip().casefold()
+        if key:
+            return key
+    return ""
 
 
 def _first_unused_candidate(
@@ -190,10 +215,18 @@ def _first_unused_candidate(
 def _used_saved_players(page) -> set[str]:
     state = getattr(page, "_comp_plan_state", None)
     canonical = {
-        str(chair.build_source_name or "").strip().casefold()
+        key
         for chair in tuple(getattr(state, "chairs", ()) or ())
         if str(chair.build_source_kind or "").strip().casefold() == "saved_build"
-        and str(chair.build_source_name or "").strip()
+        if (
+            key := str(
+                chair.player_id
+                or chair.character_id
+                or chair.selected_build_id
+                or chair.candidate_id
+                or ""
+            ).strip().casefold()
+        )
     }
     mirror = {
         key
@@ -298,6 +331,7 @@ def _candidate_state_changes(chair, candidate: CompBuildCandidate) -> dict:
         changes["eso_class"] = candidate.eso_class
     if not chair.is_locked("build"):
         if candidate.source_kind == "saved_build":
+            changes["selected_build_id"] = candidate.saved_build_id or None
             changes["selected_build_name"] = candidate.name
         changes.update(
             build_source_kind=candidate.source_kind,
