@@ -64,13 +64,18 @@ class CanonicalBuildBridge:
             # again on the same load.
             roster = self.enchantment_compatibility.normalize_roster(self._load_legacy())
             if roster.Members:
-                self.sync_from_roster(roster)
-                return roster
+                catalog = self.sync_from_roster(roster)
+                return self.enchantment_compatibility.normalize_roster(
+                    self._roster_from_catalog(catalog)
+                )
             return canonical_roster
 
         roster = self.enchantment_compatibility.normalize_roster(self._load_legacy())
         if roster.Members:
-            self.sync_from_roster(roster)
+            catalog = self.sync_from_roster(roster)
+            return self.enchantment_compatibility.normalize_roster(
+                self._roster_from_catalog(catalog)
+            )
         return roster
 
     def save(self, roster: BuildRoster) -> None:
