@@ -273,8 +273,21 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
         for member in getattr(plan, "members", ()) or ()
         if str(getattr(member, "eso_class", "") or "").strip()
     }
-    planned_sets_by_seat = {
-        next(
+    # The manual Comp picker owns ordinary five-piece overrides only. Do not seed
+    # monster/mythic/arena sets into its two slots or truncate a full Raid Plan package.
+    from services.comp_builder_build_candidates import _five_piece_set_names
+    from engine.config import get_data_dir
+
+    planned_sets_by_seat = {}
+    for member in getattr(plan, "members", ()) or ():
+        planned = tuple(
+            str(value).strip()
+            for value in (getattr(member, "planned_gear_sets", ()) or ())
+            if str(value).strip()
+        )
+        if not planned:
+            continue
+        seat_name = next(
             (
                 seat
                 for seat in canonical_seats
@@ -282,14 +295,10 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
                 == str(getattr(member, "seat_id", "") or "").strip().casefold()
             ),
             str(getattr(member, "seat_id", "") or "").strip(),
-        ): tuple(
-            str(value).strip()
-            for value in (getattr(member, "planned_gear_sets", ()) or ())
-            if str(value).strip()
-        )[:2]
-        for member in getattr(plan, "members", ()) or ()
-        if getattr(member, "planned_gear_sets", ())
-    }
+        )
+        five_piece = _five_piece_set_names(get_data_dir() / "eso.db", planned)
+        if five_piece:
+            planned_sets_by_seat[seat_name] = tuple(five_piece[:2])
 
     comp._raid_plan_class_by_seat = dict(class_by_seat)
     comp._comp_class_constraint_by_slot = dict(class_by_seat)
