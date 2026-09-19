@@ -145,8 +145,20 @@ def test_raid_plan_coverage_counts_planned_and_conditional_effects_as_present() 
     source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
 
     assert "review.counts_as_planned_coverage" in source
-    assert '"PLANNED / PRESENT  {planned_present}' in source
+    assert '"COVERED  {planned_present}' in source
     assert '"ASSIGNED • RUNTIME UNPROVEN  {assigned_unproven}' in source
     assert '"MISSING  {unassigned_gaps}' in source
     assert '"Planned: " + ", ".join(review.primary)' in source
     assert "Assigned provider counts as planned coverage" in source
+
+
+def test_coverage_assignment_service_exposes_binary_planning_state() -> None:
+    source = Path("services/raid_plan_coverage_assignment_service.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "def coverage_state(self) -> str:" in source
+    assert 'return "covered" if self.state != "gap" else "missing"' in source
+    assert 'label = "Covered • Conditional"' in source
+    assert 'label = "Covered • Planned"' in source
+    assert 'label = "Missing • No provider"' in source
