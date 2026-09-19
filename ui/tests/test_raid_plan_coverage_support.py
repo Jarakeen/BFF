@@ -139,3 +139,14 @@ def test_coverage_scope_picker_contains_saved_raid_plans_only() -> None:
     assert "All Saved Builds" not in refresh
     assert "_sync_team_choices(page)" not in enhance
     assert "Coverage evaluates saved Raid Plans only." in base
+
+
+def test_raid_plan_coverage_counts_planned_and_conditional_effects_as_present() -> None:
+    source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
+
+    assert "review.counts_as_planned_coverage" in source
+    assert '"PLANNED / PRESENT  {planned_present}' in source
+    assert '"ASSIGNED • RUNTIME UNPROVEN  {assigned_unproven}' in source
+    assert '"MISSING  {unassigned_gaps}' in source
+    assert '"Planned: " + ", ".join(review.primary)' in source
+    assert "Assigned provider counts as planned coverage" in source
