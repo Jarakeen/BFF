@@ -148,8 +148,9 @@ class CompPlanAutoFillService:
                 candidate_id=candidate.candidate_id,
             )
 
-        # Skill-package adoption remains deliberately deferred. Candidate skills are
-        # evidence only until the later ESO Logs / skill-evidence pass is implemented.
+        # Skills are adopted only when this chair has an explicit assigned provider
+        # responsibility and the selected candidate carries known skill evidence.
+        # Generic roster fill continues to leave skills untouched.
         return changes
 
     def apply(
