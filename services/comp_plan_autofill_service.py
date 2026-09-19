@@ -23,6 +23,11 @@ def _clean(value: object) -> str:
     return " ".join(str(value or "").strip().split())
 
 
+def _seat_key(value: object) -> str:
+    text = _clean(value).casefold().replace("_", " ").replace("-", " ")
+    return "-".join(text.split())
+
+
 def _same_identity(left: object, right: object) -> bool:
     a = _clean(left).casefold()
     b = _clean(right).casefold()
@@ -138,7 +143,15 @@ class CompPlanAutoFillService:
         open_pools: list[CompTeamCandidatePool] = []
         skipped: list[str] = []
         for pool in pools:
-            chair = state.chair(pool.slot_name)
+            wanted = _seat_key(pool.slot_name)
+            chair = next(
+                (
+                    item
+                    for item in state.chairs
+                    if _seat_key(item.seat_id) == wanted
+                ),
+                None,
+            )
             if chair is None:
                 continue
             if not self.chair_is_open_for_build_autofill(chair):
@@ -162,7 +175,15 @@ class CompPlanAutoFillService:
             candidate = assignment.candidate
             if candidate is None:
                 continue
-            chair = updated.chair(assignment.slot_name)
+            wanted = _seat_key(assignment.slot_name)
+            chair = next(
+                (
+                    item
+                    for item in updated.chairs
+                    if _seat_key(item.seat_id) == wanted
+                ),
+                None,
+            )
             if chair is None:
                 continue
             field_changes = self._candidate_changes(chair, candidate)
