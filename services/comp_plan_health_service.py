@@ -15,6 +15,10 @@ from services.raid_planned_gear_coverage_service import (
     PlannedGearCoverageProvider,
     RaidPlannedGearCoverageService,
 )
+from services.raid_planned_skill_coverage_service import (
+    PlannedSkillCoverageProvider,
+    RaidPlannedSkillCoverageService,
+)
 from services.raid_unique_support_set_catalog import (
     UNIQUE_SUPPORT_SET_BY_NAME,
     UNIQUE_SUPPORT_SET_NAMES,
@@ -76,6 +80,7 @@ class CompPlanHealthService:
 
     def __init__(self, database_path: Path) -> None:
         self.planned_gear = RaidPlannedGearCoverageService(database_path)
+        self.planned_skills = RaidPlannedSkillCoverageService(database_path)
 
     def _assignment_reviews(
         self,
@@ -94,6 +99,19 @@ class CompPlanHealthService:
             effects_by_seat[chair.seat_id.casefold()] = set(
                 self.planned_gear.effects_for_provider(
                     row,
+                    effect_names=_EFFECT_NAMES,
+                )
+            )
+            planned_skill = PlannedSkillCoverageProvider(
+                seat_id=chair.seat_id,
+                provider_label=chair.character_name or chair.player_name or chair.seat_id,
+                eso_class=chair.eso_class,
+                skills=chair.planned_skills,
+            )
+            effects_by_seat[chair.seat_id.casefold()].update(
+                effect_name
+                for effect_name, _source in self.planned_skills.effects_for_provider(
+                    planned_skill,
                     effect_names=_EFFECT_NAMES,
                 )
             )
@@ -182,6 +200,21 @@ class CompPlanHealthService:
         snapshot = self.planned_gear.overlay(
             snapshot,
             planned_rows,
+            effect_names=_EFFECT_NAMES,
+        )
+        planned_skill_rows = tuple(
+            PlannedSkillCoverageProvider(
+                seat_id=chair.seat_id,
+                provider_label=chair.character_name or chair.player_name or chair.seat_id,
+                eso_class=chair.eso_class,
+                skills=chair.planned_skills,
+            )
+            for chair in state.chairs
+            if chair.planned_skills or chair.eso_class
+        )
+        snapshot = self.planned_skills.overlay(
+            snapshot,
+            planned_skill_rows,
             effect_names=_EFFECT_NAMES,
         )
 
