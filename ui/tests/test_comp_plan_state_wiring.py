@@ -134,13 +134,13 @@ def test_phase14_team_health_reads_canonical_comp_state_before_legacy_fallback()
         "def _refresh_shell(page) -> None:", 1
     )[0]
     assert 'state = getattr(page, "_comp_plan_state", None)' in health
-    assert "CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)" in health
+    assert "health = _cached_comp_health(page, state)" in health
     assert "health.conditional_required" in health
     assert "health.missing_required" in health
     assert "health.duplicate_effects" in health
     assert "health.open_player_seats" in health
     assert "Compatibility fallback for ad-hoc/unbound Comp sessions" in health
-    assert health.index("CompPlanHealthService(DEFAULT_DATABASE).evaluate(state)") < health.index(
+    assert health.index("health = _cached_comp_health(page, state)") < health.index(
         "Compatibility fallback for ad-hoc/unbound Comp sessions"
     )
 
@@ -338,3 +338,19 @@ def test_comp_shell_memoizes_team_health_and_selected_candidate_proposals() -> N
     assert "current_health: CompPlanHealth | None = None" in adviser
     assert "current_health = current_health or self.health.evaluate(state)" in adviser
     assert "proposal: CompCandidateProposal | None = None" in adviser
+
+
+def test_selected_chair_candidate_discovery_is_cached_by_relevant_inputs() -> None:
+    source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+
+    chair = source.split("def _chair_candidates(page, row: int)", 1)[1].split(
+        "def _saved_player_key", 1
+    )[0]
+    assert 'cache = getattr(page, "_comp_chair_candidate_cache", None)' in chair
+    assert "observed_gear" in chair
+    assert "observed_skills" in chair
+    assert "member_key" in chair
+    assert "preferred_class" in chair
+    assert "goal" in chair
+    assert "if cache_key in cache:" in chair
+    assert "if len(cache) >= 64:" in chair
