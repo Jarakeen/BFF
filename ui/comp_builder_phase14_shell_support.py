@@ -1313,23 +1313,33 @@ def _materialize_visible_recommendations(page) -> int:
 
 
 def _save_to_originating_raid_plan(page) -> None:
-    """Save current Comp Builder choices to the bound or newly named Raid Plan.
+    """Save current Comp choices without silently applying recommendations.
 
-    This is a UI persistence boundary: failures must be reported on-page rather than
-    escaping the Qt click handler and terminating the application.
+    Raid Plan-bound sessions persist canonical CompPlanState directly. The generated
+    draft path remains only as a compatibility fallback for ad-hoc/unbound sessions.
     """
-    from ui import comp_builder_build_candidate_support as candidate_support
-
     try:
-        _materialize_visible_recommendations(page)
-        draft = candidate_support.save_generated_plan(page)
         window = page.window()
-        persist = getattr(window, "_persist_generated_comp_plan_to_raid_plan", None)
-        if not callable(persist):
-            page.status.error("Raid Plan save bridge is unavailable.")
-            return
+        state = getattr(page, "_comp_plan_state", None)
+        if state is not None:
+            persist_state = getattr(window, "_persist_comp_plan_state_to_raid_plan", None)
+            if not callable(persist_state):
+                page.status.error("Canonical Raid Plan save bridge is unavailable.")
+                return
+            plan = persist_state(navigate=False)
+        else:
+            from ui import comp_builder_build_candidate_support as candidate_support
 
-        plan = persist(draft.name, navigate=False)
+            draft = candidate_support.save_generated_plan(page)
+            persist_legacy = getattr(
+                window,
+                "_persist_generated_comp_plan_to_raid_plan",
+                None,
+            )
+            if not callable(persist_legacy):
+                page.status.error("Legacy Comp save bridge is unavailable.")
+                return
+            plan = persist_legacy(draft.name, navigate=False)
     except Exception as exc:
         page.status.error(
             f"Could not save Comp Builder plan: {type(exc).__name__}: {exc}"
