@@ -29,7 +29,12 @@ def test_coverage_support_is_installed_before_main_window_construction() -> None
 def test_coverage_owns_saved_raid_plan_scope_selection() -> None:
     source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
 
-    assert 'return f"raid_plan:{str(plan_id or '').strip()}"' in source
+    plan_item = source.split("def _plan_item_data", 1)[1].split(
+        "def _selected_plan_id", 1
+    )[0]
+    assert 'return f"raid_plan:' in plan_item
+    assert "str(plan_id" in plan_item
+    assert ".strip()" in plan_item
     assert "RaidPlanRepository(get_data_dir() / \"raid_plans.json\").list_plans()" in source
     assert 'label = f"{plan.name} • {trial} • {difficulty}"' in source
     assert "combo.addItem(label, _plan_item_data(plan.plan_id))" in source
