@@ -75,6 +75,11 @@ class CompPlanHealth:
         return len(self.planned_required)
 
 
+def required_effect_names() -> tuple[str, ...]:
+    """Return the current Comp Team Health default-required planning effects."""
+    return _REQUIRED_EFFECTS
+
+
 class CompPlanHealthService:
     """Evaluate exactly the state Comp Maker will save, not legacy UI projections."""
 
@@ -300,4 +305,5 @@ __all__ = [
     "CompAssignmentHealthReview",
     "CompPlanHealth",
     "CompPlanHealthService",
+    "required_effect_names",
 ]
