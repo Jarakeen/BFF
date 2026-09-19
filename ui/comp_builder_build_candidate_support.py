@@ -279,8 +279,9 @@ def _candidate_state_changes(chair, candidate: CompBuildCandidate) -> dict:
     if not chair.is_locked("class") and candidate.eso_class:
         changes["eso_class"] = candidate.eso_class
     if not chair.is_locked("build"):
+        if candidate.source_kind == "saved_build":
+            changes["selected_build_name"] = candidate.name
         changes.update(
-            selected_build_name=candidate.name,
             build_source_kind=candidate.source_kind,
             build_source_name=candidate.source_name,
             build_source_url=candidate.source_url,
