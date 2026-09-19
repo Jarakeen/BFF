@@ -72,6 +72,10 @@ def test_saved_build_and_reference_template_merge_for_matching_chair(tmp_path) -
 
     assert [candidate.name for candidate in candidates] == ["DF Healer", "Reference Warden"]
     assert candidates[0].source_kind == "saved_build"
+    assert candidates[0].saved_player_id
+    assert candidates[0].saved_character_id
+    assert candidates[0].saved_build_id
+    assert candidates[0].candidate_id == f"saved:{candidates[0].saved_build_id}"
     assert "Spell Power Cure" in candidates[0].gear_sets
     assert "Pillager's Profit" in candidates[0].gear_sets
     assert "Combat Prayer" in candidates[0].skills
