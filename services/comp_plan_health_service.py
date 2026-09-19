@@ -138,7 +138,7 @@ class CompPlanHealthService:
                 label = "Backup only"
             elif effect_name in available_effects:
                 state_name = "unassigned_available"
-                label = "Present • Unassigned"
+                label = "Covered • Unassigned"
             else:
                 state_name = "gap"
                 label = "Gap • No provider"
