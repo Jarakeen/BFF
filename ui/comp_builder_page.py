@@ -223,8 +223,12 @@ class CompBuilderPage(FoundryPage):
         self._comp_manual_gear_sets_by_slot = dict(planned_five_piece_sets)
 
         apply_context = getattr(self, "apply_roster_team_context", None)
-        if callable(apply_context):
-            apply_context(plan.name, members, group_size=12)
+        self._comp_loading_plan = True
+        try:
+            if callable(apply_context):
+                apply_context(plan.name, members, group_size=12)
+        finally:
+            self._comp_loading_plan = False
 
         # Roster intake may rebuild chair state. Reassert exact Raid Plan ownership
         # after that rebuild so classes and planned gear cannot be replaced by defaults.
