@@ -339,12 +339,19 @@ Each row should expose lock state without adding a forest of controls.
 Show:
 
 - current locked/current choices
+- direct searchable Gear Catalog assignment
+- current planned gear with explicit remove controls
 - what this chair currently contributes
 - recommendation
 - alternatives
 - gain/loss to the whole team
 - evidence source/confidence
 - explicit Apply action
+
+Direct gear assignment is first-class. The recommendation engine may suggest sets, but
+it must never restrict which catalog set the user may assign to a chair. A raid lead who
+already knows the desired set should be able to search the full Gear Catalog and add it
+without manufacturing a matching recommendation first.
 
 Example explanation:
 
