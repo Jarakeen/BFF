@@ -246,7 +246,8 @@ def _render_raid_plan_scope(page) -> None:
                     )
                 if review.unsupported_primary:
                     details.append(
-                        "Assigned provider is not proven by current static/planned evidence: "
+                        "Assigned provider counts as planned coverage; exact static/runtime "
+                        "source proof is unresolved: "
                         + ", ".join(review.unsupported_primary)
                     )
                 if review.duplicate_primary:
@@ -297,8 +298,11 @@ def _render_raid_plan_scope(page) -> None:
     backup_only = sum(
         review.state == "backup_only" for review in assignment_reviews.values()
     )
+    planned_present = sum(
+        review.counts_as_planned_coverage for review in assignment_reviews.values()
+    )
     unassigned_gaps = sum(
-        review.state == "gap" for review in assignment_reviews.values()
+        not review.counts_as_planned_coverage for review in assignment_reviews.values()
     )
     duplicate_primary = sum(
         review.duplicate_primary for review in assignment_reviews.values()
@@ -306,12 +310,13 @@ def _render_raid_plan_scope(page) -> None:
     page.summary_card.clear()
     page.summary_card.addWidget(QLabel(
         f"TOTAL EFFECTS   {len(visible_effects)}\n"
+        f"PLANNED / PRESENT  {planned_present}\n"
         f"ASSIGNED + PROVEN  {assigned_supported}\n"
         f"ASSIGNED CONDITIONAL  {assigned_conditional}\n"
-        f"ASSIGNED UNPROVEN  {assigned_unproven}\n"
-        f"SOURCE FOUND / UNASSIGNED  {unassigned_sources}\n"
+        f"ASSIGNED • RUNTIME UNPROVEN  {assigned_unproven}\n"
+        f"PRESENT / UNASSIGNED  {unassigned_sources}\n"
         f"BACKUP ONLY  {backup_only}\n"
-        f"UNASSIGNED GAPS  {unassigned_gaps}\n"
+        f"MISSING  {unassigned_gaps}\n"
         f"DUPLICATE PRIMARY  {duplicate_primary}\n"
         f"UNRESOLVED CHAIRS {unresolved}"
     ))
@@ -347,19 +352,19 @@ def _render_raid_plan_scope(page) -> None:
         assigned_unproven
         + unassigned_sources
         + backup_only
-        + unassigned_gaps
         + duplicate_primary
     )
     if unresolved or attention:
         page.status.warning(
             f"Raid Plan Coverage • {assigned_supported} assigned/proven • "
-            f"{assigned_conditional} assigned/conditional • {attention} ownership issue(s) • "
+            f"{assigned_conditional} assigned/conditional • {unassigned_gaps} missing • "
+            f"{attention} review item(s) • "
             f"{unresolved} unresolved chair(s)."
         )
     else:
         page.status.info(
             f"Raid Plan Coverage • {assigned_supported} assigned/proven • "
-            f"{assigned_conditional} assigned/conditional • no assignment gaps detected; "
+            f"{assigned_conditional} assigned/conditional • {planned_present} planned/present • "
             "runtime uptime remains unproven."
         )
 
