@@ -302,36 +302,23 @@ def _comp_selected_saved_builds(page):
 
     roster = BuildService(get_data_dir() / "builds.json").load().Members
     resolved = []
-    seen: set[tuple[str, str]] = set()
+    seen: set[str] = set()
     for candidate in getattr(page, "_comp_applied_candidates", {}).values():
         if getattr(candidate, "source_kind", "") != "saved_build":
             continue
-        candidate_name = str(getattr(candidate, "name", "") or "").strip().casefold()
-        candidate_owner = str(
-            getattr(candidate, "source_name", "") or ""
-        ).strip().casefold()
+        build_id = str(getattr(candidate, "saved_build_id", "") or "").strip()
+        if not build_id:
+            continue
         matches = [
             build
             for build in roster
-            if str(getattr(build, "BuildName", "") or "").strip().casefold()
-            == candidate_name
-            and str(
-                getattr(build, "Name", "")
-                or getattr(build, "Gamertag", "")
-                or ""
-            ).strip().casefold()
-            == candidate_owner
+            if str(getattr(build, "BuildId", "") or "").strip() == build_id
         ]
         if len(matches) != 1:
             continue
-        build = matches[0]
-        key = (
-            str(getattr(build, "Name", "") or "").strip().casefold(),
-            str(getattr(build, "BuildName", "") or "").strip().casefold(),
-        )
-        if key not in seen:
-            seen.add(key)
-            resolved.append(build)
+        if build_id not in seen:
+            seen.add(build_id)
+            resolved.append(matches[0])
     return tuple(resolved)
 
 
