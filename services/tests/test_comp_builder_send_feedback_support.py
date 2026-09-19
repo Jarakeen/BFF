@@ -12,21 +12,15 @@ def test_comp_maker_send_feedback_keeps_only_send_state_in_actions_card() -> Non
     assert 'TEAM / ROSTER PLAN:' not in source
 
 
-def test_roster_hides_generated_plan_dropdown_without_static_team_name() -> None:
+def test_generated_plan_roster_bridge_is_compatibility_only() -> None:
     source = Path("ui/comp_builder_roster_view_support.py").read_text(encoding="utf-8")
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
+        encoding="utf-8"
+    )
 
-    assert 'combo = getattr(self, "generated_plan_combo", None)' in source
-    assert "host.hide()" in source
-    assert "combo.hide()" in source
-    assert 'generated_plan_name_label' not in source
-    assert 'TEAM:' not in source
-
-
-def test_roster_generated_plan_choices_still_refresh_while_hidden() -> None:
-    source = Path("ui/comp_builder_roster_view_support.py").read_text(encoding="utf-8")
-
-    assert "_ORIGINAL_REFRESH_CHOICES(page, selected)" in source
-    assert "RosterPage._refresh_generated_plan_choices = _refresh_generated_plan_choices_hidden" in source
+    assert "_refresh_generated_plan_choices_hidden" in source
+    assert "install_comp_builder_roster_view()" not in installer
+    assert "comp_builder_roster_view_support" not in installer
 
 
 def test_selected_build_details_surface_skills_before_send() -> None:
@@ -39,11 +33,11 @@ def test_selected_build_details_surface_skills_before_send() -> None:
     assert "candidate.gear_sets" in source
 
 
-def test_send_feedback_and_roster_cleanup_are_installed() -> None:
-    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(encoding="utf-8")
+def test_send_feedback_stays_installed_without_legacy_roster_bridge() -> None:
+    installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
+        encoding="utf-8"
+    )
 
     assert "install_comp_builder_send_feedback()" in installer
-    assert "install_comp_builder_roster_view()" in installer
-    assert installer.index("install_comp_builder_send_feedback()") < installer.index(
-        "install_comp_builder_roster_view()"
-    )
+    assert "install_comp_builder_roster_view()" not in installer
+    assert "comp_builder_roster_view_support" not in installer
