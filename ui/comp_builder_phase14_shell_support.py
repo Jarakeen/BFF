@@ -2288,6 +2288,11 @@ def _render_slots_with_phase14_shell(self, slots) -> None:
         _refresh_shell(self)
 
 
+def _send_to_raid_plan_method(self, *_args) -> None:
+    """Final Phase 14 owner for every legacy send-to-roster invocation."""
+    _send_to_raid_plan(self)
+
+
 def install() -> None:
     global _INSTALLED, _ORIGINAL_COMP_INIT, _ORIGINAL_RENDER_SLOTS
     global _ORIGINAL_REFRESH_CANDIDATES, _ORIGINAL_APPLY_ROSTER_CONTEXT
@@ -2330,5 +2335,9 @@ def install() -> None:
                 _refresh_shell(self)
 
         CompBuilderPage.apply_roster_team_context = apply_roster_context_with_shell
+
+    # Final ownership boundary: no hidden/direct Comp send call may route through
+    # generated-roster draft persistence after the Phase 14 shell is installed.
+    CompBuilderPage._send_to_roster = _send_to_raid_plan_method
 
     _INSTALLED = True
