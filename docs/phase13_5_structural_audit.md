@@ -183,20 +183,23 @@ regression gate is green: **3026 passed in 46.93s** on 2026-09-17.
 
 **Category:** Character -> Build -> Team identity contract debt
 
-**Files reviewed:**
+**Files:**
+- `models/build_model.py`
+- `services/canonical_build_bridge.py`
+- `services/build_catalog_service.py`
 - `services/comp_builder_build_candidates.py`
 - `services/comp_builder_team_candidate_optimizer.py`
 - `services/comp_builder_provider_evidence.py`
-- `ui/team_provider_workload_support.py`
 - `ui/comp_builder_build_candidate_support.py`
+- `ui/team_provider_workload_support.py`
 
-**Finding:** saved `CompBuildCandidate` rows use `source_name` as a blended display-owner field: canonical `PlayerBuild.Name` when present, otherwise `PlayerBuild.Gamertag`. Downstream Comp Maker grouping, provider-evidence, and selected-build recovery reuse `source_name` as a saved-player key. This means the field is not a stable canonical character identity even though several consumers treat it as if it were one.
+**Finding:** saved `CompBuildCandidate` rows historically used `source_name` as a blended display-owner field and several consumers reused it as canonical saved-player/build identity.
 
-**Disposition:** DEFERRED — broader Comp Maker identity-contract cleanup required.
+**Disposition:** FIXED on Phase 14; focused regression gate pending user execution.
 
-**Reason deferred:** the ambiguity originates in the upstream candidate contract rather than one Rotation consumer. Tightening only `ui/team_provider_workload_support.py` would make that consumer disagree with candidate generation, optimizer grouping, and provider evidence. A correct repair needs a dedicated canonical saved-build identity on `CompBuildCandidate` (for example canonical build id and/or explicit character identity) while retaining `source_name` as display/source metadata.
+**Resolution:** canonical `player_id`, `character_id`, and `build_id` now survive the `PlayerBuild` compatibility snapshot and canonical bridge. Saved Comp candidates carry explicit `saved_player_id`, `saved_character_id`, and `saved_build_id`; candidate ids prefer the stable build id. Optimizer duplicate-player handling uses stable ids instead of `source_name`, provider evidence resolves exact saved builds by canonical `BuildId`, roster matching prefers canonical player/character ids, and provider-workload saved-build recovery reads canonical `CompPlanState.selected_build_id`. `source_name` remains presentation/provenance metadata and only a compatibility fallback for historical roster rows lacking canonical ids.
 
-**Closeout boundary:** no new consumer may treat `CompBuildCandidate.source_name` as canonical character or build identity. Existing consumers may retain current fail-closed/unique-match behavior until the candidate contract is migrated. Exact Raid Plan and Rotation execution paths must continue using canonical `PlayerBuild` fields / build ids and must not inherit this display fallback.
+**Closeout boundary:** no new Comp consumer may treat `source_name` as player, character, or build authority. Historical compatibility fallbacks may read it only when stable ids are absent and must not persist it as canonical identity.
 
 ---
 
