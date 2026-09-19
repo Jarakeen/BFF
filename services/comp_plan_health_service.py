@@ -234,7 +234,6 @@ class CompPlanHealthService:
         assignment_reviews = self._assignment_reviews(
             state,
             providers_by_effect=tuple(provider_rows),
-            assignment_reviews=assignment_reviews,
         )
 
         return CompPlanHealth(
@@ -250,6 +249,7 @@ class CompPlanHealthService:
                 for name in _EFFECT_NAMES
             ),
             providers_by_effect=tuple(provider_rows),
+            assignment_reviews=assignment_reviews,
         )
 
 
