@@ -26,7 +26,7 @@ _POLICIES = {
         style=CompCompositionStyle.PROVEN,
         label="Proven / Standard",
         description=(
-            "Prefer established saved builds and the strongest chair/player fit while preserving locked roster decisions."
+            "Prefer established saved builds and the strongest chair/player fit while preserving locked choices and assigned provider responsibilities."
         ),
         prefer_saved_builds=True,
         novelty_weight=0.0,
@@ -36,7 +36,7 @@ _POLICIES = {
         style=CompCompositionStyle.PERFORMANCE,
         label="Performance First",
         description=(
-            "Prefer the strongest available roster/build relevance evidence for each open chair."
+            "Prefer the strongest available roster/build relevance evidence for each open chair after assigned provider responsibilities are satisfied."
         ),
         prefer_saved_builds=False,
         novelty_weight=0.0,
@@ -46,7 +46,7 @@ _POLICIES = {
         style=CompCompositionStyle.EXPERIMENTAL,
         label="Experimental",
         description=(
-            "Prefer less-common evidence-backed roster/build options while preserving locked chair decisions."
+            "Prefer less-common evidence-backed roster/build options while preserving locked chair decisions and assigned provider responsibilities."
         ),
         prefer_saved_builds=False,
         novelty_weight=0.75,
@@ -56,7 +56,7 @@ _POLICIES = {
         style=CompCompositionStyle.OFF_META,
         label="Off-Meta Discovery",
         description=(
-            "Actively surface unusual evidence-backed roster/build options while keeping player uniqueness, chair fit, and locked decisions intact."
+            "Actively surface unusual evidence-backed roster/build options while keeping player uniqueness, chair fit, locked decisions, and assigned provider responsibilities intact."
         ),
         prefer_saved_builds=False,
         novelty_weight=1.5,
