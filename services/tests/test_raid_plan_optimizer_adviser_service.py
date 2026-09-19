@@ -93,3 +93,120 @@ def test_adviser_is_deterministically_priority_sorted() -> None:
     priorities = [item.priority for item in review.findings]
     rank = {"high": 0, "medium": 1, "low": 2}
     assert [rank[value] for value in priorities] == sorted(rank[value] for value in priorities)
+
+
+def test_adviser_exposes_honest_workbench_evidence_contract() -> None:
+    review = RaidPlanOptimizerAdviserService(_CapabilityService()).review(
+        raid_plan=_plan(),
+        saved_builds=(_build(),),
+        total_chairs=1,
+    )
+
+    assert review.required_effect_count > 0
+    assert (
+        review.covered_effect_count
+        + review.conditional_effect_count
+        + review.planned_unproven_effect_count
+        + review.ownership_attention_effect_count
+        + review.missing_effect_count
+        + review.unverified_effect_count
+        == review.required_effect_count
+    )
+    assert "verified" in review.coverage_summary
+    assert all(item.current_state for item in review.findings)
+    assert all(item.proposed_state for item in review.findings)
+    assert all(item.confidence in {"high", "medium", "low", "unknown"} for item in review.findings)
+
+
+def test_adviser_does_not_fabricate_numeric_performance_gains() -> None:
+    review = RaidPlanOptimizerAdviserService(_CapabilityService()).review(
+        raid_plan=_plan(),
+        saved_builds=(_build(),),
+        total_chairs=1,
+    )
+
+    rendered = "\n".join(
+        value
+        for item in review.findings
+        for value in (
+            item.recommendation,
+            item.evidence,
+            item.current_state,
+            item.proposed_state,
+        )
+    )
+    assert "% group DPS" not in rendered
+    assert "projected DPS" not in rendered
+
+
+def test_assigned_but_unproven_provider_is_not_reported_as_unassigned_missing() -> None:
+    plan = RaidPlan(
+        plan_id="assigned-plan",
+        trial_id="rockgrove",
+        name="Assigned Plan",
+        members=(
+            RaidPlanMember(
+                seat_id="healer-1",
+                gamertag="Jarakeen",
+                character_name="Magrat",
+                role="Healer",
+                selected_build_name="DF Healer",
+                primary_assignment="Major Courage",
+                assignment_source="WW",
+            ),
+        ),
+    )
+
+    review = RaidPlanOptimizerAdviserService(_CapabilityService()).review(
+        raid_plan=plan,
+        saved_builds=(_build(),),
+        total_chairs=1,
+    )
+
+    major_courage = [
+        item for item in review.findings if item.subject == "Major Courage"
+    ]
+    assert major_courage
+    assert any(item.current_state == "Assigned provider; source unproven" for item in major_courage)
+    assert all(item.category != "coverage_gap" for item in major_courage)
+    assert review.planned_unproven_effect_count >= 1
+
+
+def test_planned_support_gear_is_reviewed_as_conditional_provider_evidence() -> None:
+    plan = RaidPlan(
+        plan_id="planned-gear",
+        trial_id="rockgrove",
+        name="Planned Gear",
+        members=(
+            RaidPlanMember(
+                seat_id="tank-1",
+                gamertag="Tank",
+                character_name="Tank",
+                role="Tank",
+                selected_build_name="Tank Plan",
+                planned_gear_sets=("Powerful Assault",),
+            ),
+        ),
+    )
+    build = PlayerBuild(
+        Name="Tank",
+        Gamertag="Tank",
+        BuildName="Tank Plan",
+        Role="Tank",
+    )
+
+    review = RaidPlanOptimizerAdviserService(_CapabilityService()).review(
+        raid_plan=plan,
+        saved_builds=(build,),
+        total_chairs=1,
+    )
+
+    powerful_assault = [
+        item for item in review.findings if item.subject == "Powerful Assault"
+    ]
+    assert powerful_assault
+    assert all(item.category == "conditional" for item in powerful_assault)
+    assert any(
+        item.current_state == "Provider exists; ownership unassigned"
+        for item in powerful_assault
+    )
