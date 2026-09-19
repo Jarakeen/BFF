@@ -480,9 +480,27 @@ Minimum acceptance cases:
 - exact combat DPS prediction
 - exact encounter uptime
 - full Rotation proof
+- automatic ESO Logs skill-package application
 - automated external-web scraping during every optimization
 - declaring observed ESO Logs setups universally optimal
 - rewriting existing canonical mechanic services
+
+### Later enhancement: ESO Logs skill evidence
+
+The existing Comp/ESO Logs path has historically captured observed skills as well as
+gear. Preserve that capability for a later improvement after the new state boundary is
+stable.
+
+Later behavior should:
+
+- attach observed skill packages to CompCandidateOption evidence;
+- show which skills are commonly observed for the selected chair/build;
+- use skill overlap as candidate-fit evidence where appropriate;
+- never treat observed skills as canonical mechanics or proof of optimal rotation;
+- never overwrite a locked or explicitly planned skill package;
+- require explicit user action before observed skills are copied into CompPlanState;
+- hand accepted planned skills to Rotation Builder as planning input, where runtime
+  cadence/uptime can be evaluated separately.
 
 These can be layered in after the state boundary is trustworthy.
 
