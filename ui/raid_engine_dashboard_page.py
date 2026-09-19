@@ -457,20 +457,25 @@ class RaidEngineDashboardPage(FoundryPage):
         right.addWidget(self.optimization_card, 1)
 
         self.coverage_card = FoundryCard("Coverage Snapshot", "shield")
-        self.coverage_scope_label = QLabel("Select saved builds in Team Optimization to check this team.")
+        self.coverage_scope_label = QLabel(
+            "Coverage evaluates saved Raid Plans, not generic Roster teams or the full build library."
+        )
         self.coverage_scope_label.setWordWrap(True)
         self.coverage_card.addWidget(self.coverage_scope_label)
         self.coverage_grid = QGridLayout()
         self.coverage_grid.setHorizontalSpacing(12)
         self.coverage_grid.setVerticalSpacing(4)
         self.coverage_card.addLayout(self.coverage_grid)
-        self.send_coverage_button = FoundryButton("Send Selected Team to Coverage", role=ButtonRole.PRIMARY, compact=True)
-        self.send_coverage_button.setToolTip("Check exactly the saved builds selected in Team Optimization; open slots stay open.")
+        self.send_coverage_button = FoundryButton(
+            "Open Raid Plan Coverage →",
+            role=ButtonRole.PRIMARY,
+            compact=True,
+        )
+        self.send_coverage_button.setToolTip(
+            "Open Coverage and choose the saved trial-specific Raid Plan to audit."
+        )
         self.send_coverage_button.clicked.connect(self._send_team_to_coverage)
         self.coverage_card.addWidget(self.send_coverage_button)
-        coverage_link = FoundryButton("Browse All Saved Builds →", role=ButtonRole.GHOST, compact=True)
-        coverage_link.clicked.connect(self._browse_all_coverage)
-        self.coverage_card.addWidget(coverage_link)
         right.addWidget(self.coverage_card, 1)
         top.addLayout(right, 30)
         root.addLayout(top, 6)
@@ -607,16 +612,7 @@ class RaidEngineDashboardPage(FoundryPage):
         return tuple(selected)
 
     def _send_team_to_coverage(self, *_args) -> None:
-        selected = self._selected_team_members()
-        if self.coverage is None or not selected:
-            self.status.warning("Select saved builds in Team Optimization before sending a team to Coverage.")
-            return
-        self.coverage.set_team_scope(self.plan_combo.currentText(), selected, total_slots=len(RAID_SLOTS))
-        self.pageRequested.emit("console:7")
-
-    def _browse_all_coverage(self, *_args) -> None:
-        if self.coverage is not None:
-            self.coverage.scope_combo.setCurrentIndex(self.coverage.scope_combo.findData("all"))
+        """Coverage is Raid-Plan scoped; dashboard navigation never injects a team scope."""
         self.pageRequested.emit("console:7")
 
     def _comp_slots(self) -> tuple[RaidSlotSnapshot, ...]:
