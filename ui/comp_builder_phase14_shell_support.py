@@ -1225,18 +1225,29 @@ def _materialize_visible_recommendations(page) -> int:
 
 
 def _save_to_originating_raid_plan(page) -> None:
-    """Save current Comp Builder choices to the bound or newly named Raid Plan."""
+    """Save current Comp Builder choices to the bound or newly named Raid Plan.
+
+    This is a UI persistence boundary: failures must be reported on-page rather than
+    escaping the Qt click handler and terminating the application.
+    """
     from ui import comp_builder_build_candidate_support as candidate_support
 
-    _materialize_visible_recommendations(page)
-    draft = candidate_support.save_generated_plan(page)
-    window = page.window()
-    persist = getattr(window, "_persist_generated_comp_plan_to_raid_plan", None)
-    if not callable(persist):
-        page.status.error("Raid Plan save bridge is unavailable.")
+    try:
+        _materialize_visible_recommendations(page)
+        draft = candidate_support.save_generated_plan(page)
+        window = page.window()
+        persist = getattr(window, "_persist_generated_comp_plan_to_raid_plan", None)
+        if not callable(persist):
+            page.status.error("Raid Plan save bridge is unavailable.")
+            return
+
+        plan = persist(draft.name, navigate=False)
+    except Exception as exc:
+        page.status.error(
+            f"Could not save Comp Builder plan: {type(exc).__name__}: {exc}"
+        )
         return
 
-    plan = persist(draft.name, navigate=False)
     if plan is not None:
         page._raid_plan_origin_id = plan.plan_id
         refresh_names = getattr(page, "_refresh_raid_plan_name_choices", None)
