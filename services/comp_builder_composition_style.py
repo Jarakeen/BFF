@@ -26,7 +26,7 @@ _POLICIES = {
         style=CompCompositionStyle.PROVEN,
         label="Proven / Standard",
         description=(
-            "Prefer established saved builds and relevance after all hard raid requirements are satisfied."
+            "Prefer established saved builds and the strongest chair/player fit while preserving locked roster decisions."
         ),
         prefer_saved_builds=True,
         novelty_weight=0.0,
@@ -36,7 +36,7 @@ _POLICIES = {
         style=CompCompositionStyle.PERFORMANCE,
         label="Performance First",
         description=(
-            "Prefer the strongest available modeled/relevance evidence after all hard raid requirements are satisfied."
+            "Prefer the strongest available roster/build relevance evidence for each open chair."
         ),
         prefer_saved_builds=False,
         novelty_weight=0.0,
@@ -46,7 +46,7 @@ _POLICIES = {
         style=CompCompositionStyle.EXPERIMENTAL,
         label="Experimental",
         description=(
-            "Prefer uncommon but evidence-backed options when they preserve every hard raid requirement."
+            "Prefer less-common evidence-backed roster/build options while preserving locked chair decisions."
         ),
         prefer_saved_builds=False,
         novelty_weight=0.75,
@@ -56,7 +56,7 @@ _POLICIES = {
         style=CompCompositionStyle.OFF_META,
         label="Off-Meta Discovery",
         description=(
-            "Actively surface unusual evidence-backed options while keeping required providers, build ingredients, chair fill, and mechanic obligations intact."
+            "Actively surface unusual evidence-backed roster/build options while keeping player uniqueness, chair fit, and locked decisions intact."
         ),
         prefer_saved_builds=False,
         novelty_weight=1.5,
