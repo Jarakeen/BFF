@@ -70,6 +70,9 @@ remain temporarily for compatibility, migration, or historical tooling.
 
 - [x] `tools/profile_team_optimization_startup.py` records lightweight page-construction
       time independently from first plan-scope analysis time.
+- [x] `tools/profile_team_optimization_legacy_baseline.py` profiles the retired
+      Optimization-specific constructor chain from a detached source tree without invoking
+      unrelated Comp/Roster application bootstrap code.
 - [x] focused structural tests guard that legacy Optimization constructors and provider
       hooks do not return to application startup.
 - [ ] record local Windows before/after timing output in this file after profiling.
