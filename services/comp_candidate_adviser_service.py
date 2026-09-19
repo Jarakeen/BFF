@@ -103,14 +103,7 @@ class CompCandidateAdviserService:
             else:
                 changes["planned_mundus"] = candidate_mundus
 
-        can_bind_saved_build = (
-            candidate.source_kind == "saved_build"
-            and (
-                _same_identity(chair.player_name, candidate.source_name)
-                or _same_identity(chair.character_name, candidate.source_name)
-            )
-        )
-        if can_bind_saved_build and candidate.name != _clean(chair.selected_build_name):
+        if candidate.name != _clean(chair.selected_build_name):
             if chair.is_locked("build"):
                 blocked.append("build")
             else:
@@ -126,6 +119,27 @@ class CompCandidateAdviserService:
 
         # Candidate skills remain evidence only until the deferred skill-evidence pass.
         return changes, tuple(dict.fromkeys(blocked))
+
+    def apply(
+        self,
+        *,
+        state: CompPlanState,
+        seat_id: str,
+        candidate: CompBuildCandidate,
+    ) -> tuple[CompPlanState, CompCandidateProposal]:
+        """Apply only unlocked proposal fields and return the exact evaluated proposal."""
+        proposal = self.evaluate(
+            state=state,
+            seat_id=seat_id,
+            candidate=candidate,
+        )
+        chair = state.chair(seat_id)
+        if chair is None:
+            raise ValueError(f"unknown Comp chair: {seat_id}")
+        changes, _blocked = self._proposal_changes(chair, candidate)
+        if not changes:
+            return state, proposal
+        return state.with_chair(chair.with_changes(**changes)), proposal
 
     def evaluate(
         self,
@@ -222,7 +236,7 @@ class CompCandidateAdviserService:
             candidate_name=candidate.name,
             source_kind=candidate.source_kind,
             source_name=candidate.source_name,
-            applicable=not blocked and bool(changes),
+            applicable=bool(changes),
             blocked_fields=blocked,
             changed_fields=tuple(changes),
             gained_planned_required=gained_planned,
