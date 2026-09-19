@@ -254,6 +254,65 @@ def _match_rows(page, members) -> list[tuple[int, object]]:
     return matches
 
 
+def _sync_comp_state_from_matches(page, matched) -> None:
+    state = getattr(page, "_comp_plan_state", None)
+    if state is None:
+        return
+
+    current = state
+    for row, member in matched:
+        slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+        wanted = "-".join(
+            str(slot_name or "")
+            .strip()
+            .casefold()
+            .replace("_", " ")
+            .replace("-", " ")
+            .split()
+        )
+        chair = next(
+            (
+                item
+                for item in current.chairs
+                if "-".join(
+                    str(item.seat_id or "")
+                    .strip()
+                    .casefold()
+                    .replace("_", " ")
+                    .replace("-", " ")
+                    .split()
+                )
+                == wanted
+            ),
+            None,
+        )
+        if chair is None:
+            continue
+
+        changes: dict[str, object] = {}
+        player = str(getattr(member, "PlayerName", "") or "").strip()
+        recruit = _is_recruit_member(member)
+        if not chair.is_locked("player"):
+            changes["player_name"] = "" if recruit else player
+
+        character = str(getattr(member, "CharacterName", "") or "").strip()
+        if character and not chair.is_locked("character"):
+            changes["character_name"] = character
+
+        role = str(getattr(member, "PrimaryRole", "") or "").strip()
+        if role and not chair.is_locked("role"):
+            changes["role"] = role
+
+        eso_class = str(getattr(member, "EsoClass", "") or "").strip()
+        if eso_class and not chair.is_locked("class"):
+            changes["eso_class"] = eso_class
+
+        if changes:
+            current = current.with_chair(chair.with_changes(**changes))
+
+    page._comp_plan_state = current
+
+
 def apply_roster_team_context(
     page,
     team_name: str,
@@ -295,6 +354,7 @@ def apply_roster_team_context(
             page._comp_class_constraint_by_slot[slot_name] = eso_class
         page._comp_roster_member_by_slot[slot_name] = None if _is_recruit_member(member) else member
 
+    _sync_comp_state_from_matches(page, matched)
     _reapply_class_constraints(page)
 
     if hasattr(page, "plan_name_input") and page._roster_team_context_name:
