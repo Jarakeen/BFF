@@ -758,11 +758,52 @@ def _apply_choice(page, frame: QFrame) -> None:
     if candidate is None or row < 0:
         return
 
+    state = getattr(page, "_comp_plan_state", None)
+    chair = _state_chair_for_row(page, row)
+    slot_name = page._cell_text(row, 0) or f"Slot {row + 1}"
+
+    if state is not None and chair is not None:
+        from engine.config import DEFAULT_DATABASE
+        from services.comp_candidate_adviser_service import CompCandidateAdviserService
+
+        updated, proposal = CompCandidateAdviserService(DEFAULT_DATABASE).apply(
+            state=state,
+            seat_id=chair.seat_id,
+            candidate=candidate,
+        )
+        page._comp_plan_state = updated
+        if proposal.changes_anything:
+            page._comp_applied_candidates[slot_name] = candidate
+            bits = [f"Applied {_candidate_label(candidate)} to {slot_name}."]
+            if proposal.assignment_proof_improved:
+                bits.append(
+                    "Improved assignment evidence: "
+                    + ", ".join(proposal.assignment_proof_improved[:3])
+                    + "."
+                )
+            if proposal.blocked_fields:
+                bits.append(
+                    "Preserved locked "
+                    + ", ".join(proposal.blocked_fields)
+                    + "."
+                )
+            page.status.success(" ".join(bits))
+        elif proposal.blocked_fields:
+            page.status.warning(
+                f"{slot_name}: recommendation is blocked by locked "
+                + ", ".join(proposal.blocked_fields)
+                + "."
+            )
+        else:
+            page.status.info(f"{slot_name} already matches this recommendation.")
+        _refresh_shell(page)
+        return
+
     from ui import comp_builder_build_candidate_support as candidate_support
 
-    slot_name = candidate_support._set_candidate_for_row(page, row, candidate)
+    legacy_slot = candidate_support._set_candidate_for_row(page, row, candidate)
     page.status.success(
-        f"Applied {_candidate_label(candidate)} to {slot_name}. "
+        f"Applied {_candidate_label(candidate)} to {legacy_slot}. "
         "The plan now uses this gear recommendation."
     )
     _refresh_shell(page)
@@ -869,7 +910,72 @@ def _refresh_why(page) -> None:
     obligations = []
     for column in (4, 6, 7):
         obligations.extend(page._split_values(page._cell_text(row, column)))
-    why_parts = list(reasons[:3])
+
+    why_parts: list[str] = []
+    state = getattr(page, "_comp_plan_state", None)
+    chair = _state_chair_for_row(page, row)
+    if state is not None and chair is not None:
+        try:
+            from engine.config import DEFAULT_DATABASE
+            from services.comp_candidate_adviser_service import CompCandidateAdviserService
+
+            proposal = CompCandidateAdviserService(DEFAULT_DATABASE).evaluate(
+                state=state,
+                seat_id=chair.seat_id,
+                candidate=preferred,
+            )
+        except (AttributeError, OSError, TypeError, ValueError):
+            proposal = None
+
+        if proposal is not None:
+            if proposal.gained_planned_required:
+                why_parts.append(
+                    "Covers: " + ", ".join(proposal.gained_planned_required[:3]) + "."
+                )
+            if proposal.assignment_proof_improved:
+                why_parts.append(
+                    "Strengthens assignment evidence: "
+                    + ", ".join(proposal.assignment_proof_improved[:3])
+                    + "."
+                )
+            if proposal.gained_effect_evidence:
+                why_parts.append(
+                    "Adds reviewed source evidence: "
+                    + ", ".join(proposal.gained_effect_evidence[:3])
+                    + "."
+                )
+            if proposal.duplicates_removed:
+                why_parts.append(
+                    "Removes duplicate coverage: "
+                    + ", ".join(proposal.duplicates_removed[:3])
+                    + "."
+                )
+            if proposal.lost_planned_required:
+                why_parts.append(
+                    "Would lose planned coverage: "
+                    + ", ".join(proposal.lost_planned_required[:3])
+                    + "."
+                )
+            if proposal.assignment_proof_regressed:
+                why_parts.append(
+                    "Weakens assignment evidence: "
+                    + ", ".join(proposal.assignment_proof_regressed[:3])
+                    + "."
+                )
+            if proposal.duplicates_added:
+                why_parts.append(
+                    "Adds duplicate coverage: "
+                    + ", ".join(proposal.duplicates_added[:3])
+                    + "."
+                )
+            if proposal.blocked_fields:
+                why_parts.append(
+                    "Locked fields preserved: "
+                    + ", ".join(proposal.blocked_fields)
+                    + "."
+                )
+
+    why_parts.extend(reasons[:2])
     if obligations:
         why_parts.append("Plan obligation: " + " • ".join(obligations[:2]))
     if not why_parts:
