@@ -139,7 +139,10 @@ def test_candidate_helpers_use_canonical_state_before_compatibility_mirror() -> 
     )[0]
     assert 'state = getattr(page, "_comp_plan_state", None)' in used
     assert "chair.build_source_kind" in used
-    assert "chair.build_source_name" in used
+    assert "chair.player_id" in used
+    assert "chair.character_id" in used
+    assert "chair.selected_build_id" in used
+    assert "chair.build_source_name" not in used
     assert "return canonical | mirror" in used
 
     formatted = source.split("def _format_candidates(page)", 1)[1].split(
