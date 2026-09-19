@@ -31,6 +31,7 @@ class CanonicalBuildBridge:
             "EsoClass",
             "Role",
             "Alliance",
+            "PlayerId",
             "CharacterId",
             "BuildId",
         }
