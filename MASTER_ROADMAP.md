@@ -1143,8 +1143,20 @@ Implemented:
 Illustrious Healing is the first control. Reviewed timing can expand the cast-resolved
 periodic magnitude into deterministic tick events clipped to the simulation horizon.
 
-**Phase 14D validation pending:** focused Phase 14 healer simulation plus the canonical
-reviewed-evidence loader/evidence/runtime suites must pass before this slice is green.
+### Phase 14D validation checkpoint — 2026-09-19
+
+User-reported focused checkpoint:
+
+- **63 passed in 13.48s**
+- Phase 14 healer simulation, reviewed timing evidence, runtime tick scheduling,
+  observation-fixture loading, and refresh-policy composition suites are green.
+
+**Phase 14D reviewed periodic healer timing status: green.**
+
+Next implementation slice: connect reviewed skill effects from healer actions into the
+simulation state/event stream. Combat Prayer is the first control. Effect identity,
+duration, target scope, and refresh/expiry behavior must remain owned by the existing
+known-effect/runtime architecture; healing output alone must not imply support effects.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
