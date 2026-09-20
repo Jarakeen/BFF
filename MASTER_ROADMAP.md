@@ -1294,11 +1294,35 @@ User-reported focused checkpoint:
 
 **Phase 14H recipient-aware Health state status: green.**
 
-Next implementation slice: add explicit incoming-damage events and deterministic Health
-loss for known combatants. Damage may only mutate Health when the event amount and
-recipient are explicit. Mitigation remains a separate canonical calculation boundary;
-this slice must not invent armor, resistances, shields, blocking, or encounter damage
-rules.
+### Phase 14I — explicit incoming damage and Health loss
+
+Phase 14 now accepts explicit post-mitigation incoming-damage events and projects them
+into deterministic Health loss for known combatants.
+
+Implemented:
+
+- `CombatSimulationIncomingDamage` supplies exact time, sequence, source, recipient,
+  resolved damage amount, and optional damage type;
+- the main simulation queues `incoming_damage` alongside actions and other
+  consequences;
+- `CombatSimulationHealthService` applies incoming damage and recipient-bound healing
+  in one ordered Health timeline;
+- damage records before, attempted damage, applied damage, overkill, after, and maximum
+  Health;
+- Health bottoms at zero and overkill remains auditable;
+- later heals consume the Health state produced by earlier damage events;
+- exact-time snapshots project Health after incoming damage from already-computed
+  `health_change` events;
+- missing combatant or Health state fails closed.
+
+Boundary: incoming damage is explicitly **post-mitigation/resolved**. This slice does not
+infer armor/resistance mitigation, blocking, shields, dodge, damage type modifiers, or
+encounter mechanic values. Those must be connected through their canonical engines or
+reviewed encounter evidence later.
+
+**Phase 14I validation pending:** incoming-damage Health projection, target binding,
+snapshots, healer output, effects, resources, and main simulation integration must pass
+before this slice is green.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
