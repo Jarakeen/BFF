@@ -110,3 +110,76 @@ def test_missing_health_state_fails_closed_without_inventing_effective_healing()
     assert result.unresolved == (
         "Combat Prayer direct_heal at 1s -> Tank 1: current and maximum Health are required",
     )
+
+
+
+def _damage_event(*, time_seconds=0.5, sequence=0, amount=6000.0, recipient="Tank 1"):
+    return CombatSimulationEvent(
+        time_seconds=time_seconds,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=sequence,
+        event_type="incoming_damage",
+        source="Boss Cleave",
+        payload=(
+            ("recipient", recipient),
+            ("amount", amount),
+            ("damage_type", "physical"),
+        ),
+    )
+
+
+def test_explicit_incoming_damage_reduces_health() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(_damage_event(amount=6000.0),),
+        target_state=_state(current=20000, maximum=25000),
+    )
+
+    assert result.unresolved == ()
+    payload = result.events[0].payload_dict()
+    assert payload["before"] == 20000
+    assert payload["attempted_damage"] == 6000.0
+    assert payload["applied_damage"] == 6000.0
+    assert payload["overkill"] == 0.0
+    assert payload["after"] == 14000
+
+
+def test_incoming_damage_caps_at_zero_and_records_overkill() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(_damage_event(amount=12000.0),),
+        target_state=_state(current=5000, maximum=25000),
+    )
+
+    payload = result.events[0].payload_dict()
+    assert payload["applied_damage"] == 5000.0
+    assert payload["overkill"] == 7000.0
+    assert payload["after"] == 0
+
+
+def test_damage_then_heal_uses_updated_health_state() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(
+            _damage_event(time_seconds=0.5, amount=6000.0),
+            _heal_event(time_seconds=1.0, amount=4000.0),
+        ),
+        target_state=_state(current=20000, maximum=25000),
+    )
+
+    assert [event.payload_dict()["before"] for event in result.events] == [20000, 14000]
+    assert [event.payload_dict()["after"] for event in result.events] == [14000, 18000]
+
+
+def test_incoming_damage_missing_health_state_fails_closed() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(CombatSimulationCombatant("Tank 1", "ally"),),
+        recipient_bindings=(),
+    )
+
+    result = CombatSimulationHealthService().project(
+        events=(_damage_event(),),
+        target_state=state,
+    )
+
+    assert result.events == ()
+    assert result.unresolved == (
+        "Boss Cleave incoming_damage at 0.5s -> Tank 1: current and maximum Health are required",
+    )
