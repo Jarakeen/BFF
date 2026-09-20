@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QMessageBox,
     QPushButton,
     QVBoxLayout,
@@ -206,6 +207,92 @@ def _edit_baseline(page, build) -> None:
     page.status.success("Build baseline updated. Existing item values were preserved.")
 
 
+class _OwnershipDialog(QDialog):
+    def __init__(self, page, profile: BuildProfile):
+        super().__init__(page)
+        self.setWindowTitle("Build Ownership")
+        self.setMinimumWidth(430)
+
+        self.ownership = QComboBox()
+        self.ownership.addItem("My Build", "mine")
+        self.ownership.addItem("Team / Other Player", "team")
+        wanted = self.ownership.findData(profile.ownership)
+        self.ownership.setCurrentIndex(wanted if wanted >= 0 else 0)
+
+        self.source_owner = QLineEdit()
+        self.source_owner.setPlaceholderText("Player / source name")
+        self.source_owner.setText(profile.source_owner)
+
+        form = QFormLayout()
+        form.addRow("Ownership", self.ownership)
+        form.addRow("Owner / source", self.source_owner)
+
+        hint = QLabel(
+            "Ownership is library metadata keyed to the canonical BuildId. "
+            "It changes Mine/Team filtering only; it does not copy or rewrite the saved build."
+        )
+        hint.setWordWrap(True)
+        hint.setProperty("muted", True)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Cancel
+            | QDialogButtonBox.StandardButton.Save
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+
+        layout = QVBoxLayout(self)
+        layout.addLayout(form)
+        layout.addWidget(hint)
+        layout.addWidget(buttons)
+
+        self.ownership.currentIndexChanged.connect(self._sync_owner_field)
+        self._sync_owner_field()
+
+    def _sync_owner_field(self) -> None:
+        team_owned = self.ownership.currentData() == "team"
+        self.source_owner.setEnabled(team_owned)
+        if not team_owned:
+            self.source_owner.clear()
+
+
+def _edit_ownership(page, build) -> None:
+    build_id = _build_id(page, build)
+    if not build_id:
+        page.status.warning(
+            "This saved build has no canonical build id yet; ownership was not changed."
+        )
+        return
+
+    service = _service()
+    dialog = _OwnershipDialog(page, service.get(build_id))
+    if dialog.exec() != QDialog.DialogCode.Accepted:
+        return
+
+    ownership = str(dialog.ownership.currentData() or "mine").strip()
+    source_owner = dialog.source_owner.text().strip() if ownership == "team" else ""
+    service.update(
+        build_id,
+        ownership=ownership,
+        source_owner=source_owner,
+    )
+
+    from ui import phase14_builds_command_center_support as command_center
+
+    current_mode = command_center._active_library_mode(page)
+    if current_mode in {"Mine", "Team"}:
+        command_center._select_library_mode(
+            page,
+            "Team" if ownership == "team" else "Mine",
+        )
+    _populate_profile_table(page)
+    page._refresh_detail()
+    label = source_owner or "Team / Other Player"
+    page.status.success(
+        f"Build ownership updated: {label if ownership == 'team' else 'My Build'}."
+    )
+
+
 def _toggle_archive(page, build) -> None:
     build_id = _build_id(page, build)
     if not build_id:
@@ -246,6 +333,9 @@ def _baseline_card(page, build) -> FoundryCard:
     exception = QLabel(f"{exceptions} exception" + ("" if exceptions == 1 else "s"))
     exception.setProperty("cardBadge", True)
     row.addWidget(exception)
+    ownership_edit = FoundryButton("Ownership", role=ButtonRole.SECONDARY, compact=True)
+    ownership_edit.clicked.connect(lambda: _edit_ownership(page, build))
+    row.addWidget(ownership_edit)
     edit = FoundryButton("Edit Baseline", role=ButtonRole.SECONDARY, compact=True)
     edit.clicked.connect(lambda: _edit_baseline(page, build))
     row.addWidget(edit)
