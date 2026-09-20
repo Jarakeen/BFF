@@ -14,9 +14,11 @@ from models.combat_simulation import (
 )
 from models.effective_build_snapshot import EffectiveBuildSnapshot
 from minmax.rotation_active_bar_legality import RotationActiveBarAssessor
+from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 
 from services.combat_simulation_event_queue import CombatSimulationEventQueue
+from services.combat_simulation_resource_service import CombatSimulationResourceService
 
 
 _CONSEQUENCE_PENDING = frozenset(
@@ -39,8 +41,10 @@ class CombatSimulationService:
         self,
         *,
         active_bar_assessor: RotationActiveBarAssessor | None = None,
+        resource_service: CombatSimulationResourceService | None = None,
     ) -> None:
         self.active_bar_assessor = active_bar_assessor or RotationActiveBarAssessor()
+        self.resource_service = resource_service or CombatSimulationResourceService()
 
     def simulate(
         self,
@@ -84,6 +88,16 @@ class CombatSimulationService:
                 )
             )
 
+        resources = []
+        magicka = self.resource_service.project(
+            build=build,
+            plan=plan,
+            resource=ResourceType.MAGICKA,
+        )
+        resources.append(magicka.result)
+        queue.extend(magicka.events)
+        unresolved.extend(magicka.unresolved)
+
         events: list[CombatSimulationEvent] = []
         while queue:
             event = queue.pop()
@@ -91,8 +105,12 @@ class CombatSimulationService:
                 break
             events.append(event)
 
+            if event.event_type != "action":
+                continue
             kind = RotationActionKind(event.payload_dict()["kind"])
             if kind in _CONSEQUENCE_PENDING:
+                if kind in {RotationActionKind.SKILL, RotationActionKind.ULTIMATE}:
+                    continue
                 unresolved.append(
                     f"{event.time_seconds:g}s {event.source}: "
                     f"{kind.value} consequence projection not yet wired in Phase 14"
@@ -103,6 +121,7 @@ class CombatSimulationService:
             initial_bar=assessment.initial_bar,
             final_bar=assessment.final_bar,
             events=tuple(events),
+            resources=tuple(resources),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
