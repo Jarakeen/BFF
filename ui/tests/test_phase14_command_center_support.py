@@ -45,7 +45,7 @@ def test_build_command_center_exposes_selected_library_views_and_filters() -> No
     assert 'page.phase14_source_filter.addItem("Comp Builds", "comp")' in source
     assert 'page.phase14_source_filter.addItem("Saved Builds", "saved")' in source
     assert "self.splitter.replaceWidget(0, command_center)" in source
-    assert "setUsesScrollButtons(False)" in source
+    assert "setUsesScrollButtons(True)" in source
 
 
 def test_phase14_new_build_reuses_existing_easy_mode_action_without_second_wrapper() -> None:
