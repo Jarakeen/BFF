@@ -2045,7 +2045,9 @@ def _save_to_originating_raid_plan(page) -> bool:
         from engine.config import get_data_dir
         from services.comp_build_persistence_service import CompBuildPersistenceService
 
-        build_result = CompBuildPersistenceService(get_data_dir()).persist(state)
+        was_unbound = not state.is_raid_plan_bound
+        build_service = CompBuildPersistenceService(get_data_dir())
+        build_result = build_service.persist(state)
         page._comp_plan_state = build_result.state
         state = build_result.state
 
@@ -2054,6 +2056,17 @@ def _save_to_originating_raid_plan(page) -> bool:
             page.status.error("Canonical Raid Plan save bridge is unavailable.")
             return False
         plan = persist_state(navigate=False)
+
+        # A brand-new Comp session must create BuildIds before its Raid Plan can be
+        # persisted, but the new Raid Plan id does not exist until that first save.
+        # Re-persist the same Comp Builds once after binding so their source metadata
+        # records the real plan id. Stable BuildIds keep this as an update, never a
+        # duplicate build. The Raid Plan already points at those exact BuildIds.
+        if was_unbound and plan is not None:
+            rebound_result = build_service.persist(page._comp_plan_state)
+            page._comp_plan_state = rebound_result.state.mark_saved()
+            state = page._comp_plan_state
+            build_result = rebound_result
     except Exception as exc:
         page.status.error(
             f"Could not save Comp Builder plan: {type(exc).__name__}: {exc}"
