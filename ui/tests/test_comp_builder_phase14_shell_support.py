@@ -324,3 +324,24 @@ def test_new_comp_plan_repairs_comp_build_provenance_after_first_raid_plan_bindi
     assert "if was_unbound and plan is not None:" in save_block
     assert "rebound_result = build_service.persist(page._comp_plan_state)" in save_block
     assert "rebound_result.state.mark_saved()" in save_block
+
+
+def test_comp_maker_plan_picker_guards_unsaved_state_before_switching_saved_plans() -> None:
+    source = Path("ui/comp_builder_page.py").read_text(encoding="utf-8")
+
+    assert "def _confirm_raid_plan_switch(self, target_plan_id: str) -> bool:" in source
+    assert 'box.setWindowTitle("Unsaved Comp Plan Changes")' in source
+    assert "QMessageBox.StandardButton.Save" in source
+    assert "QMessageBox.StandardButton.Discard" in source
+    assert "QMessageBox.StandardButton.Cancel" in source
+    assert 'save_pending = getattr(self, "save_pending_changes", None)' in source
+    assert 'discard_pending = getattr(self, "discard_pending_changes", None)' in source
+    assert "self._restore_raid_plan_picker_to_current_state()" in source
+
+    load_block = source.split("def _raid_plan_name_selected(self, index: int) -> None:", 1)[1].split(
+        "    def _build_ui", 1
+    )[0]
+    assert "if not self._confirm_raid_plan_switch(str(plan_id)):" in load_block
+    assert load_block.index("_confirm_raid_plan_switch") < load_block.index(
+        "self.raid_plan_repository.get"
+    )
