@@ -122,6 +122,8 @@ local office = {
     context = "",
     notesForExplorers = "",
     randomNotes = "",
+    noteObservationOverride = "",
+    fieldNoteLocationOverride = "",
 }
 
 local function json_escape(value)
@@ -529,6 +531,8 @@ function script_update(settings)
     office.context = obs.obs_data_get_string(settings, "context")
     office.notesForExplorers = obs.obs_data_get_string(settings, "notes_for_explorers")
     office.randomNotes = obs.obs_data_get_string(settings, "random_notes")
+    office.noteObservationOverride = obs.obs_data_get_string(settings, "note_observation_override")
+    office.fieldNoteLocationOverride = obs.obs_data_get_string(settings, "fn_location_override")
 
     auto_chapters_enabled = obs.obs_data_get_bool(settings, "auto_chapters")
 end
@@ -549,7 +553,6 @@ local function update()
         Date = "CLIP_Date",
         Assignment = "CLIP_Assignment",
         FieldNoteNumber = "FN_Note_Number",
-        Observation = "NOTE_Observation",
         Context = "NOTE_Context",
         NextSteps = "NOTE_NextSteps"
     }
@@ -566,9 +569,23 @@ local function update()
         end
     end
 
-    -- Field Note section mirrors the Top Bar's Expedition/Objective values
+    -- Field Note section mirrors the Top Bar's Expedition/Objective values.
+    -- OBS-side overrides are intentionally optional: blank keeps the existing
+    -- automatic JSON-driven value, while entered text remains stable across the
+    -- one-second refresh timer.
+    local note_observation = office.noteObservationOverride
+    if note_observation == "" then
+        note_observation = extract("Observation", json)
+    end
+
+    local field_note_location = office.fieldNoteLocationOverride
+    if field_note_location == "" then
+        field_note_location = extract("Expedition", json)
+    end
+
     set_text("FN_Expedition", extract("Objective", json))
-    set_text("FN_Location", extract("Expedition", json))
+    set_text("FN_Location", field_note_location)
+    set_text("NOTE_Observation", note_observation)
     set_text("FN_Observation", extract("Observation", json))
     set_text("NOTE_Content", extract("Content", json))
     set_text("NOTE_Context", extract("Context", json))
@@ -971,6 +988,25 @@ function script_properties()
     )
     obs.obs_properties_add_text(
         props, "random_notes", "Random Notes", obs.OBS_TEXT_MULTILINE
+    )
+
+    obs.obs_properties_add_text(
+        props,
+        "source_overrides_heading",
+        "OBS SOURCE OVERRIDES (leave blank for automatic values)",
+        obs.OBS_TEXT_INFO
+    )
+    obs.obs_properties_add_text(
+        props,
+        "note_observation_override",
+        "NOTE_Observation",
+        obs.OBS_TEXT_MULTILINE
+    )
+    obs.obs_properties_add_text(
+        props,
+        "fn_location_override",
+        "FN_Location",
+        obs.OBS_TEXT_DEFAULT
     )
 
     obs.obs_properties_add_button(
