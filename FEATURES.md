@@ -18,6 +18,7 @@
 - **Phase 14 explicit recipient binding** — carries known self/ally/enemy combatants and exact event-scoped recipient bindings through simulation and snapshots; missing, unknown, or scope-conflicting recipients remain unresolved rather than being inferred from roster membership or geometry.
 - **Phase 14 recipient-aware Health state** — applies explicitly bound direct/periodic heals to explicit current/max Health, recording attempted heal, applied heal, overheal, and exact-time Health snapshots without assuming missing target state.
 - **Phase 14 incoming damage Health state** — accepts explicit post-mitigation incoming damage for known recipients, records applied damage/overkill, sequences it with healing, and projects resulting Health into exact-time snapshots without inventing mitigation or encounter damage values.
+- **Phase 14 outgoing damage Health state** — accepts explicit already-resolved outgoing damage for known enemy combatants, carries it through the deterministic event stream into enemy Health/overkill/death transitions, and exposes the result through exact-time snapshots without duplicating canonical DD formulas or mitigation math.
 - **Phase 14 explicit death state** — emits deterministic death transitions when explicit Health reaches zero, exposes `is_dead` in exact-time snapshots, and blocks implicit healing-based resurrection until revive semantics are modeled.
 
 - **Phase 12.5 canonical closeout audit** — a read-only real-data audit checks persisted Raid Plans against reusable saved Builds and Roster identities, preserving recruit/open chairs, stable player/character/build IDs, locked class/role/gear choices, assignment provenance, explicit unresolved state, temporary-only persistence round-trips, and Optimizer Adviser non-mutation.
@@ -349,3 +350,22 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **OBS Field Note source overrides** — The Foundry dashboard Lua script exposes persistent OBS-side edit fields for `NOTE_Observation` and `FN_Location`. Blank values preserve the existing automatic JSON-driven text; entered values override the one-second overlay refresh safely.
 
 - **Phase 14 planning workflow round-trip guard** — regression coverage now exercises the real cross-service path from Personnel → unbound Comp Maker plan → canonical Comp Build → persisted/reloaded Raid Plan → stable BuildId resolution → Coverage assignment semantics → Readiness. Brand-new plans repair Comp Build source-plan provenance immediately after first Raid Plan binding without duplicating the build.
+
+
+### Personnel lifecycle and history
+- Personnel records support **Archived** status.
+- Archived players are excluded from normal roster queries and current planning by default.
+- Archived players remain available through the explicit **Archived** view and can be restored.
+- Permanent deletion requires the Personnel record to be archived first.
+- Personnel records retain private freeform notes.
+- Former gamertags are stored as durable exact player aliases and remain available on archived records.
+- Exact alias matching excludes archived players from active identity resolution while preserving their historical aliases.
+
+
+
+### Team deletion and cleanup
+- Teams can be deleted directly from the Teams overview or Team Schedule.
+- Team deletion removes the team record, schedule, roster memberships, and canonical build assignments for that team.
+- Deleting a team never deletes Personnel, characters, saved builds, or historical raid-plan snapshots.
+- Use Team Merge instead of Delete when a duplicate team contains roster/build-assignment data that should be preserved.
+

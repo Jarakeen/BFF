@@ -107,6 +107,40 @@ class CombatSimulationIncomingDamage:
 
 
 @dataclass(frozen=True)
+class CombatSimulationOutgoingDamage:
+    """Explicit already-resolved player/group damage applied to one combatant.
+
+    The simulator does not calculate mitigation here. Callers must provide the
+    final damage amount after the authoritative damage engine has resolved its
+    mechanics.
+    """
+
+    time_seconds: float
+    sequence: int
+    source: str
+    recipient: str
+    amount: float
+    damage_type: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.time_seconds < 0:
+            raise ValueError("outgoing damage time cannot be negative")
+        if self.sequence < 0:
+            raise ValueError("outgoing damage sequence cannot be negative")
+        if not str(self.source or "").strip():
+            raise ValueError("outgoing damage source is required")
+        if not str(self.recipient or "").strip():
+            raise ValueError("outgoing damage recipient is required")
+        if float(self.amount) < 0:
+            raise ValueError("outgoing damage amount cannot be negative")
+        object.__setattr__(self, "source", str(self.source).strip())
+        object.__setattr__(self, "recipient", str(self.recipient).strip())
+        object.__setattr__(self, "amount", float(self.amount))
+        if self.damage_type is not None:
+            object.__setattr__(self, "damage_type", str(self.damage_type).strip() or None)
+
+
+@dataclass(frozen=True)
 class CombatSimulationRecipientBinding:
     time_seconds: float
     sequence: int
@@ -216,6 +250,7 @@ __all__ = [
     "CombatSimulationEvent",
     "CombatSimulationCombatant",
     "CombatSimulationIncomingDamage",
+    "CombatSimulationOutgoingDamage",
     "CombatSimulationRecipientBinding",
     "CombatSimulationTargetState",
     "CombatSimulationResourceResult",

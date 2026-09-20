@@ -97,7 +97,7 @@ Currently approved:
 - `assets/themes/bff/urban_wilderness` — active visual skin assets
 - `assets/themes/bff/field_journal/roster` — pencil/sketch Roster/Readiness assets still intentionally used by Urban Wilderness
 - `bff.ico` — Windows application icon
-- `data/eso.db` as a **read-only recovery seed only** inside the frozen app
+- a **sanitized `eso.db` reference seed** inside the frozen app and first-install package; developer Personnel, teams, roster workflow state, collectible/stickerbook progress, generated drafts, and imported ESO Logs rows are stripped before packaging
 
 The live writable database remains external.
 
@@ -131,6 +131,7 @@ A release is ready only when all of the following are true:
 - no required runtime asset/data file is missing;
 - no forbidden legacy asset tree is bundled;
 - existing live database migrates without reset;
+- first-install and embedded recovery databases contain no developer-owned Personnel, team, roster workflow, collectible/stickerbook progress, generated draft, or imported ESO Logs rows;
 - update archive contains no `eso.db`, settings, builds, roster/progress/session state;
 - upgrade from the previous release preserves user-owned data;
 - release artifacts report version `0.1.3`.

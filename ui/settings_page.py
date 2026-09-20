@@ -10,9 +10,11 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer, QUrl
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
     QFileDialog,
     QFormLayout,
@@ -208,6 +210,16 @@ class SettingsPage(QWidget):
         form.addRow("ESO Logs Client ID", self.eso_logs_client_id)
         form.addRow("ESO Logs Client Secret", self.eso_logs_client_secret)
 
+        self.finch_api_url = QLineEdit()
+        self.finch_api_url.setPlaceholderText("https://your-finch-service.up.railway.app")
+        self.finch_api_key = QLineEdit()
+        self.finch_api_key.setEchoMode(QLineEdit.EchoMode.Password)
+        self.finch_api_key.setPlaceholderText("Finch API key")
+        form.addRow("Finch API URL", self.finch_api_url)
+        form.addRow("Finch API Key", self.finch_api_key)
+        self.test_finch_button = QPushButton("Test Finch Connection")
+        form.addRow("", self.test_finch_button)
+
         self.google_credentials = QLineEdit()
         self.google_credentials_browse = QPushButton("Browse…")
         self.google_spreadsheet_id = QLineEdit()
@@ -377,6 +389,7 @@ class SettingsPage(QWidget):
         entries.extend(
             (
                 ("archive", "Archive Folder"),
+                ("finch", "Finch"),
                 ("sheets", "Google Sheets"),
                 ("ai", "AI Service"),
             )
@@ -436,6 +449,7 @@ class SettingsPage(QWidget):
         )
         if self.broadcast_enabled:
             self.test_obs_button.clicked.connect(self.test_obs)
+        self.test_finch_button.clicked.connect(self.test_finch)
 
         self.save_button = QPushButton("Save Settings")
         self.save_button.setProperty("primary", True)
@@ -473,6 +487,8 @@ class SettingsPage(QWidget):
         self.builds_export_folder.setText(s.get("BuildsExportFolder", ""))
         self.eso_logs_client_id.setText(s.get("EsoLogsClientId", ""))
         self.eso_logs_client_secret.setText(s.get("EsoLogsClientSecret", ""))
+        self.finch_api_url.setText(s.get("FinchApiUrl", ""))
+        self.finch_api_key.setText(s.get("FinchApiKey", ""))
         self.google_credentials.setText(s.get("GoogleCredentialsPath", ""))
         self.google_spreadsheet_id.setText(s.get("GoogleSpreadsheetId", ""))
         self.archive_folder.setText(s.get("ArchiveFolder", ""))
@@ -496,6 +512,13 @@ class SettingsPage(QWidget):
         if self.broadcast_enabled:
             self.integration_labels["obs"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
             self.integration_labels["websocket"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
+        finch_ok = bool(
+            self.finch_api_url.text().strip()
+            and self.finch_api_key.text().strip()
+        )
+        self.integration_labels["finch"].setText(
+            "●  Configured" if finch_ok else "●  Not configured"
+        )
         self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Optional / not configured")
         self.integration_labels["ai"].setText("●  Not configured")
         self.status.info("Settings loaded.")
@@ -507,6 +530,16 @@ class SettingsPage(QWidget):
             "BuildsExportFolder": self.builds_export_folder.text().strip(),
             "EsoLogsClientId": self.eso_logs_client_id.text().strip(),
             "EsoLogsClientSecret": self.eso_logs_client_secret.text(),
+            "FinchApiUrl": (
+                self.finch_api_url.text().strip().rstrip("/")
+                if "://" in self.finch_api_url.text().strip()
+                else (
+                    "https://" + self.finch_api_url.text().strip().rstrip("/")
+                    if self.finch_api_url.text().strip()
+                    else ""
+                )
+            ),
+            "FinchApiKey": self.finch_api_key.text(),
             "GoogleCredentialsPath": self.google_credentials.text().strip(),
             "GoogleSpreadsheetId": self.google_spreadsheet_id.text().strip(),
             "ArchiveFolder": self.archive_folder.text().strip(),
@@ -530,8 +563,136 @@ class SettingsPage(QWidget):
             self.google_credentials.text().strip()
             and self.google_spreadsheet_id.text().strip()
         )
+        finch_ok = bool(
+            self.finch_api_url.text().strip()
+            and self.finch_api_key.text().strip()
+        )
+        self.integration_labels["finch"].setText(
+            "●  Configured" if finch_ok else "●  Not configured"
+        )
         self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Optional / not configured")
         self.status.success("Settings saved.")
+
+    def test_finch(self):
+        url = self.finch_api_url.text().strip().rstrip("/")
+        if url and "://" not in url:
+            url = "https://" + url
+            self.finch_api_url.setText(url)
+        key = self.finch_api_key.text().strip()
+        if not url or not key:
+            self.integration_labels["finch"].setText("●  Not configured")
+            self.status.warning("Finch API URL and API Key are both required.")
+            return
+
+        if getattr(self, "_finch_reply", None) is not None:
+            try:
+                self._finch_reply.abort()
+            except RuntimeError:
+                pass
+            self._finch_reply = None
+
+        self.integration_labels["finch"].setText("●  Checking…")
+        self.test_finch_button.setEnabled(False)
+        self.status.info("Contacting Finch…")
+
+        if getattr(self, "_finch_network", None) is None:
+            self._finch_network = QNetworkAccessManager(self)
+
+        request = QNetworkRequest(QUrl(f"{url}/api/v1/status"))
+        request.setRawHeader(b"Accept", b"application/json")
+        request.setRawHeader(b"Authorization", f"Bearer {key}".encode("utf-8"))
+        request.setRawHeader(b"User-Agent", b"FoundryDock/FinchClient")
+
+        reply = self._finch_network.get(request)
+        self._finch_reply = reply
+
+        timeout = QTimer(self)
+        timeout.setSingleShot(True)
+        timeout.setInterval(10000)
+        self._finch_timeout = timeout
+
+        def timed_out() -> None:
+            if self._finch_reply is reply and reply.isRunning():
+                reply.setProperty("finchTimedOut", True)
+                reply.abort()
+
+        timeout.timeout.connect(timed_out)
+        timeout.start()
+        reply.finished.connect(lambda: self._finish_finch_test(reply))
+
+    def _finish_finch_test(self, reply: QNetworkReply) -> None:
+        timeout = getattr(self, "_finch_timeout", None)
+        if timeout is not None:
+            timeout.stop()
+
+        if self._finch_reply is reply:
+            self._finch_reply = None
+        self.test_finch_button.setEnabled(True)
+
+        timed_out = bool(reply.property("finchTimedOut"))
+        status = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
+        try:
+            status_code = int(status) if status is not None else 0
+        except (TypeError, ValueError):
+            status_code = 0
+
+        raw = bytes(reply.readAll()).decode("utf-8", errors="replace").strip()
+        network_error = reply.error()
+        error_text = reply.errorString()
+        reply.deleteLater()
+
+        if timed_out:
+            self.integration_labels["finch"].setText("●  Timed out")
+            self.status.error("Finch did not answer within 10 seconds.")
+            return
+
+        if status_code == 401:
+            self.integration_labels["finch"].setText("●  Bad API key")
+            self.status.error("Finch is reachable, but rejected the API key.")
+            return
+
+        if status_code == 404:
+            self.integration_labels["finch"].setText("●  API not deployed")
+            self.status.error(
+                "Finch is reachable, but /api/v1/status is not deployed yet. Redeploy Finch on Railway."
+            )
+            return
+
+        if status_code == 503:
+            self.integration_labels["finch"].setText("●  Server not configured")
+            self.status.error("Finch is reachable, but FINCH_API_KEY is not configured on Railway.")
+            return
+
+        if network_error != QNetworkReply.NetworkError.NoError:
+            self.integration_labels["finch"].setText("●  Error")
+            self.status.error(f"Could not connect to Finch: {error_text}")
+            return
+
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError:
+            self.integration_labels["finch"].setText("●  Invalid response")
+            self.status.error("Finch responded, but did not return valid JSON.")
+            return
+
+        if not isinstance(payload, dict) or not payload.get("ok"):
+            self.integration_labels["finch"].setText("●  Error")
+            self.status.error("Finch responded, but did not report a healthy API connection.")
+            return
+
+        self.integration_labels["finch"].setText("●  Connected")
+        discord_ready = bool(payload.get("discord_ready"))
+        discord_user = str(payload.get("discord_user") or "").strip()
+        discord_text = (
+            f"Discord: {discord_user}"
+            if discord_ready and discord_user
+            else "Discord gateway not ready"
+        )
+        service = str(payload.get("service") or "Finch")
+        api_version = str(payload.get("api_version") or "").strip()
+        self.status.success(
+            f"Connected to {service} {api_version} • {discord_text}."
+        )
 
     def test_obs(self):
         if not self.broadcast_enabled:

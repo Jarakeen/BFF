@@ -44,7 +44,7 @@ OPTIONAL_RUNTIME_ASSET_DATAS: tuple[tuple[str, str], ...] = (
 )
 
 SEED_DATAS: tuple[tuple[str, str], ...] = (
-    ("data/eso.db", "_seed_data"),
+    ("build/release_seed/eso.db", "_seed_data"),
 )
 
 # Python namespaces that are explicitly outside the default release runtime. These may
@@ -188,6 +188,7 @@ USER_OWNED_DATA_FILES: tuple[str, ...] = (
     "characters.json",
     "current_achievement_run.json",
     "CurrentAchievementRun.json",
+    "discord_registrations.json",
     "CurrentBroadcast.json",
     "CurrentExpedition.json",
     "CurrentIncident.json",

@@ -104,7 +104,9 @@ def test_release_build_preserves_user_database_and_uses_fixed_update_asset_name(
     build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
     updater = (ROOT / "services" / "application_update_service.py").read_text(encoding="utf-8")
 
-    assert 'Copy-Item $SourceDatabase (Join-Path $DataRoot "eso.db") -Force' in build
+    assert 'build_release_database_seed.py' in build
+    assert 'Copy-Item $ReleaseSeedDatabase (Join-Path $DataRoot "eso.db") -Force' in build
+    assert 'Copy-Item $SourceDatabase (Join-Path $DataRoot "eso.db") -Force' not in build
     assert 'FoundryDock-update.zip' in build
     assert 'FoundryDock-update.zip' in updater
     assert 'Copy-Item (Join-Path $PackageRoot "settings.json")' not in build
@@ -193,6 +195,7 @@ def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
     assert (ROOT / "data" / "rotation_policy" / "encounter_demands.json").is_file()
 
     for name in (
+        "discord_registrations.json",
         "encounter_positioning.json",
         "encounter_positioning.png",
         "encounter_positioning_timeline.json",
@@ -285,3 +288,12 @@ def test_release_includes_rotation_encounter_policy_required_at_startup() -> Non
     assert "rotation_policy" in set(manifest.RUNTIME_EXTERNAL_DATA_DIRECTORIES)
     assert 'get_data_dir() / "rotation_policy" / "encounter_demands.json"' in registry
     assert (ROOT / "data" / "rotation_policy" / "encounter_demands.json").is_file()
+
+
+def test_release_embeds_sanitized_database_seed_instead_of_live_database() -> None:
+    manifest = _load_manifest()
+    build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
+
+    assert manifest.SEED_DATAS == (("build/release_seed/eso.db", "_seed_data"),)
+    assert '$ReleaseSeedDatabase = Join-Path $ReleaseSeedRoot "eso.db"' in build
+    assert 'python tools\\build_release_database_seed.py --source $SourceDatabase --destination $ReleaseSeedDatabase' in build

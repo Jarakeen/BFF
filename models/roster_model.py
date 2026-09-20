@@ -29,6 +29,7 @@ STATUSES = [
     "Active",
     "Sub",
     "Inactive",
+    "Archived",
 ]
 
 ESO_CLASSES = [
@@ -58,6 +59,7 @@ class RosterMember:
     DiscordName: str = ""
     YouTube: str = ""
     Twitch: str = ""
+    PersonnelNotes: str = ""
 
     def __post_init__(self) -> None:
         self.PrimaryRole = normalize_roster_role(self.PrimaryRole)

@@ -38,6 +38,7 @@ def test_deleting_member_removes_assignment_row(tmp_path):
     member_id = service.create_member(RosterMember(PlayerName="TestPlayer"))
     service.set_member_assignment_field(member_id, "primary_assignment", "Portal")
 
+    service.archive_member(member_id)
     service.delete_member(member_id)
 
     assert service.get_member_assignment(member_id) == {

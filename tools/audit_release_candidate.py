@@ -78,7 +78,16 @@ def main(argv: list[str] | None = None) -> int:
         errors.append("RELEASE_STATUS.md is missing")
 
     approved_sources = [source for source, _destination in manifest.RUNTIME_ASSET_DATAS]
-    for source, _destination in (*manifest.RUNTIME_ASSET_DATAS, *manifest.SEED_DATAS):
+    for source, _destination in manifest.RUNTIME_ASSET_DATAS:
+        if not (ROOT / source).exists():
+            errors.append(f"Required release payload is missing: {source}")
+
+    # Release DB seeds are generated from the live reference database during the
+    # packaging step. They are intentionally absent from the source tree so user-owned
+    # SQLite state can never be committed or copied into release payloads by accident.
+    for source, _destination in manifest.SEED_DATAS:
+        if str(source).replace("\\", "/").startswith("build/release_seed/"):
+            continue
         if not (ROOT / source).exists():
             errors.append(f"Required release payload is missing: {source}")
 

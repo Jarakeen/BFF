@@ -54,6 +54,23 @@ try {
         Remove-Item $BuildRoot -Recurse -Force
     }
 
+    $SourceDatabase = Join-Path $ProjectRoot "data\eso.db"
+    if (-not (Test-Path $SourceDatabase)) {
+        throw "Source database not found: $SourceDatabase"
+    }
+    $ReleaseSeedRoot = Join-Path $BuildRoot "release_seed"
+    $ReleaseSeedDatabase = Join-Path $ReleaseSeedRoot "eso.db"
+    New-Item -ItemType Directory -Force -Path $ReleaseSeedRoot | Out-Null
+
+    Write-Host "Creating privacy-safe release database seed..."
+    python tools\build_release_database_seed.py --source $SourceDatabase --destination $ReleaseSeedDatabase
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not create sanitized release database seed."
+    }
+    if (-not (Test-Path $ReleaseSeedDatabase)) {
+        throw "Sanitized release database seed was not created: $ReleaseSeedDatabase"
+    }
+
     Write-Host "Building $ExeName..."
     python -m PyInstaller --clean $SpecPath
     if ($LASTEXITCODE -ne 0) {
@@ -71,13 +88,10 @@ try {
     New-Item -ItemType Directory -Force -Path $DataRoot | Out-Null
     Move-Item $BuiltExe (Join-Path $PackageRoot $ExeName) -Force
 
-    # First install gets a writable external DB. The frozen app also carries a
-    # read-only recovery seed, but updates must never replace this live database.
-    $SourceDatabase = Join-Path $ProjectRoot "data\eso.db"
-    if (-not (Test-Path $SourceDatabase)) {
-        throw "Source database not found: $SourceDatabase"
-    }
-    Copy-Item $SourceDatabase (Join-Path $DataRoot "eso.db") -Force
+    # First install gets a writable privacy-safe DB created from canonical
+    # reference data only. The frozen app embeds the same sanitized file as its
+    # recovery seed. Never copy the developer's live eso.db into release output.
+    Copy-Item $ReleaseSeedDatabase (Join-Path $DataRoot "eso.db") -Force
 
     # Runtime external data is positive-allowlisted by release_manifest.py.
     # File entries may include reviewed subdirectories such as gameplay_policy/.
@@ -138,6 +152,12 @@ try {
         '{"schema_version": 4, "players": [], "characters": [], "builds": [], "team_assignments": []}',
         $Utf8NoBom
     )
+
+    Write-Host "Running packaged release privacy audit..."
+    python tools\audit_packaged_release_privacy.py --package-root $PackageRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "Packaged release privacy audit failed. No release package will be created."
+    }
 
     $CleanSettings = @'
 {

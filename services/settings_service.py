@@ -14,6 +14,7 @@ except ImportError:
 # credential vault instead when keyring is available.
 _KEYRING_SERVICE = "BlackFeatherFoundry"
 _KEYRING_ESO_LOGS_SECRET = "EsoLogsClientSecret"
+_KEYRING_FINCH_API_KEY = "FinchApiKey"
 
 
 class SettingsService:
@@ -25,6 +26,8 @@ class SettingsService:
             "EsoLogsClientId": "",
             "EsoLogsClientSecret": "",
             "BuildsExportFolder": "",
+            "FinchApiUrl": "",
+            "FinchApiKey": "",
             "CurrentExpeditionPath": str(Path("user_data/broadcast/CurrentExpedition.json")),
             "CurrentIncidentPath": str(Path("user_data/broadcast/CurrentIncident.json")),
             "FieldNoteCounterPath": str(Path("user_data/broadcast/FieldNoteCounter.txt")),
@@ -71,6 +74,8 @@ class SettingsService:
             "EsoLogsClientId": str(data.get("EsoLogsClientId", "")),
             "EsoLogsClientSecret": self._load_secret(data),
             "BuildsExportFolder": str(data.get("BuildsExportFolder", "")),
+            "FinchApiUrl": str(data.get("FinchApiUrl", "")),
+            "FinchApiKey": self._load_finch_api_key(data),
             "CurrentExpeditionPath": self._resolve_path(
                 data.get("CurrentExpeditionPath", "user_data/broadcast/CurrentExpedition.json")
             ),
@@ -135,9 +140,13 @@ class SettingsService:
         settings = dict(settings)
         secret = settings.pop("EsoLogsClientSecret", "")
         stored_in_keyring = self._save_secret(secret)
+        finch_api_key = settings.pop("FinchApiKey", "")
+        finch_stored_in_keyring = self._save_finch_api_key(finch_api_key)
 
         if not stored_in_keyring:
             settings["EsoLogsClientSecret"] = secret
+        if not finch_stored_in_keyring:
+            settings["FinchApiKey"] = finch_api_key
 
         self.settings_path.write_text(
             json.dumps(settings, ensure_ascii=False, indent=4),
@@ -169,6 +178,44 @@ class SettingsService:
         except Exception:
             return False
 
+    # --------------------------------------------------
+    # Finch API key (keyring-backed)
+    # --------------------------------------------------
+
+    def _save_finch_api_key(self, secret: str) -> bool:
+        if keyring is None:
+            return False
+        try:
+            if secret:
+                keyring.set_password(
+                    _KEYRING_SERVICE,
+                    _KEYRING_FINCH_API_KEY,
+                    secret,
+                )
+            else:
+                try:
+                    keyring.delete_password(
+                        _KEYRING_SERVICE,
+                        _KEYRING_FINCH_API_KEY,
+                    )
+                except Exception:
+                    pass
+            return True
+        except Exception:
+            return False
+
+    def _load_finch_api_key(self, raw_settings: dict) -> str:
+        if keyring is not None:
+            try:
+                stored = keyring.get_password(
+                    _KEYRING_SERVICE,
+                    _KEYRING_FINCH_API_KEY,
+                )
+                if stored:
+                    return stored
+            except Exception:
+                pass
+        return str(raw_settings.get("FinchApiKey", ""))
     def _load_secret(self, raw_settings: dict) -> str:
         if keyring is not None:
             try:

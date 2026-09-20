@@ -11,13 +11,12 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QWidget,
     QFormLayout,
     QComboBox,
     QLineEdit,
-    QPushButton,
+    QTextEdit,
 )
 
 from models.roster_model import (
@@ -31,14 +30,17 @@ from models.roster_model import (
 class RosterRecord(QWidget):
     """Editable identity, role, team membership, and status for one roster member."""
 
-    screenshotImportRequested = Signal()
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.member_id: int | None = None
 
         self.player_name = QLineEdit()
         self.player_name.setPlaceholderText("Xbox gamertag")
+        self.former_gamertags = QLineEdit()
+        self.former_gamertags.setPlaceholderText("Old gamertags, separated by commas")
+        self.former_gamertags.setToolTip(
+            "Exact former gamertags are stored as durable player aliases."
+        )
         self.character_name = QLineEdit()
 
         self.discord_name = QLineEdit()
@@ -47,13 +49,6 @@ class RosterRecord(QWidget):
         self.youtube.setPlaceholderText("YouTube channel or handle")
         self.twitch = QLineEdit()
         self.twitch.setPlaceholderText("Twitch channel or handle")
-
-        self.import_discord_screenshot = QPushButton("Import Discord Screenshot…")
-        self.import_discord_screenshot.setToolTip(
-            "Open a Discord profile screenshot beside this Personnel record. "
-            "Details are only prefilled; nothing is saved automatically."
-        )
-        self.import_discord_screenshot.clicked.connect(self.screenshotImportRequested.emit)
 
         self.eso_class = QComboBox()
         self.eso_class.addItems(ESO_CLASSES)
@@ -76,18 +71,25 @@ class RosterRecord(QWidget):
         self.status = QComboBox()
         self.status.addItems(STATUSES)
 
+        self.personnel_notes = QTextEdit()
+        self.personnel_notes.setPlaceholderText(
+            "Private Personnel notes: history, context, reminders, former-team notes..."
+        )
+        self.personnel_notes.setMinimumHeight(90)
+
         form = QFormLayout(self)
         form.addRow("Xbox Gamertag", self.player_name)
+        form.addRow("Former Gamertags", self.former_gamertags)
         form.addRow("Character Name", self.character_name)
         form.addRow("Discord", self.discord_name)
         form.addRow("YouTube", self.youtube)
         form.addRow("Twitch", self.twitch)
-        form.addRow("Quick Intake", self.import_discord_screenshot)
         form.addRow("ESO Class", self.eso_class)
         form.addRow("Primary Role", self.primary_role)
         form.addRow("Secondary Role", self.secondary_role)
         form.addRow("Teams", self.team)
         form.addRow("Status", self.status)
+        form.addRow("Personnel Notes", self.personnel_notes)
 
     def set_team_choices(self, team_names: list[str]):
         current = self.team.currentText()
@@ -130,6 +132,7 @@ class RosterRecord(QWidget):
             DiscordName=self.discord_name.text().strip(),
             YouTube=self.youtube.text().strip(),
             Twitch=self.twitch.text().strip(),
+            PersonnelNotes=self.personnel_notes.toPlainText().strip(),
         )
 
     def load(self, member: RosterMember):
@@ -144,16 +147,34 @@ class RosterRecord(QWidget):
         self.secondary_role.setCurrentText(member.SecondaryRole)
         self.team.setCurrentText(member.Team)
         self.status.setCurrentText(self._display_status(member.Status))
+        self.personnel_notes.setPlainText(member.PersonnelNotes)
 
     def clear(self):
         self.member_id = None
         self.player_name.clear()
+        self.former_gamertags.clear()
         self.character_name.clear()
         self.discord_name.clear()
         self.youtube.clear()
         self.twitch.clear()
+        self.personnel_notes.clear()
         self.eso_class.setCurrentIndex(0)
         self.primary_role.setCurrentIndex(0)
         self.secondary_role.setCurrentIndex(0)
         self.team.setCurrentText("")
         self.status.setCurrentIndex(0)
+
+    def set_former_gamertags(self, values: list[str] | tuple[str, ...]) -> None:
+        self.former_gamertags.setText(", ".join(str(value).strip() for value in values if str(value).strip()))
+
+    def former_gamertag_values(self) -> tuple[str, ...]:
+        seen: set[str] = set()
+        values: list[str] = []
+        for raw in self.former_gamertags.text().split(","):
+            value = " ".join(raw.strip().split())
+            key = value.lstrip("@").casefold()
+            if not value or key in seen:
+                continue
+            seen.add(key)
+            values.append(value)
+        return tuple(values)

@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
+    QPushButton,
     QScrollArea,
     QSplitter,
     QTreeWidget,
@@ -24,6 +26,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.build_service import BuildService
+from services.team_deletion_service import delete_team_everywhere
 from ui.components.foundry_card import FoundryCard
 
 _INSTALLED = False
@@ -369,6 +372,39 @@ def install() -> None:
 
         self.character_detail_layout.addStretch(1)
 
+    def delete_team_from_overview(self, team_name: str) -> None:
+        name = _text(team_name)
+        if not name:
+            return
+        answer = QMessageBox.question(
+            self,
+            "Delete Team",
+            (
+                f'Delete "{name}"?\n\n'
+                "This removes the team, its schedule, roster memberships, and canonical "
+                "build assignments for that team. People, characters, saved builds, "
+                "and historical raid plans are kept."
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            result = delete_team_everywhere(
+                self.roster_service,
+                self.build_library,
+                name,
+            )
+            self.refresh()
+            self.status.success(
+                f"Deleted {result.team_name}: "
+                f"{result.removed_memberships} roster membership(s), "
+                f"{result.removed_build_assignments} build assignment(s)."
+            )
+        except Exception as exc:
+            self.status.error(f"Team deletion failed: {exc}")
+
     def refresh_team_cards(self) -> None:
         if not hasattr(self, "team_overview_grid"):
             return
@@ -411,6 +447,17 @@ def install() -> None:
             )
             counts.setProperty("muted", True)
             card.addWidget(counts)
+
+            delete_button = QPushButton("Delete Team")
+            delete_button.setProperty("danger", True)
+            delete_button.setToolTip(
+                "Delete this team without deleting people, characters, saved builds, or raid history."
+            )
+            delete_button.clicked.connect(
+                lambda _checked=False, team_name=schedule.TeamName:
+                self._delete_team_from_overview(team_name)
+            )
+            card.addWidget(delete_button)
 
             if assignments:
                 card.addWidget(QLabel("Assigned builds"))
@@ -455,6 +502,7 @@ def install() -> None:
     RosterPage._filter_character_tree = filter_character_tree
     RosterPage._character_tree_selection_changed = character_tree_selection_changed
     RosterPage._show_character_detail = show_character_detail
+    RosterPage._delete_team_from_overview = delete_team_from_overview
     RosterPage._refresh_team_cards = refresh_team_cards
     RosterPage.refresh = refresh_with_player_architecture
 
