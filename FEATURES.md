@@ -360,3 +360,11 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Former gamertags are stored as durable exact player aliases and remain available on archived records.
 - Exact alias matching excludes archived players from active identity resolution while preserving their historical aliases.
 
+
+
+### Team deletion and cleanup
+- Teams can be deleted directly from the Teams overview or Team Schedule.
+- Team deletion removes the team record, schedule, roster memberships, and canonical build assignments for that team.
+- Deleting a team never deletes Personnel, characters, saved builds, or historical raid-plan snapshots.
+- Use Team Merge instead of Delete when a duplicate team contains roster/build-assignment data that should be preserved.
+
