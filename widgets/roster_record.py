@@ -34,8 +34,15 @@ class RosterRecord(QWidget):
         self.member_id: int | None = None
 
         self.player_name = QLineEdit()
-        self.player_name.setPlaceholderText("Gamertag")
+        self.player_name.setPlaceholderText("Xbox gamertag")
         self.character_name = QLineEdit()
+
+        self.discord_name = QLineEdit()
+        self.discord_name.setPlaceholderText("Discord display name / username")
+        self.youtube = QLineEdit()
+        self.youtube.setPlaceholderText("YouTube channel or handle")
+        self.twitch = QLineEdit()
+        self.twitch.setPlaceholderText("Twitch channel or handle")
 
         self.eso_class = QComboBox()
         self.eso_class.addItems(ESO_CLASSES)
@@ -59,8 +66,11 @@ class RosterRecord(QWidget):
         self.status.addItems(STATUSES)
 
         form = QFormLayout(self)
-        form.addRow("Player Name", self.player_name)
+        form.addRow("Xbox Gamertag", self.player_name)
         form.addRow("Character Name", self.character_name)
+        form.addRow("Discord", self.discord_name)
+        form.addRow("YouTube", self.youtube)
+        form.addRow("Twitch", self.twitch)
         form.addRow("ESO Class", self.eso_class)
         form.addRow("Primary Role", self.primary_role)
         form.addRow("Secondary Role", self.secondary_role)
@@ -105,12 +115,18 @@ class RosterRecord(QWidget):
             SecondaryRole=self.secondary_role.currentText(),
             Team=self._normalize_teams(self.team.currentText()),
             Status=self.status.currentText(),
+            DiscordName=self.discord_name.text().strip(),
+            YouTube=self.youtube.text().strip(),
+            Twitch=self.twitch.text().strip(),
         )
 
     def load(self, member: RosterMember):
         self.member_id = member.Id
         self.player_name.setText(member.PlayerName)
         self.character_name.setText(member.CharacterName)
+        self.discord_name.setText(member.DiscordName)
+        self.youtube.setText(member.YouTube)
+        self.twitch.setText(member.Twitch)
         self.eso_class.setCurrentText(member.EsoClass)
         self.primary_role.setCurrentText(member.PrimaryRole)
         self.secondary_role.setCurrentText(member.SecondaryRole)
@@ -121,6 +137,9 @@ class RosterRecord(QWidget):
         self.member_id = None
         self.player_name.clear()
         self.character_name.clear()
+        self.discord_name.clear()
+        self.youtube.clear()
+        self.twitch.clear()
         self.eso_class.setCurrentIndex(0)
         self.primary_role.setCurrentIndex(0)
         self.secondary_role.setCurrentIndex(0)
