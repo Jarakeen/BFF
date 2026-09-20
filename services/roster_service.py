@@ -48,7 +48,8 @@ class RosterService:
                 canonical_character_id TEXT NOT NULL DEFAULT '',
                 discord_name TEXT NOT NULL DEFAULT '',
                 youtube TEXT NOT NULL DEFAULT '',
-                twitch TEXT NOT NULL DEFAULT ''
+                twitch TEXT NOT NULL DEFAULT '',
+                personnel_notes TEXT NOT NULL DEFAULT ''
             )
         """)
         existing_roster_columns = {
@@ -62,7 +63,7 @@ class RosterService:
             self.db.execute(
                 "ALTER TABLE roster_member ADD COLUMN canonical_character_id TEXT NOT NULL DEFAULT ''"
             )
-        for column in ("discord_name", "youtube", "twitch"):
+        for column in ("discord_name", "youtube", "twitch", "personnel_notes"):
             if column not in existing_roster_columns:
                 self.db.execute(
                     f"ALTER TABLE roster_member ADD COLUMN {column} TEXT NOT NULL DEFAULT ''"
@@ -180,6 +181,7 @@ class RosterService:
                 rm.discord_name,
                 rm.youtube,
                 rm.twitch,
+                rm.personnel_notes,
                 COALESCE((
                     SELECT GROUP_CONCAT(team_name, ', ')
                     FROM (
@@ -212,6 +214,7 @@ class RosterService:
                 rm.discord_name,
                 rm.youtube,
                 rm.twitch,
+                rm.personnel_notes,
                 COALESCE((
                     SELECT GROUP_CONCAT(team_name, ', ')
                     FROM (
@@ -387,8 +390,8 @@ class RosterService:
                 player_name, character_name, eso_class,
                 primary_role, secondary_role, status,
                 canonical_player_id, canonical_character_id,
-                discord_name, youtube, twitch
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                discord_name, youtube, twitch, personnel_notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             member.PlayerName, member.CharacterName, member.EsoClass,
             normalize_roster_role(member.PrimaryRole),
@@ -399,6 +402,7 @@ class RosterService:
             str(member.DiscordName or "").strip(),
             str(member.YouTube or "").strip(),
             str(member.Twitch or "").strip(),
+            str(member.PersonnelNotes or "").strip(),
         ))
         member_id = cursor.lastrowid
         self._set_member_teams(member_id, member.Team)
@@ -417,7 +421,8 @@ class RosterService:
                 player_name = ?, character_name = ?, eso_class = ?,
                 primary_role = ?, secondary_role = ?, status = ?,
                 canonical_player_id = ?, canonical_character_id = ?,
-                discord_name = ?, youtube = ?, twitch = ?
+                discord_name = ?, youtube = ?, twitch = ?,
+                personnel_notes = ?
             WHERE id = ?
         """, (
             member.PlayerName, member.CharacterName, member.EsoClass,
@@ -429,6 +434,7 @@ class RosterService:
             str(member.DiscordName or "").strip(),
             str(member.YouTube or "").strip(),
             str(member.Twitch or "").strip(),
+            str(member.PersonnelNotes or "").strip(),
             member.Id,
         ))
         self._set_member_teams(member.Id, member.Team)
@@ -562,4 +568,5 @@ class RosterService:
             DiscordName=row["discord_name"] or "",
             YouTube=row["youtube"] or "",
             Twitch=row["twitch"] or "",
+            PersonnelNotes=row["personnel_notes"] or "",
         )
