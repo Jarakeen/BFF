@@ -1040,8 +1040,20 @@ Initial real-role control is a short healer sequence using Combat Prayer, light 
 bar swap, and Illustrious Healing. Resource, healing, damage, and proc consequences are
 the next wiring slices and remain owned by their existing canonical engines.
 
-**Phase 14A validation pending:** focused kernel tests must be run on the user's Windows
-checkout before this slice is called green.
+### Phase 14A validation checkpoint — 2026-09-19
+
+User-reported focused checkpoint:
+
+- **15 passed in 2.08s**
+- deterministic replay, same-timestamp ordering, build/rotation identity, bar legality,
+  and runtime-state integration tests are green.
+
+**Phase 14A kernel status: green.**
+
+Next implementation slice: execute healer resource consequences through the existing
+Phase 4 sustain/resource authorities so supported skill actions consume verified costs,
+recovery remains deterministic, and unresolved costs stay explicit rather than becoming
+zero.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
