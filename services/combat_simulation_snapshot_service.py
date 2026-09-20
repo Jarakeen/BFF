@@ -6,6 +6,7 @@ import math
 
 from minmax.runtime_effect_window import partition_runtime_effect_windows
 from models.combat_simulation import (
+    CombatSimulationHealthSnapshot,
     CombatSimulationResourceSnapshot,
     CombatSimulationResult,
     CombatSimulationSnapshot,
@@ -69,6 +70,34 @@ class CombatSimulationSnapshotService:
                 )
             )
 
+        health = []
+        if result.target_state is not None:
+            current_health = {
+                item.identity: item.current_health
+                for item in result.target_state.combatants
+            }
+            maximum_health = {
+                item.identity: item.maximum_health
+                for item in result.target_state.combatants
+            }
+            for event in result.events:
+                if event.time_seconds > instant:
+                    break
+                if event.event_type != "health_change":
+                    continue
+                payload = event.payload_dict()
+                recipient = str(payload.get("recipient") or "").strip()
+                if recipient:
+                    current_health[recipient] = int(payload["after"])
+            health = [
+                CombatSimulationHealthSnapshot(
+                    identity=item.identity,
+                    current_health=current_health.get(item.identity),
+                    maximum_health=maximum_health.get(item.identity),
+                )
+                for item in result.target_state.combatants
+            ]
+
         partition = partition_runtime_effect_windows(
             result.effect_windows,
             at_time_seconds=instant,
@@ -78,6 +107,7 @@ class CombatSimulationSnapshotService:
             time_seconds=instant,
             active_bar=active_bar,
             resources=tuple(resources),
+            health=tuple(health),
             active_effect_windows=partition.active,
             target_state=result.target_state,
             unresolved=tuple(result.unresolved),
