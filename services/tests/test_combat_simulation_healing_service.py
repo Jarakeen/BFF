@@ -18,6 +18,9 @@ from services.rotation_healer_action_healing_service import (
     RotationHealerPeriodicHealSeed,
     RotationHealerResolvedHealEvent,
 )
+from services.rotation_healer_periodic_runtime_evidence_service import (
+    RotationHealerReviewedRuntimeObservation,
+)
 
 
 class _StaticContexts:
@@ -153,7 +156,7 @@ def test_healer_output_bridge_emits_direct_heal_and_periodic_seed() -> None:
     assert seed.payload_dict()["modeled_heal"] == 1456.25
     assert any(
         "Illustrious Healing coefficient 1" in message
-        and "exact tick events require reviewed runtime timing evidence" in message
+        and "first-tick offset is not canonically/reviewedly verified" in message
         for message in result.unresolved
     )
 
@@ -196,7 +199,7 @@ def test_simulation_merges_healing_output_deterministically() -> None:
     )
     assert any(
         "Illustrious Healing coefficient 1" in message
-        and "reviewed runtime timing evidence" in message
+        and "first-tick offset is not canonically/reviewedly verified" in message
         for message in first.unresolved
     )
 
@@ -221,3 +224,59 @@ def test_healer_output_bridge_fails_closed_without_static_context() -> None:
 
     assert result.events == ()
     assert result.unresolved == ("front static context unresolved",)
+
+
+class _CanonicalPeriodicTimingService:
+    def resolve(self, *, source_name, coefficient_number):
+        assert source_name == "Illustrious Healing"
+        assert coefficient_number == 1
+        return SimpleNamespace(
+            source_name=source_name,
+            coefficient_number=coefficient_number,
+            unresolved=(),
+            evidence=("reviewed canonical timing",),
+            timing=object(),
+            cadence_seconds=1.0,
+            duration_seconds=4.0,
+        )
+
+
+def test_reviewed_periodic_timing_expands_illustrious_into_real_ticks() -> None:
+    observation = RotationHealerReviewedRuntimeObservation(
+        source_name="Illustrious Healing",
+        coefficient_number=1,
+        first_tick_offset_seconds=1.0,
+        tick_on_expiry_boundary=True,
+        provenance=("reviewed combat-log control",),
+        game_version="U50",
+    )
+    service = CombatSimulationHealingService(
+        action_healing_service=_ActionHealingService(),
+        static_context_service=_StaticContextService(),
+        canonical_periodic_timing_service=_CanonicalPeriodicTimingService(),
+        reviewed_runtime_observations=(observation,),
+    )
+
+    result = service.project(
+        build=_snapshot().materialize(),
+        plan=_plan(),
+    )
+
+    periodic = [
+        event
+        for event in result.events
+        if event.event_type == "periodic_heal"
+    ]
+    assert [event.time_seconds for event in periodic] == [3.0, 4.0, 5.0]
+    assert all(
+        event.payload_dict()["modeled_heal"] == 1456.25
+        for event in periodic
+    )
+    assert all(
+        event.priority == int(SimulationEventPriority.PERIODIC)
+        for event in periodic
+    )
+    assert not any(
+        "first-tick offset" in message or "tick-at-expiry" in message
+        for message in result.unresolved
+    )
