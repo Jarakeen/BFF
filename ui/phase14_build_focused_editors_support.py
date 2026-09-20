@@ -212,6 +212,24 @@ class _GearDialog(_FocusedDialog):
         self.rows: list[tuple[str, GearSlotRow]] = []
         set_choices = page.reference.list_gear_set_names()
 
+        planned_sets = [
+            str(value).strip()
+            for value in (getattr(build, "PlannedGearSets", ()) or ())
+            if str(value).strip()
+        ]
+        if planned_sets:
+            plan_card = FoundryCard("Comp Plan", "clipboard")
+            note = QLabel(
+                "Planned in Comp Maker. These sets are not assigned to exact gear slots yet."
+            )
+            note.setWordWrap(True)
+            note.setProperty("muted", True)
+            plan_card.addWidget(note)
+            planned = QLabel(" + ".join(planned_sets))
+            planned.setWordWrap(True)
+            plan_card.addWidget(planned)
+            self.root.addWidget(plan_card)
+
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.Shape.NoFrame)
@@ -310,6 +328,24 @@ class _SkillsDialog(_FocusedDialog):
             bar.set_class(build.EsoClass)
         self.front.load(build.FrontBarSkills)
         self.back.load(build.BackBarSkills)
+
+        planned_skills = [
+            str(value).strip()
+            for value in (getattr(build, "PlannedSkills", ()) or ())
+            if str(value).strip()
+        ]
+        if planned_skills:
+            plan_card = FoundryCard("Comp Plan", "clipboard")
+            note = QLabel(
+                "Planned in Comp Maker. These skills are not assigned to exact bar slots yet."
+            )
+            note.setWordWrap(True)
+            note.setProperty("muted", True)
+            plan_card.addWidget(note)
+            planned = QLabel(", ".join(planned_skills))
+            planned.setWordWrap(True)
+            plan_card.addWidget(planned)
+            self.root.addWidget(plan_card)
 
         card = FoundryCard("Skill Bars", "book-open-text")
         form = QFormLayout()
@@ -697,6 +733,15 @@ def _gear_card(page, title: str, rows: list[tuple[str, object]]) -> FoundryCard:
     card = FoundryCard(title, card_icon)
 
     set_text, meta, count = _group_summary(rows, page, build)
+    planned_sets = [
+        str(value).strip()
+        for value in (getattr(build, "PlannedGearSets", ()) or ())
+        if str(value).strip()
+    ]
+    if count == 0 and planned_sets:
+        set_text = " + ".join(planned_sets)
+        meta = "Comp Maker plan • exact slots not assigned yet"
+
     header = QHBoxLayout()
     count_label = QLabel(f"{count} item" + ("" if count == 1 else "s"))
     count_label.setProperty("muted", True)
@@ -747,7 +792,30 @@ def _skills_tab(page, build) -> QWidget:
     from ui import phase14_build_icon_polish_support as icon_polish
 
     tab = QWidget()
-    layout = QHBoxLayout(tab)
+    outer = QVBoxLayout(tab)
+    outer.setContentsMargins(0, 0, 0, 0)
+    outer.setSpacing(8)
+
+    planned_skills = [
+        str(value).strip()
+        for value in (getattr(build, "PlannedSkills", ()) or ())
+        if str(value).strip()
+    ]
+    if planned_skills:
+        planned_card = FoundryCard("Comp Planned Skills", "clipboard")
+        note = QLabel(
+            "Planned in Comp Maker. These are requirements/recommendations, not exact bar slots."
+        )
+        note.setWordWrap(True)
+        note.setProperty("muted", True)
+        planned_card.addWidget(note)
+        planned = QLabel(", ".join(planned_skills))
+        planned.setWordWrap(True)
+        planned_card.addWidget(planned)
+        outer.addWidget(planned_card)
+
+    bars = QWidget()
+    layout = QHBoxLayout(bars)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(8)
     for title, values in (("Base Front Bar", build.FrontBarSkills), ("Base Back Bar", build.BackBarSkills)):
@@ -762,6 +830,7 @@ def _skills_tab(page, build) -> QWidget:
         edit.clicked.connect(lambda: _edit_skills(page))
         card.addWidget(edit)
         layout.addWidget(card, 1)
+    outer.addWidget(bars, 1)
     return tab
 
 
