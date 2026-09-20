@@ -208,6 +208,14 @@ class SettingsPage(QWidget):
         form.addRow("ESO Logs Client ID", self.eso_logs_client_id)
         form.addRow("ESO Logs Client Secret", self.eso_logs_client_secret)
 
+        self.finch_api_url = QLineEdit()
+        self.finch_api_url.setPlaceholderText("https://your-finch-service.up.railway.app")
+        self.finch_api_key = QLineEdit()
+        self.finch_api_key.setEchoMode(QLineEdit.EchoMode.Password)
+        self.finch_api_key.setPlaceholderText("Finch API key")
+        form.addRow("Finch API URL", self.finch_api_url)
+        form.addRow("Finch API Key", self.finch_api_key)
+
         self.google_credentials = QLineEdit()
         self.google_credentials_browse = QPushButton("Browse…")
         self.google_spreadsheet_id = QLineEdit()
@@ -377,6 +385,7 @@ class SettingsPage(QWidget):
         entries.extend(
             (
                 ("archive", "Archive Folder"),
+                ("finch", "Finch"),
                 ("sheets", "Google Sheets"),
                 ("ai", "AI Service"),
             )
@@ -473,6 +482,8 @@ class SettingsPage(QWidget):
         self.builds_export_folder.setText(s.get("BuildsExportFolder", ""))
         self.eso_logs_client_id.setText(s.get("EsoLogsClientId", ""))
         self.eso_logs_client_secret.setText(s.get("EsoLogsClientSecret", ""))
+        self.finch_api_url.setText(s.get("FinchApiUrl", ""))
+        self.finch_api_key.setText(s.get("FinchApiKey", ""))
         self.google_credentials.setText(s.get("GoogleCredentialsPath", ""))
         self.google_spreadsheet_id.setText(s.get("GoogleSpreadsheetId", ""))
         self.archive_folder.setText(s.get("ArchiveFolder", ""))
@@ -496,6 +507,13 @@ class SettingsPage(QWidget):
         if self.broadcast_enabled:
             self.integration_labels["obs"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
             self.integration_labels["websocket"].setText("●  Configured" if self.obs_host.text().strip() else "●  Not configured")
+        finch_ok = bool(
+            self.finch_api_url.text().strip()
+            and self.finch_api_key.text().strip()
+        )
+        self.integration_labels["finch"].setText(
+            "●  Configured" if finch_ok else "●  Not configured"
+        )
         self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Optional / not configured")
         self.integration_labels["ai"].setText("●  Not configured")
         self.status.info("Settings loaded.")
@@ -507,6 +525,8 @@ class SettingsPage(QWidget):
             "BuildsExportFolder": self.builds_export_folder.text().strip(),
             "EsoLogsClientId": self.eso_logs_client_id.text().strip(),
             "EsoLogsClientSecret": self.eso_logs_client_secret.text(),
+            "FinchApiUrl": self.finch_api_url.text().strip().rstrip("/"),
+            "FinchApiKey": self.finch_api_key.text(),
             "GoogleCredentialsPath": self.google_credentials.text().strip(),
             "GoogleSpreadsheetId": self.google_spreadsheet_id.text().strip(),
             "ArchiveFolder": self.archive_folder.text().strip(),
@@ -529,6 +549,13 @@ class SettingsPage(QWidget):
         sheets_ok = bool(
             self.google_credentials.text().strip()
             and self.google_spreadsheet_id.text().strip()
+        )
+        finch_ok = bool(
+            self.finch_api_url.text().strip()
+            and self.finch_api_key.text().strip()
+        )
+        self.integration_labels["finch"].setText(
+            "●  Configured" if finch_ok else "●  Not configured"
         )
         self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Optional / not configured")
         self.status.success("Settings saved.")
