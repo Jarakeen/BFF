@@ -35,7 +35,7 @@ RAID_PLAN_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         outputs=("RaidReadinessEvidence",),
         dependencies=(
             "build.catalog.persistence",
-            "coverage.raid_plan.scope",
+            "raid_plan.coverage_scope",
         ),
         responsibilities=(
             "raid_readiness_build_state_projection",
