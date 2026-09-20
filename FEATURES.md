@@ -255,6 +255,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Canonical encounter-mechanic entries sourced through the shared encounter repository / projection
 - Canonical combat-effect entries sourced read-only from `combat_effect`, `combat_effect_trigger`, and `combat_effect_interaction`
 - Canonical gear sets, active skills, passives, and Champion Points are exposed as searchable Reference Data entries
+- Gear Lookup strips ESO client and HTML-style color markup from set names, categories, acquisition/source text, and bonus descriptions; existing Gear Lookup rows in `eso.db` are cleaned in place on refresh, and future gear-set imports are normalized before persistence.
 - Skill and passive entries include their skill line in the display identity so same-name abilities do not silently collide
 - Related boss / encounter names include their parent dungeon or trial when known, including reviewed dungeon identities whose raw boss import is missing
 - Reviewed gear / skill / passive / Champion Point version history can be shown as a **History / Legacy** flavor section with source provenance
