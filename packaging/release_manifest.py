@@ -200,6 +200,7 @@ USER_OWNED_DATA_FILES: tuple[str, ...] = (
     "MarkerLog.md",
     "performance_dashboard.json",
     "performance_focus.json",
+    "raid_plans.json",
     "StreamEvents.json",
     "StreamSession.json",
     "TamrielDate.txt",
