@@ -3,6 +3,8 @@
 - **Top Gear naming** — the former Capabilities surface is presented as Top Gear; Raid Plan Review now opens the run-note journal instead of Top Gear.
 # BFF / FoundryDock Feature Index
 
+- **Comp Build round-trip identity** — Comp Maker can promote a real Personnel row into canonical player/character identity when no prior Build exists, save the resulting Comp Build under a stable BuildId, preserve that BuildId and Comp metadata through later Builds-page edits, and Readiness can open the exact selected build by stable ID.
+
 - **Readiness canonical evidence** — Raid Readiness now resolves selected canonical/Comp Builds, distinguishes partial Comp plans as PLANNED instead of falsely missing, and reuses the same saved-build + planned-gear + planned-skill + assignment Coverage evidence as the Coverage page. Rotation and Sustain remain explicitly NEEDS REVIEW until their owning engines provide evidence.
 
 - **Comp Maker Build Persistence** — saving a Phase 14 Comp Maker plan promotes every real occupied chair with a planned setup into the canonical build catalog, assigns a stable build ID back to the chair, and lets the Raid Plan persist that exact identity. Comp Builds use the normal build model with `BuildKind="comp"`, source plan/seat metadata, and partial planned gear/skill fields; repeat saves update the same Comp Build, recruits are skipped, and ordinary Saved Builds are never silently overwritten.
