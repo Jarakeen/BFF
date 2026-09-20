@@ -36,3 +36,23 @@ def test_saved_build_dd_simulation_services_are_catalogued() -> None:
     )
     assert "simulation.saved_build_dd_provider" in runner.dependencies
     assert "combat_simulation_saved_build_dd_execution" in runner.responsibilities
+
+
+
+def test_sequential_target_health_feedback_is_catalogued() -> None:
+    descriptor = SERVICE_CATALOG.get(
+        "simulation.sequential_dd_health_feedback"
+    )
+
+    assert descriptor is not None
+    assert descriptor.implementation_path == (
+        "services.combat_simulation_sequential_dd_damage_service"
+    )
+    assert (
+        "combat_simulation_sequential_target_health_feedback"
+        in descriptor.responsibilities
+    )
+
+    runner = SERVICE_CATALOG.get("simulation.saved_build_dd")
+    assert runner is not None
+    assert "simulation.sequential_dd_health_feedback" in runner.dependencies
