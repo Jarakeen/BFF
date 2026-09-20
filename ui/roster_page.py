@@ -498,8 +498,8 @@ class RosterPage(FoundryPage):
             self,
             "Remove Assignment",
             (
-                f"Remove {player_name or 'this player'} from Assignments?\n\n"
-                "This also removes their roster record."
+                f"Archive {player_name or 'this player'} from current planning?\n\n"
+                "Their Personnel history, aliases, notes, builds, and old raid references are kept."
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
@@ -507,12 +507,12 @@ class RosterPage(FoundryPage):
             return
 
         try:
-            self.roster_service.delete_member(int(member_id))
+            self.roster_service.archive_member(int(member_id))
             if self.record.model.Id == int(member_id):
                 self.record.clear()
             self.refresh()
             self.status.success(
-                f"Removed {player_name or 'player'} from Assignments."
+                f"Archived {player_name or 'player'} and removed them from current planning."
             )
         except Exception as exc:
             self.status.error(f"Remove failed: {exc}")
@@ -521,6 +521,9 @@ class RosterPage(FoundryPage):
         member = self.roster_service.get_member(member_id)
         if member is not None:
             self.record.load(member)
+            aliases = self.identity_service.aliases_for_member(member_id)
+            self.record.set_former_gamertags(tuple(alias.alias for alias in aliases))
+            self._update_personnel_lifecycle_actions()
 
     def new_member(self):
         self.table.clearSelection()
@@ -540,6 +543,12 @@ class RosterPage(FoundryPage):
                 self.roster_service.update_member(model)
                 new_id = model.Id
                 self.status.success(f"Updated {model.PlayerName}.")
+            for alias in self.record.former_gamertag_values():
+                self.identity_service.add_alias(
+                    int(new_id),
+                    alias,
+                    source="former_gamertag",
+                )
             self.refresh()
             self.table.select_member_id(new_id)
         except Exception as exc:
@@ -548,20 +557,80 @@ class RosterPage(FoundryPage):
     def delete_member(self):
         model = self.record.model
         if model.Id is None:
-            self.status.warning("Select a roster member to delete.")
+            self.status.warning("Select a roster member to archive.")
+            return
+        current = self.roster_service.get_member(int(model.Id))
+        if current is None:
+            self.status.warning("That Personnel record no longer exists.")
+            return
+        if str(current.Status or "").strip().casefold() == "archived":
+            self.status.info("This player is already archived.")
             return
         confirm = QMessageBox.question(
             self,
-            "Remove Personnel Record",
-            f"Remove {model.PlayerName or 'this member'} from the roster?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            "Archive Player",
+            (
+                f"Archive {current.PlayerName or 'this player'}?\n\n"
+                "They will disappear from normal player lists and current raid planning. "
+                "Historical records, builds, aliases, and Personnel notes are kept."
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
         )
         if confirm != QMessageBox.StandardButton.Yes:
             return
         try:
-            self.roster_service.delete_member(model.Id)
+            self.roster_service.archive_member(int(model.Id))
             self.record.clear()
             self.refresh()
-            self.status.success("Removed from roster.")
+            self.status.success(f"Archived {current.PlayerName or 'player'}.")
         except Exception as exc:
-            self.status.error(f"Delete failed: {exc}")
+            self.status.error(f"Archive failed: {exc}")
+
+    def restore_member(self):
+        model = self.record.model
+        if model.Id is None:
+            self.status.warning("Select an archived player to restore.")
+            return
+        try:
+            restored = self.roster_service.restore_member(int(model.Id))
+            self.show_combo.setCurrentText("All Players")
+            self.refresh()
+            self.table.select_member_id(int(model.Id))
+            self.status.success(f"Restored {restored.PlayerName or 'player'} to Active.")
+        except Exception as exc:
+            self.status.error(f"Restore failed: {exc}")
+
+    def delete_member_permanently(self):
+        model = self.record.model
+        if model.Id is None:
+            self.status.warning("Select an archived player to delete permanently.")
+            return
+        current = self.roster_service.get_member(int(model.Id))
+        if current is None:
+            self.status.warning("That Personnel record no longer exists.")
+            return
+        if str(current.Status or "").strip().casefold() != "archived":
+            self.status.warning("Archive the player before permanent deletion.")
+            return
+        confirm = QMessageBox.warning(
+            self,
+            "Delete Archived Player Permanently",
+            (
+                f"Permanently delete {current.PlayerName or 'this player'}?\n\n"
+                "This removes the Personnel record, current team memberships, aliases, "
+                "and roster assignment state. This cannot be undone.\n\n"
+                "Saved builds and historical raid-plan snapshots are not deleted."
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            self.roster_service.delete_member(int(model.Id))
+            self.record.clear()
+            self.refresh()
+            self.status.success(f"Permanently deleted {current.PlayerName or 'player'}.")
+        except Exception as exc:
+            self.status.error(f"Permanent delete failed: {exc}")
