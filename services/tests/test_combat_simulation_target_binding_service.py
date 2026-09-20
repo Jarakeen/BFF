@@ -3,6 +3,7 @@ from __future__ import annotations
 from models.combat_simulation import (
     CombatSimulationCombatant,
     CombatSimulationEvent,
+    CombatSimulationIncomingDamage,
     CombatSimulationRecipientBinding,
     CombatSimulationResourceResult,
     CombatSimulationTargetState,
@@ -267,3 +268,63 @@ def test_target_state_rejects_duplicate_event_binding_identity() -> None:
         assert "recipient binding identities must be unique" in str(exc)
     else:
         raise AssertionError("Expected duplicate recipient binding identity to fail closed")
+
+
+
+def test_main_simulation_merges_explicit_incoming_damage_and_health_change() -> None:
+    plan = RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=3.0,
+        actions=(),
+    )
+    snapshot = EffectiveBuildSnapshot.from_saved_build(
+        PlayerBuild(
+            Name="Magrat",
+            BuildName="DF Healer",
+            Role="Healer",
+            EsoClass="Warden",
+        )
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+        ),
+    )
+
+    result = CombatSimulationService(
+        resource_service=_ResourceService(),
+        healing_service=_HealingService(),
+        skill_effect_service=_EffectService(),
+    ).simulate(
+        build_snapshot=snapshot,
+        plan=plan,
+        target_state=state,
+        incoming_damage=(
+            CombatSimulationIncomingDamage(
+                time_seconds=0.5,
+                sequence=0,
+                source="Boss Cleave",
+                recipient="Tank 1",
+                amount=6000.0,
+                damage_type="physical",
+            ),
+        ),
+    )
+
+    incoming = next(event for event in result.events if event.event_type == "incoming_damage")
+    change = next(
+        event
+        for event in result.events
+        if event.event_type == "health_change"
+        and event.source == "Boss Cleave"
+    )
+    assert incoming.payload_dict()["recipient"] == "Tank 1"
+    assert incoming.payload_dict()["amount"] == 6000.0
+    assert change.payload_dict()["before"] == 20000
+    assert change.payload_dict()["after"] == 14000
