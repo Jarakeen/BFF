@@ -266,25 +266,62 @@ class CompBuilderPage(FoundryPage):
             self.difficulty_combo.blockSignals(False)
 
         from services.comp_plan_state_service import CompPlanStateService
+        from services.eso_database import EsoDatabase
+        from services.roster_service import RosterService
 
         self._comp_plan_state = CompPlanStateService.from_raid_plan(
             plan,
             achievement_goal=self.goal_combo.currentText().strip() or None,
         )
 
-        members = tuple(
-            SimpleNamespace(
-                Id=member.roster_member_id,
-                CanonicalPlayerId=str(member.player_id or "").strip(),
-                CanonicalCharacterId=str(member.character_id or "").strip(),
-                RaidSeatId=self._seat_label(member.seat_id),
-                PlayerName=str(member.gamertag or "").strip() or "Recruit",
-                CharacterName=str(member.character_name or "").strip(),
-                PrimaryRole=str(member.role or "").strip(),
-                EsoClass=str(member.eso_class or "").strip(),
+        roster_service = RosterService(EsoDatabase(get_data_dir() / "eso.db"))
+        personnel = tuple(roster_service.list_members())
+
+        def _legacy_personnel_match(member):
+            if member.roster_member_id is not None:
+                return roster_service.get_member(int(member.roster_member_id))
+            gamertag = str(member.gamertag or "").strip().casefold()
+            if not gamertag:
+                return None
+            matches = tuple(
+                row
+                for row in personnel
+                if str(getattr(row, "PlayerName", "") or "").strip().casefold()
+                == gamertag
+                and getattr(row, "Id", None) is not None
             )
-            for member in plan.members
-        )
+            return matches[0] if len(matches) == 1 else None
+
+        members = []
+        for member in plan.members:
+            personnel_row = _legacy_personnel_match(member)
+            members.append(
+                SimpleNamespace(
+                    Id=(
+                        member.roster_member_id
+                        if member.roster_member_id is not None
+                        else getattr(personnel_row, "Id", None)
+                    ),
+                    CanonicalPlayerId=(
+                        str(member.player_id or "").strip()
+                        or str(
+                            getattr(personnel_row, "CanonicalPlayerId", "") or ""
+                        ).strip()
+                    ),
+                    CanonicalCharacterId=(
+                        str(member.character_id or "").strip()
+                        or str(
+                            getattr(personnel_row, "CanonicalCharacterId", "") or ""
+                        ).strip()
+                    ),
+                    RaidSeatId=self._seat_label(member.seat_id),
+                    PlayerName=str(member.gamertag or "").strip() or "Recruit",
+                    CharacterName=str(member.character_name or "").strip(),
+                    PrimaryRole=str(member.role or "").strip(),
+                    EsoClass=str(member.eso_class or "").strip(),
+                )
+            )
+        members = tuple(members)
         self._raid_plan_origin_id = plan.plan_id
         self._raid_plan_class_by_seat = {
             self._seat_label(member.seat_id): str(member.eso_class or "").strip()
