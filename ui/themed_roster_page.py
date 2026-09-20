@@ -25,6 +25,7 @@ from models.team_schedule import TeamSchedule
 from services.accessibility_preferences import AccessibilityPreferences
 from services.roster_share_formats import discord_roster_text, export_roster_csv
 from services.team_schedule_share_export import TeamScheduleShareDocumentExporter
+from services.team_deletion_service import delete_team_everywhere
 from ui.components.foundry_card import FoundryCard
 from ui.roster_page import RosterPage as BaseRosterPage
 
@@ -273,14 +274,20 @@ class RosterPage(BaseRosterPage):
             return
 
         try:
-            deleted = self.roster_service.delete_team(team)
-            if not deleted:
-                self.status.warning(f"Team no longer exists: {team}")
-                return
+            build_service = BuildService(get_data_dir() / "builds.json")
+            build_service.load()
+            result = delete_team_everywhere(
+                self.roster_service,
+                build_service,
+                team,
+            )
             super().refresh()
             self._reload_schedule_teams()
             self.status.success(
-                f"Deleted team {team}. Roster people, characters, and builds were kept."
+                f"Deleted team {result.team_name}: "
+                f"{result.removed_memberships} roster membership(s) and "
+                f"{result.removed_build_assignments} build assignment(s) removed. "
+                "People, characters, builds, and old raid plans were kept."
             )
         except Exception as exc:
             self.status.error(f"Team deletion failed: {exc}")
