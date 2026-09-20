@@ -321,3 +321,104 @@ def test_snapshot_marks_combatant_dead_after_lethal_health_change() -> None:
     assert before.health[0].is_dead is False
     assert after.health[0].is_dead is True
     assert after.health[0].current_health == 0
+
+
+
+def test_snapshot_projects_enemy_health_after_outgoing_damage() -> None:
+    from dataclasses import replace
+
+    base = _result()
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=12000,
+                maximum_health=12000,
+            ),
+        ),
+    )
+    damage_change = CombatSimulationEvent(
+        time_seconds=4.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="health_change",
+        source="Resolved Damage",
+        payload=(
+            ("recipient", "Boss"),
+            ("before", 12000),
+            ("attempted_damage", 3000.0),
+            ("applied_damage", 3000.0),
+            ("overkill", 0.0),
+            ("after", 9000),
+            ("maximum_health", 12000),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+    result = replace(
+        base,
+        events=tuple(sorted((*base.events, damage_change))),
+        target_state=state,
+    )
+
+    before = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=3.9,
+    )
+    after = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=4.0,
+    )
+
+    assert before.health[0].identity == "Boss"
+    assert before.health[0].current_health == 12000
+    assert before.health[0].is_dead is False
+    assert after.health[0].current_health == 9000
+    assert after.health[0].is_dead is False
+
+
+def test_snapshot_marks_enemy_dead_after_lethal_outgoing_damage() -> None:
+    from dataclasses import replace
+
+    base = _result()
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=4000,
+                maximum_health=12000,
+            ),
+        ),
+    )
+    lethal_change = CombatSimulationEvent(
+        time_seconds=4.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="health_change",
+        source="Resolved Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("before", 4000),
+            ("attempted_damage", 6000.0),
+            ("applied_damage", 4000.0),
+            ("overkill", 2000.0),
+            ("after", 0),
+            ("maximum_health", 12000),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+    result = replace(
+        base,
+        events=tuple(sorted((*base.events, lethal_change))),
+        target_state=state,
+    )
+
+    snapshot = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=4.0,
+    )
+
+    assert snapshot.health[0].identity == "Boss"
+    assert snapshot.health[0].current_health == 0
+    assert snapshot.health[0].is_dead is True
