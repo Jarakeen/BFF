@@ -311,6 +311,15 @@ class PlayerBuild:
     PlayerId: str = ""
     CharacterId: str = ""
     BuildId: str = ""
+    # BuildKind is additive metadata. "saved" remains the implicit legacy/default
+    # flavor; Comp Maker promotes accepted plans as "comp" without inventing a
+    # second persistence model.
+    BuildKind: str = "saved"
+    PlannedGearSets: list[str] = field(default_factory=list)
+    PlannedSkills: list[str] = field(default_factory=list)
+    SourcePlanId: str = ""
+    SourcePlanName: str = ""
+    SourceSeatId: str = ""
 
     @property
     def attribute_points_total(self) -> int:
@@ -373,6 +382,22 @@ class PlayerBuild:
             payload["CharacterId"] = self.CharacterId
         if str(self.BuildId or "").strip():
             payload["BuildId"] = self.BuildId
+        if str(self.BuildKind or "saved").strip().casefold() != "saved":
+            payload["BuildKind"] = str(self.BuildKind).strip().casefold()
+        if self.PlannedGearSets:
+            payload["PlannedGearSets"] = [
+                str(value).strip() for value in self.PlannedGearSets if str(value).strip()
+            ]
+        if self.PlannedSkills:
+            payload["PlannedSkills"] = [
+                str(value).strip() for value in self.PlannedSkills if str(value).strip()
+            ]
+        if str(self.SourcePlanId or "").strip():
+            payload["SourcePlanId"] = self.SourcePlanId
+        if str(self.SourcePlanName or "").strip():
+            payload["SourcePlanName"] = self.SourcePlanName
+        if str(self.SourceSeatId or "").strip():
+            payload["SourceSeatId"] = self.SourceSeatId
         if str(self.SecondMundus or "").strip():
             payload["SecondMundus"] = self.SecondMundus
         if str(self.TransformedForm or "").strip():
@@ -442,6 +467,20 @@ class PlayerBuild:
             PlayerId=str(data.get("PlayerId", "") or ""),
             CharacterId=str(data.get("CharacterId", "") or ""),
             BuildId=str(data.get("BuildId", "") or ""),
+            BuildKind=str(data.get("BuildKind", "saved") or "saved").strip().casefold() or "saved",
+            PlannedGearSets=[
+                str(value).strip()
+                for value in (data.get("PlannedGearSets") or [])
+                if str(value).strip()
+            ],
+            PlannedSkills=[
+                str(value).strip()
+                for value in (data.get("PlannedSkills") or [])
+                if str(value).strip()
+            ],
+            SourcePlanId=str(data.get("SourcePlanId", "") or ""),
+            SourcePlanName=str(data.get("SourcePlanName", "") or ""),
+            SourceSeatId=str(data.get("SourceSeatId", "") or ""),
         )
 
     def display_label(self, fallback: str) -> str:
