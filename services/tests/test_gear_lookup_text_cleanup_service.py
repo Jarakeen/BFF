@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from pathlib import Path
 
 from services.gear_lookup_text_cleanup_service import clean_gear_lookup_database
 
@@ -76,3 +77,14 @@ def test_clean_gear_lookup_database_is_idempotent() -> None:
 
     assert clean_gear_lookup_database(connection) == 1
     assert clean_gear_lookup_database(connection) == 0
+
+
+def test_gear_lookup_and_importer_share_plain_text_cleanup_boundary() -> None:
+    page = Path("ui/gear_lookup_page.py").read_text(encoding="utf-8")
+    importer = Path("importers/gear_set_importer.py").read_text(encoding="utf-8")
+
+    assert "clean_gear_lookup_database(connection)" in page
+    assert "_plain_text(description)" in page
+    assert "_plain_text(name)" in page
+    assert "from services.eso_text_cleanup import clean_eso_text" in importer
+    assert "clean_eso_text(description)" in importer
