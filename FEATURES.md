@@ -3,6 +3,8 @@
 - **Top Gear naming** — the former Capabilities surface is presented as Top Gear; Raid Plan Review now opens the run-note journal instead of Top Gear.
 # BFF / FoundryDock Feature Index
 
+- **Comp Maker Build Persistence** — saving a Phase 14 Comp Maker plan promotes every real occupied chair with a planned setup into the canonical build catalog, assigns a stable build ID back to the chair, and lets the Raid Plan persist that exact identity. Comp Builds use the normal build model with `BuildKind="comp"`, source plan/seat metadata, and partial planned gear/skill fields; repeat saves update the same Comp Build, recruits are skipped, and ordinary Saved Builds are never silently overwritten.
+
 - **Phase 14 deterministic combat-simulation kernel** — consumes canonical `EffectiveBuildSnapshot` + Phase 13 `RotationPlan`, preserves exact action ordering and active-bar authority, fails closed on identity/bar violations, and emits explicit unresolved consequences until existing resource/healing/damage/proc engines are wired.
 - **Phase 14 healer Magicka simulation bridge** — projects named healer skill costs and ordinary recovery through the existing Rotation/Phase 4 sustain authority, merges auditable resource transitions into the deterministic simulation stream, and keeps non-resource skill outcomes explicitly unresolved until their owning engines are connected.
 - **Phase 14 healer output bridge** — reuses canonical healer component math to emit direct-heal simulation events and explicit periodic/delayed/channel healing seeds; exact periodic tick placement remains unresolved until reviewed runtime timing evidence is available.
