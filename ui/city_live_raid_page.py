@@ -27,6 +27,10 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from models.raid_plan import RaidPlan
+from services.live_raid_encounter_projection_service import (
+    LiveRaidEncounterContext,
+    LiveRaidEncounterProjectionService,
+)
 from services.raid_plan_repository import RaidPlanRepository
 from services.raid_section_state_service import RaidSectionStateService
 from ui.components.foundry_card import FoundryCard
@@ -60,7 +64,12 @@ class CityLiveRaidPage(FoundryPage):
         super().__init__(parent)
         self.repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
         self.user_state = RaidSectionStateService()
+        self.encounter_projection = LiveRaidEncounterProjectionService(
+            get_data_dir() / "eso.db",
+            get_data_dir(),
+        )
         self._plan: RaidPlan | None = None
+        self._encounter_context: LiveRaidEncounterContext | None = None
         self._timer = QTimer(self)
         self._timer.setInterval(1000)
         self._timer.timeout.connect(self._refresh_clock)
@@ -112,6 +121,12 @@ class CityLiveRaidPage(FoundryPage):
         self.plan_combo.setProperty("liveRaidContext", True)
         self.plan_combo.currentIndexChanged.connect(self._load_selected_plan)
         self.header.add_context_widget(self.plan_combo)
+
+        self.encounter_combo = QComboBox()
+        self.encounter_combo.setMinimumWidth(220)
+        self.encounter_combo.setProperty("liveRaidContext", True)
+        self.encounter_combo.currentIndexChanged.connect(self._encounter_changed)
+        self.header.add_context_widget(self.encounter_combo)
 
         self.start_button = QPushButton("Start Pull")
         self.start_button.setProperty("primary", True)
@@ -231,18 +246,23 @@ class CityLiveRaidPage(FoundryPage):
         )
         timeline.setMinimumHeight(112)
         timeline.setMaximumHeight(145)
-        timeline_text = QLabel(
-            "No live encounter clock is connected. Reviewed trigger responsibilities appear as PLANNED conditions, never fabricated timestamps."
+        self.timeline_text = QLabel(
+            "Select an encounter to load reviewed timing and threshold context."
         )
-        timeline_text.setProperty("liveRaidTimelineText", True)
-        timeline_text.setWordWrap(True)
-        timeline.addWidget(timeline_text)
+        self.timeline_text.setProperty("liveRaidTimelineText", True)
+        self.timeline_text.setWordWrap(True)
+        timeline.addWidget(self.timeline_text)
         lower.addWidget(timeline, 3)
 
         notes = self._style_live_card(
             FoundryCard("Quick Notes / Run Sheet", "clipboard"), "notes", compact=True
         )
         notes.setProperty("foundryNoteCard", True)
+        self.encounter_checklist_label = QLabel("No encounter checklist loaded.")
+        self.encounter_checklist_label.setProperty("liveRaidChecklistText", True)
+        self.encounter_checklist_label.setWordWrap(True)
+        notes.addWidget(self.encounter_checklist_label)
+
         self.run_notes_edit = QTextEdit()
         self.run_notes_edit.setProperty("parchmentEditor", True)
         self.run_notes_edit.setProperty("liveRaidNotesEditor", True)
@@ -303,7 +323,150 @@ class CityLiveRaidPage(FoundryPage):
     def _load_selected_plan(self, *_args) -> None:
         plan_id = self.plan_combo.currentData()
         self._plan = self.repository.get(plan_id) if isinstance(plan_id, str) and plan_id else None
+        self._refresh_encounters()
         self._render_plan()
+
+    def _refresh_encounters(self) -> None:
+        self.encounter_combo.blockSignals(True)
+        self.encounter_combo.clear()
+        self.encounter_combo.addItem("Trial / General", "")
+        plan = self._plan
+        if plan is not None:
+            try:
+                rows = self.encounter_projection.encounters_for_trial(plan.trial_id)
+            except Exception:
+                rows = ()
+            for row in rows:
+                self.encounter_combo.addItem(row.name, row.encounter_id)
+
+            remembered = self.user_state.selected_encounter_id(plan.plan_id)
+            if remembered:
+                index = self.encounter_combo.findData(remembered)
+                if index >= 0:
+                    self.encounter_combo.setCurrentIndex(index)
+        self.encounter_combo.blockSignals(False)
+        self._load_encounter_context()
+
+    def _encounter_changed(self, *_args) -> None:
+        if self._plan is not None:
+            self.user_state.set_selected_encounter_id(
+                self._plan.plan_id,
+                _clean(self.encounter_combo.currentData()),
+            )
+        self._load_encounter_context()
+        self._render_encounter_context()
+
+    def _load_encounter_context(self) -> None:
+        self._encounter_context = None
+        plan = self._plan
+        encounter_id = _clean(self.encounter_combo.currentData())
+        if plan is None or not encounter_id:
+            return
+        try:
+            self._encounter_context = self.encounter_projection.context_for(
+                plan,
+                encounter_id,
+            )
+        except Exception as exc:
+            self.status.warning(f"Encounter context could not be loaded: {exc}")
+
+    def _elapsed_pull_seconds(self) -> int | None:
+        if self._plan is None:
+            return None
+        state = self.user_state.run_state(self._plan.plan_id)
+        if not state.get("active"):
+            return None
+        started = _parse_iso(state.get("started_at"))
+        if started is None:
+            return None
+        return max(0, int((datetime.now(timezone.utc) - started).total_seconds()))
+
+    @staticmethod
+    def _clock_marker(seconds: float) -> str:
+        whole = max(0, int(round(seconds)))
+        minutes, second = divmod(whole, 60)
+        return f"{minutes}:{second:02d}"
+
+    def _render_encounter_context(self) -> None:
+        plan = self._plan
+        context = self._encounter_context
+        if plan is None:
+            return
+        if context is None:
+            self.hero_title.setText(
+                f"{plan.name}\n{plan.trial_id} · {plan.difficulty or 'Difficulty not set'}"
+            )
+            self.phase_label.setText("Phase Guide\nTrial / General")
+            self.timeline_text.setText(
+                "Select an encounter to load reviewed boss timing and phase context."
+            )
+            self.encounter_checklist_label.setText(
+                "Trial / General notes. No boss-specific checklist is selected."
+            )
+            return
+
+        self.hero_title.setText(
+            f"{context.encounter_name}\n"
+            f"{context.content_name or plan.trial_id} · {plan.difficulty or 'Difficulty not set'}"
+        )
+        self.phase_label.setText(
+            "Phase Guide\n"
+            + (context.phase_lines[0] if context.phase_lines else "No reviewed phase markers")
+        )
+
+        elapsed = self._elapsed_pull_seconds()
+        window_start = 0 if elapsed is None else elapsed
+        window_end = window_start + 60
+        upcoming = [
+            event
+            for event in context.clock_events
+            if event.start_seconds >= window_start
+            and event.start_seconds <= window_end
+        ]
+        if upcoming:
+            lines = []
+            for event in upcoming[:8]:
+                marker = self._clock_marker(event.start_seconds)
+                if elapsed is not None:
+                    remaining = max(0, int(round(event.start_seconds - elapsed)))
+                    prefix = f"in {remaining}s"
+                else:
+                    prefix = f"at {marker}"
+                detail = f" — {event.detail}" if event.detail else ""
+                lines.append(f"{prefix}: {event.label}{detail}")
+            self.timeline_text.setText("\n".join(lines))
+        elif context.clock_events:
+            self.timeline_text.setText(
+                "No reviewed clock-backed encounter events fall in the next 60 seconds."
+            )
+        elif context.phase_lines:
+            self.timeline_text.setText(
+                "No reviewed wall-clock events are persisted for this encounter. "
+                "Threshold guide: " + " | ".join(context.phase_lines[:4])
+            )
+        else:
+            self.timeline_text.setText(
+                "No reviewed wall-clock or phase timeline is persisted for this encounter."
+            )
+
+        timed_callouts = []
+        if elapsed is not None:
+            for event in context.clock_events:
+                remaining = int(round(event.start_seconds - elapsed))
+                if 0 <= remaining <= 20:
+                    timed_callouts.append(f"TIMED  {event.label} in {remaining}s")
+        planned = [f"PLANNED  {line}" for line in context.callouts]
+        lines = (timed_callouts + planned)[:10]
+        self.callouts_label.setText(
+            "\n".join(lines)
+            if lines
+            else "No reviewed encounter callouts or plan responsibilities are available."
+        )
+        self.encounter_checklist_label.setText(
+            "\n".join(f"□ {line}" for line in context.checklist)
+            if context.checklist
+            else "No reviewed encounter checklist items are available."
+        )
 
     def _render_plan(self) -> None:
         plan = self._plan
@@ -317,6 +480,8 @@ class CityLiveRaidPage(FoundryPage):
             self.attempt_label.setText("#0")
             self.combat_label.setText("Not in pull")
             self.callouts_label.setText("No planned callouts for this Raid Plan.")
+            self.timeline_text.setText("Select a Raid Plan and encounter.")
+            self.encounter_checklist_label.setText("No encounter checklist loaded.")
             self.events_label.setText("No manual run events yet.")
             self.run_notes_edit.clear()
             self.run_notes_edit.setEnabled(False)
@@ -355,6 +520,7 @@ class CityLiveRaidPage(FoundryPage):
                 f"PLANNED  {item.trigger_key} → {item.seat_id}: {item.directive}"
             )
         self.callouts_label.setText("\n".join(callout_lines) if callout_lines else "No planned trigger responsibilities on this Raid Plan.")
+        self._render_encounter_context()
         self._refresh_run_state()
         self._refresh_events()
         self.status.info(f"Live Raid loaded {plan.name}. Runtime telemetry is not inferred.")
@@ -390,6 +556,7 @@ class CityLiveRaidPage(FoundryPage):
         seconds = max(0, int((datetime.now(timezone.utc) - started).total_seconds()))
         minutes, second = divmod(seconds, 60)
         self.timer_label.setText(f"{minutes:02d}:{second:02d}")
+        self._render_encounter_context()
 
     def _refresh_events(self) -> None:
         if self._plan is None:
