@@ -221,3 +221,51 @@ def test_snapshot_projects_health_after_bound_heal_changes() -> None:
     assert [(item.identity, item.current_health, item.maximum_health) for item in after.health] == [
         ("Tank 1", 24000, 25000),
     ]
+
+
+
+def test_snapshot_projects_health_after_incoming_damage() -> None:
+    from dataclasses import replace
+
+    base = _result()
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+        ),
+    )
+    damage_change = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="health_change",
+        source="Boss Cleave",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 20000),
+            ("attempted_damage", 6000.0),
+            ("applied_damage", 6000.0),
+            ("overkill", 0.0),
+            ("after", 14000),
+            ("maximum_health", 25000),
+            ("origin_event_type", "incoming_damage"),
+        ),
+    )
+    result = replace(
+        base,
+        events=tuple(sorted((*base.events, damage_change))),
+        target_state=state,
+    )
+
+    snapshot = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=1.0,
+    )
+
+    assert [(item.identity, item.current_health, item.maximum_health) for item in snapshot.health] == [
+        ("Tank 1", 14000, 25000),
+    ]
