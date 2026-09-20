@@ -626,10 +626,25 @@ state honestly, including open recruits and unresolved evidence. Because this sp
 plan has no selected saved Builds, it does **not** satisfy the separate real selected-
 Build round-trip proof by itself.
 
-**Remaining closeout gates:** run the canonical closeout audit against a real saved
-Raid Plan containing at least one exact selected Build (preferably multiple chairs),
-rerun the relevant provider/temporal checkpoint, and record a fresh full-suite
-regression. Phase 12.5 remains Active until those gates are green.
+### Phase 12.5 full regression checkpoint — 2026-09-19
+
+User-reported full-suite regression:
+
+- **3029 passed in 439.31s (0:07:19)**
+- **0 failures**
+
+The canonical real-data workflow audit and the focused Phase 12.5 integration suites
+were already green. The only unperformed exercise is a live Raid Plan containing an
+explicit selected saved Build. The user is not assigning a Build at this time, so that
+exercise is deferred until natural use rather than manufactured solely for validation.
+
+**Phase 12.5 status: Complete.**
+
+The completed contract covers team/chair/player/character identity, recruit state,
+structured candidate provenance, class/role/gear constraints, assignment ownership,
+explicit unresolved boundaries, durable Raid Plan persistence, and read-only Optimizer
+consumption. A future real selected-Build audit remains a non-blocking verification
+exercise and must not silently change or fabricate Build ownership.
 
 
 
