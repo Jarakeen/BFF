@@ -564,31 +564,20 @@ class CityLiveRaidPage(FoundryPage):
             )
 
         callout_rows: list[tuple[str, str, str, str, str]] = []
-        if elapsed is not None:
-            for event in context.clock_events:
-                remaining = int(round(event.start_seconds - elapsed))
-                if 0 <= remaining <= 20:
-                    callout_rows.append(
-                        (
-                            f"-0:{remaining:02d}" if remaining < 60 else f"-{remaining}s",
-                            event.label,
-                            event.detail,
-                            "TIMED",
-                            "timed",
-                        )
-                    )
-        elif context.clock_events:
-            for event in context.clock_events[:4]:
-                if event.start_seconds <= 60:
-                    callout_rows.append(
-                        (
-                            self._clock_marker(event.start_seconds),
-                            event.label,
-                            event.detail,
-                            "TIMED",
-                            "timed",
-                        )
-                    )
+
+        for condition in context.condition_events:
+            marker = _clean(condition.marker) or "PLAN"
+            role = "threshold" if "%" in marker else "planned"
+            badge = "THRESHOLD" if role == "threshold" else "PLAN"
+            callout_rows.append(
+                (
+                    marker,
+                    condition.label,
+                    condition.detail,
+                    badge,
+                    role,
+                )
+            )
 
         for line in context.callouts:
             callout_rows.append(("PLAN", line, "", "PLAN", "planned"))
