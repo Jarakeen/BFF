@@ -4,9 +4,17 @@ from models.combat_simulation import (
     CombatSimulationCombatant,
     CombatSimulationEvent,
     CombatSimulationRecipientBinding,
+    CombatSimulationResourceResult,
     CombatSimulationTargetState,
     SimulationEventPriority,
 )
+from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from models.build_model import PlayerBuild
+from models.effective_build_snapshot import EffectiveBuildSnapshot
+from services.combat_simulation_healing_service import CombatSimulationHealingProjection
+from services.combat_simulation_resource_service import CombatSimulationResourceProjection
+from services.combat_simulation_service import CombatSimulationService
+from services.combat_simulation_skill_effect_service import CombatSimulationEffectProjection
 from services.combat_simulation_target_binding_service import (
     CombatSimulationTargetBindingService,
 )
@@ -140,3 +148,100 @@ def test_unknown_bound_recipient_fails_closed() -> None:
     assert result.unresolved == (
         "Combat Prayer direct_heal at 1s: recipient binding references unknown combatant(s): Mystery DD",
     )
+
+
+
+class _ResourceService:
+    def project(self, **_kwargs):
+        return CombatSimulationResourceProjection(
+            result=CombatSimulationResourceResult(
+                resource="magicka",
+                starting_amount=30000,
+                ending_amount=30000,
+            ),
+            events=(),
+            unresolved=(),
+        )
+
+
+class _HealingService:
+    def project(self, **_kwargs):
+        return CombatSimulationHealingProjection(
+            events=(_heal_event(),),
+            unresolved=(),
+        )
+
+
+class _EffectService:
+    def project(self, **_kwargs):
+        return CombatSimulationEffectProjection(
+            events=(_effect_event(),),
+            windows=(),
+            unresolved=(),
+        )
+
+
+def test_main_simulation_binds_known_recipients_without_inventing_others() -> None:
+    plan = RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=3.0,
+        actions=(
+            RotationAction(
+                1.0,
+                0,
+                RotationActionKind.SKILL,
+                name="Combat Prayer",
+                bar="front",
+            ),
+        ),
+    )
+    snapshot = EffectiveBuildSnapshot.from_saved_build(
+        PlayerBuild(
+            Name="Magrat",
+            BuildName="DF Healer",
+            Role="Healer",
+            EsoClass="Warden",
+        )
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant("Magrat", "self"),
+            CombatSimulationCombatant("Tank 1", "ally"),
+        ),
+        recipient_bindings=(
+            CombatSimulationRecipientBinding(
+                time_seconds=1.0,
+                sequence=0,
+                event_type="direct_heal",
+                source="Combat Prayer",
+                coefficient_number=1,
+                recipients=("Tank 1",),
+            ),
+            CombatSimulationRecipientBinding(
+                time_seconds=1.0,
+                sequence=0,
+                event_type="effect_apply",
+                source="Combat Prayer",
+                effect_name="minor_resolve",
+                recipients=("Tank 1",),
+            ),
+        ),
+    )
+
+    result = CombatSimulationService(
+        resource_service=_ResourceService(),
+        healing_service=_HealingService(),
+        skill_effect_service=_EffectService(),
+    ).simulate(
+        build_snapshot=snapshot,
+        plan=plan,
+        target_state=state,
+    )
+
+    heal = next(event for event in result.events if event.event_type == "direct_heal")
+    effect = next(event for event in result.events if event.event_type == "effect_apply")
+    assert heal.payload_dict()["recipients"] == ("Tank 1",)
+    assert effect.payload_dict()["recipients"] == ("Tank 1",)
+    assert result.target_state == state
+    assert not any("explicit recipient binding is required" in item for item in result.unresolved)
