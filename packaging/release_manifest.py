@@ -188,6 +188,7 @@ USER_OWNED_DATA_FILES: tuple[str, ...] = (
     "characters.json",
     "current_achievement_run.json",
     "CurrentAchievementRun.json",
+    "discord_registrations.json",
     "CurrentBroadcast.json",
     "CurrentExpedition.json",
     "CurrentIncident.json",
