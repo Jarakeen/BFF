@@ -168,11 +168,15 @@ def test_simulation_merges_healer_actions_and_resource_events_deterministically(
         (int(SimulationEventPriority.RESOURCE_RESTORE), "recovery_tick", "In-combat recovery tick"),
     ]
 
-    assert not any(
-        "Combat Prayer" in value and "consequence projection not yet wired" in value
+    assert any(
+        "Combat Prayer" in value and "non-resource skill consequences" in value
+        for value in first.unresolved
+    )
+    assert any(
+        "Illustrious Healing" in value and "non-resource skill consequences" in value
         for value in first.unresolved
     )
     assert not any(
-        "Illustrious Healing" in value and "consequence projection not yet wired" in value
+        "Combat Prayer" in value and "skill consequence projection not yet wired" in value
         for value in first.unresolved
     )
