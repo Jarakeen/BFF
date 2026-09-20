@@ -259,6 +259,61 @@ class EncounterBossGuideService:
     def encounter_ids(self) -> tuple[str, ...]:
         return tuple(row.encounter_id for row in self.encounter_summaries())
 
+    def reviewed_clock_facts(
+        self,
+        encounter_id: str,
+    ) -> tuple[BossGuideTimelineFact, ...]:
+        """Return reviewed canonical facts with explicit wall-clock timing fields.
+
+        This deliberately ignores thresholds and prose. A fact is clock-backed only
+        when its persisted payload carries time_seconds/at_seconds or a complete
+        start_seconds/end_seconds interval.
+        """
+        encounter_id = str(encounter_id or "").strip()
+        if not encounter_id:
+            raise ValueError("encounter_id must be a non-empty canonical id")
+
+        connection = self._connect()
+        try:
+            rows = connection.execute(
+                """
+                SELECT f.id, f.canonical_kind, f.fact_type, f.fact_key,
+                       f.payload_json, f.review_status,
+                       COUNT(ev.id) AS evidence_count
+                FROM encounter_canonical_fact AS f
+                LEFT JOIN encounter_fact_evidence AS ev
+                  ON ev.canonical_fact_id = f.id
+                WHERE f.encounter_id = ?
+                GROUP BY f.id
+                ORDER BY f.id
+                """,
+                (encounter_id,),
+            ).fetchall()
+        finally:
+            connection.close()
+
+        facts: list[BossGuideTimelineFact] = []
+        for row in rows:
+            payload = _timeline_payload(row["payload_json"], fact_id=int(row["id"]))
+            has_point = any(key in payload for key in ("time_seconds", "at_seconds"))
+            has_window = "start_seconds" in payload and "end_seconds" in payload
+            reviewed = str(row["review_status"] or "").casefold().startswith("reviewed")
+            evidence_count = int(row["evidence_count"] or 0)
+            if not reviewed or evidence_count <= 0 or not (has_point or has_window):
+                continue
+            facts.append(
+                BossGuideTimelineFact(
+                    fact_id=int(row["id"]),
+                    canonical_kind=str(row["canonical_kind"] or ""),
+                    fact_type=str(row["fact_type"] or ""),
+                    fact_key=str(row["fact_key"] or ""),
+                    payload=payload,
+                    review_status=str(row["review_status"] or ""),
+                    evidence_count=evidence_count,
+                )
+            )
+        return tuple(facts)
+
     def get(self, encounter_id: str) -> EncounterBossGuide:
         encounter_id = str(encounter_id or "").strip()
         if not encounter_id:
