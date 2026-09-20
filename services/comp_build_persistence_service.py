@@ -11,11 +11,14 @@ records in the same canonical build catalog.
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from models.build_model import PlayerBuild
+from engine.config import DEFAULT_DATABASE
 from models.comp_plan_state import CompChairState, CompPlanState
 from services.canonical_build_bridge import CanonicalBuildBridge
+from services.eso_database import EsoDatabase
+from services.roster_service import RosterService
 
 
 @dataclass(frozen=True)
@@ -32,14 +35,18 @@ class CompBuildPersistenceService:
             self.data_dir / "builds.json",
             self.data_dir / "characters.json",
         )
+        self.database = EsoDatabase(DEFAULT_DATABASE)
+        self.roster = RosterService(self.database)
 
     @staticmethod
     def _is_real_player(chair: CompChairState) -> bool:
         return bool(
-            chair.player_id
-            and chair.character_id
-            and chair.player_name
+            chair.player_name
             and not chair.is_open_player
+            and (
+                (chair.player_id and chair.character_id)
+                or chair.roster_member_id is not None
+            )
         )
 
     @staticmethod
@@ -51,6 +58,131 @@ class CompBuildPersistenceService:
             or chair.planned_skills
             or chair.planned_mundus
         )
+
+    @staticmethod
+    def _promoted_id(kind: str, roster_member_id: int) -> str:
+        return str(uuid5(NAMESPACE_URL, f"bff:comp:{kind}:roster-member:{int(roster_member_id)}"))
+
+    def _ensure_canonical_identity(
+        self,
+        *,
+        chair: CompChairState,
+        catalog: dict,
+        players: dict[str, dict],
+        characters: dict[str, dict],
+        staged_roster_bindings: list[tuple[int, str, str]],
+    ) -> tuple[str, str]:
+        """Resolve or explicitly promote one real Personnel row to canonical identity.
+
+        Promotion uses roster_member_id as the stable seed. It never joins an existing
+        canonical player or character by display name.
+        """
+        player_id = str(chair.player_id or "").strip()
+        character_id = str(chair.character_id or "").strip()
+
+        if character_id:
+            character = characters.get(character_id)
+            if character is None:
+                raise ValueError(
+                    f"{chair.seat_id}: canonical character {character_id!r} does not exist"
+                )
+            owner_id = str(character.get("player_id") or "").strip()
+            if player_id and owner_id and player_id != owner_id:
+                raise ValueError(
+                    f"{chair.seat_id}: player/character ownership mismatch"
+                )
+            player_id = player_id or owner_id
+
+        if player_id and player_id not in players:
+            raise ValueError(
+                f"{chair.seat_id}: canonical player {player_id!r} does not exist"
+            )
+
+        roster_member_id = chair.roster_member_id
+        if player_id and character_id:
+            return player_id, character_id
+
+        if roster_member_id is None:
+            raise ValueError(
+                f"{chair.seat_id}: real player has no canonical identity or Personnel row"
+            )
+        roster_member = self.roster.get_member(int(roster_member_id))
+        if roster_member is None:
+            raise ValueError(
+                f"{chair.seat_id}: Personnel row {roster_member_id} does not exist"
+            )
+
+        roster_player_id = str(roster_member.CanonicalPlayerId or "").strip()
+        roster_character_id = str(roster_member.CanonicalCharacterId or "").strip()
+
+        if roster_character_id:
+            character = characters.get(roster_character_id)
+            if character is None:
+                raise ValueError(
+                    f"{chair.seat_id}: Personnel references missing canonical character "
+                    f"{roster_character_id!r}"
+                )
+            owner_id = str(character.get("player_id") or "").strip()
+            if roster_player_id and owner_id and roster_player_id != owner_id:
+                raise ValueError(
+                    f"{chair.seat_id}: Personnel player/character bindings disagree"
+                )
+            character_id = character_id or roster_character_id
+            player_id = player_id or roster_player_id or owner_id
+
+        if roster_player_id:
+            if roster_player_id not in players:
+                raise ValueError(
+                    f"{chair.seat_id}: Personnel references missing canonical player "
+                    f"{roster_player_id!r}"
+                )
+            player_id = player_id or roster_player_id
+
+        if not player_id:
+            player_id = self._promoted_id("player", int(roster_member_id))
+            if player_id not in players:
+                player = {
+                    "player_id": player_id,
+                    "gamertag": str(roster_member.PlayerName or chair.player_name or "").strip(),
+                    "display_name": str(roster_member.PlayerName or chair.player_name or "").strip(),
+                    "notes": "",
+                    "status": str(roster_member.Status or "Active").strip() or "Active",
+                    "avatar_path": "",
+                }
+                catalog.setdefault("players", []).append(player)
+                players[player_id] = player
+
+        if not character_id:
+            character_id = self._promoted_id("character", int(roster_member_id))
+            if character_id not in characters:
+                character = {
+                    "character_id": character_id,
+                    "player_id": player_id,
+                    "name": str(roster_member.CharacterName or chair.character_name or "").strip(),
+                    "gamertag": str(roster_member.PlayerName or chair.player_name or "").strip(),
+                    "eso_class": str(roster_member.EsoClass or chair.eso_class or "").strip(),
+                    "race": "",
+                    "role": str(roster_member.PrimaryRole or chair.role or "").strip(),
+                    "alliance": "",
+                    "vampire": False,
+                    "werewolf": False,
+                    "owned_skill_lines": [],
+                    "passive_ranks": {},
+                    "passive_cp_points": {},
+                }
+                catalog.setdefault("characters", []).append(character)
+                characters[character_id] = character
+
+        owner_id = str(characters[character_id].get("player_id") or "").strip()
+        if owner_id != player_id:
+            raise ValueError(
+                f"{chair.seat_id}: promoted character does not belong to promoted player"
+            )
+
+        staged_roster_bindings.append(
+            (int(roster_member_id), player_id, character_id)
+        )
+        return player_id, character_id
 
     @staticmethod
     def _record_snapshot(record: dict | None) -> PlayerBuild:
@@ -149,23 +281,32 @@ class CompBuildPersistenceService:
         updated_state = state
         saved: list[str] = []
         skipped: list[str] = []
+        staged_roster_bindings: list[tuple[int, str, str]] = []
 
         for chair in state.chairs:
             if not self._is_real_player(chair) or not self._has_build_plan(chair):
                 skipped.append(chair.seat_id)
                 continue
 
-            character_id = str(chair.character_id or "").strip()
-            character = characters.get(character_id)
-            if character is None:
-                raise ValueError(
-                    f"{chair.seat_id}: canonical character {character_id!r} does not exist"
+            canonical_player_id, character_id = self._ensure_canonical_identity(
+                chair=chair,
+                catalog=catalog,
+                players=players,
+                characters=characters,
+                staged_roster_bindings=staged_roster_bindings,
+            )
+            character = characters[character_id]
+
+            if (
+                str(chair.player_id or "").strip() != canonical_player_id
+                or str(chair.character_id or "").strip() != character_id
+            ):
+                chair = chair.with_changes(
+                    player_id=canonical_player_id,
+                    character_id=character_id,
+                    roster_member_id=chair.roster_member_id,
                 )
-            canonical_player_id = str(character.get("player_id") or "").strip()
-            if chair.player_id and canonical_player_id != str(chair.player_id).strip():
-                raise ValueError(
-                    f"{chair.seat_id}: player/character ownership mismatch; refusing Comp build save"
-                )
+                updated_state = updated_state.with_chair(chair)
 
             existing_comp = self._existing_comp_record(builds, chair)
             baseline_record = existing_comp or self._source_baseline(builds, chair)
@@ -245,6 +386,19 @@ class CompBuildPersistenceService:
         if saved:
             catalog["builds"] = builds
             self.bridge.save_catalog(catalog)
+            for roster_member_id, player_id, character_id in dict.fromkeys(
+                staged_roster_bindings
+            ):
+                self.database.execute(
+                    """
+                    UPDATE roster_member
+                    SET canonical_player_id = ?, canonical_character_id = ?
+                    WHERE id = ?
+                    """,
+                    (player_id, character_id, roster_member_id),
+                )
+            if staged_roster_bindings:
+                self.database.commit()
 
         return CompBuildPersistenceResult(
             state=updated_state,
