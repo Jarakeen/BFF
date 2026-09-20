@@ -2,8 +2,8 @@
 
 This file is the release-facing inventory for packaged FoundryDock builds. It is deliberately stricter than `FEATURES.md`: a feature may exist in source and still be excluded from a release.
 
-**Current release candidate:** `0.1.2`  
-**Status date:** 2026-09-17
+**Current release candidate:** `0.1.3`  
+**Status date:** 2026-09-20
 
 ## Release rules
 
@@ -133,4 +133,4 @@ A release is ready only when all of the following are true:
 - existing live database migrates without reset;
 - update archive contains no `eso.db`, settings, builds, roster/progress/session state;
 - upgrade from the previous release preserves user-owned data;
-- release artifacts report version `0.1.2`.
+- release artifacts report version `0.1.3`.
