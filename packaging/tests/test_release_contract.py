@@ -129,7 +129,11 @@ def test_release_includes_canonical_encounter_runtime_directories() -> None:
     audit = (ROOT / "tools" / "audit_release_candidate.py").read_text(encoding="utf-8")
 
     runtime_directories = set(manifest.RUNTIME_EXTERNAL_DATA_DIRECTORIES)
-    assert runtime_directories == {"eso_info/bosses", "encounter_evidence"}
+    assert runtime_directories == {
+        "eso_info/bosses",
+        "encounter_evidence",
+        "rotation_policy",
+    }
     assert "RUNTIME_EXTERNAL_DATA_DIRECTORIES" in build
     assert "Copy-Item $Source $Destination -Recurse -Force" in build
     assert "RUNTIME_EXTERNAL_DATA_DIRECTORIES" in audit
@@ -185,6 +189,8 @@ def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
 
     assert "eso_info/bosses" in runtime_directories
     assert "encounter_evidence" in runtime_directories
+    assert "rotation_policy" in runtime_directories
+    assert (ROOT / "data" / "rotation_policy" / "encounter_demands.json").is_file()
 
     for name in (
         "encounter_positioning.json",
@@ -271,3 +277,14 @@ def test_first_install_starts_without_developer_character_identity() -> None:
     assert '"characters": []' in build
     assert '"team_assignments": []' in build
     assert '(Join-Path $DataRoot "characters.json")' in build
+
+
+def test_release_includes_rotation_encounter_policy_required_at_startup() -> None:
+    manifest = _load_manifest()
+    registry = (
+        ROOT / "services" / "rotation_encounter_demand_policy_registry_service.py"
+    ).read_text(encoding="utf-8")
+
+    assert "rotation_policy" in set(manifest.RUNTIME_EXTERNAL_DATA_DIRECTORIES)
+    assert 'get_data_dir() / "rotation_policy" / "encounter_demands.json"' in registry
+    assert (ROOT / "data" / "rotation_policy" / "encounter_demands.json").is_file()
