@@ -80,6 +80,33 @@ class CombatSimulationCombatant:
 
 
 @dataclass(frozen=True)
+class CombatSimulationIncomingDamage:
+    time_seconds: float
+    sequence: int
+    source: str
+    recipient: str
+    amount: float
+    damage_type: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.time_seconds < 0:
+            raise ValueError("incoming damage time cannot be negative")
+        if self.sequence < 0:
+            raise ValueError("incoming damage sequence cannot be negative")
+        if not str(self.source or "").strip():
+            raise ValueError("incoming damage source is required")
+        if not str(self.recipient or "").strip():
+            raise ValueError("incoming damage recipient is required")
+        if float(self.amount) < 0:
+            raise ValueError("incoming damage amount cannot be negative")
+        object.__setattr__(self, "source", str(self.source).strip())
+        object.__setattr__(self, "recipient", str(self.recipient).strip())
+        object.__setattr__(self, "amount", float(self.amount))
+        if self.damage_type is not None:
+            object.__setattr__(self, "damage_type", str(self.damage_type).strip() or None)
+
+
+@dataclass(frozen=True)
 class CombatSimulationRecipientBinding:
     time_seconds: float
     sequence: int
@@ -187,6 +214,7 @@ class CombatSimulationResult:
 __all__ = [
     "CombatSimulationEvent",
     "CombatSimulationCombatant",
+    "CombatSimulationIncomingDamage",
     "CombatSimulationRecipientBinding",
     "CombatSimulationTargetState",
     "CombatSimulationResourceResult",
