@@ -274,7 +274,9 @@ class CompBuilderPage(FoundryPage):
 
         members = tuple(
             SimpleNamespace(
-                Id=None,
+                Id=member.roster_member_id,
+                CanonicalPlayerId=str(member.player_id or "").strip(),
+                CanonicalCharacterId=str(member.character_id or "").strip(),
                 RaidSeatId=self._seat_label(member.seat_id),
                 PlayerName=str(member.gamertag or "").strip() or "Recruit",
                 CharacterName=str(member.character_name or "").strip(),
