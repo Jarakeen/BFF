@@ -19,7 +19,18 @@ from models.build_model import BuildRoster, PlayerBuild
 
 
 _IDENTITY_FIELDS = {
-    "Name", "Gamertag", "CharacterId", "BuildId", "ReadyForRaid",
+    "Name",
+    "Gamertag",
+    "PlayerId",
+    "CharacterId",
+    "BuildId",
+    "BuildKind",
+    "PlannedGearSets",
+    "PlannedSkills",
+    "SourcePlanId",
+    "SourcePlanName",
+    "SourceSeatId",
+    "ReadyForRaid",
 }
 _CLASS_OVERLAY_FIELDS = {
     "FrontBarSkills", "BackBarSkills", "ClassSkillLines", "ClassMasteryAbilityIds",
