@@ -596,6 +596,42 @@ for the new audit, one real saved 12-player Raid Plan audit, the relevant
 provider/temporal checkpoint, and a fresh full-suite regression. No green result
 is claimed until those commands are actually reported passing.
 
+### Phase 12.5 validation checkpoint — 2026-09-19
+
+User-reported focused checkpoint:
+
+- **34 passed in 22.84s** across the canonical Phase 12.5 workflow audit, legacy
+  workflow audit, Raid Plan saved-build resolution, Raid Plan repository, and
+  Optimizer Adviser suites.
+
+Real saved Raid Plan audit:
+
+- plan: **Performance Mode GS** (`sunspire-performance-mode-gs`);
+- trial: **Sunspire**;
+- chairs: **12**;
+- assigned players: **8**;
+- recruit/open chairs: **4**;
+- selected saved Builds: **0**;
+- resolved saved Builds: **0**;
+- explicit unresolved chairs: **8**;
+- every reported identity, recruit-state, class/role/gear constraint, assignment,
+  unresolved-state, temporary persistence, and read-only Optimizer invariant: **PASS**;
+- audit problems: **0**;
+- Optimizer Adviser findings: **12 blockers / 35 actionable**, correctly treated as
+  plan-readiness evidence rather than workflow-pipeline failure;
+- overall canonical workflow audit: **PASS**.
+
+This real audit proves the current Raid Plan workflow preserves incomplete planning
+state honestly, including open recruits and unresolved evidence. Because this specific
+plan has no selected saved Builds, it does **not** satisfy the separate real selected-
+Build round-trip proof by itself.
+
+**Remaining closeout gates:** run the canonical closeout audit against a real saved
+Raid Plan containing at least one exact selected Build (preferably multiple chairs),
+rerun the relevant provider/temporal checkpoint, and record a fresh full-suite
+regression. Phase 12.5 remains Active until those gates are green.
+
+
 
 ---
 
