@@ -974,3 +974,12 @@ and the 7% PvP value cannot leak into the PvE maximum.
 
 ## Phase 14 Comp/Raid Plan provenance
 - A brand-new Comp Maker plan has a small identity chicken-and-egg problem: the Comp Build needs a BuildId before the Raid Plan can point to it, while the build cannot record its source Raid Plan id until that plan exists. The save path now performs one safe second metadata pass after first binding. It updates the same stable Comp Build instead of creating another one, so Builds, Coverage, and Readiness all carry the same identity.
+
+
+## 2026-09-20 — Execute damage depends on the Health created by earlier simulated actions
+
+Target-Health-conditioned damage cannot be evaluated from one static boss Health value when the same simulated rotation is changing that Health over time. An earlier hit can push the target below an execute threshold, which can change the damage consequence of the very next skill. Actions at the same timestamp still have a deterministic sequence, so sequence 0 can change the Health seen by sequence 1.
+
+**Layman's version:** the second hit has to look at the boss *after* the first hit landed. If the first hit pushes the boss into execute, the second hit may legitimately become stronger or activate a conditional component.
+
+**For BFF:** Phase 14 Combat Simulation now maintains an execution-local target Health ledger and exposes that evolving Health through the existing canonical `CombatStateSnapshot` contract. Execute thresholds and reviewed target-Health amplification remain owned by the existing Rotation DD mechanics; the simulator only supplies the changing Health evidence and never invents an execute rule.
