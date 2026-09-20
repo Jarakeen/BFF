@@ -79,6 +79,7 @@ class CombatSimulationSnapshotService:
             active_bar=active_bar,
             resources=tuple(resources),
             active_effect_windows=partition.active,
+            target_state=result.target_state,
             unresolved=tuple(result.unresolved),
         )
 
