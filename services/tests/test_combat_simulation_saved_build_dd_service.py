@@ -185,3 +185,100 @@ def test_saved_build_dd_orchestrator_preserves_provider_resolution_failure() -> 
         "remaining skill consequences" in message
         for message in result.unresolved
     )
+
+
+
+class _ThresholdProvider:
+    def __init__(self, snapshot_resolver):
+        self.snapshot_resolver = snapshot_resolver
+        self.seen = []
+
+    def evaluate_action(self, *, candidate, action):
+        del candidate
+        snapshot = self.snapshot_resolver(action.time_seconds, action.sequence)
+        target = snapshot.target("Boss")
+        fraction = target.current_health / target.maximum_health
+        self.seen.append((action.name, target.current_health, fraction))
+        return RotationActionDamageEvidence(
+            time_seconds=action.time_seconds,
+            sequence=action.sequence,
+            damage_value=(7000.0 if fraction < 0.5 else 6000.0),
+        )
+
+
+class _ThresholdProviderService:
+    def __init__(self):
+        self.provider = None
+
+    def resolve(self, **kwargs):
+        self.provider = _ThresholdProvider(kwargs["target_snapshot_resolver"])
+        return CombatSimulationSavedBuildDDProviderResolution(
+            provider=self.provider,
+            unresolved=(),
+        )
+
+
+def test_saved_build_dd_orchestrator_feeds_simulated_health_into_later_damage() -> None:
+    provider_service = _ThresholdProviderService()
+    service = CombatSimulationSavedBuildDDService(
+        provider_service=provider_service,
+        simulation_service=_simulation_service(),
+    )
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=5.0,
+        actions=(
+            RotationAction(
+                time_seconds=1.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Opening Hit",
+                bar="front",
+            ),
+            RotationAction(
+                time_seconds=2.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Execute Hit",
+                bar="front",
+            ),
+        ),
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = service.simulate(
+        build_snapshot=_snapshot(),
+        plan=plan,
+        target_state=state,
+        damage_target_identity="Boss",
+        target_resistance=18200.0,
+    )
+
+    assert provider_service.provider is not None
+    assert provider_service.provider.seen == [
+        ("Opening Hit", 10000.0, 1.0),
+        ("Execute Hit", 4000.0, 0.4),
+    ]
+    outgoing = [
+        event.payload_dict()["amount"]
+        for event in result.events
+        if event.event_type == "outgoing_damage"
+    ]
+    assert outgoing == [6000.0, 7000.0]
+    health = [
+        event.payload_dict()["after"]
+        for event in result.events
+        if event.event_type == "health_change"
+        and event.payload_dict().get("recipient") == "Boss"
+    ]
+    assert health == [4000, 0]
