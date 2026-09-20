@@ -1082,10 +1082,33 @@ User-reported focused checkpoint:
 
 **Phase 14B healer Magicka/resource slice status: green.**
 
-Next implementation slice: connect supported healer skills to the existing healing
-resolution engine so direct/periodic healing events become explicit simulation
-consequences. Buff/debuff/proc application remains a separate following slice and must
-not be implied merely because healing magnitude is known.
+### Phase 14C — healer output bridge
+
+The simulation kernel now consumes the existing canonical healer action-output path
+rather than introducing new healing formulas.
+
+Implemented:
+
+- `RotationHealerActionHealingService` remains authoritative for component identity
+  and modeled healing magnitude;
+- canonical static front/back build contexts are resolved through
+  `RotationStaticBuildContextService`;
+- verified direct healing becomes `direct_heal` simulation events;
+- periodic, delayed, and channel components become explicit typed simulation seeds
+  carrying their canonically resolved magnitude;
+- unresolved build context or component evidence fails closed;
+- periodic magnitude does **not** imply tick timing: exact tick events remain
+  unresolved until reviewed runtime timing evidence supplies first-tick/expiry/recast
+  behavior;
+- healer output events merge into the same deterministic Phase 14 event stream;
+- healing resolution does not imply damage, buff/debuff, or proc consequences.
+
+Initial control behavior: Combat Prayer can emit a real direct-heal event. Illustrious
+Healing can emit a canonical periodic-heal seed, while exact tick placement remains
+explicitly unresolved instead of being guessed.
+
+**Phase 14C validation pending:** focused healer-output, kernel, resource, and existing
+canonical healer action/runtime suites must pass before this slice is green.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
