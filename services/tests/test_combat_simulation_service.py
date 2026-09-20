@@ -7,8 +7,16 @@ from models.combat_simulation import CombatSimulationResourceResult
 from services.combat_simulation_healing_service import CombatSimulationHealingProjection
 from services.combat_simulation_resource_service import CombatSimulationResourceProjection
 from services.combat_simulation_service import CombatSimulationService
+from services.combat_simulation_skill_effect_service import CombatSimulationEffectProjection
 
 
+
+
+
+
+class _NoopSkillEffectService:
+    def project(self, **_kwargs):
+        return CombatSimulationEffectProjection(events=(), windows=(), unresolved=())
 
 
 class _NoopHealingService:
@@ -34,6 +42,7 @@ def _service() -> CombatSimulationService:
     return CombatSimulationService(
         resource_service=_NoopResourceService(),
         healing_service=_NoopHealingService(),
+        skill_effect_service=_NoopSkillEffectService(),
     )
 
 
