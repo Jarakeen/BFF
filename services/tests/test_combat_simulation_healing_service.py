@@ -280,3 +280,69 @@ def test_reviewed_periodic_timing_expands_illustrious_into_real_ticks() -> None:
         "first-tick offset" in message or "tick-at-expiry" in message
         for message in result.unresolved
     )
+
+
+class _ReviewedEvidenceLoader:
+    def load(self, timing_fixture_path, *, refresh_fixture_path=None):
+        assert str(timing_fixture_path).endswith("timing.json")
+        assert str(refresh_fixture_path).endswith("refresh.json")
+        return SimpleNamespace(
+            observations=(
+                RotationHealerReviewedRuntimeObservation(
+                    source_name="Illustrious Healing",
+                    coefficient_number=1,
+                    first_tick_offset_seconds=1.0,
+                    tick_on_expiry_boundary=True,
+                    refresh_policy="restart",
+                    provenance=("reviewed fixture",),
+                    game_version="U50",
+                ),
+            ),
+            unresolved=("reviewed fixture note",),
+        )
+
+
+def test_reviewed_fixture_boundary_loads_timing_and_preserves_loader_unresolved(tmp_path) -> None:
+    service = CombatSimulationHealingService(
+        action_healing_service=_ActionHealingService(),
+        static_context_service=_StaticContextService(),
+        canonical_periodic_timing_service=_CanonicalPeriodicTimingService(),
+        reviewed_timing_fixture_path=tmp_path / "timing.json",
+        reviewed_refresh_fixture_path=tmp_path / "refresh.json",
+        reviewed_runtime_evidence_loader=_ReviewedEvidenceLoader(),
+    )
+
+    result = service.project(
+        build=_snapshot().materialize(),
+        plan=_plan(),
+    )
+
+    assert [event.time_seconds for event in result.events if event.event_type == "periodic_heal"] == [
+        3.0,
+        4.0,
+        5.0,
+    ]
+    assert "reviewed fixture note" in result.unresolved
+
+
+def test_reviewed_fixture_boundary_rejects_ambiguous_evidence_sources(tmp_path) -> None:
+    observation = RotationHealerReviewedRuntimeObservation(
+        source_name="Illustrious Healing",
+        coefficient_number=1,
+        first_tick_offset_seconds=1.0,
+        tick_on_expiry_boundary=True,
+        provenance=("explicit observation",),
+        game_version="U50",
+    )
+
+    try:
+        CombatSimulationHealingService(
+            action_healing_service=_ActionHealingService(),
+            static_context_service=_StaticContextService(),
+            reviewed_runtime_observations=(observation,),
+            reviewed_timing_fixture_path=tmp_path / "timing.json",
+        )
+    except ValueError as exc:
+        assert "not both" in str(exc)
+    else:
+        raise AssertionError("Expected ambiguous reviewed timing sources to fail closed")
