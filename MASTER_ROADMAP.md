@@ -1284,9 +1284,21 @@ Implemented:
 This remains healing-only state mutation. Incoming damage, deaths, shields, resurrection,
 and encounter-target behavior are not inferred by this slice.
 
-**Phase 14H validation pending:** health projection, recipient binding, snapshots, healer
-output, skill effects, resource projection, and main simulation tests must pass before
-this slice is green.
+### Phase 14H validation checkpoint — 2026-09-19
+
+User-reported focused checkpoint:
+
+- **33 passed in 11.84s**
+- recipient-aware Health projection, recipient binding, snapshots, healer output,
+  reviewed skill effects, resource projection, and main simulation integration are green.
+
+**Phase 14H recipient-aware Health state status: green.**
+
+Next implementation slice: add explicit incoming-damage events and deterministic Health
+loss for known combatants. Damage may only mutate Health when the event amount and
+recipient are explicit. Mitigation remains a separate canonical calculation boundary;
+this slice must not invent armor, resistances, shields, blocking, or encounter damage
+rules.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
