@@ -95,6 +95,14 @@ def _build_matches_filters(page, build) -> bool:
     selected_content = str(page.phase14_content_filter.currentText() or "All")
     if selected_content != "All" and selected_content.casefold() != _content_for_build(build).casefold():
         return False
+
+    source_filter = getattr(page, "phase14_source_filter", None)
+    selected_source = str(source_filter.currentData() or "") if source_filter is not None else ""
+    build_kind = str(getattr(build, "BuildKind", "saved") or "saved").strip().casefold()
+    if selected_source == "comp" and build_kind != "comp":
+        return False
+    if selected_source == "saved" and build_kind == "comp":
+        return False
     return True
 
 
@@ -227,6 +235,7 @@ def _reset_library_filters(page, *, mode: str = "All") -> None:
         "phase14_class_filter",
         "phase14_role_filter",
         "phase14_content_filter",
+        "phase14_source_filter",
     ):
         combo = getattr(page, name, None)
         if combo is None:
@@ -254,25 +263,30 @@ def _create_command_center(page) -> QWidget:
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(7)
 
-    top = QHBoxLayout()
-    top.setContentsMargins(0, 0, 0, 0)
-    top.setSpacing(7)
+    tabs_row = QHBoxLayout()
+    tabs_row.setContentsMargins(0, 0, 0, 0)
+    tabs_row.setSpacing(7)
 
     page.phase14_library_tabs = QTabBar()
     page.phase14_library_tabs.setDocumentMode(False)
     page.phase14_library_tabs.setExpanding(True)
-    page.phase14_library_tabs.setUsesScrollButtons(False)
+    page.phase14_library_tabs.setUsesScrollButtons(True)
     page.phase14_library_tabs.setElideMode(Qt.TextElideMode.ElideNone)
-    page.phase14_library_tabs.setMinimumWidth(470)
+    page.phase14_library_tabs.setMinimumWidth(650)
     for name in _LIBRARY_TABS:
         page.phase14_library_tabs.addTab(name)
-    top.addWidget(page.phase14_library_tabs, 5)
+    tabs_row.addWidget(page.phase14_library_tabs, 1)
+    layout.addLayout(tabs_row)
+
+    top = QHBoxLayout()
+    top.setContentsMargins(0, 0, 0, 0)
+    top.setSpacing(7)
 
     page.phase14_build_search = QLineEdit()
     page.phase14_build_search.setPlaceholderText("Search builds…")
     page.phase14_build_search.setClearButtonEnabled(True)
     page.phase14_build_search.setMinimumWidth(210)
-    top.addWidget(page.phase14_build_search, 2)
+    top.addWidget(page.phase14_build_search, 1)
 
     page.phase14_create_build_button = FoundryButton("+ Create New Build", role=ButtonRole.PRIMARY)
     page.phase14_create_build_button.setMinimumWidth(150)
@@ -286,13 +300,19 @@ def _create_command_center(page) -> QWidget:
     page.phase14_class_filter = QComboBox()
     page.phase14_role_filter = QComboBox()
     page.phase14_content_filter = QComboBox()
+    page.phase14_source_filter = QComboBox()
+    page.phase14_source_filter.addItem("All Sources", "")
+    page.phase14_source_filter.addItem("Comp Builds", "comp")
+    page.phase14_source_filter.addItem("Saved Builds", "saved")
     for label, combo in (
         ("Class", page.phase14_class_filter),
         ("Role", page.phase14_role_filter),
         ("Content", page.phase14_content_filter),
+        ("Source", page.phase14_source_filter),
     ):
         filters.addWidget(QLabel(label))
-        combo.addItem("All")
+        if combo is not page.phase14_source_filter:
+            combo.addItem("All")
         combo.setMinimumWidth(115)
         filters.addWidget(combo)
     layout.addLayout(filters)
@@ -319,6 +339,7 @@ def _create_command_center(page) -> QWidget:
     page.phase14_class_filter.currentTextChanged.connect(lambda _text: _populate_build_table(page))
     page.phase14_role_filter.currentTextChanged.connect(lambda _text: _populate_build_table(page))
     page.phase14_content_filter.currentTextChanged.connect(lambda _text: _populate_build_table(page))
+    page.phase14_source_filter.currentIndexChanged.connect(lambda _index: _populate_build_table(page))
     page.phase14_build_table.cellClicked.connect(lambda row, col: _select_command_center_row(page, row, col))
     return host
 
