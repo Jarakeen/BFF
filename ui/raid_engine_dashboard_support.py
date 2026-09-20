@@ -222,7 +222,9 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
     )
     members = tuple(
         SimpleNamespace(
-            Id=None,
+            Id=getattr(member, "roster_member_id", None),
+            CanonicalPlayerId=str(getattr(member, "player_id", "") or "").strip(),
+            CanonicalCharacterId=str(getattr(member, "character_id", "") or "").strip(),
             RaidSeatId=next(
                 (
                     seat
