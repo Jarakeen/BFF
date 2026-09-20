@@ -75,6 +75,9 @@ def _merge_personnel_identity(survivor: RosterMember, donors: list[RosterMember]
         survivor.EsoClass = _merge_text(survivor.EsoClass, donor.EsoClass)
         survivor.PrimaryRole = _merge_text(survivor.PrimaryRole, donor.PrimaryRole)
         survivor.SecondaryRole = _merge_text(survivor.SecondaryRole, donor.SecondaryRole)
+        survivor.DiscordName = _merge_text(survivor.DiscordName, donor.DiscordName)
+        survivor.YouTube = _merge_text(survivor.YouTube, donor.YouTube)
+        survivor.Twitch = _merge_text(survivor.Twitch, donor.Twitch)
 
         if not str(survivor.SecondaryRole or "").strip():
             donor_primary = str(donor.PrimaryRole or "").strip()
@@ -232,7 +235,8 @@ def merge_duplicate_roster_players(database: EsoDatabase, *, create_backup: bool
                 """
                 UPDATE roster_member SET
                     player_name = ?, character_name = ?, eso_class = ?,
-                    primary_role = ?, secondary_role = ?, status = ?
+                    primary_role = ?, secondary_role = ?, status = ?,
+                    discord_name = ?, youtube = ?, twitch = ?
                 WHERE id = ?
                 """,
                 (
@@ -242,6 +246,9 @@ def merge_duplicate_roster_players(database: EsoDatabase, *, create_backup: bool
                     str(survivor.PrimaryRole or "").strip(),
                     str(survivor.SecondaryRole or "").strip(),
                     str(survivor.Status or "Active").strip() or "Active",
+                    str(survivor.DiscordName or "").strip(),
+                    str(survivor.YouTube or "").strip(),
+                    str(survivor.Twitch or "").strip(),
                     survivor_id,
                 ),
             )
