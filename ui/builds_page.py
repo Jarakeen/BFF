@@ -609,21 +609,32 @@ class BuildsPage(FoundryPage):
             self._refresh_roster()
 
     def _save(self):
-        abs_path = self.build_service.builds_path.resolve()
+        catalog_path = self.build_service.canonical.catalog_path.resolve()
+        mirror_path = self.build_service.builds_path.resolve()
         try:
             self.build_service.save(self.roster)
         except Exception as exc:
-            self.status.error(f"Save failed writing {abs_path}: {exc}")
+            self.status.error(
+                f"Save failed for canonical build catalog {catalog_path}: {exc}"
+            )
             return
         try:
             reloaded = self.build_service.load()
         except Exception as exc:
-            self.status.error(f"Saved to {abs_path}, but re-reading it back failed: {exc}")
+            self.status.error(
+                f"Saved canonical build catalog {catalog_path}, but re-reading it failed: {exc}"
+            )
             return
         if reloaded != self.roster:
-            self.status.error(f"Save to {abs_path} did not verify: reloaded data does not match what was saved.")
+            self.status.error(
+                f"Canonical build save to {catalog_path} did not verify: "
+                "reloaded data does not match what was saved."
+            )
             return
-        self.status.success(f"Builds saved to {abs_path}.")
+        self.status.success(
+            f"Builds saved to canonical catalog {catalog_path}. "
+            f"Compatibility mirror refreshed at {mirror_path}."
+        )
 
     def _export_csv(self):
         folder = ""
