@@ -119,6 +119,25 @@ class RaidPlanStableIdentitySelectionPage(RaidPlanCharacterSelectionPage):
             return None
         return self._selected_item_data(combo)
 
+    def _selected_roster_member_id(self, row: int) -> int | None:
+        """Return the exact selected Personnel row when one display row matches."""
+        combo = self.team_table.cellWidget(row, 1)
+        if not isinstance(combo, QComboBox):
+            return None
+        gamertag = _clean(combo.currentText()).casefold()
+        if not gamertag:
+            return None
+        matches = [
+            member
+            for member in tuple(self.personnel_members or ())
+            if _clean(getattr(member, "PlayerName", "")).casefold() == gamertag
+            and getattr(member, "Id", None) is not None
+        ]
+        ids = {int(member.Id) for member in matches if int(member.Id) > 0}
+        if len(ids) != 1:
+            return None
+        return next(iter(ids))
+
     def _selected_character_id(self, row: int) -> str | None:
         combo = self._character_combo(row)
         if combo is None:
@@ -181,6 +200,7 @@ class RaidPlanStableIdentitySelectionPage(RaidPlanCharacterSelectionPage):
                 continue
             members.append(
                 member.with_selection(
+                    roster_member_id=self._selected_roster_member_id(row),
                     player_id=self._selected_player_id(row),
                     character_id=self._selected_character_id(row),
                 )
