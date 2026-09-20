@@ -2042,6 +2042,13 @@ def _save_to_originating_raid_plan(page) -> bool:
         if state is None:
             page.status.error("Canonical Comp planning state is unavailable.")
             return False
+        from engine.config import get_data_dir
+        from services.comp_build_persistence_service import CompBuildPersistenceService
+
+        build_result = CompBuildPersistenceService(get_data_dir()).persist(state)
+        page._comp_plan_state = build_result.state
+        state = build_result.state
+
         persist_state = getattr(window, "_persist_comp_plan_state_to_raid_plan", None)
         if not callable(persist_state):
             page.status.error("Canonical Raid Plan save bridge is unavailable.")
@@ -2059,7 +2066,15 @@ def _save_to_originating_raid_plan(page) -> bool:
         if callable(refresh_names):
             refresh_names()
             page.plan_name_input.setText(plan.name)
-        page.status.success(f"Saved Comp Builder changes to Raid Plan: {plan.name}.")
+        saved_builds = tuple(getattr(build_result, "saved_seats", ()) or ())
+        build_detail = (
+            f" Saved {len(saved_builds)} canonical Comp Build(s)."
+            if saved_builds
+            else ""
+        )
+        page.status.success(
+            f"Saved Comp Builder changes to Raid Plan: {plan.name}." + build_detail
+        )
         return True
     return False
 
