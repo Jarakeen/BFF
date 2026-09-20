@@ -25,6 +25,7 @@ if str(PROJECT_ROOT) not in sys.path:
     )
 
 from services.eso_database import EsoDatabase
+from services.eso_text_cleanup import clean_eso_text
 from parsers.gear_set_parser import GearSetParser
 
 class GearSetImporter:
@@ -311,14 +312,18 @@ class GearSetImporter:
                         record.get("id")
                     ),
 
-                    record.get(
-                        "name",
-                        "",
+                    clean_eso_text(
+                        record.get(
+                            "name",
+                            "",
+                        )
                     ),
 
-                    record.get(
-                        "category",
-                        "standard",
+                    clean_eso_text(
+                        record.get(
+                            "category",
+                            "standard",
+                        )
                     ),
 
                     self._int(
@@ -390,7 +395,7 @@ class GearSetImporter:
                             piece_count
                         ),
 
-                        description,
+                        clean_eso_text(description),
                     ),
                 )
 
