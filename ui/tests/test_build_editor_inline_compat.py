@@ -83,3 +83,15 @@ def test_edit_save_preserves_canonical_identity_provenance_and_non_editor_state(
     ):
         assert f'"{field_name}"' in source
     assert "updated = _preserve_non_editor_build_state(original, editor.model)" in source
+
+
+def test_full_build_editor_surfaces_comp_planning_state() -> None:
+    source = Path("widgets/build_editor.py").read_text(encoding="utf-8")
+
+    assert 'self.comp_plan_card = FoundryCard("Comp Plan")' in source
+    assert '"Planned in Comp Maker. Exact gear slots and skill-bar positions can be filled in below."' in source
+    assert 'getattr(model, "PlannedGearSets", ())' in source
+    assert 'getattr(model, "PlannedSkills", ())' in source
+    assert 'getattr(model, "SourcePlanName", "")' in source
+    assert 'getattr(model, "SourceSeatId", "")' in source
+    assert 'self.comp_plan_card.setVisible(bool(is_comp or planned_sets or planned_skills))' in source
