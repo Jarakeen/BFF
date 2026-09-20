@@ -18,6 +18,7 @@ from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 
 from services.combat_simulation_event_queue import CombatSimulationEventQueue
+from services.combat_simulation_healing_service import CombatSimulationHealingService
 from services.combat_simulation_resource_service import CombatSimulationResourceService
 
 
@@ -42,9 +43,11 @@ class CombatSimulationService:
         *,
         active_bar_assessor: RotationActiveBarAssessor | None = None,
         resource_service: CombatSimulationResourceService | None = None,
+        healing_service: CombatSimulationHealingService | None = None,
     ) -> None:
         self.active_bar_assessor = active_bar_assessor or RotationActiveBarAssessor()
         self.resource_service = resource_service or CombatSimulationResourceService()
+        self.healing_service = healing_service or CombatSimulationHealingService()
 
     def simulate(
         self,
@@ -98,6 +101,10 @@ class CombatSimulationService:
         queue.extend(magicka.events)
         unresolved.extend(magicka.unresolved)
 
+        healing = self.healing_service.project(build=build, plan=plan)
+        queue.extend(healing.events)
+        unresolved.extend(healing.unresolved)
+
         events: list[CombatSimulationEvent] = []
         while queue:
             event = queue.pop()
@@ -112,7 +119,7 @@ class CombatSimulationService:
                 if kind is RotationActionKind.SKILL:
                     unresolved.append(
                         f"{event.time_seconds:g}s {event.source}: "
-                        "non-resource skill consequences (healing/damage/effects) "
+                        "non-healing skill consequences (damage/effects) "
                         "not yet wired in Phase 14"
                     )
                     continue
