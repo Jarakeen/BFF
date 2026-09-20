@@ -109,7 +109,12 @@ class CombatSimulationService:
                 continue
             kind = RotationActionKind(event.payload_dict()["kind"])
             if kind in _CONSEQUENCE_PENDING:
-                if kind in {RotationActionKind.SKILL, RotationActionKind.ULTIMATE}:
+                if kind is RotationActionKind.SKILL:
+                    unresolved.append(
+                        f"{event.time_seconds:g}s {event.source}: "
+                        "non-resource skill consequences (healing/damage/effects) "
+                        "not yet wired in Phase 14"
+                    )
                     continue
                 unresolved.append(
                     f"{event.time_seconds:g}s {event.source}: "
