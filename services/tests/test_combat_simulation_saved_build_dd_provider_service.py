@@ -1,0 +1,154 @@
+from types import SimpleNamespace
+
+from minmax.character_progression import CharacterProgression
+from minmax.rotation_plan import RotationPlan
+from models.build_model import PlayerBuild
+from services.combat_simulation_saved_build_dd_provider_service import (
+    CombatSimulationSavedBuildDDProviderService,
+)
+from services.minmax_character_progression_adapter import (
+    SavedBuildProgressionResolution,
+)
+from services.rotation_saved_build_weapon_attack_evaluation_service import (
+    RotationWeaponAttackBuildEvaluationResolution,
+)
+from services.rotation_static_build_context_service import (
+    RotationStaticBuildContextResolution,
+)
+
+
+class _StaticContextService:
+    def __init__(self, resolution):
+        self.resolution = resolution
+        self.calls = []
+
+    def resolve(self, build):
+        self.calls.append(build)
+        return self.resolution
+
+
+class _WeaponEvaluationService:
+    def __init__(self, resolution):
+        self.resolution = resolution
+        self.calls = []
+
+    def resolve(self, *, player_build, static_context):
+        self.calls.append((player_build, static_context))
+        return self.resolution
+
+
+def _progression(*, unresolved=()):
+    return SavedBuildProgressionResolution(
+        character_id="character-1",
+        progression=CharacterProgression(
+            passive_ranks={},
+            passive_cp_points={},
+        ),
+        unresolved=tuple(unresolved),
+    )
+
+
+def _plan():
+    return RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=10.0,
+        actions=(),
+    )
+
+
+def test_saved_build_dd_provider_rejects_non_dd_role_before_context_resolution() -> None:
+    static = _StaticContextService(
+        RotationStaticBuildContextResolution(
+            progression=_progression(),
+            contexts=(SimpleNamespace(active_bar="front"),),
+        )
+    )
+    service = CombatSimulationSavedBuildDDProviderService(
+        database_path="unused.db",
+        static_context_service=static,
+        weapon_evaluation_service=_WeaponEvaluationService(
+            RotationWeaponAttackBuildEvaluationResolution(build=None)
+        ),
+    )
+
+    result = service.resolve(
+        player_build=PlayerBuild(
+            Name="Healer",
+            BuildName="Heal",
+            Role="Healer",
+        ),
+        plan=_plan(),
+        target_resistance=18200.0,
+    )
+
+    assert result.provider is None
+    assert "damage-dealer build" in result.unresolved[0]
+    assert static.calls == []
+
+
+def test_saved_build_dd_provider_fails_closed_on_relevant_static_context_gap() -> None:
+    static = _StaticContextService(
+        RotationStaticBuildContextResolution(
+            progression=_progression(),
+            contexts=(SimpleNamespace(active_bar="front"),),
+            unresolved=("front static context: offensive mechanic unresolved",),
+        )
+    )
+    service = CombatSimulationSavedBuildDDProviderService(
+        database_path="unused.db",
+        static_context_service=static,
+        weapon_evaluation_service=_WeaponEvaluationService(
+            RotationWeaponAttackBuildEvaluationResolution(build=None)
+        ),
+    )
+
+    result = service.resolve(
+        player_build=PlayerBuild(
+            Name="Damage Tester",
+            BuildName="DD Build",
+            Role="DD",
+        ),
+        plan=_plan(),
+        target_resistance=18200.0,
+    )
+
+    assert result.provider is None
+    assert result.unresolved == (
+        "front static context: offensive mechanic unresolved",
+    )
+
+
+def test_saved_build_dd_provider_allows_reviewed_ambient_static_context_gap() -> None:
+    static_resolution = RotationStaticBuildContextResolution(
+        progression=_progression(),
+        contexts=(SimpleNamespace(active_bar="front"),),
+        unresolved=("front static context: movement_speed unresolved",),
+    )
+    weapon = _WeaponEvaluationService(
+        RotationWeaponAttackBuildEvaluationResolution(
+            build=None,
+            unresolved=("weapon evidence unavailable in fixture",),
+        )
+    )
+    service = CombatSimulationSavedBuildDDProviderService(
+        database_path="unused.db",
+        static_context_service=_StaticContextService(static_resolution),
+        weapon_evaluation_service=weapon,
+    )
+
+    result = service.resolve(
+        player_build=PlayerBuild(
+            Name="Damage Tester",
+            BuildName="DD Build",
+            Role="DD",
+        ),
+        plan=_plan(),
+        target_resistance=18200.0,
+    )
+
+    assert result.provider is not None
+    assert result.unresolved == ()
+    assert result.static_context is not None
+    assert result.static_context.unresolved == ()
+    assert len(weapon.calls) == 1
