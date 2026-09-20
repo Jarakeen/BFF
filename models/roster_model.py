@@ -55,6 +55,9 @@ class RosterMember:
     Team: str = ""
     CanonicalPlayerId: str = ""
     CanonicalCharacterId: str = ""
+    DiscordName: str = ""
+    YouTube: str = ""
+    Twitch: str = ""
 
     def __post_init__(self) -> None:
         self.PrimaryRole = normalize_roster_role(self.PrimaryRole)
