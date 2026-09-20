@@ -15,6 +15,14 @@ from models.effective_build_snapshot import EffectiveBuildSnapshot
 from services.combat_simulation_healing_service import CombatSimulationHealingProjection
 from services.combat_simulation_resource_service import CombatSimulationResourceService
 from services.combat_simulation_service import CombatSimulationService
+from services.combat_simulation_skill_effect_service import CombatSimulationEffectProjection
+
+
+
+
+class _NoopSkillEffectService:
+    def project(self, **_kwargs):
+        return CombatSimulationEffectProjection(events=(), windows=(), unresolved=())
 
 
 class _NoopHealingService:
@@ -144,6 +152,7 @@ def test_simulation_merges_healer_actions_and_resource_events_deterministically(
             sustain_service=_FakeSustainService()
         ),
         healing_service=_NoopHealingService(),
+        skill_effect_service=_NoopSkillEffectService(),
     )
 
     first = service.simulate(build_snapshot=_snapshot(), plan=_plan())
