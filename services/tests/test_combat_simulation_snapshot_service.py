@@ -166,3 +166,58 @@ def test_snapshot_preserves_explicit_target_state() -> None:
         "Magrat",
         "Tank 1",
     ]
+
+
+
+def test_snapshot_projects_health_after_bound_heal_changes() -> None:
+    from dataclasses import replace
+
+    base = _result()
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+        ),
+    )
+    health_change = CombatSimulationEvent(
+        time_seconds=3.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="health_change",
+        source="Combat Prayer",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 20000),
+            ("attempted_heal", 4000.0),
+            ("applied_heal", 4000.0),
+            ("overheal", 0.0),
+            ("after", 24000),
+            ("maximum_health", 25000),
+            ("origin_event_type", "direct_heal"),
+        ),
+    )
+    result = replace(
+        base,
+        events=tuple(sorted((*base.events, health_change))),
+        target_state=state,
+    )
+
+    before = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=2.5,
+    )
+    after = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=3.0,
+    )
+
+    assert [(item.identity, item.current_health, item.maximum_health) for item in before.health] == [
+        ("Tank 1", 20000, 25000),
+    ]
+    assert [(item.identity, item.current_health, item.maximum_health) for item in after.health] == [
+        ("Tank 1", 24000, 25000),
+    ]
