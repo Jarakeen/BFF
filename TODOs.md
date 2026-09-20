@@ -3,7 +3,7 @@ Tasks outside of the master roadmap
 - [X] find a nicer desktop icon
 - [X] write a nice mundus stone importer
 - [X] create a testing installer
-- [ ] import Rumors and find a page to put them on
+- [X] import Rumors and find a page to put them on
 - [ ] create a flow thru of buttons on the broadcast desk to make it more obvious that things are getting sent to OBS and sent to a report for Archive
 - [X] add checkboxes - and a way to check off multiple at a time - on the row of Collectibles
 - [X] import images for the collectibles and add to each corresponding Collectible (we wrote a tool/parser)
@@ -14,7 +14,7 @@ Tasks outside of the master roadmap
 - [X] create the Boss page from docs (on encounters or mechs?)
 - [X] find a standard 'Boss' and 'Double Bosses' icon to use on the boss page
 - [X] add a "Pages On/Off" setting on the Settings tab that allows you to hide pages by main menu (Broadcast, Collectible, Acheivement, Raid Engine)
-- [ ] Achievement page - details box, make the text much larger - style it like the wireframe
+- [X] Achievement page - details box, make the text much larger - style it like the wireframe
 - [X] Create a page for the Collections main menu button with circle and/or line graphs that shows your progress in each submenu category
 - [X] | What it actually is                  | Current-ish name           | Better name                                                         |
 | ------------------------------------ | -------------------------- | ------------------------------------------------------------------- |
@@ -72,12 +72,12 @@ Tasks outside of the master roadmap
   - [ ] Add reversible saved scenarios and explicit approval/application. Never overwrite a Build or Raid Plan merely because a proposal was generated.
 -[X] can we create builds from screenshots?
 -[X] add a dashboard inside OBS so I dont have to run the app if I dont want to
--[ ] Close the encounter-source → canonical encounter-model gap for bosses with rich source data but sparse canonical phase/mechanic rows. Start with Sunspire → Lokkestiiz as the reference implementation. Promote reviewed, source-backed encounter facts such as Aerial Onslaught at 80% / 50% / 20%, boss untargetability during flight, add-active windows, raid-damage windows, and true transition/wait downtime into the canonical encounter model without parsing prose into assumed truth. Preserve provenance and unresolved fields, especially unknown exact add counts or timing. The resulting canonical model must distinguish boss-damageable time, add-damage time, raid-damage/healing-demand time, and genuine inactive transition time so Comp Maker, Optimization, rotation evaluation, and uptime scoring can choose the correct effect-specific denominator. Add an audit that finds other encounters where source data exists but `encounter_phase`, `encounter_mechanic`, `encounter_strategy`, health, or canonical facts are missing, then migrate them through the same reviewed evidence path rather than adding encounter-specific hard-coded exceptions.
+-[ ] Close the encounter-source â†’ canonical encounter-model gap for bosses with rich source data but sparse canonical phase/mechanic rows. Start with Sunspire â†’ Lokkestiiz as the reference implementation. Promote reviewed, source-backed encounter facts such as Aerial Onslaught at 80% / 50% / 20%, boss untargetability during flight, add-active windows, raid-damage windows, and true transition/wait downtime into the canonical encounter model without parsing prose into assumed truth. Preserve provenance and unresolved fields, especially unknown exact add counts or timing. The resulting canonical model must distinguish boss-damageable time, add-damage time, raid-damage/healing-demand time, and genuine inactive transition time so Comp Maker, Optimization, rotation evaluation, and uptime scoring can choose the correct effect-specific denominator. Add an audit that finds other encounters where source data exists but `encounter_phase`, `encounter_mechanic`, `encounter_strategy`, health, or canonical facts are missing, then migrate them through the same reviewed evidence path rather than adding encounter-specific hard-coded exceptions.
   - [ ] Finish the Lokkestiiz reference promotion after the verified dry run: persist only the two accepted reviewed-single-source facts (`damage_window:aerial_onslaught_flight` and `add_group:aerial_onslaught_atronachs`) through the existing schema-v3 writer; verify the write is idempotent on a second run; confirm exactly one preserved evidence row per fact with `reviewed_single_source` provenance; rerun the Sunspire/actionable-gap audit; and add a post-write regression proving no unresolved timing/add-count data was invented and no human review was counted as corroborating source evidence.
 -[X] fix the lua obs script to include the weather icons   
 -[X] add a trending tab somewhere and show what the top DD/healers/Tanks are wearing
 -[X] is there a way to map 'trending' gear amongst different roles? like trending healer sets?
-
+-[ ] what does it look like when you push past a boss's immunity phase in ESO logs
 ## Canonical Service Catalog / Capability Registry
 
 Create a canonical machine-readable catalog of BFF services so the app and developers can discover what already exists, which implementation is authoritative, and what capabilities are currently available.
@@ -140,12 +140,25 @@ Create a canonical machine-readable catalog of BFF services so the app and devel
   - Coverage - Providers
   - Coverage - Encounter Needs
   - Coverage - Reports
--[ ] Mechanics -why isnt the boss info wired up?
--[ ] Reference data - not much here (its in here twice - remove one lol)
+-[X] Mechanics -why isnt the boss info wired up?
+-[X] Reference data - not much here (its in here twice - remove one lol)
 
 -[X] move Rotation under Roster 
 -[X] move Mechanics under??
 -[X] and then get rid of the Reference Data under Mechanics 
+<<<<<<< Updated upstream
 -[ ] we need to bold the header terms in Reference Data - the words before : they are too hard to pick out
 
 - [ ] Discord Comp sharing: add a low-friction way to share a saved Comp / Raid Plan to Discord from FoundryDock. Keep Personnel as the source of truth; optionally store Discord display/user identity alongside Xbox gamertag for matching, but do not require member-facing registration or OAuth. The goal is one-click sharing of the planned roster, seats, classes, builds/gear packages, assignments, and relevant notes into a Discord channel.
+=======
+-[X] we need to bold the header terms in Reference Data - the words before : they are too hard to pick out
+-[ ] simplify the app where possible
+-[X] add link to main_page when you click on main logo
+-[X] make 3 male and 3 female default toon profile images
+-[X] add link to team discord
+-[X] create images for Raid Plan top card - one for each trial
+-[ ] make the page headings like Collectibles
+-[ ] put back all the card header icons
+-[ ] make it so we can add our own avatars
+-[ ] 
+>>>>>>> Stashed changes
