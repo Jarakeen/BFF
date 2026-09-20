@@ -36,7 +36,7 @@ def test_phase14_build_command_center_is_composed_after_existing_build_features(
 def test_build_command_center_exposes_selected_library_views_and_filters() -> None:
     source = _source(phase14_builds_command_center_support)
 
-    assert '("All", "Mine", "Team", "Templates", "Favorites", "Archive")' in source
+    assert '("All", "Mine", "Team", "Comp Builds", "Templates", "Favorites", "Archive")' in source
     assert 'setPlaceholderText("Search builds…")' in source
     assert '("Class", page.phase14_class_filter)' in source
     assert '("Role", page.phase14_role_filter)' in source
@@ -145,7 +145,7 @@ def test_rotation_intents_settings_and_obligations_use_requested_semantic_icons(
         "uptime",
     ):
         assert f'"{icon_name}"' in source
-    assert 'button.setMinimumHeight(98)' in source
+    assert 'button.setMinimumHeight(118)' in source
     assert 'row.setMinimumHeight(48)' in source
     assert 'button.setMinimumHeight(54)' in source
 
