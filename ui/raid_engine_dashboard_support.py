@@ -378,6 +378,19 @@ def _route_plan_page(window, source_page, target: str) -> None:
     window.show_page(target)
 
 
+def _open_exact_build(window, build_id: str) -> None:
+    build_id = str(build_id or "").strip()
+    if not build_id:
+        return
+    window.show_page("console:2")
+    builds = window.pages.get("console:2")
+    if builds is None:
+        return
+    opener = getattr(builds, "show_build_by_id", None)
+    if callable(opener):
+        opener(build_id)
+
+
 def _register_page(window, route: str, page) -> None:
     window.pages[route] = page
     container = window.wrap_page(page)
@@ -424,6 +437,7 @@ def register_raid_engine_pages(window) -> None:
 
     readiness = CityRaidReadinessPage()
     readiness.pageRequested.connect(window.show_page)
+    readiness.buildRequested.connect(lambda build_id: _open_exact_build(window, build_id))
     _register_page(window, "readiness", readiness)
 
     live_raid = CityLiveRaidPage()
