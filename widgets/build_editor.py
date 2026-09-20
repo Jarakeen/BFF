@@ -444,6 +444,26 @@ class BuildEditor(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
         root.addWidget(self._build_identity_card())
+
+        self.comp_plan_card = FoundryCard("Comp Plan")
+        self.comp_plan_note = QLabel(
+            "Planned in Comp Maker. Exact gear slots and skill-bar positions can be filled in below."
+        )
+        self.comp_plan_note.setWordWrap(True)
+        self.comp_plan_note.setProperty("muted", True)
+        self.comp_plan_source = QLabel()
+        self.comp_plan_source.setWordWrap(True)
+        self.comp_plan_sets = QLabel()
+        self.comp_plan_sets.setWordWrap(True)
+        self.comp_plan_skills = QLabel()
+        self.comp_plan_skills.setWordWrap(True)
+        self.comp_plan_card.addWidget(self.comp_plan_note)
+        self.comp_plan_card.addWidget(self.comp_plan_source)
+        self.comp_plan_card.addWidget(self.comp_plan_sets)
+        self.comp_plan_card.addWidget(self.comp_plan_skills)
+        self.comp_plan_card.hide()
+        root.addWidget(self.comp_plan_card)
+
         root.addWidget(self._build_gear_card())
         root.addWidget(self._build_cp_card())
         root.addWidget(self._build_skills_card())
@@ -831,6 +851,32 @@ class BuildEditor(QWidget):
         self.role.setCurrentText(getattr(model, "Role", "") or "")
         self.alliance.setCurrentText(getattr(model, "Alliance", "") or "")
         self.mundus.setCurrentText(getattr(model, "Mundus", "") or "")
+
+        planned_sets = [
+            str(value).strip()
+            for value in (getattr(model, "PlannedGearSets", ()) or ())
+            if str(value).strip()
+        ]
+        planned_skills = [
+            str(value).strip()
+            for value in (getattr(model, "PlannedSkills", ()) or ())
+            if str(value).strip()
+        ]
+        is_comp = str(getattr(model, "BuildKind", "") or "").strip().casefold() == "comp"
+        source_plan = str(getattr(model, "SourcePlanName", "") or "").strip()
+        source_seat = str(getattr(model, "SourceSeatId", "") or "").strip()
+        self.comp_plan_source.setText(
+            "Source: " + " • ".join(value for value in (source_plan, source_seat) if value)
+            if source_plan or source_seat
+            else "Source: Comp Maker"
+        )
+        self.comp_plan_sets.setText(
+            "Planned sets: " + (" + ".join(planned_sets) if planned_sets else "None recorded")
+        )
+        self.comp_plan_skills.setText(
+            "Planned skills: " + (", ".join(planned_skills) if planned_skills else "None recorded")
+        )
+        self.comp_plan_card.setVisible(bool(is_comp or planned_sets or planned_skills))
 
         self.vampire.blockSignals(True)
         self.werewolf.blockSignals(True)
