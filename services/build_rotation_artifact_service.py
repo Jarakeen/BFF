@@ -82,15 +82,26 @@ def rotation_plan_from_artifact(artifact: dict[str, Any]) -> RotationPlan:
 def resolve_canonical_build_id(catalog_service, build) -> str | None:
     """Resolve one compatibility PlayerBuild to its canonical build identity.
 
-    Exact Gamertag + character + build-name ownership is preferred. A fallback
-    without Gamertag is allowed only when it identifies exactly one canonical
-    build, so ambiguous human-readable labels never silently pick a record.
+    An explicit BuildId is authoritative. Human-readable ownership fields are
+    migration fallback only for compatibility rows that genuinely lack a stable id.
+    A stale explicit id fails closed rather than silently rebinding the build to
+    another record that happens to share its labels.
     """
+    catalog = catalog_service.load()
+    explicit_build_id = str(getattr(build, "BuildId", "") or "").strip()
+    if explicit_build_id:
+        matches = [
+            str(record.get("build_id") or "").strip()
+            for record in catalog.get("builds", [])
+            if isinstance(record, dict)
+            and str(record.get("build_id") or "").strip() == explicit_build_id
+        ]
+        return explicit_build_id if len(matches) == 1 else None
+
     character_name = str(getattr(build, "Name", "") or "").strip().casefold()
     gamertag = str(getattr(build, "Gamertag", "") or "").strip().casefold()
     build_name = str(getattr(build, "BuildName", "") or "").strip().casefold()
 
-    catalog = catalog_service.load()
     exact: list[str] = []
     fallback: list[str] = []
     for record in catalog.get("builds", []):
