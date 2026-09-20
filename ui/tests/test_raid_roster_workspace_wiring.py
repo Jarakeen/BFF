@@ -61,7 +61,7 @@ def test_raid_lead_navigation_uses_real_current_routes() -> None:
         ("Encounters", "console:1"),
         ("Mechanics & Timelines", "console:4"),
         ("Coverage", "console:7"),
-        ("Comp Maker", "comp_builder"),
+        ("Comp Builder", "comp_builder"),
         ("Optimizer Adviser", "console:6"),
     ):
         assert f'("{label}", "{route}")' in source
@@ -147,15 +147,15 @@ def test_roster_character_detail_is_profile_style_without_database_ids() -> None
     assert '"CHARACTER\\nIMAGE"' in wrapper
 
 
-def test_readiness_parchment_uses_field_journal_sketches_with_fixed_height() -> None:
+def test_readiness_parchment_uses_urban_wilderness_note_sketches_with_fixed_height() -> None:
     source = Path("ui/city_raid_readiness_page.py").read_text(encoding="utf-8")
 
-    assert '"field_journal", "roster"' in source
-    assert '"roster_people.jpg"' in source
-    assert '"roster_team.jpg"' in source
+    assert '"urban_wilderness", "notes", self.filename' in source
+    assert '"note1.png"' in source
+    assert '"note4.png"' in source
     assert '"city_night", "roster"' not in source
     assert "self.setFixedHeight(150)" in source
-    assert "Full-color city artwork belongs on dark surfaces" in source
+    assert "Fixed-height Urban Wilderness pencil art" in source
 
 
 def test_assignment_selected_spot_is_structured_profile_card_with_drawn_role_marks() -> None:
@@ -188,7 +188,7 @@ def test_city_key_remains_the_compatibility_storage_key_for_urban_wilderness() -
     assert "VISUAL_THEME_URBAN_WILDERNESS = VISUAL_THEME_RYLO_CITY" in source
 
 
-def test_roster_character_avatar_is_click_editable_and_character_owned() -> None:
+def test_roster_player_avatar_is_click_editable_and_player_owned() -> None:
     wrapper = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
     catalog = Path("services/build_catalog_service.py").read_text(encoding="utf-8")
 
@@ -197,9 +197,9 @@ def test_roster_character_avatar_is_click_editable_and_character_owned() -> None
     assert 'get_resource_path(*_AVATAR_ROOT)' in wrapper
     assert 'reference = f"assets/avatar/{path.name}"' in wrapper
     assert 'target_root = get_data_dir() / "avatar"' in wrapper
-    assert 'catalog.set_character_avatar(' in wrapper
-    assert 'character.get("avatar_path")' in wrapper
-    assert 'def set_character_avatar(' in catalog
+    assert 'catalog.set_player_avatar(' in wrapper
+    assert 'player.get("avatar_path")' in wrapper
+    assert 'def set_player_avatar(' in catalog
     assert 'updated["avatar_path"] = normalized_path' in catalog
 
 
@@ -225,27 +225,22 @@ def test_optimizer_handoff_targets_current_roster_workspace() -> None:
     assert 'self.show_page("roster_page")' not in method
     assert 'load_optimizer_plan' in method
 
-    assert 'FoundryCard("Optimizer Plan", "compass")' in roster
+    assert 'FoundryCard("Incoming Team Plan", "compass")' in roster
     assert "def load_optimizer_plan(self, plan)" in roster
     assert 'show_detail("teams")' in roster
     assert "Saved team membership was not changed." in roster
 
 
-def test_comp_builder_handoff_targets_current_roster_workspace() -> None:
+def test_comp_builder_uses_raid_plan_as_current_handoff_authority() -> None:
     main_window = Path("ui/main_window.py").read_text(encoding="utf-8")
+    raid_support = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
     roster = Path("ui/raid_roster_workspace_page.py").read_text(encoding="utf-8")
 
-    method = main_window.split(
-        "def _show_generated_roster_plan", 1
-    )[1].split("def _confirm_collectible_navigation", 1)[0]
-
-    assert 'GeneratedRosterDraftService' in method
-    assert '.load_plan(plan_name)' in method
-    assert 'self.pages.get("roster_workspace")' in method
-    assert 'self.show_page("roster_workspace")' in method
-    assert 'self.show_page("roster_page")' not in method
-    assert 'source="Comp Builder"' in method
-    assert "load_external_team_plan" in method
+    assert "def _show_generated_roster_plan" not in main_window
+    assert "GeneratedRosterDraftService" not in main_window
+    assert "def _bind_plan_comp_builder(window, source_page) -> bool:" in raid_support
+    assert 'window.show_page("comp_builder")' in raid_support
+    assert "CompPlanStateService.from_raid_plan" in raid_support
 
     assert 'def load_external_team_plan(' in roster
     assert 'def load_optimizer_plan(self, plan)' in roster
