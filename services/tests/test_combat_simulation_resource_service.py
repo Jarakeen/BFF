@@ -185,11 +185,11 @@ def test_simulation_merges_healer_actions_and_resource_events_deterministically(
     ]
 
     assert any(
-        "Combat Prayer" in value and "non-healing skill consequences" in value
+        "Combat Prayer" in value and "remaining skill consequences" in value
         for value in first.unresolved
     )
     assert any(
-        "Illustrious Healing" in value and "non-healing skill consequences" in value
+        "Illustrious Healing" in value and "remaining skill consequences" in value
         for value in first.unresolved
     )
     assert not any(
