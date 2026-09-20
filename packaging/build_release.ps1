@@ -153,6 +153,12 @@ try {
         $Utf8NoBom
     )
 
+    Write-Host "Running packaged release privacy audit..."
+    python tools\audit_packaged_release_privacy.py --package-root $PackageRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw "Packaged release privacy audit failed. No release package will be created."
+    }
+
     $CleanSettings = @'
 {
   "EsoLogsClientId": "",
