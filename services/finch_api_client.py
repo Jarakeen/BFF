@@ -25,6 +25,8 @@ class FinchApiError(RuntimeError):
 class FinchApiClient:
     def __init__(self, *, base_url: str, api_key: str, timeout: float = 10.0) -> None:
         self.base_url = str(base_url or "").strip().rstrip("/")
+        if self.base_url and "://" not in self.base_url:
+            self.base_url = "https://" + self.base_url
         self.api_key = str(api_key or "").strip()
         self.timeout = float(timeout)
         if not self.base_url:
