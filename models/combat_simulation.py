@@ -48,6 +48,64 @@ class CombatSimulationResourceResult:
 
 
 @dataclass(frozen=True)
+class CombatSimulationCombatant:
+    identity: str
+    side: str = "ally"
+
+    def __post_init__(self) -> None:
+        identity = str(self.identity or "").strip()
+        if not identity:
+            raise ValueError("simulation combatant identity is required")
+        side = str(self.side or "").strip().casefold()
+        if side not in {"self", "ally", "enemy"}:
+            raise ValueError("simulation combatant side must be self, ally, or enemy")
+        object.__setattr__(self, "identity", identity)
+        object.__setattr__(self, "side", side)
+
+
+@dataclass(frozen=True)
+class CombatSimulationRecipientBinding:
+    time_seconds: float
+    sequence: int
+    event_type: str
+    source: str
+    recipients: tuple[str, ...]
+    coefficient_number: int | None = None
+    effect_name: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.time_seconds < 0:
+            raise ValueError("recipient binding time cannot be negative")
+        if self.sequence < 0:
+            raise ValueError("recipient binding sequence cannot be negative")
+        if not str(self.event_type or "").strip():
+            raise ValueError("recipient binding event_type is required")
+        if not str(self.source or "").strip():
+            raise ValueError("recipient binding source is required")
+        recipients = tuple(str(value or "").strip() for value in self.recipients)
+        if any(not value for value in recipients):
+            raise ValueError("recipient binding identities must be non-empty")
+        if len(set(recipients)) != len(recipients):
+            raise ValueError("recipient binding identities must be unique")
+        object.__setattr__(self, "recipients", recipients)
+
+
+@dataclass(frozen=True)
+class CombatSimulationTargetState:
+    combatants: tuple[CombatSimulationCombatant, ...]
+    recipient_bindings: tuple[CombatSimulationRecipientBinding, ...] = ()
+
+    def __post_init__(self) -> None:
+        identities = tuple(item.identity for item in self.combatants)
+        if len(set(identities)) != len(identities):
+            raise ValueError("simulation combatant identities must be unique")
+
+    def combatant(self, identity: str) -> CombatSimulationCombatant | None:
+        wanted = str(identity or "").strip()
+        return next((item for item in self.combatants if item.identity == wanted), None)
+
+
+@dataclass(frozen=True)
 class CombatSimulationResourceSnapshot:
     resource: str
     current_amount: int
@@ -87,6 +145,9 @@ class CombatSimulationResult:
 
 __all__ = [
     "CombatSimulationEvent",
+    "CombatSimulationCombatant",
+    "CombatSimulationRecipientBinding",
+    "CombatSimulationTargetState",
     "CombatSimulationResourceResult",
     "CombatSimulationResourceSnapshot",
     "CombatSimulationSnapshot",
