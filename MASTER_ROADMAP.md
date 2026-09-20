@@ -1107,8 +1107,20 @@ Initial control behavior: Combat Prayer can emit a real direct-heal event. Illus
 Healing can emit a canonical periodic-heal seed, while exact tick placement remains
 explicitly unresolved instead of being guessed.
 
-**Phase 14C validation pending:** focused healer-output, kernel, resource, and existing
-canonical healer action/runtime suites must pass before this slice is green.
+### Phase 14C validation checkpoint — 2026-09-19
+
+User-reported focused checkpoint:
+
+- **45 passed in 4.92s**
+- healer output bridge, resource bridge, simulation kernel, canonical healer action
+  projection, periodic runtime, and Rotation sustain suites are green.
+
+**Phase 14C healer output slice status: green.**
+
+Next implementation slice: consume reviewed periodic runtime timing evidence to turn
+eligible healer periodic seeds into exact simulation heal events. Illustrious Healing
+is the first control. First-tick, expiry-boundary, and refresh/recast behavior must come
+from reviewed evidence; missing timing remains unresolved rather than inferred.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
