@@ -3,7 +3,29 @@ from __future__ import annotations
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 from models.effective_build_snapshot import EffectiveBuildSnapshot
+from models.combat_simulation import CombatSimulationResourceResult
+from services.combat_simulation_resource_service import CombatSimulationResourceProjection
 from services.combat_simulation_service import CombatSimulationService
+
+
+
+
+class _NoopResourceService:
+    def project(self, **_kwargs):
+        return CombatSimulationResourceProjection(
+            result=CombatSimulationResourceResult(
+                resource="magicka",
+                starting_amount=0,
+                ending_amount=0,
+                total_shortfall=0,
+            ),
+            events=(),
+            unresolved=(),
+        )
+
+
+def _service() -> CombatSimulationService:
+    return CombatSimulationService(resource_service=_NoopResourceService())
 
 
 def _snapshot() -> EffectiveBuildSnapshot:
@@ -63,7 +85,7 @@ def _healer_plan() -> RotationPlan:
 
 
 def test_healer_kernel_replays_same_input_identically() -> None:
-    service = CombatSimulationService()
+    service = _service()
 
     first = service.simulate(build_snapshot=_snapshot(), plan=_healer_plan())
     second = service.simulate(build_snapshot=_snapshot(), plan=_healer_plan())
@@ -81,7 +103,7 @@ def test_healer_kernel_replays_same_input_identically() -> None:
 
 
 def test_healer_kernel_preserves_same_timestamp_rotation_sequence() -> None:
-    result = CombatSimulationService().simulate(
+    result = _service().simulate(
         build_snapshot=_snapshot(),
         plan=_healer_plan(),
     )
@@ -96,7 +118,7 @@ def test_healer_kernel_preserves_same_timestamp_rotation_sequence() -> None:
 
 
 def test_healer_kernel_reports_unwired_consequences_instead_of_zeroing_them() -> None:
-    result = CombatSimulationService().simulate(
+    result = _service().simulate(
         build_snapshot=_snapshot(),
         plan=_healer_plan(),
     )
@@ -122,7 +144,7 @@ def test_kernel_fails_closed_when_rotation_identity_does_not_match_build() -> No
     )
 
     try:
-        CombatSimulationService().simulate(
+        _service().simulate(
             build_snapshot=_snapshot(),
             plan=bad_plan,
         )
@@ -148,7 +170,7 @@ def test_kernel_surfaces_existing_phase13_bar_legality_violation() -> None:
         ),
     )
 
-    result = CombatSimulationService().simulate(
+    result = _service().simulate(
         build_snapshot=_snapshot(),
         plan=plan,
         initial_bar="front",
