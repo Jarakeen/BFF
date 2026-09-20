@@ -73,6 +73,13 @@ class LiveRaidClockEvent:
 
 
 @dataclass(frozen=True)
+class LiveRaidEncounterCondition:
+    marker: str
+    label: str
+    detail: str
+
+
+@dataclass(frozen=True)
 class LiveRaidEncounterContext:
     encounter_id: str
     encounter_name: str
@@ -80,6 +87,7 @@ class LiveRaidEncounterContext:
     summary: str
     location: str
     phase_lines: tuple[str, ...]
+    condition_events: tuple[LiveRaidEncounterCondition, ...]
     callouts: tuple[str, ...]
     checklist: tuple[str, ...]
     clock_events: tuple[LiveRaidClockEvent, ...]
@@ -131,6 +139,16 @@ class LiveRaidEncounterProjectionService:
             if _clean(phase.label) or _clean(phase.threshold)
         )
 
+        condition_events = tuple(
+            LiveRaidEncounterCondition(
+                marker=_clean(row.marker) or "PLAN",
+                label=_clean(row.label) or "Encounter condition",
+                detail=_clean(row.detail),
+            )
+            for row in evidence.timeline
+            if _clean(row.marker) or _clean(row.label)
+        )
+
         callouts = list(evidence.callouts)
         for responsibility in plan.triggered_responsibilities:
             if responsibility.encounter_id.casefold() != encounter_id.casefold():
@@ -159,6 +177,7 @@ class LiveRaidEncounterProjectionService:
             summary=guide.summary,
             location=guide.location,
             phase_lines=tuple(dict.fromkeys(line for line in phase_lines if line))[:8],
+            condition_events=condition_events[:10],
             callouts=tuple(dict.fromkeys(_clean(line) for line in callouts if _clean(line)))[:10],
             checklist=tuple(dict.fromkeys(_clean(line) for line in checklist if _clean(line)))[:8],
             clock_events=clock_events,
@@ -204,6 +223,7 @@ class LiveRaidEncounterProjectionService:
 
 __all__ = [
     "LiveRaidClockEvent",
+    "LiveRaidEncounterCondition",
     "LiveRaidEncounterContext",
     "LiveRaidEncounterProjectionService",
 ]

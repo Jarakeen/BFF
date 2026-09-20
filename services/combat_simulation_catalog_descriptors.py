@@ -33,6 +33,66 @@ COMBAT_SIMULATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "damage providers; missing evidence stays unresolved."
         ),
     ),
+    ServiceDescriptor(
+        service_id="simulation.saved_build_dd_provider",
+        domain="simulation",
+        purpose=(
+            "Compose one canonical saved-build DD action-damage provider for Combat "
+            "Simulation from existing static build, skill, weapon-attack, periodic, "
+            "mitigation, and execute services."
+        ),
+        implementation_path=(
+            "services.combat_simulation_saved_build_dd_provider_service"
+        ),
+        inputs=(
+            "PlayerBuild",
+            "RotationPlan",
+            "TargetResistance",
+            "OptionalTargetCombatStateResolver",
+            "OptionalTargetSnapshotResolver",
+        ),
+        outputs=("CombatSimulationSavedBuildDDProviderResolution",),
+        dependencies=("simulation.outgoing_damage_bridge",),
+        responsibilities=("combat_simulation_saved_build_dd_provider_composition",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Composition only. It does not duplicate skill, LA, HA, Ultimate, "
+            "periodic, crit, penetration, mitigation, or execute formulas."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="simulation.saved_build_dd",
+        domain="simulation",
+        purpose=(
+            "Run the deterministic Combat Simulation for one saved DD build while "
+            "feeding canonical per-action damage evidence into explicit enemy Health."
+        ),
+        implementation_path="services.combat_simulation_saved_build_dd_service",
+        inputs=(
+            "EffectiveBuildSnapshot",
+            "RotationPlan",
+            "CombatSimulationTargetState",
+            "TargetIdentity",
+            "TargetResistance",
+        ),
+        outputs=("CombatSimulationResult",),
+        dependencies=(
+            "simulation.saved_build_dd_provider",
+            "simulation.outgoing_damage_bridge",
+        ),
+        responsibilities=("combat_simulation_saved_build_dd_execution",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Unknown or unsupported canonical damage evidence remains unresolved and "
+            "is never coerced to zero."
+        ),
+    ),
 )
 
 
