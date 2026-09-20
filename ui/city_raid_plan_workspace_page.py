@@ -3,14 +3,18 @@ from __future__ import annotations
 """Urban Wilderness shell over the canonical Raid Plan editor."""
 
 from dataclasses import replace
+from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
     QGridLayout,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QMenu,
     QPushButton,
     QPlainTextEdit,
     QStackedWidget,
@@ -19,6 +23,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from services.raid_plan_build_export_service import (
+    export_raid_plan_builds_csv,
+    export_raid_plan_builds_pdf,
+    raid_plan_build_export,
+    raid_plan_discord_builds_text,
+)
 from ui.components.foundry_card import FoundryCard
 from ui.raid_plan_adviser_page import RaidPlanAdviserPage
 from ui.raid_trial_banner_support import TrialBannerLabel, trial_banner_path
@@ -84,6 +94,21 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.header.title.setText("Raid Plan")
         self.header.subtitle.setText("Turn a group of good players into a great run.")
         self.header.department.setText("RAID • PLAN")
+
+        self.share_builds_button = QPushButton("Share Builds ▾")
+        self.share_builds_button.setToolTip(
+            "Share this Raid Plan's resolved builds as an ink-light PDF, CSV, or Discord text."
+        )
+        share_menu = QMenu(self.share_builds_button)
+        pdf_action = share_menu.addAction("Export Ink-Light PDF")
+        csv_action = share_menu.addAction("Export CSV")
+        share_menu.addSeparator()
+        discord_action = share_menu.addAction("Copy for Discord")
+        pdf_action.triggered.connect(self._export_plan_builds_pdf)
+        csv_action.triggered.connect(self._export_plan_builds_csv)
+        discord_action.triggered.connect(self._copy_plan_builds_discord)
+        self.share_builds_button.setMenu(share_menu)
+        self.header.add_context_widget(self.share_builds_button)
 
         # Preserve canonical role/spot controls without adding another decorative
         # field-note card above them. Duties live on the dedicated Assignments page.
@@ -317,6 +342,77 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.encounter_snapshot.value_label.setText(plan.trial_id)
         self.strategy_snapshot.value_label.setText(f"{assigned} / {len(plan.members)} spots assigned")
         self.progress_snapshot.value_label.setText(f"{builds} builds linked")
+
+    def _resolved_plan_build_export(self):
+        plan = self.current_plan()
+        export = raid_plan_build_export(plan, self.build_service)
+        if not export.seats:
+            self.status.warning(
+                "This Raid Plan has no resolved canonical builds to export yet."
+            )
+            return plan, None
+        return plan, export
+
+    def _export_plan_builds_pdf(self, *_args) -> None:
+        plan, export = self._resolved_plan_build_export()
+        if export is None:
+            return
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Raid Plan Builds",
+            f"{plan.name}_builds.pdf",
+            "Printer-Friendly PDF (*.pdf)",
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.casefold() != ".pdf":
+            path = path.with_suffix(".pdf")
+        try:
+            export_raid_plan_builds_pdf(plan, export, path)
+            detail = (
+                f" {len(export.unresolved_seats)} unresolved seat(s) were listed separately."
+                if export.unresolved_seats
+                else ""
+            )
+            self.status.success(f"Exported ink-light Raid Plan builds to {path}.{detail}")
+        except Exception as exc:
+            self.status.error(f"Raid Plan PDF export failed: {exc}")
+
+    def _export_plan_builds_csv(self, *_args) -> None:
+        plan, export = self._resolved_plan_build_export()
+        if export is None:
+            return
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Raid Plan Builds",
+            f"{plan.name}_builds.csv",
+            "CSV Files (*.csv)",
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.casefold() != ".csv":
+            path = path.with_suffix(".csv")
+        try:
+            export_raid_plan_builds_csv(plan, export, path)
+            self.status.success(f"Exported Raid Plan builds to {path}.")
+        except Exception as exc:
+            self.status.error(f"Raid Plan CSV export failed: {exc}")
+
+    def _copy_plan_builds_discord(self, *_args) -> None:
+        plan, export = self._resolved_plan_build_export()
+        if export is None:
+            return
+        try:
+            QApplication.clipboard().setText(
+                raid_plan_discord_builds_text(plan, export)
+            )
+            self.status.success(
+                "Copied Raid Plan builds for Discord. Paste directly into the raid channel."
+            )
+        except Exception as exc:
+            self.status.error(f"Discord build copy failed: {exc}")
 
     def current_plan(self):
         plan = super().current_plan()
