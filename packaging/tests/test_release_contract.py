@@ -259,13 +259,10 @@ def test_rotation_command_center_preserves_legacy_shell_without_delete_later() -
     command_center = (ROOT / "ui" / "phase14_rotation_command_center_support.py").read_text(
         encoding="utf-8"
     )
-    visual = (ROOT / "ui" / "phase14_rotation_visual_target_support.py").read_text(
-        encoding="utf-8"
-    )
 
     assert "page._phase14_preserved_legacy_builder = old_builder" in command_center
     assert "old_builder.deleteLater()" not in command_center
-    assert "legacy_builder.deleteLater =" not in visual
+    assert not (ROOT / "ui" / "phase14_rotation_visual_target_support.py").exists()
 
 
 def test_first_install_starts_without_developer_character_identity() -> None:
