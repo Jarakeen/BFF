@@ -245,3 +245,25 @@ def test_main_simulation_binds_known_recipients_without_inventing_others() -> No
     assert effect.payload_dict()["recipients"] == ("Tank 1",)
     assert result.target_state == state
     assert not any("explicit recipient binding is required" in item for item in result.unresolved)
+
+
+
+def test_target_state_rejects_duplicate_event_binding_identity() -> None:
+    binding = CombatSimulationRecipientBinding(
+        time_seconds=1.0,
+        sequence=0,
+        event_type="direct_heal",
+        source="Combat Prayer",
+        coefficient_number=1,
+        recipients=("Tank 1",),
+    )
+
+    try:
+        CombatSimulationTargetState(
+            combatants=(CombatSimulationCombatant("Tank 1", "ally"),),
+            recipient_bindings=(binding, binding),
+        )
+    except ValueError as exc:
+        assert "recipient binding identities must be unique" in str(exc)
+    else:
+        raise AssertionError("Expected duplicate recipient binding identity to fail closed")
