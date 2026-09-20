@@ -29,13 +29,20 @@ class CompBuildPersistenceResult:
 
 
 class CompBuildPersistenceService:
-    def __init__(self, data_dir: str | Path):
+    def __init__(
+        self,
+        data_dir: str | Path,
+        *,
+        database_path: str | Path | None = None,
+    ):
         self.data_dir = Path(data_dir)
         self.bridge = CanonicalBuildBridge(
             self.data_dir / "builds.json",
             self.data_dir / "characters.json",
         )
-        self.database = EsoDatabase(DEFAULT_DATABASE)
+        self.database = EsoDatabase(
+            Path(database_path) if database_path is not None else DEFAULT_DATABASE
+        )
         self.roster = RosterService(self.database)
 
     @staticmethod
