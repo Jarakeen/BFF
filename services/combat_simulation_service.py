@@ -29,6 +29,9 @@ from services.combat_simulation_outgoing_damage_service import (
 from services.combat_simulation_resource_service import CombatSimulationResourceService
 from services.combat_simulation_skill_effect_service import CombatSimulationSkillEffectService
 from services.combat_simulation_target_binding_service import CombatSimulationTargetBindingService
+from services.rotation_candidate_dd_role_output_service import (
+    RotationActionDamageEvidenceProvider,
+)
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 
 
@@ -78,6 +81,7 @@ class CombatSimulationService:
         outgoing_damage: tuple[CombatSimulationOutgoingDamage, ...] = (),
         damage_target_identity: str = "",
         damage_candidate: GeneratedRotationCandidate | None = None,
+        action_damage_evidence_provider: RotationActionDamageEvidenceProvider | None = None,
     ) -> CombatSimulationResult:
         if not isinstance(build_snapshot, EffectiveBuildSnapshot):
             raise TypeError("combat simulation requires EffectiveBuildSnapshot")
@@ -135,13 +139,24 @@ class CombatSimulationService:
             )
 
         resolved_damage_actions: set[tuple[float, int]] = set()
-        if self.outgoing_damage_service is not None:
+        projection_service = self.outgoing_damage_service
+        if action_damage_evidence_provider is not None:
+            if projection_service is not None:
+                raise ValueError(
+                    "combat simulation accepts either configured outgoing-damage service "
+                    "or action_damage_evidence_provider, not both"
+                )
+            projection_service = CombatSimulationOutgoingDamageService(
+                action_damage_evidence_provider=action_damage_evidence_provider,
+            )
+
+        if projection_service is not None:
             if not str(damage_target_identity or "").strip():
                 unresolved.append(
                     "canonical outgoing damage projection requires explicit target identity"
                 )
             else:
-                projection = self.outgoing_damage_service.project(
+                projection = projection_service.project(
                     plan=plan,
                     target_identity=damage_target_identity,
                     candidate=damage_candidate,

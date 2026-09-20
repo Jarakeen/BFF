@@ -370,3 +370,16 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Deleting a team never deletes Personnel, characters, saved builds, or historical raid-plan snapshots.
 - Use Team Merge instead of Delete when a duplicate team contains roster/build-assignment data that should be preserved.
 
+
+
+### Live Raid encounter context
+- Live Raid includes an **Encounter** selector filtered to the selected Raid Plan's trial, plus **Trial / General**.
+- The selected encounter is stored as per-plan manual run state and survives pull start/end actions without mutating the Raid Plan.
+- Selected encounter context is projected from canonical boss-guide and reviewed encounter-evidence services.
+- The hero card shows the selected encounter and reviewed phase guide without claiming unobserved live boss phase.
+- **Current Callouts** combines reviewed encounter handling with encounter-scoped Raid Plan responsibilities.
+- **Next 60 Seconds** uses only reviewed facts with explicit persisted wall-clock fields; health/phase thresholds remain threshold-based and are never converted to guessed timestamps.
+- **Quick Notes / Run Sheet** shows read-only encounter checklist context separately from editable manual run notes.
+- **Recent Events** remains manual run-state history.
+- **Coverage Snapshot** remains owned by the existing Coverage system rather than duplicating coverage logic inside Live Raid.
+
