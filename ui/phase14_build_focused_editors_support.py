@@ -4,8 +4,7 @@ from __future__ import annotations
 
 The Phase 14 Builds library is the primary workspace. Editing one section opens a
 small modal that owns only that section instead of constructing the monolithic legacy
-BuildEditor. The legacy editor remains available as a compatibility fallback, but the
-normal inspector path no longer routes through it.
+BuildEditor. Superseded editor surfaces are not exposed in the Phase 14 workspace.
 """
 
 from collections import Counter
@@ -493,16 +492,6 @@ def _context_variants_summary(page, build) -> FoundryCard:
     else:
         card.addWidget(QLabel("No Team, Boss, or Team + Boss variants saved."))
 
-    edit = FoundryButton(
-        "Edit Context Variants",
-        role=ButtonRole.SECONDARY,
-        compact=True,
-    )
-    edit.setToolTip(
-        "Open the canonical build editor for Team, Boss, and Team + Boss overrides."
-    )
-    edit.clicked.connect(lambda: page._open_phase14_legacy_build_editor())
-    card.addWidget(edit)
     return card
 
 
@@ -1001,7 +990,6 @@ def _footer(page) -> QWidget:
         ("Save as Template", lambda: _proxy(page, "template_build_button")),
         ("Copy Build To…", lambda: _proxy(page, "copy_build_button")),
         ("Export Builds…", page._export_csv),
-        ("Legacy Build Editor (Fallback)", lambda: page._open_phase14_legacy_build_editor()),
         ("Delete Build", lambda: _proxy(page, "delete_build_button")),
     )
     for label, callback in actions:
