@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
     QFrame,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -229,17 +230,19 @@ class CityLiveRaidPage(FoundryPage):
         middle.addWidget(spots, 5)
 
         callouts = self._style_live_card(FoundryCard("Current Callouts", "warning"), "callouts")
-        self.callouts_label = QLabel("No planned callouts for this Raid Plan.")
-        self.callouts_label.setProperty("liveRaidCalloutText", True)
-        self.callouts_label.setWordWrap(True)
-        self.callouts_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        callouts.addWidget(self.callouts_label)
-        callouts.addStretch(1)
+        self.callouts_host = QWidget()
+        self.callouts_host.setProperty("liveRaidCalloutList", True)
+        self.callouts_layout = QVBoxLayout(self.callouts_host)
+        self.callouts_layout.setContentsMargins(0, 0, 0, 0)
+        self.callouts_layout.setSpacing(0)
+        callouts.addWidget(self.callouts_host)
         middle.addWidget(callouts, 3)
-        self.workspace_layout.addLayout(middle, 1)
+        middle.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.workspace_layout.addLayout(middle)
 
         lower = QHBoxLayout()
         lower.setSpacing(10)
+        lower.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         timeline = self._style_live_card(
             FoundryCard("Next 60 Seconds", "stopwatch"), "timeline", compact=True
@@ -325,6 +328,86 @@ class CityLiveRaidPage(FoundryPage):
         self._plan = self.repository.get(plan_id) if isinstance(plan_id, str) and plan_id else None
         self._refresh_encounters()
         self._render_plan()
+
+    @staticmethod
+    def _clear_layout(layout) -> None:
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            nested = item.layout()
+            if widget is not None:
+                widget.deleteLater()
+            elif nested is not None:
+                CityLiveRaidPage._clear_layout(nested)
+
+    def _callout_row(
+        self,
+        *,
+        marker: str,
+        title: str,
+        detail: str = "",
+        badge: str = "",
+        role: str = "planned",
+    ) -> QWidget:
+        row = QFrame()
+        row.setProperty("liveRaidCalloutRow", True)
+        row.setProperty("liveRaidCalloutRole", role)
+        layout = QGridLayout(row)
+        layout.setContentsMargins(4, 6, 4, 6)
+        layout.setHorizontalSpacing(8)
+        layout.setVerticalSpacing(1)
+
+        marker_label = QLabel(marker)
+        marker_label.setProperty("liveRaidCalloutMarker", True)
+        marker_label.setProperty("liveRaidCalloutRole", role)
+        marker_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        marker_label.setMinimumWidth(58)
+        marker_label.setMaximumWidth(72)
+        layout.addWidget(marker_label, 0, 0, 2, 1)
+
+        title_label = QLabel(title or "Callout")
+        title_label.setProperty("liveRaidCalloutTitle", True)
+        title_label.setWordWrap(True)
+        layout.addWidget(title_label, 0, 1)
+
+        if badge:
+            badge_label = QLabel(badge)
+            badge_label.setProperty("liveRaidCalloutBadge", True)
+            badge_label.setProperty("liveRaidCalloutRole", role)
+            badge_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            badge_label.setMinimumWidth(56)
+            layout.addWidget(badge_label, 0, 2)
+
+        if detail:
+            detail_label = QLabel(detail)
+            detail_label.setProperty("liveRaidCalloutDetail", True)
+            detail_label.setWordWrap(True)
+            layout.addWidget(detail_label, 1, 1, 1, 2)
+
+        layout.setColumnStretch(1, 1)
+        return row
+
+    def _render_callout_rows(
+        self,
+        rows: list[tuple[str, str, str, str, str]],
+    ) -> None:
+        self._clear_layout(self.callouts_layout)
+        if not rows:
+            empty = QLabel("No reviewed encounter callouts or plan responsibilities are available.")
+            empty.setProperty("liveRaidCalloutEmpty", True)
+            empty.setWordWrap(True)
+            self.callouts_layout.addWidget(empty)
+            return
+        for marker, title, detail, badge, role in rows[:8]:
+            self.callouts_layout.addWidget(
+                self._callout_row(
+                    marker=marker,
+                    title=title,
+                    detail=detail,
+                    badge=badge,
+                    role=role,
+                )
+            )
 
     def _refresh_encounters(self) -> None:
         self.encounter_combo.blockSignals(True)
@@ -449,19 +532,37 @@ class CityLiveRaidPage(FoundryPage):
                 "No reviewed wall-clock or phase timeline is persisted for this encounter."
             )
 
-        timed_callouts = []
+        callout_rows: list[tuple[str, str, str, str, str]] = []
         if elapsed is not None:
             for event in context.clock_events:
                 remaining = int(round(event.start_seconds - elapsed))
                 if 0 <= remaining <= 20:
-                    timed_callouts.append(f"TIMED  {event.label} in {remaining}s")
-        planned = [f"PLANNED  {line}" for line in context.callouts]
-        lines = (timed_callouts + planned)[:10]
-        self.callouts_label.setText(
-            "\n".join(lines)
-            if lines
-            else "No reviewed encounter callouts or plan responsibilities are available."
-        )
+                    callout_rows.append(
+                        (
+                            f"-0:{remaining:02d}" if remaining < 60 else f"-{remaining}s",
+                            event.label,
+                            event.detail,
+                            "TIMED",
+                            "timed",
+                        )
+                    )
+        elif context.clock_events:
+            for event in context.clock_events[:4]:
+                if event.start_seconds <= 60:
+                    callout_rows.append(
+                        (
+                            self._clock_marker(event.start_seconds),
+                            event.label,
+                            event.detail,
+                            "TIMED",
+                            "timed",
+                        )
+                    )
+
+        for line in context.callouts:
+            callout_rows.append(("PLAN", line, "", "PLAN", "planned"))
+
+        self._render_callout_rows(callout_rows)
         self.encounter_checklist_label.setText(
             "\n".join(f"□ {line}" for line in context.checklist)
             if context.checklist
@@ -479,7 +580,7 @@ class CityLiveRaidPage(FoundryPage):
             self.timer_label.setText("00:00")
             self.attempt_label.setText("#0")
             self.combat_label.setText("Not in pull")
-            self.callouts_label.setText("No planned callouts for this Raid Plan.")
+            self._render_callout_rows([])
             self.timeline_text.setText("Select a Raid Plan and encounter.")
             self.encounter_checklist_label.setText("No encounter checklist loaded.")
             self.events_label.setText("No manual run events yet.")
@@ -514,12 +615,18 @@ class CityLiveRaidPage(FoundryPage):
             for col, value in enumerate(values):
                 self.spots_table.setItem(row, col, QTableWidgetItem(value))
 
-        callout_lines = []
+        plan_callouts = []
         for item in plan.triggered_responsibilities:
-            callout_lines.append(
-                f"PLANNED  {item.trigger_key} → {item.seat_id}: {item.directive}"
+            plan_callouts.append(
+                (
+                    "PLAN",
+                    _clean(item.directive) or item.trigger_key,
+                    f"{item.seat_id} • {item.trigger_key}",
+                    "PLAN",
+                    "planned",
+                )
             )
-        self.callouts_label.setText("\n".join(callout_lines) if callout_lines else "No planned trigger responsibilities on this Raid Plan.")
+        self._render_callout_rows(plan_callouts)
         self._render_encounter_context()
         self._refresh_run_state()
         self._refresh_events()
