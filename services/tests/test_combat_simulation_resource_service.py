@@ -12,8 +12,14 @@ from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPla
 from models.build_model import PlayerBuild
 from models.combat_simulation import SimulationEventPriority
 from models.effective_build_snapshot import EffectiveBuildSnapshot
+from services.combat_simulation_healing_service import CombatSimulationHealingProjection
 from services.combat_simulation_resource_service import CombatSimulationResourceService
 from services.combat_simulation_service import CombatSimulationService
+
+
+class _NoopHealingService:
+    def project(self, **_kwargs):
+        return CombatSimulationHealingProjection(events=(), unresolved=())
 
 
 class _FakeSustainService:
@@ -136,7 +142,8 @@ def test_simulation_merges_healer_actions_and_resource_events_deterministically(
     service = CombatSimulationService(
         resource_service=CombatSimulationResourceService(
             sustain_service=_FakeSustainService()
-        )
+        ),
+        healing_service=_NoopHealingService(),
     )
 
     first = service.simulate(build_snapshot=_snapshot(), plan=_plan())
@@ -169,7 +176,7 @@ def test_simulation_merges_healer_actions_and_resource_events_deterministically(
     ]
 
     assert any(
-        "Combat Prayer" in value and "non-resource skill consequences" in value
+        "Combat Prayer" in value and "non-healing skill consequences" in value
         for value in first.unresolved
     )
     assert any(
