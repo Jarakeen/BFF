@@ -88,3 +88,12 @@ def test_live_raid_page_has_encounter_driven_projection():
     assert "self._render_encounter_context()" in source
     assert "self.timeline_text" in source
     assert "self.encounter_checklist_label" in source
+
+
+def test_live_raid_current_callouts_use_condition_markers():
+    source = Path("ui/city_live_raid_page.py").read_text(encoding="utf-8")
+
+    assert "for condition in context.condition_events" in source
+    assert '"THRESHOLD" if role == "threshold" else "PLAN"' in source
+    assert "for event in context.clock_events" in source
+    assert "self.timeline_text" in source
