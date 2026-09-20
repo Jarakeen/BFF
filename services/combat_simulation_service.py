@@ -10,6 +10,7 @@ reported explicitly as unresolved instead of being treated as zero.
 from models.combat_simulation import (
     CombatSimulationEvent,
     CombatSimulationIncomingDamage,
+    CombatSimulationOutgoingDamage,
     CombatSimulationResult,
     CombatSimulationTargetState,
     SimulationEventPriority,
@@ -68,6 +69,7 @@ class CombatSimulationService:
         initial_bar: str = "front",
         target_state: CombatSimulationTargetState | None = None,
         incoming_damage: tuple[CombatSimulationIncomingDamage, ...] = (),
+        outgoing_damage: tuple[CombatSimulationOutgoingDamage, ...] = (),
     ) -> CombatSimulationResult:
         if not isinstance(build_snapshot, EffectiveBuildSnapshot):
             raise TypeError("combat simulation requires EffectiveBuildSnapshot")
@@ -97,6 +99,24 @@ class CombatSimulationService:
                     priority=int(SimulationEventPriority.DIRECT_RESULT),
                     sequence=int(item.sequence),
                     event_type="incoming_damage",
+                    source=item.source,
+                    payload=(
+                        ("recipient", item.recipient),
+                        ("amount", float(item.amount)),
+                        ("damage_type", item.damage_type or ""),
+                    ),
+                )
+            )
+
+        for item in outgoing_damage:
+            if item.time_seconds > plan.duration_seconds:
+                continue
+            queue.push(
+                CombatSimulationEvent(
+                    time_seconds=float(item.time_seconds),
+                    priority=int(SimulationEventPriority.DIRECT_RESULT),
+                    sequence=int(item.sequence),
+                    event_type="outgoing_damage",
                     source=item.source,
                     payload=(
                         ("recipient", item.recipient),
