@@ -227,3 +227,82 @@ def test_healing_dead_recipient_does_not_imply_resurrection() -> None:
         "recipient is dead; resurrection semantics are not modeled" in message
         for message in result.unresolved
     )
+
+
+
+def _outgoing_damage_event(
+    *,
+    time_seconds=0.5,
+    sequence=0,
+    amount=6000.0,
+    recipient="Boss",
+):
+    return CombatSimulationEvent(
+        time_seconds=time_seconds,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=sequence,
+        event_type="outgoing_damage",
+        source="Force Pulse",
+        payload=(
+            ("recipient", recipient),
+            ("amount", amount),
+            ("damage_type", "magic"),
+        ),
+    )
+
+
+def test_explicit_outgoing_damage_reduces_enemy_health() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=50000,
+                maximum_health=50000,
+            ),
+        ),
+    )
+
+    result = CombatSimulationHealthService().project(
+        events=(_outgoing_damage_event(amount=12000.0),),
+        target_state=state,
+    )
+
+    assert result.unresolved == ()
+    assert [event.event_type for event in result.events] == ["health_change"]
+    payload = result.events[0].payload_dict()
+    assert payload["recipient"] == "Boss"
+    assert payload["before"] == 50000
+    assert payload["attempted_damage"] == 12000.0
+    assert payload["applied_damage"] == 12000.0
+    assert payload["after"] == 38000
+    assert payload["origin_event_type"] == "outgoing_damage"
+
+
+def test_lethal_outgoing_damage_emits_enemy_death_transition() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=5000,
+                maximum_health=50000,
+            ),
+        ),
+    )
+
+    result = CombatSimulationHealthService().project(
+        events=(_outgoing_damage_event(amount=9000.0),),
+        target_state=state,
+    )
+
+    assert [event.event_type for event in result.events] == [
+        "health_change",
+        "death",
+    ]
+    health = result.events[0].payload_dict()
+    death = result.events[1].payload_dict()
+    assert health["after"] == 0
+    assert health["overkill"] == 4000.0
+    assert death["recipient"] == "Boss"
+    assert death["origin_event_type"] == "outgoing_damage"
