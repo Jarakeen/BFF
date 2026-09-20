@@ -100,6 +100,20 @@ class CombatSimulationTargetState:
         if len(set(identities)) != len(identities):
             raise ValueError("simulation combatant identities must be unique")
 
+        binding_keys = tuple(
+            (
+                float(item.time_seconds),
+                int(item.sequence),
+                str(item.event_type),
+                str(item.source),
+                item.coefficient_number,
+                item.effect_name,
+            )
+            for item in self.recipient_bindings
+        )
+        if len(set(binding_keys)) != len(binding_keys):
+            raise ValueError("simulation recipient binding identities must be unique")
+
     def combatant(self, identity: str) -> CombatSimulationCombatant | None:
         wanted = str(identity or "").strip()
         return next((item for item in self.combatants if item.identity == wanted), None)
