@@ -29,6 +29,7 @@ STATUSES = [
     "Active",
     "Sub",
     "Inactive",
+    "Archived",
 ]
 
 ESO_CLASSES = [
