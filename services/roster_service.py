@@ -166,7 +166,7 @@ class RosterService:
             self.db.commit()
         return tuple(removed)
 
-    def list_members(self) -> list[RosterMember]:
+    def list_members(self, *, include_archived: bool = False) -> list[RosterMember]:
         rows = self.db.execute("""
             SELECT
                 rm.id,
@@ -193,10 +193,11 @@ class RosterService:
                     )
                 ), '') AS team_name
             FROM roster_member rm
+            WHERE (? = 1 OR lower(trim(rm.status)) <> 'archived')
             ORDER BY
                 rm.player_name COLLATE NOCASE,
                 rm.character_name COLLATE NOCASE
-        """).fetchall()
+        """, (1 if include_archived else 0,)).fetchall()
         return [self._row_to_member(row) for row in rows]
 
     def get_member(self, member_id: int) -> RosterMember | None:
