@@ -45,7 +45,10 @@ class RosterService:
                 secondary_role TEXT,
                 status TEXT NOT NULL DEFAULT 'Active',
                 canonical_player_id TEXT NOT NULL DEFAULT '',
-                canonical_character_id TEXT NOT NULL DEFAULT ''
+                canonical_character_id TEXT NOT NULL DEFAULT '',
+                discord_name TEXT NOT NULL DEFAULT '',
+                youtube TEXT NOT NULL DEFAULT '',
+                twitch TEXT NOT NULL DEFAULT ''
             )
         """)
         existing_roster_columns = {
@@ -59,6 +62,11 @@ class RosterService:
             self.db.execute(
                 "ALTER TABLE roster_member ADD COLUMN canonical_character_id TEXT NOT NULL DEFAULT ''"
             )
+        for column in ("discord_name", "youtube", "twitch"):
+            if column not in existing_roster_columns:
+                self.db.execute(
+                    f"ALTER TABLE roster_member ADD COLUMN {column} TEXT NOT NULL DEFAULT ''"
+                )
         # A single player may legitimately have multiple Personnel rows because the
         # current roster model is still player+character shaped. Character identity,
         # not player identity, is the one-to-one bridge at this layer.
@@ -169,6 +177,9 @@ class RosterService:
                 rm.status,
                 rm.canonical_player_id,
                 rm.canonical_character_id,
+                rm.discord_name,
+                rm.youtube,
+                rm.twitch,
                 COALESCE((
                     SELECT GROUP_CONCAT(team_name, ', ')
                     FROM (
@@ -198,6 +209,9 @@ class RosterService:
                 rm.status,
                 rm.canonical_player_id,
                 rm.canonical_character_id,
+                rm.discord_name,
+                rm.youtube,
+                rm.twitch,
                 COALESCE((
                     SELECT GROUP_CONCAT(team_name, ', ')
                     FROM (
@@ -372,8 +386,9 @@ class RosterService:
             INSERT INTO roster_member (
                 player_name, character_name, eso_class,
                 primary_role, secondary_role, status,
-                canonical_player_id, canonical_character_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                canonical_player_id, canonical_character_id,
+                discord_name, youtube, twitch
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             member.PlayerName, member.CharacterName, member.EsoClass,
             normalize_roster_role(member.PrimaryRole),
@@ -381,6 +396,9 @@ class RosterService:
             member.Status or "Active",
             str(member.CanonicalPlayerId or "").strip(),
             str(member.CanonicalCharacterId or "").strip(),
+            str(member.DiscordName or "").strip(),
+            str(member.YouTube or "").strip(),
+            str(member.Twitch or "").strip(),
         ))
         member_id = cursor.lastrowid
         self._set_member_teams(member_id, member.Team)
@@ -398,7 +416,8 @@ class RosterService:
             UPDATE roster_member SET
                 player_name = ?, character_name = ?, eso_class = ?,
                 primary_role = ?, secondary_role = ?, status = ?,
-                canonical_player_id = ?, canonical_character_id = ?
+                canonical_player_id = ?, canonical_character_id = ?,
+                discord_name = ?, youtube = ?, twitch = ?
             WHERE id = ?
         """, (
             member.PlayerName, member.CharacterName, member.EsoClass,
@@ -406,7 +425,11 @@ class RosterService:
             normalize_roster_role(member.SecondaryRole),
             member.Status or "Active",
             str(member.CanonicalPlayerId or "").strip(),
-            str(member.CanonicalCharacterId or "").strip(), member.Id,
+            str(member.CanonicalCharacterId or "").strip(),
+            str(member.DiscordName or "").strip(),
+            str(member.YouTube or "").strip(),
+            str(member.Twitch or "").strip(),
+            member.Id,
         ))
         self._set_member_teams(member.Id, member.Team)
         self.db.commit()
@@ -482,4 +505,7 @@ class RosterService:
             Status=row["status"] or "Active", Team=row["team_name"] or "",
             CanonicalPlayerId=row["canonical_player_id"] or "",
             CanonicalCharacterId=row["canonical_character_id"] or "",
+            DiscordName=row["discord_name"] or "",
+            YouTube=row["youtube"] or "",
+            Twitch=row["twitch"] or "",
         )
