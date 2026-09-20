@@ -7,7 +7,6 @@ from services.comp_builder_build_candidates import (
     CompBuildCandidate,
     CompBuilderBuildCandidateService,
 )
-from services.generated_roster_plan_service import GeneratedRosterDraftSlot
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
 
@@ -15,7 +14,6 @@ from ui.components.foundry_card import FoundryCard
 _INSTALLED = False
 _ORIGINAL_COMP_INIT = None
 _ORIGINAL_RENDER_SLOTS = None
-_ORIGINAL_SEND_TO_ROSTER = None
 
 
 def _details_card(page) -> FoundryCard | None:
@@ -637,170 +635,6 @@ def _render_slots_with_candidate_refresh(self, slots) -> None:
         }
         _wire_class_selectors(self)
         _refresh_candidates(self)
-
-
-def _effective_candidate_gear_sets(
-    candidate: CompBuildCandidate,
-    manual_five_piece_sets: tuple[str, ...],
-) -> tuple[str, ...]:
-    """Apply manual five-piece overrides without erasing monster/mythic/arena evidence."""
-    if not manual_five_piece_sets:
-        return tuple(candidate.gear_sets)
-
-    candidate_five = {
-        str(value or "").strip().casefold()
-        for value in tuple(candidate.five_piece_sets or ())
-        if str(value or "").strip()
-    }
-    preserved_non_five = tuple(
-        str(value).strip()
-        for value in tuple(candidate.gear_sets or ())
-        if str(value).strip()
-        and str(value).strip().casefold() not in candidate_five
-    )
-    merged: list[str] = []
-    seen: set[str] = set()
-    for value in (*preserved_non_five, *manual_five_piece_sets):
-        key = value.casefold()
-        if key in seen:
-            continue
-        seen.add(key)
-        merged.append(value)
-    return tuple(merged)
-
-
-def _candidate_unresolved(candidate: CompBuildCandidate, base_detail: str) -> str:
-    details = [base_detail, f"Candidate source: {_source_label(candidate)}."]
-    if not candidate.complete_build:
-        details.append("Candidate is partial evidence, not a complete prescribed build.")
-    if candidate.unresolved:
-        details.append("Unresolved: " + "; ".join(candidate.unresolved) + ".")
-    return " ".join(details)
-
-
-def save_generated_plan(page):
-    """Persist the exact visible Comp Builder state as one generated team draft."""
-    applied = getattr(page, "_comp_applied_candidates", {})
-    roster_members = getattr(page, "_comp_roster_member_by_slot", {})
-
-    goal = page.goal_combo.currentText().strip() or "Custom Goal"
-    plan_name = page.plan_name_input.text().strip() or f"{goal} Composition"
-    slots: list[GeneratedRosterDraftSlot] = []
-
-    for row in range(page.matrix_table.rowCount()):
-        slot_name = page._cell_text(row, 0)
-        role = page._cell_text(row, 1)
-        selected_class = page._selected_class(row)
-        alternatives = page._cell_text(row, 3) or "Flexible"
-        required = page._cell_text(row, 4) or "Open responsibility"
-        optional = page._cell_text(row, 5) or "None declared"
-        providers = page._cell_text(row, 6) or "None declared"
-        mechanic_jobs = page._cell_text(row, 7) or "None declared"
-        detail = (
-            f"Composition requirement. Alternatives: {alternatives}. "
-            f"Required: {required}. Optional/flex: {optional}. "
-            f"Providers: {providers}. Mechanic jobs: {mechanic_jobs}."
-        )
-
-        candidate = applied.get(slot_name)
-        manual_gear_sets = tuple(
-            str(value).strip()
-            for value in getattr(page, "_comp_manual_gear_sets_by_slot", {}).get(slot_name, ())
-            if str(value).strip()
-        )
-        roster_context_active = slot_name in roster_members
-        roster_member = roster_members.get(slot_name)
-        roster_player = (
-            str(getattr(roster_member, "PlayerName", "") or "").strip()
-            if roster_member is not None
-            else ""
-        )
-        roster_character = (
-            str(getattr(roster_member, "CharacterName", "") or "").strip()
-            if roster_member is not None
-            else ""
-        )
-
-        if candidate is None:
-            concrete = selected_class != "Any class"
-            known_player = bool(roster_context_active and roster_member is not None)
-            slots.append(
-                GeneratedRosterDraftSlot(
-                    slot_name=slot_name,
-                    kind="saved" if known_player else (
-                        "prescribed_recruit" if concrete else "open_recruit"
-                    ),
-                    player_name=roster_player if known_player else "Recruitment Needed",
-                    character_name=roster_character if known_player else "",
-                    eso_class=selected_class,
-                    build_name=(
-                        "Manual gear package"
-                        if manual_gear_sets
-                        else "Composition requirement"
-                    ),
-                    gear_summary=" + ".join(manual_gear_sets),
-                    unresolved=detail,
-                    role=role,
-                    gear_sets=manual_gear_sets,
-                )
-            )
-            continue
-
-        is_saved = candidate.source_kind == "saved_build"
-        known_player = bool(roster_context_active and roster_member is not None)
-        effective_gear_sets = _effective_candidate_gear_sets(
-            candidate,
-            manual_gear_sets,
-        )
-        slots.append(
-            GeneratedRosterDraftSlot(
-                slot_name=slot_name,
-                kind="saved" if is_saved or known_player else "prescribed_recruit",
-                player_name=roster_player if known_player else (
-                    candidate.source_name if is_saved else "Recruitment Needed"
-                ),
-                character_name=roster_character if known_player else (
-                    candidate.source_name if is_saved else ""
-                ),
-                eso_class=candidate.eso_class or selected_class,
-                build_name=(
-                    "Manual gear package"
-                    if manual_gear_sets
-                    else candidate.name
-                ),
-                gear_summary=" + ".join(effective_gear_sets),
-                unresolved=_candidate_unresolved(candidate, detail),
-                role=candidate.role or role,
-                source_kind=candidate.source_kind,
-                source_name=candidate.source_name,
-                source_url=candidate.source_url,
-                candidate_id=candidate.candidate_id,
-                gear_sets=effective_gear_sets,
-                skills=tuple(candidate.skills),
-                mundus=candidate.mundus,
-            )
-        )
-
-    return page.plan_service.save_plan(
-        name=plan_name,
-        goal=goal,
-        difficulty=page.difficulty_combo.currentText(),
-        slots=tuple(slots),
-    )
-
-
-def _send_to_roster_with_candidates(self, *_args) -> None:
-    plan = save_generated_plan(self)
-    applied_count = sum(
-        1
-        for slot in plan.slots
-        if slot.build_name != "Composition requirement"
-    )
-    self.status.success(
-        f"Prepared {plan.name} for Raid Plan with {len(plan.slots)} composition chair(s); "
-        f"preserved {applied_count} applied build candidate(s)."
-    )
-    self.rosterPlanSent.emit(plan.name)
 
 
 def install() -> None:
