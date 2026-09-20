@@ -295,6 +295,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 - **Player avatar picker** — clicking the Character detail portrait opens the bundled `assets/avatar` choices; the selected portrait is stored on the canonical Player and follows all of that player's characters/builds.
 
+- Discord profile screenshot intake uses local Windows OCR to prefill visible Personnel identity/social fields for review before the normal Save boundary
 - Player roster
 - Character roster records
 - Role assignment
