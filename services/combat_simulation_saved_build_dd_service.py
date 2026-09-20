@@ -19,6 +19,10 @@ from services.combat_simulation_saved_build_dd_provider_service import (
     TargetResistanceResolver,
     TargetSnapshotResolver,
 )
+from services.combat_simulation_sequential_dd_damage_service import (
+    CombatSimulationSequentialDDDamageService,
+    CombatSimulationTargetHealthLedger,
+)
 from services.combat_simulation_service import CombatSimulationService
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 
@@ -31,11 +35,15 @@ class CombatSimulationSavedBuildDDService:
         *,
         provider_service: CombatSimulationSavedBuildDDProviderService | None = None,
         simulation_service: CombatSimulationService | None = None,
+        sequential_damage_service: CombatSimulationSequentialDDDamageService | None = None,
     ) -> None:
         self.provider_service = (
             provider_service or CombatSimulationSavedBuildDDProviderService()
         )
         self.simulation_service = simulation_service or CombatSimulationService()
+        self.sequential_damage_service = (
+            sequential_damage_service or CombatSimulationSequentialDDDamageService()
+        )
 
     def simulate(
         self,
@@ -53,6 +61,28 @@ class CombatSimulationSavedBuildDDService:
         target_snapshot_resolver: TargetSnapshotResolver | None = None,
     ) -> CombatSimulationResult:
         build = build_snapshot.materialize()
+        candidate = damage_candidate or GeneratedRotationCandidate(
+            candidate_id="combat-simulation-saved-build",
+            plan=plan,
+            refresh_leads=(),
+            action_claims=(),
+        )
+        if candidate.plan != plan:
+            raise ValueError(
+                "saved-build combat simulation candidate plan does not match simulation plan"
+            )
+
+        ledger = CombatSimulationTargetHealthLedger(
+            target_state=target_state,
+            target_identity=damage_target_identity,
+            player_identity=str(build.Name or plan.character_name or "simulation_player"),
+        )
+        effective_snapshot_resolver = (
+            target_snapshot_resolver
+            if target_snapshot_resolver is not None
+            else ledger.snapshot_at
+        )
+
         resolution = self.provider_service.resolve(
             player_build=build,
             plan=plan,
@@ -60,9 +90,24 @@ class CombatSimulationSavedBuildDDService:
             initial_bar=initial_bar,
             target_combat_state_resolver=target_combat_state_resolver,
             target_resistance_resolver=target_resistance_resolver,
-            target_snapshot_resolver=target_snapshot_resolver,
+            target_snapshot_resolver=effective_snapshot_resolver,
             execute_target_identity=damage_target_identity,
         )
+
+        sequential_unresolved: tuple[str, ...] = ()
+        replay_provider = resolution.provider
+        if resolution.provider is not None:
+            sequential = self.sequential_damage_service.project(
+                plan=plan,
+                candidate=candidate,
+                action_damage_evidence_provider=resolution.provider,
+                target_state=target_state,
+                target_identity=damage_target_identity,
+                player_identity=str(build.Name or plan.character_name or "simulation_player"),
+                ledger=ledger,
+            )
+            sequential_unresolved = sequential.unresolved
+            replay_provider = sequential.evidence_provider()
 
         result = self.simulation_service.simulate(
             build_snapshot=build_snapshot,
@@ -71,18 +116,22 @@ class CombatSimulationSavedBuildDDService:
             target_state=target_state,
             incoming_damage=incoming_damage,
             damage_target_identity=damage_target_identity,
-            damage_candidate=damage_candidate,
-            action_damage_evidence_provider=resolution.provider,
+            damage_candidate=candidate,
+            action_damage_evidence_provider=replay_provider,
         )
 
-        if not resolution.unresolved:
-            return result
-        return replace(
-            result,
-            unresolved=tuple(
-                dict.fromkeys((*resolution.unresolved, *result.unresolved))
-            ),
+        combined_unresolved = tuple(
+            dict.fromkeys(
+                (
+                    *resolution.unresolved,
+                    *sequential_unresolved,
+                    *result.unresolved,
+                )
+            )
         )
+        if combined_unresolved == result.unresolved:
+            return result
+        return replace(result, unresolved=combined_unresolved)
 
 
 __all__ = ["CombatSimulationSavedBuildDDService"]
