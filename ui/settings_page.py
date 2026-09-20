@@ -215,6 +215,8 @@ class SettingsPage(QWidget):
         self.finch_api_key.setPlaceholderText("Finch API key")
         form.addRow("Finch API URL", self.finch_api_url)
         form.addRow("Finch API Key", self.finch_api_key)
+        self.test_finch_button = QPushButton("Test Finch Connection")
+        form.addRow("", self.test_finch_button)
 
         self.google_credentials = QLineEdit()
         self.google_credentials_browse = QPushButton("Browse…")
@@ -445,6 +447,7 @@ class SettingsPage(QWidget):
         )
         if self.broadcast_enabled:
             self.test_obs_button.clicked.connect(self.test_obs)
+        self.test_finch_button.clicked.connect(self.test_finch)
 
         self.save_button = QPushButton("Save Settings")
         self.save_button.setProperty("primary", True)
@@ -559,6 +562,38 @@ class SettingsPage(QWidget):
         )
         self.integration_labels["sheets"].setText("●  Configured" if sheets_ok else "●  Optional / not configured")
         self.status.success("Settings saved.")
+
+    def test_finch(self):
+        from services.finch_api_client import FinchApiClient, FinchApiError
+
+        url = self.finch_api_url.text().strip().rstrip("/")
+        key = self.finch_api_key.text().strip()
+        if not url or not key:
+            self.integration_labels["finch"].setText("●  Not configured")
+            self.status.warning("Finch API URL and API Key are both required.")
+            return
+
+        self.integration_labels["finch"].setText("●  Checking…")
+        try:
+            result = FinchApiClient(base_url=url, api_key=key).test_connection()
+        except FinchApiError as exc:
+            self.integration_labels["finch"].setText("●  Error")
+            self.status.error(str(exc))
+            return
+
+        if not result.ok:
+            self.integration_labels["finch"].setText("●  Error")
+            self.status.error("Finch responded, but did not report a healthy API connection.")
+            return
+
+        self.integration_labels["finch"].setText("●  Connected")
+        discord_text = (
+            f"Discord: {result.discord_user}" if result.discord_ready and result.discord_user
+            else "Discord gateway not ready"
+        )
+        self.status.success(
+            f"Connected to {result.service or 'Finch'} {result.api_version or ''} • {discord_text}."
+        )
 
     def test_obs(self):
         if not self.broadcast_enabled:
