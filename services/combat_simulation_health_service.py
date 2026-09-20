@@ -21,7 +21,7 @@ class CombatSimulationHealthService:
     """Apply bound healing events to explicit combatant health state."""
 
     _HEAL_EVENT_TYPES = frozenset({"direct_heal", "periodic_heal"})
-    _DAMAGE_EVENT_TYPES = frozenset({"incoming_damage"})
+    _DAMAGE_EVENT_TYPES = frozenset({"incoming_damage", "outgoing_damage"})
 
     def project(
         self,
@@ -59,31 +59,31 @@ class CombatSimulationHealthService:
                 recipient = str(payload.get("recipient") or "").strip()
                 if not recipient:
                     unresolved.append(
-                        f"{event.source} incoming_damage at {event.time_seconds:g}s: recipient is required"
+                        f"{event.source} damage at {event.time_seconds:g}s: recipient is required"
                     )
                     continue
                 if recipient not in health:
                     unresolved.append(
-                        f"{event.source} incoming_damage at {event.time_seconds:g}s -> {recipient}: unknown combatant"
+                        f"{event.source} damage at {event.time_seconds:g}s -> {recipient}: unknown combatant"
                     )
                     continue
                 current, maximum = health[recipient]
                 if current is None or maximum is None:
                     unresolved.append(
-                        f"{event.source} incoming_damage at {event.time_seconds:g}s -> {recipient}: "
+                        f"{event.source} damage at {event.time_seconds:g}s -> {recipient}: "
                         "current and maximum Health are required"
                     )
                     continue
                 amount = payload.get("amount")
                 if amount is None:
                     unresolved.append(
-                        f"{event.source} incoming_damage at {event.time_seconds:g}s -> {recipient}: damage amount is unavailable"
+                        f"{event.source} damage at {event.time_seconds:g}s -> {recipient}: damage amount is unavailable"
                     )
                     continue
                 attempted_damage = float(amount)
                 if attempted_damage < 0:
                     unresolved.append(
-                        f"{event.source} incoming_damage at {event.time_seconds:g}s -> {recipient}: damage amount cannot be negative"
+                        f"{event.source} damage at {event.time_seconds:g}s -> {recipient}: damage amount cannot be negative"
                     )
                     continue
                 applied_damage = min(attempted_damage, float(current))
