@@ -1153,10 +1153,35 @@ User-reported focused checkpoint:
 
 **Phase 14D reviewed periodic healer timing status: green.**
 
-Next implementation slice: connect reviewed skill effects from healer actions into the
-simulation state/event stream. Combat Prayer is the first control. Effect identity,
-duration, target scope, and refresh/expiry behavior must remain owned by the existing
-known-effect/runtime architecture; healing output alone must not imply support effects.
+### Phase 14E — reviewed healer skill effects
+
+The simulation kernel now consumes reviewed cast-time skill effects through the existing
+skill-effect and runtime-window architecture.
+
+Implemented:
+
+- `SkillEffectRepository` remains authoritative for imported + reviewed supplemental
+  skill effects;
+- Phase 14 projects bounded unconditional CAST effects into deterministic
+  `effect_apply` / `effect_expire` events;
+- `RuntimeEffectActiveWindow` remains the canonical bounded-window contract;
+- `apply_runtime_effect_window_stacking` remains authoritative for UNIQUE/STACKS/
+  HIGHEST_ONLY behavior;
+- repeated UNIQUE applications refresh by truncating the previous overlapping window
+  and starting a new canonical window;
+- unresolved conditions, target scope, duration, or stacking fail closed instead of
+  being guessed;
+- triggered effects remain owned by the Phase 7 runtime path and are not treated as
+  unconditional cast effects;
+- group-target effects preserve `target_scope=group` without fabricating exact
+  recipients.
+
+First control: Combat Prayer's reviewed supplemental **Minor Resolve** effect
+(2974 resistance, 10 seconds, GROUP, UNIQUE) becomes a timed simulation window.
+Exact group-recipient membership remains a later target/encounter-state responsibility.
+
+**Phase 14E validation pending:** focused skill-effect, kernel, resource, healer-output,
+and existing runtime-window/stacking suites must pass before this slice is green.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
