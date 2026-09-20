@@ -20,3 +20,13 @@ def test_named_group_effect_projection_is_registered_as_canonical_coverage_servi
     assert "raid_named_group_effect_static_projection" in descriptor.responsibilities
     assert "self-only" in descriptor.notes
     assert "fail closed" in descriptor.notes
+
+
+def test_readiness_dependency_points_to_registered_raid_plan_coverage_scope() -> None:
+    readiness = SERVICE_CATALOG.get("raid.readiness.evidence")
+    coverage = SERVICE_CATALOG.get("raid_plan.coverage_scope")
+
+    assert readiness is not None
+    assert coverage is not None
+    assert "raid_plan.coverage_scope" in readiness.dependencies
+    assert "coverage.raid_plan.scope" not in readiness.dependencies
