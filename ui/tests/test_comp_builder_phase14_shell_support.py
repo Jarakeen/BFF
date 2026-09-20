@@ -365,6 +365,7 @@ def test_phase14_comp_runtime_has_one_canonical_persistence_path() -> None:
     assert "def _persist_generated_comp_plan_to_raid_plan(" not in main
     assert "def _show_generated_roster_plan(" not in main
     assert "GeneratedRosterDraftService" not in main
+    assert "rosterPlanSent.connect(self._show_generated_roster_plan)" not in main
 
     assert "CompBuildPersistenceService(get_data_dir())" in shell
     assert '"_persist_comp_plan_state_to_raid_plan"' in shell
