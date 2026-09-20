@@ -244,8 +244,9 @@ def test_phase14_comp_builder_can_pick_individual_sets_per_chair() -> None:
     assert '"_comp_manual_gear_sets_by_slot"' in source
     assert 'heading = QLabel("ASSIGN GEAR")' in source
     assert 'picker.setPlaceholderText("Search all gear sets…")' in source
-    assert "_add_planned_gear_set(page, set_name)" in source
-    assert "_remove_planned_gear_set(page, set_name)" in source
+    assert "def _add_planned_gear_set(page, set_name: str) -> None:" in source
+    assert "def _remove_planned_gear_set(page, set_name: str) -> None:" in source
+    assert "lambda *_: _add_planned_gear_set(page, picker.text())" in source
     assert "_refresh_manual_set_picker(page, candidates)" in source
     assert '" + ".join(state_sets)' in source
     assert '" + ".join(manual_sets)' in source
