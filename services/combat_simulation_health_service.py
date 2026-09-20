@@ -109,6 +109,21 @@ class CombatSimulationHealthService:
                         ),
                     )
                 )
+                if int(current) > 0 and int(after) == 0:
+                    projected.append(
+                        CombatSimulationEvent(
+                            time_seconds=event.time_seconds,
+                            priority=int(SimulationEventPriority.EXPIRATION),
+                            sequence=event.sequence,
+                            event_type="death",
+                            source=event.source,
+                            payload=(
+                                ("recipient", recipient),
+                                ("overkill", overkill),
+                                ("origin_event_type", event.event_type),
+                            ),
+                        )
+                    )
                 continue
 
             if event.event_type not in self._HEAL_EVENT_TYPES:
@@ -136,6 +151,13 @@ class CombatSimulationHealthService:
                     unresolved.append(
                         f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: "
                         "current and maximum Health are required"
+                    )
+                    continue
+
+                if int(current) == 0:
+                    unresolved.append(
+                        f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: "
+                        "recipient is dead; resurrection semantics are not modeled"
                     )
                     continue
 
