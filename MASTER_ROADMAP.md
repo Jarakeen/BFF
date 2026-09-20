@@ -1212,8 +1212,20 @@ This is intentionally a Phase 14 orchestration/read model rather than a replacem
 the richer Phase 8 `CombatStateSnapshot`. Target health/status/recipient state will be
 bridged when supported target behavior enters the simulator.
 
-**Phase 14F validation pending:** exact-time snapshot, effect-window, resource, and main
-simulation tests must pass before this slice is green.
+### Phase 14F validation checkpoint — 2026-09-19
+
+User-reported focused checkpoint:
+
+- **41 passed in 12.03s**
+- exact-time snapshots, reviewed skill effects, healer output, resource projection,
+  main simulation ordering, runtime windows, and stacking suites are green.
+
+**Phase 14F exact-time simulation snapshot status: green.**
+
+Next implementation slice: add explicit supported target/recipient state so healer output
+and group-target effects can bind to known combatants when recipient evidence is
+provided. Missing recipient identity must remain unresolved; Phase 14 must not invent
+which allies were hit by a cone, ground heal, or group buff.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
