@@ -2,14 +2,13 @@ from __future__ import annotations
 
 """Finch Discord bot entry point."""
 
-import os
-from pathlib import Path
-
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
+from discord_companion.changes import BuildChangeMonitor
 from discord_companion.config import DiscordCompanionConfig, load_config, write_example_config
+from discord_companion.credentials import load_bot_token
 from discord_companion.formatting import (
     format_build_brief,
     format_raid_brief,
@@ -47,6 +46,10 @@ class FinchBot(commands.Bot):
             roster_service=self.foundry.roster_service,
             config=config,
         )
+        self.build_changes = BuildChangeMonitor(
+            companion=self.foundry,
+            config=config,
+        )
 
     async def setup_hook(self) -> None:
         if self.config.guild_id:
@@ -56,9 +59,11 @@ class FinchBot(commands.Bot):
         else:
             await self.tree.sync()
         self.reminder_loop.start()
+        self.build_change_loop.start()
 
     async def close(self) -> None:
         self.reminder_loop.cancel()
+        self.build_change_loop.cancel()
         self.foundry.roster_service.db.close()
         await super().close()
 
@@ -81,6 +86,30 @@ class FinchBot(commands.Bot):
     @reminder_loop.before_loop
     async def before_reminder_loop(self) -> None:
         await self.wait_until_ready()
+
+    @tasks.loop(seconds=60)
+    async def build_change_loop(self) -> None:
+        for notice in self.build_changes.scan():
+            channel = self.get_channel(notice.channel_id)
+            if channel is None:
+                try:
+                    channel = await self.fetch_channel(notice.channel_id)
+                except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                    continue
+            if not hasattr(channel, "send"):
+                continue
+            await channel.send(notice.message)
+
+    @build_change_loop.before_loop
+    async def before_build_change_loop(self) -> None:
+        await self.wait_until_ready()
+
+    async def on_ready(self) -> None:
+        await self.change_presence(
+            activity=discord.Game(name="FoundryDock raid operations")
+        )
+        if self.user is not None:
+            print(f"Finch online as {self.user} (id={self.user.id})")
 
 
 bot: FinchBot | None = None
@@ -197,11 +226,11 @@ def create_bot(config: DiscordCompanionConfig | None = None) -> FinchBot:
 def main() -> None:
     config_path = write_example_config()
     config = load_config(config_path)
-    token = os.environ.get(config.token_env, "").strip()
+    token = load_bot_token(config)
     if not token:
         raise RuntimeError(
-            f"Discord token is missing. Set the {config.token_env} environment variable; "
-            "the token is deliberately not stored in FoundryDock files."
+            "Discord token is missing. Run the Finch token setup once; "
+            "the token is stored in the operating-system credential vault."
         )
     create_bot(config).run(token, log_handler=None)
 
