@@ -22,6 +22,7 @@ from models.roster_model import RosterMember
 from services.eso_database import EsoDatabase
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from services.roster_service import RosterService
+from services.roster_player_identity_service import RosterPlayerIdentityService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -79,7 +80,9 @@ class RosterPage(FoundryPage):
         super().__init__(parent)
         self.database = EsoDatabase(get_data_dir() / "eso.db")
         self.roster_service = RosterService(self.database)
+        self.identity_service = RosterPlayerIdentityService(self.database)
         self.members: list[RosterMember] = []
+        self._all_members: list[RosterMember] = []
         self._build_ui()
         self._connect_editor_signals()
         self.refresh()
@@ -97,7 +100,10 @@ class RosterPage(FoundryPage):
         self.role_combo = QComboBox()
         self.role_combo.addItems(["All Roles", "Tanks", "Healers", "Damage Dealers"])
         self.show_combo = QComboBox()
-        self.show_combo.addItems(["All Players", "Active", "Bench", "Needs Attention"])
+        self.show_combo.addItems(
+            ["All Players", "Active", "Bench", "Needs Attention", "Archived"]
+        )
+        self.show_combo.currentTextChanged.connect(self._apply_player_filter)
         self.search = QLineEdit()
         self.search.setPlaceholderText("Search player or assignment...")
         self.search.textChanged.connect(self._populate_assignment_table)
@@ -226,7 +232,26 @@ class RosterPage(FoundryPage):
         root.addLayout(workspace, 1)
 
         self.actions = RosterActions()
-        root.addWidget(self.actions)
+        self.actions.delete_button.setText("Archive Player")
+        self.actions.delete_button.setToolTip(
+            "Archive this player without deleting their history, builds, or aliases."
+        )
+
+        lifecycle = QHBoxLayout()
+        lifecycle.setContentsMargins(0, 0, 0, 0)
+        lifecycle.setSpacing(8)
+        lifecycle.addWidget(self.actions, 1)
+
+        self.restore_player_button = QPushButton("Restore Player")
+        self.restore_player_button.clicked.connect(self.restore_member)
+        lifecycle.addWidget(self.restore_player_button)
+
+        self.permanent_delete_button = QPushButton("Delete Permanently")
+        self.permanent_delete_button.setProperty("danger", True)
+        self.permanent_delete_button.clicked.connect(self.delete_member_permanently)
+        lifecycle.addWidget(self.permanent_delete_button)
+
+        root.addLayout(lifecycle)
         return page
 
     def _placeholder_tab(self, title: str, text: str) -> QWidget:
@@ -248,7 +273,8 @@ class RosterPage(FoundryPage):
     def refresh(self):
         try:
             selected_id = self.table.selected_member_id()
-            self.members = self.roster_service.list_members()
+            self._all_members = self.roster_service.list_members()
+            self.members = self._filtered_members(self._all_members)
             self.table.load_members(self.members)
             self.record.set_team_choices(self.roster_service.list_team_names())
             if selected_id is not None:
@@ -260,6 +286,59 @@ class RosterPage(FoundryPage):
             )
         except Exception as exc:
             self.status.error(f"Failed to load roster: {exc}")
+
+    def _filtered_members(self, members: list[RosterMember]) -> list[RosterMember]:
+        mode = self.show_combo.currentText().strip() if hasattr(self, "show_combo") else "All Players"
+        current = [
+            member for member in members
+            if str(member.Status or "").strip().casefold() != "archived"
+        ]
+        if mode == "Archived":
+            return [
+                member for member in members
+                if str(member.Status or "").strip().casefold() == "archived"
+            ]
+        if mode == "Active":
+            return [
+                member for member in current
+                if str(member.Status or "").strip().casefold() == "active"
+            ]
+        if mode == "Bench":
+            return [
+                member for member in current
+                if str(member.Status or "").strip().casefold() in {"sub", "bench"}
+            ]
+        if mode == "Needs Attention":
+            return [
+                member for member in current
+                if not str(member.PrimaryRole or "").strip()
+                or str(member.Status or "").strip().casefold() not in {"active", "sub", "bench"}
+            ]
+        return current
+
+    def _apply_player_filter(self, *_args) -> None:
+        selected_id = self.table.selected_member_id() if hasattr(self, "table") else None
+        self.members = self._filtered_members(self._all_members)
+        if hasattr(self, "table"):
+            self.table.load_members(self.members)
+            if selected_id is not None:
+                self.table.select_member_id(selected_id)
+        self._populate_assignment_table()
+        self._refresh_summary_cards()
+        self._update_personnel_lifecycle_actions()
+
+    def _update_personnel_lifecycle_actions(self) -> None:
+        if not hasattr(self, "restore_player_button"):
+            return
+        member_id = self.record.model.Id if hasattr(self, "record") else None
+        member = self.roster_service.get_member(int(member_id)) if member_id else None
+        archived = bool(
+            member is not None
+            and str(member.Status or "").strip().casefold() == "archived"
+        )
+        self.restore_player_button.setEnabled(archived)
+        self.permanent_delete_button.setEnabled(archived)
+        self.actions.delete_button.setEnabled(member is not None and not archived)
 
     @staticmethod
     def _assignment_combo(value: str) -> QComboBox:
