@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_data_dir
+from services.gear_lookup_text_cleanup_service import clean_gear_lookup_database
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -283,6 +284,7 @@ class GearLookupPage(FoundryPage):
     def refresh(self) -> None:
         try:
             with sqlite3.connect(self.database_path) as connection:
+                cleaned_rows = clean_gear_lookup_database(connection)
                 tables = self._table_names(connection)
                 self._metadata_columns = self._resolve_optional_columns(connection)
                 acquisition_column = self._metadata_columns.get("acquisition_type")
@@ -373,6 +375,10 @@ class GearLookupPage(FoundryPage):
 
         classified = sum(1 for row in self._sets if row["acquisition_type"])
         unresolved = len(self._sets) - classified
+        if cleaned_rows:
+            self.status.info(
+                f"Gear Lookup cleaned {cleaned_rows} stored color-markup field(s) in eso.db."
+            )
         if unresolved:
             self.status.info(
                 f"Gear Lookup ready • {len(self._sets)} canonical set(s) • "
