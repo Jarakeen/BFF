@@ -970,3 +970,7 @@ and the 7% PvP value cannot leak into the PvE maximum.
 - It is not a generic group-wide duration extender.
 - Comp Maker / Coverage / Rotation must preserve provider identity when evaluating Jorvuld: the relevant question is which effects that wearer applies, not merely whether the group contains the set.
 - Static set presence can prove the modifier is available to that wearer; it does not by itself prove uptime or that another player's buffs are extended.
+
+
+## Phase 14 Comp/Raid Plan provenance
+- A brand-new Comp Maker plan has a small identity chicken-and-egg problem: the Comp Build needs a BuildId before the Raid Plan can point to it, while the build cannot record its source Raid Plan id until that plan exists. The save path now performs one safe second metadata pass after first binding. It updates the same stable Comp Build instead of creating another one, so Builds, Coverage, and Readiness all carry the same identity.
