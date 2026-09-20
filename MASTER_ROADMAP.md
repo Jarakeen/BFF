@@ -571,6 +571,32 @@ The temporal/provider suite exposed one fixture mismatch after later distinct-ca
 
 **Phase 12.5 exit criteria:** a representative real team can be created in Comp Maker, saved and inspected in Roster, loaded into Optimization, and transferred back without losing or silently changing team identity, exact assignment choice, source, gear/skill evidence, hard constraints, recruit state, or unresolved boundaries. Focused regression tests must pass, a real-data end-to-end workflow must be demonstrated, and an appropriate full regression checkpoint must be recorded before Phase 12.5 is closed.
 
+### Phase 12.5 canonical closeout audit — pending validation
+
+A current-architecture, read-only closeout gate now exists at
+`tools/audit_phase12_5_closeout.py`. It audits persisted `RaidPlan` state against
+the reusable saved-Build library and Roster rather than treating the older
+generated-roster draft as current authority.
+
+The audit checks:
+
+- stable team, chair, player, character, and Build identity;
+- explicit recruit/open-chair state without fabricated player/Build ownership;
+- class, role, gear-lock, and assignment integrity;
+- structured provenance for non-saved Comp candidates;
+- preservation of explicit unresolved evidence;
+- Raid Plan persistence through a temporary round-trip only;
+- Optimizer Adviser read-only behavior without rewriting the Raid Plan.
+
+The older generated-draft Phase 12.5 audit remains useful as migration/legacy
+compatibility evidence but is not the canonical closeout authority.
+
+**Validation still required before changing Phase 12.5 to Complete:** focused tests
+for the new audit, one real saved 12-player Raid Plan audit, the relevant
+provider/temporal checkpoint, and a fresh full-suite regression. No green result
+is claimed until those commands are actually reported passing.
+
+
 ---
 
 # PHASE 13 · Rotation Engine
