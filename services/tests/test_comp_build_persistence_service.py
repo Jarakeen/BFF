@@ -244,3 +244,58 @@ def test_comp_save_can_promote_personnel_without_character_name(tmp_path: Path) 
         if row["character_id"] == chair.character_id
     )
     assert character["name"] == ""
+
+
+def test_builds_edit_preserves_comp_build_id_and_kind(tmp_path: Path) -> None:
+    database_path = tmp_path / "eso-test.db"
+    roster = RosterService(EsoDatabase(database_path))
+    member_id = roster.create_member(
+        RosterMember(
+            PlayerName="Jarakeen",
+            CharacterName="Magrat",
+            EsoClass="Warden",
+            PrimaryRole="Healer",
+        )
+    )
+    state = CompPlanState(
+        raid_plan_id="plan-sunspire",
+        raid_plan_name="Performance Mode GS",
+        trial_id="sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="Healer1",
+                player_name="Jarakeen",
+                roster_member_id=member_id,
+                character_name="Magrat",
+                role="Healer",
+                eso_class="Warden",
+                planned_gear_sets=("Spell Power Cure",),
+            ),
+        ),
+        dirty=True,
+    )
+    result = _service(tmp_path).persist(state)
+    chair = result.state.chair("Healer1")
+    assert chair is not None and chair.selected_build_id
+
+    builds = BuildService(tmp_path / "builds.json")
+    loaded = builds.load()
+    build = next(
+        item for item in loaded.Members
+        if item.BuildId == chair.selected_build_id
+    )
+    build.BackBarWeapon.Set = "Perfected Grand Rejuvenation"
+    original_id = build.BuildId
+
+    builds.save(loaded)
+
+    reloaded = builds.load()
+    edited = next(item for item in reloaded.Members if item.BuildId == original_id)
+    assert edited.BuildId == original_id
+    assert edited.BuildKind == "comp"
+    assert edited.BackBarWeapon.Set == "Perfected Grand Rejuvenation"
+
+    catalog = BuildCatalogService(tmp_path / "characters.json").load()
+    record = next(row for row in catalog["builds"] if row["build_id"] == original_id)
+    assert record["build_kind"] == "comp"
+    assert record["source"]["kind"] == "comp_maker"
