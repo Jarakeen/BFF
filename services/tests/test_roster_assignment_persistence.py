@@ -46,3 +46,35 @@ def test_deleting_member_removes_assignment_row(tmp_path):
         "gear_needed": "",
         "notes": "",
     }
+
+
+def test_personnel_social_fields_persist_across_service_instances(tmp_path):
+    db_path = tmp_path / "eso.db"
+    service = RosterService(EsoDatabase(db_path))
+    member_id = service.create_member(
+        RosterMember(
+            PlayerName="CobblestoneKing",
+            DiscordName="cobble",
+            YouTube="@cobbleESO",
+            Twitch="cobblestoneking",
+        )
+    )
+
+    reloaded = RosterService(EsoDatabase(db_path)).get_member(member_id)
+
+    assert reloaded is not None
+    assert reloaded.PlayerName == "CobblestoneKing"
+    assert reloaded.DiscordName == "cobble"
+    assert reloaded.YouTube == "@cobbleESO"
+    assert reloaded.Twitch == "cobblestoneking"
+
+    reloaded.DiscordName = "cobble-new"
+    reloaded.YouTube = "https://youtube.com/@cobble"
+    reloaded.Twitch = "https://twitch.tv/cobble"
+    RosterService(EsoDatabase(db_path)).update_member(reloaded)
+
+    updated = RosterService(EsoDatabase(db_path)).get_member(member_id)
+    assert updated is not None
+    assert updated.DiscordName == "cobble-new"
+    assert updated.YouTube == "https://youtube.com/@cobble"
+    assert updated.Twitch == "https://twitch.tv/cobble"
