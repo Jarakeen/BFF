@@ -203,7 +203,7 @@ def test_simulation_merges_healing_output_deterministically() -> None:
     ]
 
     assert any(
-        "Combat Prayer" in message and "damage/effects" in message
+        "Combat Prayer" in message and "remaining skill consequences" in message
         for message in first.unresolved
     )
     assert any(
