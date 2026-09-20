@@ -10,6 +10,9 @@ from models.combat_simulation import (
     CombatSimulationTargetState,
 )
 from services.combat_simulation_healing_service import CombatSimulationHealingProjection
+from services.combat_simulation_outgoing_damage_service import (
+    CombatSimulationOutgoingDamageProjection,
+)
 from services.combat_simulation_resource_service import CombatSimulationResourceProjection
 from services.combat_simulation_service import CombatSimulationService
 from services.combat_simulation_skill_effect_service import CombatSimulationEffectProjection
@@ -250,3 +253,99 @@ def test_kernel_routes_outgoing_damage_into_enemy_health_state() -> None:
     assert health[0].payload_dict()["before"] == 10000
     assert health[0].payload_dict()["after"] == 7500
     assert health[0].payload_dict()["origin_event_type"] == "outgoing_damage"
+
+
+
+class _StaticOutgoingDamageService:
+    def project(self, *, plan, target_identity, candidate=None):
+        assert plan is not None
+        assert target_identity == "Boss"
+        return CombatSimulationOutgoingDamageProjection(
+            damage=(
+                CombatSimulationOutgoingDamage(
+                    time_seconds=1.0,
+                    sequence=0,
+                    source="light_attack",
+                    recipient=target_identity,
+                    amount=3000.0,
+                    damage_type="magic",
+                ),
+                CombatSimulationOutgoingDamage(
+                    time_seconds=2.0,
+                    sequence=1,
+                    source="Illustrious Healing",
+                    recipient=target_identity,
+                    amount=2000.0,
+                    damage_type="magic",
+                ),
+            ),
+            resolved_action_keys=((1.0, 0), (2.0, 1)),
+            unresolved=(),
+        )
+
+
+def test_kernel_consumes_canonical_action_damage_projection() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+    service = CombatSimulationService(
+        resource_service=_NoopResourceService(),
+        healing_service=_NoopHealingService(),
+        skill_effect_service=_NoopSkillEffectService(),
+        outgoing_damage_service=_StaticOutgoingDamageService(),
+    )
+
+    result = service.simulate(
+        build_snapshot=_snapshot(),
+        plan=_healer_plan(),
+        target_state=state,
+        damage_target_identity="Boss",
+    )
+
+    outgoing = [
+        event for event in result.events
+        if event.event_type == "outgoing_damage"
+    ]
+    health = [
+        event for event in result.events
+        if event.event_type == "health_change"
+        and event.payload_dict().get("recipient") == "Boss"
+    ]
+
+    assert [event.payload_dict()["amount"] for event in outgoing] == [3000.0, 2000.0]
+    assert [event.payload_dict()["after"] for event in health] == [7000, 5000]
+    assert not any(
+        "light_attack consequence projection not yet wired" in message
+        for message in result.unresolved
+    )
+    assert any(
+        "Illustrious Healing" in message
+        and "damage consequence is wired" in message
+        for message in result.unresolved
+    )
+
+
+def test_kernel_fails_closed_when_damage_bridge_has_no_explicit_target() -> None:
+    service = CombatSimulationService(
+        resource_service=_NoopResourceService(),
+        healing_service=_NoopHealingService(),
+        skill_effect_service=_NoopSkillEffectService(),
+        outgoing_damage_service=_StaticOutgoingDamageService(),
+    )
+
+    result = service.simulate(
+        build_snapshot=_snapshot(),
+        plan=_healer_plan(),
+    )
+
+    assert any(
+        "outgoing damage projection requires explicit target identity" in message
+        for message in result.unresolved
+    )

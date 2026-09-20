@@ -80,6 +80,18 @@ class RaidSectionStateService:
     def run_notes(self, plan_id: str) -> str:
         return _clean(self.run_state(plan_id).get("notes"))
 
+    def selected_encounter_id(self, plan_id: str) -> str:
+        return _clean(self.run_state(plan_id).get("encounter_id"))
+
+    def set_selected_encounter_id(self, plan_id: str, encounter_id: str) -> dict:
+        payload = self._read()
+        runs = payload.setdefault("runs", {})
+        state = dict(runs.get(_clean(plan_id), {}))
+        state["encounter_id"] = _clean(encounter_id)
+        runs[_clean(plan_id)] = state
+        self._write(payload)
+        return dict(state)
+
     def set_run_notes(self, plan_id: str, notes: str) -> dict:
         payload = self._read()
         runs = payload.setdefault("runs", {})
@@ -214,6 +226,7 @@ class RaidSectionStateService:
             "ended_at": "",
             "notes_paused": False,
             "notes": _clean(prior.get("notes")),
+            "encounter_id": _clean(prior.get("encounter_id")),
         }
         runs[_clean(plan_id)] = state
         self._append_event_payload(payload, plan_id, "pull_started", f"Pull #{attempt} started", "MANUAL")
