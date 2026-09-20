@@ -51,6 +51,8 @@ class CombatSimulationResourceResult:
 class CombatSimulationCombatant:
     identity: str
     side: str = "ally"
+    current_health: int | None = None
+    maximum_health: int | None = None
 
     def __post_init__(self) -> None:
         identity = str(self.identity or "").strip()
@@ -59,8 +61,22 @@ class CombatSimulationCombatant:
         side = str(self.side or "").strip().casefold()
         if side not in {"self", "ally", "enemy"}:
             raise ValueError("simulation combatant side must be self, ally, or enemy")
+        if self.current_health is not None and int(self.current_health) < 0:
+            raise ValueError("simulation combatant current_health cannot be negative")
+        if self.maximum_health is not None and int(self.maximum_health) <= 0:
+            raise ValueError("simulation combatant maximum_health must be positive")
+        if (
+            self.current_health is not None
+            and self.maximum_health is not None
+            and int(self.current_health) > int(self.maximum_health)
+        ):
+            raise ValueError("simulation combatant current_health cannot exceed maximum_health")
         object.__setattr__(self, "identity", identity)
         object.__setattr__(self, "side", side)
+        if self.current_health is not None:
+            object.__setattr__(self, "current_health", int(self.current_health))
+        if self.maximum_health is not None:
+            object.__setattr__(self, "maximum_health", int(self.maximum_health))
 
 
 @dataclass(frozen=True)
@@ -120,6 +136,13 @@ class CombatSimulationTargetState:
 
 
 @dataclass(frozen=True)
+class CombatSimulationHealthSnapshot:
+    identity: str
+    current_health: int | None
+    maximum_health: int | None
+
+
+@dataclass(frozen=True)
 class CombatSimulationResourceSnapshot:
     resource: str
     current_amount: int
@@ -130,6 +153,7 @@ class CombatSimulationSnapshot:
     time_seconds: float
     active_bar: str
     resources: tuple[CombatSimulationResourceSnapshot, ...]
+    health: tuple[CombatSimulationHealthSnapshot, ...] = ()
     active_effect_windows: tuple[RuntimeEffectActiveWindow, ...] = ()
     target_state: CombatSimulationTargetState | None = None
     unresolved: tuple[str, ...] = ()
@@ -166,6 +190,7 @@ __all__ = [
     "CombatSimulationRecipientBinding",
     "CombatSimulationTargetState",
     "CombatSimulationResourceResult",
+    "CombatSimulationHealthSnapshot",
     "CombatSimulationResourceSnapshot",
     "CombatSimulationSnapshot",
     "CombatSimulationResult",
