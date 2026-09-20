@@ -1261,11 +1261,32 @@ User-reported focused checkpoint:
 
 **Phase 14G explicit recipient binding status: green.**
 
-Next implementation slice: add supported combatant health state and project bound heals
-into deterministic health changes. Healing may only change a combatant when current and
-maximum Health are explicit and the event has explicit recipients. Overheal/waste must
-remain auditable; missing health state must remain unresolved rather than assuming full
-benefit.
+### Phase 14H — recipient-aware Health state
+
+Phase 14 now projects explicit recipient-bound healing into deterministic Health changes.
+
+Implemented:
+
+- `CombatSimulationCombatant` may carry explicit current and maximum Health;
+- `CombatSimulationHealthService` consumes only explicitly bound
+  `direct_heal` / `periodic_heal` events;
+- each applied heal records before, attempted heal, applied heal, overheal, after, and
+  maximum Health;
+- sequential heals consume the prior projected Health state in deterministic order;
+- Health is capped at the explicit maximum and overheal remains visible rather than
+  being discarded;
+- missing current/maximum Health fails closed and does not imply effective healing;
+- `CombatSimulationService` preserves the original heal event and adds auditable
+  `health_change` consequence events;
+- `CombatSimulationSnapshotService` projects exact combatant Health at the queried
+  simulation instant from those already-computed changes.
+
+This remains healing-only state mutation. Incoming damage, deaths, shields, resurrection,
+and encounter-target behavior are not inferred by this slice.
+
+**Phase 14H validation pending:** health projection, recipient binding, snapshots, healer
+output, skill effects, resource projection, and main simulation tests must pass before
+this slice is green.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
