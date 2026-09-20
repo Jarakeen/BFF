@@ -94,6 +94,7 @@ class CombatSimulationSnapshotService:
                     identity=item.identity,
                     current_health=current_health.get(item.identity),
                     maximum_health=maximum_health.get(item.identity),
+                    is_dead=(current_health.get(item.identity) == 0),
                 )
                 for item in result.target_state.combatants
             ]
