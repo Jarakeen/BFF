@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 from ui.raid_plan_persistence_page import RaidPlanPersistencePage
@@ -147,3 +148,12 @@ def test_character_picker_identity_fails_closed_when_explicit_sources_conflict()
 
 def test_persisted_raid_plan_page_uses_stable_identity_picker_layer() -> None:
     assert issubclass(RaidPlanPersistencePage, RaidPlanStableIdentitySelectionPage)
+
+
+def test_raid_plan_stable_identity_layer_persists_exact_personnel_row_id() -> None:
+    source = Path("ui/raid_plan_stable_identity_selection_page.py").read_text(encoding="utf-8")
+
+    assert "def _selected_roster_member_id(self, row: int) -> int | None:" in source
+    assert 'if _clean(getattr(member, "PlayerName", "")).casefold() == gamertag' in source
+    assert "if len(ids) != 1:" in source
+    assert "roster_member_id=self._selected_roster_member_id(row)" in source
