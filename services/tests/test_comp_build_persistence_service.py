@@ -3,8 +3,19 @@ from __future__ import annotations
 from pathlib import Path
 
 from models.comp_plan_state import CompChairState, CompPlanState
+from models.roster_model import RosterMember
 from services.build_catalog_service import BuildCatalogService
+from services.build_service import BuildService
 from services.comp_build_persistence_service import CompBuildPersistenceService
+from services.eso_database import EsoDatabase
+from services.roster_service import RosterService
+
+
+def _service(tmp_path: Path) -> CompBuildPersistenceService:
+    return CompBuildPersistenceService(
+        tmp_path,
+        database_path=tmp_path / "eso-test.db",
+    )
 
 
 def _seed_catalog(tmp_path: Path) -> tuple[str, str]:
@@ -63,7 +74,7 @@ def _state(player_id: str, character_id: str) -> CompPlanState:
 def test_comp_save_creates_real_canonical_build_and_assigns_id(tmp_path: Path) -> None:
     player_id, character_id = _seed_catalog(tmp_path)
 
-    result = CompBuildPersistenceService(tmp_path).persist(
+    result = _service(tmp_path).persist(
         _state(player_id, character_id)
     )
 
@@ -87,7 +98,7 @@ def test_comp_save_creates_real_canonical_build_and_assigns_id(tmp_path: Path) -
 
 def test_resaving_comp_chair_updates_same_build_id(tmp_path: Path) -> None:
     player_id, character_id = _seed_catalog(tmp_path)
-    service = CompBuildPersistenceService(tmp_path)
+    service = _service(tmp_path)
 
     first = service.persist(_state(player_id, character_id))
     first_chair = first.state.chair("DD1")
@@ -134,8 +145,102 @@ def test_recruit_chair_does_not_create_build(tmp_path: Path) -> None:
         dirty=True,
     )
 
-    result = CompBuildPersistenceService(tmp_path).persist(state)
+    result = _service(tmp_path).persist(state)
 
     assert result.saved_seats == ()
     assert result.skipped_seats == ("DD1",)
     assert BuildCatalogService(tmp_path / "characters.json").load()["builds"] == []
+
+
+def test_comp_save_promotes_real_personnel_row_without_existing_build(tmp_path: Path) -> None:
+    database_path = tmp_path / "eso-test.db"
+    roster = RosterService(EsoDatabase(database_path))
+    member_id = roster.create_member(
+        RosterMember(
+            PlayerName="Jarakeen",
+            CharacterName="Magrat",
+            EsoClass="Warden",
+            PrimaryRole="Healer",
+            Status="Active",
+        )
+    )
+
+    state = CompPlanState(
+        raid_plan_id="plan-sunspire",
+        raid_plan_name="Performance Mode GS",
+        trial_id="sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="Healer1",
+                player_name="Jarakeen",
+                roster_member_id=member_id,
+                character_name="Magrat",
+                role="Healer",
+                eso_class="Warden",
+                planned_gear_sets=("Perfected Grand Rejuvenation", "Spell Power Cure"),
+            ),
+        ),
+        dirty=True,
+    )
+
+    result = _service(tmp_path).persist(state)
+    chair = result.state.chair("Healer1")
+    assert chair is not None
+    assert chair.player_id
+    assert chair.character_id
+    assert chair.selected_build_id
+
+    rebound = roster.get_member(member_id)
+    assert rebound is not None
+    assert rebound.CanonicalPlayerId == chair.player_id
+    assert rebound.CanonicalCharacterId == chair.character_id
+
+    builds = BuildService(tmp_path / "builds.json").load().Members
+    saved = next(build for build in builds if build.BuildId == chair.selected_build_id)
+    assert saved.BuildKind == "comp"
+    assert saved.Gamertag == "Jarakeen"
+    assert saved.Name == "Magrat"
+    assert saved.PlannedGearSets == [
+        "Perfected Grand Rejuvenation",
+        "Spell Power Cure",
+    ]
+
+
+def test_comp_save_can_promote_personnel_without_character_name(tmp_path: Path) -> None:
+    database_path = tmp_path / "eso-test.db"
+    roster = RosterService(EsoDatabase(database_path))
+    member_id = roster.create_member(
+        RosterMember(
+            PlayerName="Rikbacon",
+            CharacterName="",
+            EsoClass="Dragonknight",
+            PrimaryRole="Tank",
+        )
+    )
+    state = CompPlanState(
+        raid_plan_id="plan-sunspire",
+        raid_plan_name="Performance Mode GS",
+        trial_id="sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="Tank1",
+                player_name="Rikbacon",
+                roster_member_id=member_id,
+                role="Tank",
+                eso_class="Dragonknight",
+                planned_gear_sets=("Turning Tide",),
+            ),
+        ),
+        dirty=True,
+    )
+
+    result = _service(tmp_path).persist(state)
+    chair = result.state.chair("Tank1")
+    assert chair is not None and chair.selected_build_id and chair.character_id
+
+    catalog = BuildCatalogService(tmp_path / "characters.json").load()
+    character = next(
+        row for row in catalog["characters"]
+        if row["character_id"] == chair.character_id
+    )
+    assert character["name"] == ""
