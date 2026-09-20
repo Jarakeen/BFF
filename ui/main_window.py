@@ -491,6 +491,9 @@ class MainWindow(QMainWindow):
 
         if page_name == "console:2":
             builds_page = self.pages.get("console:2")
+            reload_builds = getattr(builds_page, "_load", None)
+            if callable(reload_builds):
+                reload_builds()
             clear_filter = getattr(builds_page, "clear_player_build_filter", None)
             if callable(clear_filter):
                 clear_filter()
