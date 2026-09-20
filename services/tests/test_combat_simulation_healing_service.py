@@ -13,6 +13,7 @@ from services.combat_simulation_healing_service import (
 from services.combat_simulation_resource_service import CombatSimulationResourceProjection
 from models.combat_simulation import CombatSimulationResourceResult
 from services.combat_simulation_service import CombatSimulationService
+from services.combat_simulation_skill_effect_service import CombatSimulationEffectProjection
 from services.rotation_healer_action_healing_service import (
     RotationHealerActionHealingProjection,
     RotationHealerPeriodicHealSeed,
@@ -71,6 +72,13 @@ class _ActionHealingService:
             ),
             unresolved=(),
         )
+
+
+
+
+class _NoopSkillEffectService:
+    def project(self, **_kwargs):
+        return CombatSimulationEffectProjection(events=(), windows=(), unresolved=())
 
 
 class _NoopResourceService:
@@ -165,6 +173,7 @@ def test_simulation_merges_healing_output_deterministically() -> None:
     service = CombatSimulationService(
         resource_service=_NoopResourceService(),
         healing_service=_healing_service(),
+        skill_effect_service=_NoopSkillEffectService(),
     )
 
     first = service.simulate(build_snapshot=_snapshot(), plan=_plan())
