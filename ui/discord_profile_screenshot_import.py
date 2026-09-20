@@ -2,10 +2,8 @@ from __future__ import annotations
 
 """Low-friction Discord profile screenshot intake for Personnel.
 
-This dialog deliberately does not save Personnel records. It keeps the screenshot
-visible while the raid lead transcribes or corrects visible identity fields, then
-prefills the existing RosterRecord. The normal Personnel Save action remains the
-only persistence boundary.
+The screenshot is OCR-read locally on Windows and recognizable profile fields are
+prefilled for review. Nothing is persisted until the normal Personnel Save action.
 """
 
 from pathlib import Path
@@ -19,18 +17,31 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
+from services.discord_profile_screenshot_intake_service import (
+    DiscordProfileIntake,
+    DiscordProfileScreenshotIntakeService,
+)
+
 
 class DiscordProfileScreenshotDialog(QDialog):
-    def __init__(self, record, image_path: str | Path, parent=None) -> None:
+    def __init__(
+        self,
+        record,
+        image_path: str | Path,
+        intake: DiscordProfileIntake | None = None,
+        parent=None,
+    ) -> None:
         super().__init__(parent)
         self.record = record
         self.image_path = Path(image_path)
+        self.intake = intake or DiscordProfileIntake()
         self.setWindowTitle("Discord Profile Screenshot Intake")
         self.resize(1120, 720)
 
@@ -74,21 +85,28 @@ class DiscordProfileScreenshotDialog(QDialog):
         title.setProperty("sidebarHeading", True)
         panel_layout.addWidget(title)
 
-        note = QLabel(
-            "Use the screenshot as the source. Nothing is saved automatically. "
-            "Confirm what is visibly present, then use the normal Personnel Save button."
+        note_text = (
+            "FoundryDock read the screenshot locally and filled the profile details it could recognize. "
+            "Review or correct them here. Nothing is saved until you use the normal Personnel Save button."
         )
+        if self.intake.warnings:
+            note_text += "\n\n" + "\n".join(self.intake.warnings)
+        note = QLabel(note_text)
         note.setWordWrap(True)
         note.setProperty("muted", True)
         panel_layout.addWidget(note)
 
-        self.xbox = QLineEdit(record.player_name.text())
+        def initial(existing: str, extracted: str) -> str:
+            current = str(existing or "").strip()
+            return current if current else str(extracted or "").strip()
+
+        self.xbox = QLineEdit(initial(record.player_name.text(), self.intake.xbox))
         self.xbox.setPlaceholderText("Xbox gamertag")
-        self.discord = QLineEdit(record.discord_name.text())
+        self.discord = QLineEdit(initial(record.discord_name.text(), self.intake.discord))
         self.discord.setPlaceholderText("Discord display name / username")
-        self.youtube = QLineEdit(record.youtube.text())
+        self.youtube = QLineEdit(initial(record.youtube.text(), self.intake.youtube))
         self.youtube.setPlaceholderText("YouTube channel or handle")
-        self.twitch = QLineEdit(record.twitch.text())
+        self.twitch = QLineEdit(initial(record.twitch.text(), self.intake.twitch))
         self.twitch.setPlaceholderText("Twitch channel or handle")
 
         form = QFormLayout()
@@ -99,8 +117,8 @@ class DiscordProfileScreenshotDialog(QDialog):
         panel_layout.addLayout(form)
 
         helper = QLabel(
-            "Tip: Discord screenshots often show the display name and username. "
-            "If the person's Xbox gamertag is visible in their profile/about text, copy it here too."
+            "Recognized values are suggestions from the visible screenshot only. "
+            "Existing Personnel values are never overwritten automatically."
         )
         helper.setWordWrap(True)
         helper.setProperty("muted", True)
@@ -137,7 +155,27 @@ def import_discord_profile_screenshot(page) -> bool:
     if not filename:
         return False
 
-    dialog = DiscordProfileScreenshotDialog(page.record, filename, parent=page)
+    try:
+        intake = DiscordProfileScreenshotIntakeService().extract(filename)
+    except Exception as exc:
+        intake = DiscordProfileIntake(
+            warnings=(
+                "Automatic screenshot reading was unavailable. "
+                "The screenshot is still open for review, and nothing has been saved.",
+            )
+        )
+        QMessageBox.warning(
+            page,
+            "Discord screenshot recognition",
+            f"FoundryDock could not read the screenshot automatically.\n\n{exc}",
+        )
+
+    dialog = DiscordProfileScreenshotDialog(
+        page.record,
+        filename,
+        intake=intake,
+        parent=page,
+    )
     if dialog.exec() != QDialog.DialogCode.Accepted:
         return False
 
