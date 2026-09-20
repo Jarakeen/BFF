@@ -7,8 +7,17 @@ from minmax.support_effect_category import SupportEffectCategory
 from minmax.support_stacking import StackingBehavior
 from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
-from models.combat_simulation import SimulationEventPriority
-from services.combat_simulation_skill_effect_service import CombatSimulationSkillEffectService
+from models.combat_simulation import (
+    CombatSimulationResourceResult,
+    SimulationEventPriority,
+)
+from models.effective_build_snapshot import EffectiveBuildSnapshot
+from services.combat_simulation_healing_service import CombatSimulationHealingProjection
+from services.combat_simulation_resource_service import CombatSimulationResourceProjection
+from services.combat_simulation_service import CombatSimulationService
+from services.combat_simulation_skill_effect_service import (
+    CombatSimulationSkillEffectService,
+)
 
 
 class _Repository:
@@ -171,4 +180,64 @@ def test_unreviewed_condition_fails_closed_instead_of_applying_effect() -> None:
     assert result.windows == ()
     assert result.unresolved == (
         "Overflowing Altar minor_lifesteal at 0s: condition context required: damage_affected_enemy",
+    )
+
+
+
+class _NoopResourceService:
+    def project(self, **_kwargs):
+        return CombatSimulationResourceProjection(
+            result=CombatSimulationResourceResult(
+                resource="magicka",
+                starting_amount=30000,
+                ending_amount=30000,
+            ),
+            events=(),
+            unresolved=(),
+        )
+
+
+class _NoopHealingService:
+    def project(self, **_kwargs):
+        return CombatSimulationHealingProjection(events=(), unresolved=())
+
+
+def test_main_simulation_merges_reviewed_effect_window_deterministically() -> None:
+    plan = RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=12.0,
+        actions=(
+            RotationAction(
+                0.0,
+                0,
+                RotationActionKind.SKILL,
+                name="Combat Prayer",
+                bar="front",
+            ),
+        ),
+    )
+    snapshot = EffectiveBuildSnapshot.from_saved_build(_build())
+    effect_service = CombatSimulationSkillEffectService(repository=_Repository())
+    service = CombatSimulationService(
+        resource_service=_NoopResourceService(),
+        healing_service=_NoopHealingService(),
+        skill_effect_service=effect_service,
+    )
+
+    first = service.simulate(build_snapshot=snapshot, plan=plan)
+    second = service.simulate(build_snapshot=snapshot, plan=plan)
+
+    assert first == second
+    assert [
+        (event.time_seconds, event.priority, event.event_type)
+        for event in first.events
+    ] == [
+        (0.0, int(SimulationEventPriority.ACTION), "action"),
+        (0.0, int(SimulationEventPriority.EFFECT_APPLY), "effect_apply"),
+        (10.0, int(SimulationEventPriority.EXPIRATION), "effect_expire"),
+    ]
+    assert any(
+        "remaining skill consequences" in message
+        for message in first.unresolved
     )
