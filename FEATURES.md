@@ -5,6 +5,7 @@
 
 - **Phase 14 deterministic combat-simulation kernel** — consumes canonical `EffectiveBuildSnapshot` + Phase 13 `RotationPlan`, preserves exact action ordering and active-bar authority, fails closed on identity/bar violations, and emits explicit unresolved consequences until existing resource/healing/damage/proc engines are wired.
 - **Phase 14 healer Magicka simulation bridge** — projects named healer skill costs and ordinary recovery through the existing Rotation/Phase 4 sustain authority, merges auditable resource transitions into the deterministic simulation stream, and keeps non-resource skill outcomes explicitly unresolved until their owning engines are connected.
+- **Phase 14 healer output bridge** — reuses canonical healer component math to emit direct-heal simulation events and explicit periodic/delayed/channel healing seeds; exact periodic tick placement remains unresolved until reviewed runtime timing evidence is available.
 
 - **Phase 12.5 canonical closeout audit** — a read-only real-data audit checks persisted Raid Plans against reusable saved Builds and Roster identities, preserving recruit/open chairs, stable player/character/build IDs, locked class/role/gear choices, assignment provenance, explicit unresolved state, temporary-only persistence round-trips, and Optimizer Adviser non-mutation.
 
