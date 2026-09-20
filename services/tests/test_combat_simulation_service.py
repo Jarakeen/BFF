@@ -3,7 +3,12 @@ from __future__ import annotations
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 from models.effective_build_snapshot import EffectiveBuildSnapshot
-from models.combat_simulation import CombatSimulationResourceResult
+from models.combat_simulation import (
+    CombatSimulationCombatant,
+    CombatSimulationOutgoingDamage,
+    CombatSimulationResourceResult,
+    CombatSimulationTargetState,
+)
 from services.combat_simulation_healing_service import CombatSimulationHealingProjection
 from services.combat_simulation_resource_service import CombatSimulationResourceProjection
 from services.combat_simulation_service import CombatSimulationService
@@ -196,3 +201,52 @@ def test_kernel_surfaces_existing_phase13_bar_legality_violation() -> None:
 
     assert result.final_bar == "front"
     assert any("scheduled bar does not match the active bar" in value for value in result.unresolved)
+
+
+
+def test_kernel_routes_outgoing_damage_into_enemy_health_state() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = _service().simulate(
+        build_snapshot=_snapshot(),
+        plan=_healer_plan(),
+        target_state=state,
+        outgoing_damage=(
+            CombatSimulationOutgoingDamage(
+                time_seconds=3.0,
+                sequence=0,
+                source="Resolved Damage",
+                recipient="Boss",
+                amount=2500.0,
+                damage_type="magic",
+            ),
+        ),
+    )
+
+    outgoing = [
+        event
+        for event in result.events
+        if event.event_type == "outgoing_damage"
+    ]
+    health = [
+        event
+        for event in result.events
+        if event.event_type == "health_change"
+        and event.payload_dict().get("recipient") == "Boss"
+    ]
+
+    assert len(outgoing) == 1
+    assert len(health) == 1
+    assert outgoing[0].payload_dict()["amount"] == 2500.0
+    assert health[0].payload_dict()["before"] == 10000
+    assert health[0].payload_dict()["after"] == 7500
+    assert health[0].payload_dict()["origin_event_type"] == "outgoing_damage"
