@@ -141,6 +141,7 @@ class CombatSimulationService:
             final_bar=assessment.final_bar,
             events=tuple(events),
             resources=tuple(resources),
+            effect_windows=tuple(effects.windows),
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
