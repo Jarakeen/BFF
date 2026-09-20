@@ -24,9 +24,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir, get_resource_path
+from engine.config import DEFAULT_DATABASE, get_data_dir, get_resource_path
 from models.raid_plan import RaidPlan, RaidPlanMember
 from services.raid_plan_repository import RaidPlanRepository
+from services.raid_readiness_evidence_service import RaidReadinessEvidenceService
 from services.raid_section_state_service import RaidSectionStateService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -105,7 +106,12 @@ class CityRaidReadinessPage(FoundryPage):
         super().__init__(parent)
         self.repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
         self.user_state = RaidSectionStateService()
+        self.readiness_evidence = RaidReadinessEvidenceService(
+            data_dir=get_data_dir(),
+            database_path=DEFAULT_DATABASE,
+        )
         self._plan: RaidPlan | None = None
+        self._evidence = None
         self._build_ui()
         self.refresh_plans()
 
@@ -254,8 +260,21 @@ class CityRaidReadinessPage(FoundryPage):
         self._render_plan()
 
     @staticmethod
-    def _row_gap(member: RaidPlanMember, human_ready: bool | None) -> bool:
-        return not member.build_selected or not bool(member.primary_assignment or member.secondary_assignment) or human_ready is not True
+    def _row_gap(member: RaidPlanMember, human_ready: bool | None, evidence=None) -> bool:
+        build_gap = (
+            evidence is None
+            or str(getattr(evidence, "build_state", "gap")) != "ready"
+        )
+        coverage_gap = (
+            evidence is not None
+            and str(getattr(evidence, "coverage_state", "")) == "gap"
+        )
+        return (
+            build_gap
+            or coverage_gap
+            or not bool(member.primary_assignment or member.secondary_assignment)
+            or human_ready is not True
+        )
 
     def _render_plan(self, *_args) -> None:
         plan = self._plan
@@ -268,22 +287,37 @@ class CityRaidReadinessPage(FoundryPage):
 
         gaps: list[str] = []
         ready_count = 0
+        try:
+            self._evidence = self.readiness_evidence.evaluate(plan)
+        except Exception as exc:
+            self._evidence = None
+            self.status.warning(
+                f"Readiness build/coverage evidence could not be composed: {type(exc).__name__}: {exc}"
+            )
+
         for member in plan.members:
             human = self.user_state.human_ready(plan.plan_id, member.seat_id)
-            if self.gaps_only.isChecked() and not self._row_gap(member, human):
+            evidence = self._evidence.seat(member.seat_id) if self._evidence is not None else None
+            if self.gaps_only.isChecked() and not self._row_gap(member, human, evidence):
                 continue
             row = self.table.rowCount()
             self.table.insertRow(row)
-            build_ok = member.build_selected
             assignment_ok = bool(member.primary_assignment or member.secondary_assignment)
             human_text = "✓ READY" if human is True else "! NOT READY" if human is False else "○ NEEDS REVIEW"
+            build_text = evidence.build_label if evidence is not None else _unknown()
+            coverage_text = evidence.coverage_label if evidence is not None else _unknown()
             notes = []
-            if not build_ok:
-                notes.append("Build missing")
-                gaps.append(f"{member.seat_id}: build not selected")
+            if evidence is None:
+                notes.append("Build / coverage evidence unavailable")
+            elif evidence.build_state != "ready":
+                notes.append(evidence.build_detail)
+                gaps.append(f"{member.seat_id}: {evidence.build_detail}")
             if not assignment_ok:
                 notes.append("Assignment missing")
                 gaps.append(f"{member.seat_id}: assignment missing")
+            if evidence is not None and evidence.coverage_state == "gap":
+                notes.append(evidence.coverage_detail)
+                gaps.append(f"{member.seat_id}: {evidence.coverage_detail}")
             if human is not True:
                 notes.append("Player confirmation pending")
                 gaps.append(f"{member.seat_id}: human confirmation pending")
@@ -292,13 +326,13 @@ class CityRaidReadinessPage(FoundryPage):
             values = (
                 member.seat_id.replace("-", " ").title(),
                 member.gamertag,
-                _known(build_ok),
+                build_text,
                 _known(assignment_ok),
                 _unknown(),
                 _unknown(),
-                _unknown(),
+                coverage_text,
                 human_text,
-                "; ".join(notes) or "Known fields ready; engine evidence still needs review",
+                "; ".join(notes) or "Known persisted fields ready; runtime evidence remains separate",
             )
             for col, value in enumerate(values):
                 item = QTableWidgetItem(value)
@@ -308,7 +342,7 @@ class CityRaidReadinessPage(FoundryPage):
         total = len(plan.members)
         self.summary_label.setText(
             f"{total} total spots\n{ready_count} human-confirmed\n{max(0, total - ready_count)} awaiting confirmation\n\n"
-            "Rotation / Sustain / Coverage are deliberately shown as NEEDS REVIEW until their owning engines supply evidence."
+            "Build and Coverage use persisted canonical/planned evidence. Rotation and Sustain remain NEEDS REVIEW until their owning engines supply evidence."
         )
         self.blockers_label.setText("\n".join(f"• {gap}" for gap in gaps[:10]) if gaps else "No build, assignment, or human-confirmation gaps.")
         events = self.user_state.events(plan.plan_id, limit=6)
@@ -332,16 +366,26 @@ class CityRaidReadinessPage(FoundryPage):
             self.selected_label.setText("Select a spot in the matrix.")
             return
         human = self.user_state.human_ready(self._plan.plan_id, member.seat_id)
+        evidence = self._evidence.seat(member.seat_id) if self._evidence is not None else None
+        build_detail = (
+            evidence.build_detail if evidence is not None else "Evidence unavailable"
+        )
+        coverage_detail = (
+            evidence.coverage_detail if evidence is not None else "Evidence unavailable"
+        )
         self.selected_label.setText(
             f"{member.seat_id.replace('-', ' ').title()}\n"
             f"Player: {member.gamertag}\n"
             f"Character: {_clean(member.character_name) or 'Not selected'}\n"
             f"Role: {_clean(member.role) or 'Not selected'}\n"
-            f"Build: {_clean(member.selected_build_name) or 'Not selected'}\n"
+            f"Build: {evidence.build_label if evidence is not None else _unknown()}\n"
+            f"Build detail: {build_detail}\n"
             f"Assignment: {_clean(member.primary_assignment) or 'Not set'}\n"
             f"Secondary: {_clean(member.secondary_assignment) or 'Not set'}\n"
+            f"Coverage: {evidence.coverage_label if evidence is not None else _unknown()}\n"
+            f"Coverage detail: {coverage_detail}\n"
             f"Human Ready: {'Ready' if human is True else 'Not ready' if human is False else 'Needs review'}\n\n"
-            "Rotation / sustain / coverage evidence is not inferred here."
+            "Rotation / sustain evidence remains unresolved until its owning engines supply it."
         )
         self.mark_ready.setText("Clear Human Ready" if human is True else "Mark Human Ready")
 
