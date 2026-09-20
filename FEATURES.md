@@ -3,6 +3,8 @@
 - **Top Gear naming** — the former Capabilities surface is presented as Top Gear; Raid Plan Review now opens the run-note journal instead of Top Gear.
 # BFF / FoundryDock Feature Index
 
+- **Phase 12.5 canonical closeout audit** — a read-only real-data audit checks persisted Raid Plans against reusable saved Builds and Roster identities, preserving recruit/open chairs, stable player/character/build IDs, locked class/role/gear choices, assignment provenance, explicit unresolved state, temporary-only persistence round-trips, and Optimizer Adviser non-mutation.
+
 This file is a working index of features, tools, workflows, and notable user-facing capabilities that exist in BFF / FoundryDock.
 
 Its purpose is simple: **do not forget the useful, strange, ambitious, or unexpectedly nice things we build.**
