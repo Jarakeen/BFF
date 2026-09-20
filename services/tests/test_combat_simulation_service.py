@@ -4,10 +4,16 @@ from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPla
 from models.build_model import PlayerBuild
 from models.effective_build_snapshot import EffectiveBuildSnapshot
 from models.combat_simulation import CombatSimulationResourceResult
+from services.combat_simulation_healing_service import CombatSimulationHealingProjection
 from services.combat_simulation_resource_service import CombatSimulationResourceProjection
 from services.combat_simulation_service import CombatSimulationService
 
 
+
+
+class _NoopHealingService:
+    def project(self, **_kwargs):
+        return CombatSimulationHealingProjection(events=(), unresolved=())
 
 
 class _NoopResourceService:
@@ -25,7 +31,10 @@ class _NoopResourceService:
 
 
 def _service() -> CombatSimulationService:
-    return CombatSimulationService(resource_service=_NoopResourceService())
+    return CombatSimulationService(
+        resource_service=_NoopResourceService(),
+        healing_service=_NoopHealingService(),
+    )
 
 
 def _snapshot() -> EffectiveBuildSnapshot:
@@ -124,7 +133,7 @@ def test_healer_kernel_reports_unwired_consequences_instead_of_zeroing_them() ->
     )
 
     assert any(
-        "Combat Prayer" in message and "non-resource skill consequences" in message
+        "Combat Prayer" in message and "non-healing skill consequences" in message
         for message in result.unresolved
     )
     assert any(
