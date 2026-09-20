@@ -345,3 +345,26 @@ def test_comp_maker_plan_picker_guards_unsaved_state_before_switching_saved_plan
     assert load_block.index("_confirm_raid_plan_switch") < load_block.index(
         "self.raid_plan_repository.get"
     )
+
+
+def test_phase14_comp_runtime_has_one_canonical_persistence_path() -> None:
+    page = Path("ui/comp_builder_page.py").read_text(encoding="utf-8")
+    candidates = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
+    main = Path("ui/main_window.py").read_text(encoding="utf-8")
+    shell = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
+
+    assert "GeneratedRosterDraftService" not in page
+    assert "GeneratedRosterDraftSlot" not in page
+    assert "self.plan_service =" not in page
+    assert "self.user_template_path =" not in page
+
+    assert "GeneratedRosterDraftSlot" not in candidates
+    assert "def save_generated_plan(" not in candidates
+    assert "page.plan_service.save_plan(" not in candidates
+
+    assert "def _persist_generated_comp_plan_to_raid_plan(" not in main
+    assert "def _show_generated_roster_plan(" not in main
+    assert "GeneratedRosterDraftService" not in main
+
+    assert "CompBuildPersistenceService(get_data_dir())" in shell
+    assert '"_persist_comp_plan_state_to_raid_plan"' in shell
