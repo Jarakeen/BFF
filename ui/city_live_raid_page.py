@@ -329,7 +329,7 @@ class CityLiveRaidPage(FoundryPage):
     def _refresh_encounters(self) -> None:
         self.encounter_combo.blockSignals(True)
         self.encounter_combo.clear()
-        self.encounter_combo.addItem("Trial / General", "")
+        self.encounter_combo.addItem("Encounter: Trial / General", "")
         plan = self._plan
         if plan is not None:
             try:
@@ -337,7 +337,7 @@ class CityLiveRaidPage(FoundryPage):
             except Exception:
                 rows = ()
             for row in rows:
-                self.encounter_combo.addItem(row.name, row.encounter_id)
+                self.encounter_combo.addItem(f"Encounter: {row.name}", row.encounter_id)
 
             remembered = self.user_state.selected_encounter_id(plan.plan_id)
             if remembered:
