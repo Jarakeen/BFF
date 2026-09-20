@@ -158,3 +158,41 @@ def test_ambiguous_name_only_match_is_not_guessed() -> None:
     build = SimpleNamespace(Gamertag="", Name="Same", BuildName="Trial")
 
     assert resolve_canonical_build_id(catalog, build) is None
+
+
+def test_resolve_canonical_build_id_prefers_explicit_stable_id(tmp_path: Path) -> None:
+    catalog = BuildCatalogService(tmp_path / "characters.json")
+    build = PlayerBuild(
+        Name="Magrat",
+        Gamertag="Jarakeen",
+        BuildName="SW Healer",
+        BuildId="build-explicit",
+    )
+    payload = catalog.new_catalog()
+    payload["builds"] = [
+        {
+            "build_id": "build-explicit",
+            "character_id": "char-1",
+            "name": "Different Display Name",
+            "legacy": {"Name": "Elsewhere", "Gamertag": "SomeoneElse", "BuildName": "Other"},
+            "payload": {"Name": "Elsewhere", "Gamertag": "SomeoneElse", "BuildName": "Other"},
+        }
+    ]
+    catalog.save(payload)
+
+    assert resolve_canonical_build_id(catalog, build) == "build-explicit"
+
+
+def test_resolve_canonical_build_id_fails_closed_on_stale_explicit_id(tmp_path: Path) -> None:
+    catalog = BuildCatalogService(tmp_path / "characters.json")
+    source = PlayerBuild(Name="Magrat", Gamertag="Jarakeen", BuildName="SW Healer")
+    payload = catalog.import_legacy_roster(BuildRoster(Members=[source]))
+    catalog.save(payload)
+
+    stale = PlayerBuild(
+        Name="Magrat",
+        Gamertag="Jarakeen",
+        BuildName="SW Healer",
+        BuildId="missing-build-id",
+    )
+    assert resolve_canonical_build_id(catalog, stale) is None
