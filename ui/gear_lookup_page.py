@@ -19,6 +19,7 @@ from engine.config import get_data_dir
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
+from ui.eso_text_cleanup import strip_eso_color_markup
 from ui.foundry_page import FoundryPage
 
 
@@ -53,6 +54,11 @@ _ACQUISITION_TYPES = (
     "Dungeon / Trial",
     "Cyrodiil",
 )
+
+
+def _plain_text(value: object) -> str:
+    """Normalize lookup-facing source text without mutating canonical database rows."""
+    return " ".join(strip_eso_color_markup(value).split())
 
 
 class GearLookupPage(FoundryPage):
@@ -218,8 +224,8 @@ class GearLookupPage(FoundryPage):
             if content_kind in {"trial", "dungeon", "arena"}:
                 entry["acquisition_type"] = "Dungeon / Trial"
 
-            source = str(name or "").strip()
-            location_text = str(location or "").strip()
+            source = _plain_text(name)
+            location_text = _plain_text(location)
             if source and location_text and location_text.casefold() not in source.casefold():
                 source = f"{source} • {location_text}"
             if source and source not in entry["sources"]:
@@ -256,7 +262,7 @@ class GearLookupPage(FoundryPage):
 
         result = []
         for entity_id, name in rows:
-            display_name = str(name).strip()
+            display_name = _plain_text(name)
             if display_name.casefold() in existing_names:
                 continue
             result.append(
@@ -315,14 +321,14 @@ class GearLookupPage(FoundryPage):
 
                 bonuses_by_set: dict[int, list[str]] = {}
                 for set_id, description in bonus_rows:
-                    bonuses_by_set.setdefault(int(set_id), []).append(str(description))
+                    bonuses_by_set.setdefault(int(set_id), []).append(_plain_text(description))
 
                 self._sets = []
                 existing_names: set[str] = set()
                 for row in rows:
                     set_id, name, category, max_equip_count, armor_csv, stored_acquisition = row
                     set_id = int(set_id)
-                    display_name = str(name)
+                    display_name = _plain_text(name)
                     existing_names.add(display_name.casefold())
                     armor_types = {
                         int(value)
@@ -333,16 +339,16 @@ class GearLookupPage(FoundryPage):
                     content_info = content_acquisition.get(set_id, {})
                     acquisition_type = str(content_info.get("acquisition_type") or "")
                     if not acquisition_type:
-                        acquisition_type = self._normalize_acquisition(str(stored_acquisition or ""))
+                        acquisition_type = self._normalize_acquisition(_plain_text(stored_acquisition))
                     if not acquisition_type:
-                        acquisition_type = self._normalize_acquisition(str(category or ""))
+                        acquisition_type = self._normalize_acquisition(_plain_text(category))
 
                     self._sets.append(
                         {
                             "id": f"gear:{set_id}",
                             "gear_set_id": set_id,
                             "name": display_name,
-                            "category": str(category or ""),
+                            "category": _plain_text(category),
                             "max_equip_count": max_equip_count,
                             "armor_types": armor_types,
                             "bonus_texts": bonuses_by_set.get(set_id, []),
@@ -536,7 +542,7 @@ class GearLookupPage(FoundryPage):
             lines = []
             for piece_count, description in bonus_rows:
                 pieces = f"{piece_count} item" if int(piece_count) == 1 else f"{piece_count} items"
-                lines.append(f"{pieces}: {description}")
+                lines.append(f"{pieces}: {_plain_text(description)}")
             self.bonuses.setText("\n\n".join(lines))
         else:
             self.bonuses.setText(
