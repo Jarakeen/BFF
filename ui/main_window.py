@@ -113,7 +113,6 @@ class MainWindow(QMainWindow):
         roster_page.header.department.setText("RAID ENGINE • ROSTER")
 
         comp_builder_page = CompBuilderPage()
-        comp_builder_page.rosterPlanSent.connect(self._show_generated_roster_plan)
 
         optimization_page = OptimizationPage()
 
