@@ -1330,10 +1330,28 @@ User-reported focused checkpoint:
 
 **Phase 14I incoming damage Health state status: green.**
 
-Next implementation slice: make zero Health an explicit death-state transition. Death
-must be derived only from deterministic Health changes for known combatants. This slice
-will not invent resurrection, soul-gem behavior, encounter wipe rules, or post-death
-targetability; those remain separate mechanics.
+### Phase 14J — explicit death state
+
+Phase 14 now turns deterministic Health depletion into an explicit death-state
+transition.
+
+Implemented:
+
+- when a known combatant moves from Health > 0 to Health = 0, the simulation emits
+  one deterministic `death` event after the causal `health_change`;
+- nonlethal damage emits no death transition;
+- exact-time Health snapshots expose `is_dead`;
+- healing a combatant already at zero Health does not silently resurrect them and
+  instead reports resurrection semantics as unresolved;
+- death remains derived from explicit Health state only.
+
+This slice does **not** model resurrection, soul gems, revive channel timing, encounter
+wipe logic, corpse targetability, death-triggered set behavior, or encounter-specific
+failure conditions.
+
+**Phase 14J validation pending:** death transitions, Health/damage/healing projection,
+snapshots, target binding, and main simulation integration must pass before this slice
+is green.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
