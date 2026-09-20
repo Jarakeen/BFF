@@ -24,3 +24,4 @@ thread==2.0.6
 typing_extensions==4.16.0
 uvicorn==0.52.1
 xmlrpclib==1.0.1
+discord.py==2.7.1
