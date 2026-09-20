@@ -117,6 +117,7 @@ class CombatSimulationSnapshot:
     active_bar: str
     resources: tuple[CombatSimulationResourceSnapshot, ...]
     active_effect_windows: tuple[RuntimeEffectActiveWindow, ...] = ()
+    target_state: CombatSimulationTargetState | None = None
     unresolved: tuple[str, ...] = ()
 
 
@@ -128,6 +129,7 @@ class CombatSimulationResult:
     events: tuple[CombatSimulationEvent, ...]
     resources: tuple[CombatSimulationResourceResult, ...] = ()
     effect_windows: tuple[RuntimeEffectActiveWindow, ...] = ()
+    target_state: CombatSimulationTargetState | None = None
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -139,6 +141,7 @@ class CombatSimulationResult:
             self.events,
             self.resources,
             self.effect_windows,
+            self.target_state,
             self.unresolved,
         )
 
