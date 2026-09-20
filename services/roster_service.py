@@ -477,14 +477,22 @@ class RosterService:
             "DELETE FROM roster_member_assignment WHERE roster_member_id = ?",
             (member_id,),
         )
-        self.db.execute(
-            "DELETE FROM roster_assignment_context WHERE roster_member_id = ?",
-            (member_id,),
-        )
-        self.db.execute(
-            "DELETE FROM roster_player_alias WHERE roster_member_id = ?",
-            (member_id,),
-        )
+        optional_tables = {
+            row["name"]
+            for row in self.db.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
+        }
+        if "roster_assignment_context" in optional_tables:
+            self.db.execute(
+                "DELETE FROM roster_assignment_context WHERE roster_member_id = ?",
+                (member_id,),
+            )
+        if "roster_player_alias" in optional_tables:
+            self.db.execute(
+                "DELETE FROM roster_player_alias WHERE roster_member_id = ?",
+                (member_id,),
+            )
         self.db.execute("DELETE FROM team_member WHERE roster_member_id = ?", (member_id,))
         self.db.execute("DELETE FROM roster_member WHERE id = ?", (member_id,))
         self.db.commit()
