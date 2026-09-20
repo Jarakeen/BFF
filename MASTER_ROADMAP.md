@@ -1222,10 +1222,37 @@ User-reported focused checkpoint:
 
 **Phase 14F exact-time simulation snapshot status: green.**
 
-Next implementation slice: add explicit supported target/recipient state so healer output
-and group-target effects can bind to known combatants when recipient evidence is
-provided. Missing recipient identity must remain unresolved; Phase 14 must not invent
-which allies were hit by a cone, ground heal, or group buff.
+### Phase 14G — explicit combatants and recipient binding
+
+Phase 14 now carries an explicit combatant map and event-scoped recipient bindings
+through the deterministic simulation result and exact-time snapshots.
+
+Implemented:
+
+- `CombatSimulationCombatant` identifies known SELF / ALLY / ENEMY combatants;
+- `CombatSimulationRecipientBinding` binds one exact simulation consequence to an
+  explicit recipient set using time, sequence, event type, source, and optional
+  coefficient/effect identity;
+- `CombatSimulationTargetState` carries combatants + bindings and rejects duplicate
+  combatant or duplicate binding identities;
+- `CombatSimulationTargetBindingService` attaches recipients only to
+  `direct_heal`, `periodic_heal`, and `effect_apply` events;
+- missing target state or missing event binding preserves the original event and
+  reports an explicit unresolved recipient boundary;
+- unknown recipients or ally/enemy/self scope conflicts fail closed;
+- `CombatSimulationService.simulate(..., target_state=...)` carries this state through
+  deterministic replay;
+- `CombatSimulationSnapshotService` preserves the same target state at exact-time
+  snapshots;
+- no geometry, cone coverage, ground-area membership, encounter positioning, or ESO
+  target-selection algorithm is inferred.
+
+Combat Prayer is the first control: its direct heal and Minor Resolve application can
+now be bound to known allies when exact recipient evidence is supplied. Without that
+evidence, recipient identity remains unresolved rather than becoming “the group.”
+
+**Phase 14G validation pending:** target-binding, snapshot, healer-output, skill-effect,
+resource, and main simulation suites must pass before this slice is green.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
