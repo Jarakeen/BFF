@@ -434,9 +434,55 @@ class RosterService:
         self._set_member_teams(member.Id, member.Team)
         self.db.commit()
 
+    def set_member_status(self, member_id: int, status: str) -> RosterMember:
+        member_id = int(member_id)
+        member = self.get_member(member_id)
+        if member is None:
+            raise ValueError(f"roster member {member_id} does not exist")
+        value = str(status or "").strip() or "Active"
+        self.db.execute(
+            "UPDATE roster_member SET status = ? WHERE id = ?",
+            (value, member_id),
+        )
+        self.db.commit()
+        updated = self.get_member(member_id)
+        if updated is None:
+            raise RuntimeError(f"roster member {member_id} could not be reloaded")
+        return updated
+
+    def archive_member(self, member_id: int) -> RosterMember:
+        """Retire a Personnel record without deleting identity or history."""
+        return self.set_member_status(member_id, "Archived")
+
+    def restore_member(self, member_id: int) -> RosterMember:
+        """Return an archived Personnel record to active service."""
+        member = self.get_member(int(member_id))
+        if member is None:
+            raise ValueError(f"roster member {member_id} does not exist")
+        if str(member.Status or "").strip().casefold() != "archived":
+            raise ValueError("only archived Personnel records can be restored")
+        return self.set_member_status(int(member_id), "Active")
+
     def delete_member(self, member_id: int):
+        """Permanently delete a Personnel record only after it has been archived."""
+        member_id = int(member_id)
+        member = self.get_member(member_id)
+        if member is None:
+            return
+        if str(member.Status or "").strip().casefold() != "archived":
+            raise ValueError(
+                "Personnel must be archived before it can be permanently deleted"
+            )
         self.db.execute(
             "DELETE FROM roster_member_assignment WHERE roster_member_id = ?",
+            (member_id,),
+        )
+        self.db.execute(
+            "DELETE FROM roster_assignment_context WHERE roster_member_id = ?",
+            (member_id,),
+        )
+        self.db.execute(
+            "DELETE FROM roster_player_alias WHERE roster_member_id = ?",
             (member_id,),
         )
         self.db.execute("DELETE FROM team_member WHERE roster_member_id = ?", (member_id,))
