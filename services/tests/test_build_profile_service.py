@@ -73,3 +73,51 @@ def test_custom_baseline_changes_effective_resolution_without_mutating_item() ->
     assert effective.has_override is False
     assert item.Level == ""
     assert item.EnchantTier == ""
+
+
+def test_build_profiles_are_isolated_by_canonical_build_id(tmp_path) -> None:
+    service = BuildProfileService(tmp_path / "build_profiles.json")
+
+    service.update(
+        "build-mine",
+        favorite=True,
+        ownership="mine",
+        source_owner="",
+    )
+    service.update(
+        "build-team",
+        archived=True,
+        ownership="team",
+        source_owner="CobblestoneKing",
+    )
+
+    mine = service.get("build-mine")
+    team = service.get("build-team")
+
+    assert mine.favorite is True
+    assert mine.archived is False
+    assert mine.ownership == "mine"
+    assert mine.source_owner == ""
+
+    assert team.favorite is False
+    assert team.archived is True
+    assert team.ownership == "team"
+    assert team.source_owner == "CobblestoneKing"
+
+
+def test_build_profile_ownership_update_preserves_other_metadata(tmp_path) -> None:
+    service = BuildProfileService(tmp_path / "build_profiles.json")
+
+    service.update(
+        "build-1",
+        favorite=True,
+        quality="Purple",
+        ownership="TEAM",
+        source_owner="CobblestoneKing",
+    )
+    updated = service.update("build-1", ownership="mine", source_owner="")
+
+    assert updated.favorite is True
+    assert updated.quality == "Purple"
+    assert updated.ownership == "mine"
+    assert updated.source_owner == ""
