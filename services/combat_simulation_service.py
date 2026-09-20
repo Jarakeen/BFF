@@ -23,9 +23,13 @@ from minmax.rotation_plan import RotationActionKind, RotationPlan
 from services.combat_simulation_event_queue import CombatSimulationEventQueue
 from services.combat_simulation_healing_service import CombatSimulationHealingService
 from services.combat_simulation_health_service import CombatSimulationHealthService
+from services.combat_simulation_outgoing_damage_service import (
+    CombatSimulationOutgoingDamageService,
+)
 from services.combat_simulation_resource_service import CombatSimulationResourceService
 from services.combat_simulation_skill_effect_service import CombatSimulationSkillEffectService
 from services.combat_simulation_target_binding_service import CombatSimulationTargetBindingService
+from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 
 
 _CONSEQUENCE_PENDING = frozenset(
@@ -53,6 +57,7 @@ class CombatSimulationService:
         health_service: CombatSimulationHealthService | None = None,
         skill_effect_service: CombatSimulationSkillEffectService | None = None,
         target_binding_service: CombatSimulationTargetBindingService | None = None,
+        outgoing_damage_service: CombatSimulationOutgoingDamageService | None = None,
     ) -> None:
         self.active_bar_assessor = active_bar_assessor or RotationActiveBarAssessor()
         self.resource_service = resource_service or CombatSimulationResourceService()
@@ -60,6 +65,7 @@ class CombatSimulationService:
         self.health_service = health_service or CombatSimulationHealthService()
         self.skill_effect_service = skill_effect_service or CombatSimulationSkillEffectService()
         self.target_binding_service = target_binding_service or CombatSimulationTargetBindingService()
+        self.outgoing_damage_service = outgoing_damage_service
 
     def simulate(
         self,
@@ -70,6 +76,8 @@ class CombatSimulationService:
         target_state: CombatSimulationTargetState | None = None,
         incoming_damage: tuple[CombatSimulationIncomingDamage, ...] = (),
         outgoing_damage: tuple[CombatSimulationOutgoingDamage, ...] = (),
+        damage_target_identity: str = "",
+        damage_candidate: GeneratedRotationCandidate | None = None,
     ) -> CombatSimulationResult:
         if not isinstance(build_snapshot, EffectiveBuildSnapshot):
             raise TypeError("combat simulation requires EffectiveBuildSnapshot")
@@ -126,6 +134,38 @@ class CombatSimulationService:
                 )
             )
 
+        resolved_damage_actions: set[tuple[float, int]] = set()
+        if self.outgoing_damage_service is not None:
+            if not str(damage_target_identity or "").strip():
+                unresolved.append(
+                    "canonical outgoing damage projection requires explicit target identity"
+                )
+            else:
+                projection = self.outgoing_damage_service.project(
+                    plan=plan,
+                    target_identity=damage_target_identity,
+                    candidate=damage_candidate,
+                )
+                unresolved.extend(projection.unresolved)
+                resolved_damage_actions.update(projection.resolved_action_keys)
+                for item in projection.damage:
+                    if item.time_seconds > plan.duration_seconds:
+                        continue
+                    queue.push(
+                        CombatSimulationEvent(
+                            time_seconds=float(item.time_seconds),
+                            priority=int(SimulationEventPriority.DIRECT_RESULT),
+                            sequence=int(item.sequence),
+                            event_type="outgoing_damage",
+                            source=item.source,
+                            payload=(
+                                ("recipient", item.recipient),
+                                ("amount", float(item.amount)),
+                                ("damage_type", item.damage_type or ""),
+                            ),
+                        )
+                    )
+
         for action in plan.actions:
             queue.push(
                 CombatSimulationEvent(
@@ -171,13 +211,37 @@ class CombatSimulationService:
                 continue
             kind = RotationActionKind(event.payload_dict()["kind"])
             if kind in _CONSEQUENCE_PENDING:
+                action_key = (float(event.time_seconds), int(event.sequence))
+                damage_resolved = action_key in resolved_damage_actions
+
                 if kind is RotationActionKind.SKILL:
-                    unresolved.append(
-                        f"{event.time_seconds:g}s {event.source}: "
-                        "remaining skill consequences (for example damage or unsupported effects) "
-                        "not yet wired in Phase 14"
-                    )
+                    if damage_resolved:
+                        unresolved.append(
+                            f"{event.time_seconds:g}s {event.source}: "
+                            "damage consequence is wired; remaining unsupported non-damage "
+                            "skill consequences are unresolved"
+                        )
+                    else:
+                        unresolved.append(
+                            f"{event.time_seconds:g}s {event.source}: "
+                            "remaining skill consequences (for example damage or unsupported effects) "
+                            "not yet wired in Phase 14"
+                        )
                     continue
+
+                if kind in {
+                    RotationActionKind.LIGHT_ATTACK,
+                    RotationActionKind.HEAVY_ATTACK,
+                    RotationActionKind.ULTIMATE,
+                } and damage_resolved:
+                    if kind is RotationActionKind.ULTIMATE:
+                        unresolved.append(
+                            f"{event.time_seconds:g}s {event.source}: "
+                            "Ultimate damage consequence is wired; unsupported non-damage "
+                            "Ultimate consequences remain unresolved"
+                        )
+                    continue
+
                 unresolved.append(
                     f"{event.time_seconds:g}s {event.source}: "
                     f"{kind.value} consequence projection not yet wired in Phase 14"
