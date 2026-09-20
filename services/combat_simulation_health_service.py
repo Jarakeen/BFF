@@ -21,6 +21,7 @@ class CombatSimulationHealthService:
     """Apply bound healing events to explicit combatant health state."""
 
     _HEAL_EVENT_TYPES = frozenset({"direct_heal", "periodic_heal"})
+    _DAMAGE_EVENT_TYPES = frozenset({"incoming_damage"})
 
     def project(
         self,
@@ -38,10 +39,80 @@ class CombatSimulationHealthService:
         projected: list[CombatSimulationEvent] = []
         unresolved: list[str] = []
 
-        for event in events:
+        ordered = tuple(
+            sorted(
+                events,
+                key=lambda event: (
+                    event.time_seconds,
+                    event.priority,
+                    event.sequence,
+                    event.event_type,
+                    event.source.casefold(),
+                ),
+            )
+        )
+
+        for event in ordered:
+            payload = event.payload_dict()
+
+            if event.event_type in self._DAMAGE_EVENT_TYPES:
+                recipient = str(payload.get("recipient") or "").strip()
+                if not recipient:
+                    unresolved.append(
+                        f"{event.source} incoming_damage at {event.time_seconds:g}s: recipient is required"
+                    )
+                    continue
+                if recipient not in health:
+                    unresolved.append(
+                        f"{event.source} incoming_damage at {event.time_seconds:g}s -> {recipient}: unknown combatant"
+                    )
+                    continue
+                current, maximum = health[recipient]
+                if current is None or maximum is None:
+                    unresolved.append(
+                        f"{event.source} incoming_damage at {event.time_seconds:g}s -> {recipient}: "
+                        "current and maximum Health are required"
+                    )
+                    continue
+                amount = payload.get("amount")
+                if amount is None:
+                    unresolved.append(
+                        f"{event.source} incoming_damage at {event.time_seconds:g}s -> {recipient}: damage amount is unavailable"
+                    )
+                    continue
+                attempted_damage = float(amount)
+                if attempted_damage < 0:
+                    unresolved.append(
+                        f"{event.source} incoming_damage at {event.time_seconds:g}s -> {recipient}: damage amount cannot be negative"
+                    )
+                    continue
+                applied_damage = min(attempted_damage, float(current))
+                overkill = max(0.0, attempted_damage - applied_damage)
+                after = max(0, int(round(float(current) - applied_damage)))
+                health[recipient] = (after, maximum)
+                projected.append(
+                    CombatSimulationEvent(
+                        time_seconds=event.time_seconds,
+                        priority=int(SimulationEventPriority.DIRECT_RESULT),
+                        sequence=event.sequence,
+                        event_type="health_change",
+                        source=event.source,
+                        payload=(
+                            ("recipient", recipient),
+                            ("before", int(current)),
+                            ("attempted_damage", attempted_damage),
+                            ("applied_damage", applied_damage),
+                            ("overkill", overkill),
+                            ("after", int(after)),
+                            ("maximum_health", int(maximum)),
+                            ("origin_event_type", event.event_type),
+                        ),
+                    )
+                )
+                continue
+
             if event.event_type not in self._HEAL_EVENT_TYPES:
                 continue
-            payload = event.payload_dict()
             recipients = payload.get("recipients")
             if not recipients:
                 continue
