@@ -1014,11 +1014,34 @@ The purpose is not to minimize line count. The purpose is to prove that the arch
 ---
 
 # PHASE 14 · Combat Simulation
-**Status: 🔴 Planned**
+**Status: 🟡 Active**
 
 The `phase14` branch was opened from the completed Phase 13.5 release baseline on
-2026-09-17. Combat Simulation implementation remains planned; the structural and
-architectural prerequisite is now closed.
+2026-09-17. Phase 12.5 is now closed and the first Combat Simulation implementation
+slice is active.
+
+### Phase 14A — deterministic simulation kernel
+
+The first kernel consumes the authoritative Phase 13 `RotationPlan` directly rather
+than creating a second action model. It currently:
+
+- requires an immutable `EffectiveBuildSnapshot`;
+- fails closed when Rotation character/build identity does not match the frozen Build;
+- reuses `RotationActiveBarAssessor` for canonical bar progression and legality;
+- emits an ordered immutable simulation event stream;
+- preserves same-timestamp `(time, sequence)` order;
+- exposes deterministic replay equality/signature;
+- records unsupported skill/light/heavy/ultimate/potion/block/dodge consequences as
+  explicit unresolved evidence instead of treating them as zero;
+- treats WAIT and BAR_SWAP as orchestration actions whose kernel consequences are
+  already understood.
+
+Initial real-role control is a short healer sequence using Combat Prayer, light attack,
+bar swap, and Illustrious Healing. Resource, healing, damage, and proc consequences are
+the next wiring slices and remain owned by their existing canonical engines.
+
+**Phase 14A validation pending:** focused kernel tests must be run on the user's Windows
+checkout before this slice is called green.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
