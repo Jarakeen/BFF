@@ -11,11 +11,13 @@
 
 from __future__ import annotations
 
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QWidget,
     QFormLayout,
     QComboBox,
     QLineEdit,
+    QPushButton,
 )
 
 from models.roster_model import (
@@ -28,6 +30,8 @@ from models.roster_model import (
 
 class RosterRecord(QWidget):
     """Editable identity, role, team membership, and status for one roster member."""
+
+    screenshotImportRequested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -43,6 +47,13 @@ class RosterRecord(QWidget):
         self.youtube.setPlaceholderText("YouTube channel or handle")
         self.twitch = QLineEdit()
         self.twitch.setPlaceholderText("Twitch channel or handle")
+
+        self.import_discord_screenshot = QPushButton("Import Discord Screenshot…")
+        self.import_discord_screenshot.setToolTip(
+            "Open a Discord profile screenshot beside this Personnel record. "
+            "Details are only prefilled; nothing is saved automatically."
+        )
+        self.import_discord_screenshot.clicked.connect(self.screenshotImportRequested.emit)
 
         self.eso_class = QComboBox()
         self.eso_class.addItems(ESO_CLASSES)
@@ -71,6 +82,7 @@ class RosterRecord(QWidget):
         form.addRow("Discord", self.discord_name)
         form.addRow("YouTube", self.youtube)
         form.addRow("Twitch", self.twitch)
+        form.addRow("Quick Intake", self.import_discord_screenshot)
         form.addRow("ESO Class", self.eso_class)
         form.addRow("Primary Role", self.primary_role)
         form.addRow("Secondary Role", self.secondary_role)
