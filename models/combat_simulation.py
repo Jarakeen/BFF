@@ -38,11 +38,20 @@ class CombatSimulationEvent:
 
 
 @dataclass(frozen=True)
+class CombatSimulationResourceResult:
+    resource: str
+    starting_amount: int
+    ending_amount: int
+    total_shortfall: int = 0
+
+
+@dataclass(frozen=True)
 class CombatSimulationResult:
     duration_seconds: float
     initial_bar: str
     final_bar: str
     events: tuple[CombatSimulationEvent, ...]
+    resources: tuple[CombatSimulationResourceResult, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -52,12 +61,14 @@ class CombatSimulationResult:
             self.initial_bar,
             self.final_bar,
             self.events,
+            self.resources,
             self.unresolved,
         )
 
 
 __all__ = [
     "CombatSimulationEvent",
+    "CombatSimulationResourceResult",
     "CombatSimulationResult",
     "SimulationEventPriority",
 ]
