@@ -369,3 +369,14 @@ def test_phase14_comp_runtime_has_one_canonical_persistence_path() -> None:
 
     assert "CompBuildPersistenceService(get_data_dir())" in shell
     assert '"_persist_comp_plan_state_to_raid_plan"' in shell
+
+
+def test_saved_raid_plan_identity_is_carried_into_comp_intake() -> None:
+    page = Path("ui/comp_builder_page.py").read_text(encoding="utf-8")
+    handoff = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
+
+    for source in (page, handoff):
+        assert "CanonicalPlayerId=" in source
+        assert "CanonicalCharacterId=" in source
+    assert "Id=member.roster_member_id" in page
+    assert 'Id=getattr(member, "roster_member_id", None)' in handoff
