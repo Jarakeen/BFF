@@ -1117,10 +1117,34 @@ User-reported focused checkpoint:
 
 **Phase 14C healer output slice status: green.**
 
-Next implementation slice: consume reviewed periodic runtime timing evidence to turn
-eligible healer periodic seeds into exact simulation heal events. Illustrious Healing
-is the first control. First-tick, expiry-boundary, and refresh/recast behavior must come
-from reviewed evidence; missing timing remains unresolved rather than inferred.
+### Phase 14D — reviewed periodic healer timing
+
+The simulation healer bridge now expands periodic-heal seeds into concrete heal events
+only when reviewed runtime timing evidence is available.
+
+Implemented:
+
+- canonical periodic component cadence/duration remains owned by
+  `RotationHealerCanonicalPeriodicTimingService`;
+- first-tick, expiry-boundary, and repeated-application refresh behavior remain owned
+  by reviewed runtime observations and `RotationHealerPeriodicRuntimeEvidenceService`;
+- `RotationHealerPeriodicRuntimeService` schedules exact periodic heal events from
+  that evidence;
+- Phase 14 preserves the original `periodic_heal_seed` event as cast/source
+  provenance and emits additional `periodic_heal` events for reviewed ticks;
+- missing reviewed timing leaves the seed visible and exact ticks unresolved;
+- explicit reviewed timing fixtures can be loaded through
+  `RotationHealerReviewedRuntimeEvidenceLoader`, with optional reviewed refresh-policy
+  composition;
+- candidate evidence is not auto-promoted and no fixture path is guessed implicitly;
+- explicit observation injection and fixture-backed evidence are mutually exclusive
+  to prevent ambiguous runtime authority.
+
+Illustrious Healing is the first control. Reviewed timing can expand the cast-resolved
+periodic magnitude into deterministic tick events clipped to the simulation horizon.
+
+**Phase 14D validation pending:** focused Phase 14 healer simulation plus the canonical
+reviewed-evidence loader/evidence/runtime suites must pass before this slice is green.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
