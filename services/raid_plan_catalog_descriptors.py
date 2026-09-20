@@ -27,6 +27,26 @@ RAID_PLAN_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="raid.readiness.evidence",
+        domain="raid_plan",
+        purpose="Compose per-chair Readiness build and Coverage state from persisted Raid Plan, canonical build identity, and the existing plan-scoped Coverage evidence pipeline.",
+        implementation_path="services.raid_readiness_evidence_service",
+        inputs=("RaidPlan", "CanonicalBuildCatalog", "RaidCoverageSnapshot"),
+        outputs=("RaidReadinessEvidence",),
+        dependencies=(
+            "build.catalog.persistence",
+            "coverage.raid_plan.scope",
+        ),
+        responsibilities=(
+            "raid_readiness_build_state_projection",
+            "raid_readiness_coverage_state_projection",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes="Readiness does not infer Rotation, Sustain, proc uptime, or telemetry. Selected builds must resolve canonically; partial Comp planning remains visibly Planned; Coverage reuses saved-build/planned-gear/planned-skill and assignment evidence.",
+    ),
+    ServiceDescriptor(
         service_id="coverage.named_group_effect_projection",
         domain="coverage",
         purpose=(
