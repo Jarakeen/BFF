@@ -131,6 +131,7 @@ RUNTIME_EXTERNAL_DATA_FILES: tuple[str, ...] = (
 RUNTIME_EXTERNAL_DATA_DIRECTORIES: tuple[str, ...] = (
     "eso_info/bosses",
     "encounter_evidence",
+    "rotation_policy",
 )
 
 CLEAN_FIRST_INSTALL_DATA_FILES: tuple[str, ...] = (
