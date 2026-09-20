@@ -352,6 +352,37 @@ class CityLiveRaidPage(FoundryPage):
         row = QFrame()
         row.setProperty("liveRaidCalloutRow", True)
         row.setProperty("liveRaidCalloutRole", role)
+        row.setStyleSheet(
+            "QFrame[liveRaidCalloutRow=\"true\"] {"
+            " border-bottom: 1px solid #26363A;"
+            " background: transparent;"
+            " }"
+            "QLabel[liveRaidCalloutMarker=\"true\"] {"
+            " color: #BFC8C6;"
+            " font-family: 'Montserrat';"
+            " font-size: 11px;"
+            " }"
+            "QLabel[liveRaidCalloutTitle=\"true\"] {"
+            " color: #E5ECEB;"
+            " font-family: 'Montserrat';"
+            " font-size: 13px;"
+            " font-weight: 600;"
+            " }"
+            "QLabel[liveRaidCalloutDetail=\"true\"] {"
+            " color: #BFC8C6;"
+            " font-family: 'Montserrat';"
+            " font-size: 11px;"
+            " }"
+            "QLabel[liveRaidCalloutBadge=\"true\"] {"
+            " color: #C8A46A;"
+            " border: 1px solid #6F5B37;"
+            " border-radius: 4px;"
+            " padding: 2px 6px;"
+            " font-family: 'Montserrat';"
+            " font-size: 10px;"
+            " font-weight: 600;"
+            " }"
+        )
         layout = QGridLayout(row)
         layout.setContentsMargins(4, 6, 4, 6)
         layout.setHorizontalSpacing(8)
