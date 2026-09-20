@@ -1320,9 +1320,20 @@ infer armor/resistance mitigation, blocking, shields, dodge, damage type modifie
 encounter mechanic values. Those must be connected through their canonical engines or
 reviewed encounter evidence later.
 
-**Phase 14I validation pending:** incoming-damage Health projection, target binding,
-snapshots, healer output, effects, resources, and main simulation integration must pass
-before this slice is green.
+### Phase 14I validation checkpoint — 2026-09-19
+
+User-reported focused checkpoint:
+
+- **39 passed in 7.30s**
+- incoming-damage Health projection, target binding, snapshots, healer output,
+  reviewed effects, resource projection, and main simulation integration are green.
+
+**Phase 14I incoming damage Health state status: green.**
+
+Next implementation slice: make zero Health an explicit death-state transition. Death
+must be derived only from deterministic Health changes for known combatants. This slice
+will not invent resurrection, soul-gem behavior, encounter wipe rules, or post-death
+targetability; those remain separate mechanics.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
