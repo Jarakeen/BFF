@@ -197,6 +197,56 @@ def _switch_library_mode(page, index: int) -> None:
     _populate_build_table(page)
 
 
+def _select_library_mode(page, mode: str) -> None:
+    tabs = getattr(page, "phase14_library_tabs", None)
+    if tabs is None:
+        return
+    wanted = str(mode or "All").strip() or "All"
+    for index in range(tabs.count()):
+        if tabs.tabText(index) != wanted:
+            continue
+        tabs.blockSignals(True)
+        try:
+            tabs.setCurrentIndex(index)
+        finally:
+            tabs.blockSignals(False)
+        return
+
+
+def _reset_library_filters(page, *, mode: str = "All") -> None:
+    """Make an explicit navigation target visible regardless of stale library UI state."""
+    _select_library_mode(page, mode)
+    search = getattr(page, "phase14_build_search", None)
+    if search is not None:
+        search.blockSignals(True)
+        try:
+            search.clear()
+        finally:
+            search.blockSignals(False)
+    for name in (
+        "phase14_class_filter",
+        "phase14_role_filter",
+        "phase14_content_filter",
+    ):
+        combo = getattr(page, name, None)
+        if combo is None:
+            continue
+        combo.blockSignals(True)
+        try:
+            if combo.count():
+                combo.setCurrentIndex(0)
+        finally:
+            combo.blockSignals(False)
+
+    view = getattr(page, "view_combo", None)
+    if view is not None and view.findText("All Builds") >= 0:
+        view.blockSignals(True)
+        try:
+            view.setCurrentText("All Builds")
+        finally:
+            view.blockSignals(False)
+
+
 def _create_command_center(page) -> QWidget:
     host = QWidget()
     host.setObjectName("phase14BuildLibrary")
@@ -313,6 +363,7 @@ def install() -> None:
     _ORIGINAL_LOAD = BuildsPage._load
     _ORIGINAL_REFRESH_ROSTER = BuildsPage._refresh_roster
     _ORIGINAL_REFRESH_DETAIL = BuildsPage._refresh_detail
+    original_show_player_builds = BuildsPage.show_player_builds
 
     def build_ui_phase14(self):
         _ORIGINAL_BUILD_UI(self)
@@ -380,15 +431,11 @@ def install() -> None:
             return False
 
         self.selected_index = int(match)
-        if hasattr(self, "phase14_library_tabs"):
-            comp_kind = str(
-                getattr(self.roster.Members[match], "BuildKind", "saved") or "saved"
-            ).strip().casefold()
-            wanted_tab = "Comp Builds" if comp_kind == "comp" else "All"
-            for tab_index in range(self.phase14_library_tabs.count()):
-                if self.phase14_library_tabs.tabText(tab_index) == wanted_tab:
-                    self.phase14_library_tabs.setCurrentIndex(tab_index)
-                    break
+        comp_kind = str(
+            getattr(self.roster.Members[match], "BuildKind", "saved") or "saved"
+        ).strip().casefold()
+        wanted_tab = "Comp Builds" if comp_kind == "comp" else "All"
+        _reset_library_filters(self, mode=wanted_tab)
         _set_filters_from_library(self)
         _populate_build_table(self)
         self._refresh_detail()
@@ -401,6 +448,15 @@ def install() -> None:
     BuildsPage._load = load_phase14
     BuildsPage._refresh_roster = refresh_roster_phase14
     BuildsPage._refresh_detail = refresh_detail_phase14
+
+    def show_player_builds_phase14(self, gamertag: str) -> None:
+        _reset_library_filters(self, mode="All")
+        original_show_player_builds(self, gamertag)
+        if hasattr(self, "phase14_build_table"):
+            _set_filters_from_library(self)
+            _populate_build_table(self)
+
+    BuildsPage.show_player_builds = show_player_builds_phase14
     BuildsPage.show_build_by_id = show_build_by_id
     _INSTALLED = True
 
