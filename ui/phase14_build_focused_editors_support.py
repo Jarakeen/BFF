@@ -492,6 +492,9 @@ def _context_variants_summary(page, build) -> FoundryCard:
     else:
         card.addWidget(QLabel("No Team, Boss, or Team + Boss variants saved."))
 
+    edit = FoundryButton("Edit Context Variants", role=ButtonRole.SECONDARY, compact=True)
+    edit.clicked.connect(lambda: page._open_phase14_legacy_build_editor())
+    card.addWidget(edit)
     return card
 
 
