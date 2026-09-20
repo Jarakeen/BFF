@@ -273,7 +273,7 @@ class RosterPage(FoundryPage):
     def refresh(self):
         try:
             selected_id = self.table.selected_member_id()
-            self._all_members = self.roster_service.list_members()
+            self._all_members = self.roster_service.list_members(include_archived=True)
             self.members = self._filtered_members(self._all_members)
             self.table.load_members(self.members)
             self.record.set_team_choices(self.roster_service.list_team_names())
@@ -281,6 +281,7 @@ class RosterPage(FoundryPage):
                 self.table.select_member_id(selected_id)
             self._populate_assignment_table()
             self._refresh_summary_cards()
+            self._update_personnel_lifecycle_actions()
             self.status.info(
                 f"{len(self.members)} roster member(s) loaded into Assignments."
             )
