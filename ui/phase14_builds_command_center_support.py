@@ -359,10 +359,49 @@ def install() -> None:
                 self.phase14_build_table.blockSignals(False)
         return result
 
+    def show_build_by_id(self, build_id: str) -> bool:
+        wanted = str(build_id or "").strip().casefold()
+        if not wanted:
+            return False
+        self._player_build_filter = ""
+        self.roster = self.build_service.load()
+        match = next(
+            (
+                index
+                for index, build in enumerate(self.roster.Members)
+                if str(getattr(build, "BuildId", "") or "").strip().casefold() == wanted
+            ),
+            None,
+        )
+        if match is None:
+            _set_filters_from_library(self)
+            _populate_build_table(self)
+            self.status.warning(f"Canonical build {build_id!r} is not available in Builds.")
+            return False
+
+        self.selected_index = int(match)
+        if hasattr(self, "phase14_library_tabs"):
+            comp_kind = str(
+                getattr(self.roster.Members[match], "BuildKind", "saved") or "saved"
+            ).strip().casefold()
+            wanted_tab = "Comp Builds" if comp_kind == "comp" else "All"
+            for tab_index in range(self.phase14_library_tabs.count()):
+                if self.phase14_library_tabs.tabText(tab_index) == wanted_tab:
+                    self.phase14_library_tabs.setCurrentIndex(tab_index)
+                    break
+        _set_filters_from_library(self)
+        _populate_build_table(self)
+        self._refresh_detail()
+        self.status.info(
+            f"Opened build: {self.roster.Members[match].BuildName or build_id}."
+        )
+        return True
+
     BuildsPage._build_ui = build_ui_phase14
     BuildsPage._load = load_phase14
     BuildsPage._refresh_roster = refresh_roster_phase14
     BuildsPage._refresh_detail = refresh_detail_phase14
+    BuildsPage.show_build_by_id = show_build_by_id
     _INSTALLED = True
 
 
