@@ -167,6 +167,7 @@ class CombatSimulationHealthSnapshot:
     identity: str
     current_health: int | None
     maximum_health: int | None
+    is_dead: bool = False
 
 
 @dataclass(frozen=True)
