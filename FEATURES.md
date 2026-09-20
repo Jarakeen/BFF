@@ -349,3 +349,14 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **OBS Field Note source overrides** — The Foundry dashboard Lua script exposes persistent OBS-side edit fields for `NOTE_Observation` and `FN_Location`. Blank values preserve the existing automatic JSON-driven text; entered values override the one-second overlay refresh safely.
 
 - **Phase 14 planning workflow round-trip guard** — regression coverage now exercises the real cross-service path from Personnel → unbound Comp Maker plan → canonical Comp Build → persisted/reloaded Raid Plan → stable BuildId resolution → Coverage assignment semantics → Readiness. Brand-new plans repair Comp Build source-plan provenance immediately after first Raid Plan binding without duplicating the build.
+
+
+### Personnel lifecycle and history
+- Personnel records support **Archived** status.
+- Archived players are excluded from normal roster queries and current planning by default.
+- Archived players remain available through the explicit **Archived** view and can be restored.
+- Permanent deletion requires the Personnel record to be archived first.
+- Personnel records retain private freeform notes.
+- Former gamertags are stored as durable exact player aliases and remain available on archived records.
+- Exact alias matching excludes archived players from active identity resolution while preserving their historical aliases.
+
