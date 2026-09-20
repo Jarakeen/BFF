@@ -122,6 +122,21 @@ class CombatSimulationHealingService:
                 )
             )
 
+        for item in projection.periodic_seeds:
+            events.append(
+                CombatSimulationEvent(
+                    time_seconds=float(item.time_seconds),
+                    priority=int(SimulationEventPriority.TRIGGER),
+                    sequence=int(item.sequence),
+                    event_type="periodic_heal_seed",
+                    source=item.source_name,
+                    payload=(
+                        ("coefficient_number", int(item.coefficient_number)),
+                        ("modeled_heal", float(item.modeled_heal)),
+                    ),
+                )
+            )
+
         periodic_runtime_events, periodic_unresolved = self._periodic_events(
             projection,
             horizon_seconds=plan.duration_seconds,
