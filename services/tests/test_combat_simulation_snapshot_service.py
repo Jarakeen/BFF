@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from minmax.runtime_effect_window import RuntimeEffectActiveWindow
 from models.combat_simulation import (
+    CombatSimulationCombatant,
     CombatSimulationEvent,
     CombatSimulationResourceResult,
     CombatSimulationResult,
+    CombatSimulationTargetState,
     SimulationEventPriority,
 )
 from services.combat_simulation_snapshot_service import CombatSimulationSnapshotService
@@ -91,6 +93,12 @@ def _result() -> CombatSimulationResult:
                 magnitude=2974.0,
             ),
         ),
+        target_state=CombatSimulationTargetState(
+            combatants=(
+                CombatSimulationCombatant("Magrat", "self"),
+                CombatSimulationCombatant("Tank 1", "ally"),
+            ),
+        ),
         unresolved=("exact group recipients unresolved",),
     )
 
@@ -144,3 +152,17 @@ def test_snapshot_rejects_time_outside_simulation_horizon() -> None:
             assert "snapshot time" in str(exc)
         else:
             raise AssertionError("Expected out-of-range snapshot time to fail closed")
+
+
+
+def test_snapshot_preserves_explicit_target_state() -> None:
+    snapshot = CombatSimulationSnapshotService().snapshot_at(
+        _result(),
+        time_seconds=5.0,
+    )
+
+    assert snapshot.target_state is not None
+    assert [item.identity for item in snapshot.target_state.combatants] == [
+        "Magrat",
+        "Tank 1",
+    ]
