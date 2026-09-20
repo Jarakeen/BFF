@@ -108,8 +108,16 @@ class FinchBot(commands.Bot):
         await self.change_presence(
             activity=discord.Game(name="FoundryDock raid operations")
         )
+        if not self.config.guild_id:
+            for guild in self.guilds:
+                self.tree.copy_global_to(guild=guild)
+                await self.tree.sync(guild=guild)
         if self.user is not None:
-            print(f"Finch online as {self.user} (id={self.user.id})")
+            guild_names = ", ".join(guild.name for guild in self.guilds) or "(no guilds)"
+            print(
+                f"Finch online as {self.user} (id={self.user.id}); "
+                f"connected guilds: {guild_names}"
+            )
 
 
 bot: FinchBot | None = None
