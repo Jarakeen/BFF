@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any
 
+from minmax.runtime_effect_window import RuntimeEffectActiveWindow
+
 
 class SimulationEventPriority(IntEnum):
     ACTION = 10
@@ -46,12 +48,28 @@ class CombatSimulationResourceResult:
 
 
 @dataclass(frozen=True)
+class CombatSimulationResourceSnapshot:
+    resource: str
+    current_amount: int
+
+
+@dataclass(frozen=True)
+class CombatSimulationSnapshot:
+    time_seconds: float
+    active_bar: str
+    resources: tuple[CombatSimulationResourceSnapshot, ...]
+    active_effect_windows: tuple[RuntimeEffectActiveWindow, ...] = ()
+    unresolved: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class CombatSimulationResult:
     duration_seconds: float
     initial_bar: str
     final_bar: str
     events: tuple[CombatSimulationEvent, ...]
     resources: tuple[CombatSimulationResourceResult, ...] = ()
+    effect_windows: tuple[RuntimeEffectActiveWindow, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -62,6 +80,7 @@ class CombatSimulationResult:
             self.final_bar,
             self.events,
             self.resources,
+            self.effect_windows,
             self.unresolved,
         )
 
@@ -69,6 +88,8 @@ class CombatSimulationResult:
 __all__ = [
     "CombatSimulationEvent",
     "CombatSimulationResourceResult",
+    "CombatSimulationResourceSnapshot",
+    "CombatSimulationSnapshot",
     "CombatSimulationResult",
     "SimulationEventPriority",
 ]
