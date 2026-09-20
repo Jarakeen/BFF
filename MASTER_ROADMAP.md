@@ -1190,10 +1190,30 @@ User-reported focused checkpoint:
 
 **Phase 14E reviewed healer skill-effect status: green.**
 
-Next implementation slice: build explicit simulation snapshots from the deterministic
-event stream so callers can ask for resource amounts and active effect windows at an
-exact simulation time without reinterpreting raw history. Snapshot projection must
-reuse the canonical event/resource/effect outputs and preserve unresolved boundaries.
+### Phase 14F — exact-time simulation snapshots
+
+The deterministic simulation result now preserves canonical effect windows and can be
+projected into an exact-time read model without re-running ESO calculations.
+
+Implemented:
+
+- `CombatSimulationResult` carries canonical runtime effect windows alongside the
+  ordered event stream and resource summaries;
+- `CombatSimulationSnapshotService` projects the active bar at an exact instant from
+  the already-ordered BAR_SWAP history;
+- current resource amounts come from the canonical Phase 4-derived resource events,
+  not from a second resource formula;
+- active timed effects are selected through
+  `partition_runtime_effect_windows`, preserving Phase 7 window semantics;
+- unresolved simulation boundaries propagate into every snapshot;
+- snapshot times outside the deterministic simulation horizon fail closed.
+
+This is intentionally a Phase 14 orchestration/read model rather than a replacement for
+the richer Phase 8 `CombatStateSnapshot`. Target health/status/recipient state will be
+bridged when supported target behavior enters the simulator.
+
+**Phase 14F validation pending:** exact-time snapshot, effect-window, resource, and main
+simulation tests must pass before this slice is green.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
