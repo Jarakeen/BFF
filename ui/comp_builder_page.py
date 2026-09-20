@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QTableWidget,
@@ -185,9 +186,68 @@ class CompBuilderPage(FoundryPage):
             self.plan_name_input.setCurrentIndex(0)
         self.plan_name_input.blockSignals(False)
 
+    def _restore_raid_plan_picker_to_current_state(self) -> None:
+        state = getattr(self, "_comp_plan_state", None)
+        current_id = str(getattr(state, "raid_plan_id", "") or "").strip()
+        current_name = str(getattr(state, "raid_plan_name", "") or "").strip()
+
+        self.plan_name_input.blockSignals(True)
+        try:
+            if current_id:
+                current_index = self.plan_name_input.findData(current_id)
+                if current_index >= 0:
+                    self.plan_name_input.setCurrentIndex(current_index)
+                    return
+            self.plan_name_input.setCurrentIndex(0)
+            if current_name:
+                self.plan_name_input.setText(current_name)
+        finally:
+            self.plan_name_input.blockSignals(False)
+
+    def _confirm_raid_plan_switch(self, target_plan_id: str) -> bool:
+        state = getattr(self, "_comp_plan_state", None)
+        current_id = str(getattr(state, "raid_plan_id", "") or "").strip()
+        if current_id and current_id == str(target_plan_id or "").strip():
+            return True
+
+        has_pending = getattr(self, "has_pending_changes", None)
+        if not callable(has_pending) or not has_pending():
+            return True
+
+        box = QMessageBox(self)
+        box.setWindowTitle("Unsaved Comp Plan Changes")
+        box.setText("You have unsaved changes in Comp Maker.")
+        box.setInformativeText(
+            "Save them before loading another Raid Plan, discard them, or cancel the switch."
+        )
+        box.setStandardButtons(
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel
+        )
+        box.setDefaultButton(QMessageBox.StandardButton.Save)
+        answer = box.exec()
+
+        if answer == QMessageBox.StandardButton.Save:
+            save_pending = getattr(self, "save_pending_changes", None)
+            if not callable(save_pending) or not bool(save_pending()):
+                self._restore_raid_plan_picker_to_current_state()
+                return False
+            return True
+        if answer == QMessageBox.StandardButton.Discard:
+            discard_pending = getattr(self, "discard_pending_changes", None)
+            if callable(discard_pending):
+                discard_pending()
+            return True
+
+        self._restore_raid_plan_picker_to_current_state()
+        return False
+
     def _raid_plan_name_selected(self, index: int) -> None:
         plan_id = self.plan_name_input.itemData(index)
         if not plan_id:
+            return
+        if not self._confirm_raid_plan_switch(str(plan_id)):
             return
         plan = self.raid_plan_repository.get(str(plan_id))
         if plan is None:
