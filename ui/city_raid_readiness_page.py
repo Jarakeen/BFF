@@ -101,6 +101,7 @@ class _ReadinessArt(QLabel):
 
 class CityRaidReadinessPage(FoundryPage):
     pageRequested = Signal(str)
+    buildRequested = Signal(str)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -210,7 +211,7 @@ class CityRaidReadinessPage(FoundryPage):
         self.selected_label.setWordWrap(True)
         selected.addWidget(self.selected_label)
         open_build = QPushButton("Open Build")
-        open_build.clicked.connect(lambda: self.pageRequested.emit("console:2"))
+        open_build.clicked.connect(self._open_selected_build)
         selected.addWidget(open_build)
         open_rotation = QPushButton("Open Rotation")
         open_rotation.clicked.connect(lambda: self.pageRequested.emit("rotations"))
@@ -388,6 +389,19 @@ class CityRaidReadinessPage(FoundryPage):
             "Rotation / sustain evidence remains unresolved until its owning engines supply it."
         )
         self.mark_ready.setText("Clear Human Ready" if human is True else "Mark Human Ready")
+
+    def _open_selected_build(self) -> None:
+        member = self._selected_member()
+        if member is None:
+            self.status.warning("Select a Raid Plan spot first.")
+            return
+        build_id = _clean(member.selected_build_id)
+        if build_id:
+            self.buildRequested.emit(build_id)
+            return
+        self.status.warning(
+            "This chair does not have a canonical selected build yet. Save the Comp plan first."
+        )
 
     def _toggle_human_ready(self) -> None:
         member = self._selected_member()
