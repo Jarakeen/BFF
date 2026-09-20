@@ -10,9 +10,11 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer, QUrl
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
     QFileDialog,
     QFormLayout,
@@ -564,8 +566,6 @@ class SettingsPage(QWidget):
         self.status.success("Settings saved.")
 
     def test_finch(self):
-        from services.finch_api_client import FinchApiClient, FinchApiError
-
         url = self.finch_api_url.text().strip().rstrip("/")
         key = self.finch_api_key.text().strip()
         if not url or not key:
@@ -573,26 +573,114 @@ class SettingsPage(QWidget):
             self.status.warning("Finch API URL and API Key are both required.")
             return
 
+        if getattr(self, "_finch_reply", None) is not None:
+            try:
+                self._finch_reply.abort()
+            except RuntimeError:
+                pass
+            self._finch_reply = None
+
         self.integration_labels["finch"].setText("●  Checking…")
+        self.test_finch_button.setEnabled(False)
+        self.status.info("Contacting Finch…")
+
+        if getattr(self, "_finch_network", None) is None:
+            self._finch_network = QNetworkAccessManager(self)
+
+        request = QNetworkRequest(QUrl(f"{url}/api/v1/status"))
+        request.setRawHeader(b"Accept", b"application/json")
+        request.setRawHeader(b"Authorization", f"Bearer {key}".encode("utf-8"))
+        request.setRawHeader(b"User-Agent", b"FoundryDock/FinchClient")
+
+        reply = self._finch_network.get(request)
+        self._finch_reply = reply
+
+        timeout = QTimer(self)
+        timeout.setSingleShot(True)
+        timeout.setInterval(10000)
+        self._finch_timeout = timeout
+
+        def timed_out() -> None:
+            if self._finch_reply is reply and reply.isRunning():
+                reply.setProperty("finchTimedOut", True)
+                reply.abort()
+
+        timeout.timeout.connect(timed_out)
+        timeout.start()
+        reply.finished.connect(lambda: self._finish_finch_test(reply))
+
+    def _finish_finch_test(self, reply: QNetworkReply) -> None:
+        timeout = getattr(self, "_finch_timeout", None)
+        if timeout is not None:
+            timeout.stop()
+
+        if self._finch_reply is reply:
+            self._finch_reply = None
+        self.test_finch_button.setEnabled(True)
+
+        timed_out = bool(reply.property("finchTimedOut"))
+        status = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         try:
-            result = FinchApiClient(base_url=url, api_key=key).test_connection()
-        except FinchApiError as exc:
-            self.integration_labels["finch"].setText("●  Error")
-            self.status.error(str(exc))
+            status_code = int(status) if status is not None else 0
+        except (TypeError, ValueError):
+            status_code = 0
+
+        raw = bytes(reply.readAll()).decode("utf-8", errors="replace").strip()
+        network_error = reply.error()
+        error_text = reply.errorString()
+        reply.deleteLater()
+
+        if timed_out:
+            self.integration_labels["finch"].setText("●  Timed out")
+            self.status.error("Finch did not answer within 10 seconds.")
             return
 
-        if not result.ok:
+        if status_code == 401:
+            self.integration_labels["finch"].setText("●  Bad API key")
+            self.status.error("Finch is reachable, but rejected the API key.")
+            return
+
+        if status_code == 404:
+            self.integration_labels["finch"].setText("●  API not deployed")
+            self.status.error(
+                "Finch is reachable, but /api/v1/status is not deployed yet. Redeploy Finch on Railway."
+            )
+            return
+
+        if status_code == 503:
+            self.integration_labels["finch"].setText("●  Server not configured")
+            self.status.error("Finch is reachable, but FINCH_API_KEY is not configured on Railway.")
+            return
+
+        if network_error != QNetworkReply.NetworkError.NoError:
+            self.integration_labels["finch"].setText("●  Error")
+            self.status.error(f"Could not connect to Finch: {error_text}")
+            return
+
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError:
+            self.integration_labels["finch"].setText("●  Invalid response")
+            self.status.error("Finch responded, but did not return valid JSON.")
+            return
+
+        if not isinstance(payload, dict) or not payload.get("ok"):
             self.integration_labels["finch"].setText("●  Error")
             self.status.error("Finch responded, but did not report a healthy API connection.")
             return
 
         self.integration_labels["finch"].setText("●  Connected")
+        discord_ready = bool(payload.get("discord_ready"))
+        discord_user = str(payload.get("discord_user") or "").strip()
         discord_text = (
-            f"Discord: {result.discord_user}" if result.discord_ready and result.discord_user
+            f"Discord: {discord_user}"
+            if discord_ready and discord_user
             else "Discord gateway not ready"
         )
+        service = str(payload.get("service") or "Finch")
+        api_version = str(payload.get("api_version") or "").strip()
         self.status.success(
-            f"Connected to {result.service or 'Finch'} {result.api_version or ''} • {discord_text}."
+            f"Connected to {service} {api_version} • {discord_text}."
         )
 
     def test_obs(self):
