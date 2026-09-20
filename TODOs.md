@@ -147,3 +147,5 @@ Create a canonical machine-readable catalog of BFF services so the app and devel
 -[X] move Mechanics under??
 -[X] and then get rid of the Reference Data under Mechanics 
 -[ ] we need to bold the header terms in Reference Data - the words before : they are too hard to pick out
+
+- [ ] Discord Comp sharing: add a low-friction way to share a saved Comp / Raid Plan to Discord from FoundryDock. Keep Personnel as the source of truth; optionally store Discord display/user identity alongside Xbox gamertag for matching, but do not require member-facing registration or OAuth. The goal is one-click sharing of the planned roster, seats, classes, builds/gear packages, assignments, and relevant notes into a Discord channel.
