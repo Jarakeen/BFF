@@ -34,6 +34,10 @@ class CanonicalBuildBridge:
             "PlayerId",
             "CharacterId",
             "BuildId",
+            "BuildKind",
+            "SourcePlanId",
+            "SourcePlanName",
+            "SourceSeatId",
         }
     )
 
@@ -49,6 +53,24 @@ class CanonicalBuildBridge:
             return self.catalog_service.new_catalog()
         payload = json.loads(self.catalog_path.read_text(encoding="utf-8"))
         return self.catalog_service._normalize(payload)
+
+    def load_catalog(self) -> dict[str, Any]:
+        """Return strict canonical build state for trusted persistence workflows."""
+        return self._load_catalog_strict()
+
+    def save_catalog(self, catalog: dict[str, Any]) -> dict[str, Any]:
+        """Persist canonical catalog first, then refresh the compatibility mirror.
+
+        This is the supported boundary for workflows that need to preserve stable
+        build IDs while adding or updating canonical build records directly.
+        """
+        normalized = self.catalog_service._normalize(catalog)
+        self.catalog_service.save(normalized)
+        mirror = self.enchantment_compatibility.normalize_roster(
+            self._roster_from_catalog(normalized)
+        )
+        self._save_legacy(mirror)
+        return normalized
 
     def load(self) -> BuildRoster:
         catalog = self._load_catalog_strict()
