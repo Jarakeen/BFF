@@ -72,6 +72,8 @@ def _profile_matches_mode(page, build) -> bool:
         return profile.ownership == "mine"
     if mode == "Team":
         return profile.ownership == "team"
+    if mode == "Comp Builds":
+        return str(getattr(build, "BuildKind", "saved") or "saved").strip().casefold() == "comp"
     if mode == "Favorites":
         return profile.favorite
     return mode == "All"
