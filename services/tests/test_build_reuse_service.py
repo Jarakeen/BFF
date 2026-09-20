@@ -124,3 +124,61 @@ def test_replace_or_append_is_keyed_by_player_character_build_name() -> None:
     updated = BuildReuseService.replace_or_append(roster, replacement)
     assert len(updated.Members) == 1
     assert updated.Members[0].Food == "Different Food"
+
+
+def test_reuse_strips_canonical_identity_and_comp_provenance() -> None:
+    source = _healer()
+    source.PlayerId = "player-1"
+    source.CharacterId = "character-1"
+    source.BuildId = "build-1"
+    source.BuildKind = "comp"
+    source.PlannedGearSets = ["Spell Power Cure", "Perfected Grand Rejuvenation"]
+    source.PlannedSkills = ["Combat Prayer"]
+    source.SourcePlanId = "plan-1"
+    source.SourcePlanName = "Swashbuckler"
+    source.SourceSeatId = "Healer1"
+
+    copied = BuildReuseService.copy_build(
+        source,
+        destination_name="Maeve",
+        destination_gamertag="OtherPlayer",
+        destination_class="Warden",
+        new_build_name="Copied Healer",
+    ).build
+
+    assert copied.PlayerId == ""
+    assert copied.CharacterId == ""
+    assert copied.BuildId == ""
+    assert copied.BuildKind == "saved"
+    assert copied.PlannedGearSets == []
+    assert copied.PlannedSkills == []
+    assert copied.SourcePlanId == ""
+    assert copied.SourcePlanName == ""
+    assert copied.SourceSeatId == ""
+
+
+def test_template_application_does_not_inherit_comp_provenance(tmp_path: Path) -> None:
+    source = _healer()
+    source.BuildKind = "comp"
+    source.SourcePlanId = "plan-1"
+    source.SourcePlanName = "Swashbuckler"
+    source.SourceSeatId = "Healer1"
+    source.PlannedGearSets = ["Spell Power Cure"]
+    source.PlannedSkills = ["Combat Prayer"]
+
+    service = BuildReuseService(tmp_path / "build_templates.json")
+    template = service.save_template_from_build(source, template_name="Core Healer")
+    applied = service.apply_template(
+        template,
+        destination_name="Maeve",
+        destination_gamertag="OtherPlayer",
+        destination_class="Warden",
+        destination_role="Healer",
+    ).build
+
+    assert applied.BuildKind == "saved"
+    assert applied.SourcePlanId == ""
+    assert applied.SourcePlanName == ""
+    assert applied.SourceSeatId == ""
+    assert applied.PlannedGearSets == []
+    assert applied.PlannedSkills == []
