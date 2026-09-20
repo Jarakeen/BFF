@@ -72,12 +72,35 @@ def test_build_service_round_trip_preserves_full_build(tmp_path):
     service.save(roster)
     loaded = service.load()
 
-    assert loaded.to_dict() == roster.to_dict()
-    assert loaded.Members[0].Armor["Head"]["Set"] == "Ozezan the Inferno"
-    assert loaded.Members[0].Armor["Head"]["Weight"] == "Light"
-    assert loaded.Members[0].FrontBarWeapon.Enchant == "Absorb Magicka"
-    assert loaded.Members[0].FrontBarSkills[0] == "Combat Prayer"
-    assert loaded.Members[0].ChampionPoints[0].Points == "50"
+    original = roster.Members[0]
+    build = loaded.Members[0]
+
+    # Canonical identity is additive Phase 14 state. The build content itself must
+    # still round-trip exactly, while load exposes stable IDs for downstream pages.
+    assert build.PlayerId
+    assert build.CharacterId
+    assert build.BuildId
+    assert build.Name == original.Name
+    assert build.Gamertag == original.Gamertag
+    assert build.Race == original.Race
+    assert build.EsoClass == original.EsoClass
+    assert build.Armor == original.Armor
+    assert build.FrontBarWeapon == original.FrontBarWeapon
+    assert build.BackBarWeapon == original.BackBarWeapon
+    assert build.Necklace == original.Necklace
+    assert build.Ring1 == original.Ring1
+    assert build.Ring2 == original.Ring2
+    assert build.ChampionPoints == original.ChampionPoints
+    assert build.FrontBarSkills == original.FrontBarSkills
+    assert build.BackBarSkills == original.BackBarSkills
+    assert build.Food == original.Food
+    assert build.Potion == original.Potion
+    assert build.Notes == original.Notes
+    assert build.Armor["Head"]["Set"] == "Ozezan the Inferno"
+    assert build.Armor["Head"]["Weight"] == "Light"
+    assert build.FrontBarWeapon.Enchant == "Absorb Magicka"
+    assert build.FrontBarSkills[0] == "Combat Prayer"
+    assert build.ChampionPoints[0].Points == "50"
 
 
 def test_build_service_writes_expected_json(tmp_path):
@@ -96,6 +119,7 @@ def test_build_service_repeated_saves_are_reliable(tmp_path):
     path = tmp_path / "builds.json"
     service = BuildService(path)
     roster = make_roster()
+    stable_ids: tuple[str, str, str] | None = None
 
     for index in range(10):
         roster.Members[0].Notes = f"save {index}"
@@ -104,7 +128,23 @@ def test_build_service_repeated_saves_are_reliable(tmp_path):
         )
         service.save(roster)
         loaded = service.load()
-        assert loaded.to_dict() == roster.to_dict()
+        build = loaded.Members[0]
+
+        current_ids = (build.PlayerId, build.CharacterId, build.BuildId)
+        assert all(current_ids)
+        if stable_ids is None:
+            stable_ids = current_ids
+        else:
+            assert current_ids == stable_ids
+
+        assert build.Notes == roster.Members[0].Notes
+        assert build.Armor == roster.Members[0].Armor
+        assert build.FrontBarSkills == roster.Members[0].FrontBarSkills
+        assert build.BackBarSkills == roster.Members[0].BackBarSkills
+
+        # Feed the canonical identity back through the next save, just as the Builds
+        # UI does after an initial load.
+        roster = loaded
 
     assert not list(tmp_path.glob(".builds.json.*.tmp"))
 
