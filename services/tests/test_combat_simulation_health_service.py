@@ -183,3 +183,47 @@ def test_incoming_damage_missing_health_state_fails_closed() -> None:
     assert result.unresolved == (
         "Boss Cleave incoming_damage at 0.5s -> Tank 1: current and maximum Health are required",
     )
+
+
+
+def test_lethal_damage_emits_explicit_death_transition() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(_damage_event(amount=25000.0),),
+        target_state=_state(current=5000, maximum=25000),
+    )
+
+    assert [event.event_type for event in result.events] == [
+        "health_change",
+        "death",
+    ]
+    death = result.events[1].payload_dict()
+    assert death["recipient"] == "Tank 1"
+    assert death["origin_event_type"] == "incoming_damage"
+
+
+def test_nonlethal_damage_does_not_emit_death() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(_damage_event(amount=4000.0),),
+        target_state=_state(current=5000, maximum=25000),
+    )
+
+    assert [event.event_type for event in result.events] == ["health_change"]
+
+
+def test_healing_dead_recipient_does_not_imply_resurrection() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(
+            _damage_event(time_seconds=0.5, amount=25000.0),
+            _heal_event(time_seconds=1.0, amount=8000.0),
+        ),
+        target_state=_state(current=5000, maximum=25000),
+    )
+
+    assert [event.event_type for event in result.events] == [
+        "health_change",
+        "death",
+    ]
+    assert any(
+        "recipient is dead; resurrection semantics are not modeled" in message
+        for message in result.unresolved
+    )
