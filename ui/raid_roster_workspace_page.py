@@ -575,11 +575,17 @@ class RaidRosterWorkspacePage(FoundryPage):
         self.actions.saveRequested.connect(self._save_player)
         self.actions.deleteRequested.connect(self._archive_selected_player)
         self.actions.refreshRequested.connect(self.refresh)
+        self.record.screenshotImportRequested.connect(self._import_discord_profile_screenshot)
 
     def load_member(self, member_id: int) -> None:
         member = self.roster_service.get_member(int(member_id))
         if member is not None:
             self.record.load(member)
+
+    def _import_discord_profile_screenshot(self) -> None:
+        from ui.discord_profile_screenshot_import import import_discord_profile_screenshot
+
+        import_discord_profile_screenshot(self)
 
     def _new_player(self) -> None:
         self.tabs.setCurrentIndex(0)
