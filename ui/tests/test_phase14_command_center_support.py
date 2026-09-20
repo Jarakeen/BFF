@@ -65,6 +65,20 @@ def test_build_profile_support_uses_additive_sidecar_and_baseline() -> None:
     assert 'archived=not profile.archived' in source
 
 
+def test_build_profile_support_can_assign_mine_or_team_ownership_by_build_id() -> None:
+    source = _source(phase14_build_profile_support)
+
+    assert 'class _OwnershipDialog(QDialog):' in source
+    assert 'self.ownership.addItem("My Build", "mine")' in source
+    assert 'self.ownership.addItem("Team / Other Player", "team")' in source
+    assert 'self.source_owner = QLineEdit()' in source
+    assert 'build_id = _build_id(page, build)' in source
+    assert 'ownership=ownership' in source
+    assert 'source_owner=source_owner' in source
+    assert 'FoundryButton("Ownership"' in source
+    assert '"Team" if ownership == "team" else "Mine"' in source
+
+
 def test_phase14_build_inspector_uses_selected_section_tabs() -> None:
     source = _source(phase14_build_inspector_support)
 
