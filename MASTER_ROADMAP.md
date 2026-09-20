@@ -1180,8 +1180,20 @@ First control: Combat Prayer's reviewed supplemental **Minor Resolve** effect
 (2974 resistance, 10 seconds, GROUP, UNIQUE) becomes a timed simulation window.
 Exact group-recipient membership remains a later target/encounter-state responsibility.
 
-**Phase 14E validation pending:** focused skill-effect, kernel, resource, healer-output,
-and existing runtime-window/stacking suites must pass before this slice is green.
+### Phase 14E validation checkpoint — 2026-09-19
+
+User-reported focused checkpoint:
+
+- **39 passed in 5.37s**
+- reviewed skill-effect projection, healer-output/resource/kernel integration, runtime
+  windows, runtime stacking, and verified known-effect support tests are green.
+
+**Phase 14E reviewed healer skill-effect status: green.**
+
+Next implementation slice: build explicit simulation snapshots from the deterministic
+event stream so callers can ask for resource amounts and active effect windows at an
+exact simulation time without reinterpreting raw history. Snapshot projection must
+reuse the canonical event/resource/effect outputs and preserve unresolved boundaries.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
