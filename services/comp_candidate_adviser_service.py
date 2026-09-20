@@ -39,19 +39,6 @@ def _assignment_map(health: CompPlanHealth) -> dict[str, str]:
 _EVIDENCE_STATES = frozenset({"available", "conditional"})
 
 
-def _plannable_candidate_skills(candidate: CompBuildCandidate) -> tuple[str, ...]:
-    """Promote only authoritative candidate skill bars into Comp planning state."""
-    if candidate.source_kind == "saved_build" or candidate.complete_build:
-        return tuple(
-            dict.fromkeys(
-                _clean(value)
-                for value in tuple(candidate.skills or ())
-                if _clean(value)
-            )
-        )
-    return ()
-
-
 @dataclass(frozen=True)
 class CompCandidateProposal:
     seat_id: str
@@ -116,13 +103,6 @@ class CompCandidateAdviserService:
             else:
                 changes["planned_mundus"] = candidate_mundus
 
-        candidate_skills = _plannable_candidate_skills(candidate)
-        if candidate_skills and candidate_skills != tuple(chair.planned_skills or ()):
-            if chair.is_locked("skills"):
-                blocked.append("skills")
-            else:
-                changes["planned_skills"] = candidate_skills
-
         wants_saved_build_binding = candidate.source_kind == "saved_build"
         if (
             wants_saved_build_binding
@@ -142,8 +122,8 @@ class CompCandidateAdviserService:
                 candidate_id=candidate.candidate_id,
             )
 
-        # Partial reference-template skills remain evidence-only. Saved builds and
-        # complete reference builds may contribute explicit planned skill lists.
+        # Candidate skills are handled by the conservative skill-seed service.
+        # Applying gear/class/Mundus must never silently replace a skill plan.
         return changes, tuple(dict.fromkeys(blocked))
 
     def apply(
