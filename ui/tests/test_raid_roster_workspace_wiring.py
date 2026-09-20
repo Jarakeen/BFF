@@ -264,3 +264,20 @@ def test_navigation_has_app_wide_unsaved_change_contract() -> None:
     assert "def has_pending_changes(self) -> bool:" in plan
     assert "def save_pending_changes(self) -> bool:" in plan
     assert "def discard_pending_changes(self) -> bool:" in plan
+
+
+def test_personnel_exposes_social_fields_and_discord_screenshot_intake() -> None:
+    record = Path("widgets/roster_record.py").read_text(encoding="utf-8")
+    workspace = Path("ui/raid_roster_workspace_page.py").read_text(encoding="utf-8")
+    intake = Path("ui/discord_profile_screenshot_import.py").read_text(encoding="utf-8")
+
+    assert 'form.addRow("Discord", self.discord_name)' in record
+    assert 'form.addRow("YouTube", self.youtube)' in record
+    assert 'form.addRow("Twitch", self.twitch)' in record
+    assert '"Import Discord Screenshot…"' in record
+    assert "screenshotImportRequested = Signal()" in record
+    assert "self.record.screenshotImportRequested.connect(self._import_discord_profile_screenshot)" in workspace
+    assert "dialog.apply_to_record()" in intake
+    assert "create_member" not in intake
+    assert "update_member" not in intake
+    assert "Nothing is saved automatically." in intake
