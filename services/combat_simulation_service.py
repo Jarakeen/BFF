@@ -10,6 +10,7 @@ reported explicitly as unresolved instead of being treated as zero.
 from models.combat_simulation import (
     CombatSimulationEvent,
     CombatSimulationResult,
+    CombatSimulationTargetState,
     SimulationEventPriority,
 )
 from models.effective_build_snapshot import EffectiveBuildSnapshot
@@ -21,6 +22,7 @@ from services.combat_simulation_event_queue import CombatSimulationEventQueue
 from services.combat_simulation_healing_service import CombatSimulationHealingService
 from services.combat_simulation_resource_service import CombatSimulationResourceService
 from services.combat_simulation_skill_effect_service import CombatSimulationSkillEffectService
+from services.combat_simulation_target_binding_service import CombatSimulationTargetBindingService
 
 
 _CONSEQUENCE_PENDING = frozenset(
@@ -46,11 +48,13 @@ class CombatSimulationService:
         resource_service: CombatSimulationResourceService | None = None,
         healing_service: CombatSimulationHealingService | None = None,
         skill_effect_service: CombatSimulationSkillEffectService | None = None,
+        target_binding_service: CombatSimulationTargetBindingService | None = None,
     ) -> None:
         self.active_bar_assessor = active_bar_assessor or RotationActiveBarAssessor()
         self.resource_service = resource_service or CombatSimulationResourceService()
         self.healing_service = healing_service or CombatSimulationHealingService()
         self.skill_effect_service = skill_effect_service or CombatSimulationSkillEffectService()
+        self.target_binding_service = target_binding_service or CombatSimulationTargetBindingService()
 
     def simulate(
         self,
@@ -58,6 +62,7 @@ class CombatSimulationService:
         build_snapshot: EffectiveBuildSnapshot,
         plan: RotationPlan,
         initial_bar: str = "front",
+        target_state: CombatSimulationTargetState | None = None,
     ) -> CombatSimulationResult:
         if not isinstance(build_snapshot, EffectiveBuildSnapshot):
             raise TypeError("combat simulation requires EffectiveBuildSnapshot")
@@ -135,13 +140,20 @@ class CombatSimulationService:
                     f"{kind.value} consequence projection not yet wired in Phase 14"
                 )
 
+        target_projection = self.target_binding_service.bind(
+            events=tuple(events),
+            target_state=target_state,
+        )
+        unresolved.extend(target_projection.unresolved)
+
         return CombatSimulationResult(
             duration_seconds=plan.duration_seconds,
             initial_bar=assessment.initial_bar,
             final_bar=assessment.final_bar,
-            events=tuple(events),
+            events=target_projection.events,
             resources=tuple(resources),
             effect_windows=tuple(effects.windows),
+            target_state=target_state,
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
