@@ -2080,11 +2080,26 @@ def _save_to_originating_raid_plan(page) -> bool:
             refresh_names()
             page.plan_name_input.setText(plan.name)
         saved_builds = tuple(getattr(build_result, "saved_seats", ()) or ())
+        skipped_builds = tuple(getattr(build_result, "skipped_seats", ()) or ())
+        if not saved_builds and any(
+            getattr(chair, "player_name", None)
+            and not getattr(chair, "is_open_player", False)
+            for chair in getattr(state, "chairs", ())
+        ):
+            page.status.warning(
+                f"Raid Plan saved, but no canonical Comp Builds were created for {plan.name}. "
+                "The occupied chairs are missing resolvable Personnel/build planning identity. "
+                "Reload the team from Roster/Assignments, then save the Comp again."
+            )
+            return True
+
         build_detail = (
             f" Saved {len(saved_builds)} canonical Comp Build(s)."
             if saved_builds
             else ""
         )
+        if skipped_builds:
+            build_detail += f" Skipped {len(skipped_builds)} unresolved/open chair(s)."
         page.status.success(
             f"Saved Comp Builder changes to Raid Plan: {plan.name}." + build_detail
         )
