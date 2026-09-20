@@ -13,6 +13,9 @@ contains Build + Foundation, and Foundation already contains Application descrip
 """
 
 from services.comp_maker_catalog_descriptors import COMP_MAKER_LOCAL_SERVICE_DESCRIPTORS
+from services.combat_simulation_catalog_descriptors import (
+    COMBAT_SIMULATION_SERVICE_DESCRIPTORS,
+)
 from services.extreme_actual_heal_catalog_descriptors import (
     EXTREME_ACTUAL_HEAL_SERVICE_DESCRIPTORS,
 )
@@ -54,6 +57,7 @@ from services.team_workflow_catalog_descriptors import TEAM_WORKFLOW_SERVICE_DES
 
 
 ALL_EXTENSION_SERVICE_DESCRIPTORS = (
+    *COMBAT_SIMULATION_SERVICE_DESCRIPTORS,
     *COMP_MAKER_LOCAL_SERVICE_DESCRIPTORS,
     *RAID_PLAN_SERVICE_DESCRIPTORS,
     *EXTREME_SERVICE_DESCRIPTORS,
