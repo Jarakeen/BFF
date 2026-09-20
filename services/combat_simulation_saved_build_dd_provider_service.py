@@ -1,0 +1,462 @@
+from __future__ import annotations
+
+"""Compose canonical saved-build DD action damage for Combat Simulation.
+
+This module is simulation composition only. It owns no ESO damage formulas. Skill,
+Light Attack, Heavy Attack, Ultimate, periodic timing, static build state, target
+mitigation, and execute semantics remain with their existing canonical services.
+"""
+
+from dataclasses import dataclass, replace
+from pathlib import Path
+from typing import Callable
+
+from engine.config import get_data_dir
+from minmax.build_candidate_damage import calculation_result_from_build_context
+from minmax.combat_state import CombatState
+from minmax.combat_state_snapshot import CombatStateSnapshot
+from minmax.evaluation_context import EvaluationContext
+from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from models.build_model import PlayerBuild
+from services.rotation_active_bar_context_resolver_service import (
+    RotationActiveBarContextResolverService,
+)
+from services.rotation_candidate_action_damage_evidence_service import (
+    RotationActionDamageProvider,
+    RotationCandidateActionDamageEvidenceService,
+)
+from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
+from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+from services.rotation_candidate_heavy_attack_damage_evidence_service import (
+    RotationCandidateHeavyAttackDamageEvidenceService,
+)
+from services.rotation_candidate_light_attack_damage_evidence_service import (
+    RotationCandidateLightAttackDamageEvidenceService,
+)
+from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    RotationCandidatePeriodicDamageRuntimeProjectionService,
+)
+from services.rotation_candidate_periodic_damage_timing_evidence_service import (
+    RotationCandidatePeriodicDamageTimingEvidenceService,
+)
+from services.rotation_candidate_skill_damage_evidence_service import (
+    RotationCandidateSkillDamageEvidenceService,
+)
+from services.rotation_candidate_ultimate_damage_evidence_service import (
+    RotationCandidateUltimateDamageEvidenceService,
+)
+from services.rotation_dd_output_context_relevance_service import (
+    RotationDDOutputContextRelevanceService,
+)
+from services.rotation_dd_periodic_runtime_semantics_registry_service import (
+    RotationDDPeriodicRuntimeSemanticsRegistryService,
+)
+from services.rotation_heavy_sustain_projection_service import (
+    RotationHeavySustainProjectionService,
+)
+from services.rotation_saved_build_weapon_attack_evaluation_service import (
+    RotationSavedBuildWeaponAttackEvaluationService,
+)
+from services.rotation_static_build_context_service import (
+    RotationStaticBuildContextResolution,
+    RotationStaticBuildContextService,
+)
+
+
+_DD_ROLE_KEYS = {"dd", "dps", "damage", "damage dealer", "damage_dealer"}
+
+TargetCombatStateResolver = Callable[[float, int | None], CombatState]
+TargetResistanceResolver = Callable[[float, int | None], float]
+TargetSnapshotResolver = Callable[[float, int | None], CombatStateSnapshot | None]
+
+
+@dataclass(frozen=True)
+class CombatSimulationSavedBuildDDProviderResolution:
+    provider: RotationActionDamageProvider | None
+    static_context: RotationStaticBuildContextResolution | None = None
+    unresolved: tuple[str, ...] = ()
+
+    @property
+    def resolved(self) -> bool:
+        return self.provider is not None and not self.unresolved
+
+
+class _UnresolvedDamageProvider:
+    def __init__(self, unresolved: tuple[str, ...]) -> None:
+        self.unresolved = tuple(
+            dict.fromkeys(
+                str(message).strip()
+                for message in unresolved
+                if str(message).strip()
+            )
+        ) or ("canonical damage evidence is unresolved",)
+
+    def evaluate_action(self, *, candidate, action) -> RotationActionDamageEvidence:
+        del candidate
+        return RotationActionDamageEvidence(
+            time_seconds=action.time_seconds,
+            sequence=action.sequence,
+            damage_value=None,
+            unresolved=self.unresolved,
+        )
+
+
+class _StaticBarAwareSkillProvider:
+    def __init__(
+        self,
+        *,
+        database_path: Path,
+        static_context: RotationStaticBuildContextResolution,
+        plan: RotationPlan,
+        target_resistance: float,
+        target_combat_state_resolver: TargetCombatStateResolver | None,
+        target_resistance_resolver: TargetResistanceResolver | None,
+        target_snapshot_resolver: TargetSnapshotResolver | None,
+        execute_target_identity: str,
+        initial_bar: str,
+    ) -> None:
+        self.database_path = database_path
+        self.static_context = static_context
+        self.plan = plan
+        self.target_resistance = float(target_resistance)
+        self.target_combat_state_resolver = target_combat_state_resolver
+        self.target_resistance_resolver = target_resistance_resolver
+        self.target_snapshot_resolver = target_snapshot_resolver
+        self.execute_target_identity = str(execute_target_identity or "").strip()
+        self.initial_bar = str(initial_bar or "").strip().casefold()
+        self.semantics = RotationDDPeriodicRuntimeSemanticsRegistryService().load()
+        self.periodic_projection = (
+            RotationCandidatePeriodicDamageRuntimeProjectionService(
+                RotationCandidatePeriodicDamageTimingEvidenceService(database_path)
+            )
+            if self.semantics
+            else None
+        )
+
+    def evaluate_action(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageEvidence:
+        if action.kind is not RotationActionKind.SKILL:
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=None,
+                unresolved=(
+                    f"{action.kind.value} damage requires its dedicated canonical action evaluator",
+                ),
+            )
+
+        resolver = RotationActiveBarContextResolverService(
+            static_context=self.static_context,
+            plan=candidate.plan,
+            initial_bar=self.initial_bar,
+        )
+        context = resolver.context_at(action.time_seconds, action.sequence)
+        target_resistance = (
+            float(self.target_resistance_resolver(action.time_seconds, action.sequence))
+            if self.target_resistance_resolver is not None
+            else self.target_resistance
+        )
+        context = replace(
+            context,
+            target_resistance=target_resistance,
+            fight_duration=float(candidate.plan.duration_seconds),
+        )
+        target_state = (
+            self.target_combat_state_resolver(action.time_seconds, action.sequence)
+            if self.target_combat_state_resolver is not None
+            else None
+        )
+        return RotationCandidateSkillDamageEvidenceService(
+            database_path=self.database_path,
+            context=context,
+            target_combat_state=target_state,
+            periodic_runtime_projection_service=self.periodic_projection,
+            periodic_runtime_semantics=self.semantics,
+            runtime_target_combat_state_resolver=self.target_combat_state_resolver,
+            runtime_target_resistance_resolver=self.target_resistance_resolver,
+            runtime_target_snapshot_resolver=self.target_snapshot_resolver,
+            execute_target_identity=self.execute_target_identity,
+        ).evaluate_action(
+            candidate=candidate,
+            action=action,
+        )
+
+
+class _StaticBarAwareLightAttackProvider:
+    def __init__(
+        self,
+        *,
+        weapon_resolution,
+        static_context: RotationStaticBuildContextResolution,
+        target_resistance: float,
+        target_combat_state_resolver: TargetCombatStateResolver | None,
+        target_resistance_resolver: TargetResistanceResolver | None,
+        initial_bar: str,
+    ) -> None:
+        self.weapon_resolution = weapon_resolution
+        self.static_context = static_context
+        self.target_resistance = float(target_resistance)
+        self.target_combat_state_resolver = target_combat_state_resolver
+        self.target_resistance_resolver = target_resistance_resolver
+        self.initial_bar = str(initial_bar or "").strip().casefold()
+
+    def evaluate_action(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageEvidence:
+        resolver = RotationActiveBarContextResolverService(
+            static_context=self.static_context,
+            plan=candidate.plan,
+            initial_bar=self.initial_bar,
+        )
+        context = resolver.context_at(action.time_seconds, action.sequence)
+        evaluation = self.weapon_resolution.evaluation_for(context.active_bar)
+        calculation = calculation_result_from_build_context(context)
+        if evaluation is None or calculation is None:
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=None,
+                unresolved=(
+                    f"{context.active_bar} canonical light-attack evaluation is unavailable",
+                ),
+            )
+        evaluation = replace(evaluation, stats=calculation)
+        target_state = (
+            self.target_combat_state_resolver(action.time_seconds, action.sequence)
+            if self.target_combat_state_resolver is not None
+            else None
+        )
+        resistance = (
+            float(self.target_resistance_resolver(action.time_seconds, action.sequence))
+            if self.target_resistance_resolver is not None
+            else self.target_resistance
+        )
+        return RotationCandidateLightAttackDamageEvidenceService(
+            build=self.weapon_resolution.build,
+            evaluation=evaluation,
+            initial_bar=self.initial_bar,
+            evaluation_context=EvaluationContext(
+                fight_duration=float(candidate.plan.duration_seconds),
+                target_resistance=resistance,
+            ),
+            attacker_combat_state=getattr(context, "combat_state", None),
+            target_combat_state=target_state,
+        ).evaluate_action(candidate=candidate, action=action)
+
+
+class _StaticBarAwareHeavyAttackProvider:
+    def __init__(
+        self,
+        *,
+        weapon_resolution,
+        static_context: RotationStaticBuildContextResolution,
+        target_resistance: float,
+        target_combat_state_resolver: TargetCombatStateResolver | None,
+        target_resistance_resolver: TargetResistanceResolver | None,
+        initial_bar: str,
+    ) -> None:
+        self.weapon_resolution = weapon_resolution
+        self.static_context = static_context
+        self.target_resistance = float(target_resistance)
+        self.target_combat_state_resolver = target_combat_state_resolver
+        self.target_resistance_resolver = target_resistance_resolver
+        self.initial_bar = str(initial_bar or "").strip().casefold()
+
+    def evaluate_action(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageEvidence:
+        resolver = RotationActiveBarContextResolverService(
+            static_context=self.static_context,
+            plan=candidate.plan,
+            initial_bar=self.initial_bar,
+        )
+        context = resolver.context_at(action.time_seconds, action.sequence)
+        evaluation = self.weapon_resolution.evaluation_for(context.active_bar)
+        calculation = calculation_result_from_build_context(context)
+        if evaluation is None or calculation is None:
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=None,
+                unresolved=(
+                    f"{context.active_bar} canonical heavy-attack evaluation is unavailable",
+                ),
+            )
+        evaluation = replace(evaluation, stats=calculation)
+
+        completion_evidence = (
+            RotationHeavySustainProjectionService.completion_evidence_from_verified_reservations(
+                candidate.plan
+            )
+        )
+        completion = next(
+            (
+                item
+                for item in completion_evidence
+                if item.action_time_seconds == action.time_seconds
+                and item.action_sequence == action.sequence
+            ),
+            None,
+        )
+        target_time = (
+            float(completion.completion_time_seconds)
+            if completion is not None
+            else float(action.time_seconds)
+        )
+        target_sequence = None if completion is not None else int(action.sequence)
+        target_state = (
+            self.target_combat_state_resolver(target_time, target_sequence)
+            if self.target_combat_state_resolver is not None
+            else None
+        )
+        resistance = (
+            float(self.target_resistance_resolver(target_time, target_sequence))
+            if self.target_resistance_resolver is not None
+            else self.target_resistance
+        )
+        return RotationCandidateHeavyAttackDamageEvidenceService(
+            build=self.weapon_resolution.build,
+            evaluation=evaluation,
+            initial_bar=self.initial_bar,
+            completion_evidence=completion_evidence,
+            evaluation_context=EvaluationContext(
+                fight_duration=float(candidate.plan.duration_seconds),
+                target_resistance=resistance,
+            ),
+            attacker_combat_state=getattr(context, "combat_state", None),
+            target_combat_state=target_state,
+        ).evaluate_action(candidate=candidate, action=action)
+
+
+class CombatSimulationSavedBuildDDProviderService:
+    """Compose the canonical DD action provider for one saved build and plan."""
+
+    def __init__(
+        self,
+        *,
+        database_path: str | Path | None = None,
+        static_context_service: RotationStaticBuildContextService | None = None,
+        weapon_evaluation_service: RotationSavedBuildWeaponAttackEvaluationService | None = None,
+        relevance_service: RotationDDOutputContextRelevanceService | None = None,
+    ) -> None:
+        self.database_path = (
+            Path(database_path)
+            if database_path is not None
+            else get_data_dir() / "eso.db"
+        )
+        self.static_context_service = (
+            static_context_service or RotationStaticBuildContextService()
+        )
+        self.weapon_evaluation_service = (
+            weapon_evaluation_service
+            or RotationSavedBuildWeaponAttackEvaluationService(self.database_path)
+        )
+        self.relevance_service = relevance_service or RotationDDOutputContextRelevanceService()
+
+    def resolve(
+        self,
+        *,
+        player_build: PlayerBuild,
+        plan: RotationPlan,
+        target_resistance: float,
+        initial_bar: str = "front",
+        target_combat_state_resolver: TargetCombatStateResolver | None = None,
+        target_resistance_resolver: TargetResistanceResolver | None = None,
+        target_snapshot_resolver: TargetSnapshotResolver | None = None,
+        execute_target_identity: str = "",
+    ) -> CombatSimulationSavedBuildDDProviderResolution:
+        role = " ".join(str(getattr(player_build, "Role", "") or "").strip().casefold().replace("_", " ").split())
+        if role not in _DD_ROLE_KEYS:
+            return CombatSimulationSavedBuildDDProviderResolution(
+                provider=None,
+                unresolved=(
+                    "combat simulation canonical DD provider requires a saved damage-dealer build",
+                ),
+            )
+
+        static_context = self.static_context_service.resolve(player_build)
+        relevance = self.relevance_service.classify(static_context.unresolved)
+        filtered = replace(static_context, unresolved=tuple(relevance.relevant))
+        if not filtered.resolved:
+            unresolved = tuple(filtered.unresolved)
+            if not filtered.progression.resolved and not unresolved:
+                unresolved = ("canonical DD character progression is unresolved",)
+            if not filtered.contexts and not unresolved:
+                unresolved = ("canonical DD static build contexts are unavailable",)
+            return CombatSimulationSavedBuildDDProviderResolution(
+                provider=None,
+                static_context=filtered,
+                unresolved=unresolved,
+            )
+
+        skill = _StaticBarAwareSkillProvider(
+            database_path=self.database_path,
+            static_context=filtered,
+            plan=plan,
+            target_resistance=float(target_resistance),
+            target_combat_state_resolver=target_combat_state_resolver,
+            target_resistance_resolver=target_resistance_resolver,
+            target_snapshot_resolver=target_snapshot_resolver,
+            execute_target_identity=execute_target_identity,
+            initial_bar=initial_bar,
+        )
+        ultimate = RotationCandidateUltimateDamageEvidenceService(
+            skill_damage_delegate=skill,
+        )
+
+        weapon_resolution = self.weapon_evaluation_service.resolve(
+            player_build=player_build,
+            static_context=filtered,
+        )
+        if weapon_resolution.resolved:
+            light: RotationActionDamageProvider | None = _StaticBarAwareLightAttackProvider(
+                weapon_resolution=weapon_resolution,
+                static_context=filtered,
+                target_resistance=float(target_resistance),
+                target_combat_state_resolver=target_combat_state_resolver,
+                target_resistance_resolver=target_resistance_resolver,
+                initial_bar=initial_bar,
+            )
+            heavy: RotationActionDamageProvider | None = _StaticBarAwareHeavyAttackProvider(
+                weapon_resolution=weapon_resolution,
+                static_context=filtered,
+                target_resistance=float(target_resistance),
+                target_combat_state_resolver=target_combat_state_resolver,
+                target_resistance_resolver=target_resistance_resolver,
+                initial_bar=initial_bar,
+            )
+        else:
+            unresolved_weapon = _UnresolvedDamageProvider(weapon_resolution.unresolved)
+            light = unresolved_weapon
+            heavy = unresolved_weapon
+
+        router = RotationCandidateActionDamageEvidenceService(
+            skill_provider=skill,
+            light_attack_provider=light,
+            heavy_attack_provider=heavy,
+            ultimate_provider=ultimate,
+        )
+        return CombatSimulationSavedBuildDDProviderResolution(
+            provider=router,
+            static_context=filtered,
+            unresolved=(),
+        )
+
+
+__all__ = [
+    "CombatSimulationSavedBuildDDProviderResolution",
+    "CombatSimulationSavedBuildDDProviderService",
+    "TargetCombatStateResolver",
+    "TargetResistanceResolver",
+    "TargetSnapshotResolver",
+]
