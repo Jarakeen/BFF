@@ -530,7 +530,15 @@ class SettingsPage(QWidget):
             "BuildsExportFolder": self.builds_export_folder.text().strip(),
             "EsoLogsClientId": self.eso_logs_client_id.text().strip(),
             "EsoLogsClientSecret": self.eso_logs_client_secret.text(),
-            "FinchApiUrl": self.finch_api_url.text().strip().rstrip("/"),
+            "FinchApiUrl": (
+                self.finch_api_url.text().strip().rstrip("/")
+                if "://" in self.finch_api_url.text().strip()
+                else (
+                    "https://" + self.finch_api_url.text().strip().rstrip("/")
+                    if self.finch_api_url.text().strip()
+                    else ""
+                )
+            ),
             "FinchApiKey": self.finch_api_key.text(),
             "GoogleCredentialsPath": self.google_credentials.text().strip(),
             "GoogleSpreadsheetId": self.google_spreadsheet_id.text().strip(),
@@ -567,6 +575,9 @@ class SettingsPage(QWidget):
 
     def test_finch(self):
         url = self.finch_api_url.text().strip().rstrip("/")
+        if url and "://" not in url:
+            url = "https://" + url
+            self.finch_api_url.setText(url)
         key = self.finch_api_key.text().strip()
         if not url or not key:
             self.integration_labels["finch"].setText("●  Not configured")
