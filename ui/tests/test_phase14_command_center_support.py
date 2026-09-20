@@ -41,6 +41,9 @@ def test_build_command_center_exposes_selected_library_views_and_filters() -> No
     assert '("Class", page.phase14_class_filter)' in source
     assert '("Role", page.phase14_role_filter)' in source
     assert '("Content", page.phase14_content_filter)' in source
+    assert '("Source", page.phase14_source_filter)' in source
+    assert 'page.phase14_source_filter.addItem("Comp Builds", "comp")' in source
+    assert 'page.phase14_source_filter.addItem("Saved Builds", "saved")' in source
     assert "self.splitter.replaceWidget(0, command_center)" in source
     assert "setUsesScrollButtons(False)" in source
 
@@ -195,3 +198,15 @@ def test_phase14_selected_build_identity_uses_compact_hero_title_not_page_title(
 
     assert 'title.setProperty("heroTitle", True)' in source
     assert 'title.setProperty("pageTitle", True)' not in source
+
+
+def test_build_command_center_keeps_comp_tab_and_source_filter_in_sync() -> None:
+    source = _source(phase14_builds_command_center_support)
+
+    assert 'if mode == "Comp Builds":' in source
+    assert 'wanted = source_filter.findData("comp")' in source
+    assert 'source_filter.setCurrentIndex(wanted if wanted >= 0 else 0)' in source
+    assert 'if selected_source == "comp" and build_kind != "comp":' in source
+    assert 'if selected_source == "saved" and build_kind == "comp":' in source
+    assert "setUsesScrollButtons(True)" in source
+    assert "setMinimumWidth(650)" in source
