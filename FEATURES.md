@@ -11,6 +11,7 @@
 - **Phase 14 reviewed healer periodic timing** — expands periodic-heal seeds into deterministic heal ticks only from canonical cadence/duration plus explicitly reviewed runtime timing/refresh evidence; supports reviewed fixture loading without promoting candidate evidence or guessing fixture paths.
 - **Phase 14 reviewed healer skill effects** — projects reviewed bounded cast effects into deterministic apply/expire windows, reusing canonical skill-effect identity and runtime stacking; Combat Prayer Minor Resolve is the first control, while exact group recipients remain unresolved until target state is modeled.
 - **Phase 14 exact-time simulation snapshots** — reads active bar, current resource amounts, canonical active effect windows, and unresolved boundaries from an already-computed deterministic simulation without recalculating ESO mechanics.
+- **Phase 14 explicit recipient binding** — carries known self/ally/enemy combatants and exact event-scoped recipient bindings through simulation and snapshots; missing, unknown, or scope-conflicting recipients remain unresolved rather than being inferred from roster membership or geometry.
 
 - **Phase 12.5 canonical closeout audit** — a read-only real-data audit checks persisted Raid Plans against reusable saved Builds and Roster identities, preserving recruit/open chairs, stable player/character/build IDs, locked class/role/gear choices, assignment provenance, explicit unresolved state, temporary-only persistence round-trips, and Optimizer Adviser non-mutation.
 
