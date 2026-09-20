@@ -17,6 +17,20 @@ from services.service_catalog import (
 
 INFRASTRUCTURE_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
     ServiceDescriptor(
+        service_id="infrastructure.discord_companion_projection",
+        domain="infrastructure",
+        purpose="Project authoritative FoundryDock Raid Plan, Personnel, Team schedule, encounter strategy, and user-owned raid-map state into Discord-safe companion responses.",
+        implementation_path="services.discord_companion_service",
+        inputs=("RaidPlan", "RosterMember", "TeamSchedule", "EncounterGuideEvidence", "EncounterRaidMap"),
+        outputs=("DiscordRaidBrief", "DiscordBuildBrief", "DiscordStrategyBrief", "DiscordRaidMapBrief"),
+        responsibilities=("discord_companion_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        ui_safe=True,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.NONE,
+        notes="Discord is a delivery surface only. The service does not persist parallel raid/build/strategy truth and does not require member-facing OAuth.",
+    ),
+    ServiceDescriptor(
         service_id="infrastructure.settings.persistence",
         domain="infrastructure",
         purpose="Load and persist FoundryDock application settings while resolving configured paths and keeping the ESO Logs client secret out of ordinary settings JSON when OS keyring storage is available.",
