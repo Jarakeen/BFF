@@ -8,8 +8,8 @@ def test_phase14_comp_builder_visible_shell_matches_approved_work_chat_contract(
     assert 'matrix.set_title("Recommended Team Plan")' in source
     assert 'details.set_title("Why This Plan")' in source
     assert 'coverage.set_title("Team Health")' in source
-    assert 'generate.setText("Generate Team Plan")' in source
-    assert 'load_team.setText("Load Team")' in source
+    assert 'generate.setText("Auto-Fill Builds")' in source
+    assert 'load_team.setText("Load Players")' in source
     assert 'save.setText("Save Plan")' in source
     assert 'send.setText("Send to Raid Plan")' in source
 
@@ -53,8 +53,9 @@ def test_phase14_comp_builder_health_summarizes_coverage_duplicates_and_recruits
     assert '("MISSING",' in source
     assert '("DUPLICATE",' in source
     assert '("RECRUIT NEED",' in source
-    assert "polish.coverage_from_candidate_rows" in source
-    assert "set_counts: Counter[str]" in source
+    assert "CompPlanHealthService" in source
+    assert "health = _cached_comp_health(page, state)" in source
+    assert "health.planned_or_static_required_count" in source
 
 
 def test_phase14_comp_builder_shell_installs_after_legacy_extensions() -> None:
@@ -130,7 +131,8 @@ def test_phase14_why_choices_apply_to_selected_chair() -> None:
     source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
 
     assert 'setProperty("compCandidateChoice", True)' in source
-    assert "candidate_support._set_candidate_for_row(page, row, candidate)" in source
+    assert "CompCandidateAdviserService(DEFAULT_DATABASE).apply(" in source
+    assert "page._comp_plan_state = updated" in source
     assert "page.comp_phase14_recommendation_frame._comp_candidate = preferred" in source
     assert "page.comp_phase14_alt_one_frame._comp_candidate = alt_one" in source
     assert "page.comp_phase14_alt_two_frame._comp_candidate = alt_two" in source
@@ -152,8 +154,10 @@ def test_phase14_comp_builder_save_updates_or_creates_raid_plan_not_template_fil
     source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
 
     assert "def _save_to_originating_raid_plan(page)" in source
-    assert "candidate_support.save_generated_plan(page)" in source
-    assert '"_persist_generated_comp_plan_to_raid_plan"' in source
+    assert "CompBuildPersistenceService(get_data_dir())" in source
+    assert '"_persist_comp_plan_state_to_raid_plan"' in source
+    assert "candidate_support.save_generated_plan(page)" not in source
+    assert '"_persist_generated_comp_plan_to_raid_plan"' not in source
     assert "page._raid_plan_origin_id = plan.plan_id" in source
     assert 'refresh_names = getattr(page, "_refresh_raid_plan_name_choices", None)' in source
     assert "Open it from Raid Plan first" not in source
@@ -188,15 +192,17 @@ def test_phase14_final_shell_reapplies_recruit_class_constraints() -> None:
     assert "def apply_roster_context_with_shell(self, *args, **kwargs)" in source
 
 
-def test_phase14_save_materializes_visible_recommendations_before_draft_persistence() -> None:
+def test_phase14_save_persists_explicit_canonical_state_without_materializing_visible_suggestions() -> None:
     source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
 
-    assert "def _materialize_visible_recommendations(page)" in source
-    assert "if slot_name in applied:" in source
-    assert "candidate_support._set_candidate_for_row(page, row, candidates[0])" in source
-    assert source.index("_materialize_visible_recommendations(page)") < source.index(
-        "candidate_support.save_generated_plan(page)"
-    )
+    save_block = source.split("def _save_to_originating_raid_plan(page)", 1)[1].split(
+        "def _has_pending_changes", 1
+    )[0]
+    assert "_sync_context_into_comp_state(page)" in save_block
+    assert "CompBuildPersistenceService(get_data_dir())" in save_block
+    assert 'getattr(window, "_persist_comp_plan_state_to_raid_plan", None)' in save_block
+    assert "_materialize_visible_recommendations(page)" not in save_block
+    assert "save_generated_plan(page)" not in save_block
 
 
 def test_comp_to_raid_plan_bridge_verifies_exact_repository_round_trip() -> None:
@@ -236,11 +242,13 @@ def test_phase14_comp_builder_can_pick_individual_sets_per_chair() -> None:
 
     assert "def _toggle_manual_set(page, set_name: str)" in source
     assert '"_comp_manual_gear_sets_by_slot"' in source
-    assert '"CHOOSE SETS FOR THIS CHAIR • pick up to 2"' in source
-    assert "button.setCheckable(True)" in source
-    assert "if len(current) >= 2:" in source
+    assert 'heading = QLabel("ASSIGN GEAR")' in source
+    assert 'picker.setPlaceholderText("Search all gear sets…")' in source
+    assert "_add_planned_gear_set(page, set_name)" in source
+    assert "_remove_planned_gear_set(page, set_name)" in source
     assert "_refresh_manual_set_picker(page, candidates)" in source
-    assert 'build_label = " + ".join(manual_sets) if manual_sets else _candidate_label(candidate)' in source
+    assert '" + ".join(state_sets)' in source
+    assert '" + ".join(manual_sets)' in source
 
 
 def test_raid_plan_reopens_comp_with_planned_manual_sets() -> None:
@@ -273,7 +281,7 @@ def test_raid_plan_class_only_recruit_chair_is_handed_to_comp_maker() -> None:
 def test_recruit_with_applied_or_manual_sets_is_not_labeled_needs_gear() -> None:
     source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
 
-    assert 'planned_gear = bool(manual_sets or applied_sets)' in source
+    assert 'planned_gear = bool(state_sets or manual_sets or applied_sets)' in source
     assert 'return "Planned gear" if planned_gear else "Needs gear"' in source
     assert 'if applied or manual_sets:' in source
 
@@ -288,7 +296,8 @@ def test_comp_maker_plan_name_is_editable_saved_raid_plan_picker() -> None:
     assert "self.raid_plan_repository = RaidPlanRepository" in source
     assert "self._refresh_raid_plan_name_choices()" in source
     assert "self.plan_name_input.activated.connect(self._raid_plan_name_selected)" in source
-    assert "apply_context(plan.name, members, group_size=12)" in source
+    assert "group_size=self._raid_plan_group_size(plan)" in source
+    assert "def _raid_plan_group_size(plan) -> int:" in source
     assert "self._raid_plan_origin_id = plan.plan_id" in source
 
 
