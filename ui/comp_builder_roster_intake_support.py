@@ -386,6 +386,21 @@ def _sync_comp_state_from_matches(page, matched, assignments: dict[int, dict] | 
         if not chair.is_locked("player"):
             changes["player_name"] = "" if recruit else player
 
+        member_id = int(member.Id) if getattr(member, "Id", None) is not None else -1
+        canonical_player_id = str(
+            getattr(member, "CanonicalPlayerId", "") or ""
+        ).strip()
+        canonical_character_id = str(
+            getattr(member, "CanonicalCharacterId", "") or ""
+        ).strip()
+        if not recruit:
+            if member_id > 0:
+                changes["roster_member_id"] = member_id
+            if canonical_player_id and not chair.is_locked("player"):
+                changes["player_id"] = canonical_player_id
+            if canonical_character_id and not chair.is_locked("character"):
+                changes["character_id"] = canonical_character_id
+
         character = str(getattr(member, "CharacterName", "") or "").strip()
         if character and not chair.is_locked("character"):
             changes["character_name"] = character
@@ -398,7 +413,6 @@ def _sync_comp_state_from_matches(page, matched, assignments: dict[int, dict] | 
         if eso_class and not chair.is_locked("class"):
             changes["eso_class"] = eso_class
 
-        member_id = int(member.Id) if getattr(member, "Id", None) is not None else -1
         assignment = assignments.get(member_id, {})
         primary = str(assignment.get("primary_assignment", "") or "").strip()
         secondary = str(assignment.get("secondary_assignment", "") or "").strip()
