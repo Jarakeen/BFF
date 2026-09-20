@@ -299,3 +299,30 @@ def test_builds_edit_preserves_comp_build_id_and_kind(tmp_path: Path) -> None:
     record = next(row for row in catalog["builds"] if row["build_id"] == original_id)
     assert record["build_kind"] == "comp"
     assert record["source"]["kind"] == "comp_maker"
+
+
+def test_comp_build_created_after_initial_build_service_load_appears_on_reload(
+    tmp_path: Path,
+) -> None:
+    player_id, character_id = _seed_catalog(tmp_path)
+    builds = BuildService(tmp_path / "builds.json")
+
+    initial = builds.load()
+    assert not [
+        build for build in initial.Members
+        if str(getattr(build, "BuildKind", "") or "").casefold() == "comp"
+    ]
+
+    result = _service(tmp_path).persist(_state(player_id, character_id))
+    chair = result.state.chair("DD1")
+    assert chair is not None and chair.selected_build_id
+
+    refreshed = builds.load()
+    comp = next(
+        build for build in refreshed.Members
+        if build.BuildId == chair.selected_build_id
+    )
+    assert comp.BuildKind == "comp"
+    assert comp.SourcePlanId == "plan-1"
+    assert comp.SourceSeatId == "DD1"
+    assert comp.PlannedGearSets == ["Corpseburster", "Null Arca"]
