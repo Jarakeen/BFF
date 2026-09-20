@@ -1072,8 +1072,20 @@ Implemented:
 Initial scope is Magicka for the healer control. Stamina/Health primary-resource
 projection and Ultimate economy remain later resource slices rather than being guessed.
 
-**Phase 14B validation pending:** focused resource-adapter, simulation-kernel, Phase 4
-sustain, and Rotation sustain tests must pass before this slice is called green.
+### Phase 14B validation checkpoint — 2026-09-19
+
+User-reported focused checkpoint:
+
+- **23 passed in 3.04s**
+- resource adapter, simulation kernel, Rotation sustain, named-build sustain, and
+  Phase 4 build sustain tests are green.
+
+**Phase 14B healer Magicka/resource slice status: green.**
+
+Next implementation slice: connect supported healer skills to the existing healing
+resolution engine so direct/periodic healing events become explicit simulation
+consequences. Buff/debuff/proc application remains a separate following slice and must
+not be implied merely because healing magnitude is known.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
