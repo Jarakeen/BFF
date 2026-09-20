@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import Counter
-import json
 from types import SimpleNamespace
 
 from PySide6.QtCore import Qt, Signal
@@ -10,7 +9,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFrame,
     QHBoxLayout,
-    QInputDialog,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -24,12 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_data_dir
-from services.eso_database import EsoDatabase
 from services.raid_plan_repository import RaidPlanRepository
-from services.generated_roster_plan_service import (
-    GeneratedRosterDraftService,
-    GeneratedRosterDraftSlot,
-)
 from services.team_composition_catalog import (
     CompositionSlot,
     TeamCompositionCatalog,
@@ -93,8 +86,6 @@ class CompBuilderPage(FoundryPage):
         data_dir = get_data_dir()
         self.catalog = TeamCompositionCatalog(data_dir / "team_compositions.json")
         self.snapshot = self.catalog.load()
-        self.user_template_path = data_dir / "team_composition_user_templates.json"
-        self.plan_service = GeneratedRosterDraftService(EsoDatabase(data_dir / "eso.db"))
         self.raid_plan_repository = RaidPlanRepository(data_dir / "raid_plans.json")
         self.current_template: TeamCompositionTemplate | None = None
         self.current_slots: tuple[CompositionSlot, ...] = ()
@@ -409,10 +400,10 @@ class CompBuilderPage(FoundryPage):
         actions_card.addLayout(name_row)
 
         action_buttons = QHBoxLayout()
-        self.send_button = QPushButton("Send to Roster")
+        self.send_button = QPushButton("Send to Raid Plan")
         self.send_button.setProperty("primary", True)
-        self.save_template_button = QPushButton("Save")
-        self.load_template_button = QPushButton("Load")
+        self.save_template_button = QPushButton("Save Plan")
+        self.load_template_button = QPushButton("Legacy Load")
         action_buttons.addWidget(self.send_button, 2)
         action_buttons.addWidget(self.save_template_button, 1)
         action_buttons.addWidget(self.load_template_button, 1)
@@ -692,156 +683,20 @@ class CompBuilderPage(FoundryPage):
             f"MECHANIC JOBS\n{job_summary}"
         )
 
-    def _read_user_templates(self) -> dict[str, object]:
-        if not self.user_template_path.is_file():
-            return {"schema_version": 1, "templates": []}
-        try:
-            raw = json.loads(self.user_template_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return {"schema_version": 1, "templates": []}
-        if not isinstance(raw, dict) or not isinstance(raw.get("templates"), list):
-            return {"schema_version": 1, "templates": []}
-        return raw
-
     def _save_user_template(self, *_args) -> None:
-        name = self.plan_name_input.text().strip()
-        if not name:
-            self.status.warning("Give the composition a plan name before saving it.")
-            return
-
-        raw = self._read_user_templates()
-        templates = [
-            row
-            for row in raw.get("templates", [])
-            if isinstance(row, dict) and str(row.get("name", "")).casefold() != name.casefold()
-        ]
-        templates.append(
-            {
-                "name": name,
-                "goal": self.goal_combo.currentText().strip() or "Custom Goal",
-                "difficulty": self.difficulty_combo.currentText().strip(),
-                "slots": self._current_slot_payloads(),
-            }
+        """Compatibility stub. Phase 14 Save is owned by canonical Raid Plan persistence."""
+        self.status.warning(
+            "Legacy composition-template saving is retired. Use Save Plan in Comp Maker."
         )
-        payload = {"schema_version": 1, "templates": templates}
-        try:
-            self.user_template_path.write_text(
-                json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
-                encoding="utf-8",
-            )
-        except OSError as exc:
-            self.status.error(f"Could not save composition template: {exc}")
-            return
-        self.status.success(f"Saved composition template: {name}.")
 
     def _load_user_template(self, *_args) -> None:
-        raw = self._read_user_templates()
-        templates = [row for row in raw.get("templates", []) if isinstance(row, dict)]
-        names = sorted(str(row.get("name", "")).strip() for row in templates if str(row.get("name", "")).strip())
-        if not names:
-            self.status.info("No saved composition templates exist yet.")
-            return
-
-        name, accepted = QInputDialog.getItem(
-            self,
-            "Load Composition Template",
-            "Template",
-            names,
-            0,
-            False,
+        """Compatibility stub retained for decorators that still expect the attribute."""
+        self.status.info(
+            "Legacy composition templates are retired. Choose a saved Raid Plan from Plan Name."
         )
-        if not accepted or not name:
-            return
-        selected = next(
-            row for row in templates if str(row.get("name", "")).strip() == name
-        )
-
-        goal = str(selected.get("goal", "")).strip()
-        difficulty = str(selected.get("difficulty", "")).strip()
-        if goal and self.goal_combo.findText(goal) >= 0:
-            self.goal_combo.blockSignals(True)
-            self.goal_combo.setCurrentText(goal)
-            self.goal_combo.blockSignals(False)
-        if difficulty and self.difficulty_combo.findText(difficulty) >= 0:
-            self.difficulty_combo.blockSignals(True)
-            self.difficulty_combo.setCurrentText(difficulty)
-            self.difficulty_combo.blockSignals(False)
-
-        slots: list[CompositionSlot] = []
-        for raw_slot in selected.get("slots", []):
-            if not isinstance(raw_slot, dict):
-                continue
-            slots.append(
-                CompositionSlot(
-                    slot_name=str(raw_slot.get("slot_name", "")).strip(),
-                    role=str(raw_slot.get("role", "")).strip(),
-                    preferred_class=str(raw_slot.get("preferred_class", "Any class")).strip() or "Any class",
-                    alternative_classes=tuple(raw_slot.get("alternative_classes") or ()),
-                    responsibilities=tuple(raw_slot.get("required_responsibilities") or ()),
-                    optional_responsibilities=tuple(raw_slot.get("optional_responsibilities") or ()),
-                    provider_requirements=tuple(raw_slot.get("provider_requirements") or ()),
-                    mechanic_jobs=tuple(raw_slot.get("mechanic_jobs") or ()),
-                )
-            )
-        if not slots:
-            self.status.warning(f"Saved composition template {name!r} has no usable slots.")
-            return
-
-        self.current_template = None
-        self.current_slots = tuple(slots)
-        self._render_slots(self.current_slots)
-        self.plan_name_input.setText(name)
-        self.trial_label.setText(
-            f"TRIAL\n{GOAL_TRIALS.get(goal, 'Custom Trial')}\n\nGOAL\n{goal or 'Custom Goal'}\n\nDIFFICULTY\n{difficulty or 'Unresolved'}"
-        )
-        self.summary_label.setText(
-            f"Saved user composition\n{len(slots)} raid chairs\n\n"
-            "This is a locally saved planning template, not external reference evidence."
-        )
-        self.evidence_text.setPlainText(
-            "User-saved composition template. No external provenance is asserted for edits stored in this local template."
-        )
-        self._refresh_coverage()
-        self.status.success(f"Loaded composition template: {name}.")
 
     def _send_to_roster(self, *_args) -> None:
-        goal = self.goal_combo.currentText().strip() or "Custom Goal"
-        plan_name = self.plan_name_input.text().strip() or f"{goal} Composition"
-        slots: list[GeneratedRosterDraftSlot] = []
-        for row in range(self.matrix_table.rowCount()):
-            slot_name = self._cell_text(row, 0)
-            eso_class = self._selected_class(row)
-            alternatives = self._cell_text(row, 3) or "Flexible"
-            required = self._cell_text(row, 4) or "Open responsibility"
-            optional = self._cell_text(row, 5) or "None declared"
-            providers = self._cell_text(row, 6) or "None declared"
-            mechanic_jobs = self._cell_text(row, 7) or "None declared"
-            detail = (
-                f"Composition requirement. Alternatives: {alternatives}. "
-                f"Required: {required}. Optional/flex: {optional}. "
-                f"Providers: {providers}. Mechanic jobs: {mechanic_jobs}."
-            )
-            concrete = eso_class != "Any class"
-            slots.append(
-                GeneratedRosterDraftSlot(
-                    slot_name=slot_name,
-                    kind="prescribed_recruit" if concrete else "open_recruit",
-                    player_name="Recruitment Needed",
-                    character_name="",
-                    eso_class=eso_class,
-                    build_name="Composition requirement",
-                    gear_summary="",
-                    unresolved=detail,
-                )
-            )
-
-        draft = self.plan_service.save_plan(
-            name=plan_name,
-            goal=goal,
-            difficulty=self.difficulty_combo.currentText(),
-            slots=tuple(slots),
+        """Compatibility stub. Phase 14 redirects this method to canonical Raid Plan save."""
+        self.status.warning(
+            "Legacy generated-roster transfer is retired. Use Send to Raid Plan."
         )
-        self.status.success(
-            f"Sent {draft.name} to Roster with {len(draft.slots)} composition chair(s)."
-        )
-        self.rosterPlanSent.emit(draft.name)
