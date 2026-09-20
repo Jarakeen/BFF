@@ -274,6 +274,11 @@ class BuildCatalogService:
             for character in existing["characters"]
             if isinstance(character, dict) and str(character.get("character_id") or "").strip()
         }
+        existing_builds_by_id = {
+            str(build.get("build_id") or "").strip(): build
+            for build in existing["builds"]
+            if isinstance(build, dict) and str(build.get("build_id") or "").strip()
+        }
         existing_by_character = {
             self._character_match_key(
                 character.get("name"),
@@ -298,9 +303,16 @@ class BuildCatalogService:
             identity = self._identity(member, index)
             gamertag = member.Gamertag.strip()
             tag_key = self._player_match_key(gamertag)
-            previous_player = existing_players_by_tag.get(tag_key) if tag_key else None
+            explicit_player_id = str(getattr(member, "PlayerId", "") or "").strip()
+            previous_player = (
+                players.get(explicit_player_id)
+                if explicit_player_id
+                else existing_players_by_tag.get(tag_key) if tag_key else None
+            )
             player_id = (
-                str(previous_player.get("player_id") or "").strip()
+                explicit_player_id
+                if explicit_player_id and explicit_player_id in players
+                else str(previous_player.get("player_id") or "").strip()
                 if previous_player
                 else self._stable_id("player", tag_key or identity)
             )
@@ -316,12 +328,28 @@ class BuildCatalogService:
                 players[player_id]["gamertag"] = gamertag
 
             match_key = self._character_match_key(member.Name, member.Gamertag)
-            previous = existing_by_character.get(match_key)
+            explicit_character_id = str(
+                getattr(member, "CharacterId", "") or ""
+            ).strip()
+            previous = (
+                existing_characters_by_id.get(explicit_character_id)
+                if explicit_character_id
+                else existing_by_character.get(match_key)
+            )
             previous_id = str(previous.get("character_id", "")).strip() if previous else ""
-            character_id = previous_id or self._stable_id("character", identity)
-            build_id = self._stable_id(
-                "build",
-                f"{character_id}:{member.BuildName.strip().casefold() or index}",
+            character_id = (
+                explicit_character_id
+                if explicit_character_id and explicit_character_id in existing_characters_by_id
+                else previous_id or self._stable_id("character", identity)
+            )
+            explicit_build_id = str(getattr(member, "BuildId", "") or "").strip()
+            build_id = (
+                explicit_build_id
+                if explicit_build_id
+                else self._stable_id(
+                    "build",
+                    f"{character_id}:{member.BuildName.strip().casefold() or index}",
+                )
             )
 
             if character_id not in characters:
@@ -355,15 +383,36 @@ class BuildCatalogService:
             payload["PlayerId"] = player_id
             payload["CharacterId"] = character_id
             payload["BuildId"] = build_id
-            catalog["builds"].append(
-                {
-                    "build_id": build_id,
-                    "character_id": character_id,
-                    "name": member.BuildName,
-                    "legacy": legacy,
-                    "payload": payload,
-                }
-            )
+            previous_build = existing_builds_by_id.get(build_id, {})
+            build_kind = str(
+                getattr(member, "BuildKind", "")
+                or previous_build.get("build_kind")
+                or "saved"
+            ).strip().casefold() or "saved"
+            source = copy.deepcopy(previous_build.get("source"))
+            if not isinstance(source, dict):
+                source = {}
+            if str(getattr(member, "SourcePlanId", "") or "").strip():
+                source["plan_id"] = str(member.SourcePlanId).strip()
+            if str(getattr(member, "SourcePlanName", "") or "").strip():
+                source["plan_name"] = str(member.SourcePlanName).strip()
+            if str(getattr(member, "SourceSeatId", "") or "").strip():
+                source["seat_id"] = str(member.SourceSeatId).strip()
+            if build_kind == "comp":
+                source.setdefault("kind", "comp_maker")
+
+            record = {
+                "build_id": build_id,
+                "character_id": character_id,
+                "name": member.BuildName,
+                "legacy": legacy,
+                "payload": payload,
+            }
+            if build_kind != "saved":
+                record["build_kind"] = build_kind
+            if source:
+                record["source"] = source
+            catalog["builds"].append(record)
 
         # Characters may exist before they have a build. Preserve those records
         # and the player relationship instead of deleting them during a legacy
