@@ -14,6 +14,8 @@ def _candidate(
     mundus: str = "",
     source_kind: str = "reference_template",
     source_name: str = "Reference",
+    skills: tuple[str, ...] = (),
+    complete_build: bool = False,
 ) -> CompBuildCandidate:
     return CompBuildCandidate(
         candidate_id=candidate_id,
@@ -24,9 +26,9 @@ def _candidate(
         eso_class=eso_class,
         role="Healer",
         gear_sets=gear_sets,
-        skills=(),
+        skills=skills,
         mundus=mundus,
-        complete_build=False,
+        complete_build=complete_build,
         unresolved=(),
         score=100.0,
         score_reasons=("reviewed candidate",),
@@ -213,3 +215,134 @@ def test_reference_template_does_not_become_selected_saved_build(monkeypatch, tm
     assert chair.candidate_id == "reference"
     assert chair.planned_gear_sets == ("Set A", "Set B")
     assert "selected_build_name" not in proposal.changed_fields
+
+
+def test_saved_build_candidate_promotes_concrete_skills_into_comp_plan(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (),
+    )
+
+    state = CompPlanState(
+        raid_plan_id="plan",
+        raid_plan_name="Plan",
+        trial_id="Sunspire",
+        chairs=(CompChairState(seat_id="healer-1", player_name="Healer"),),
+    )
+    candidate = _candidate(
+        "saved-healer",
+        source_kind="saved_build",
+        source_name="Healer",
+        skills=("Combat Prayer", "Energy Orb", "Aggressive Horn"),
+    )
+
+    updated, proposal = CompCandidateAdviserService(tmp_path / "eso.db").apply(
+        state=state,
+        seat_id="healer-1",
+        candidate=candidate,
+    )
+
+    chair = updated.chair("healer-1")
+    assert chair is not None
+    assert chair.planned_skills == (
+        "Combat Prayer",
+        "Energy Orb",
+        "Aggressive Horn",
+    )
+    assert "planned_skills" in proposal.changed_fields
+
+
+def test_complete_reference_candidate_promotes_skills_but_partial_reference_does_not(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (),
+    )
+
+    state = CompPlanState(
+        raid_plan_id="plan",
+        raid_plan_name="Plan",
+        trial_id="Sunspire",
+        chairs=(CompChairState(seat_id="healer-1", player_name="Healer"),),
+    )
+    service = CompCandidateAdviserService(tmp_path / "eso.db")
+
+    partial = _candidate(
+        "partial",
+        skills=("Combat Prayer",),
+        complete_build=False,
+    )
+    partial_state, partial_proposal = service.apply(
+        state=state,
+        seat_id="healer-1",
+        candidate=partial,
+    )
+    partial_chair = partial_state.chair("healer-1")
+    assert partial_chair is not None
+    assert partial_chair.planned_skills == ()
+    assert "planned_skills" not in partial_proposal.changed_fields
+
+    complete = _candidate(
+        "complete",
+        skills=("Combat Prayer", "Energy Orb"),
+        complete_build=True,
+    )
+    complete_state, complete_proposal = service.apply(
+        state=state,
+        seat_id="healer-1",
+        candidate=complete,
+    )
+    complete_chair = complete_state.chair("healer-1")
+    assert complete_chair is not None
+    assert complete_chair.planned_skills == ("Combat Prayer", "Energy Orb")
+    assert "planned_skills" in complete_proposal.changed_fields
+
+
+def test_locked_skills_block_candidate_skill_plan_without_blocking_other_fields(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (),
+    )
+
+    state = CompPlanState(
+        raid_plan_id="plan",
+        raid_plan_name="Plan",
+        trial_id="Sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="healer-1",
+                player_name="Healer",
+                planned_skills=("Keep Skill",),
+                locked_fields=("skills",),
+            ),
+        ),
+    )
+    candidate = _candidate(
+        "saved-healer",
+        source_kind="saved_build",
+        gear_sets=("Set A", "Set B"),
+        skills=("Combat Prayer", "Energy Orb"),
+    )
+
+    updated, proposal = CompCandidateAdviserService(tmp_path / "eso.db").apply(
+        state=state,
+        seat_id="healer-1",
+        candidate=candidate,
+    )
+
+    chair = updated.chair("healer-1")
+    assert chair is not None
+    assert chair.planned_skills == ("Keep Skill",)
+    assert chair.planned_gear_sets == ("Set A", "Set B")
+    assert "skills" in proposal.blocked_fields
