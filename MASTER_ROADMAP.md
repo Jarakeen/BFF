@@ -1251,8 +1251,21 @@ Combat Prayer is the first control: its direct heal and Minor Resolve applicatio
 now be bound to known allies when exact recipient evidence is supplied. Without that
 evidence, recipient identity remains unresolved rather than becoming “the group.”
 
-**Phase 14G validation pending:** target-binding, snapshot, healer-output, skill-effect,
-resource, and main simulation suites must pass before this slice is green.
+### Phase 14G validation checkpoint — 2026-09-19
+
+User-reported focused checkpoint:
+
+- **28 passed in 5.84s**
+- explicit recipient binding, target-state preservation, snapshots, healer output,
+  reviewed skill effects, resources, and main simulation integration are green.
+
+**Phase 14G explicit recipient binding status: green.**
+
+Next implementation slice: add supported combatant health state and project bound heals
+into deterministic health changes. Healing may only change a combatant when current and
+maximum Health are explicit and the event has explicit recipients. Overheal/waste must
+remain auditable; missing health state must remain unresolved rather than assuming full
+benefit.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
