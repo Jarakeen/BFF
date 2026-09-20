@@ -2,11 +2,10 @@
 #
 # Persistence and export for the Builds page.
 #
-# Builds are stored as their own JSON file (data/builds.json)
-# rather than in eso.db -- eso.db is reference data shipped
-# with the Foundry (sets, skills, races...); builds are the
-# user's own roster data, same treatment as
-# CurrentExpedition.json / roster.
+# Canonical user-owned player / character / build state lives in
+# data/characters.json through CanonicalBuildBridge. data/builds.json
+# remains a compatibility mirror for older tooling and exports.
+# eso.db is read-only ESO reference data shipped with the Foundry.
 
 from __future__ import annotations
 
