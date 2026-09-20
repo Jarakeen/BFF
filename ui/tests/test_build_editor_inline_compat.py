@@ -57,3 +57,29 @@ def test_tabbed_workspace_is_installed_after_other_build_extensions() -> None:
     assert app_source.index("install_inline_build_editor()") > app_source.index(
         "install_phase5_potion_picker_support()"
     )
+
+
+def test_edit_save_preserves_canonical_identity_provenance_and_non_editor_state() -> None:
+    source = Path(build_editor_inline_compat.__file__).read_text(encoding="utf-8")
+
+    assert "def _preserve_non_editor_build_state(original, updated):" in source
+    for field_name in (
+        "ClassSkillLines",
+        "ClassMasteryAbilityIds",
+        "ScribedSkills",
+        "ScribedSkillRecipes",
+        "SecondMundus",
+        "ContextVariants",
+        "TransformedForm",
+        "PlayerId",
+        "CharacterId",
+        "BuildId",
+        "BuildKind",
+        "PlannedGearSets",
+        "PlannedSkills",
+        "SourcePlanId",
+        "SourcePlanName",
+        "SourceSeatId",
+    ):
+        assert f'"{field_name}"' in source
+    assert "updated = _preserve_non_editor_build_state(original, editor.model)" in source
