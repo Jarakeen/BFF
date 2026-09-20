@@ -124,11 +124,11 @@ def test_healer_kernel_reports_unwired_consequences_instead_of_zeroing_them() ->
     )
 
     assert any(
-        "Combat Prayer" in message and "consequence projection not yet wired" in message
+        "Combat Prayer" in message and "non-resource skill consequences" in message
         for message in result.unresolved
     )
     assert any(
-        "Illustrious Healing" in message and "consequence projection not yet wired" in message
+        "Illustrious Healing" in message and "non-resource skill consequences" in message
         for message in result.unresolved
     )
     assert not any("wait consequence" in message for message in result.unresolved)
