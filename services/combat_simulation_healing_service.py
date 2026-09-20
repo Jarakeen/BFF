@@ -3,6 +3,7 @@ from __future__ import annotations
 """Bridge canonical healer output into Phase 14 simulation events."""
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from engine.config import DEFAULT_DATABASE
 from models.build_model import PlayerBuild
@@ -21,6 +22,9 @@ from services.rotation_healer_periodic_runtime_evidence_service import (
 )
 from services.rotation_healer_periodic_runtime_service import (
     RotationHealerPeriodicRuntimeService,
+)
+from services.rotation_healer_reviewed_runtime_evidence_loader import (
+    RotationHealerReviewedRuntimeEvidenceLoader,
 )
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
 
@@ -48,6 +52,9 @@ class CombatSimulationHealingService:
         periodic_runtime_evidence_service: RotationHealerPeriodicRuntimeEvidenceService | object | None = None,
         periodic_runtime_service: RotationHealerPeriodicRuntimeService | object | None = None,
         reviewed_runtime_observations: tuple[RotationHealerReviewedRuntimeObservation, ...] = (),
+        reviewed_timing_fixture_path: str | Path | None = None,
+        reviewed_refresh_fixture_path: str | Path | None = None,
+        reviewed_runtime_evidence_loader: RotationHealerReviewedRuntimeEvidenceLoader | object | None = None,
     ) -> None:
         self.action_healing_service = (
             action_healing_service
@@ -67,7 +74,30 @@ class CombatSimulationHealingService:
         self.periodic_runtime_service = (
             periodic_runtime_service or RotationHealerPeriodicRuntimeService()
         )
-        self.reviewed_runtime_observations = tuple(reviewed_runtime_observations)
+        explicit_observations = tuple(reviewed_runtime_observations)
+        if explicit_observations and reviewed_timing_fixture_path is not None:
+            raise ValueError(
+                "supply reviewed healer runtime observations or a reviewed timing fixture, not both"
+            )
+
+        self.reviewed_runtime_load_unresolved: tuple[str, ...] = ()
+        if reviewed_timing_fixture_path is not None:
+            loader = (
+                reviewed_runtime_evidence_loader
+                or RotationHealerReviewedRuntimeEvidenceLoader(DEFAULT_DATABASE)
+            )
+            loaded = loader.load(
+                reviewed_timing_fixture_path,
+                refresh_fixture_path=reviewed_refresh_fixture_path,
+            )
+            self.reviewed_runtime_observations = tuple(loaded.observations)
+            self.reviewed_runtime_load_unresolved = tuple(loaded.unresolved)
+        else:
+            if reviewed_refresh_fixture_path is not None:
+                raise ValueError(
+                    "reviewed healer refresh fixture requires a reviewed timing fixture"
+                )
+            self.reviewed_runtime_observations = explicit_observations
 
     def project(
         self,
@@ -173,7 +203,8 @@ class CombatSimulationHealingService:
                 )
             )
 
-        unresolved = list(projection.unresolved)
+        unresolved = list(self.reviewed_runtime_load_unresolved)
+        unresolved.extend(projection.unresolved)
         unresolved.extend(periodic_unresolved)
         for item in projection.delayed_seeds:
             unresolved.append(
