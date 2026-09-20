@@ -312,6 +312,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Import external raid rosters by merge rather than replacement, preserving unrelated players, teams, characters, and saved builds
 - Imported build/team assignments are attached to the canonical gamertag/character/build identities when the import can resolve them uniquely
 - Personnel keeps explicit **Known Aliases** for old gamertags, Discord names, and raid-sheet names; aliases are learned from manual entry, renames, or explicit merges rather than guessed from similarity
+- Personnel stores optional **Discord**, **YouTube**, and **Twitch** identity fields alongside the Xbox gamertag; duplicate-player merges preserve them.
+- Personnel includes **Import Discord Screenshot…** for low-friction intake: the screenshot is shown beside Xbox/Discord/YouTube/Twitch fields, fills only the current Player form, and never saves automatically.
 - **Merge Players…** consolidates two user-confirmed Personnel identities, preserves their teams and assignment state, moves canonical characters/builds under the kept player identity, creates backups, and remembers discarded names as future import aliases
 - Future roster imports reuse exact learned aliases as player identity evidence, including all canonical characters already known for that player
 - Assignments persist separately for each **roster member + team**, so one character can have different normal jobs on different teams
