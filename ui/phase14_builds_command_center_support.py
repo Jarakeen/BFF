@@ -30,7 +30,7 @@ _ORIGINAL_LOAD = None
 _ORIGINAL_REFRESH_ROSTER = None
 _ORIGINAL_REFRESH_DETAIL = None
 
-_LIBRARY_TABS = ("All", "Mine", "Team", "Templates", "Favorites", "Archive")
+_LIBRARY_TABS = ("All", "Mine", "Team", "Comp Builds", "Templates", "Favorites", "Archive")
 
 
 def _role_for_row(page, build) -> str:
@@ -140,11 +140,13 @@ def _populate_build_table(page) -> None:
         return
 
     mode = _active_library_mode(page)
-    if mode not in {"All", "Mine"}:
-        table.blockSignals(False)
-        return
 
     for build_index, build in enumerate(page.roster.Members):
+        build_kind = str(getattr(build, "BuildKind", "saved") or "saved").strip().casefold()
+        if mode == "Comp Builds" and build_kind != "comp":
+            continue
+        if mode not in {"All", "Mine", "Comp Builds"}:
+            continue
         if not _build_matches_filters(page, build):
             continue
         row = table.rowCount()
