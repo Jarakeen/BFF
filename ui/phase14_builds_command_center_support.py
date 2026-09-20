@@ -194,6 +194,18 @@ def _select_command_center_row(page, row: int, _column: int = 0) -> None:
 
 def _switch_library_mode(page, index: int) -> None:
     mode = str(page.phase14_library_tabs.tabText(index) or "All")
+    source_filter = getattr(page, "phase14_source_filter", None)
+    if source_filter is not None:
+        source_filter.blockSignals(True)
+        try:
+            if mode == "Comp Builds":
+                wanted = source_filter.findData("comp")
+                source_filter.setCurrentIndex(wanted if wanted >= 0 else 0)
+            else:
+                source_filter.setCurrentIndex(0)
+        finally:
+            source_filter.blockSignals(False)
+
     if mode == "Templates":
         if page.view_combo.findText("Templates") >= 0:
             page.view_combo.setCurrentText("Templates")
