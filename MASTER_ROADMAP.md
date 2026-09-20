@@ -1050,10 +1050,30 @@ User-reported focused checkpoint:
 
 **Phase 14A kernel status: green.**
 
-Next implementation slice: execute healer resource consequences through the existing
-Phase 4 sustain/resource authorities so supported skill actions consume verified costs,
-recovery remains deterministic, and unresolved costs stay explicit rather than becoming
-zero.
+### Phase 14B — healer resource execution
+
+The simulation kernel now projects **Magicka** through the existing
+`RotationSustainService` / Phase 4 resource timeline instead of adding a second
+resource calculator.
+
+Implemented:
+
+- supported named healer skills resolve through canonical ability-cost data;
+- verified build cost modifiers remain owned by the Phase 4 sustain path;
+- ordinary recovery ticks retain Phase 4 cadence and ordering;
+- resource timeline events are merged into the Phase 14 event stream with explicit
+  simulation priorities;
+- before/attempted/applied/after, shortfall, and wasted-restore evidence is preserved;
+- resource starting/ending amounts are part of the immutable simulation result;
+- unsupported or incomplete resource evidence remains unresolved;
+- wiring a skill cost does **not** imply its healing/damage/effect outcome is modeled:
+  non-resource skill consequences remain explicitly unresolved.
+
+Initial scope is Magicka for the healer control. Stamina/Health primary-resource
+projection and Ultimate economy remain later resource slices rather than being guessed.
+
+**Phase 14B validation pending:** focused resource-adapter, simulation-kernel, Phase 4
+sustain, and Rotation sustain tests must pass before this slice is called green.
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
