@@ -210,3 +210,16 @@ def test_build_command_center_keeps_comp_tab_and_source_filter_in_sync() -> None
     assert 'if selected_source == "saved" and build_kind == "comp":' in source
     assert "setUsesScrollButtons(True)" in source
     assert "setMinimumWidth(650)" in source
+
+
+def test_comp_build_planning_state_is_visible_in_focused_build_editors() -> None:
+    source = _source(phase14_build_focused_editors_support)
+
+    assert 'getattr(build, "PlannedGearSets", ())' in source
+    assert '"Comp Maker plan • exact slots not assigned yet"' in source
+    assert 'FoundryCard("Comp Plan", "clipboard")' in source
+    assert '"Planned in Comp Maker. These sets are not assigned to exact gear slots yet."' in source
+    assert 'getattr(build, "PlannedSkills", ())' in source
+    assert 'FoundryCard("Comp Planned Skills", "clipboard")' in source
+    assert '"These are requirements/recommendations, not exact bar slots."' in source
+    assert '"Planned in Comp Maker. These skills are not assigned to exact bar slots yet."' in source
