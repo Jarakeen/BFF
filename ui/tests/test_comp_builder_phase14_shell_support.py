@@ -378,5 +378,7 @@ def test_saved_raid_plan_identity_is_carried_into_comp_intake() -> None:
     for source in (page, handoff):
         assert "CanonicalPlayerId=" in source
         assert "CanonicalCharacterId=" in source
-    assert "Id=member.roster_member_id" in page
+    assert "member.roster_member_id" in page
+    assert 'getattr(personnel_row, "Id", None)' in page
+    assert "if member.roster_member_id is not None" in page
     assert 'Id=getattr(member, "roster_member_id", None)' in handoff
