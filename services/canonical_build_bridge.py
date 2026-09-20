@@ -229,15 +229,39 @@ class CanonicalBuildBridge:
             if not isinstance(entry, dict):
                 continue
             legacy = entry.get("legacy")
-            if not cls._is_valid_legacy_build(legacy):
+            payload = entry.get("payload")
+            build_kind = str(entry.get("build_kind") or "saved").strip().casefold() or "saved"
+            source = entry.get("source") if isinstance(entry.get("source"), dict) else {}
+
+            # Ordinary historical placeholder rows remain hidden. Comp Builds are
+            # different: they are intentionally planning artifacts and may contain
+            # only planned gear/skills plus canonical source metadata.
+            snapshot = payload if isinstance(payload, dict) else legacy
+            if build_kind != "comp" and not cls._is_valid_legacy_build(snapshot):
                 continue
-            # The canonical catalog can contain historical placeholder builds;
-            # only reconstruct real legacy rows into the compatibility roster.
-            build = PlayerBuild.from_dict(legacy)
-            character_id = str(entry.get("character_id") or build.CharacterId or "").strip()
-            character = characters_by_id.get(character_id, {})
-            # Do not manufacture identity fields in the compatibility snapshot.
-            # If legacy already carried IDs, PlayerBuild.from_dict preserved them;
-            # otherwise canonical identity remains available from catalog records.
+            if not isinstance(snapshot, dict):
+                snapshot = {}
+
+            build = PlayerBuild.from_dict(snapshot)
+            build.BuildId = str(entry.get("build_id") or build.BuildId or "").strip()
+            build.CharacterId = str(entry.get("character_id") or build.CharacterId or "").strip()
+            build.BuildKind = build_kind
+            if not build.BuildName:
+                build.BuildName = str(entry.get("name") or "").strip()
+            if build_kind == "comp":
+                build.SourcePlanId = str(source.get("plan_id") or build.SourcePlanId or "").strip()
+                build.SourcePlanName = str(source.get("plan_name") or build.SourcePlanName or "").strip()
+                build.SourceSeatId = str(source.get("seat_id") or build.SourceSeatId or "").strip()
+
+            character = characters_by_id.get(build.CharacterId, {})
+            if not build.Name:
+                build.Name = str(character.get("name") or "").strip()
+            if not build.Gamertag:
+                build.Gamertag = str(character.get("gamertag") or "").strip()
+            if not build.EsoClass:
+                build.EsoClass = str(character.get("eso_class") or "").strip()
+            if not build.Role:
+                build.Role = str(character.get("role") or "").strip()
+
             members.append(build)
         return BuildRoster(Members=members)
