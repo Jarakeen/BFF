@@ -118,17 +118,23 @@ class CombatSimulationSequentialDDDamageService:
         target_state: CombatSimulationTargetState,
         target_identity: str,
         player_identity: str,
+        ledger: CombatSimulationTargetHealthLedger | None = None,
     ) -> CombatSimulationSequentialDamageProjection:
         if candidate.plan != plan:
             raise ValueError(
                 "sequential combat-simulation candidate plan does not match simulation plan"
             )
 
-        ledger = CombatSimulationTargetHealthLedger(
-            target_state=target_state,
-            target_identity=target_identity,
-            player_identity=player_identity,
-        )
+        if ledger is None:
+            ledger = CombatSimulationTargetHealthLedger(
+                target_state=target_state,
+                target_identity=target_identity,
+                player_identity=player_identity,
+            )
+        elif ledger.target_identity != str(target_identity or "").strip():
+            raise ValueError(
+                "sequential combat-simulation Health ledger target does not match requested target"
+            )
         damage: list[CombatSimulationOutgoingDamage] = []
         evidence_rows: list[tuple[float, int, RotationActionDamageEvidence]] = []
         unresolved: list[str] = []
