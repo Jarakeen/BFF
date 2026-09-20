@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from copy import deepcopy
+
 """Persistent, non-native Build workspace tabs.
 
 The Build Editor, Character Progression, and Scribed Skills editors all live
@@ -63,6 +65,34 @@ def _set_combo_index(combo: QComboBox, index: int) -> None:
     match = combo.findData(index)
     combo.setCurrentIndex(match if match >= 0 else -1)
     combo.blockSignals(False)
+
+
+_NON_EDITOR_BUILD_FIELDS = (
+    "ClassSkillLines",
+    "ClassMasteryAbilityIds",
+    "ScribedSkills",
+    "ScribedSkillRecipes",
+    "SecondMundus",
+    "ContextVariants",
+    "TransformedForm",
+    "PlayerId",
+    "CharacterId",
+    "BuildId",
+    "BuildKind",
+    "PlannedGearSets",
+    "PlannedSkills",
+    "SourcePlanId",
+    "SourcePlanName",
+    "SourceSeatId",
+)
+
+
+def _preserve_non_editor_build_state(original, updated):
+    """Carry canonical/provenance state the visual BuildEditor does not own."""
+    for field_name in _NON_EDITOR_BUILD_FIELDS:
+        if hasattr(original, field_name) and hasattr(updated, field_name):
+            setattr(updated, field_name, deepcopy(getattr(original, field_name)))
+    return updated
 
 
 def _clear_host(host: QWidget) -> None:
@@ -333,10 +363,7 @@ def install() -> None:
         if editor is None or index is None or index < 0 or index >= len(self.roster.Members):
             return
         original = self.roster.Members[index]
-        updated = editor.model
-        updated.ScribedSkills = list(getattr(original, "ScribedSkills", []))
-        if hasattr(original, "CharacterId") and hasattr(updated, "CharacterId"):
-            updated.CharacterId = getattr(original, "CharacterId", "")
+        updated = _preserve_non_editor_build_state(original, editor.model)
         self.roster.Members[index] = updated
         self.selected_index = index
         self._save()
