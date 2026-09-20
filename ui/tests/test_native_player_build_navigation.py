@@ -32,7 +32,11 @@ def test_normal_builds_navigation_natively_clears_player_filter() -> None:
 
     show_page = main_window.split("def show_page(self, page_name: str):", 1)[1]
     assert 'if page_name == "console:2":' in show_page
+    assert 'reload_builds = getattr(builds_page, "_load", None)' in show_page
     assert "clear_player_build_filter" in show_page
+    assert show_page.index('reload_builds = getattr(builds_page, "_load", None)') < show_page.index(
+        "clear_player_build_filter"
+    )
     assert "def clear_player_build_filter(self) -> None:" in builds
 
 
