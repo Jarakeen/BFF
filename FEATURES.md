@@ -336,3 +336,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Phase 14 selected-chair Apply, Auto-Fill, and Team Health are canonical-state-only. `_comp_applied_candidates` remains a compatibility/presentation cache, while saved-player duplicate detection and applied-candidate recovery prefer `CompPlanState`.
 
 - **OBS Field Note source overrides** — The Foundry dashboard Lua script exposes persistent OBS-side edit fields for `NOTE_Observation` and `FN_Location`. Blank values preserve the existing automatic JSON-driven text; entered values override the one-second overlay refresh safely.
+
+- **Phase 14 planning workflow round-trip guard** — regression coverage now exercises the real cross-service path from Personnel → unbound Comp Maker plan → canonical Comp Build → persisted/reloaded Raid Plan → stable BuildId resolution → Coverage assignment semantics → Readiness. Brand-new plans repair Comp Build source-plan provenance immediately after first Raid Plan binding without duplicating the build.
