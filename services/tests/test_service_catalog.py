@@ -1154,6 +1154,25 @@ def test_sustained_dps_finite_family_node_bound_is_identity_safe() -> None:
 
 
 
+def test_sustained_dps_objective32_search_keeps_proof_levels_distinct() -> None:
+    service = canonical_service_for("extreme_sustained_dps_objective32_search")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.objective32_search"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.generated_axis_pipeline_search",
+        "extreme.sustained_dps.generated_runtime_state_axis_adapter",
+        "extreme.sustained_dps.axis_dominance_composition",
+        "extreme.sustained_dps.theoretical_maximum_closure",
+    )
+    assert "end-to-end Objective #32 result" in service.purpose
+    assert "does not invent coverage" in service.notes
+    assert "distinct facts" in service.notes
+
+
 def test_sustained_dps_generated_runtime_state_axis_requires_local_proof() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_generated_runtime_state_axis_adapter"
