@@ -94,7 +94,15 @@ class ExtremeSustainedDPSGeneratedCandidateService:
 
     def candidate_at(self, index: int) -> ExtremeSustainedDPSStructuralCandidate:
         universe = self.universe_service.build()
-        count = self._candidate_count(universe)
+        return self._candidate_from_universe(universe, index)
+
+    @classmethod
+    def _candidate_from_universe(
+        cls,
+        universe: ExtremeGlobalSearchUniverse,
+        index: int,
+    ) -> ExtremeSustainedDPSStructuralCandidate:
+        count = cls._candidate_count(universe)
         position = int(index)
         if position < 0 or position >= count:
             raise IndexError(
@@ -133,7 +141,10 @@ class ExtremeSustainedDPSGeneratedCandidateService:
         universe = self.universe_service.build()
         count = self._candidate_count(universe)
         stop = min(count, start + size)
-        return tuple(self.candidate_at(index) for index in range(start, stop))
+        return tuple(
+            self._candidate_from_universe(universe, index)
+            for index in range(start, stop)
+        )
 
     @staticmethod
     def _candidate_count(universe: ExtremeGlobalSearchUniverse) -> int:
