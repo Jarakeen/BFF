@@ -43,8 +43,22 @@ def _result(skill_name):
     return SimpleNamespace(
         skill=SimpleNamespace(skill_rank_id=42, name=skill_name),
         components=(
-            SimpleNamespace(coefficient_number=1, final_value=1000.0),
-            SimpleNamespace(coefficient_number=2, final_value=700.0),
+            SimpleNamespace(
+                coefficient_number=1,
+                coefficient_type="1",
+                a=0.0,
+                b=0.0,
+                c=0.0,
+                final_value=1000.0,
+            ),
+            SimpleNamespace(
+                coefficient_number=2,
+                coefficient_type="1",
+                a=0.0,
+                b=0.0,
+                c=0.0,
+                final_value=700.0,
+            ),
         ),
         component_actual_effect_trace=(),
         unresolved=(),
