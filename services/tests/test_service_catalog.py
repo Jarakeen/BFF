@@ -268,3 +268,23 @@ def test_combat_simulation_catalog_preserves_authority_boundaries() -> None:
     assert summary.ui_safe is True
     assert kernel.service_id in summary.dependencies
     assert "withheld" in summary.notes
+
+
+
+def test_extreme_sustained_dps_consumes_combat_simulation_authority() -> None:
+    sustained = canonical_service_for("extreme_saved_rotation_sustained_dps_record")
+
+    assert sustained is not None
+    assert sustained.service_id == "extreme.sustained_dps.saved_rotation"
+    assert sustained.behavior is ServiceBehavior.DETERMINISTIC
+    assert sustained.encounter_aware is True
+    assert set(sustained.roles) == {"DPS"}
+    assert {
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(sustained.service_id)
+    } == {
+        "combat.simulation.saved_build_dd",
+        "combat.simulation.damage_summary",
+    }
+    assert "lower bound" in sustained.notes
+    assert "optimization responsibility" in sustained.notes
