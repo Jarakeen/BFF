@@ -572,6 +572,22 @@ class CombatSimulationResult:
             raise ValueError(
                 "combat simulation effect windows must be in canonical timeline order"
             )
+        window_identity_keys = tuple(
+            (
+                float(window.start_time_seconds),
+                float(window.end_time_seconds),
+                int(window.sequence),
+                str(window.effect_name),
+                str(window.source),
+                str(window.target or ""),
+                window.magnitude,
+            )
+            for window in self.effect_windows
+        )
+        if len(set(window_identity_keys)) != len(window_identity_keys):
+            raise ValueError(
+                "combat simulation effect window identities must be unique"
+            )
         if any(
             float(window.start_time_seconds) > duration_seconds
             for window in self.effect_windows
