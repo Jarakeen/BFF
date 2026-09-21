@@ -32,6 +32,16 @@ class RaidRunEvent:
     evidence: str = "MANUAL"
 
 
+@dataclass(frozen=True)
+class RaidRunAttempt:
+    plan_id: str
+    attempt: int
+    encounter_id: str
+    started_at: str
+    ended_at: str
+    duration_seconds: int | None
+
+
 class RaidSectionStateService:
     """Persist explicit readiness and manual run state without touching eso.db."""
 
@@ -45,6 +55,7 @@ class RaidSectionStateService:
                 "runs": {},
                 "events": [],
                 "reviews": [],
+                "attempts": [],
                 "raid_map_links": {},
             }
         try:
@@ -57,6 +68,7 @@ class RaidSectionStateService:
         payload.setdefault("runs", {})
         payload.setdefault("events", [])
         payload.setdefault("reviews", [])
+        payload.setdefault("attempts", [])
         payload.setdefault("raid_map_links", {})
         return payload
 
@@ -237,6 +249,95 @@ class RaidSectionStateService:
                 cls._set_review_duration(review)
                 return
 
+    @staticmethod
+    def _set_attempt_duration(attempt: dict) -> None:
+        started = _clean(attempt.get("started_at"))
+        ended = _clean(attempt.get("ended_at"))
+        if not started or not ended:
+            attempt["duration_seconds"] = None
+            return
+        try:
+            start_dt = datetime.fromisoformat(started)
+            end_dt = datetime.fromisoformat(ended)
+        except ValueError:
+            attempt["duration_seconds"] = None
+            return
+        attempt["duration_seconds"] = max(
+            0,
+            int((end_dt - start_dt).total_seconds()),
+        )
+
+    @classmethod
+    def _upsert_attempt_payload(
+        cls,
+        payload: dict,
+        *,
+        plan_id: str,
+        attempt: int,
+        encounter_id: str,
+        started_at: str,
+        ended_at: str,
+    ) -> dict:
+        plan_key = _clean(plan_id)
+        attempt_number = max(0, int(attempt or 0))
+        rows = payload.setdefault("attempts", [])
+        existing = next(
+            (
+                row
+                for row in rows
+                if isinstance(row, dict)
+                and _clean(row.get("plan_id")) == plan_key
+                and int(row.get("attempt", 0) or 0) == attempt_number
+            ),
+            None,
+        )
+        if existing is None:
+            existing = {
+                "plan_id": plan_key,
+                "attempt": attempt_number,
+            }
+            rows.append(existing)
+        existing["encounter_id"] = _clean(encounter_id)
+        existing["started_at"] = _clean(started_at) or _clean(existing.get("started_at"))
+        existing["ended_at"] = _clean(ended_at) or _clean(existing.get("ended_at"))
+        cls._set_attempt_duration(existing)
+        return existing
+
+    def attempt_history(
+        self,
+        plan_id: str,
+        *,
+        encounter_id: str = "",
+    ) -> tuple[RaidRunAttempt, ...]:
+        payload = self._read()
+        plan_key = _clean(plan_id)
+        encounter_key = _clean(encounter_id)
+        rows = []
+        for row in payload.get("attempts", []):
+            if not isinstance(row, dict):
+                continue
+            if _clean(row.get("plan_id")) != plan_key:
+                continue
+            if encounter_key and _clean(row.get("encounter_id")) != encounter_key:
+                continue
+            duration = row.get("duration_seconds")
+            rows.append(
+                RaidRunAttempt(
+                    plan_id=plan_key,
+                    attempt=max(0, int(row.get("attempt", 0) or 0)),
+                    encounter_id=_clean(row.get("encounter_id")),
+                    started_at=_clean(row.get("started_at")),
+                    ended_at=_clean(row.get("ended_at")),
+                    duration_seconds=(
+                        max(0, int(duration))
+                        if isinstance(duration, int) and not isinstance(duration, bool)
+                        else None
+                    ),
+                )
+            )
+        rows.sort(key=lambda row: (row.attempt, row.started_at), reverse=True)
+        return tuple(rows)
+
     def review_notes(self) -> tuple[dict, ...]:
         """Return review notes newest first without inventing missing run metadata."""
         payload = self._read()
@@ -251,7 +352,7 @@ class RaidSectionStateService:
         )
         return tuple(rows)
 
-    def start_pull(self, plan_id: str) -> dict:
+    def start_pull(self, plan_id: str, *, encounter_id: str = "") -> dict:
         payload = self._read()
         runs = payload.setdefault("runs", {})
         prior = runs.get(_clean(plan_id), {})
@@ -263,9 +364,17 @@ class RaidSectionStateService:
             "ended_at": "",
             "notes_paused": False,
             "notes": _clean(prior.get("notes")),
-            "encounter_id": _clean(prior.get("encounter_id")),
+            "encounter_id": _clean(encounter_id) or _clean(prior.get("encounter_id")),
         }
         runs[_clean(plan_id)] = state
+        self._upsert_attempt_payload(
+            payload,
+            plan_id=plan_id,
+            attempt=attempt,
+            encounter_id=_clean(state.get("encounter_id")),
+            started_at=_clean(state.get("started_at")),
+            ended_at="",
+        )
         self._append_event_payload(payload, plan_id, "pull_started", f"Pull #{attempt} started", "MANUAL")
         self._write(payload)
         return dict(state)
@@ -288,6 +397,14 @@ class RaidSectionStateService:
         state["ended_at"] = _now()
         runs[_clean(plan_id)] = state
         attempt = int(state.get("attempt", 0) or 0)
+        self._upsert_attempt_payload(
+            payload,
+            plan_id=plan_id,
+            attempt=attempt,
+            encounter_id=_clean(state.get("encounter_id")),
+            started_at=_clean(state.get("started_at")),
+            ended_at=_clean(state.get("ended_at")),
+        )
         self._update_review_timing_payload(
             payload,
             plan_id=plan_id,
@@ -336,4 +453,4 @@ class RaidSectionStateService:
         )
 
 
-__all__ = ["RaidRunEvent", "RaidSectionStateService"]
+__all__ = ["RaidRunAttempt", "RaidRunEvent", "RaidSectionStateService"]
