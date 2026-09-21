@@ -831,6 +831,53 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_branch_and_bound",
+        domain="extreme",
+        purpose=(
+            "Coordinate proof-safe lazy generated sustained-DPS search with external optimistic "
+            "bounds, exact canonical leaf evaluation, incumbent maintenance, tie preservation, "
+            "and global-maximum proof bookkeeping."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_branch_and_bound_search_service",
+        inputs=("GeneratedSearchBranches", "BranchExpander", "ExactLeafEvaluator", "RequiredDuration"),
+        outputs=("ExtremeSustainedDPSGeneratedSearchResult",),
+        dependencies=("extreme.sustained_dps.pruning",),
+        responsibilities=("extreme_sustained_dps_generated_branch_and_bound",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Owns search order and proof bookkeeping only. It never calculates ESO damage or "
+            "manufactures bounds. Missing/unproven bounds force branches open; only proven-safe "
+            "ceilings strictly below the incumbent may prune. Equal ceilings remain open so ties survive."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_search_evidence_adapter",
+        domain="extreme",
+        purpose=(
+            "Adapt canonical rotation upper-bound results and generated runtime simulation results "
+            "into branch-and-bound evidence without strengthening their proof status."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_search_evidence_adapter_service",
+        inputs=("RotationUpperBoundOrGeneratedRuntimeResult",),
+        outputs=("ExtremeSustainedDPSBoundEvidence", "ExtremeSustainedDPSExactLeafEvaluation"),
+        dependencies=(
+            "extreme.sustained_dps.generated_branch_and_bound",
+            "extreme.sustained_dps.generated_runtime_evaluation",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_search_evidence_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Proof-preserving adapter only: an unproven/missing rotation ceiling stays unproven, "
+            "and an incomplete runtime result never becomes an exact modeled-DPS leaf."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.execute_policy_frontier",
         domain="extreme",
         purpose=(
