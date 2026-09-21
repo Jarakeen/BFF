@@ -85,6 +85,47 @@ class CombatSimulationResourceService:
                 raise ValueError(
                     "resource timeline event arithmetic is inconsistent"
                 )
+            attempted_change = int(item.attempted_change)
+            shortfall = int(item.shortfall)
+            wasted_restore = int(item.wasted_restore)
+            if shortfall < 0 or wasted_restore < 0:
+                raise ValueError(
+                    "resource timeline shortfall and wasted restore cannot be negative"
+                )
+            if item.kind is ResourceTimelineEventKind.ACTION_COST:
+                if attempted_change > 0 or applied_change > 0:
+                    raise ValueError(
+                        "resource action cost changes must be non-positive"
+                    )
+                if wasted_restore != 0:
+                    raise ValueError(
+                        "resource action cost cannot record wasted restore"
+                    )
+                if shortfall != abs(attempted_change) - abs(applied_change):
+                    raise ValueError(
+                        "resource action cost shortfall arithmetic is inconsistent"
+                    )
+            elif item.kind in {
+                ResourceTimelineEventKind.RECOVERY_TICK,
+                ResourceTimelineEventKind.RESTORATION,
+            }:
+                if attempted_change < 0 or applied_change < 0:
+                    raise ValueError(
+                        "resource restore changes must be non-negative"
+                    )
+                if shortfall != 0:
+                    raise ValueError(
+                        "resource restore cannot record action-cost shortfall"
+                    )
+                if wasted_restore != attempted_change - applied_change:
+                    raise ValueError(
+                        "resource wasted restore arithmetic is inconsistent"
+                    )
+            elif item.kind is ResourceTimelineEventKind.RESOURCE_MAXIMUM:
+                if attempted_change != 0 or shortfall != 0 or wasted_restore != 0:
+                    raise ValueError(
+                        "resource maximum change carries invalid resource delta evidence"
+                    )
             prior_after = after
 
             events.append(
@@ -97,11 +138,11 @@ class CombatSimulationResourceService:
                     payload=(
                         ("resource", resource.value),
                         ("before", before),
-                        ("attempted_change", int(item.attempted_change)),
+                        ("attempted_change", attempted_change),
                         ("applied_change", applied_change),
                         ("after", after),
-                        ("shortfall", int(item.shortfall)),
-                        ("wasted_restore", int(item.wasted_restore)),
+                        ("shortfall", shortfall),
+                        ("wasted_restore", wasted_restore),
                     ),
                 )
             )
