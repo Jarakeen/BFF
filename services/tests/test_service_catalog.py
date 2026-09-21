@@ -1043,3 +1043,20 @@ def test_sustained_dps_combat_dynamic_axis_coverage_preserves_open_timing_scope(
     assert "Anchored potion timing does not close continuous first-use offsets" in service.notes
     assert "post-affordability delay" in service.notes
     assert "caller-reviewed safe windows" in service.notes
+
+
+def test_sustained_dps_finite_whole_plan_dominance_allows_plan_shape_changes() -> None:
+    service = canonical_service_for("extreme_sustained_dps_finite_whole_plan_dominance")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.finite_whole_plan_dominance"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.axis_dominance_composition",
+        "extreme.sustained_dps.pruning",
+    )
+    assert "Plan shape and action identity may differ across choices" in service.notes
+    assert "one exact horizon" in service.notes
+    assert "Omitted scope remains separate" in service.notes
