@@ -79,6 +79,10 @@ class CombatSimulationTargetHealthLedger:
             raise ValueError(
                 "combat simulation target Health feedback requires current and maximum Health"
             )
+        if int(combatant.current_health) <= 0:
+            raise ValueError(
+                "combat simulation target Health feedback requires a living target at simulation start"
+            )
         self.target_identity = target
         self.player_identity = player
         self.current_health = float(combatant.current_health)
