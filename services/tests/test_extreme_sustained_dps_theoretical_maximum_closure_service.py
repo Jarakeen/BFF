@@ -108,3 +108,28 @@ def test_unproven_finite_search_cannot_close_theoretical_maximum() -> None:
     assert result.finite_denominator_maximum_proven is False
     assert result.theoretical_maximum_proven is False
     assert any("finite search denominator" in row for row in result.unresolved)
+
+
+
+def test_axis_proof_omission_blocks_theoretical_claim_without_manual_scope_argument() -> None:
+    proof = ExtremeSustainedDPSAxisCoverageProof(
+        source="finite all-axis family with open timing",
+        dominated_axes=tuple(CANONICAL_SUSTAINED_DPS_MUTATION_AXES),
+        omitted_scope=("continuous potion first-use offset remains open",),
+    )
+    coverage = ExtremeSustainedDPSAxisDominanceCompositionService.compose(
+        "objective:32",
+        required_axes=tuple(CANONICAL_SUSTAINED_DPS_MUTATION_AXES),
+        proofs=(proof,),
+    )
+
+    result = ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+        _search(),
+        axis_coverage=coverage,
+    )
+
+    assert result.canonical_axis_coverage_complete is True
+    assert result.theoretical_maximum_proven is False
+    assert result.omitted_scope == (
+        "continuous potion first-use offset remains open",
+    )
