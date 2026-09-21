@@ -42,6 +42,7 @@ def test_canonical_h1_evaluation_passes_explicit_gear_condition_context() -> Non
         ExtremeCanonicalActualHealOptimizationService
     )
     service.build_condition_context = _ConditionService()
+    service.candidate_gear_conditions = None
     service.conditioned_context_factory = _ConditionedFactory()
     service.healing_events = _HealingEvents()
 
