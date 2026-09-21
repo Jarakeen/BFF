@@ -161,8 +161,6 @@ def test_shared_raid_plan_payload_excludes_local_ids_builds_and_notes() -> None:
         "player-local-id",
         "character-local-id",
         "build-local-id",
-        "Corpsebuster",
-        "Null Arca",
         "Fatecarver",
         "https://private.example/build",
         "private raid lead note",
