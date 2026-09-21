@@ -5,6 +5,7 @@ from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
 from services.combat_simulation_saved_build_dd_provider_service import (
     CombatSimulationSavedBuildDDProviderService,
+    _SimulationTemporalSkillProvider,
 )
 from services.minmax_character_progression_adapter import (
     SavedBuildProgressionResolution,
@@ -152,3 +153,116 @@ def test_saved_build_dd_provider_allows_reviewed_ambient_static_context_gap() ->
     assert result.static_context is not None
     assert result.static_context.unresolved == ()
     assert len(weapon.calls) == 1
+
+
+
+class _PeriodicTimingService:
+    def __init__(self, entries):
+        self.entries = tuple(entries)
+
+    def inspect_action(self, action):
+        return SimpleNamespace(entries=self.entries)
+
+
+class _SkillDamageDelegate:
+    def __init__(self):
+        self.calls = []
+
+    def evaluate_action(self, *, candidate, action):
+        self.calls.append((candidate, action))
+        return __import__(
+            "services.rotation_candidate_dd_role_output_service",
+            fromlist=["RotationActionDamageEvidence"],
+        ).RotationActionDamageEvidence(
+            time_seconds=action.time_seconds,
+            sequence=action.sequence,
+            damage_value=12345.0,
+        )
+
+
+def test_simulation_temporal_skill_provider_blocks_periodic_whole_plan_totals() -> None:
+    action = __import__(
+        "minmax.rotation_plan",
+        fromlist=["RotationAction", "RotationActionKind"],
+    ).RotationAction(
+        time_seconds=1.0,
+        sequence=0,
+        kind=__import__(
+            "minmax.rotation_plan",
+            fromlist=["RotationActionKind"],
+        ).RotationActionKind.SKILL,
+        name="Damage Over Time",
+        bar="front",
+    )
+    delegate = _SkillDamageDelegate()
+    provider = _SimulationTemporalSkillProvider(
+        delegate=delegate,
+        timing_service=_PeriodicTimingService((object(),)),
+    )
+    candidate = __import__(
+        "services.rotation_candidate_generation_service",
+        fromlist=["GeneratedRotationCandidate"],
+    ).GeneratedRotationCandidate(
+        candidate_id="periodic",
+        plan=__import__(
+            "minmax.rotation_plan",
+            fromlist=["RotationPlan"],
+        ).RotationPlan(
+            character_name="Damage Tester",
+            build_name="DD Build",
+            duration_seconds=5.0,
+            actions=(action,),
+        ),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    result = provider.evaluate_action(candidate=candidate, action=action)
+
+    assert result.damage_value is None
+    assert "occurrence-level tick damage" in result.unresolved[0]
+    assert delegate.calls == []
+
+
+def test_simulation_temporal_skill_provider_allows_nonperiodic_damage() -> None:
+    action = __import__(
+        "minmax.rotation_plan",
+        fromlist=["RotationAction", "RotationActionKind"],
+    ).RotationAction(
+        time_seconds=1.0,
+        sequence=0,
+        kind=__import__(
+            "minmax.rotation_plan",
+            fromlist=["RotationActionKind"],
+        ).RotationActionKind.SKILL,
+        name="Direct Hit",
+        bar="front",
+    )
+    delegate = _SkillDamageDelegate()
+    provider = _SimulationTemporalSkillProvider(
+        delegate=delegate,
+        timing_service=_PeriodicTimingService(()),
+    )
+    candidate = __import__(
+        "services.rotation_candidate_generation_service",
+        fromlist=["GeneratedRotationCandidate"],
+    ).GeneratedRotationCandidate(
+        candidate_id="direct",
+        plan=__import__(
+            "minmax.rotation_plan",
+            fromlist=["RotationPlan"],
+        ).RotationPlan(
+            character_name="Damage Tester",
+            build_name="DD Build",
+            duration_seconds=5.0,
+            actions=(action,),
+        ),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    result = provider.evaluate_action(candidate=candidate, action=action)
+
+    assert result.damage_value == 12345.0
+    assert result.unresolved == ()
+    assert len(delegate.calls) == 1
