@@ -26,6 +26,9 @@ from services.extreme_record_execution_catalog_service import (
     ExtremeRecordExecutionCatalogService,
     ExtremeRecordExecutionStatus,
 )
+from services.extreme_saved_rotation_combat_record_service import (
+    ExtremeSavedRotationCombatRecordService,
+)
 from services.extreme_saved_rotation_resource_record_service import (
     ExtremeSavedRotationResourceRecordService,
 )
@@ -68,6 +71,7 @@ class ExtremeSpecializedExecutionService:
             "damage_shield",
             "bash_damage",
             "resource_sustain",
+            "sustained_dps",
             "ultimate_generation",
             "movement_speed",
             "sprint_speed",
@@ -96,6 +100,20 @@ class ExtremeSpecializedExecutionService:
                 "Event Source",
                 "canonical_candidate",
                 note="Select/prove the legal event source before scoring.",
+            ),
+        ),
+        "combat-simulation": (
+            ExtremeSpecializedInputRequirement(
+                "target_health",
+                "Target Health",
+                "integer",
+                note="Explicit target maximum/current Health for the modeled comparison.",
+            ),
+            ExtremeSpecializedInputRequirement(
+                "target_resistance",
+                "Target Resistance",
+                "rating",
+                note="Explicit target resistance used by canonical DD damage evaluation.",
             ),
         ),
         "resource-timeline": (
@@ -135,6 +153,20 @@ class ExtremeSpecializedExecutionService:
         # Saved RotationPlan artifacts own the explicit timeline/workload for the
         # two resource-timeline records. No second scenario editor is required.
         "resource_sustain": (),
+        "sustained_dps": (
+            ExtremeSpecializedInputRequirement(
+                "target_health",
+                "Target Health",
+                "integer",
+                note="Explicit target Health; no training-dummy Health is assumed.",
+            ),
+            ExtremeSpecializedInputRequirement(
+                "target_resistance",
+                "Target Resistance",
+                "rating",
+                note="Explicit target resistance; no dummy/boss armor is assumed.",
+            ),
+        ),
         "ultimate_generation": (),
         "invisibility_duration": (),
         "invisibility_uptime": (
@@ -154,6 +186,7 @@ class ExtremeSpecializedExecutionService:
         shield_record: ExtremeDamageShieldSavedBuildRecordService | None = None,
         bash_record: ExtremeBashSavedBuildRecordService | None = None,
         saved_rotation_resources: ExtremeSavedRotationResourceRecordService | None = None,
+        saved_rotation_combat: ExtremeSavedRotationCombatRecordService | None = None,
         movement_package: ExtremeMovementStaticPackageService | None = None,
         stealth_package: ExtremeStealthSourcePackageService | None = None,
         invisibility_duration_record: ExtremeInvisibilityDurationRecordService | None = None,
@@ -173,6 +206,11 @@ class ExtremeSpecializedExecutionService:
         )
         self.saved_rotation_resources = saved_rotation_resources or (
             ExtremeSavedRotationResourceRecordService(database_path)
+            if database_path is not None
+            else None
+        )
+        self.saved_rotation_combat = saved_rotation_combat or (
+            ExtremeSavedRotationCombatRecordService(database_path)
             if database_path is not None
             else None
         )
@@ -238,19 +276,31 @@ class ExtremeSpecializedExecutionService:
         *,
         active_bar: str = "front",
         duration_seconds: float | None = None,
+        target_health: int | None = None,
+        target_resistance: float | None = None,
+        target_name: str = "Boss",
     ) -> ExtremeSpecializedExecutionResult:
         key = str(objective_key or "").strip().casefold()
         descriptor = ExtremeRecordExecutionCatalogService.descriptor(key)
         if descriptor.status is not ExtremeRecordExecutionStatus.SPECIALIZED:
             raise ValueError(f"Extreme record is not specialized: {objective_key!r}")
         requirements = self.requirements_for(key)
-        if requirements and not (
-            self.can_execute_with_duration_input(key) and duration_seconds is not None
-        ):
-            labels = ", ".join(requirement.label for requirement in requirements if requirement.required)
-            raise ValueError(
-                f"{descriptor.objective.label} requires family-specific scenario inputs before execution: {labels}"
+        if requirements:
+            provided = {
+                "duration_seconds": duration_seconds,
+                "target_health": target_health,
+                "target_resistance": target_resistance,
+            }
+            missing = tuple(
+                requirement.label
+                for requirement in requirements
+                if requirement.required and provided.get(requirement.key) is None
             )
+            if missing:
+                raise ValueError(
+                    f"{descriptor.objective.label} requires family-specific scenario inputs before execution: "
+                    + ", ".join(missing)
+                )
 
         if key in {"actual_heal", "critical_heal"}:
             if build is None:
@@ -333,6 +383,60 @@ class ExtremeSpecializedExecutionService:
                     ("Active bar", active_bar),
                     ("Reviewed Bash lower bound", f"{value:,.0f}"),
                 ),
+                unresolved=result.unresolved,
+                search_scope=result.evidence,
+                omitted_scope=result.unresolved,
+            )
+
+        if key == "sustained_dps":
+            if build is None:
+                raise ValueError(f"{descriptor.objective.label} requires a saved-build starting context")
+            if target_health is None or target_resistance is None:
+                raise ValueError(
+                    f"{descriptor.objective.label} requires explicit target Health and resistance"
+                )
+            if self.saved_rotation_combat is None:
+                raise ValueError("Extreme sustained-DPS record requires a canonical database path")
+            result = self.saved_rotation_combat.sustained_dps(
+                build,
+                target_health=int(target_health),
+                target_resistance=float(target_resistance),
+                target_name=target_name,
+            )
+            record = result.record
+            summary_rows: list[tuple[str, str]] = [
+                ("Target Health", f"{int(target_health):,}"),
+                ("Target Resistance", f"{float(target_resistance):g}"),
+            ]
+            value = None
+            value_text = None
+            if record is not None:
+                value = record.modeled_dps
+                value_text = f"{value:,.2f} DPS modeled saved-rotation lower bound"
+                summary_rows.extend(
+                    (
+                        ("Executed horizon", f"{record.duration_seconds:g}s"),
+                        ("Applied damage", f"{record.applied_damage:,.2f}"),
+                        (
+                            "Ending target Health",
+                            "unknown"
+                            if record.ending_target_health is None
+                            else f"{record.ending_target_health:,}",
+                        ),
+                        ("Target dead", "YES" if record.target_dead else "NO"),
+                    )
+                )
+                if record.killing_source:
+                    summary_rows.append(("Killing source", record.killing_source))
+            return ExtremeSpecializedExecutionResult(
+                objective_key=key,
+                label=descriptor.objective.label,
+                execution_family=descriptor.execution_family,
+                value=value,
+                value_text=value_text,
+                mechanic_complete=result.mechanic_complete,
+                global_maximum_proven=False,
+                summary_rows=tuple(summary_rows),
                 unresolved=result.unresolved,
                 search_scope=result.evidence,
                 omitted_scope=result.unresolved,
