@@ -125,6 +125,7 @@ class EsoLogsTrendingService:
                     tanks = self._coordinated_tank_players(
                         encounter_id=int(encounter_id),
                         limit=limit,
+                        cache=report_player_cache,
                     )
                 except EsoLogsApiError as exc:
                     role_errors[role_key] = str(exc)
@@ -190,6 +191,7 @@ class EsoLogsTrendingService:
         *,
         encounter_id: int,
         limit: int,
+        cache: dict[tuple[str, int], list[TopTeamPlayer] | None] | None = None,
     ) -> list[TopTeamPlayer]:
         """Sample actual Tank-bucket players from top coordinated encounter reports.
 
@@ -204,22 +206,28 @@ class EsoLogsTrendingService:
         tanks: list[TopTeamPlayer] = []
         seen: set[tuple[str, str]] = set()
         errors: list[str] = []
+        player_cache = cache if cache is not None else {}
         for report_code, fight_id in candidates:
-            try:
-                fight = self.client.get_fight(report_code, fight_id)
-                start = float(fight.get("startTime", 0.0))
-                end = float(fight.get("endTime", 0.0))
-                details = self.client.get_report_player_summary(
-                    report_code,
-                    fight_id,
-                    start,
-                    end,
-                )
-            except EsoLogsApiError as exc:
-                errors.append(f"{report_code}#{fight_id}: {exc}")
-                continue
+            cache_key = (str(report_code), int(fight_id))
+            if cache_key not in player_cache:
+                try:
+                    fight = self.client.get_fight(report_code, fight_id)
+                    start = float(fight.get("startTime", 0.0))
+                    end = float(fight.get("endTime", 0.0))
+                    details = self.client.get_report_player_summary(
+                        report_code,
+                        fight_id,
+                        start,
+                        end,
+                    )
+                    player_cache[cache_key] = TopTeamService._players_from_details(details)
+                except EsoLogsApiError as exc:
+                    player_cache[cache_key] = None
+                    errors.append(f"{report_code}#{fight_id}: {exc}")
+                    continue
 
-            for player in TopTeamService._players_from_details(details):
+            players = player_cache[cache_key] or []
+            for player in players:
                 if player.Role != "tank":
                     continue
                 identity = (
