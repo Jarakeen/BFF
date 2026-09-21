@@ -57,6 +57,9 @@ from services.rotation_dd_periodic_runtime_semantics_registry_service import (
 from services.rotation_heavy_sustain_projection_service import (
     RotationHeavySustainProjectionService,
 )
+from services.rotation_plan_runtime_build_context_service import (
+    RotationRuntimeBuildContextResolver,
+)
 from services.rotation_saved_build_weapon_attack_evaluation_service import (
     RotationSavedBuildWeaponAttackEvaluationService,
 )
@@ -176,6 +179,7 @@ class _StaticBarAwareSkillProvider:
         target_combat_state_resolver: TargetCombatStateResolver | None,
         target_resistance_resolver: TargetResistanceResolver | None,
         target_snapshot_resolver: TargetSnapshotResolver | None,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None,
         execute_target_identity: str,
         initial_bar: str,
     ) -> None:
@@ -186,6 +190,7 @@ class _StaticBarAwareSkillProvider:
         self.target_combat_state_resolver = target_combat_state_resolver
         self.target_resistance_resolver = target_resistance_resolver
         self.target_snapshot_resolver = target_snapshot_resolver
+        self.runtime_build_context_resolver = runtime_build_context_resolver
         self.execute_target_identity = str(execute_target_identity or "").strip()
         self.initial_bar = str(initial_bar or "").strip().casefold()
         self.semantics = RotationDDPeriodicRuntimeSemanticsRegistryService().load()
@@ -240,6 +245,7 @@ class _StaticBarAwareSkillProvider:
             target_combat_state=target_state,
             periodic_runtime_projection_service=self.periodic_projection,
             periodic_runtime_semantics=self.semantics,
+            runtime_build_context_resolver=self.runtime_build_context_resolver,
             runtime_target_combat_state_resolver=self.target_combat_state_resolver,
             runtime_target_resistance_resolver=self.target_resistance_resolver,
             runtime_target_snapshot_resolver=self.target_snapshot_resolver,
@@ -292,6 +298,7 @@ class _StaticBarAwareSkillProvider:
             target_combat_state=target_state,
             periodic_runtime_projection_service=self.periodic_projection,
             periodic_runtime_semantics=self.semantics,
+            runtime_build_context_resolver=self.runtime_build_context_resolver,
             runtime_target_combat_state_resolver=self.target_combat_state_resolver,
             runtime_target_resistance_resolver=self.target_resistance_resolver,
             runtime_target_snapshot_resolver=self.target_snapshot_resolver,
@@ -489,6 +496,7 @@ class CombatSimulationSavedBuildDDProviderService:
         target_combat_state_resolver: TargetCombatStateResolver | None = None,
         target_resistance_resolver: TargetResistanceResolver | None = None,
         target_snapshot_resolver: TargetSnapshotResolver | None = None,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
         execute_target_identity: str = "",
     ) -> CombatSimulationSavedBuildDDProviderResolution:
         role = " ".join(str(getattr(player_build, "Role", "") or "").strip().casefold().replace("_", " ").split())
@@ -523,6 +531,7 @@ class CombatSimulationSavedBuildDDProviderService:
             target_combat_state_resolver=target_combat_state_resolver,
             target_resistance_resolver=target_resistance_resolver,
             target_snapshot_resolver=target_snapshot_resolver,
+            runtime_build_context_resolver=runtime_build_context_resolver,
             execute_target_identity=execute_target_identity,
             initial_bar=initial_bar,
         )
