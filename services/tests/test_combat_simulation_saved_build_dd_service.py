@@ -383,3 +383,98 @@ def test_saved_build_dd_orchestrator_replays_periodic_occurrence_timestamps() ->
         (1.0, "Mixed Skill", 2000.0),
     ]
     assert health == [(0.0, 9000), (1.0, 7000)]
+
+
+
+class _LethalPeriodicOccurrenceProvider:
+    def evaluate_action_occurrences(self, *, candidate, action):
+        del candidate
+        if action.name == "DoT":
+            return RotationActionDamageOccurrenceEvidence(
+                action_time_seconds=action.time_seconds,
+                action_sequence=action.sequence,
+                occurrences=(
+                    RotationActionDamageOccurrence(
+                        time_seconds=1.0,
+                        sequence=0,
+                        damage_value=12000.0,
+                        source_name="DoT",
+                        coefficient_number=1,
+                        occurrence_index=0,
+                    ),
+                ),
+            )
+        raise AssertionError("post-death action should never be evaluated")
+
+
+class _LethalPeriodicProviderService:
+    def resolve(self, **_kwargs):
+        return CombatSimulationSavedBuildDDProviderResolution(
+            provider=_LethalPeriodicOccurrenceProvider(),
+            unresolved=(),
+        )
+
+
+def test_periodic_tick_can_terminate_saved_build_simulation() -> None:
+    service = CombatSimulationSavedBuildDDService(
+        provider_service=_LethalPeriodicProviderService(),
+        simulation_service=_simulation_service(),
+    )
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=5.0,
+        actions=(
+            RotationAction(
+                time_seconds=0.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="DoT",
+                bar="front",
+            ),
+            RotationAction(
+                time_seconds=2.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Too Late",
+                bar="front",
+            ),
+        ),
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = service.simulate(
+        build_snapshot=_snapshot(),
+        plan=plan,
+        target_state=state,
+        damage_target_identity="Boss",
+        target_resistance=18200.0,
+    )
+
+    assert result.duration_seconds == 1.0
+    outgoing = [
+        event
+        for event in result.events
+        if event.event_type == "outgoing_damage"
+    ]
+    deaths = [
+        event
+        for event in result.events
+        if event.event_type == "death"
+    ]
+    assert [(event.time_seconds, event.source) for event in outgoing] == [
+        (1.0, "DoT"),
+    ]
+    assert [(event.time_seconds, event.source) for event in deaths] == [
+        (1.0, "DoT"),
+    ]
+    assert not any(event.time_seconds > 1.0 for event in result.events)
