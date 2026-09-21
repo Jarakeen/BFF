@@ -875,6 +875,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.axis_dominance_composition",
+        domain="extreme",
+        purpose=(
+            "Compose canonical generated sustained-DPS mutation-axis coverage from "
+            "multiple independent dominance proofs without mixing coverage with numeric optimism."
+        ),
+        implementation_path="services.extreme_sustained_dps_axis_dominance_composition_service",
+        inputs=("CandidateKey", "RequiredMutationAxes", "AxisCoverageProofs"),
+        outputs=("ExtremeSustainedDPSAxisDominanceComposition",),
+        dependencies=("extreme.sustained_dps.action_upper_bound",),
+        responsibilities=("extreme_sustained_dps_axis_dominance_composition",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Uses one canonical axis vocabulary, unions proof coverage, rejects unknown axes, "
+            "and leaves numeric optimistic multipliers/absolute ceilings to the action-bound authority. "
+            "Missing required axes keep the composed dominance proof incomplete."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.closed_descendant_action_ceiling",
         domain="extreme",
         purpose=(
