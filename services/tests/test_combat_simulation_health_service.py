@@ -543,14 +543,12 @@ def test_same_source_same_kind_damage_components_are_allowed() -> None:
     )
 
     assert result.unresolved == ()
-    assert [event.payload_dict()["before"] for event in result.events] == [
-        10000,
-        8000,
-    ]
-    assert [event.payload_dict()["after"] for event in result.events] == [
-        8000,
-        5000,
-    ]
+    assert len(result.events) == 1
+    payload = result.events[0].payload_dict()
+    assert payload["before"] == 10000
+    assert payload["attempted_damage"] == 5000.0
+    assert payload["applied_damage"] == 5000.0
+    assert payload["after"] == 5000
 
 
 def test_same_source_mixed_damage_and_heal_still_fails_closed() -> None:
@@ -584,3 +582,55 @@ def test_same_source_mixed_damage_and_heal_still_fails_closed() -> None:
         "Health consequence ordering is unresolved" in message
         for message in result.unresolved
     )
+
+
+
+def test_same_source_damage_components_have_order_independent_overkill() -> None:
+    def event(amount, damage_type):
+        return CombatSimulationEvent(
+            time_seconds=1.0,
+            priority=int(SimulationEventPriority.DIRECT_RESULT),
+            sequence=0,
+            event_type="outgoing_damage",
+            source="Mixed Skill",
+            payload=(
+                ("recipient", "Boss"),
+                ("amount", float(amount)),
+                ("damage_type", damage_type),
+            ),
+        )
+
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=2500,
+                maximum_health=10000,
+            ),
+        ),
+    )
+    service = CombatSimulationHealthService()
+
+    first_order = service.project(
+        events=(event(2000, "magic"), event(3000, "flame")),
+        target_state=state,
+    )
+    reverse_order = service.project(
+        events=(event(3000, "flame"), event(2000, "magic")),
+        target_state=state,
+    )
+
+    for result in (first_order, reverse_order):
+        assert result.unresolved == ()
+        assert [item.event_type for item in result.events] == [
+            "health_change",
+            "death",
+        ]
+        health = result.events[0].payload_dict()
+        death = result.events[1].payload_dict()
+        assert health["attempted_damage"] == 5000.0
+        assert health["applied_damage"] == 2500.0
+        assert health["overkill"] == 2500.0
+        assert health["after"] == 0
+        assert death["overkill"] == 2500.0
