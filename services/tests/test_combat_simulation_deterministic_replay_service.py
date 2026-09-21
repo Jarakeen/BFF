@@ -880,3 +880,67 @@ def test_combat_simulation_result_rejects_duplicate_death_transition() -> None:
         assert "death transition cannot be duplicated" in str(exc)
     else:
         raise AssertionError("Expected duplicate death transition to fail closed")
+
+
+def test_combat_simulation_result_rejects_health_change_after_death() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=5000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    lethal = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("before", 5000),
+            ("applied_damage", 5000.0),
+            ("after", 0),
+            ("maximum_health", 10000),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+    death = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.EXPIRATION),
+        sequence=0,
+        event_type="death",
+        source="Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+    resurrection = CombatSimulationEvent(
+        time_seconds=2.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Impossible Heal",
+        payload=(
+            ("recipient", "Boss"),
+            ("before", 0),
+            ("applied_heal", 1000.0),
+            ("after", 1000),
+            ("maximum_health", 10000),
+            ("origin_event_type", "direct_heal"),
+        ),
+    )
+
+    try:
+        _result(
+            events=(lethal, death, resurrection),
+            target_state=state,
+        )
+    except ValueError as exc:
+        assert "cannot change after death" in str(exc)
+    else:
+        raise AssertionError("Expected post-death Health change to fail closed")
