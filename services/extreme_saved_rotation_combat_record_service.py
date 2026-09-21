@@ -59,6 +59,7 @@ class ExtremeSavedRotationSustainedDPSResult:
     summary: CombatSimulationDamageSummary | None
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+    omitted_scope: tuple[str, ...] = ()
 
     @property
     def mechanic_complete(self) -> bool:
@@ -200,8 +201,10 @@ class ExtremeSavedRotationCombatRecordService:
             (
                 *summary.unresolved,
                 *summary.damage_unresolved,
-                "Global Extreme sustained-DPS search across alternate legal builds/rotations remains open",
             )
+        )
+        omitted_scope = (
+            "Global Extreme sustained-DPS search across alternate legal builds/rotations remains open",
         )
         if summary.modeled_dps is None:
             return ExtremeSavedRotationSustainedDPSResult(
@@ -209,6 +212,7 @@ class ExtremeSavedRotationCombatRecordService:
                 summary=summary,
                 evidence=evidence,
                 unresolved=unresolved,
+                omitted_scope=omitted_scope,
             )
 
         record = ExtremeSustainedDPSRecord(
@@ -227,6 +231,7 @@ class ExtremeSavedRotationCombatRecordService:
             summary=summary,
             evidence=evidence,
             unresolved=unresolved,
+            omitted_scope=omitted_scope,
         )
 
 
