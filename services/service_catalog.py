@@ -831,6 +831,38 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.rotation_policy_frontier",
+        domain="extreme",
+        purpose=(
+            "Enumerate explicit Ultimate-bar choice/as-soon-as-affordable policies and "
+            "anchored potion first-use/reuse timing over one generated seed RotationPlan."
+        ),
+        implementation_path="services.extreme_sustained_dps_rotation_policy_frontier_service",
+        inputs=(
+            "PlayerBuild",
+            "ExtremeSustainedDPSRotationPlanCandidate",
+            "EffectivePotionCooldownSeconds",
+            "StartingUltimate",
+            "ExplicitUltimateGenerationEvidence",
+        ),
+        outputs=(
+            "ExtremeSustainedDPSRotationPolicyFrontier",
+            "ExtremeSustainedDPSRotationPolicyCandidate",
+        ),
+        dependencies=("extreme.sustained_dps.rotation_plan_frontier",),
+        responsibilities=("extreme_sustained_dps_rotation_policy_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Ultimate affordability/spend remains owned by RotationUltimateService and final "
+            "Ultimate/potion legality remains owned by RotationScheduledActionResourceLegalityService. "
+            "This frontier proves only its anchored potion family and explicit Ultimate-choice family; "
+            "continuous potion offsets and deliberate post-affordability Ultimate delays remain open."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.rotation_plan_frontier",
         domain="extreme",
         purpose=(
