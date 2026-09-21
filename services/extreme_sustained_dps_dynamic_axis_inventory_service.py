@@ -101,7 +101,9 @@ class ExtremeSustainedDPSDynamicAxisInventoryService:
 
         foods: list[str] = []
         food_unresolved: list[str] = []
-        seen_food_signatures: set[tuple[tuple[str, str, float, str], ...]] = set()
+        seen_food_signatures: set[
+            tuple[tuple[tuple[str, str, float, str], ...], str]
+        ] = set()
         for listed in self.provisioning_repository.list_names():
             name = self.provisioning_repository.canonical_name(listed)
             if not name:
@@ -111,7 +113,7 @@ class ExtremeSustainedDPSDynamicAxisInventoryService:
                 if unresolved:
                     food_unresolved.extend(str(item) for item in unresolved if str(item))
                 continue
-            signature = tuple(
+            effect_signature = tuple(
                 sorted(
                     (
                         str(getattr(getattr(effect, "stat", None), "value", getattr(effect, "stat", ""))),
@@ -122,6 +124,14 @@ class ExtremeSustainedDPSDynamicAxisInventoryService:
                     for effect in effects
                 )
             )
+            description_resolver = getattr(self.provisioning_repository, "description", None)
+            description = (
+                str(description_resolver(name) or "")
+                if callable(description_resolver)
+                else ""
+            )
+            normalized_description = " ".join(description.casefold().split())
+            signature = (effect_signature, normalized_description)
             if signature in seen_food_signatures:
                 continue
             seen_food_signatures.add(signature)
@@ -164,7 +174,7 @@ class ExtremeSustainedDPSDynamicAxisInventoryService:
         evidence = (
             f"Structural candidate index: {int(candidate.structural_index)}",
             f"Mundus choices: {len(mundus)}",
-            f"Mechanically distinct mapped food/drink choices: {len(foods)}",
+            f"Distinct mapped static food/drink states, conservatively preserving tooltip-distinct items: {len(foods)}",
             f"Modeled armor trait choices per equipped armor slot: {len(MODELED_ARMOR_TRAITS)}",
             f"Modeled armor enchant choices per eligible armor slot: {len(MODELED_ARMOR_ENCHANTS)}",
             f"Bar-eligible active skill identities after class-route filtering: {len(set(skill_ids))}",
