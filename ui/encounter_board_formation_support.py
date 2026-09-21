@@ -10,7 +10,7 @@ color-vision behavior.
 
 from dataclasses import dataclass
 
-from PySide6.QtWidgets import QApplication, QComboBox, QLabel, QPushButton
+from PySide6.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from services.accessibility_preferences import VISUAL_THEME_URBAN_WILDERNESS
 
@@ -126,7 +126,7 @@ def apply_formation(board, preset_key: str) -> bool:
 
 
 def install() -> None:
-    """Add formation presets to the Mechanics & Areas Raid Map row."""
+    """Add formation presets as their own functional Raid Map row."""
     global _INSTALLED
     if _INSTALLED:
         return
@@ -143,10 +143,7 @@ def install() -> None:
             return
 
         root = self.layout()
-        zone_toolbar = None
-        if root is not None and root.count() > 1:
-            zone_toolbar = root.itemAt(1).layout()
-        if zone_toolbar is None:
+        if root is None:
             return
 
         self.formation_combo = QComboBox()
@@ -175,10 +172,19 @@ def install() -> None:
             )
         )
 
-        insert_at = _first_spacer_index(zone_toolbar)
-        zone_toolbar.insertWidget(insert_at, formation_label)
-        zone_toolbar.insertWidget(insert_at + 1, self.formation_combo)
-        zone_toolbar.insertWidget(insert_at + 2, apply_button)
+        panel = QWidget(self)
+        row = QHBoxLayout(panel)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(5)
+        row.addWidget(formation_label)
+        row.addWidget(self.formation_combo)
+        row.addWidget(apply_button)
+        row.addStretch(1)
+
+        # Base EncounterBoard rows are Actors, Mechanics & Areas, then Layout &
+        # Output. Keep Formations between Mechanics and Layout so the menu reads
+        # in task order instead of appending controls to an unrelated row.
+        root.insertWidget(2, panel)
 
     encounter_board.EncounterBoard.__init__ = init_with_formations
     encounter_board.EncounterBoard.apply_formation = apply_formation
