@@ -877,7 +877,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Generated progression is caller-owned rather than resolved through saved-build persistence. "
             "Bar-legal named gear buffs flow through the shared runtime CombatState path, while reviewed "
-            "timed stat EffectVariants are projected into canonical runtime build-context inputs."
+            "timed stat EffectVariants are projected into canonical runtime build-context inputs. "
+            "Unknown runtime stat identities still fail closed."
         ),
     ),
     ServiceDescriptor(
