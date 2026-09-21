@@ -1117,3 +1117,7 @@ For a sustained-DPS action, the best Mundus and the best food are not necessaril
 ### 2026-09-21 — Max-resource armor reductions are not automatically DPS-safe
 
 A trait/glyph reduction that is proof-safe for Max Health, Magicka, or Stamina can still be unsafe for sustained DPS. DPS depends on interactions such as crit, penetration, resource scaling, Divines amplification, sustain, and skill-specific coefficients. FoundryDock therefore preserves the full modeled armor trait/enchant denominator for sustained-DPS search and pages it lazily instead of borrowing a resource-objective reduction whose proof assumptions do not apply.
+
+### 2026-09-21 — Weapon enchant identity is static; weapon enchant DPS is runtime
+
+A weapon enchant can be selected as a build identity without knowing its sustained contribution. Its real DPS impact can depend on trigger events, cooldown, bar state, Infused, status effects, buff/debuff duration, and the rotation timeline. FoundryDock therefore enumerates weapon enchant families in the generated-search denominator but does not score them as static character-sheet bonuses. Their contribution remains owned by runtime combat evaluation.
