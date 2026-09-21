@@ -11,6 +11,10 @@ from services.extreme_sustained_dps_generated_branch_and_bound_search_service im
 from services.extreme_sustained_dps_generated_frontier_wiring_service import (
     ExtremeSustainedDPSIndexedFrontierAxis,
 )
+from services.extreme_sustained_dps_runtime_state_frontier_service import (
+    ExtremeSustainedDPSRuntimeStateChoice,
+    ExtremeSustainedDPSRuntimeStateFrontierService,
+)
 
 
 @dataclass(frozen=True)
@@ -132,3 +136,33 @@ def test_forwards_node_bound_provider_to_lazy_wiring() -> None:
         ("structural:0|choice:0", 1),
         ("structural:0|choice:1", 1),
     ]
+
+
+
+def test_appends_proven_local_runtime_family_as_terminal_search_axis() -> None:
+    leaf = _LeafEvaluation()
+    service = ExtremeSustainedDPSGeneratedAxisPipelineSearchService(
+        pipeline=_Pipeline(),
+        leaf_evaluation=leaf,
+    )
+    runtime_frontier = ExtremeSustainedDPSRuntimeStateFrontierService.build(
+        (
+            ExtremeSustainedDPSRuntimeStateChoice("runtime:a", "snapshot-a"),
+            ExtremeSustainedDPSRuntimeStateChoice("runtime:b", "snapshot-b"),
+        ),
+        denominator_proven=True,
+        source="reviewed local runtime family",
+    )
+
+    result = service.search(
+        _State(),
+        required_duration_seconds=10.0,
+        runtime_snapshot="fallback-snapshot",
+        target_health=100,
+        target_resistance=0.0,
+        runtime_state_frontier=runtime_frontier,
+    )
+
+    assert result.evaluated_leaf_count == 4
+    assert result.best_modeled_dps == 1.0
+    assert result.global_maximum_proven is True
