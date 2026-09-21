@@ -818,3 +818,23 @@ def test_sustained_dps_mundus_provisioning_adapter_preserves_joint_dominance() -
     )
     assert "one coupled proof" in service.notes
     assert "promote neither canonical axis coverage nor numeric action ceiling" in service.notes
+
+def test_sustained_dps_generated_gear_axis_adapter_preserves_evolving_build() -> None:
+    service = canonical_service_for("extreme_sustained_dps_generated_gear_axis_adapter")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.generated_gear_axis_adapter"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.dual_bar_gear_frontier",
+        "extreme.sustained_dps.armor_trait_enchant_frontier",
+        "extreme.sustained_dps.jewelry_frontier",
+        "extreme.sustained_dps.weapon_frontier",
+        "extreme.sustained_dps.cross_axis_context",
+        "extreme.sustained_dps.generated_frontier_wiring",
+    )
+    assert "same evolving materialized build" in service.notes
+    assert "fail closed" in service.notes
+
