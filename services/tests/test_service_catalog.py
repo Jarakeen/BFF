@@ -1060,3 +1060,16 @@ def test_sustained_dps_finite_whole_plan_dominance_allows_plan_shape_changes() -
     assert "Plan shape and action identity may differ across choices" in service.notes
     assert "one exact horizon" in service.notes
     assert "Omitted scope remains separate" in service.notes
+
+
+def test_sustained_dps_generated_whole_plan_choice_evaluator_keeps_witness_fixed() -> None:
+    service = canonical_service_for("extreme_sustained_dps_generated_whole_plan_choice_evaluator")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.generated_whole_plan_choice_evaluator"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.generated_runtime_evaluation",)
+    assert "build, explicit progression, dual-bar gear" in service.notes
+    assert "Only the legal plan choice and its initial bar vary" in service.notes
