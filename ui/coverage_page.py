@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
+from services.finch_shared_provenance_service import format_shared_timestamp
 from services.finch_shared_coverage_service import (
     list_shared_coverage_from_finch,
     publish_coverage_to_finch,
@@ -177,7 +178,10 @@ class CoveragePage(FoundryPage):
             return
 
         labels = [
-            f"{row.name or row.plan_id} • {row.trial_id or 'Trial unknown'} • {row.covered}/{row.total_effects} covered"
+            f"{row.name or row.plan_id} • {row.trial_id or 'Trial unknown'} • "
+            f"{row.covered}/{row.total_effects} covered • "
+            f"{row.published_by or 'Unknown publisher'} • "
+            f"{format_shared_timestamp(row.updated_at)}"
             for row in previews
         ]
         selected, accepted = QInputDialog.getItem(
@@ -212,7 +216,7 @@ class CoveragePage(FoundryPage):
                 f"Trial: {row.trial_id or 'Unknown'}\n"
                 f"Team: {row.team_name or 'Not set'}\n"
                 f"Published by: {row.published_by or 'Unknown'}\n"
-                f"Updated: {row.updated_at or 'Unknown'}\n\n"
+                f"Updated: {format_shared_timestamp(row.updated_at)}\n\n"
                 f"Covered: {row.covered}/{row.total_effects}\n"
                 f"Missing: {row.missing}\n"
                 f"Needs attention: {row.needs_attention}\n"
