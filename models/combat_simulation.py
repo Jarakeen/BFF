@@ -303,6 +303,11 @@ class CombatSimulationResult:
             raise ValueError(
                 "combat simulation result events must be in canonical timeline order"
             )
+        resource_keys = tuple(item.resource for item in self.resources)
+        if len(set(resource_keys)) != len(resource_keys):
+            raise ValueError(
+                "combat simulation result resource identities must be unique"
+            )
         initial_bar = str(self.initial_bar or "").strip().casefold()
         final_bar = str(self.final_bar or "").strip().casefold()
         if initial_bar not in {"front", "back"} or final_bar not in {"front", "back"}:
