@@ -961,9 +961,12 @@ def test_sustained_dps_generated_axis_pipeline_search_shares_scenario() -> None:
 
 
 def test_sustained_dps_finite_axis_action_dominance_requires_complete_same_coordinate_evidence() -> None:
-    service = canonical_service_for("extreme.sustained_dps.finite_axis_action_dominance")
+    direct = get_service("extreme.sustained_dps.finite_axis_action_dominance")
+    service = canonical_service_for("extreme_sustained_dps_finite_axis_action_dominance")
 
+    assert direct is not None
     assert service is not None
+    assert direct is service
     assert service.service_id == "extreme.sustained_dps.finite_axis_action_dominance"
     assert tuple(
         row.service_id
