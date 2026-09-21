@@ -64,7 +64,7 @@ class CombatSimulationResourceService:
             }:
                 priority = SimulationEventPriority.RESOURCE_RESTORE
             elif item.kind is ResourceTimelineEventKind.RESOURCE_MAXIMUM:
-                priority = SimulationEventPriority.EFFECT_APPLY
+                priority = SimulationEventPriority.RESOURCE_MAXIMUM
             else:
                 priority = SimulationEventPriority.SNAPSHOT
 
