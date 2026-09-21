@@ -198,6 +198,7 @@ class ExtremeSavedRotationCombatRecordService:
         )
         unresolved = self._dedupe(
             (
+                *summary.unresolved,
                 *summary.damage_unresolved,
                 "Global Extreme sustained-DPS search across alternate legal builds/rotations remains open",
             )
