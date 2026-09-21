@@ -159,13 +159,24 @@ class RosterPlayerIdentityService:
         self.database.commit()
         return True
 
-    def matching_members(self, identity: object, *, exclude_id: int | None = None):
-        """Return exact current-name or explicitly learned-alias matches."""
+    def matching_members(
+        self,
+        identity: object,
+        *,
+        exclude_id: int | None = None,
+        include_archived: bool = False,
+    ):
+        """Return exact current-name or explicitly learned-alias matches.
+
+        Archived Personnel remain excluded by default. Callers that need to
+        distinguish an archived identity from a genuinely unknown one may opt
+        in explicitly; no fuzzy or similarity matching is ever performed.
+        """
         key = _identity_key(identity)
         if not key:
             return []
         matched_ids: set[int] = set()
-        members = self.roster.list_members()
+        members = self.roster.list_members(include_archived=include_archived)
         by_id = {int(member.Id): member for member in members if member.Id is not None}
         for member_id, member in by_id.items():
             if exclude_id is not None and member_id == int(exclude_id):
