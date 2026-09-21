@@ -17,6 +17,7 @@ from models.raid_plan import RaidPlan, RaidPlanMember
 from models.team_schedule import TeamSchedule, TeamScheduleSlot
 from services.eso_database import EsoDatabase
 from services.finch_api_client import FinchApiClient, FinchSharedSnapshot
+from services.finch_shared_provenance_service import FinchSharedProvenanceService
 from services.raid_plan_repository import RaidPlanRepository
 from services.roster_service import RosterService
 from services.settings_service import SettingsService
@@ -48,6 +49,7 @@ class FinchSharedTeamPreview:
     current_focus: str
     published_by: str
     updated_at: str
+    provenance: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +63,7 @@ class FinchSharedRaidPlanPreview:
     member_count: int
     published_by: str
     updated_at: str
+    provenance: str
 
 
 class FinchSharedImportService:
@@ -70,10 +73,14 @@ class FinchSharedImportService:
         client: FinchApiClient,
         roster: RosterService,
         raid_plans: RaidPlanRepository,
+        provenance: FinchSharedProvenanceService | None = None,
     ) -> None:
         self.client = client
         self.roster = roster
         self.raid_plans = raid_plans
+        self.provenance = provenance or FinchSharedProvenanceService(
+            raid_plans.path.parent / "finch_shared_provenance.json"
+        )
 
     @staticmethod
     def team_preview(snapshot: FinchSharedSnapshot) -> FinchSharedTeamPreview:
@@ -92,6 +99,7 @@ class FinchSharedImportService:
             current_focus=_clean(schedule.get("current_focus")),
             published_by=snapshot.published_by,
             updated_at=snapshot.updated_at,
+            provenance=self.provenance.relation_for(snapshot),
         )
 
     @staticmethod
@@ -112,6 +120,7 @@ class FinchSharedImportService:
             member_count=len(members),
             published_by=snapshot.published_by,
             updated_at=snapshot.updated_at,
+            provenance=self.provenance.relation_for(snapshot),
         )
 
     def list_shared_teams(self) -> tuple[FinchSharedTeamPreview, ...]:
@@ -170,6 +179,7 @@ class FinchSharedImportService:
                 Slots=tuple(slots),
             )
         )
+        self.provenance.record_copy(snapshot=snapshot, local_key=canonical)
         return canonical
 
     def decoded_raid_plan(self, snapshot_key: str) -> RaidPlan:
@@ -258,9 +268,12 @@ class FinchSharedImportService:
             local_name = f"{base_name} {suffix}"
             suffix += 1
 
-        return self.raid_plans.save(
+        saved = self.raid_plans.save(
             replace(plan, plan_id=local_plan_id, name=local_name)
         )
+        snapshot = self.client.shared_raid_plan(snapshot_key)
+        self.provenance.record_copy(snapshot=snapshot, local_key=saved.plan_id)
+        return saved
 
 
 def _configured_client(
