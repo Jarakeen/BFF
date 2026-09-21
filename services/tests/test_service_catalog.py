@@ -1073,3 +1073,22 @@ def test_sustained_dps_generated_whole_plan_choice_evaluator_keeps_witness_fixed
     ) == ("extreme.sustained_dps.generated_runtime_evaluation",)
     assert "build, explicit progression, dual-bar gear" in service.notes
     assert "Only the legal plan choice and its initial bar vary" in service.notes
+
+
+def test_sustained_dps_dynamic_whole_plan_frontier_adapter_preserves_omitted_scope() -> None:
+    service = canonical_service_for("extreme_sustained_dps_dynamic_whole_plan_frontier_adapter")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.dynamic_whole_plan_frontier_adapter"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.rotation_plan_frontier",
+        "extreme.sustained_dps.rotation_policy_frontier",
+        "extreme.sustained_dps.execute_policy_frontier",
+        "extreme.sustained_dps.heavy_attack_policy_frontier",
+        "extreme.sustained_dps.finite_whole_plan_dominance",
+    )
+    assert "preserve each source denominator and omitted scope" in service.notes
+    assert "materialized one at a time" in service.notes
