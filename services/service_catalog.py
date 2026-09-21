@@ -831,6 +831,48 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.jewelry_frontier",
+        domain="extreme",
+        purpose=(
+            "Count and page the complete modeled jewelry trait × canonical glyph-family "
+            "product for the jewelry slots actually equipped by one build witness."
+        ),
+        implementation_path="services.extreme_sustained_dps_jewelry_frontier_service",
+        inputs=("PlayerBuild", "CanonicalJewelryTraits", "CanonicalJewelryGlyphFamilies"),
+        outputs=("ExtremeSustainedDPSJewelryFrontier",),
+        dependencies=("extreme.sustained_dps.dynamic_axes",),
+        responsibilities=("extreme_sustained_dps_jewelry_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Preserves the joint finite denominator lazily and makes no independent-stat "
+            "DPS reduction assumption."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_frontier",
+        domain="extreme",
+        purpose=(
+            "Count and page the modeled weapon trait × canonical enchant-family product "
+            "while preserving weapon-enchant proc/cooldown scoring as a runtime responsibility."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_frontier_service",
+        inputs=("PlayerBuild", "CanonicalWeaponTraits", "CanonicalWeaponEnchantFamilies"),
+        outputs=("ExtremeSustainedDPSWeaponFrontier",),
+        dependencies=("extreme.sustained_dps.dynamic_axes",),
+        responsibilities=("extreme_sustained_dps_weapon_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Weapon enchant identities are enumerable statically, but damage, buff/debuff, "
+            "proc, cooldown, and Infused interactions remain runtime-owned."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.mundus_provisioning_dominance",
         domain="extreme",
         purpose=(
