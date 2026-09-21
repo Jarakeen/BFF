@@ -15,6 +15,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QCompleter,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -39,6 +40,11 @@ from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
 
+
+HOUSE_STACK_ROWS: tuple[tuple[str, ...], ...] = (
+    ("DD 5", "DD 6", "DD 7", "DD 8"),
+    ("DD 1", "DD 2", "DD 3", "DD 4"),
+)
 
 RAID_PLAN_SEATS: tuple[str, ...] = (
     "Tank 1",
@@ -268,6 +274,31 @@ class RaidPlanPage(FoundryPage):
             self.team_table.setCellWidget(row, 5, save_player)
 
         self.team_table.cellChanged.connect(lambda *_: self._update_summary())
+
+        stack_panel = QWidget()
+        stack_layout = QGridLayout(stack_panel)
+        stack_layout.setContentsMargins(0, 0, 0, 4)
+        stack_layout.setHorizontalSpacing(8)
+        stack_layout.setVerticalSpacing(4)
+
+        stack_heading = QLabel("HOUSE STACK")
+        stack_heading.setProperty("sidebarHeading", True)
+        stack_layout.addWidget(stack_heading, 0, 0, 2, 1)
+
+        self.house_stack_labels: dict[str, QLabel] = {}
+        for stack_row, seats in enumerate(HOUSE_STACK_ROWS):
+            for column, seat in enumerate(seats, start=1):
+                label = QLabel()
+                label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                label.setMinimumWidth(100)
+                label.setToolTip(
+                    f"{seat} house-stack position. The top row is DD 5–8; "
+                    "the bottom row is DD 1–4."
+                )
+                self.house_stack_labels[seat] = label
+                stack_layout.addWidget(label, stack_row, column)
+
+        team_card.addWidget(stack_panel)
         team_card.addWidget(self.team_table)
         root.addWidget(team_card, 1)
 
@@ -565,7 +596,23 @@ class RaidPlanPage(FoundryPage):
             members=tuple(members),
         )
 
+    def _refresh_house_stack_preview(self) -> None:
+        labels = getattr(self, "house_stack_labels", {})
+        if not labels:
+            return
+        row_by_seat = {
+            seat: row
+            for row, seat in enumerate(RAID_PLAN_SEATS)
+        }
+        for seat, label in labels.items():
+            row = row_by_seat[seat]
+            number = seat.split()[-1]
+            gamertag = self._player_text(row)
+            display_name = gamertag if gamertag and not is_seat_placeholder(gamertag) else "Recruit"
+            label.setText(f"{number}\n{display_name}")
+
     def _update_summary(self, *_args) -> None:
+        self._refresh_house_stack_preview()
         try:
             plan = self.current_plan()
         except Exception as exc:
@@ -610,6 +657,7 @@ class RaidPlanPage(FoundryPage):
 
 
 __all__ = [
+    "HOUSE_STACK_ROWS",
     "RAID_PLAN_SEATS",
     "RaidPlanPage",
     "is_seat_placeholder",
