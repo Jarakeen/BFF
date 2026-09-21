@@ -44,6 +44,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
         initial_bar: str = "front",
     ) -> ExtremeSustainedDPSExactLeafEvaluation:
         state = node.state
+        runtime_choice = getattr(state, "runtime_state_choice", None)
         if not bool(getattr(state, "complete", False)):
             return self._incomplete(
                 node,
@@ -77,12 +78,30 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
                 "Generated axis pipeline leaf is missing " + ", ".join(missing),
             )
 
+        if runtime_choice is not None and getattr(runtime_choice, "unresolved", ()):
+            return self._incomplete(
+                node,
+                "Generated runtime-state choice is unresolved: "
+                + "; ".join(str(item) for item in runtime_choice.unresolved),
+            )
+
+        effective_runtime_snapshot = (
+            getattr(runtime_choice, "snapshot")
+            if runtime_choice is not None
+            else runtime_snapshot
+        )
+        runtime_choice_evidence = (
+            tuple(getattr(runtime_choice, "evidence", ()))
+            if runtime_choice is not None
+            else ()
+        )
+
         result = self.runtime_evaluation.evaluate(
             build,
             progression=progression,
             gear_state=gear_state,
             plan=plan,
-            runtime_snapshot=runtime_snapshot,
+            runtime_snapshot=effective_runtime_snapshot,
             target_health=int(target_health),
             target_resistance=float(target_resistance),
             target_name=target_name,
@@ -97,7 +116,9 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
             modeled_dps=exact.modeled_dps,
             duration_seconds=exact.duration_seconds,
             mechanic_complete=exact.mechanic_complete,
-            evidence=tuple((*node.evidence, *exact.evidence)),
+            evidence=tuple(
+                (*node.evidence, *runtime_choice_evidence, *exact.evidence)
+            ),
             unresolved=tuple(exact.unresolved),
         )
 
