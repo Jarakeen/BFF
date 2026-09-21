@@ -38,6 +38,26 @@ if (
 }
 Write-Host "Raid Map startup import preflight: PASS"
 
+# Remove stale Python bytecode before PyInstaller analysis. The friend EXE must
+# be built from the checked-out source tree, not from an older __pycache__
+# artifact that happens to share the same import path.
+Write-Host "Clearing project Python bytecode caches..."
+Get-ChildItem -Path $ProjectRoot -Directory -Recurse -Force -Filter "__pycache__" |
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+Get-ChildItem -Path $ProjectRoot -File -Recurse -Force -Filter "*.pyc" |
+    Remove-Item -Force -ErrorAction SilentlyContinue
+Write-Host "Python bytecode cache cleanup: PASS"
+
+# Re-read the source after cache cleanup immediately before build setup.
+$EncounterAccessibilitySource = Get-Content $EncounterAccessibilityPath -Raw
+if (
+    $EncounterAccessibilitySource -notmatch 'from PySide6\.QtWidgets import QVBoxLayout as _QVBoxLayout' -or
+    $EncounterAccessibilitySource -notmatch 'root = _QVBoxLayout\(tab\)'
+) {
+    throw "Raid Map startup source changed or is stale after preflight. Refusing to package."
+}
+Write-Host "Raid Map source recheck: PASS"
+
 if (Test-Path $DistRoot) {
     Remove-Item $DistRoot -Recurse -Force
 }
