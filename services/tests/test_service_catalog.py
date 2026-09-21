@@ -683,3 +683,17 @@ def test_sustained_dps_generated_branch_and_bound_keeps_bounds_and_damage_extern
     assert "never calculates ESO damage" in search.notes
     assert "Equal ceilings remain open" in search.notes
     assert "Proof-preserving adapter only" in adapter.notes
+
+
+def test_sustained_dps_partial_branch_upper_bound_intersects_without_double_counting() -> None:
+    service = canonical_service_for("extreme_sustained_dps_partial_branch_upper_bound")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.partial_branch_upper_bound"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.pruning",)
+    assert "intersected with min()" in service.notes
+    assert "never summed" in service.notes
+    assert "cannot weaken an inherited proven parent ceiling" in service.notes
