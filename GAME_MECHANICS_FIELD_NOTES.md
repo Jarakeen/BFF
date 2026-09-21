@@ -1121,3 +1121,7 @@ A trait/glyph reduction that is proof-safe for Max Health, Magicka, or Stamina c
 ### 2026-09-21 — Weapon enchant identity is static; weapon enchant DPS is runtime
 
 A weapon enchant can be selected as a build identity without knowing its sustained contribution. Its real DPS impact can depend on trigger events, cooldown, bar state, Infused, status effects, buff/debuff duration, and the rotation timeline. FoundryDock therefore enumerates weapon enchant families in the generated-search denominator but does not score them as static character-sheet bonuses. Their contribution remains owned by runtime combat evaluation.
+
+### 2026-09-21 — Champion Point legality and Champion Point damage are separate proofs
+
+A four-star-per-discipline Champion Bar can be structurally legal while still containing stars whose sustained-DPS contribution depends on event type, runtime conditions, target state, or rotation timing. FoundryDock now enumerates the complete canonical slottable CP legality denominator lazily, but it does not treat bar legality as proof that a dynamic star's damage is active.
