@@ -941,6 +941,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_frontier_wiring",
+        domain="extreme",
+        purpose=(
+            "Wire canonical lazy indexed refinement frontiers into one deterministic "
+            "branch-and-bound tree without materializing their Cartesian product."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_frontier_wiring_service",
+        inputs=("RootState", "IndexedFrontierAxes", "ExactLeafEvaluator", "RequiredDuration"),
+        outputs=("ExtremeSustainedDPSGeneratedSearchResult",),
+        dependencies=(
+            "extreme.sustained_dps.partial_branch_upper_bound",
+            "extreme.sustained_dps.generated_branch_and_bound",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_frontier_wiring",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Owns stable coordinate identity and lazy axis traversal only. Each concrete "
+            "frontier still owns legality and indexed materialization; canonical bound providers "
+            "and exact Combat Simulation remain external authorities. Dynamic child counts are supported."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_branch_and_bound",
         domain="extreme",
         purpose=(
