@@ -53,7 +53,9 @@ _SPECIALIZED_FAMILIES = {
     "invisibility_uptime": "stealth-runtime",
 }
 
-_PENDING_FAMILIES: dict[str, str] = {}
+_PENDING_FAMILIES: dict[str, str] = {
+    "sustained_dps": "combat-simulation",
+}
 
 
 class ExtremeRecordExecutionCatalogService:
