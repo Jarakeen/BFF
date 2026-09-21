@@ -89,3 +89,20 @@ def test_review_note_upsert_keeps_one_note_per_attempt_and_encounter(tmp_path) -
     assert len(notes) == 1
     assert notes[0]["notes"] == "Updated note"
     assert notes[0]["encounter_id"] == "xalvakka"
+
+
+def test_attempt_ledger_keeps_trial_and_plan_identity(tmp_path) -> None:
+    service = RaidSectionStateService(tmp_path / "raid_section_state.json")
+
+    service.start_pull(
+        "rg-pm",
+        encounter_id="xalvakka",
+        trial_id="rockgrove",
+        plan_name="Performance Mode RG",
+    )
+
+    row = service.all_attempt_history()[0]
+    assert row.plan_id == "rg-pm"
+    assert row.trial_id == "rockgrove"
+    assert row.plan_name == "Performance Mode RG"
+    assert row.encounter_id == "xalvakka"
