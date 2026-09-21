@@ -1053,3 +1053,11 @@ A damage-over-time effect can have reviewed ticks scheduled after the requested 
 **Layman's version:** if we simulate only the first 5 seconds, a DoT tick scheduled for second 6 does not get to reach backward and kill the boss in the 5-second result.
 
 **For BFF:** sequential DD projection now discards periodic occurrences beyond the plan duration before they can change the target Health ledger or create a terminal fight coordinate.
+
+## 2026-09-20 — Attempted damage is not the same thing as proven applied damage
+
+Combat Simulation can know that an outgoing hit attempted a specific amount while still lacking the target Health state needed to prove how much damage actually landed, whether there was overkill, or whether the hit killed the target.
+
+**Layman's version:** knowing a skill tried to hit for 2,500 does not prove the boss actually lost 2,500 Health if we do not know the boss's Health state.
+
+**For BFF:** outgoing DD damage without explicit target Health now remains damage-unresolved. Modeled DPS is withheld instead of reporting zero applied DPS as if that were a proven result. Incoming/environmental damage gaps remain general simulation issues and do not incorrectly poison DD completeness.
