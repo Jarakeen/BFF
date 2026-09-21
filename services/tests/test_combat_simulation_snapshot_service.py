@@ -4,8 +4,11 @@ from minmax.runtime_effect_window import RuntimeEffectActiveWindow
 from models.combat_simulation import (
     CombatSimulationCombatant,
     CombatSimulationEvent,
+    CombatSimulationHealthSnapshot,
     CombatSimulationResourceResult,
+    CombatSimulationResourceSnapshot,
     CombatSimulationResult,
+    CombatSimulationSnapshot,
     CombatSimulationTargetState,
     SimulationEventPriority,
 )
@@ -706,3 +709,65 @@ def test_snapshot_sequence_boundary_applies_to_effect_windows() -> None:
         "early_effect",
         "late_effect",
     ]
+
+
+def test_snapshot_models_reject_impossible_state() -> None:
+    bad_health = (
+        dict(identity="", current_health=1, maximum_health=1, is_dead=False),
+        dict(identity="Tank", current_health=-1, maximum_health=100, is_dead=False),
+        dict(identity="Tank", current_health=101, maximum_health=100, is_dead=False),
+        dict(identity="Tank", current_health=10, maximum_health=100, is_dead=True),
+        dict(identity="Tank", current_health=0, maximum_health=100, is_dead=False),
+    )
+    for kwargs in bad_health:
+        try:
+            CombatSimulationHealthSnapshot(**kwargs)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Expected invalid Health snapshot state to fail closed")
+
+    for resource, amount in (("", 1), ("magicka", -1)):
+        try:
+            CombatSimulationResourceSnapshot(
+                resource=resource,
+                current_amount=amount,
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Expected invalid resource snapshot state to fail closed")
+
+
+def test_snapshot_model_rejects_invalid_bar_and_duplicate_identities() -> None:
+    resource = CombatSimulationResourceSnapshot("magicka", 100)
+    health = CombatSimulationHealthSnapshot("Tank 1", 100, 100, False)
+
+    bad_snapshots = (
+        dict(
+            time_seconds=1.0,
+            active_bar="sideways",
+            resources=(resource,),
+            health=(health,),
+        ),
+        dict(
+            time_seconds=1.0,
+            active_bar="front",
+            resources=(resource, resource),
+            health=(health,),
+        ),
+        dict(
+            time_seconds=1.0,
+            active_bar="front",
+            resources=(resource,),
+            health=(health, health),
+        ),
+    )
+
+    for kwargs in bad_snapshots:
+        try:
+            CombatSimulationSnapshot(**kwargs)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Expected invalid combat snapshot to fail closed")
