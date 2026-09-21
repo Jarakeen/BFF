@@ -71,6 +71,19 @@ if (
 }
 Write-Host "EncounterBoard startup import preflight: PASS"
 
+$CustomLabelsPath = Join-Path $ProjectRoot "ui\encounter_board_custom_labels_support.py"
+if (-not (Test-Path $CustomLabelsPath)) {
+    throw "Raid Map custom-label source not found: $CustomLabelsPath"
+}
+$CustomLabelsSource = Get-Content $CustomLabelsPath -Raw
+if (
+    $CustomLabelsSource -notmatch '(?s)from PySide6\.QtWidgets import \(.*QVBoxLayout.*\)' -or
+    $CustomLabelsSource -notmatch 'stack = QVBoxLayout\(panel\)'
+) {
+    throw "Local checkout is missing the Raid Map custom-label QVBoxLayout import fix."
+}
+Write-Host "Raid Map custom-label import preflight: PASS"
+
 if (Test-Path $DistRoot) {
     Remove-Item $DistRoot -Recurse -Force
 }
