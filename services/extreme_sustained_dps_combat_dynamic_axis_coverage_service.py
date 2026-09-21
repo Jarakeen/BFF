@@ -69,10 +69,6 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
     ) -> ExtremeSustainedDPSCombatDynamicAxisCoverageResult:
         unresolved = tuple(frontier.unresolved)
         complete = bool(frontier.denominator_proven and not unresolved)
-        omitted = (
-            "starting-bar route remains part of rotation-order family identity",
-            "Ultimate timing/potion timing/execute/Heavy Attack/encounter-demand policies remain separate",
-        )
         proof = ExtremeSustainedDPSAxisCoverageProof(
             source="complete sustained-DPS semi-static seed rotation denominator",
             dominated_axes=(
@@ -81,7 +77,6 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
                 else ()
             ),
             unresolved=unresolved,
-            omitted_scope=omitted,
         )
         return ExtremeSustainedDPSCombatDynamicAxisCoverageResult(
             proof=proof,
@@ -96,9 +91,9 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
                     if complete
                     else "Canonical seed-rotation coverage withheld"
                 ),
+                "Starting-bar route is included inside rotation_order family identity; Ultimate, potion, execute, Heavy Attack, and encounter policies are separate canonical axes, not omitted seed scope",
             ),
             unresolved=unresolved,
-            omitted_scope=omitted,
         )
 
     @classmethod
