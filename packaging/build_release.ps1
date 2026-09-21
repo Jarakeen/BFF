@@ -192,6 +192,30 @@ try {
 '@
     [System.IO.File]::WriteAllText((Join-Path $PackageRoot "settings.json"), $CleanSettings, $Utf8NoBom)
 
+    # Optional private-repository updater access. These values are injected at
+    # packaging time and are never committed to the repository or included in
+    # the in-place update archive.
+    $UpdateBaseUrl = $env:FOUNDRYDOCK_UPDATE_BASE_URL
+    $UpdateAccessKey = $env:FOUNDRYDOCK_UPDATE_ACCESS_KEY
+    if (-not [string]::IsNullOrWhiteSpace($UpdateBaseUrl) -and -not [string]::IsNullOrWhiteSpace($UpdateAccessKey)) {
+        $UpdateAccess = @{
+            base_url = $UpdateBaseUrl.TrimEnd('/')
+            access_key = $UpdateAccessKey
+        } | ConvertTo-Json
+        [System.IO.File]::WriteAllText(
+            (Join-Path $PackageRoot "update_access.json"),
+            $UpdateAccess,
+            $Utf8NoBom
+        )
+        Write-Host "Private updater access: configured"
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($UpdateBaseUrl) -or -not [string]::IsNullOrWhiteSpace($UpdateAccessKey)) {
+        throw "Set both FOUNDRYDOCK_UPDATE_BASE_URL and FOUNDRYDOCK_UPDATE_ACCESS_KEY, or neither."
+    }
+    else {
+        Write-Host "Private updater access: not configured (public GitHub release fallback)"
+    }
+
     Copy-Item (Join-Path $ProjectRoot "RELEASE_STATUS.md") (Join-Path $PackageRoot "RELEASE_STATUS.md") -Force
 
     $ReadmeSource = Join-Path $PSScriptRoot "FRIEND_README.txt"
