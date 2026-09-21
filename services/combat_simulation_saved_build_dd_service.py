@@ -174,9 +174,25 @@ class CombatSimulationSavedBuildDDService:
                 )
             )
         )
-        if combined_unresolved == result.unresolved:
+        combined_damage_unresolved = tuple(
+            dict.fromkeys(
+                (
+                    *resolution.unresolved,
+                    *sequential_unresolved,
+                    *result.damage_unresolved,
+                )
+            )
+        )
+        if (
+            combined_unresolved == result.unresolved
+            and combined_damage_unresolved == result.damage_unresolved
+        ):
             return result
-        return replace(result, unresolved=combined_unresolved)
+        return replace(
+            result,
+            unresolved=combined_unresolved,
+            damage_unresolved=combined_damage_unresolved,
+        )
 
 
 __all__ = ["CombatSimulationSavedBuildDDService"]
