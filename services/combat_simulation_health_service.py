@@ -242,7 +242,14 @@ class CombatSimulationHealthService:
                         damage_blocking=(event.event_type == "outgoing_damage"),
                     )
                     continue
-                attempted_damage = float(amount)
+                try:
+                    attempted_damage = float(amount)
+                except (TypeError, ValueError):
+                    add_unresolved(
+                        f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: damage amount must be numeric",
+                        damage_blocking=(event.event_type == "outgoing_damage"),
+                    )
+                    continue
                 if not isfinite(attempted_damage):
                     add_unresolved(
                         f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: damage amount must be finite",
@@ -307,7 +314,13 @@ class CombatSimulationHealthService:
                     f"{event.source} {event.event_type} at {event.time_seconds:g}s: modeled_heal is unavailable"
                 )
                 continue
-            attempted_value = float(attempted)
+            try:
+                attempted_value = float(attempted)
+            except (TypeError, ValueError):
+                unresolved.append(
+                    f"{event.source} {event.event_type} at {event.time_seconds:g}s: modeled_heal must be numeric"
+                )
+                continue
             if not isfinite(attempted_value):
                 unresolved.append(
                     f"{event.source} {event.event_type} at {event.time_seconds:g}s: modeled_heal must be finite"
