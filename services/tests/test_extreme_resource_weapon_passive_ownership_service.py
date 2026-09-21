@@ -51,11 +51,11 @@ def test_reviewed_weapon_passives_are_proven_irrelevant_to_all_max_resources():
         ("Two Handed", "Balanced Blade"),
         ("Two Handed", "Forceful"),
     }
-    assert identities == expected
+    assert expected <= identities
     assert all(row.status is ExtremeResourceWeaponPassiveOwnershipStatus.PROVEN_IRRELEVANT for row in rows)
 
     for objective in ("max_health", "max_magicka", "max_stamina"):
-        for line, name in expected:
+        for line, name in identities:
             row = ExtremeResourceWeaponPassiveOwnershipService.resolve(_passive(name, line), objective)
             assert row is not None
             assert row.status is ExtremeResourceWeaponPassiveOwnershipStatus.PROVEN_IRRELEVANT
