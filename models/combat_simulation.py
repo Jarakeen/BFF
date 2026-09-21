@@ -465,6 +465,7 @@ class CombatSimulationResult:
                 continue
             summary = summaries_by_resource[resource_key]
             expected_before = int(summary.starting_amount)
+            calculated_shortfall = 0
             for row in rows:
                 payload = row.payload_dict()
                 if "before" not in payload or "after" not in payload:
@@ -490,6 +491,7 @@ class CombatSimulationResult:
                     attempted_change = int(payload.get("attempted_change", applied_change))
                     shortfall = int(payload.get("shortfall", 0))
                     wasted_restore = int(payload.get("wasted_restore", 0))
+                    calculated_shortfall += shortfall
                     if shortfall < 0 or wasted_restore < 0:
                         raise ValueError(
                             "combat simulation resource shortfall and wasted restore cannot be negative"
@@ -529,6 +531,10 @@ class CombatSimulationResult:
             if expected_before != int(summary.ending_amount):
                 raise ValueError(
                     "combat simulation resource summary end does not match event state"
+                )
+            if calculated_shortfall != int(summary.total_shortfall):
+                raise ValueError(
+                    "combat simulation resource summary shortfall does not match event evidence"
                 )
         health_change_present = any(
             event.event_type == "health_change"
