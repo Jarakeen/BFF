@@ -45,12 +45,20 @@ def _occurrences(*, unresolved=()):
     )
 
 
-def _proof(*, dominated=("gear", "cp"), required=("gear", "cp"), multiplier=1.0, unresolved=()):
+def _proof(
+    *,
+    dominated=("gear", "cp"),
+    required=("gear", "cp"),
+    multiplier=1.0,
+    upper=None,
+    unresolved=(),
+):
     return ExtremeSustainedDPSActionDominanceProof(
         candidate_key="candidate",
         dominated_axes=tuple(dominated),
         required_axes=tuple(required),
         optimistic_multiplier=multiplier,
+        optimistic_upper_damage=upper,
         source="test proof",
         unresolved=tuple(unresolved),
     )
@@ -118,3 +126,26 @@ def test_required_axes_are_case_insensitive() -> None:
 def test_invalid_optimistic_multiplier_fails_closed(multiplier: float) -> None:
     with pytest.raises(ValueError, match="multiplier"):
         _proof(multiplier=multiplier)
+
+
+def test_absolute_upper_damage_can_promote_without_ratio_math() -> None:
+    result = ExtremeSustainedDPSActionUpperBoundService.from_occurrences(
+        occurrence_evidence=_occurrences(),
+        dominance=_proof(upper=2750.0),
+    )
+
+    assert result.dominance_complete is True
+    assert result.bound.proven_safe is True
+    assert result.bound.upper_bound_damage == pytest.approx(2750.0)
+
+
+def test_absolute_upper_damage_below_exact_witness_fails_closed() -> None:
+    result = ExtremeSustainedDPSActionUpperBoundService.from_occurrences(
+        occurrence_evidence=_occurrences(),
+        dominance=_proof(upper=1500.0),
+    )
+
+    assert result.dominance_complete is False
+    assert result.bound.proven_safe is False
+    assert result.bound.upper_bound_damage is None
+    assert any("below the exact witness" in row for row in result.bound.unresolved)
