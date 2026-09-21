@@ -31,10 +31,10 @@ if (-not (Test-Path $EncounterAccessibilityPath)) {
 }
 $EncounterAccessibilitySource = Get-Content $EncounterAccessibilityPath -Raw
 if (
-    $EncounterAccessibilitySource -notmatch '(?s)from PySide6\.QtWidgets import \(.*QVBoxLayout.*\)' -or
-    $EncounterAccessibilitySource -notmatch 'root = QVBoxLayout\(tab\)'
+    $EncounterAccessibilitySource -notmatch 'from PySide6\.QtWidgets import QVBoxLayout as _QVBoxLayout' -or
+    $EncounterAccessibilitySource -notmatch 'root = _QVBoxLayout\(tab\)'
 ) {
-    throw "Local checkout is missing the Raid Map QVBoxLayout startup fix. Pull phase14 before packaging."
+    throw "Local checkout is missing the packaged Raid Map local QVBoxLayout startup fix. Pull phase14 before packaging."
 }
 Write-Host "Raid Map startup import preflight: PASS"
 
