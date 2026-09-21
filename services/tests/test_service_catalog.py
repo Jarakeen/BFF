@@ -508,3 +508,16 @@ def test_sustained_dps_gear_topology_and_realization_are_separate_authorities() 
     ) == ("extreme.sustained_dps.gear_topology_frontier",)
     assert "abstract active-snapshot count topology" in topology.notes
     assert "proven-empty branch" in realization.notes
+
+
+def test_sustained_dps_dual_bar_gear_frontier_requires_realized_topologies() -> None:
+    service = canonical_service_for("extreme_sustained_dps_dual_bar_gear_frontier")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.dual_bar_gear_frontier"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.gear_topology_realization",)
+    assert "complete topology-branch coverage" in service.notes
+    assert "bar-access rules" in service.notes
