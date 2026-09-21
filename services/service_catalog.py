@@ -1039,6 +1039,41 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_axis_pipeline",
+        domain="extreme",
+        purpose=(
+            "Compose gear, late-build, rotation, and evidence-gated runtime-policy "
+            "adapter states into one lazy indexed generated-search pipeline."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_axis_pipeline_service",
+        inputs=(
+            "GeneratedGearAxisRootInputs",
+            "GeneratedRotationRuntimeEvidence",
+        ),
+        outputs=(
+            "IndexedFrontierAxes",
+            "ExtremeSustainedDPSGeneratedAxisPipelineState",
+        ),
+        dependencies=(
+            "extreme.sustained_dps.generated_gear_axis_adapter",
+            "extreme.sustained_dps.generated_late_axis_adapter",
+            "extreme.sustained_dps.generated_rotation_axis_adapter",
+            "extreme.sustained_dps.generated_runtime_policy_axis_adapter",
+            "extreme.sustained_dps.generated_frontier_wiring",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_axis_pipeline",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Explicit immutable stage transitions preserve each adapter's native state, "
+            "reset downstream selections after upstream mutation, forward axis-local bound "
+            "providers, and derive stable runtime candidate identity from selected structural "
+            "rotation coordinates."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_runtime_policy_axis_adapter",
         domain="extreme",
         purpose=(
