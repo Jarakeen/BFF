@@ -72,3 +72,32 @@ def test_raid_map_startup_installs_custom_labels_for_all_themes() -> None:
 
     assert "install_custom_labels" in source
     assert "install_custom_labels()" in source
+
+
+
+def test_custom_label_selection_ignores_deleted_scene(monkeypatch) -> None:
+    class DeadScene:
+        def selectedItems(self):
+            raise AssertionError("deleted scene must not be queried")
+
+    class Board:
+        scene = DeadScene()
+
+    board = Board()
+
+    monkeypatch.setattr(
+        encounter_board_custom_labels_support,
+        "isValid",
+        lambda value: value is board,
+    )
+
+    assert encounter_board_custom_labels_support._selected_labelable(board) is None
+
+
+def test_custom_label_selection_signal_uses_teardown_guard() -> None:
+    source = Path(encounter_board_custom_labels_support.__file__).read_text(encoding="utf-8")
+
+    assert "from shiboken6 import isValid" in source
+    assert "if not _qt_alive(scene):" in source
+    assert "self._raid_map_label_selection_changed" in source
+    assert "scene.selectionChanged.connect(self._raid_map_label_selection_changed)" in source
