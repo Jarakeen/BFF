@@ -121,3 +121,27 @@ def test_canonical_axis_vocabulary_contains_current_generated_search_dimensions(
         "heavy_attack_policy",
         "runtime_state",
     }.issubset(set(CANONICAL_SUSTAINED_DPS_MUTATION_AXES))
+
+
+
+def test_axis_composition_preserves_omitted_scope_from_contributors() -> None:
+    result = ExtremeSustainedDPSAxisDominanceCompositionService.compose(
+        "candidate:scope",
+        required_axes=("ultimate_policy", "potion_timing_policy"),
+        proofs=(
+            ExtremeSustainedDPSAxisCoverageProof(
+                source="anchored family",
+                dominated_axes=("ultimate_policy", "potion_timing_policy"),
+                omitted_scope=(
+                    "continuous potion first-use offset remains open",
+                    "deliberate Ultimate delay remains open",
+                ),
+            ),
+        ),
+    )
+
+    assert result.proof.complete is True
+    assert result.omitted_scope == (
+        "continuous potion first-use offset remains open",
+        "deliberate Ultimate delay remains open",
+    )
