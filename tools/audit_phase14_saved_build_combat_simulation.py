@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import sys
 
@@ -9,6 +10,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from minmax.combat_state import CombatState
+from models.build_model import PlayerBuild
 from models.combat_simulation import CombatSimulationCombatant, CombatSimulationTargetState
 from models.effective_build_snapshot import EffectiveBuildSnapshot
 from services.combat_simulation_damage_summary_service import (
@@ -62,6 +64,51 @@ def _character_name(build) -> str:
     ).strip()
 
 
+def _saved_dd_builds(path: Path) -> tuple[PlayerBuild, ...]:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    members = payload.get("Members", []) if isinstance(payload, dict) else []
+    result: list[PlayerBuild] = []
+    for raw in members:
+        if not isinstance(raw, dict):
+            continue
+        role = " ".join(
+            str(raw.get("Role", "") or "")
+            .strip()
+            .casefold()
+            .replace("_", " ")
+            .split()
+        )
+        if role not in _DD_ROLE_KEYS:
+            continue
+        result.append(PlayerBuild.from_dict(raw))
+    return tuple(
+        sorted(
+            result,
+            key=lambda build: (
+                _character_name(build).casefold(),
+                str(getattr(build, "BuildName", "") or "").strip().casefold(),
+            ),
+        )
+    )
+
+
+def _print_saved_dd_builds(path: Path) -> int:
+    builds = _saved_dd_builds(path)
+    print("=" * 76)
+    print(" SAVED DD BUILDS AVAILABLE FOR PHASE 14 COMBAT SIMULATION")
+    print("=" * 76)
+    if not builds:
+        print("none")
+        return 1
+    for build in builds:
+        print(
+            f"{_character_name(build) or '(unnamed character)'} | "
+            f"{getattr(build, 'BuildName', '') or '(unnamed build)'} | "
+            f"{getattr(build, 'Role', '') or 'unresolved'}"
+        )
+    return 0
+
+
 def _parse_window(raw: str) -> RotationTargetCombatStateWindow:
     text = str(raw or "").strip()
     parts = text.split(":")
@@ -89,13 +136,18 @@ def main() -> int:
             "the generated RotationPlan and canonical damage providers."
         )
     )
-    parser.add_argument("--build", required=True)
+    parser.add_argument("--build")
     parser.add_argument("--character")
     parser.add_argument("--database", type=Path, default=ROOT / "data" / "eso.db")
     parser.add_argument("--builds", type=Path, default=ROOT / "data" / "builds.json")
     parser.add_argument("--duration", type=float, default=60.0)
-    parser.add_argument("--target-health", type=int, required=True)
-    parser.add_argument("--target-resistance", type=float, required=True)
+    parser.add_argument("--target-health", type=int)
+    parser.add_argument("--target-resistance", type=float)
+    parser.add_argument(
+        "--list-dd-builds",
+        action="store_true",
+        help="List saved DD/DPS builds from builds.json and exit.",
+    )
     parser.add_argument("--target-name", default="Boss")
     parser.add_argument(
         "--target-state-known",
@@ -137,6 +189,16 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if args.list_dd_builds:
+        return _print_saved_dd_builds(Path(args.builds))
+
+    if not str(args.build or "").strip():
+        parser.error("--build is required unless --list-dd-builds is used")
+    if args.target_health is None:
+        parser.error("--target-health is required unless --list-dd-builds is used")
+    if args.target_resistance is None:
+        parser.error("--target-resistance is required unless --list-dd-builds is used")
+
     if args.duration <= 0:
         raise ValueError("duration must be positive")
     if args.target_health <= 0:
@@ -144,7 +206,22 @@ def main() -> int:
     if args.target_resistance < 0:
         raise ValueError("target resistance cannot be negative")
 
-    build = _load_build(Path(args.builds), args.build, args.character)
+    try:
+        build = _load_build(Path(args.builds), args.build, args.character)
+    except ValueError as exc:
+        print(str(exc))
+        print()
+        print("Available saved DD/DPS builds:")
+        builds = _saved_dd_builds(Path(args.builds))
+        if builds:
+            for candidate in builds:
+                print(
+                    f"  {_character_name(candidate) or '(unnamed character)'} | "
+                    f"{getattr(candidate, 'BuildName', '') or '(unnamed build)'}"
+                )
+        else:
+            print("  none")
+        return 2
     role = " ".join(
         str(getattr(build, "Role", "") or "")
         .strip()
