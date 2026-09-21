@@ -1185,3 +1185,11 @@ Knowing that a potion can be reused every 45 seconds does not tell the optimizer
 ### 2026-09-21 — “Ultimate is affordable” and “cast Ultimate now” are different policies
 
 Canonical Ultimate generation can prove the first times a slotted Ultimate becomes affordable, but a player may deliberately hold it for a burst window, execute, add phase, or mechanic. The current generated sustained-DPS policy frontier can evaluate explicit bar choice with the canonical as-soon-as-affordable scheduler. Deliberately delayed casts remain a separate policy axis rather than being silently erased.
+
+### 2026-09-21 — Generic DD projection and dedicated Heavy Attack damage are different authorities
+
+The generic scheduled DD action projector still marks Light and Heavy Attacks unresolved because it owns skill/Ultimate component projection, not weapon-attack formulas. Fully charged Heavy Attacks **do** have a separate canonical evaluator with reviewed UESP-translated weapon formulas, active-bar weapon reconstruction, completion/full-charge evidence, crit, mitigation, target Damage Taken, and relevant runtime state. Generated search must therefore route Heavy Attacks through that dedicated evaluator rather than reading the generic projector's unresolved result as “Heavy Attack damage is unknown everywhere.”
+
+### 2026-09-21 — A Heavy Attack action is not proof of a fully charged Heavy Attack
+
+FoundryDock only promotes a generated Heavy Attack to full-charge evidence when the plan carries an exact reviewed **1.8-second** reservation for that action and bar. Merely changing an action kind to `HEAVY_ATTACK` is insufficient. The channel must fit the plan timeline, avoid conflicting actions, and produce the canonical completion evidence consumed by Heavy Attack damage/restoration services.
