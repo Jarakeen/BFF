@@ -1205,3 +1205,7 @@ Branch-and-bound remains correct when a branch has no pruning-safe optimistic ce
 ### 2026-09-21 — Independent upper bounds intersect; they do not add
 
 Two optimistic ceilings for the same partial build branch may overlap in what they already account for. Adding them can double-count the same future damage and produce nonsense. If each source independently proves that the branch cannot exceed its own ceiling, the safe combined ceiling is simply the **minimum** of those values. A child branch is a subset of its parent branch, so any proven parent ceiling remains valid after refinement and may be tightened by new child-specific evidence.
+
+### 2026-09-21 — Action count can bound DPS without pretending to know the winning build
+
+If a generated branch proves that no descendant can schedule more than **N** damage-bearing actions over a fixed horizon, and a separate authority proves that any one such action can contribute at most **D** total damage including its direct, periodic, and triggered consequences, then the whole branch cannot exceed **N × D / duration** sustained DPS. This is safe structural arithmetic. It does not require guessing the winning gear, skill, crit outcome, proc uptime, or action rate; those facts must already be covered by the two input proofs.
