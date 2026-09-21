@@ -29,6 +29,7 @@ class ExtremeSustainedDPSDiscoveryExclusion:
     label: str
     reason: str
     build_id: str = ""
+    blocking: bool = True
 
 
 @dataclass(frozen=True)
@@ -103,6 +104,7 @@ class ExtremeSustainedDPSCandidateDiscoveryService:
                         label=label,
                         build_id=str(getattr(build, "BuildId", "") or "").strip(),
                         reason="saved build is not explicitly DD/DPS role",
+                        blocking=False,
                     )
                 )
                 continue
