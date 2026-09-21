@@ -109,3 +109,27 @@ def test_combat_simulation_result_rejects_event_beyond_duration() -> None:
         assert "beyond its duration" in str(exc)
     else:
         raise AssertionError("Expected post-horizon result event to fail closed")
+
+
+def test_combat_simulation_result_rejects_out_of_order_events() -> None:
+    later = CombatSimulationEvent(
+        time_seconds=2.0,
+        priority=int(SimulationEventPriority.ACTION),
+        sequence=0,
+        event_type="action",
+        source="Later",
+    )
+    earlier = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.ACTION),
+        sequence=0,
+        event_type="action",
+        source="Earlier",
+    )
+
+    try:
+        _result(events=(later, earlier))
+    except ValueError as exc:
+        assert "canonical timeline order" in str(exc)
+    else:
+        raise AssertionError("Expected out-of-order result events to fail closed")
