@@ -875,6 +875,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.finite_family_dominance_search",
+        domain="extreme",
+        purpose=(
+            "Compose lazy frontier adapters, canonical exact-action evaluators, and the generic finite-axis "
+            "dominance engine into reusable Champion Point, passive-rank, and dual-bar gear searches."
+        ),
+        implementation_path="services.extreme_sustained_dps_finite_family_dominance_search_service",
+        inputs=("BaselineBuild", "BaselineProgression", "ExactActionScenario", "FiniteFamilyFrontier"),
+        outputs=("ExtremeSustainedDPSFiniteAxisActionDominanceResult",),
+        dependencies=(
+            "extreme.sustained_dps.finite_axis_frontier_adapter",
+            "extreme.sustained_dps.finite_axis_canonical_action_evaluator",
+            "extreme.sustained_dps.finite_axis_action_dominance",
+        ),
+        responsibilities=("extreme_sustained_dps_finite_family_dominance_search",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Composition only. CP, passive ranks, and dual-bar named gear retain their own frontier authorities; "
+            "damage remains owned by the canonical DD provider stack and proof arithmetic by finite-axis dominance."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.finite_axis_canonical_action_evaluator",
         domain="extreme",
         purpose=(
