@@ -787,6 +787,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.pruning",
+        domain="extreme",
+        purpose=(
+            "Apply a legal incumbent to externally proven optimistic sustained-DPS upper "
+            "bounds and prune only branches that cannot match or exceed it."
+        ),
+        implementation_path="services.extreme_sustained_dps_pruning_service",
+        inputs=("SustainedDPSUpperBoundEvidence", "IncumbentDPS"),
+        outputs=("ExtremeSustainedDPSPruningResult",),
+        dependencies=("extreme.sustained_dps.generated_frontier",),
+        responsibilities=("extreme_sustained_dps_proof_safe_pruning",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "This service never computes ESO damage or invents an upper bound. Missing or "
+            "unproven bounds force branches open. Equal-to-incumbent ceilings also remain "
+            "open because a tie can affect unique-leader and global-proof semantics."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="combat.simulation.snapshot",
         domain="combat",
         purpose=(
