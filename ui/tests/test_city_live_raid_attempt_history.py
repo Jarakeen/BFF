@@ -13,6 +13,8 @@ def test_live_raid_start_pull_captures_selected_encounter() -> None:
     ]
 
     assert "encounter_id=_clean(self.encounter_combo.currentData())" in start
+    assert "trial_id=self._plan.trial_id" in start
+    assert "plan_name=self._plan.name" in start
 
 
 def test_live_raid_recent_events_include_durable_attempt_history() -> None:
