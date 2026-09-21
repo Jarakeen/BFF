@@ -122,6 +122,7 @@ def partition_runtime_effect_windows(
     windows: Iterable[RuntimeEffectActiveWindow],
     *,
     at_time_seconds: float,
+    at_sequence: int | None = None,
 ) -> RuntimeEffectWindowPartition:
     """Partition windows into currently active and already expired groups.
 
@@ -133,12 +134,21 @@ def partition_runtime_effect_windows(
 
     if not math.isfinite(at_time_seconds) or at_time_seconds < 0:
         raise ValueError("runtime query time must be finite and non-negative")
+    boundary_sequence = None if at_sequence is None else int(at_sequence)
+    if boundary_sequence is not None and boundary_sequence < 0:
+        raise ValueError("runtime query sequence cannot be negative")
 
     active: list[RuntimeEffectActiveWindow] = []
     expired: list[RuntimeEffectActiveWindow] = []
 
     for window in order_runtime_effect_windows(windows):
         if window.start_time_seconds > at_time_seconds:
+            continue
+        if (
+            window.start_time_seconds == at_time_seconds
+            and boundary_sequence is not None
+            and int(window.sequence) > boundary_sequence
+        ):
             continue
         if window.is_active_at(at_time_seconds):
             active.append(window)
