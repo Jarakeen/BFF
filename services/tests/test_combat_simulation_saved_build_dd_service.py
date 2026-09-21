@@ -6,6 +6,7 @@ from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPla
 from models.build_model import PlayerBuild
 from models.combat_simulation import (
     CombatSimulationCombatant,
+    CombatSimulationIncomingDamage,
     CombatSimulationResourceResult,
     CombatSimulationTargetState,
 )
@@ -554,5 +555,64 @@ def test_same_timestamp_later_sequence_is_excluded_after_lethal_action() -> None
     assert result.duration_seconds == 1.0
     assert not any(
         event.time_seconds == 1.0 and event.sequence > 0
+        for event in result.events
+    )
+
+
+def test_external_event_after_same_time_lethal_sequence_is_excluded() -> None:
+    service = CombatSimulationSavedBuildDDService(
+        provider_service=_LethalSameTimestampProviderService(),
+        simulation_service=_simulation_service(),
+    )
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=5.0,
+        actions=(
+            RotationAction(
+                time_seconds=1.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Killing Hit",
+                bar="front",
+            ),
+        ),
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+            CombatSimulationCombatant(
+                "Damage Tester",
+                "self",
+                current_health=20000,
+                maximum_health=20000,
+            ),
+        ),
+    )
+
+    result = service.simulate(
+        build_snapshot=_snapshot(),
+        plan=plan,
+        target_state=state,
+        damage_target_identity="Boss",
+        target_resistance=18200.0,
+        incoming_damage=(
+            CombatSimulationIncomingDamage(
+                time_seconds=1.0,
+                sequence=1,
+                source="Post-Death Hazard",
+                recipient="Damage Tester",
+                amount=5000.0,
+            ),
+        ),
+    )
+
+    assert not any(
+        event.source == "Post-Death Hazard"
         for event in result.events
     )
