@@ -518,6 +518,8 @@ class CombatSimulationResult:
                 item.identity: item.maximum_health
                 for item in self.target_state.combatants
             }
+            lethal_transition_by_recipient: dict[str, tuple[float, int, str, str | None]] = {}
+            dead_recipients: set[str] = set()
             for event in self.events:
                 if event.event_type not in {"health_change", "death"}:
                     continue
@@ -532,10 +534,26 @@ class CombatSimulationResult:
                         f"combat simulation {event.event_type} recipient is not present in target state"
                     )
                 if event.event_type == "death":
+                    if recipient in dead_recipients:
+                        raise ValueError(
+                            "combat simulation death transition cannot be duplicated"
+                        )
                     if health_by_recipient[recipient] != 0:
                         raise ValueError(
                             "combat simulation death event requires zero Health state"
                         )
+                    expected = lethal_transition_by_recipient.get(recipient)
+                    actual = (
+                        float(event.time_seconds),
+                        int(event.sequence),
+                        str(event.source),
+                        str(payload.get("origin_event_type") or "").strip() or None,
+                    )
+                    if expected != actual:
+                        raise ValueError(
+                            "combat simulation death event does not match lethal Health transition"
+                        )
+                    dead_recipients.add(recipient)
                     continue
                 if "before" not in payload or "after" not in payload:
                     raise ValueError(
@@ -600,6 +618,13 @@ class CombatSimulationResult:
                             "combat simulation healing Health arithmetic is inconsistent"
                         )
                 health_by_recipient[recipient] = after
+                if before > 0 and after == 0:
+                    lethal_transition_by_recipient[recipient] = (
+                        float(event.time_seconds),
+                        int(event.sequence),
+                        str(event.source),
+                        str(payload.get("origin_event_type") or "").strip() or None,
+                    )
         window_keys = tuple(
             (
                 float(window.start_time_seconds),
