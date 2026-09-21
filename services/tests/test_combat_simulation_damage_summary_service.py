@@ -376,3 +376,132 @@ def test_damage_summary_counts_raw_components_but_applies_one_health_transition(
     assert row.attempted_damage == 5000.0
     assert row.applied_damage == 5000.0
     assert row.overkill == 0.0
+
+
+def test_damage_summary_keeps_proven_partial_totals_but_withholds_dps() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    result = CombatSimulationResult(
+        duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(
+            _event(
+                1.0,
+                0,
+                "outgoing_damage",
+                "Proven Hit",
+                recipient="Boss",
+                amount=3000.0,
+            ),
+            _event(
+                1.0,
+                0,
+                "health_change",
+                "Proven Hit",
+                recipient="Boss",
+                attempted_damage=3000.0,
+                applied_damage=3000.0,
+                overkill=0.0,
+                after=7000,
+                origin_event_type="outgoing_damage",
+            ),
+        ),
+        unresolved=("Later DoT tick ordering unresolved",),
+        damage_unresolved=("Later DoT tick ordering unresolved",),
+        target_state=state,
+    )
+
+    summary = CombatSimulationDamageSummaryService().summarize(
+        result,
+        target_identity="Boss",
+    )
+
+    assert summary.attempted_damage == 3000.0
+    assert summary.applied_damage == 3000.0
+    assert summary.ending_target_health == 7000
+    assert summary.complete_damage_evidence is False
+    assert summary.modeled_dps is None
+
+
+def test_environmental_death_is_not_attributed_as_dd_killing_blow() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=5000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    result = CombatSimulationResult(
+        duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(
+            _event(
+                1.0,
+                0,
+                "outgoing_damage",
+                "Player Hit",
+                recipient="Boss",
+                amount=2000.0,
+            ),
+            _event(
+                1.0,
+                0,
+                "health_change",
+                "Player Hit",
+                recipient="Boss",
+                attempted_damage=2000.0,
+                applied_damage=2000.0,
+                overkill=0.0,
+                after=3000,
+                origin_event_type="outgoing_damage",
+            ),
+            _event(
+                2.0,
+                0,
+                "health_change",
+                "Environmental Hazard",
+                recipient="Boss",
+                attempted_damage=5000.0,
+                applied_damage=3000.0,
+                overkill=2000.0,
+                after=0,
+                origin_event_type="incoming_damage",
+            ),
+            _event(
+                2.0,
+                0,
+                "death",
+                "Environmental Hazard",
+                recipient="Boss",
+                overkill=2000.0,
+                origin_event_type="incoming_damage",
+            ),
+        ),
+        unresolved=(),
+        target_state=state,
+    )
+
+    summary = CombatSimulationDamageSummaryService().summarize(
+        result,
+        target_identity="Boss",
+    )
+
+    assert summary.target_dead is True
+    assert summary.killing_source is None
+    assert summary.death_time_seconds is None
+    assert summary.applied_damage == 2000.0
+    assert summary.damage_by_source[0].source == "Player Hit"
+    assert summary.damage_by_source[0].killing_blow is False
