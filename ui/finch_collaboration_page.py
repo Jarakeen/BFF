@@ -34,6 +34,7 @@ class FinchCollaborationPage(FoundryPage):
     """Read-only command board for all shared Finch operational snapshots."""
 
     pageRequested = Signal(str)
+    workspaceRequested = Signal(str, str)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -221,9 +222,9 @@ class FinchCollaborationPage(FoundryPage):
         row_index = self.table.currentRow()
         if not 0 <= row_index < len(self._rows):
             return
-        route = self._rows[row_index].route
-        if route:
-            self.pageRequested.emit(route)
+        row = self._rows[row_index]
+        if row.route:
+            self.workspaceRequested.emit(row.route, row.context_key)
 
 
 __all__ = ["FinchCollaborationPage"]
