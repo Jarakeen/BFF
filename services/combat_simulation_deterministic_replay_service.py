@@ -31,6 +31,7 @@ class CombatSimulationDeterministicReplayService:
         "effect_windows",
         "target_state",
         "unresolved",
+        "damage_unresolved",
     )
 
     def verify(
