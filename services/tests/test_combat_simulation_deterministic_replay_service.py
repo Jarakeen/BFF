@@ -250,7 +250,7 @@ def test_combat_simulation_result_rejects_resource_summary_state_mismatch() -> N
     )
 
     for summary, expected in (
-        (wrong_start, "summary start does not match"),
+        (wrong_start, "before/after chain is inconsistent"),
         (wrong_end, "summary end does not match"),
     ):
         try:
