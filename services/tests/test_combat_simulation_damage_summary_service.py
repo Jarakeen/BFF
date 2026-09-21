@@ -829,3 +829,54 @@ def test_damage_summary_withholds_dps_for_zero_duration_even_with_proven_damage(
     assert summary.complete_damage_evidence is True
     assert summary.applied_damage == 3000.0
     assert summary.modeled_dps is None
+
+
+def test_damage_summary_pairs_raw_and_health_evidence_across_sequences() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    result = CombatSimulationResult(
+        duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(
+            _event(
+                1.0,
+                0,
+                "outgoing_damage",
+                "Skill A",
+                recipient="Boss",
+                amount=3000.0,
+            ),
+            _event(
+                1.0,
+                1,
+                "health_change",
+                "Skill A",
+                recipient="Boss",
+                before=10000,
+                applied_damage=3000.0,
+                overkill=0.0,
+                after=7000,
+                origin_event_type="outgoing_damage",
+            ),
+        ),
+        target_state=state,
+    )
+
+    summary = CombatSimulationDamageSummaryService().summarize(
+        result,
+        target_identity="Boss",
+    )
+
+    assert summary.damage_unresolved == ()
+    assert summary.complete_damage_evidence is True
+    assert summary.applied_damage == 3000.0
+    assert summary.modeled_dps == 600.0
