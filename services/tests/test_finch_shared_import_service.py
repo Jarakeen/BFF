@@ -100,15 +100,16 @@ def test_shared_team_preview_does_not_mutate_local_state(tmp_path) -> None:
     assert roster.list_members() == []
 
 
-def test_explicit_team_import_creates_only_team_metadata_not_personnel(tmp_path) -> None:
+def test_explicit_team_import_creates_collision_safe_local_copy_only(tmp_path) -> None:
     _db, roster, _repo, service = _service(tmp_path)
+    roster.ensure_team_name("Performance Mode")
 
     imported = service.import_team_metadata("performance mode")
 
-    assert imported == "Performance Mode"
-    assert roster.list_team_names() == ["Performance Mode"]
+    assert imported == "Performance Mode (Shared Copy)"
+    assert roster.list_team_names() == ["Performance Mode", "Performance Mode (Shared Copy)"]
     assert roster.list_members() == []
-    schedule = roster.get_team_schedule("Performance Mode")
+    schedule = roster.get_team_schedule("Performance Mode (Shared Copy)")
     assert schedule is not None
     assert schedule.TimeZone == "America/New_York"
     assert schedule.CurrentFocus == "Swashbuckler Supreme"
@@ -132,11 +133,31 @@ def test_shared_raid_plan_decodes_without_local_identity_or_build_state(tmp_path
     assert roster.list_members() == []
 
 
-def test_explicit_raid_plan_import_saves_snapshot_only(tmp_path) -> None:
+def test_explicit_raid_plan_import_saves_collision_safe_local_copy_only(tmp_path) -> None:
     _db, roster, repository, service = _service(tmp_path)
+    repository.save(service.decoded_raid_plan("rg-pm"))
 
     imported = service.import_raid_plan("rg-pm")
 
-    assert repository.get("rg-pm") == imported
+    assert imported.plan_id == "rg-pm-shared-copy"
+    assert imported.name == "Performance Mode RG (Shared Copy)"
+    assert repository.get("rg-pm") is not None
+    assert repository.get("rg-pm-shared-copy") == imported
     assert roster.list_members() == []
     assert roster.list_team_names() == []
+
+
+def test_repeated_shared_imports_increment_local_copy_identity(tmp_path) -> None:
+    _db, roster, repository, service = _service(tmp_path)
+
+    first_team = service.import_team_metadata("performance mode")
+    second_team = service.import_team_metadata("performance mode")
+    first_plan = service.import_raid_plan("rg-pm")
+    second_plan = service.import_raid_plan("rg-pm")
+
+    assert first_team == "Performance Mode (Shared Copy)"
+    assert second_team == "Performance Mode (Shared Copy) 2"
+    assert first_plan.plan_id == "rg-pm-shared-copy"
+    assert second_plan.plan_id == "rg-pm-shared-copy-2"
+    assert repository.get("rg-pm-shared-copy") == first_plan
+    assert repository.get("rg-pm-shared-copy-2") == second_plan
