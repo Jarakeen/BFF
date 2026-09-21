@@ -936,3 +936,25 @@ def test_sustained_dps_pipeline_leaf_bridge_uses_final_runtime_plan() -> None:
     assert "final downstream runtime-policy plan" in service.notes
     assert "without invoking simulation" in service.notes
 
+def test_sustained_dps_generated_axis_pipeline_search_shares_scenario() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_generated_axis_pipeline_search"
+    )
+
+    assert service is not None
+    assert (
+        service.service_id
+        == "extreme.sustained_dps.generated_axis_pipeline_search"
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.generated_axis_pipeline",
+        "extreme.sustained_dps.generated_axis_pipeline_leaf_evaluation",
+        "extreme.sustained_dps.generated_frontier_wiring",
+        "extreme.sustained_dps.generated_branch_and_bound_search",
+    )
+    assert "All exact leaves share" in service.notes
+    assert "missing bounds force refinement" in service.notes
+
