@@ -76,6 +76,34 @@ class _SavedRotationResources:
         )
 
 
+class _SavedRotationCombat:
+    def sustained_dps(
+        self,
+        _build,
+        *,
+        target_health,
+        target_resistance,
+        target_name="Boss",
+    ):
+        assert target_health == 21_200_000
+        assert target_resistance == pytest.approx(18200.0)
+        assert target_name == "Boss"
+        record = SimpleNamespace(
+            modeled_dps=123456.78,
+            duration_seconds=60.0,
+            applied_damage=7_407_406.8,
+            ending_target_health=13_792_593,
+            target_dead=False,
+            killing_source=None,
+        )
+        return SimpleNamespace(
+            record=record,
+            mechanic_complete=False,
+            evidence=("saved combat simulation witness",),
+            unresolved=("global sustained-DPS search remains open",),
+        )
+
+
 class _MovementPackage:
     def evaluate(self, objective_key):
         return SimpleNamespace(
@@ -129,6 +157,7 @@ def _service():
         shield_record=_ShieldRecord(),
         bash_record=_BashRecord(),
         saved_rotation_resources=_SavedRotationResources(),
+        saved_rotation_combat=_SavedRotationCombat(),
         movement_package=_MovementPackage(),
         stealth_package=_StealthPackage(),
         invisibility_duration_record=_InvisibilityDurationRecord(),
@@ -139,7 +168,7 @@ def _service():
 def test_all_zero_input_specialized_routes_are_explicit() -> None:
     for key in (
         "actual_heal", "critical_heal", "damage_shield", "bash_damage",
-        "resource_sustain", "ultimate_generation",
+        "resource_sustain", "sustained_dps", "ultimate_generation",
         "movement_speed", "sprint_speed", "stealthed_movement_speed",
         "detection_radius_reduction", "invisibility_duration",
     ):
@@ -246,3 +275,36 @@ def test_invisibility_uptime_requires_duration_and_normalizes_reviewed_schedule(
     assert ("Reviewed windows", "3") in result.summary_rows
     assert ("Reviewed provider", "Prowler's Talisman") in result.summary_rows
     assert result.global_maximum_proven is False
+
+
+
+def test_sustained_dps_requires_explicit_combat_target_inputs() -> None:
+    assert ExtremeSpecializedExecutionService.requires_saved_build("sustained_dps")
+    assert ExtremeSpecializedExecutionService.can_execute_with_combat_target_inputs(
+        "sustained_dps"
+    )
+    assert tuple(
+        row.key
+        for row in ExtremeSpecializedExecutionService.requirements_for("sustained_dps")
+    ) == ("target_health", "target_resistance")
+
+    with pytest.raises(ValueError, match="Target Health, Target Resistance"):
+        _service().execute(SimpleNamespace(), "sustained_dps")
+
+
+def test_sustained_dps_execution_uses_combat_simulation_lower_bound() -> None:
+    result = _service().execute(
+        SimpleNamespace(),
+        "sustained_dps",
+        target_health=21_200_000,
+        target_resistance=18200.0,
+    )
+
+    assert result.execution_family == "combat-simulation"
+    assert result.value == pytest.approx(123456.78)
+    assert result.value_text == "123,456.78 DPS modeled saved-rotation lower bound"
+    assert ("Target Health", "21,200,000") in result.summary_rows
+    assert ("Target Resistance", "18200") in result.summary_rows
+    assert ("Executed horizon", "60s") in result.summary_rows
+    assert result.global_maximum_proven is False
+    assert result.unresolved == ("global sustained-DPS search remains open",)
