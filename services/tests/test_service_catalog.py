@@ -1029,3 +1029,17 @@ def test_sustained_dps_finite_family_dominance_search_is_composition_only() -> N
     )
     assert "Composition only" in service.notes
     assert "damage remains owned by the canonical DD provider stack" in service.notes
+
+
+def test_sustained_dps_combat_dynamic_axis_coverage_preserves_open_timing_scope() -> None:
+    service = canonical_service_for("extreme_sustained_dps_combat_dynamic_axis_coverage")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.combat_dynamic_axis_coverage"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.axis_dominance_composition",)
+    assert "Anchored potion timing does not close continuous first-use offsets" in service.notes
+    assert "post-affordability delay" in service.notes
+    assert "caller-reviewed safe windows" in service.notes
