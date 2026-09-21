@@ -193,7 +193,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
 
         self.get_shared_plans_button = QPushButton("Get Shared Plans")
         self.get_shared_plans_button.setToolTip(
-            "Browse Raid Plans published to Finch. Importing saves only the shared plan outline."
+            "Browse Raid Plans published to Finch. Copy to Local creates a new local Raid Plan outline and never replaces an existing plan."
         )
         self.get_shared_plans_button.clicked.connect(self._get_shared_raid_plans)
         row.addWidget(self.get_shared_plans_button)
@@ -303,7 +303,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             selected, ok = QInputDialog.getItem(
                 self,
                 "Shared Raid Plans on Finch",
-                "Import saved Raid Plan outline:",
+                "Copy shared Raid Plan to Local:",
                 labels,
                 0,
                 False,
@@ -311,24 +311,17 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             if not ok:
                 self._finch_plan_read_timer.stop()
                 self.get_shared_plans_button.setEnabled(True)
-                self.status.info("Shared Raid Plan import cancelled.")
+                self.status.info("Shared Raid Plan copy cancelled.")
                 return
             index = labels.index(selected)
             preview = previews[index]
-            existing = self.plan_repository.get(preview.plan_id)
-            detail = (
-                "\n\nA local plan with this same stable plan ID already exists and will be replaced."
-                if existing is not None
-                else ""
-            )
             answer = QMessageBox.question(
                 self,
-                "Import Shared Raid Plan",
+                "Copy Shared Raid Plan to Local",
                 (
-                    f'Import "{preview.name}" from Finch?\n\n'
-                    "This imports the shared seat/player/character/class/role outline only. "
-                    "It does not create Personnel or saved builds."
-                    + detail
+                    f'Copy "{preview.name}" from Finch into a new local Raid Plan?\n\n'
+                    "This creates a separate local plan outline with shared seat/player/character/class/role data only. "
+                    "It never replaces an existing plan and does not create Personnel or saved builds."
                 ),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
                 QMessageBox.StandardButton.Cancel,
@@ -353,7 +346,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         plan = result
         self.refresh_saved_plan_picker(select_plan_id=plan.plan_id)
         self.status.success(
-            f"Imported shared Raid Plan from Finch: {plan.name}."
+            f"Copied shared Raid Plan from Finch into local plan: {plan.name}."
         )
 
     def _selected_build_ids_by_seat(self) -> dict[str, str]:
