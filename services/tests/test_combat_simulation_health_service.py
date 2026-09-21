@@ -662,3 +662,31 @@ def test_incoming_damage_without_target_state_is_not_dd_damage_unresolved() -> N
 
     assert result.events == ()
     assert result.damage_unresolved == ()
+
+
+def test_zero_outgoing_damage_is_resolved_without_health_loss() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = CombatSimulationHealthService().project(
+        events=(_outgoing_damage_event(amount=0.0),),
+        target_state=state,
+    )
+
+    assert result.unresolved == ()
+    assert result.damage_unresolved == ()
+    assert len(result.events) == 1
+    payload = result.events[0].payload_dict()
+    assert payload["attempted_damage"] == 0.0
+    assert payload["applied_damage"] == 0.0
+    assert payload["overkill"] == 0.0
+    assert payload["before"] == 10000
+    assert payload["after"] == 10000
