@@ -385,3 +385,12 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Recent Events** remains manual run-state history.
 - **Coverage Snapshot** remains owned by the existing Coverage system rather than duplicating coverage logic inside Live Raid.
 
+
+
+### Live Raid linked Raid Maps
+- The Live Raid Raid Spots footer uses two equal actions: **Assignments** and **Raid Map**.
+- Raid Map links are stored as user-owned operational state keyed by **Raid Plan + Encounter**.
+- The map image remains owned by the existing encounter Raid Map store; Live Raid persists only the chosen map id.
+- A Live Plan can use a different saved map for the same encounter than another plan.
+- Live Raid can link/change/clear the chosen map and open the exact linked encounter/map in Mechanics.
+
