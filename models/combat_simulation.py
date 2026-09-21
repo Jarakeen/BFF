@@ -630,6 +630,41 @@ class CombatSimulationResult:
                         raise ValueError(
                             "combat simulation damage Health arithmetic is inconsistent"
                         )
+                    attempted_damage = payload.get("attempted_damage")
+                    overkill = payload.get("overkill")
+                    normalized_attempted_damage = None
+                    normalized_overkill = None
+                    if attempted_damage is not None:
+                        normalized_attempted_damage = float(attempted_damage)
+                        if (
+                            not isfinite(normalized_attempted_damage)
+                            or normalized_attempted_damage < 0
+                        ):
+                            raise ValueError(
+                                "combat simulation attempted damage must be finite and non-negative"
+                            )
+                        if normalized_attempted_damage < applied:
+                            raise ValueError(
+                                "combat simulation attempted damage cannot be less than applied damage"
+                            )
+                    if overkill is not None:
+                        normalized_overkill = float(overkill)
+                        if (
+                            not isfinite(normalized_overkill)
+                            or normalized_overkill < 0
+                        ):
+                            raise ValueError(
+                                "combat simulation overkill must be finite and non-negative"
+                            )
+                    if (
+                        normalized_attempted_damage is not None
+                        and normalized_overkill is not None
+                        and normalized_overkill
+                        != max(0.0, normalized_attempted_damage - applied)
+                    ):
+                        raise ValueError(
+                            "combat simulation damage overkill arithmetic is inconsistent"
+                        )
                 if applied_heal is not None:
                     applied = float(applied_heal)
                     if not isfinite(applied) or applied < 0:
@@ -643,6 +678,41 @@ class CombatSimulationResult:
                     if expected_after != after:
                         raise ValueError(
                             "combat simulation healing Health arithmetic is inconsistent"
+                        )
+                    attempted_heal = payload.get("attempted_heal")
+                    overheal = payload.get("overheal")
+                    normalized_attempted_heal = None
+                    normalized_overheal = None
+                    if attempted_heal is not None:
+                        normalized_attempted_heal = float(attempted_heal)
+                        if (
+                            not isfinite(normalized_attempted_heal)
+                            or normalized_attempted_heal < 0
+                        ):
+                            raise ValueError(
+                                "combat simulation attempted healing must be finite and non-negative"
+                            )
+                        if normalized_attempted_heal < applied:
+                            raise ValueError(
+                                "combat simulation attempted healing cannot be less than applied healing"
+                            )
+                    if overheal is not None:
+                        normalized_overheal = float(overheal)
+                        if (
+                            not isfinite(normalized_overheal)
+                            or normalized_overheal < 0
+                        ):
+                            raise ValueError(
+                                "combat simulation overheal must be finite and non-negative"
+                            )
+                    if (
+                        normalized_attempted_heal is not None
+                        and normalized_overheal is not None
+                        and normalized_overheal
+                        != max(0.0, normalized_attempted_heal - applied)
+                    ):
+                        raise ValueError(
+                            "combat simulation healing overheal arithmetic is inconsistent"
                         )
                 health_by_recipient[recipient] = after
                 if before > 0 and after == 0:
