@@ -82,3 +82,17 @@ def test_shared_timestamp_formats_utc_consistently() -> None:
         == "2026-09-21 02:15 UTC"
     )
     assert format_shared_timestamp("") == "Unknown time"
+
+
+def test_latest_copy_for_returns_newest_local_context(tmp_path) -> None:
+    service = FinchSharedProvenanceService(tmp_path / "provenance.json")
+    snapshot = _snapshot("2026-09-21T01:00:00+00:00")
+
+    first = service.record_copy(snapshot=snapshot, local_key="rg-pm-shared-copy")
+    second = service.record_copy(snapshot=snapshot, local_key="rg-pm-shared-copy-2")
+
+    latest = service.latest_copy_for(kind="raid_plan", snapshot_key="rg-pm")
+
+    assert latest is not None
+    assert latest.local_key == second.local_key
+    assert latest.local_key != first.local_key
