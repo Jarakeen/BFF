@@ -60,7 +60,7 @@ def test_duplicate_gamertag_merges_teams_roles_and_assignments(tmp_path) -> None
     assert merged.CharacterName == "Magrat"
     assert merged.Team == "Disappointing Feral, Swine & Punishment"
     assert merged.PrimaryRole == "Healer"
-    assert merged.SecondaryRole == "Damage Dealer"
+    assert merged.SecondaryRole == "DD"
     assert roster.get_member_assignment(survivor_id)["notes"] == "legacy SW note"
 
     assert context.get_effective_assignment(
