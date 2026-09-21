@@ -33,6 +33,88 @@ class CombatSimulationHealthService:
     ) -> None:
         self.ordering_service = ordering_service or CombatSimulationHealthOrderingService()
 
+    def _coalesce_same_source_damage(
+        self,
+        events: tuple[CombatSimulationEvent, ...],
+    ) -> tuple[CombatSimulationEvent, ...]:
+        grouped: dict[
+            tuple[str, float, int, int, str, str],
+            list[CombatSimulationEvent],
+        ] = {}
+        passthrough: list[CombatSimulationEvent] = []
+
+        for event in events:
+            if event.event_type not in self._DAMAGE_EVENT_TYPES:
+                passthrough.append(event)
+                continue
+            payload = event.payload_dict()
+            recipient = str(payload.get("recipient") or "").strip()
+            key = (
+                recipient,
+                float(event.time_seconds),
+                int(event.priority),
+                int(event.sequence),
+                str(event.event_type),
+                str(event.source or "").strip(),
+            )
+            grouped.setdefault(key, []).append(event)
+
+        combined: list[CombatSimulationEvent] = list(passthrough)
+        for key, rows in grouped.items():
+            if len(rows) == 1:
+                combined.append(rows[0])
+                continue
+
+            amounts = [row.payload_dict().get("amount") for row in rows]
+            if any(amount is None for amount in amounts):
+                combined.extend(rows)
+                continue
+            try:
+                numeric = [float(amount) for amount in amounts]
+            except (TypeError, ValueError):
+                combined.extend(rows)
+                continue
+
+            recipient, time_seconds, priority, sequence, event_type, source = key
+            damage_types = tuple(
+                dict.fromkeys(
+                    str(row.payload_dict().get("damage_type") or "").strip()
+                    for row in rows
+                    if str(row.payload_dict().get("damage_type") or "").strip()
+                )
+            )
+            combined.append(
+                CombatSimulationEvent(
+                    time_seconds=time_seconds,
+                    priority=priority,
+                    sequence=sequence,
+                    event_type=event_type,
+                    source=source,
+                    payload=(
+                        ("recipient", recipient),
+                        ("amount", sum(numeric)),
+                        (
+                            "damage_type",
+                            damage_types[0] if len(damage_types) == 1 else "mixed",
+                        ),
+                        ("component_count", len(rows)),
+                    ),
+                )
+            )
+
+        return tuple(
+            sorted(
+                combined,
+                key=lambda event: (
+                    event.time_seconds,
+                    event.priority,
+                    event.sequence,
+                    event.event_type,
+                    event.source.casefold(),
+                ),
+            )
+        )
+
     def project(
         self,
         *,
@@ -62,6 +144,7 @@ class CombatSimulationHealthService:
             )
         )
         collisions = self.ordering_service.collisions(ordered)
+        ordered = self._coalesce_same_source_damage(ordered)
         blocked_from: dict[str, tuple[float, int, int]] = {}
         for item in collisions:
             point = (
