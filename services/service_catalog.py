@@ -875,6 +875,67 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_state_frontier",
+        domain="extreme",
+        purpose=(
+            "Validate one caller-supplied finite runtime-state family whose local denominator is explicitly proven closed."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_state_frontier_service",
+        inputs=("RuntimeStateChoices", "ExternalDenominatorProof", "OmittedScope"),
+        outputs=("ExtremeSustainedDPSRuntimeStateFrontier",),
+        responsibilities=("extreme_sustained_dps_runtime_state_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Does not infer the universe of proc, cooldown, condition, or encounter timelines. "
+            "A finite family closes runtime_state only for the explicitly proven local branch; omitted scope remains visible."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_state_whole_plan_evaluator",
+        domain="extreme",
+        purpose=(
+            "Score explicit runtime-state choices while holding build, progression, gear, plan, target, and horizon fixed."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_state_whole_plan_evaluator_service",
+        inputs=("RuntimeStateChoice", "FixedRuntimeStateEvaluationScenario"),
+        outputs=("ExtremeSustainedDPSWholePlanEvaluation",),
+        dependencies=("extreme.sustained_dps.generated_runtime_evaluation",),
+        responsibilities=("extreme_sustained_dps_runtime_state_whole_plan_evaluator",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Only ExtremeRuntimeSnapshot varies. Combat mechanics remain owned by generated runtime evaluation."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_state_dominance_search",
+        domain="extreme",
+        purpose=(
+            "Compose a proven finite runtime-state family with canonical whole-plan evaluation into a runtime_state pruning ceiling."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_state_dominance_search_service",
+        inputs=("ExtremeSustainedDPSRuntimeStateFrontier", "FixedRuntimeStateEvaluationScenario"),
+        outputs=("ExtremeSustainedDPSFiniteWholePlanDominanceResult",),
+        dependencies=(
+            "extreme.sustained_dps.runtime_state_whole_plan_evaluator",
+            "extreme.sustained_dps.finite_whole_plan_dominance",
+        ),
+        responsibilities=("extreme_sustained_dps_runtime_state_dominance_search",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Promotes runtime_state only when the supplied local denominator and every modeled runtime choice close "
+            "over one shared horizon. Omitted runtime scope remains separate from the local ceiling."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.dynamic_whole_plan_frontier_adapter",
         domain="extreme",
         purpose=(
