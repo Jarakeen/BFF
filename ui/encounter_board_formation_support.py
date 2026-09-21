@@ -47,6 +47,12 @@ FORMATION_PRESETS = (
     FormationPreset(
         key="rainbow_stacks",
         label="Rainbow Stacks",
+        # Reference layout:
+        #        H1      H2
+        #      DD2    DD3
+        #   DD1          DD4
+        #      DD6    DD7
+        # DD5              DD8
         dps_positions=(
             (375.0, 285.0),
             (445.0, 250.0),
@@ -57,7 +63,7 @@ FORMATION_PRESETS = (
             (545.0, 320.0),
             (645.0, 340.0),
         ),
-        healer_positions=((390.0, 385.0), (570.0, 385.0)),
+        healer_positions=((365.0, 195.0), (595.0, 195.0)),
     ),
 )
 
