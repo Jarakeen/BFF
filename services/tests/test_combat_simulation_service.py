@@ -349,3 +349,50 @@ def test_kernel_fails_closed_when_damage_bridge_has_no_explicit_target() -> None
         "outgoing damage projection requires explicit target identity" in message
         for message in result.unresolved
     )
+
+
+
+def test_kernel_orders_damage_before_health_change_before_death() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=2000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = _service().simulate(
+        build_snapshot=_snapshot(),
+        plan=_healer_plan(),
+        target_state=state,
+        outgoing_damage=(
+            CombatSimulationOutgoingDamage(
+                time_seconds=3.0,
+                sequence=0,
+                source="Killing Hit",
+                recipient="Boss",
+                amount=3000.0,
+            ),
+        ),
+    )
+
+    at_three = [
+        event
+        for event in result.events
+        if event.time_seconds == 3.0
+        and event.source == "Killing Hit"
+    ]
+
+    assert [event.event_type for event in at_three] == [
+        "outgoing_damage",
+        "health_change",
+        "death",
+    ]
+    assert [event.priority for event in at_three] == [
+        30,
+        35,
+        80,
+    ]
