@@ -195,7 +195,7 @@ try {
     # Optional private-repository updater access. These values are injected at
     # packaging time and are never committed to the repository or included in
     # the in-place update archive.
-    $UpdateBaseUrl = $env:FOUNDRYDOCK_UPDATE_BASE_URL
+    $UpdateBaseUrl = if ([string]::IsNullOrWhiteSpace($env:FOUNDRYDOCK_UPDATE_BASE_URL)) { "https://bff-production-30c2.up.railway.app" } else { $env:FOUNDRYDOCK_UPDATE_BASE_URL }
     $UpdateAccessKey = $env:FOUNDRYDOCK_UPDATE_ACCESS_KEY
     if (-not [string]::IsNullOrWhiteSpace($UpdateAccessKey)) {
         $UpdateAccess = @{
@@ -208,9 +208,6 @@ try {
             $Utf8NoBom
         )
         Write-Host "Private updater access: configured"
-    }
-    elseif (-not [string]::IsNullOrWhiteSpace($UpdateBaseUrl) -or -not [string]::IsNullOrWhiteSpace($UpdateAccessKey)) {
-        throw "Set both FOUNDRYDOCK_UPDATE_BASE_URL and FOUNDRYDOCK_UPDATE_ACCESS_KEY, or neither."
     }
     else {
         Write-Host "Private updater access: not configured (public GitHub release fallback)"
