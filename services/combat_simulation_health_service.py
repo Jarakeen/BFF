@@ -9,6 +9,9 @@ from models.combat_simulation import (
     CombatSimulationTargetState,
     SimulationEventPriority,
 )
+from services.combat_simulation_health_ordering_service import (
+    CombatSimulationHealthOrderingService,
+)
 
 
 @dataclass(frozen=True)
@@ -18,10 +21,17 @@ class CombatSimulationHealthProjection:
 
 
 class CombatSimulationHealthService:
-    """Apply bound healing events to explicit combatant health state."""
+    """Apply bound healing/damage events to explicit combatant Health state."""
 
     _HEAL_EVENT_TYPES = frozenset({"direct_heal", "periodic_heal"})
     _DAMAGE_EVENT_TYPES = frozenset({"incoming_damage", "outgoing_damage"})
+
+    def __init__(
+        self,
+        *,
+        ordering_service: CombatSimulationHealthOrderingService | None = None,
+    ) -> None:
+        self.ordering_service = ordering_service or CombatSimulationHealthOrderingService()
 
     def project(
         self,
@@ -51,6 +61,30 @@ class CombatSimulationHealthService:
                 ),
             )
         )
+        collisions = self.ordering_service.collisions(ordered)
+        blocked_from: dict[str, tuple[float, int, int]] = {
+            item.recipient: (
+                float(item.time_seconds),
+                int(item.priority),
+                int(item.sequence),
+            )
+            for item in collisions
+        }
+        unresolved.extend(item.message for item in collisions)
+
+        def is_blocked(
+            recipient: str,
+            event: CombatSimulationEvent,
+        ) -> bool:
+            boundary = blocked_from.get(recipient)
+            if boundary is None:
+                return False
+            point = (
+                float(event.time_seconds),
+                int(event.priority),
+                int(event.sequence),
+            )
+            return point >= boundary
 
         for event in ordered:
             payload = event.payload_dict()
@@ -61,6 +95,8 @@ class CombatSimulationHealthService:
                     unresolved.append(
                         f"{event.source} {event.event_type} at {event.time_seconds:g}s: recipient is required"
                     )
+                    continue
+                if is_blocked(recipient, event):
                     continue
                 if recipient not in health:
                     unresolved.append(
@@ -146,7 +182,10 @@ class CombatSimulationHealthService:
                 continue
 
             for recipient in tuple(recipients):
-                current, maximum = health.get(str(recipient), (None, None))
+                recipient = str(recipient)
+                if is_blocked(recipient, event):
+                    continue
+                current, maximum = health.get(recipient, (None, None))
                 if current is None or maximum is None:
                     unresolved.append(
                         f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: "
