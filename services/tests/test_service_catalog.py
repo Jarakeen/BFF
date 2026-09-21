@@ -613,3 +613,17 @@ def test_sustained_dps_cross_axis_composition_keeps_context_and_assembly_separat
     )
     assert "subclass route lines" in context.notes
     assert "Each axis contributes only the state it owns" in assembly.notes
+
+
+def test_sustained_dps_rotation_plan_frontier_is_seed_family_not_policy_closure() -> None:
+    service = canonical_service_for("extreme_sustained_dps_rotation_plan_frontier")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.rotation_plan_frontier"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.generated_candidate_assembly",)
+    assert "ordinary-skill ordering" in service.notes
+    assert "Light-Attack weave on/off" in service.notes
+    assert "remain separate open axes" in service.notes
