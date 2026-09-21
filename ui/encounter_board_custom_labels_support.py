@@ -291,7 +291,7 @@ def _label_and_key_panel(board) -> QWidget:
 
     board.raid_map_custom_label = QLineEdit()
     board.raid_map_custom_label.setMinimumWidth(150)
-    editor.setPlaceholderText("Select one marker or zone to rename")
+    board.raid_map_custom_label.setPlaceholderText("Select one marker or zone to rename")
     board.raid_map_custom_label.returnPressed.connect(lambda: _rename_selected(board))
     row.addWidget(board.raid_map_custom_label, 1)
 
