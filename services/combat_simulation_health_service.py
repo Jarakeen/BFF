@@ -177,6 +177,11 @@ class CombatSimulationHealthService:
             if current is None or point < current:
                 blocked_from[item.recipient] = point
         unresolved.extend(item.message for item in collisions)
+        damage_unresolved.extend(
+            item.message
+            for item in collisions
+            if "outgoing_damage" in item.event_types
+        )
 
         def is_blocked(
             recipient: str,
