@@ -1,0 +1,30 @@
+name: Phase 14 Live Raid focused tests
+
+on:
+  push:
+    branches: [phase14]
+    paths:
+      - "services/live_raid_encounter_projection_service.py"
+      - "services/encounter_boss_guide.py"
+      - "services/encounter_guide_evidence_projection_service.py"
+      - "services/tests/test_live_raid_encounter_projection_service.py"
+      - "ui/city_live_raid_page.py"
+      - "ui/tests/test_city_live_raid_encounter_context.py"
+      - ".github/workflows/live-raid-focused-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  focused-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install focused test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest PySide6
+      - name: Run focused Live Raid encounter tests
+        run: |
+          pytest             services/tests/test_live_raid_encounter_projection_service.py             ui/tests/test_city_live_raid_encounter_context.py -q
