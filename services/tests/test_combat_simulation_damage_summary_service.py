@@ -880,3 +880,66 @@ def test_damage_summary_pairs_raw_and_health_evidence_across_sequences() -> None
     assert summary.complete_damage_evidence is True
     assert summary.applied_damage == 3000.0
     assert summary.modeled_dps == 600.0
+
+
+def test_damage_summary_requires_one_health_transition_per_distinct_raw_sequence_group() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    result = CombatSimulationResult(
+        duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(
+            _event(
+                1.0,
+                0,
+                "outgoing_damage",
+                "Repeated Hit",
+                recipient="Boss",
+                amount=1000.0,
+            ),
+            _event(
+                1.0,
+                1,
+                "outgoing_damage",
+                "Repeated Hit",
+                recipient="Boss",
+                amount=1000.0,
+            ),
+            _event(
+                1.0,
+                0,
+                "health_change",
+                "Repeated Hit",
+                recipient="Boss",
+                before=10000,
+                applied_damage=1000.0,
+                overkill=0.0,
+                after=9000,
+                origin_event_type="outgoing_damage",
+            ),
+        ),
+        target_state=state,
+    )
+
+    summary = CombatSimulationDamageSummaryService().summarize(
+        result,
+        target_identity="Boss",
+    )
+
+    assert summary.attempted_damage == 2000.0
+    assert summary.applied_damage == 1000.0
+    assert summary.complete_damage_evidence is False
+    assert summary.modeled_dps is None
+    assert any(
+        "matching Health transition is unavailable" in message
+        for message in summary.damage_unresolved
+    )
