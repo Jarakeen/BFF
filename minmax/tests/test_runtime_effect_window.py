@@ -164,3 +164,57 @@ def test_partition_rejects_invalid_query_time():
     )
     with pytest.raises(ValueError, match="query time"):
         partition_runtime_effect_windows((window,), at_time_seconds=-1.0)
+
+
+
+def test_partition_respects_same_time_sequence_boundary() -> None:
+    early = RuntimeEffectActiveWindow(
+        effect_name="early",
+        source="Skill",
+        start_time_seconds=5.0,
+        end_time_seconds=10.0,
+        sequence=0,
+    )
+    late = RuntimeEffectActiveWindow(
+        effect_name="late",
+        source="Skill",
+        start_time_seconds=5.0,
+        end_time_seconds=10.0,
+        sequence=1,
+    )
+
+    before_late = partition_runtime_effect_windows(
+        (early, late),
+        at_time_seconds=5.0,
+        at_sequence=0,
+    )
+    after_late = partition_runtime_effect_windows(
+        (early, late),
+        at_time_seconds=5.0,
+        at_sequence=1,
+    )
+    end_of_timestamp = partition_runtime_effect_windows(
+        (early, late),
+        at_time_seconds=5.0,
+    )
+
+    assert [item.effect_name for item in before_late.active] == ["early"]
+    assert [item.effect_name for item in after_late.active] == ["early", "late"]
+    assert [item.effect_name for item in end_of_timestamp.active] == ["early", "late"]
+
+
+def test_partition_rejects_negative_sequence_boundary() -> None:
+    window = RuntimeEffectActiveWindow(
+        effect_name="test",
+        source="Skill",
+        start_time_seconds=1.0,
+        end_time_seconds=2.0,
+        sequence=0,
+    )
+
+    with pytest.raises(ValueError, match="query sequence"):
+        partition_runtime_effect_windows(
+            (window,),
+            at_time_seconds=1.0,
+            at_sequence=-1,
+        )
