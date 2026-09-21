@@ -331,3 +331,14 @@ def test_friend_build_creates_sanitized_release_seed_before_pyinstaller() -> Non
     assert 'Copy-Item $ReleaseSeedDatabase $TargetDatabase -Force' in friend
     assert 'Copy-Item $SourceDatabase $TargetDatabase -Force' not in friend
     assert friend.index(seed_command) < friend.index(pyinstaller_command)
+
+
+def test_friend_build_uses_release_manifest_runtime_data_allowlists() -> None:
+    friend = (ROOT / "packaging" / "build_friend.ps1").read_text(encoding="utf-8")
+    manifest = (ROOT / "packaging" / "release_manifest.py").read_text(encoding="utf-8")
+
+    assert "RUNTIME_EXTERNAL_DATA_FILES" in friend
+    assert "RUNTIME_EXTERNAL_DATA_DIRECTORIES" in friend
+    assert "gameplay_policy/endgame_pve.json" in manifest
+    assert 'Copy-Item (Join-Path $DataRoot $Name) $UpdateDestination -Force' in friend
+    assert 'Copy-Item (Join-Path $DataRoot $Name) $UpdateDestination -Recurse -Force' in friend
