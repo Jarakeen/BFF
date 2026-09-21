@@ -248,7 +248,7 @@ class RosterPage(BaseRosterPage):
 
         self.get_shared_teams_button = QPushButton("Get Shared Teams")
         self.get_shared_teams_button.setToolTip(
-            "Browse Teams published to Finch. Importing brings in Team schedule/focus only, not Personnel."
+            "Browse Teams published to Finch. Copy to Local creates a new local Team with schedule/focus only; Personnel is never imported."
         )
         self.get_shared_teams_button.clicked.connect(self._get_shared_teams)
         preview_row.addWidget(self.get_shared_teams_button)
@@ -492,7 +492,7 @@ class RosterPage(BaseRosterPage):
             selected, ok = QInputDialog.getItem(
                 self,
                 "Shared Teams on Finch",
-                "Import saved Team metadata:",
+                "Copy shared Team to Local:",
                 labels,
                 0,
                 False,
@@ -500,17 +500,17 @@ class RosterPage(BaseRosterPage):
             if not ok:
                 self._finch_team_read_timer.stop()
                 self.get_shared_teams_button.setEnabled(True)
-                self.status.info("Shared Team import cancelled.")
+                self.status.info("Shared Team copy cancelled.")
                 return
             index = labels.index(selected)
             preview = previews[index]
             answer = QMessageBox.question(
                 self,
-                "Import Shared Team",
+                "Copy Shared Team to Local",
                 (
-                    f'Import "{preview.team_name}" Team metadata from Finch?\n\n'
-                    "This imports the Team identity, raid schedule, time zone, and current focus. "
-                    "It does not create Personnel or overwrite player records."
+                    f'Copy "{preview.team_name}" from Finch into a new local Team?\n\n'
+                    "This creates a separate local Team copy with raid schedule, time zone, and current focus. "
+                    "It never overwrites an existing Team and does not create Personnel."
                 ),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
                 QMessageBox.StandardButton.Cancel,
@@ -535,7 +535,7 @@ class RosterPage(BaseRosterPage):
         canonical = str(result or "").strip()
         self._reload_schedule_teams(canonical)
         self.status.success(
-            f"Imported shared Team metadata from Finch: {canonical}."
+            f"Copied shared Team from Finch into local Team: {canonical}."
         )
 
     def _visible_assignment_rows(self) -> list[dict[str, str]]:
