@@ -154,3 +154,43 @@ def test_finch_api_client_publishes_and_reads_shared_readiness(monkeypatch) -> N
     assert published.kind == "readiness"
     assert fetched.snapshot_key == "rg/pm"
     assert listed[0].payload["summary"]["human_ready"] == 9
+
+
+def test_finch_api_client_publishes_and_reads_shared_coverage(monkeypatch) -> None:
+    client = FinchApiClient(base_url="https://finch.example", api_key="secret")
+    calls = []
+
+    def request(path, *, method="GET", payload=None):
+        calls.append((path, method, payload))
+        snapshot = {
+            "kind": "coverage",
+            "snapshot_key": "rg/pm",
+            "schema_version": 1,
+            "payload": {
+                "plan_id": "rg/pm",
+                "summary": {"total_effects": 16, "covered": 14, "missing": 2},
+                "effects": [],
+            },
+            "published_by": "Jarakeen",
+            "updated_at": "2026-09-21T00:00:00+00:00",
+        }
+        if path == "/api/v1/shared/coverage":
+            return {"coverage": [snapshot]}
+        return {"snapshot": snapshot}
+
+    monkeypatch.setattr(client, "_request_json", request)
+
+    published = client.publish_shared_coverage(
+        snapshot_key="rg/pm",
+        payload={"plan_id": "rg/pm", "summary": {}, "effects": []},
+    )
+    fetched = client.shared_coverage("rg/pm")
+    listed = client.shared_coverage_snapshots()
+
+    assert calls[0][0] == "/api/v1/shared/coverage/rg%2Fpm"
+    assert calls[0][1] == "PUT"
+    assert calls[1][0] == "/api/v1/shared/coverage/rg%2Fpm"
+    assert calls[2][0] == "/api/v1/shared/coverage"
+    assert published.kind == "coverage"
+    assert fetched.snapshot_key == "rg/pm"
+    assert listed[0].payload["summary"]["missing"] == 2
