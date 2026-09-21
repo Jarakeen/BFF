@@ -328,3 +328,27 @@ def test_main_simulation_merges_explicit_incoming_damage_and_health_change() -> 
     assert incoming.payload_dict()["amount"] == 6000.0
     assert change.payload_dict()["before"] == 20000
     assert change.payload_dict()["after"] == 14000
+
+
+def test_recipient_binding_normalizes_matching_identity_fields() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(CombatSimulationCombatant("Tank 1", "ally"),),
+        recipient_bindings=(
+            CombatSimulationRecipientBinding(
+                time_seconds=1.0,
+                sequence=0,
+                event_type=" direct_heal ",
+                source=" Combat Prayer ",
+                coefficient_number=1,
+                recipients=(" Tank 1 ",),
+            ),
+        ),
+    )
+
+    result = CombatSimulationTargetBindingService().bind(
+        events=(_heal_event(),),
+        target_state=state,
+    )
+
+    assert result.unresolved == ()
+    assert result.events[0].payload_dict()["recipients"] == ("Tank 1",)
