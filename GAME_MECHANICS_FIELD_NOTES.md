@@ -1129,3 +1129,7 @@ A four-star-per-discipline Champion Bar can be structurally legal while still co
 ### 2026-09-21 — A legal set-count partition is not yet a legal equipped build
 
 A familiar count shape such as **5 + 5 + 2** proves only that twelve active-snapshot set-count units can be partitioned that way. It does not prove that the selected named sets can physically occupy the required armor, jewelry, and weapon slots, satisfy Mythic limits, or coexist across both bars. FoundryDock therefore keeps abstract gear topology, named-set physical realization, dual-bar compatibility, and runtime set behavior as separate proof layers.
+
+### 2026-09-21 — An active-bar gear witness is not a complete two-bar build
+
+A legal active-snapshot set arrangement does not prove that the same character can carry a compatible backup weapon state. Shared armor and jewelry must agree across both snapshots, weapon assignments may differ by bar, and one-bar rules such as Oakensoul can change which bar is actually activatable. FoundryDock therefore proves complete front/back coexistence before treating a named-gear witness as a generated-build candidate.
