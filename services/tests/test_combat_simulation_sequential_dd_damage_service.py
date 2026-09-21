@@ -440,3 +440,139 @@ def test_periodic_tick_health_feeds_later_action_evaluation() -> None:
         (2.0, 7000.0),
     ]
     assert result.terminated_at_seconds == 2.0
+
+
+
+class _SameTimestampOccurrenceProvider:
+    def evaluate_action_occurrences(self, *, candidate, action):
+        del candidate
+        if action.name == "DoT":
+            return RotationActionDamageOccurrenceEvidence(
+                action_time_seconds=action.time_seconds,
+                action_sequence=action.sequence,
+                occurrences=(
+                    RotationActionDamageOccurrence(
+                        time_seconds=1.0,
+                        sequence=0,
+                        damage_value=2000.0,
+                        source_name="DoT",
+                        coefficient_number=1,
+                        occurrence_index=0,
+                    ),
+                ),
+            )
+        return RotationActionDamageOccurrenceEvidence(
+            action_time_seconds=action.time_seconds,
+            action_sequence=action.sequence,
+            occurrences=(
+                RotationActionDamageOccurrence(
+                    time_seconds=action.time_seconds,
+                    sequence=action.sequence,
+                    damage_value=3000.0,
+                    source_name=str(action.name),
+                    coefficient_number=1,
+                ),
+            ),
+        )
+
+
+def test_same_timestamp_periodic_and_action_damage_fails_closed() -> None:
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=3.0,
+        actions=(
+            RotationAction(
+                time_seconds=0.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="DoT",
+                bar="front",
+            ),
+            RotationAction(
+                time_seconds=1.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Execute",
+                bar="front",
+            ),
+            RotationAction(
+                time_seconds=2.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Later",
+                bar="front",
+            ),
+        ),
+    )
+    candidate = GeneratedRotationCandidate(
+        candidate_id="same-time-periodic-action",
+        plan=plan,
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    result = CombatSimulationSequentialDDDamageService().project(
+        plan=plan,
+        candidate=candidate,
+        action_damage_evidence_provider=_SameTimestampOccurrenceProvider(),
+        target_state=_state(),
+        target_identity="Boss",
+        player_identity="Damage Tester",
+    )
+
+    assert result.damage == ()
+    assert any(
+        "1s damage ordering is unresolved" in message
+        for message in result.unresolved
+    )
+    replay = result.evidence_provider()
+    for action in plan.actions[1:]:
+        evidence = replay.evaluate_action(candidate=candidate, action=action)
+        assert evidence.damage_value is None
+        assert any("same-instant ordering rule" in message for message in evidence.unresolved)
+
+
+def test_periodic_tick_before_later_action_remains_authoritative() -> None:
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=3.0,
+        actions=(
+            RotationAction(
+                time_seconds=0.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="DoT",
+                bar="front",
+            ),
+            RotationAction(
+                time_seconds=1.5,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Later",
+                bar="front",
+            ),
+        ),
+    )
+    candidate = GeneratedRotationCandidate(
+        candidate_id="ordered-periodic-action",
+        plan=plan,
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    result = CombatSimulationSequentialDDDamageService().project(
+        plan=plan,
+        candidate=candidate,
+        action_damage_evidence_provider=_SameTimestampOccurrenceProvider(),
+        target_state=_state(),
+        target_identity="Boss",
+        player_identity="Damage Tester",
+    )
+
+    assert [(item.time_seconds, item.source, item.amount) for item in result.damage] == [
+        (1.0, "DoT", 2000.0),
+        (1.5, "Later", 3000.0),
+    ]
+    assert result.unresolved == ()
