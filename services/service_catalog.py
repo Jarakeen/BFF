@@ -831,6 +831,27 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.champion_point_frontier",
+        domain="extreme",
+        purpose=(
+            "Count and page every structurally legal canonical slottable Champion Point "
+            "loadout under the four-slots-per-discipline rule without materializing the product."
+        ),
+        implementation_path="services.extreme_sustained_dps_champion_point_frontier_service",
+        inputs=("PlayerBuild", "ChampionPointStaticRepository"),
+        outputs=("ExtremeSustainedDPSChampionPointFrontier",),
+        dependencies=("champion_point.loadout",),
+        responsibilities=("extreme_sustained_dps_champion_point_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Preserves all canonical slottable stars and structural Champion Bar legality. "
+            "Dynamic/runtime star effects remain unresolved until exact candidate evaluation."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.jewelry_frontier",
         domain="extreme",
         purpose=(
