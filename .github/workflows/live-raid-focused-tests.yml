@@ -11,8 +11,10 @@ on:
       - "services/tests/test_live_raid_encounter_projection_service.py"
       - "services/tests/test_raid_section_state_attempt_history.py"
       - "ui/city_live_raid_page.py"
+      - "ui/raid_review_page.py"
       - "ui/tests/test_city_live_raid_encounter_context.py"
       - "ui/tests/test_city_live_raid_attempt_history.py"
+      - "ui/tests/test_raid_review_attempt_history.py"
       - ".github/workflows/live-raid-focused-tests.yml"
   workflow_dispatch:
 
@@ -34,4 +36,5 @@ jobs:
             services/tests/test_live_raid_encounter_projection_service.py \
             services/tests/test_raid_section_state_attempt_history.py \
             ui/tests/test_city_live_raid_encounter_context.py \
-            ui/tests/test_city_live_raid_attempt_history.py -q
+            ui/tests/test_city_live_raid_attempt_history.py \
+            ui/tests/test_raid_review_attempt_history.py -q
