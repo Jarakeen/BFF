@@ -1,0 +1,216 @@
+from __future__ import annotations
+
+from types import SimpleNamespace
+
+import pytest
+
+from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
+    ExtremeSustainedDPSExactLeafEvaluation,
+)
+from services.extreme_sustained_dps_generated_frontier_wiring_service import (
+    ExtremeSustainedDPSGeneratedFrontierWiringService,
+)
+from services.extreme_sustained_dps_generated_rotation_axis_adapter_service import (
+    ExtremeSustainedDPSGeneratedRotationAxisAdapterService,
+)
+
+
+class _PlanFrontier:
+    def __init__(self, *, proven=True, unresolved=()):
+        self.proven = proven
+        self.unresolved = tuple(unresolved)
+        self.calls = []
+
+    def frontier(self, assembled):
+        self.calls.append(("frontier", assembled))
+        return SimpleNamespace(
+            candidate_count=2,
+            denominator_proven=self.proven,
+            unresolved=self.unresolved,
+        )
+
+    def candidate_at(self, assembled, *, duration_seconds, index):
+        self.calls.append(("candidate_at", assembled, duration_seconds, index))
+        return SimpleNamespace(
+            structural_index=index,
+            plan=f"plan:{index}",
+            unresolved=(),
+        )
+
+
+class _PolicyFrontier:
+    def __init__(self, *, proven=True, unresolved=()):
+        self.proven = proven
+        self.unresolved = tuple(unresolved)
+        self.calls = []
+
+    def frontier(self, *, build, seed, potion_cooldown_seconds):
+        self.calls.append(("frontier", build, seed, potion_cooldown_seconds))
+        return SimpleNamespace(
+            candidate_count=2,
+            anchored_policy_denominator_proven=self.proven,
+            continuous_potion_timing_closed=False,
+            delayed_ultimate_timing_closed=False,
+            unresolved=self.unresolved,
+        )
+
+    def candidate_at(
+        self,
+        *,
+        build,
+        seed,
+        potion_cooldown_seconds,
+        starting_ultimate,
+        index,
+        ultimate_generation_events=(),
+        heroism_windows=(),
+        use_scheduled_combat_attacks_for_ultimate=False,
+    ):
+        self.calls.append(
+            (
+                "candidate_at",
+                build,
+                seed,
+                potion_cooldown_seconds,
+                starting_ultimate,
+                index,
+                ultimate_generation_events,
+                heroism_windows,
+                use_scheduled_combat_attacks_for_ultimate,
+            )
+        )
+        return SimpleNamespace(
+            structural_index=index,
+            plan=f"{seed.plan}|policy:{index}",
+            mechanic_complete=True,
+            unresolved=(),
+        )
+
+
+def _assembled():
+    return SimpleNamespace(build=SimpleNamespace(Name="generated"))
+
+
+def _adapter(*, plans=None, policies=None):
+    return ExtremeSustainedDPSGeneratedRotationAxisAdapterService(
+        rotation_plans=plans or _PlanFrontier(),
+        rotation_policies=policies or _PolicyFrontier(),
+    )
+
+
+def _root(adapter):
+    return adapter.root(
+        _assembled(),
+        duration_seconds=10.0,
+        potion_cooldown_seconds=45.0,
+        starting_ultimate=70.0,
+        ultimate_generation_events=("generation",),
+        heroism_windows=("heroism",),
+        use_scheduled_combat_attacks_for_ultimate=True,
+    )
+
+
+def test_rotation_axes_preserve_plan_dependency_and_policy_inputs() -> None:
+    plans = _PlanFrontier()
+    policies = _PolicyFrontier()
+    adapter = _adapter(plans=plans, policies=policies)
+    axes = adapter.axes()
+
+    assert tuple(axis.name for axis in axes) == (
+        "Rotation Plan Family",
+        "Anchored Ultimate and Potion Policy",
+    )
+
+    state = _root(adapter)
+    assert axes[0].candidate_count(state) == 2
+    state = axes[0].candidate_at(state, 1)
+    assert axes[1].candidate_count(state) == 2
+    state = axes[1].candidate_at(state, 1)
+
+    assert state.complete is True
+    assert state.rotation_policy.plan == "plan:1|policy:1"
+    policy_call = policies.calls[-1]
+    assert policy_call[3:6] == (45.0, 70.0, 1)
+    assert policy_call[6:] == (("generation",), ("heroism",), True)
+
+
+def test_runs_plan_and_anchored_policy_product_through_lazy_search() -> None:
+    adapter = _adapter()
+
+    def evaluate(node):
+        state = node.state
+        assert state.complete
+        score = (
+            state.rotation_plan.structural_index * 10
+            + state.rotation_policy.structural_index
+        )
+        return ExtremeSustainedDPSExactLeafEvaluation(
+            candidate_key=node.candidate_key,
+            modeled_dps=float(score),
+            duration_seconds=10.0,
+            mechanic_complete=True,
+        )
+
+    result = ExtremeSustainedDPSGeneratedFrontierWiringService.search(
+        _root(adapter),
+        axes=adapter.axes(),
+        evaluate_leaf=evaluate,
+        required_duration_seconds=10.0,
+    )
+
+    assert result.evaluated_leaf_count == 4
+    assert result.best_modeled_dps == 11.0
+    assert result.global_maximum_proven is True
+
+
+def test_unproven_rotation_plan_denominator_fails_closed() -> None:
+    adapter = _adapter(
+        plans=_PlanFrontier(
+            proven=False,
+            unresolved=("rotation family denominator missing",),
+        )
+    )
+
+    with pytest.raises(ValueError, match="rotation family denominator missing"):
+        adapter.axes()[0].candidate_count(_root(adapter))
+
+
+def test_unproven_anchored_policy_denominator_fails_closed() -> None:
+    adapter = _adapter(
+        policies=_PolicyFrontier(
+            proven=False,
+            unresolved=("anchored policy input missing",),
+        )
+    )
+    state = adapter.axes()[0].candidate_at(_root(adapter), 0)
+
+    with pytest.raises(ValueError, match="anchored policy input missing"):
+        adapter.axes()[1].candidate_count(state)
+
+
+def test_policy_axis_cannot_run_before_plan_selection() -> None:
+    adapter = _adapter()
+
+    with pytest.raises(ValueError, match="selected rotation-plan family"):
+        adapter.axes()[1].candidate_count(_root(adapter))
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    (
+        ({"duration_seconds": 0.0}, "duration"),
+        ({"potion_cooldown_seconds": float("inf")}, "potion cooldown"),
+        ({"starting_ultimate": -1.0}, "starting Ultimate"),
+    ),
+)
+def test_root_rejects_invalid_runtime_policy_inputs(kwargs, message) -> None:
+    adapter = _adapter()
+    values = {
+        "duration_seconds": 10.0,
+        "potion_cooldown_seconds": 45.0,
+        "starting_ultimate": 70.0,
+    }
+    values.update(kwargs)
+
+    with pytest.raises(ValueError, match=message):
+        adapter.root(_assembled(), **values)
