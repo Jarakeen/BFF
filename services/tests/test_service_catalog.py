@@ -214,3 +214,57 @@ def test_prescription_generation_and_constraints_preserve_unresolved_evidence() 
     assert "open chairs remain unresolved" in generator.notes
     assert "Phase 11 provider assignments remain authoritative" in coverage.notes
     assert "hard gates" in constraints.notes
+
+
+
+def test_combat_simulation_services_are_canonical_and_discoverable() -> None:
+    kernel = canonical_service_for("combat_simulation_deterministic_execution")
+    saved_dd = canonical_service_for("combat_simulation_saved_build_dd_execution")
+    summary = canonical_service_for("combat_simulation_damage_summary")
+    replay = canonical_service_for("combat_simulation_deterministic_replay_verification")
+    snapshot = canonical_service_for("combat_simulation_snapshot_projection")
+
+    assert kernel is not None
+    assert saved_dd is not None
+    assert summary is not None
+    assert replay is not None
+    assert snapshot is not None
+
+    assert kernel.service_id == "combat.simulation.kernel"
+    assert saved_dd.service_id == "combat.simulation.saved_build_dd"
+    assert summary.service_id == "combat.simulation.damage_summary"
+    assert replay.service_id == "combat.simulation.replay_verification"
+    assert snapshot.service_id == "combat.simulation.snapshot"
+
+    assert capability_status(
+        "combat_simulation_deterministic_execution"
+    ) is CapabilityStatus.IMPLEMENTED
+    assert {row.service_id for row in services_by_domain("combat", available_only=True)} >= {
+        "combat.simulation.kernel",
+        "combat.simulation.saved_build_dd",
+        "combat.simulation.damage_summary",
+        "combat.simulation.replay_verification",
+        "combat.simulation.snapshot",
+    }
+
+
+def test_combat_simulation_catalog_preserves_authority_boundaries() -> None:
+    kernel = SERVICE_CATALOG.get("combat.simulation.kernel")
+    saved_dd = SERVICE_CATALOG.get("combat.simulation.saved_build_dd")
+    summary = SERVICE_CATALOG.get("combat.simulation.damage_summary")
+
+    assert kernel is not None
+    assert saved_dd is not None
+    assert summary is not None
+
+    assert kernel.behavior is ServiceBehavior.DETERMINISTIC
+    assert kernel.evidence_class is EvidenceClass.MIXED
+    assert kernel.encounter_aware is True
+    assert "does not invent" in kernel.notes
+
+    assert kernel.service_id in saved_dd.dependencies
+    assert "must not fabricate" in saved_dd.notes
+
+    assert summary.ui_safe is True
+    assert kernel.service_id in summary.dependencies
+    assert "withheld" in summary.notes
