@@ -7,7 +7,7 @@ from ui.components.team_progress_panels import (
 )
 
 
-def _build(*, name: str, skills=(), sets=()):
+def _build(*, name: str, skills=(), sets=(), role="Healer", eso_class="Warden"):
     armor = {
         f"slot-{index}": {"Set": set_name}
         for index, set_name in enumerate(sets)
@@ -16,8 +16,8 @@ def _build(*, name: str, skills=(), sets=()):
         Name=name,
         Gamertag="",
         BuildName=f"{name} Build",
-        Role="Healer",
-        EsoClass="Warden",
+        Role=role,
+        EsoClass=eso_class,
         FrontBarSkills=list(skills),
         BackBarSkills=[],
         FrontBarWeapon=SimpleNamespace(Set=""),
@@ -46,15 +46,15 @@ def test_declared_composition_coverage_only_checks_explicit_text() -> None:
 def test_optimization_coverage_resolves_selected_build_evidence() -> None:
     builds = (
         _build(name="Healer", sets=("Spell Power Cure", "Pillager's Profit")),
-        _build(name="Tank", skills=("Major Breach", "Unrelenting Grip")),
+        _build(name="Tank", skills=("Major Breach", "Unrelenting Grip"), role="Tank"),
     )
 
     coverage = {item.name: item for item in coverage_from_builds(builds)}
 
     assert coverage["Major Courage"].covered
-    assert coverage["Major Courage"].provider == "Healer"
+    assert coverage["Major Courage"].provider == "Warden Healer"
     assert coverage["Major Slayer"].covered
-    assert coverage["Major Slayer"].provider == "Healer"
+    assert coverage["Major Slayer"].provider == "Warden Healer"
     assert coverage["Major Breach"].covered
-    assert coverage["Major Breach"].provider == "Tank"
+    assert coverage["Major Breach"].provider == "Warden Tank"
     assert not coverage["Major Vulnerability"].covered
