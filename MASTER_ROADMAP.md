@@ -500,7 +500,7 @@ The healing value used by the closeout audit is a modeled comparison score, not 
 ---
 
 # PHASE 12.5 · Team Workflow Integration
-**Status: 🟡 Active**
+**Status: 🟢 Complete**
 
 Phase 12.5 is the product-integration bridge between the completed bounded build optimizer and the later temporal engines. It does **not** expand Phase 12's mathematical search scope and it does **not** substitute UI plumbing for Phase 13 Rotation Engine work.
 
@@ -1363,6 +1363,22 @@ Focused validation:
 
 **Phase 14J explicit death state status: green.**
 
+### Phase 14 closeout checkpoint — 2026-09-21
+
+Dedicated closeout validation:
+
+- **198 passed in 6.22s**
+- deterministic event ordering and replay are green;
+- canonical resource, healing, reviewed skill-effect, and recipient-binding paths are
+  integrated through the main simulation;
+- Health, incoming/outgoing damage, death state, exact-time snapshots, and fight
+  termination are green;
+- saved-build DD simulation and sequential target-Health feedback are included in the
+  closeout gate;
+- unsupported mechanics remain explicit unresolved evidence rather than silently
+  improving modeled outcomes.
+
+**Phase 14 Combat Simulation status: COMPLETE / GREEN.**
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
 is responsible for required buffs/debuffs. Comp Maker owns roster construction plus HOW
