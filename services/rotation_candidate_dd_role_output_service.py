@@ -60,6 +60,59 @@ class RotationActionDamageEvidence:
         )
 
 
+@dataclass(frozen=True)
+class RotationActionDamageOccurrence:
+    """One exact-time realized damage consequence owned by a scheduled action."""
+
+    time_seconds: float
+    sequence: int
+    damage_value: float
+    source_name: str
+    coefficient_number: int | None = None
+    occurrence_index: int | None = None
+
+    def __post_init__(self) -> None:
+        time_seconds = float(self.time_seconds)
+        damage_value = float(self.damage_value)
+        if not isfinite(time_seconds) or time_seconds < 0.0:
+            raise ValueError("damage occurrence time must be finite and non-negative")
+        if self.sequence < 0:
+            raise ValueError("damage occurrence sequence cannot be negative")
+        if not isfinite(damage_value) or damage_value < 0.0:
+            raise ValueError("damage occurrence value must be finite and non-negative")
+        source_name = str(self.source_name or "").strip()
+        if not source_name:
+            raise ValueError("damage occurrence source_name is required")
+        object.__setattr__(self, "time_seconds", time_seconds)
+        object.__setattr__(self, "damage_value", damage_value)
+        object.__setattr__(self, "source_name", source_name)
+        if self.coefficient_number is not None and int(self.coefficient_number) <= 0:
+            raise ValueError("damage occurrence coefficient_number must be positive")
+        if self.occurrence_index is not None and int(self.occurrence_index) < 0:
+            raise ValueError("damage occurrence occurrence_index cannot be negative")
+
+
+@dataclass(frozen=True)
+class RotationActionDamageOccurrenceEvidence:
+    action_time_seconds: float
+    action_sequence: int
+    occurrences: tuple[RotationActionDamageOccurrence, ...] = ()
+    unresolved: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        time_seconds = float(self.action_time_seconds)
+        if not isfinite(time_seconds) or time_seconds < 0.0:
+            raise ValueError("damage occurrence action time must be finite and non-negative")
+        if self.action_sequence < 0:
+            raise ValueError("damage occurrence action sequence cannot be negative")
+        object.__setattr__(self, "action_time_seconds", time_seconds)
+        object.__setattr__(
+            self,
+            "unresolved",
+            tuple(str(item).strip() for item in self.unresolved if str(item).strip()),
+        )
+
+
 class RotationActionDamageEvidenceProvider(Protocol):
     """Resolve canonical damage consequence for one exact scheduled action."""
 
@@ -69,6 +122,17 @@ class RotationActionDamageEvidenceProvider(Protocol):
         candidate: GeneratedRotationCandidate,
         action: RotationAction,
     ) -> RotationActionDamageEvidence: ...
+
+
+class RotationActionDamageOccurrenceEvidenceProvider(Protocol):
+    """Resolve exact-time damage occurrences owned by one scheduled action."""
+
+    def evaluate_action_occurrences(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageOccurrenceEvidence: ...
 
 
 class RotationCandidateDDRoleOutputService:
@@ -157,6 +221,9 @@ class RotationCandidateDDRoleOutputService:
 __all__ = [
     "DD_DAMAGE_ACTION_KINDS",
     "RotationActionDamageEvidence",
+    "RotationActionDamageOccurrence",
+    "RotationActionDamageOccurrenceEvidence",
     "RotationActionDamageEvidenceProvider",
+    "RotationActionDamageOccurrenceEvidenceProvider",
     "RotationCandidateDDRoleOutputService",
 ]
