@@ -146,9 +146,10 @@ class CombatSimulationIncomingDamage:
     def __post_init__(self) -> None:
         time_seconds = float(self.time_seconds)
         amount = float(self.amount)
+        sequence = int(self.sequence)
         if not isfinite(time_seconds) or time_seconds < 0:
             raise ValueError("incoming damage time must be finite and non-negative")
-        if self.sequence < 0:
+        if sequence < 0:
             raise ValueError("incoming damage sequence cannot be negative")
         if not str(self.source or "").strip():
             raise ValueError("incoming damage source is required")
@@ -157,6 +158,7 @@ class CombatSimulationIncomingDamage:
         if not isfinite(amount) or amount < 0:
             raise ValueError("incoming damage amount must be finite and non-negative")
         object.__setattr__(self, "time_seconds", time_seconds)
+        object.__setattr__(self, "sequence", sequence)
         object.__setattr__(self, "source", str(self.source).strip())
         object.__setattr__(self, "recipient", str(self.recipient).strip())
         object.__setattr__(self, "amount", amount)
@@ -183,9 +185,10 @@ class CombatSimulationOutgoingDamage:
     def __post_init__(self) -> None:
         time_seconds = float(self.time_seconds)
         amount = float(self.amount)
+        sequence = int(self.sequence)
         if not isfinite(time_seconds) or time_seconds < 0:
             raise ValueError("outgoing damage time must be finite and non-negative")
-        if self.sequence < 0:
+        if sequence < 0:
             raise ValueError("outgoing damage sequence cannot be negative")
         if not str(self.source or "").strip():
             raise ValueError("outgoing damage source is required")
@@ -194,6 +197,7 @@ class CombatSimulationOutgoingDamage:
         if not isfinite(amount) or amount < 0:
             raise ValueError("outgoing damage amount must be finite and non-negative")
         object.__setattr__(self, "time_seconds", time_seconds)
+        object.__setattr__(self, "sequence", sequence)
         object.__setattr__(self, "source", str(self.source).strip())
         object.__setattr__(self, "recipient", str(self.recipient).strip())
         object.__setattr__(self, "amount", amount)
