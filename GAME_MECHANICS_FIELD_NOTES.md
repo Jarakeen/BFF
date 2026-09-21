@@ -1045,3 +1045,11 @@ Combat Simulation can have more than one scheduled action at the same clock time
 **Layman's version:** if the boss dies on the first thing that happens at 10.0 seconds, the second thing scheduled for 10.0 seconds does not still get to happen just because the clock display has not changed.
 
 **For BFF:** fight termination now preserves the exact lethal time-and-sequence coordinate. Later same-timestamp action sequences and injected combat events are excluded from execution, preventing resource costs, healing, effects, or other consequences from firing after target death.
+
+## 2026-09-20 — Periodic damage stops at the requested simulation horizon
+
+A damage-over-time effect can have reviewed ticks scheduled after the requested simulation duration. Those later ticks are outside the modeled fight window and must not alter Health, death timing, or fight termination inside that run.
+
+**Layman's version:** if we simulate only the first 5 seconds, a DoT tick scheduled for second 6 does not get to reach backward and kill the boss in the 5-second result.
+
+**For BFF:** sequential DD projection now discards periodic occurrences beyond the plan duration before they can change the target Health ledger or create a terminal fight coordinate.
