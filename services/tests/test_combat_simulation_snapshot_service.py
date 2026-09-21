@@ -562,3 +562,88 @@ def test_snapshot_rejects_negative_sequence_boundary() -> None:
         assert "snapshot sequence" in str(exc)
     else:
         raise AssertionError("Expected negative sequence boundary to fail closed")
+
+
+
+def test_snapshot_sequence_boundary_is_consistent_across_state_domains() -> None:
+    from dataclasses import replace
+
+    base = _result()
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+        ),
+    )
+    swap = CombatSimulationEvent(
+        time_seconds=6.0,
+        priority=int(SimulationEventPriority.ACTION),
+        sequence=1,
+        event_type="action",
+        source="bar_swap",
+        payload=(
+            ("kind", "bar_swap"),
+            ("bar", "front"),
+            ("target_key", ""),
+        ),
+    )
+    cost = CombatSimulationEvent(
+        time_seconds=6.0,
+        priority=int(SimulationEventPriority.RESOURCE_COST),
+        sequence=1,
+        event_type="action_cost",
+        source="Skill",
+        payload=(
+            ("resource", "magicka"),
+            ("before", 28600),
+            ("attempted_change", -3000),
+            ("applied_change", -3000),
+            ("after", 25600),
+            ("shortfall", 0),
+            ("wasted_restore", 0),
+        ),
+    )
+    health = CombatSimulationEvent(
+        time_seconds=6.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=1,
+        event_type="health_change",
+        source="Heal",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 20000),
+            ("attempted_heal", 2000.0),
+            ("applied_heal", 2000.0),
+            ("after", 22000),
+            ("maximum_health", 25000),
+            ("origin_event_type", "direct_heal"),
+        ),
+    )
+    result = replace(
+        base,
+        events=tuple(sorted((*base.events, swap, cost, health))),
+        target_state=state,
+    )
+
+    before = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=6.0,
+        sequence=0,
+    )
+    after = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=6.0,
+        sequence=1,
+    )
+
+    assert before.active_bar == "back"
+    assert before.resources[0].current_amount == 28600
+    assert before.health[0].current_health == 20000
+
+    assert after.active_bar == "front"
+    assert after.resources[0].current_amount == 25600
+    assert after.health[0].current_health == 22000
