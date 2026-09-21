@@ -52,7 +52,7 @@ def _evidence(set_id: int, name: str, count: int, status: ExtremeGearSetObjectiv
         objective_key="max_health",
         status=status,
         reviewed_delta=100.0 if status is ExtremeGearSetObjectiveRelevance.RELEVANT else 0.0,
-        candidate=SimpleNamespace(unresolved=()),
+        candidate=SimpleNamespace(unresolved=(), source_effects=()),
     )
 
 
