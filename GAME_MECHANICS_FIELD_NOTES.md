@@ -1161,3 +1161,11 @@ ESO lets a character put the same ability family on both weapon bars, but one ba
 ### 2026-09-21 — An empty skill slot is legal until dominance proves it unnecessary
 
 A theoretical build denominator cannot assume all five normal slots and the Ultimate must be filled merely because optimized players usually fill them. Generated sustained-DPS search therefore retains empty and partial bar states. Later proof-safe dominance may discard them when a filled alternative is proven no worse, but legality and optimization remain separate questions.
+
+### 2026-09-21 — Equipped, owned, and native skill lines are different facts
+
+A generated character may natively own class-route lines, explicitly own shared lines through progression, and temporarily have different weapon/armor lines made relevant by the equipment it is actually wearing. Those are not interchangeable facts. FoundryDock now carries them separately into skill-bar legality so an equipped Inferno Staff does not magically become Fighters Guild ownership, and a legal subclass line is not rejected merely because it belongs to a different base class.
+
+### 2026-09-21 — Cross-axis optimization must assemble state, not swap whole candidate snapshots
+
+Each generated frontier creates a convenient local snapshot while exploring its own axis. Combining the “best” snapshots wholesale can silently erase another axis's gear, class route, potion, CP, or skills. FoundryDock therefore assembles a final generated candidate by copying **only** the state owned by each selected axis onto one cross-axis-authoritative build.
