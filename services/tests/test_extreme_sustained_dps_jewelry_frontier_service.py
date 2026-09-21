@@ -50,9 +50,7 @@ def test_jewelry_page_is_lazy() -> None:
 
 def test_unequipped_jewelry_does_not_expand_denominator() -> None:
     build = _build()
-    build.Ring2.Set = ""
-    build.Ring2.Trait = ""
-    build.Ring2.Enchant = ""
+    build.Ring2 = type(build.Ring2)()
     result = _service().frontier(build)
 
     assert tuple(row.slot for row in result.slots) == ("Necklace", "Ring1")
