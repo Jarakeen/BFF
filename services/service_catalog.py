@@ -831,6 +831,48 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.gear_topology_frontier",
+        domain="extreme",
+        purpose=(
+            "Expose the canonical active-snapshot gear-set count-partition denominator "
+            "as a deterministic pageable sustained-DPS search frontier."
+        ),
+        implementation_path="services.extreme_sustained_dps_gear_topology_frontier_service",
+        inputs=("GearSetRepository",),
+        outputs=("ExtremeSustainedDPSGearTopologyFrontier",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_gear_topology_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Closes only the abstract active-snapshot count topology. Named-set identity, "
+            "physical slot realization, dual-bar coexistence, and runtime set semantics remain separate proofs."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.gear_topology_realization",
+        domain="extreme",
+        purpose=(
+            "Expand one sustained-DPS gear count-topology branch into exact named-set "
+            "physical slot witnesses using canonical breakpoints and slot eligibility."
+        ),
+        implementation_path="services.extreme_sustained_dps_gear_topology_realization_service",
+        inputs=("GearTopologyIndex", "OptionalAssignmentCap"),
+        outputs=("ExtremeSustainedDPSGearTopologyRealization",),
+        dependencies=("extreme.sustained_dps.gear_topology_frontier",),
+        responsibilities=("extreme_sustained_dps_gear_topology_realization",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Truncation is explicitly exploratory and withholds denominator proof. "
+            "An exhaustive branch with zero legal physical witnesses is a proven-empty branch."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.champion_point_frontier",
         domain="extreme",
         purpose=(
