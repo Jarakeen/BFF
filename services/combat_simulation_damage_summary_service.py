@@ -73,6 +73,7 @@ class CombatSimulationDamageSummaryService:
             if event.event_type == "outgoing_damage"
             and str(event.payload_dict().get("recipient") or "").strip() == target
         )
+        summary_unresolved = list(result.unresolved)
         summary_damage_unresolved = list(result.damage_unresolved)
         if result.target_state is None and outgoing:
             summary_damage_unresolved.append(
@@ -197,6 +198,17 @@ class CombatSimulationDamageSummaryService:
             for event in deaths
             if event.payload_dict().get("origin_event_type") == "outgoing_damage"
         )
+        lethal_outgoing_health = tuple(
+            event
+            for event in outgoing_health
+            if int(event.payload_dict().get("after") or 0) == 0
+        )
+        if lethal_outgoing_health and not outgoing_deaths:
+            lethal = lethal_outgoing_health[0]
+            summary_unresolved.append(
+                f"{lethal.source} lethal outgoing damage at {lethal.time_seconds:g}s "
+                f"-> {target}: death attribution event is unavailable"
+            )
         killing_event = (
             min(
                 outgoing_deaths,
@@ -271,7 +283,7 @@ class CombatSimulationDamageSummaryService:
                     key=lambda item: (-item[1][2], -item[1][1], item[0].casefold()),
                 )
             ),
-            unresolved=tuple(result.unresolved),
+            unresolved=tuple(dict.fromkeys(summary_unresolved)),
             damage_unresolved=tuple(dict.fromkeys(summary_damage_unresolved)),
         )
 
