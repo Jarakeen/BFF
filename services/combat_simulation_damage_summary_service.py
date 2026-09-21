@@ -3,6 +3,7 @@ from __future__ import annotations
 """Read-only damage summary for one completed Combat Simulation result."""
 
 from dataclasses import dataclass
+from math import isfinite
 
 from models.combat_simulation import CombatSimulationResult
 
@@ -90,13 +91,29 @@ class CombatSimulationDamageSummaryService:
             and str(event.payload_dict().get("recipient") or "").strip() == target
         )
 
+        def finite_nonnegative(value) -> float | None:
+            try:
+                numeric = float(value)
+            except (TypeError, ValueError):
+                return None
+            if not isfinite(numeric) or numeric < 0:
+                return None
+            return numeric
+
         source_totals: dict[str, list[float]] = {}
         for event in outgoing:
             payload = event.payload_dict()
             source = str(event.source or "unknown").strip() or "unknown"
             row = source_totals.setdefault(source, [0.0, 0.0, 0.0, 0.0])
             row[0] += 1.0
-            row[1] += float(payload.get("amount") or 0.0)
+            attempted = finite_nonnegative(payload.get("amount"))
+            if attempted is None:
+                summary_damage_unresolved.append(
+                    f"{source} outgoing_damage at {event.time_seconds:g}s -> {target}: "
+                    "damage amount must be finite and non-negative"
+                )
+            else:
+                row[1] += attempted
 
         outgoing_health = tuple(
             event
@@ -107,8 +124,22 @@ class CombatSimulationDamageSummaryService:
             payload = event.payload_dict()
             source = str(event.source or "unknown").strip() or "unknown"
             row = source_totals.setdefault(source, [0.0, 0.0, 0.0, 0.0])
-            row[2] += float(payload.get("applied_damage") or 0.0)
-            row[3] += float(payload.get("overkill") or 0.0)
+            applied = finite_nonnegative(payload.get("applied_damage"))
+            if applied is None:
+                summary_damage_unresolved.append(
+                    f"{source} health_change at {event.time_seconds:g}s -> {target}: "
+                    "applied outgoing damage is unavailable or invalid"
+                )
+            else:
+                row[2] += applied
+            overkill = finite_nonnegative(payload.get("overkill"))
+            if overkill is None:
+                summary_damage_unresolved.append(
+                    f"{source} health_change at {event.time_seconds:g}s -> {target}: "
+                    "outgoing damage overkill is unavailable or invalid"
+                )
+            else:
+                row[3] += overkill
 
         outgoing_deaths = tuple(
             event
@@ -162,14 +193,8 @@ class CombatSimulationDamageSummaryService:
         return CombatSimulationDamageSummary(
             duration_seconds=float(result.duration_seconds),
             outgoing_event_count=len(outgoing),
-            attempted_damage=sum(
-                float(event.payload_dict().get("amount") or 0.0)
-                for event in outgoing
-            ),
-            applied_damage=sum(
-                float(event.payload_dict().get("applied_damage") or 0.0)
-                for event in outgoing_health
-            ),
+            attempted_damage=sum(values[1] for values in source_totals.values()),
+            applied_damage=sum(values[2] for values in source_totals.values()),
             ending_target_health=ending,
             target_maximum_health=maximum,
             target_dead=bool(deaths) or ending == 0,
@@ -180,10 +205,7 @@ class CombatSimulationDamageSummaryService:
             ),
             killing_source=killing_source,
             killing_origin_event_type=killing_origin_event_type,
-            total_overkill=sum(
-                float(event.payload_dict().get("overkill") or 0.0)
-                for event in outgoing_health
-            ),
+            total_overkill=sum(values[3] for values in source_totals.values()),
             damage_by_source=tuple(
                 CombatSimulationDamageSourceSummary(
                     source=source,
