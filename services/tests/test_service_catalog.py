@@ -724,3 +724,16 @@ def test_sustained_dps_rotation_family_action_count_proof_avoids_permutation_mat
     assert "Skill permutation does not change the cycle shape" in service.notes
     assert "Weave-on is included" in service.notes
     assert "must supply its own proven count ceiling" in service.notes
+
+
+def test_sustained_dps_ultimate_added_action_count_proof_uses_canonical_affordability_capacity() -> None:
+    service = canonical_service_for("extreme_sustained_dps_ultimate_added_action_count_proof")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.ultimate_added_action_count_proof"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.rotation_policy_frontier",)
+    assert "UltimateResourceTimeline" in service.notes
+    assert "not a claim that every cast occurs" in service.notes
