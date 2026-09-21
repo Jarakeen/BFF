@@ -1315,3 +1315,7 @@ Skill-bar, rotation-order, execute, and Heavy Attack policies can legitimately c
 ### 2026-09-21 — Dynamic plan comparisons should vary the plan, not quietly vary the build underneath it
 
 When FoundryDock compares rotation-order, weave, execute, Ultimate, potion, or Heavy Attack policy variants, the build, explicit progression, dual-bar gear state, runtime history, target Health/resistance, and horizon must stay fixed unless those are intentionally part of the searched axis set. Otherwise a supposed rotation-policy ceiling is partly a build comparison and no longer proves what its label claims.
+
+### 2026-09-21 — A dynamic family adapter must carry its omissions with it
+
+Turning a rotation or policy frontier into a lazy indexed search source must not strip away what that frontier explicitly does **not** cover. Anchored potion timing still omits continuous first-use offsets, explicit Ultimate policy still omits arbitrary delayed casts, and reviewed Heavy Attack windows still omit unreviewed windows. FoundryDock carries those omissions alongside the finite denominator so branch-and-bound cannot mistake searchable scope for theoretical closure.
