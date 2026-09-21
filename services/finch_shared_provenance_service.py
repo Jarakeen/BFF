@@ -137,19 +137,28 @@ class FinchSharedProvenanceService:
             and row.snapshot_key.casefold() == wanted_key
         )
 
-    def relation_for(self, snapshot: FinchSharedSnapshot) -> str:
-        copies = self.copies_for(
-            kind=snapshot.kind,
-            snapshot_key=snapshot.snapshot_key,
-        )
+    def latest_copy_for(
+        self,
+        *,
+        kind: str,
+        snapshot_key: str,
+    ) -> FinchCopyProvenance | None:
+        copies = self.copies_for(kind=kind, snapshot_key=snapshot_key)
         if not copies:
-            return "Not copied locally"
-
-        newest_copy = max(
+            return None
+        return max(
             copies,
             key=lambda row: _parse_timestamp(row.copied_at)
             or datetime.min.replace(tzinfo=timezone.utc),
         )
+
+    def relation_for(self, snapshot: FinchSharedSnapshot) -> str:
+        newest_copy = self.latest_copy_for(
+            kind=snapshot.kind,
+            snapshot_key=snapshot.snapshot_key,
+        )
+        if newest_copy is None:
+            return "Not copied locally"
         remote_time = _parse_timestamp(snapshot.updated_at)
         copied_source_time = _parse_timestamp(newest_copy.source_updated_at)
         if remote_time is not None and copied_source_time is not None:
