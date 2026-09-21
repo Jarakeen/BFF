@@ -634,3 +634,31 @@ def test_same_source_damage_components_have_order_independent_overkill() -> None
         assert health["overkill"] == 2500.0
         assert health["after"] == 0
         assert death["overkill"] == 2500.0
+
+
+def test_outgoing_damage_without_target_state_is_damage_unresolved() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(
+            _outgoing_damage_event(amount=2500.0),
+        ),
+        target_state=None,
+    )
+
+    assert result.events == ()
+    assert result.unresolved == result.damage_unresolved
+    assert any(
+        "target Health state is required to prove applied damage" in message
+        for message in result.damage_unresolved
+    )
+
+
+def test_incoming_damage_without_target_state_is_not_dd_damage_unresolved() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(
+            _damage_event(amount=2500.0),
+        ),
+        target_state=None,
+    )
+
+    assert result.events == ()
+    assert result.damage_unresolved == ()
