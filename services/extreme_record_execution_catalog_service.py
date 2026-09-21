@@ -44,6 +44,7 @@ _SPECIALIZED_FAMILIES = {
     "damage_shield": "single-event-output",
     "bash_damage": "single-event-output",
     "resource_sustain": "resource-timeline",
+    "sustained_dps": "combat-simulation",
     "ultimate_generation": "resource-timeline",
     "movement_speed": "movement-state",
     "sprint_speed": "movement-state",
@@ -53,9 +54,7 @@ _SPECIALIZED_FAMILIES = {
     "invisibility_uptime": "stealth-runtime",
 }
 
-_PENDING_FAMILIES: dict[str, str] = {
-    "sustained_dps": "combat-simulation",
-}
+_PENDING_FAMILIES: dict[str, str] = {}
 
 
 class ExtremeRecordExecutionCatalogService:
