@@ -51,7 +51,8 @@ class ExtremeSustainedDPSDynamicAxisInventoryService:
     )
 
     DEFERRED_AXES = (
-        "Ultimate/potion/execute/Heavy-Attack/encounter-demand rotation policy families",
+        "continuous potion-offset and delayed-Ultimate rotation policies",
+        "execute/Heavy-Attack/encounter-demand rotation policy families",
         "runtime proc/cooldown/execute state beyond reviewed bridges",
         "proof-safe dominance/scoring across generated refinement frontiers",
         "global branch-and-bound frontier search",
