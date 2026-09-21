@@ -486,3 +486,81 @@ def test_resource_adapter_rejects_impossible_event_arithmetic() -> None:
         assert "event arithmetic is inconsistent" in str(exc)
     else:
         raise AssertionError("Expected impossible resource event arithmetic to fail closed")
+
+
+class _BadShortfallSustainService:
+    def evaluate(self, *, build, plan, resource):
+        timeline = ResourceTimelineResult(
+            resource=ResourceType.MAGICKA,
+            starting_amount=1000,
+            ending_amount=0,
+            events=(
+                AppliedResourceTimelineEvent(
+                    time_seconds=0.0,
+                    kind=ResourceTimelineEventKind.ACTION_COST,
+                    source="Too Expensive",
+                    before=1000,
+                    attempted_change=-1500,
+                    applied_change=-1000,
+                    after=0,
+                    shortfall=400,
+                ),
+            ),
+            starting_maximum=30000,
+            ending_maximum=30000,
+        )
+        return SimpleNamespace(run=SimpleNamespace(timeline=timeline), unresolved=())
+
+
+class _BadWastedRestoreSustainService:
+    def evaluate(self, *, build, plan, resource):
+        timeline = ResourceTimelineResult(
+            resource=ResourceType.MAGICKA,
+            starting_amount=29000,
+            ending_amount=30000,
+            events=(
+                AppliedResourceTimelineEvent(
+                    time_seconds=0.0,
+                    kind=ResourceTimelineEventKind.RECOVERY_TICK,
+                    source="Recovery",
+                    before=29000,
+                    attempted_change=1600,
+                    applied_change=1000,
+                    after=30000,
+                    wasted_restore=500,
+                ),
+            ),
+            starting_maximum=30000,
+            ending_maximum=30000,
+        )
+        return SimpleNamespace(run=SimpleNamespace(timeline=timeline), unresolved=())
+
+
+def test_resource_adapter_rejects_bad_action_cost_shortfall_arithmetic() -> None:
+    try:
+        CombatSimulationResourceService(
+            sustain_service=_BadShortfallSustainService()
+        ).project(
+            build=_snapshot().materialize(),
+            plan=_plan(),
+            resource=ResourceType.MAGICKA,
+        )
+    except ValueError as exc:
+        assert "shortfall arithmetic is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected invalid action-cost shortfall to fail closed")
+
+
+def test_resource_adapter_rejects_bad_wasted_restore_arithmetic() -> None:
+    try:
+        CombatSimulationResourceService(
+            sustain_service=_BadWastedRestoreSustainService()
+        ).project(
+            build=_snapshot().materialize(),
+            plan=_plan(),
+            resource=ResourceType.MAGICKA,
+        )
+    except ValueError as exc:
+        assert "wasted restore arithmetic is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected invalid wasted restore arithmetic to fail closed")
