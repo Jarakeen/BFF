@@ -1177,3 +1177,11 @@ A bar tells FoundryDock **which** skills are available, not the order in which t
 ### 2026-09-21 — Light-Attack weaving is a rotation choice, not a bar-legality fact
 
 A legal build can exist with or without weaving Light Attacks between skills. Endgame DPS normally weaves, but theoretical search must not erase the non-weaving state merely because it is usually worse. The generated rotation family therefore preserves both states until exact simulation or a proof-safe dominance rule removes one.
+
+### 2026-09-21 — Potion cooldown does not uniquely determine first-use timing
+
+Knowing that a potion can be reused every 45 seconds does not tell the optimizer when the first potion was used. A first use at 0 seconds and one at 8 seconds produce different buff/resource windows even though both obey the same cooldown afterward. FoundryDock therefore keeps first-use timing as policy evidence rather than equating “on cooldown” with “starts at zero.” The current generated frontier preserves a finite anchored family; arbitrary continuous first-use offsets remain explicitly open.
+
+### 2026-09-21 — “Ultimate is affordable” and “cast Ultimate now” are different policies
+
+Canonical Ultimate generation can prove the first times a slotted Ultimate becomes affordable, but a player may deliberately hold it for a burst window, execute, add phase, or mechanic. The current generated sustained-DPS policy frontier can evaluate explicit bar choice with the canonical as-soon-as-affordable scheduler. Deliberately delayed casts remain a separate policy axis rather than being silently erased.
