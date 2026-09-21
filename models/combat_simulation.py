@@ -432,18 +432,52 @@ class CombatSimulationResult:
                         "combat simulation health change before/after chain is inconsistent"
                     )
                 maximum = maximum_by_recipient[recipient]
-                if after < 0 or (maximum is not None and after > int(maximum)):
+                if maximum is None:
+                    raise ValueError(
+                        "combat simulation health change requires known maximum Health"
+                    )
+                if after < 0 or after > int(maximum):
                     raise ValueError(
                         "combat simulation health change after state is outside valid Health bounds"
                     )
                 if (
                     "maximum_health" in payload
-                    and maximum is not None
                     and int(payload["maximum_health"]) != int(maximum)
                 ):
                     raise ValueError(
                         "combat simulation health change maximum does not match target state"
                     )
+                applied_damage = payload.get("applied_damage")
+                applied_heal = payload.get("applied_heal")
+                if applied_damage is not None and applied_heal is not None:
+                    raise ValueError(
+                        "combat simulation health change cannot apply damage and healing together"
+                    )
+                if applied_damage is not None:
+                    applied = float(applied_damage)
+                    if not isfinite(applied) or applied < 0:
+                        raise ValueError(
+                            "combat simulation applied damage must be finite and non-negative"
+                        )
+                    expected_after = max(0, int(round(float(before) - applied)))
+                    if expected_after != after:
+                        raise ValueError(
+                            "combat simulation damage Health arithmetic is inconsistent"
+                        )
+                if applied_heal is not None:
+                    applied = float(applied_heal)
+                    if not isfinite(applied) or applied < 0:
+                        raise ValueError(
+                            "combat simulation applied healing must be finite and non-negative"
+                        )
+                    expected_after = min(
+                        int(maximum),
+                        int(round(float(before) + applied)),
+                    )
+                    if expected_after != after:
+                        raise ValueError(
+                            "combat simulation healing Health arithmetic is inconsistent"
+                        )
                 health_by_recipient[recipient] = after
         initial_bar = str(self.initial_bar or "").strip().casefold()
         final_bar = str(self.final_bar or "").strip().casefold()
