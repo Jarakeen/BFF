@@ -37,3 +37,10 @@ def test_shared_readiness_view_does_not_write_local_human_ready_state() -> None:
     assert "set_human_ready" not in shared
     assert "RaidPlanRepository.save" not in shared
     assert "local state unchanged" in shared
+
+
+def test_shared_readiness_picker_shows_publisher_and_utc_time() -> None:
+    source = _source("ui/city_raid_readiness_page.py")
+
+    assert "row.published_by" in source
+    assert "format_shared_timestamp(row.updated_at)" in source
