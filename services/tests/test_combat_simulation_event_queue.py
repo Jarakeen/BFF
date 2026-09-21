@@ -1,4 +1,8 @@
-from models.combat_simulation import CombatSimulationEvent, SimulationEventPriority
+from models.combat_simulation import (
+    CombatSimulationEvent,
+    CombatSimulationRecipientBinding,
+    SimulationEventPriority,
+)
 from services.combat_simulation_event_queue import CombatSimulationEventQueue
 
 
@@ -107,3 +111,19 @@ def test_combat_simulation_event_rejects_negative_sequence_and_blank_identity() 
             pass
         else:
             raise AssertionError("Expected malformed combat simulation event to fail closed")
+
+
+def test_recipient_binding_rejects_non_finite_time() -> None:
+    for value in (float("nan"), float("inf"), float("-inf")):
+        try:
+            CombatSimulationRecipientBinding(
+                time_seconds=value,
+                sequence=0,
+                event_type="direct_heal",
+                source="Combat Prayer",
+                recipients=("Tank 1",),
+            )
+        except ValueError as exc:
+            assert "finite and non-negative" in str(exc)
+        else:
+            raise AssertionError("Expected non-finite recipient binding time to fail closed")
