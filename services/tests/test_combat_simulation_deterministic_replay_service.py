@@ -664,3 +664,72 @@ def test_combat_simulation_result_rejects_duplicate_effect_windows() -> None:
         assert "effect window identities must be unique" in str(exc)
     else:
         raise AssertionError("Expected duplicate effect windows to fail closed")
+
+
+def test_combat_simulation_result_rejects_broken_resource_event_chain() -> None:
+    first = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.RESOURCE_COST),
+        sequence=0,
+        event_type="action_cost",
+        source="First",
+        payload=(
+            ("resource", "magicka"),
+            ("before", 30000),
+            ("applied_change", -3000),
+            ("after", 27000),
+        ),
+    )
+    second = CombatSimulationEvent(
+        time_seconds=2.0,
+        priority=int(SimulationEventPriority.RESOURCE_COST),
+        sequence=0,
+        event_type="action_cost",
+        source="Second",
+        payload=(
+            ("resource", "magicka"),
+            ("before", 28000),
+            ("applied_change", -1000),
+            ("after", 27000),
+        ),
+    )
+    summary = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=30000,
+        ending_amount=27000,
+    )
+
+    try:
+        _result(events=(first, second), resources=(summary,))
+    except ValueError as exc:
+        assert "before/after chain is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected broken result resource chain to fail closed")
+
+
+def test_combat_simulation_result_rejects_resource_event_arithmetic_mismatch() -> None:
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.RESOURCE_COST),
+        sequence=0,
+        event_type="action_cost",
+        source="Broken",
+        payload=(
+            ("resource", "magicka"),
+            ("before", 30000),
+            ("applied_change", -3000),
+            ("after", 28000),
+        ),
+    )
+    summary = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=30000,
+        ending_amount=28000,
+    )
+
+    try:
+        _result(events=(event,), resources=(summary,))
+    except ValueError as exc:
+        assert "resource event arithmetic is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected impossible result resource arithmetic to fail closed")
