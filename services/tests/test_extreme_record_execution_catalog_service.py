@@ -8,7 +8,7 @@ from services.extreme_record_objective_catalog_service import EXTREME_RECORD_OBJ
 def test_every_canonical_record_has_exactly_one_execution_disposition() -> None:
     rows = ExtremeRecordExecutionCatalogService.descriptors()
 
-    assert len(rows) == len(EXTREME_RECORD_OBJECTIVES) == 31
+    assert len(rows) == len(EXTREME_RECORD_OBJECTIVES) == 32
     assert tuple(row.objective.key for row in rows) == tuple(
         objective.key for objective in EXTREME_RECORD_OBJECTIVES
     )
@@ -72,4 +72,7 @@ def test_execution_disposition_counts_make_remaining_work_explicit() -> None:
 
     assert counts[ExtremeRecordExecutionStatus.READY] == 19
     assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 12
-    assert counts[ExtremeRecordExecutionStatus.PENDING] == 0
+    assert counts[ExtremeRecordExecutionStatus.PENDING] == 1
+    sustained = ExtremeRecordExecutionCatalogService.descriptor("sustained_dps")
+    assert sustained.status is ExtremeRecordExecutionStatus.PENDING
+    assert sustained.execution_family == "combat-simulation"
