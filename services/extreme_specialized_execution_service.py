@@ -448,7 +448,7 @@ class ExtremeSpecializedExecutionService:
                 summary_rows=tuple(summary_rows),
                 unresolved=result.unresolved,
                 search_scope=result.evidence,
-                omitted_scope=result.unresolved,
+                omitted_scope=result.omitted_scope,
             )
 
         if key in {"resource_sustain", "ultimate_generation"}:
