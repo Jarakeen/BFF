@@ -164,19 +164,38 @@ class CompBuilderAuthoritativePrescriptionService:
 
     @staticmethod
     def _saved_assignment(*, slot_name, role, candidate, saved_builds):
-        parts = candidate.candidate_id.split(":", 2)
-        if len(parts) != 3 or parts[0] != "saved":
+        prefix = "saved:"
+        if not candidate.candidate_id.startswith(prefix):
             raise ValueError(f"invalid saved Comp Maker candidate id: {candidate.candidate_id}")
-        try:
-            index = int(parts[1])
-        except ValueError as exc:
-            raise ValueError(
-                f"invalid saved Comp Maker candidate index: {candidate.candidate_id}"
-            ) from exc
-        if not 0 <= index < len(saved_builds):
-            raise ValueError(f"stale saved Comp Maker candidate: {candidate.candidate_id}")
 
-        build = saved_builds[index]
+        build = None
+        stable_build_id = _clean(candidate.saved_build_id)
+        if stable_build_id:
+            build = next(
+                (
+                    item
+                    for item in saved_builds
+                    if _clean(getattr(item, "BuildId", "")).casefold()
+                    == stable_build_id.casefold()
+                ),
+                None,
+            )
+        else:
+            # Compatibility for historical candidates emitted as
+            # saved:<index>:<build name> before canonical BuildId adoption.
+            parts = candidate.candidate_id.split(":", 2)
+            if len(parts) == 3:
+                try:
+                    index = int(parts[1])
+                except ValueError as exc:
+                    raise ValueError(
+                        f"invalid saved Comp Maker candidate index: {candidate.candidate_id}"
+                    ) from exc
+                if 0 <= index < len(saved_builds):
+                    build = saved_builds[index]
+
+        if build is None:
+            raise ValueError(f"stale saved Comp Maker candidate: {candidate.candidate_id}")
         build_name = _clean(build.BuildName) or _clean(build.Name)
         owner = _clean(build.Name) or _clean(build.Gamertag)
         if build_name.casefold() != _clean(candidate.name).casefold():
