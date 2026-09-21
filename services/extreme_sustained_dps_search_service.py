@@ -83,10 +83,13 @@ class ExtremeSustainedDPSSearchService:
         discovered = self.discovery.discover()
 
         unresolved: list[str] = []
+        informational_exclusions: list[str] = []
         for exclusion in discovered.exclusions:
-            unresolved.append(
-                f"Excluded {exclusion.label}: {exclusion.reason}"
-            )
+            message = f"Excluded {exclusion.label}: {exclusion.reason}"
+            if bool(getattr(exclusion, "blocking", True)):
+                unresolved.append(message)
+            else:
+                informational_exclusions.append(message)
 
         if discovered.candidate_count < 2:
             unresolved.append(
@@ -109,6 +112,7 @@ class ExtremeSustainedDPSSearchService:
 
         evidence = (
             *discovered.evidence,
+            *informational_exclusions,
             *comparison.evidence,
             "Search denominator is canonical saved user-state only; no synthetic builds or rotations were generated",
         )
