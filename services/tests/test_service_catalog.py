@@ -459,3 +459,22 @@ def test_sustained_dps_armor_trait_enchant_frontier_consumes_dynamic_axes() -> N
         for row in SERVICE_CATALOG.dependencies_of(service.service_id)
     ) == ("extreme.sustained_dps.dynamic_axes",)
     assert "full modeled denominator lazily" in service.notes
+
+
+def test_sustained_dps_equipment_frontiers_are_canonical_axes() -> None:
+    jewelry = canonical_service_for("extreme_sustained_dps_jewelry_frontier")
+    weapon = canonical_service_for("extreme_sustained_dps_weapon_frontier")
+
+    assert jewelry is not None
+    assert weapon is not None
+    assert jewelry.service_id == "extreme.sustained_dps.jewelry_frontier"
+    assert weapon.service_id == "extreme.sustained_dps.weapon_frontier"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(jewelry.service_id)
+    ) == ("extreme.sustained_dps.dynamic_axes",)
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(weapon.service_id)
+    ) == ("extreme.sustained_dps.dynamic_axes",)
+    assert "runtime-owned" in weapon.notes
