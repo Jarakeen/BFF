@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.character_progression import AttributeAllocation, CharacterProgression
@@ -105,7 +103,7 @@ def test_gear_bound_projector_injects_activation_and_allows_named_buff_effect() 
     assert result.unresolved == ()
 
 
-def test_active_non_named_gear_effect_fails_closed_until_context_bridge_exists() -> None:
+def test_active_non_named_gear_effect_survives_runtime_snapshot_for_context_projection() -> None:
     service = _GearBoundRuntimeSnapshotState(
         delegate=_Delegate((_effect("weapon_spell_damage"),)),
         activation=_activation(),
@@ -118,7 +116,8 @@ def test_active_non_named_gear_effect_fails_closed_until_context_bridge_exists()
         snapshot=ExtremeRuntimeSnapshot(),
     )
 
-    assert any("generic timed-effect" in row for row in result.unresolved)
+    assert result.unresolved == ()
+    assert tuple(effect.name for effect in result.active_effects) == ("weapon_spell_damage",)
 
 
 def test_non_gear_active_effect_does_not_create_gear_bridge_blocker() -> None:
