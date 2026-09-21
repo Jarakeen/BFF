@@ -252,8 +252,8 @@ def test_combat_simulation_services_are_canonical_and_discoverable() -> None:
 
 def test_combat_simulation_catalog_preserves_authority_boundaries() -> None:
     kernel = SERVICE_CATALOG.get("combat.simulation.kernel")
-    saved_dd = SERVICE_CATALOG.get("combat.simulation.saved_build_dd")
-    summary = SERVICE_CATALOG.get("combat.simulation.damage_summary")
+    saved_dd = SERVICE_CATALOG.get("simulation.saved_build_dd")
+    summary = SERVICE_CATALOG.get("simulation.damage_summary")
 
     assert kernel is not None
     assert saved_dd is not None
