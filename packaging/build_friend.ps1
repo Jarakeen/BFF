@@ -58,6 +58,19 @@ if (
 }
 Write-Host "Raid Map source recheck: PASS"
 
+$EncounterBoardPath = Join-Path $ProjectRoot "ui\components\encounter_board.py"
+if (-not (Test-Path $EncounterBoardPath)) {
+    throw "EncounterBoard source not found: $EncounterBoardPath"
+}
+$EncounterBoardSource = Get-Content $EncounterBoardPath -Raw
+if (
+    $EncounterBoardSource -notmatch 'from PySide6\.QtWidgets import QVBoxLayout as _QVBoxLayout' -or
+    $EncounterBoardSource -notmatch 'root = _QVBoxLayout\(self\)'
+) {
+    throw "Local checkout is missing the packaged EncounterBoard local QVBoxLayout startup fix."
+}
+Write-Host "EncounterBoard startup import preflight: PASS"
+
 if (Test-Path $DistRoot) {
     Remove-Item $DistRoot -Recurse -Force
 }
