@@ -417,6 +417,7 @@ def main() -> int:
     print(f"Outgoing events:       {summary.outgoing_event_count}")
     print(f"Attempted damage:      {summary.attempted_damage:,.2f}")
     print(f"Applied damage:        {summary.applied_damage:,.2f}")
+    print(f"Overkill:              {summary.total_overkill:,.2f}")
     print(
         f"Ending Health:         "
         + (
@@ -432,6 +433,8 @@ def main() -> int:
     print(f"Target dead:           {'yes' if summary.target_dead else 'no'}")
     if summary.death_time_seconds is not None:
         print(f"Death time:            {summary.death_time_seconds:g}s")
+    if summary.killing_source is not None:
+        print(f"Killing source:        {summary.killing_source}")
     if summary.modeled_dps is None:
         print("Modeled DPS:           withheld (unresolved damage evidence remains)")
     else:
@@ -442,8 +445,12 @@ def main() -> int:
     print("----------------")
     if summary.damage_by_source:
         for row in summary.damage_by_source:
+            kill = " | KILL" if row.killing_blow else ""
             print(
-                f"{row.attempted_damage:12,.2f} | {row.event_count:4d} event(s) | {row.source}"
+                f"{row.attempted_damage:12,.2f} attempted | "
+                f"{row.applied_damage:12,.2f} applied | "
+                f"{row.overkill:10,.2f} overkill | "
+                f"{row.event_count:4d} raw event(s) | {row.source}{kill}"
             )
     else:
         print("none")
