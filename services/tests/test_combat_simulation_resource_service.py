@@ -51,20 +51,20 @@ class _FakeSustainService:
                 ),
                 AppliedResourceTimelineEvent(
                     time_seconds=2.0,
-                    kind=ResourceTimelineEventKind.RECOVERY_TICK,
-                    source="In-combat recovery tick",
+                    kind=ResourceTimelineEventKind.ACTION_COST,
+                    source="Illustrious Healing",
                     before=27000,
-                    attempted_change=1600,
-                    applied_change=1600,
-                    after=28600,
+                    attempted_change=-2000,
+                    applied_change=-2000,
+                    after=25000,
                 ),
                 AppliedResourceTimelineEvent(
                     time_seconds=2.0,
-                    kind=ResourceTimelineEventKind.ACTION_COST,
-                    source="Illustrious Healing",
-                    before=28600,
-                    attempted_change=-2000,
-                    applied_change=-2000,
+                    kind=ResourceTimelineEventKind.RECOVERY_TICK,
+                    source="In-combat recovery tick",
+                    before=25000,
+                    attempted_change=1600,
+                    applied_change=1600,
                     after=26600,
                 ),
             ),
@@ -196,3 +196,76 @@ def test_simulation_merges_healer_actions_and_resource_events_deterministically(
         "Combat Prayer" in value and "skill consequence projection not yet wired" in value
         for value in first.unresolved
     )
+
+
+class _OutOfOrderSustainService:
+    def evaluate(self, *, build, plan, resource):
+        assert build.Name == "Magrat"
+        assert plan.build_name == "DF Healer"
+        assert resource is ResourceType.MAGICKA
+        timeline = ResourceTimelineResult(
+            resource=ResourceType.MAGICKA,
+            starting_amount=30000,
+            ending_amount=26600,
+            events=(
+                AppliedResourceTimelineEvent(
+                    time_seconds=2.0,
+                    kind=ResourceTimelineEventKind.RECOVERY_TICK,
+                    source="Recovery First",
+                    before=30000,
+                    attempted_change=1600,
+                    applied_change=0,
+                    after=30000,
+                ),
+                AppliedResourceTimelineEvent(
+                    time_seconds=2.0,
+                    kind=ResourceTimelineEventKind.ACTION_COST,
+                    source="Cost Second",
+                    before=30000,
+                    attempted_change=-3400,
+                    applied_change=-3400,
+                    after=26600,
+                ),
+            ),
+            starting_maximum=30000,
+            ending_maximum=30000,
+        )
+        return SimpleNamespace(
+            run=SimpleNamespace(timeline=timeline),
+            unresolved=(),
+        )
+
+
+def test_resource_adapter_rejects_noncanonical_same_timestamp_order() -> None:
+    try:
+        CombatSimulationResourceService(
+            sustain_service=_OutOfOrderSustainService()
+        ).project(
+            build=_snapshot().materialize(),
+            plan=_plan(),
+            resource=ResourceType.MAGICKA,
+        )
+    except ValueError as exc:
+        assert "canonical simulation order" in str(exc)
+    else:
+        raise AssertionError("Expected noncanonical resource timeline to fail closed")
+
+
+def test_final_snapshot_resource_matches_resource_summary() -> None:
+    service = CombatSimulationService(
+        resource_service=CombatSimulationResourceService(
+            sustain_service=_FakeSustainService()
+        ),
+        healing_service=_NoopHealingService(),
+        skill_effect_service=_NoopSkillEffectService(),
+    )
+
+    result = service.simulate(build_snapshot=_snapshot(), plan=_plan())
+    from services.combat_simulation_snapshot_service import CombatSimulationSnapshotService
+
+    snapshot = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=result.duration_seconds,
+    )
+
+    assert snapshot.resources[0].current_amount == result.resources[0].ending_amount
