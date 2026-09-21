@@ -37,6 +37,25 @@ class CombatSimulationEvent:
     source: str
     payload: tuple[tuple[str, Any], ...] = ()
 
+    def __post_init__(self) -> None:
+        time_seconds = float(self.time_seconds)
+        if not isfinite(time_seconds) or time_seconds < 0:
+            raise ValueError("combat simulation event time must be finite and non-negative")
+        sequence = int(self.sequence)
+        if sequence < 0:
+            raise ValueError("combat simulation event sequence cannot be negative")
+        event_type = str(self.event_type or "").strip()
+        if not event_type:
+            raise ValueError("combat simulation event_type is required")
+        source = str(self.source or "").strip()
+        if not source:
+            raise ValueError("combat simulation event source is required")
+        object.__setattr__(self, "time_seconds", time_seconds)
+        object.__setattr__(self, "priority", int(self.priority))
+        object.__setattr__(self, "sequence", sequence)
+        object.__setattr__(self, "event_type", event_type)
+        object.__setattr__(self, "source", source)
+
     def payload_dict(self) -> dict[str, Any]:
         return dict(self.payload)
 
