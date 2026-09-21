@@ -50,6 +50,7 @@ class ExtremeSustainedDPSAxisCoverageProof:
     source: str
     dominated_axes: tuple[str, ...]
     unresolved: tuple[str, ...] = ()
+    omitted_scope: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         source = str(self.source or "").strip()
@@ -84,6 +85,17 @@ class ExtremeSustainedDPSAxisCoverageProof:
             "unresolved",
             tuple(dict.fromkeys(unresolved)),
         )
+        object.__setattr__(
+            self,
+            "omitted_scope",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.omitted_scope
+                    if str(item).strip()
+                )
+            ),
+        )
 
 
 @dataclass(frozen=True)
@@ -93,6 +105,7 @@ class ExtremeSustainedDPSAxisDominanceComposition:
     dominated_axes: tuple[str, ...]
     missing_axes: tuple[str, ...]
     contributing_sources: tuple[str, ...]
+    omitted_scope: tuple[str, ...]
     proof: ExtremeSustainedDPSActionDominanceProof
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
@@ -136,12 +149,14 @@ class ExtremeSustainedDPSAxisDominanceCompositionService:
 
         dominated: list[str] = []
         sources: list[str] = []
+        omitted_scope: list[str] = []
         for proof in proofs:
             sources.append(proof.source)
             unresolved.extend(
                 f"{proof.source}: {item}"
                 for item in proof.unresolved
             )
+            omitted_scope.extend(proof.omitted_scope)
             for axis in proof.dominated_axes:
                 if axis not in dominated:
                     dominated.append(axis)
@@ -176,12 +191,14 @@ class ExtremeSustainedDPSAxisDominanceCompositionService:
             dominated_axes=tuple(dominated),
             missing_axes=missing,
             contributing_sources=tuple(dict.fromkeys(sources)),
+            omitted_scope=tuple(dict.fromkeys(omitted_scope)),
             proof=action_proof,
             evidence=(
                 f"Required canonical mutation axes: {len(required)}",
                 f"Dominated canonical mutation axes: {len(dominated)}",
                 f"Missing mutation axes: {len(missing)}",
                 f"Dominance proof contributors: {len(tuple(dict.fromkeys(sources)))}",
+                f"Explicit omitted scope items carried by axis proofs: {len(tuple(dict.fromkeys(omitted_scope)))}",
                 "Axis coverage is composed by set union only; numeric optimism remains external",
             ),
             unresolved=deduped,
