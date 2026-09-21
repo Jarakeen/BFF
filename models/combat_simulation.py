@@ -454,6 +454,17 @@ class CombatSimulationResult:
                 "combat simulation resource events require matching resource summaries"
             )
         summaries_by_resource = {item.resource: item for item in self.resources}
+        for resource_key, summary in summaries_by_resource.items():
+            if resource_key in event_resource_keys:
+                continue
+            if int(summary.starting_amount) != int(summary.ending_amount):
+                raise ValueError(
+                    "combat simulation resource summary cannot change without event evidence"
+                )
+            if int(summary.total_shortfall) != 0:
+                raise ValueError(
+                    "combat simulation resource summary cannot record shortfall without event evidence"
+                )
         for resource_key in event_resource_keys:
             rows = [
                 event
