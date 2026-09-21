@@ -875,6 +875,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.finite_axis_canonical_action_evaluator",
+        domain="extreme",
+        purpose=(
+            "Evaluate one fixed scheduled action for generated CP, passive-rank, or dual-bar gear choices "
+            "through the canonical Combat Simulation DD provider stack."
+        ),
+        implementation_path="services.extreme_sustained_dps_finite_axis_canonical_action_evaluator_service",
+        inputs=("BaselineBuild", "BaselineProgression", "ExactActionScenario", "FiniteAxisChoice"),
+        outputs=("RotationActionDamageOccurrenceEvidence",),
+        dependencies=(
+            "simulation.saved_build_dd",
+            "extreme.sustained_dps.finite_axis_frontier_adapter",
+        ),
+        responsibilities=("extreme_sustained_dps_finite_axis_canonical_action_evaluator",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Owns adaptation only, not ESO damage math. CP swaps the build CP loadout, passive search swaps "
+            "explicit progression ranks, and gear materializes one legal dual-bar state before delegating to "
+            "CombatSimulationSavedBuildDDProviderService. Unresolved runtime mechanics remain fail-closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.finite_axis_frontier_adapter",
         domain="extreme",
         purpose=(
