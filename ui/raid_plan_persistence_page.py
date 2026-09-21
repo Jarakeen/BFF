@@ -12,11 +12,15 @@ from dataclasses import replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QInputDialog, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
 from engine.config import get_data_dir
 from models.raid_plan import RaidPlan
 from services.comp_builder_trial_scope import COMP_MAKER_TRIALS
+from services.finch_shared_import_service import (
+    import_shared_raid_plan_from_finch,
+    list_shared_raid_plans_from_finch,
+)
 from services.finch_shared_publish_service import publish_raid_plan_to_finch
 from services.raid_plan_member_identity_resolution_service import (
     RaidPlanMemberIdentityResolutionService,
@@ -35,6 +39,10 @@ from ui.raid_plan_stable_identity_selection_page import RaidPlanStableIdentitySe
 _FINCH_PLAN_PUBLISH_EXECUTOR = ThreadPoolExecutor(
     max_workers=1,
     thread_name_prefix="finch-plan-publish",
+)
+_FINCH_PLAN_READ_EXECUTOR = ThreadPoolExecutor(
+    max_workers=1,
+    thread_name_prefix="finch-plan-read",
 )
 
 
@@ -137,6 +145,11 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self._finch_plan_publish_timer = QTimer(self)
         self._finch_plan_publish_timer.setInterval(100)
         self._finch_plan_publish_timer.timeout.connect(self._poll_raid_plan_publish)
+        self._finch_plan_read_future: Future | None = None
+        self._finch_plan_read_mode = ""
+        self._finch_plan_read_timer = QTimer(self)
+        self._finch_plan_read_timer.setInterval(100)
+        self._finch_plan_read_timer.timeout.connect(self._poll_shared_plan_read)
         lower_save = getattr(self, "lower_save_plan_button", None)
         if lower_save is not None:
             lower_save.clicked.connect(self.save_current_plan)
@@ -177,6 +190,13 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         )
         self.publish_plan_finch_button.clicked.connect(self._publish_saved_plan_to_finch)
         row.addWidget(self.publish_plan_finch_button)
+
+        self.get_shared_plans_button = QPushButton("Get Shared Plans")
+        self.get_shared_plans_button.setToolTip(
+            "Browse Raid Plans published to Finch. Importing saves only the shared plan outline."
+        )
+        self.get_shared_plans_button.clicked.connect(self._get_shared_raid_plans)
+        row.addWidget(self.get_shared_plans_button)
 
         delete_button = QPushButton("Delete")
         delete_button.clicked.connect(self.delete_selected_plan)
@@ -231,6 +251,109 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             return
         self.status.success(
             f"Published Raid Plan to Finch: {result.snapshot_key}"
+        )
+
+    def _get_shared_raid_plans(self) -> None:
+        if self._finch_plan_read_future is not None and not self._finch_plan_read_future.done():
+            self.status.info("A Finch shared Raid Plan request is already running.")
+            return
+        self.get_shared_plans_button.setEnabled(False)
+        self._finch_plan_read_mode = "list"
+        self.status.info("Fetching shared Raid Plans from Finch…")
+        self._finch_plan_read_future = _FINCH_PLAN_READ_EXECUTOR.submit(
+            list_shared_raid_plans_from_finch,
+            database_path=Path(get_data_dir()) / "eso.db",
+            raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+            settings_path=Path("settings.json"),
+        )
+        self._finch_plan_read_timer.start()
+
+    def _poll_shared_plan_read(self) -> None:
+        future = self._finch_plan_read_future
+        if future is None or not future.done():
+            return
+
+        mode = self._finch_plan_read_mode
+        self._finch_plan_read_future = None
+        self._finch_plan_read_mode = ""
+
+        try:
+            result = future.result()
+        except Exception as exc:
+            self._finch_plan_read_timer.stop()
+            self.get_shared_plans_button.setEnabled(True)
+            self.status.error(f"Finch shared Raid Plan request failed: {exc}")
+            return
+
+        if mode == "list":
+            previews = tuple(result)
+            if not previews:
+                self._finch_plan_read_timer.stop()
+                self.get_shared_plans_button.setEnabled(True)
+                self.status.info("Finch has no shared Raid Plans yet.")
+                return
+            labels = [
+                (
+                    f"{row.name} • {row.trial_id}"
+                    + (f" • {row.team_name}" if row.team_name else "")
+                    + f" • {row.member_count} seat(s)"
+                )
+                for row in previews
+            ]
+            selected, ok = QInputDialog.getItem(
+                self,
+                "Shared Raid Plans on Finch",
+                "Import saved Raid Plan outline:",
+                labels,
+                0,
+                False,
+            )
+            if not ok:
+                self._finch_plan_read_timer.stop()
+                self.get_shared_plans_button.setEnabled(True)
+                self.status.info("Shared Raid Plan import cancelled.")
+                return
+            index = labels.index(selected)
+            preview = previews[index]
+            existing = self.plan_repository.get(preview.plan_id)
+            detail = (
+                "\n\nA local plan with this same stable plan ID already exists and will be replaced."
+                if existing is not None
+                else ""
+            )
+            answer = QMessageBox.question(
+                self,
+                "Import Shared Raid Plan",
+                (
+                    f'Import "{preview.name}" from Finch?\n\n'
+                    "This imports the shared seat/player/character/class/role outline only. "
+                    "It does not create Personnel or saved builds."
+                    + detail
+                ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                self._finch_plan_read_timer.stop()
+                self.get_shared_plans_button.setEnabled(True)
+                self.status.info("Shared Raid Plan import cancelled.")
+                return
+            self._finch_plan_read_mode = "import"
+            self._finch_plan_read_future = _FINCH_PLAN_READ_EXECUTOR.submit(
+                import_shared_raid_plan_from_finch,
+                snapshot_key=preview.snapshot_key,
+                database_path=Path(get_data_dir()) / "eso.db",
+                raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+                settings_path=Path("settings.json"),
+            )
+            return
+
+        self._finch_plan_read_timer.stop()
+        self.get_shared_plans_button.setEnabled(True)
+        plan = result
+        self.refresh_saved_plan_picker(select_plan_id=plan.plan_id)
+        self.status.success(
+            f"Imported shared Raid Plan from Finch: {plan.name}."
         )
 
     def _selected_build_ids_by_seat(self) -> dict[str, str]:
