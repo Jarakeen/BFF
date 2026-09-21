@@ -158,7 +158,7 @@ def test_shared_coverage_preview_preserves_provider_lists_read_only() -> None:
     service = FinchSharedCoverageService(
         client=client,
         build_service=SimpleNamespace(),
-        database_path=SimpleNamespace(),
+        database_path=Path("unused.db"),
     )
 
     previews = service.list_shared()
