@@ -161,3 +161,18 @@ def test_combat_simulation_resource_result_rejects_invalid_summary_values() -> N
             pass
         else:
             raise AssertionError("Expected invalid combat resource summary to fail closed")
+
+
+def test_combat_simulation_result_rejects_duplicate_resource_summaries() -> None:
+    resource = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=30000,
+        ending_amount=25000,
+    )
+
+    try:
+        _result(resources=(resource, resource))
+    except ValueError as exc:
+        assert "resource identities must be unique" in str(exc)
+    else:
+        raise AssertionError("Expected duplicate resource summaries to fail closed")
