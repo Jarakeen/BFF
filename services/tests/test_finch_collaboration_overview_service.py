@@ -200,3 +200,69 @@ def test_overview_attention_summary_counts_structured_tags(monkeypatch, tmp_path
     assert overview.attention.readiness_gaps == 1
     assert overview.attention.coverage_gaps == 1
     assert overview.attention.total_attention == 4
+
+
+def test_overview_uses_structured_local_context_keys(tmp_path) -> None:
+    from services.finch_shared_provenance_service import FinchSharedProvenanceService
+    from services.finch_api_client import FinchSharedSnapshot
+
+    provenance = FinchSharedProvenanceService(tmp_path / "finch_shared_provenance.json")
+    provenance.record_copy(
+        snapshot=FinchSharedSnapshot(
+            kind="raid_plan",
+            snapshot_key="rg-pm",
+            schema_version=3,
+            payload={"plan_id": "rg-pm"},
+            published_by="BFF",
+            updated_at="2026-09-21T02:00:00+00:00",
+        ),
+        local_key="rg-pm-shared-copy-2",
+    )
+
+    rows = compose_collaboration_rows(
+        raid_plans=(
+            SimpleNamespace(
+                name="Performance Mode RG",
+                trial_id="rockgrove",
+                member_count=12,
+                team_name="Performance Mode",
+                published_by="BFF",
+                updated_at="2026-09-21T02:00:00+00:00",
+                provenance="Copied from this Finch snapshot • local: text-that-must-not-be-parsed",
+                local_key="rg-pm-shared-copy-2",
+            ),
+        ),
+        readiness=(
+            SimpleNamespace(
+                snapshot_key="rg-pm",
+                name="Performance Mode RG",
+                plan_id="rg-pm",
+                total=12,
+                human_ready=12,
+                build_gaps=0,
+                coverage_gaps=0,
+                published_by="BFF",
+                updated_at="2026-09-21T02:00:00+00:00",
+            ),
+        ),
+        coverage=(
+            SimpleNamespace(
+                snapshot_key="rg-pm",
+                name="Performance Mode RG",
+                plan_id="rg-pm",
+                total_effects=16,
+                covered=16,
+                missing=0,
+                needs_attention=0,
+                duplicate_primary=0,
+                unresolved_chairs=0,
+                published_by="BFF",
+                updated_at="2026-09-21T02:00:00+00:00",
+            ),
+        ),
+        provenance=provenance,
+    )
+
+    assert rows[0].context_key == "rg-pm-shared-copy-2"
+    assert rows[1].context_key == "rg-pm-shared-copy-2"
+    assert rows[2].context_key == "rg-pm-shared-copy-2"
