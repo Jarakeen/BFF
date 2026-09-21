@@ -1109,3 +1109,7 @@ For sustained DPS, an optimistic bound on a cast's immediate hit is insufficient
 ### 2026-09-21 — Exact damage is not automatically an optimistic ceiling
 
 A fully resolved skill cast can have an exact canonical total for one concrete build and rotation witness, including its direct and periodic occurrences, without proving anything about stronger **future mutations** of that candidate. Gear, CP, passives, bar choices, or runtime states may still raise the result. FoundryDock now promotes exact action damage into a pruning ceiling only when every still-open mutation axis is explicitly covered by a dominance proof. Otherwise the candidate stays open.
+
+### 2026-09-21 — Mundus and food cannot be safely optimized for DPS in isolation
+
+For a sustained-DPS action, the best Mundus and the best food are not necessarily the choices with the largest independent character-sheet deltas. Their effects can interact through offensive power, resources, crit, penetration, Divines, and the skill's own scaling. FoundryDock therefore searches the finite Mundus × mapped-provisioning grid **jointly** for dominance evidence. If one combination cannot be evaluated exactly, the axis proof remains open instead of filling the gap with an independent-stat shortcut.
