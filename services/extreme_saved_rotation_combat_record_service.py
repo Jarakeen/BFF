@@ -26,8 +26,14 @@ from services.combat_simulation_damage_summary_service import (
     CombatSimulationDamageSummary,
     CombatSimulationDamageSummaryService,
 )
+from services.combat_simulation_saved_build_dd_provider_service import (
+    CombatSimulationSavedBuildDDProviderService,
+)
 from services.combat_simulation_saved_build_dd_service import (
     CombatSimulationSavedBuildDDService,
+)
+from services.rotation_static_build_context_service import (
+    RotationStaticBuildContextService,
 )
 
 
@@ -85,7 +91,15 @@ class ExtremeSavedRotationCombatRecordService:
         self.catalog_service = catalog_service or BuildService(
             data_dir / "builds.json"
         ).canonical.catalog_service
-        self.simulator = simulator or CombatSimulationSavedBuildDDService()
+        self.simulator = simulator or CombatSimulationSavedBuildDDService(
+            provider_service=CombatSimulationSavedBuildDDProviderService(
+                database_path=self.database_path,
+                static_context_service=RotationStaticBuildContextService(
+                    database_path=self.database_path,
+                    builds_path=data_dir / "builds.json",
+                ),
+            )
+        )
         self.summary_service = summary_service or CombatSimulationDamageSummaryService()
 
     @staticmethod
