@@ -477,6 +477,86 @@ class GearStatInputResolver:
 
         return replace(result, applied_effect_count=applied, unresolved=tuple(unresolved))
 
+    @classmethod
+    def apply_additional_effects(
+        cls,
+        result: GearCalculationInputs,
+        effects: tuple[Effect, ...],
+    ) -> GearCalculationInputs:
+        """Apply already-reviewed additional stat Effects through canonical gear inputs.
+
+        This helper owns no trigger, timing, condition, or source-legality decisions.
+        Callers must supply Effects whose activation has already been proven.
+        """
+
+        unresolved = list(result.unresolved)
+        applied = result.applied_effect_count
+
+        for effect in effects:
+            stat = effect.stat
+            if stat is None:
+                unresolved.append(
+                    f"{effect.source}: additional effect has no canonical stat identity"
+                )
+                continue
+
+            if stat is StatId.CRITICAL_CHANCE:
+                ratio = cls.critical_rating_to_ratio(effect.value)
+                contribution = StatContribution(effect.source, ratio)
+                core = result.core
+                weapon_critical = replace(
+                    core.weapon_critical,
+                    additive_after_percent=core.weapon_critical.additive_after_percent + (contribution,),
+                )
+                spell_critical = replace(
+                    core.spell_critical,
+                    additive_after_percent=core.spell_critical.additive_after_percent + (contribution,),
+                )
+                result = replace(
+                    result,
+                    core=replace(
+                        core,
+                        weapon_critical=weapon_critical,
+                        spell_critical=spell_critical,
+                    ),
+                )
+                applied += 2
+                continue
+
+            resource_field = RESOURCE_STATS.get(stat)
+            if resource_field:
+                before = getattr(result, resource_field)
+                after = cls._resource_add(before, effect)
+                if after == before:
+                    unresolved.append(
+                        f"{effect.source}: unsupported additional resource effect operation {effect.operation.value}"
+                    )
+                    continue
+                result = replace(result, **{resource_field: after})
+                applied += 1
+                continue
+
+            if stat in CORE_FIELDS:
+                updated_core = cls._core_add(result.core, stat, effect)
+                if updated_core == result.core:
+                    unresolved.append(
+                        f"{effect.source}: unsupported additional core-stat effect operation {effect.operation.value}"
+                    )
+                    continue
+                result = replace(result, core=updated_core)
+                applied += 1
+                continue
+
+            unresolved.append(
+                f"{effect.source}: additional effect stat is not routed: {stat.value}"
+            )
+
+        return replace(
+            result,
+            applied_effect_count=applied,
+            unresolved=tuple(dict.fromkeys(item for item in unresolved if item)),
+        )
+
     def resolve(self, build: PlayerBuild, *, active_bar: str = "front") -> GearCalculationInputs:
         counts = self.equipped_set_counts(build, active_bar=active_bar)
         result = GearCalculationInputs(set_counts=tuple(sorted(counts.items())))
