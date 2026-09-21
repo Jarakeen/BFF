@@ -401,3 +401,17 @@ def test_sustained_dps_dynamic_axis_inventory_consumes_generated_frontier() -> N
         for row in SERVICE_CATALOG.dependencies_of(inventory.service_id)
     ) == ("extreme.sustained_dps.generated_frontier",)
     assert "pruning remains fail-open" in inventory.notes
+
+
+def test_sustained_dps_rotation_upper_bound_is_arithmetic_authority() -> None:
+    ceiling = canonical_service_for("extreme_sustained_dps_rotation_upper_bound")
+
+    assert ceiling is not None
+    assert ceiling.service_id == "extreme.sustained_dps.rotation_upper_bound"
+    assert ceiling.behavior is ServiceBehavior.DETERMINISTIC
+    assert ceiling.encounter_aware is False
+    assert set(ceiling.roles) == {"DPS"}
+    assert SERVICE_CATALOG.dependencies_of(ceiling.service_id) == ()
+    assert "does not calculate ESO damage" in ceiling.notes
+    assert "periodic" in ceiling.notes
+    assert "triggered" in ceiling.notes
