@@ -110,11 +110,11 @@ def test_canonical_optimization_analysis_replaces_placeholder_surfaces() -> None
     assert "card.setMaximumHeight(0)" in source
 
 
-def test_canonical_optimization_analysis_is_installed_after_roster_load_refocus() -> None:
+def test_legacy_canonical_optimization_stack_is_not_bootstrapped_into_phase14() -> None:
     installer = Path("ui/application_team_optimization_bootstrap.py").read_text(
         encoding="utf-8"
     )
 
-    role_cleanup = installer.index("install_role_cleanup()")
-    canonical = installer.index("install_team_optimization_canonical_analysis()")
-    assert role_cleanup < canonical
+    assert "install_role_cleanup()" not in installer
+    assert "install_team_optimization_canonical_analysis()" not in installer
+    assert "legacy editable optimizer construction/analysis stack" in installer
