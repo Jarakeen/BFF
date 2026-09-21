@@ -365,6 +365,28 @@ def _remove_raid_map(self) -> None:
     _refresh_map_list(self)
 
 
+def _open_exact_raid_map(self, encounter_id: str, map_id: str) -> None:
+    encounter_id = str(encounter_id or "").strip()
+    map_id = str(map_id or "").strip()
+    if not encounter_id:
+        return
+
+    summaries = tuple(self.guide_service.encounter_summaries()) if self.guide_service is not None else ()
+    target = next((row for row in summaries if row.encounter_id == encounter_id), None)
+    if target is not None:
+        content_index = self.trial_combo.findData(target.content_id)
+        if content_index >= 0:
+            self.trial_combo.setCurrentIndex(content_index)
+        self._populate_boss_combo(encounter_id)
+
+    for index in range(self.tabs.count()):
+        if self.tabs.tabText(index).strip().upper() == "MAP":
+            self.tabs.setCurrentIndex(index)
+            break
+
+    _refresh_map_list(self, map_id)
+
+
 def install() -> None:
     """Install paired-boss presentation and the Mechanics Raid Map tab."""
     global _INSTALLED
@@ -421,4 +443,5 @@ def install() -> None:
     MechanicsPage.__init__ = init_with_maps
     MechanicsPage._boss_changed = boss_changed_with_maps
     MechanicsPage.refresh_context = refresh_context_with_pairs
+    MechanicsPage.open_exact_raid_map = _open_exact_raid_map
     _INSTALLED = True
