@@ -82,8 +82,10 @@ class FinchSharedImportService:
             raid_plans.path.parent / "finch_shared_provenance.json"
         )
 
-    @staticmethod
-    def team_preview(snapshot: FinchSharedSnapshot) -> FinchSharedTeamPreview:
+    def team_preview(
+        self,
+        snapshot: FinchSharedSnapshot,
+    ) -> FinchSharedTeamPreview:
         body = _payload(snapshot, kind="team")
         schedule = body.get("schedule")
         if not isinstance(schedule, dict):
@@ -102,8 +104,8 @@ class FinchSharedImportService:
             provenance=self.provenance.relation_for(snapshot),
         )
 
-    @staticmethod
     def raid_plan_preview(
+        self,
         snapshot: FinchSharedSnapshot,
     ) -> FinchSharedRaidPlanPreview:
         body = _payload(snapshot, kind="raid_plan")
