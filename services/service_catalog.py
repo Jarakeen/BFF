@@ -809,6 +809,27 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.mundus_provisioning_dominance",
+        domain="extreme",
+        purpose=(
+            "Exhaust the canonical joint Mundus × mapped provisioning grid for one exact "
+            "action witness and prove an absolute action-damage ceiling for those axes only."
+        ),
+        implementation_path="services.extreme_sustained_dps_mundus_provisioning_dominance_service",
+        inputs=("PlayerBuild", "MundusChoices", "ProvisioningChoices", "ExactActionEvaluator"),
+        outputs=("ExtremeSustainedDPSMundusProvisioningDominanceResult",),
+        dependencies=("extreme.sustained_dps.dynamic_axes",),
+        responsibilities=("extreme_sustained_dps_mundus_provisioning_dominance",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Searches the full joint finite grid rather than summing independent stat maxima. "
+            "Any unresolved combination withholds dominance and keeps pruning fail-open."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.action_upper_bound",
         domain="extreme",
         purpose=(
