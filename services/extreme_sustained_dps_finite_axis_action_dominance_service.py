@@ -36,6 +36,19 @@ class ExtremeSustainedDPSFiniteChoiceActionEvaluator(Protocol[T]):
     def evaluate(self, choice: T) -> RotationActionDamageOccurrenceEvidence: ...
 
 
+class ExtremeSustainedDPSIndexedFiniteChoiceFrontier(Protocol[T]):
+    @property
+    def axes(self) -> tuple[str, ...]: ...
+
+    @property
+    def choice_count(self) -> int: ...
+
+    @property
+    def denominator_proven(self) -> bool: ...
+
+    def choice_at(self, index: int) -> "ExtremeSustainedDPSFiniteAxisChoice[T]": ...
+
+
 @dataclass(frozen=True)
 class ExtremeSustainedDPSFiniteAxisChoice(Generic[T]):
     choice_id: str
@@ -65,6 +78,28 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceResult:
 
 class ExtremeSustainedDPSFiniteAxisActionDominanceService:
     """Exhaust one proven finite axis denominator for one exact scheduled action."""
+
+    @classmethod
+    def evaluate_indexed(
+        cls,
+        *,
+        candidate_key: str,
+        frontier: ExtremeSustainedDPSIndexedFiniteChoiceFrontier[T],
+        evaluator: ExtremeSustainedDPSFiniteChoiceActionEvaluator[T],
+        source: str,
+    ) -> ExtremeSustainedDPSFiniteAxisActionDominanceResult:
+        count = int(frontier.choice_count)
+        if count < 0:
+            raise ValueError("indexed finite-axis choice_count cannot be negative")
+        choices = tuple(frontier.choice_at(index) for index in range(count))
+        return cls.evaluate(
+            candidate_key=candidate_key,
+            axes=tuple(frontier.axes),
+            choices=choices,
+            denominator_proven=bool(frontier.denominator_proven),
+            evaluator=evaluator,
+            source=source,
+        )
 
     @classmethod
     def evaluate(
@@ -220,4 +255,5 @@ __all__ = [
     "ExtremeSustainedDPSFiniteAxisActionDominanceService",
     "ExtremeSustainedDPSFiniteAxisChoice",
     "ExtremeSustainedDPSFiniteChoiceActionEvaluator",
+    "ExtremeSustainedDPSIndexedFiniteChoiceFrontier",
 ]
