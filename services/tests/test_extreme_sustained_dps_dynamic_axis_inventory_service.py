@@ -132,3 +132,27 @@ def test_unmapped_food_and_missing_dps_bound_remain_explicit() -> None:
     assert any("No proof-safe sustained-DPS upper bound" in row for row in result.unresolved)
     assert "proof-safe sustained-DPS upper bound" in result.deferred_axes
     assert any("pruning remains fail-open" in row for row in result.evidence)
+
+
+class _TooltipDistinctFood(_Food):
+    def list_names(self):
+        return ("Food B", "Duplicate")
+
+    @staticmethod
+    def description(name):
+        return {
+            "Food B": "Increase Max Stamina by 1000.",
+            "Duplicate": "Increase Max Stamina by 1000. Extra reviewed mechanic text.",
+        }[name]
+
+
+def test_tooltip_distinct_foods_with_same_static_effects_are_preserved() -> None:
+    result = ExtremeSustainedDPSDynamicAxisInventoryService(
+        "unused.db",
+        mundus_repository=_Mundus(),
+        provisioning_repository=_TooltipDistinctFood(),
+        skill_universe=_Skills(),
+    ).inventory(_candidate())
+
+    assert result.food_choices == ("Duplicate", "Food B")
+    assert any("tooltip-distinct" in row for row in result.evidence)
