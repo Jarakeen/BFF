@@ -978,3 +978,21 @@ def test_sustained_dps_finite_axis_action_dominance_requires_complete_same_coord
     )
     assert "same scheduled action coordinate" in service.notes
     assert "promote neither axis coverage nor numeric ceiling" in service.notes
+
+
+def test_sustained_dps_finite_axis_frontier_adapter_preserves_lazy_denominator_identity() -> None:
+    service = canonical_service_for("extreme_sustained_dps_finite_axis_frontier_adapter")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.finite_axis_frontier_adapter"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.champion_point_frontier",
+        "extreme.sustained_dps.passive_rank_frontier",
+        "extreme.sustained_dps.dual_bar_gear_frontier",
+        "extreme.sustained_dps.finite_axis_action_dominance",
+    )
+    assert "choice_count + choice_at(index)" in service.notes
+    assert "materialized one at a time" in service.notes
