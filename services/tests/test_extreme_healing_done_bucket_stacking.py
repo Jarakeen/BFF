@@ -74,6 +74,7 @@ class _Mastery:
             selected_masteries=(),
             critical_healing_bonus=0.0,
             critical_healing_cap=1.25,
+            weapon_spell_damage_bonus=0.0,
             unresolved=(),
         )
 
