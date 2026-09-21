@@ -10,18 +10,24 @@ on:
       - "services/finch_shared_readiness_service.py"
       - "services/finch_shared_coverage_service.py"
       - "services/finch_shared_provenance_service.py"
+      - "services/finch_collaboration_overview_service.py"
       - "services/tests/test_finch_api_client.py"
       - "services/tests/test_finch_shared_publish_service.py"
       - "services/tests/test_finch_shared_import_service.py"
       - "services/tests/test_finch_shared_readiness_service.py"
       - "services/tests/test_finch_shared_coverage_service.py"
       - "services/tests/test_finch_shared_provenance_service.py"
+      - "services/tests/test_finch_collaboration_overview_service.py"
       - "ui/themed_roster_page.py"
       - "ui/raid_plan_persistence_page.py"
       - "ui/tests/test_finch_shared_publish_actions.py"
       - "ui/tests/test_finch_shared_import_actions.py"
       - "ui/tests/test_finch_shared_readiness_actions.py"
       - "ui/tests/test_finch_shared_coverage_actions.py"
+      - "ui/tests/test_finch_collaboration_page.py"
+      - "ui/finch_collaboration_page.py"
+      - "ui/raid_engine_dashboard_support.py"
+      - "ui/components/foundry_sidebar.py"
       - "ui/coverage_page.py"
       - "ui/city_raid_readiness_page.py"
       - ".github/workflows/finch-focused-tests.yml"
@@ -48,7 +54,9 @@ jobs:
             services/tests/test_finch_shared_readiness_service.py \
             services/tests/test_finch_shared_coverage_service.py \
             services/tests/test_finch_shared_provenance_service.py \
+            services/tests/test_finch_collaboration_overview_service.py \
             ui/tests/test_finch_shared_publish_actions.py \
             ui/tests/test_finch_shared_import_actions.py \
             ui/tests/test_finch_shared_readiness_actions.py \
-            ui/tests/test_finch_shared_coverage_actions.py -q
+            ui/tests/test_finch_shared_coverage_actions.py \
+            ui/tests/test_finch_collaboration_page.py -q
