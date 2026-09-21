@@ -692,6 +692,32 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.comparison",
+        domain="extreme",
+        purpose=(
+            "Compare explicitly supplied saved DD build/rotation witnesses under one "
+            "shared target scenario without promoting incomplete or incomparable evidence "
+            "to a winner."
+        ),
+        implementation_path="services.extreme_sustained_dps_comparison_service",
+        inputs=(
+            "PlayerBuildCandidates",
+            "TargetHealth",
+            "TargetResistance",
+        ),
+        outputs=("ExtremeSustainedDPSComparisonResult",),
+        dependencies=("extreme.sustained_dps.saved_rotation",),
+        responsibilities=("extreme_sustained_dps_candidate_comparison",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "May identify a unique leader only within the explicitly supplied comparable "
+            "candidate set. It does not prove the global Extreme maximum or search unsupplied builds."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="combat.simulation.snapshot",
         domain="combat",
         purpose=(
