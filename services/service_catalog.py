@@ -831,6 +831,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.ultimate_added_action_count_proof",
+        domain="extreme",
+        purpose=(
+            "Promote one explicit generated Ultimate policy's canonical affordability "
+            "capacity into a proof-safe maximum count of additional damage actions."
+        ),
+        implementation_path="services.extreme_sustained_dps_ultimate_added_action_count_proof_service",
+        inputs=("ExtremeSustainedDPSRotationPolicyCandidate",),
+        outputs=("ExtremeSustainedDPSUltimateAddedActionCountResult",),
+        dependencies=("extreme.sustained_dps.rotation_policy_frontier",),
+        responsibilities=("extreme_sustained_dps_ultimate_added_action_count_proof",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Uses only the selected policy's canonical UltimateResourceTimeline availability "
+            "capacity. No generation, cost, scheduling, or damage arithmetic is reimplemented. "
+            "The count is an upper bound on added Ultimate actions, not a claim that every cast occurs."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.rotation_family_action_count_proof",
         domain="extreme",
         purpose=(
