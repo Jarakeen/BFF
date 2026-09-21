@@ -875,6 +875,34 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.dynamic_whole_plan_frontier_adapter",
+        domain="extreme",
+        purpose=(
+            "Expose generated seed-rotation, anchored Ultimate/potion, execute, and Heavy Attack policy families "
+            "through the indexed finite whole-plan dominance contract without eager materialization."
+        ),
+        implementation_path="services.extreme_sustained_dps_dynamic_whole_plan_frontier_adapter_service",
+        inputs=("GeneratedDynamicFrontier",),
+        outputs=("ExtremeSustainedDPSIndexedWholePlanAdapter",),
+        dependencies=(
+            "extreme.sustained_dps.rotation_plan_frontier",
+            "extreme.sustained_dps.rotation_policy_frontier",
+            "extreme.sustained_dps.execute_policy_frontier",
+            "extreme.sustained_dps.heavy_attack_policy_frontier",
+            "extreme.sustained_dps.finite_whole_plan_dominance",
+        ),
+        responsibilities=("extreme_sustained_dps_dynamic_whole_plan_frontier_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Adapters preserve each source denominator and omitted scope. Seed rotation maps to rotation_order + "
+            "light_attack_weave; anchored Ultimate/potion maps to ultimate_policy + potion_timing_policy; execute and "
+            "Heavy Attack remain separate policy axes. Choices are materialized one at a time."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_whole_plan_choice_evaluator",
         domain="extreme",
         purpose=(
