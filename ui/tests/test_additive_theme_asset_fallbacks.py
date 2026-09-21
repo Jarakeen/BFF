@@ -30,6 +30,10 @@ def test_collectible_badges_are_consistent_frameless_and_remove_sheet_spill() ->
 
     assert "def _keep_center_component" in assets
     assert "image = _keep_center_component(image)" in assets
+    assert "def _clip_city_badge_for_display" in assets
+    assert '"Companions": (0.00, 0.00, 0.00, 0.20)' in assets
+    assert '"Hair": (0.00, 0.00, 0.00, 0.18)' in assets
+    assert "return _clip_city_badge_for_display(" in assets
     assert "label.setFixedSize(90, 90)" in presentation
     assert "original_set_sprite(label, pixmap, 86)" in presentation
     assert 'background: transparent; border: none; padding: 0;' in presentation
