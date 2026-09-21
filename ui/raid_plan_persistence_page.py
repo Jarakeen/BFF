@@ -177,13 +177,13 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         row.setSpacing(6)
         row.addWidget(self.saved_plan_combo, 1)
 
-        load_button = QPushButton("Load")
-        load_button.clicked.connect(self.load_selected_plan)
-        row.addWidget(load_button)
+        self.load_plan_button = QPushButton("Load")
+        self.load_plan_button.clicked.connect(self.load_selected_plan)
+        row.addWidget(self.load_plan_button)
 
-        save_button = QPushButton("Save")
-        save_button.clicked.connect(self.save_current_plan)
-        row.addWidget(save_button)
+        self.save_plan_button = QPushButton("Save")
+        self.save_plan_button.clicked.connect(self.save_current_plan)
+        row.addWidget(self.save_plan_button)
 
         self.publish_plan_finch_button = QPushButton("Publish")
         self.publish_plan_finch_button.setToolTip(
@@ -199,11 +199,12 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.get_shared_plans_button.clicked.connect(self._get_shared_raid_plans)
         row.addWidget(self.get_shared_plans_button)
 
-        delete_button = QPushButton("Delete")
-        delete_button.clicked.connect(self.delete_selected_plan)
-        row.addWidget(delete_button)
+        self.delete_plan_button = QPushButton("Delete")
+        self.delete_plan_button.clicked.connect(self.delete_selected_plan)
+        row.addWidget(self.delete_plan_button)
 
         layout.addLayout(row)
+        self.saved_plan_controls = controls
         self.header.add_context_widget(controls)
 
     def _publish_saved_plan_to_finch(self) -> None:
