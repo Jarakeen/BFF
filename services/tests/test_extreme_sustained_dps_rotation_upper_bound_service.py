@@ -9,12 +9,13 @@ from services.extreme_sustained_dps_rotation_upper_bound_service import (
 )
 
 
-def _action(time, sequence, kind, name=""):
+def _action(time, sequence, kind, name="", *, bar=None):
     return RotationAction(
         time_seconds=float(time),
         sequence=int(sequence),
         kind=kind,
         name=name,
+        bar=bar,
     )
 
 
@@ -26,7 +27,7 @@ def _plan():
         actions=(
             _action(0.0, 0, RotationActionKind.SKILL, "Skill A"),
             _action(1.0, 1, RotationActionKind.LIGHT_ATTACK, "Light Attack"),
-            _action(2.0, 2, RotationActionKind.BAR_SWAP, "Swap"),
+            _action(2.0, 2, RotationActionKind.BAR_SWAP, "Swap", bar="back"),
             _action(3.0, 3, RotationActionKind.SKILL, "Skill B"),
         ),
     )
