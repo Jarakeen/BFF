@@ -521,3 +521,16 @@ def test_sustained_dps_dual_bar_gear_frontier_requires_realized_topologies() -> 
     ) == ("extreme.sustained_dps.gear_topology_realization",)
     assert "complete topology-branch coverage" in service.notes
     assert "bar-access rules" in service.notes
+
+
+def test_sustained_dps_gear_runtime_semantics_reuses_canonical_resolvers() -> None:
+    service = canonical_service_for("extreme_sustained_dps_gear_runtime_semantics")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.gear_runtime_semantics"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.dual_bar_gear_frontier",)
+    assert "GearSetEffectResolver" in service.notes
+    assert "does not prove proc occurrence" in service.notes
