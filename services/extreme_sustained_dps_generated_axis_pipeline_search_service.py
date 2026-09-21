@@ -12,6 +12,9 @@ from services.extreme_sustained_dps_generated_frontier_wiring_service import (
 from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
     ExtremeSustainedDPSGeneratedSearchResult,
 )
+from services.extreme_sustained_dps_generated_runtime_state_axis_adapter_service import (
+    ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService,
+)
 
 
 class ExtremeSustainedDPSGeneratedAxisPipelineSearchService:
@@ -39,6 +42,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineSearchService:
         root_key: str = "generated-root",
         root_bound_inputs=None,
         branch_bound_inputs=None,
+        runtime_state_frontier=None,
     ) -> ExtremeSustainedDPSGeneratedSearchResult:
         evaluate_leaf = self.leaf_evaluation.evaluator(
             runtime_snapshot=runtime_snapshot,
@@ -47,9 +51,18 @@ class ExtremeSustainedDPSGeneratedAxisPipelineSearchService:
             target_name=target_name,
             initial_bar=initial_bar,
         )
+        axes = tuple(self.pipeline.axes())
+        if runtime_state_frontier is not None:
+            axes = (
+                *axes,
+                ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.axis(
+                    runtime_state_frontier
+                ),
+            )
+
         return ExtremeSustainedDPSGeneratedFrontierWiringService.search(
             root_state,
-            axes=tuple(self.pipeline.axes()),
+            axes=axes,
             evaluate_leaf=evaluate_leaf,
             required_duration_seconds=float(required_duration_seconds),
             root_key=root_key,
