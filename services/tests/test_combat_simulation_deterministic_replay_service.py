@@ -1,9 +1,11 @@
 from dataclasses import replace
 
 from models.combat_simulation import (
+    CombatSimulationCombatant,
     CombatSimulationEvent,
     CombatSimulationResourceResult,
     CombatSimulationResult,
+    CombatSimulationTargetState,
     SimulationEventPriority,
 )
 from services.combat_simulation_deterministic_replay_service import (
@@ -259,3 +261,103 @@ def test_combat_simulation_result_rejects_resource_summary_state_mismatch() -> N
             raise AssertionError(
                 "Expected resource summary/event state mismatch to fail closed"
             )
+
+
+def test_combat_simulation_result_rejects_health_change_without_target_state() -> None:
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Heal",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 20000),
+            ("after", 22000),
+        ),
+    )
+
+    try:
+        _result(events=(event,))
+    except ValueError as exc:
+        assert "health changes require target state" in str(exc)
+    else:
+        raise AssertionError("Expected Health change without target state to fail closed")
+
+
+def test_combat_simulation_result_rejects_unknown_health_change_recipient() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+        )
+    )
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Heal",
+        payload=(
+            ("recipient", "Tank 2"),
+            ("before", 20000),
+            ("after", 22000),
+        ),
+    )
+
+    try:
+        _result(events=(event,), target_state=state)
+    except ValueError as exc:
+        assert "not present in target state" in str(exc)
+    else:
+        raise AssertionError("Expected unknown Health recipient to fail closed")
+
+
+def test_combat_simulation_result_rejects_broken_health_change_chain() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+        )
+    )
+    first = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="First",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 20000),
+            ("after", 22000),
+            ("maximum_health", 25000),
+        ),
+    )
+    second = CombatSimulationEvent(
+        time_seconds=2.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Second",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 21000),
+            ("after", 23000),
+            ("maximum_health", 25000),
+        ),
+    )
+
+    try:
+        _result(events=(first, second), target_state=state)
+    except ValueError as exc:
+        assert "before/after chain is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected broken Health chain to fail closed")
