@@ -875,6 +875,29 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.finite_family_branch_bound_adapter",
+        domain="extreme",
+        purpose=(
+            "Promote a proven finite-family whole-plan ceiling into branch-and-bound evidence only after exact branch-scope equivalence is proven."
+        ),
+        implementation_path="services.extreme_sustained_dps_finite_family_branch_bound_adapter_service",
+        inputs=("FiniteWholePlanDominanceResult", "FiniteFamilyBranchScopeProof"),
+        outputs=("ExtremeSustainedDPSFiniteFamilyBranchBoundAdaptation",),
+        dependencies=(
+            "extreme.sustained_dps.finite_whole_plan_dominance",
+            "extreme.sustained_dps.generated_branch_and_bound_search",
+        ),
+        responsibilities=("extreme_sustained_dps_finite_family_branch_bound_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Local finite-family closure may prune only a branch proven to contain exactly that family. "
+            "Every omitted-scope item must be explicitly excluded from the branch before the numeric ceiling is promoted."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_state_frontier",
         domain="extreme",
         purpose=(
