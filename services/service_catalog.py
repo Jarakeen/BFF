@@ -831,6 +831,27 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.dual_bar_gear_frontier",
+        domain="extreme",
+        purpose=(
+            "Compose exhaustively realized sustained-DPS gear-topology branches into "
+            "canonical complete front/back equipment states."
+        ),
+        implementation_path="services.extreme_sustained_dps_dual_bar_gear_frontier_service",
+        inputs=("GearTopologyRealizationBranches", "ExpectedTopologyCount"),
+        outputs=("ExtremeSustainedDPSDualBarGearFrontier",),
+        dependencies=("extreme.sustained_dps.gear_topology_realization",),
+        responsibilities=("extreme_sustained_dps_dual_bar_gear_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Denominator proof requires complete topology-branch coverage. Front/back states "
+            "must agree on shared body/jewelry equipment and obey canonical bar-access rules."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.gear_topology_frontier",
         domain="extreme",
         purpose=(
