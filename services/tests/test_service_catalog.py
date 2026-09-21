@@ -550,3 +550,16 @@ def test_generated_sustained_dps_runtime_evaluation_consumes_canonical_simulatio
     )
     assert "caller-owned" in service.notes
     assert "fail closed" in service.notes
+
+
+def test_sustained_dps_runtime_effect_projection_is_not_a_timing_authority() -> None:
+    service = canonical_service_for("extreme_sustained_dps_runtime_effect_projection")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.runtime_effect_projection"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.gear_runtime_semantics",)
+    assert "no trigger, timing, cooldown" in service.notes.casefold()
+    assert "weapon_spell_damage" in service.notes
