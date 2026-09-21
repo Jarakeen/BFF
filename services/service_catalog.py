@@ -875,6 +875,29 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.gear_progression_axis_coverage",
+        domain="extreme",
+        purpose=(
+            "Promote proven dual-bar named-gear, Champion Point, and passive-rank "
+            "denominator closure into canonical sustained-DPS mutation-axis coverage."
+        ),
+        implementation_path="services.extreme_sustained_dps_gear_progression_axis_coverage_service",
+        inputs=("DualBarGearFrontierOrProgressionFrontier",),
+        outputs=("ExtremeSustainedDPSStructuralAxisCoverageResult",),
+        dependencies=("extreme.sustained_dps.axis_dominance_composition",),
+        responsibilities=("extreme_sustained_dps_gear_progression_axis_coverage",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Promotes only what each structural denominator actually proves: dual-bar gear "
+            "covers gear_topology + named_gear_realization, CP covers champion_points, and "
+            "passive search covers passive_ranks. Traits, enchants, runtime behavior, racial "
+            "progression, and numeric damage dominance remain separate proof obligations."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.mundus_provisioning_proof_adapter",
         domain="extreme",
         purpose=(
