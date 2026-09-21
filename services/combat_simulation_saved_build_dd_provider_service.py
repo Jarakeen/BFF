@@ -81,6 +81,46 @@ class CombatSimulationSavedBuildDDProviderResolution:
         return self.provider is not None and not self.unresolved
 
 
+class _SimulationTemporalSkillProvider:
+    """Prevent whole-horizon periodic totals from masquerading as cast-time damage.
+
+    Rotation role-output evidence correctly aggregates periodic ticks under their
+    parent cast. Combat Simulation needs occurrence timestamps instead. Until the
+    occurrence-level bridge is supplied, any skill/Ultimate with a reviewed periodic
+    damage component fails closed rather than front-loading its total damage.
+    """
+
+    def __init__(
+        self,
+        *,
+        delegate: RotationActionDamageProvider,
+        timing_service: RotationCandidatePeriodicDamageTimingEvidenceService,
+    ) -> None:
+        self.delegate = delegate
+        self.timing_service = timing_service
+
+    def evaluate_action(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageEvidence:
+        if action.kind in {RotationActionKind.SKILL, RotationActionKind.ULTIMATE}:
+            report = self.timing_service.inspect_action(action)
+            if report.entries:
+                return RotationActionDamageEvidence(
+                    time_seconds=action.time_seconds,
+                    sequence=action.sequence,
+                    damage_value=None,
+                    unresolved=(
+                        f"{action.name}: periodic damage has canonical whole-plan magnitude "
+                        "but requires occurrence-level tick damage before Combat Simulation "
+                        "may apply it to target Health",
+                    ),
+                )
+        return self.delegate.evaluate_action(candidate=candidate, action=action)
+
+
 class _UnresolvedDamageProvider:
     def __init__(self, unresolved: tuple[str, ...]) -> None:
         self.unresolved = tuple(
@@ -399,7 +439,7 @@ class CombatSimulationSavedBuildDDProviderService:
                 unresolved=unresolved,
             )
 
-        skill = _StaticBarAwareSkillProvider(
+        base_skill = _StaticBarAwareSkillProvider(
             database_path=self.database_path,
             static_context=filtered,
             plan=plan,
@@ -409,6 +449,13 @@ class CombatSimulationSavedBuildDDProviderService:
             target_snapshot_resolver=target_snapshot_resolver,
             execute_target_identity=execute_target_identity,
             initial_bar=initial_bar,
+        )
+        timing_service = RotationCandidatePeriodicDamageTimingEvidenceService(
+            self.database_path
+        )
+        skill = _SimulationTemporalSkillProvider(
+            delegate=base_skill,
+            timing_service=timing_service,
         )
         ultimate = RotationCandidateUltimateDamageEvidenceService(
             skill_damage_delegate=skill,

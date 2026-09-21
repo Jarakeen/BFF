@@ -983,3 +983,12 @@ Target-Health-conditioned damage cannot be evaluated from one static boss Health
 **Layman's version:** the second hit has to look at the boss *after* the first hit landed. If the first hit pushes the boss into execute, the second hit may legitimately become stronger or activate a conditional component.
 
 **For BFF:** Phase 14 Combat Simulation now maintains an execution-local target Health ledger and exposes that evolving Health through the existing canonical `CombatStateSnapshot` contract. Execute thresholds and reviewed target-Health amplification remain owned by the existing Rotation DD mechanics; the simulator only supplies the changing Health evidence and never invents an execute rule.
+
+
+## 2026-09-20 — A DoT's total damage cannot be dropped onto the target at cast time
+
+The Rotation DD scorer can correctly store a periodic skill's full within-horizon damage under the cast that created it, because its job is to total the rotation. Combat Simulation has a stricter timing requirement: those same points of damage have to arrive on their actual tick timestamps.
+
+**Layman's version:** if a 10-second DoT will eventually do 20,000 damage, the boss does not lose all 20,000 Health the instant the skill is cast. Doing that would push execute thresholds and death earlier than they really happen.
+
+**For BFF:** whole-plan periodic totals are now blocked from the live target-Health ledger. Direct hits may affect Health immediately; periodic skills stay unresolved in Combat Simulation until the existing reviewed tick schedule can also supply occurrence-level damage magnitude.

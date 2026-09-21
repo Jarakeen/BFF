@@ -25,6 +25,9 @@ class CombatSimulationSequentialDamageProjection:
     damage: tuple[CombatSimulationOutgoingDamage, ...]
     evidence: tuple[tuple[float, int, RotationActionDamageEvidence], ...] = ()
     unresolved: tuple[str, ...] = ()
+    terminated_at_seconds: float | None = None
+    terminated_at_sequence: int | None = None
+    suppressed_action_keys: tuple[tuple[float, int], ...] = ()
 
     def evidence_provider(self) -> RotationActionDamageEvidenceProvider:
         return _ProjectedDamageEvidenceProvider(self.evidence)
@@ -98,6 +101,10 @@ class CombatSimulationTargetHealthLedger:
             ),
         )
 
+    @property
+    def is_dead(self) -> bool:
+        return self.current_health <= 0.0
+
     def apply_damage(self, amount: float) -> tuple[float, float, float]:
         attempted = max(0.0, float(amount))
         before = self.current_health
@@ -138,6 +145,9 @@ class CombatSimulationSequentialDDDamageService:
         damage: list[CombatSimulationOutgoingDamage] = []
         evidence_rows: list[tuple[float, int, RotationActionDamageEvidence]] = []
         unresolved: list[str] = []
+        suppressed: list[tuple[float, int]] = []
+        terminated_at_seconds: float | None = None
+        terminated_at_sequence: int | None = None
 
         actions = tuple(
             sorted(
@@ -154,6 +164,22 @@ class CombatSimulationSequentialDDDamageService:
         )
 
         for action in actions:
+            action_key = (float(action.time_seconds), int(action.sequence))
+            if ledger.is_dead:
+                suppressed.append(action_key)
+                evidence_rows.append(
+                    (
+                        float(action.time_seconds),
+                        int(action.sequence),
+                        RotationActionDamageEvidence(
+                            time_seconds=action.time_seconds,
+                            sequence=action.sequence,
+                            damage_value=0.0,
+                        ),
+                    )
+                )
+                continue
+
             evidence = action_damage_evidence_provider.evaluate_action(
                 candidate=candidate,
                 action=action,
@@ -184,20 +210,27 @@ class CombatSimulationSequentialDDDamageService:
                 continue
 
             ledger.apply_damage(float(evidence.damage_value))
-            damage.append(
-                CombatSimulationOutgoingDamage(
-                    time_seconds=float(action.time_seconds),
-                    sequence=int(action.sequence),
-                    source=str(action.name or action.kind.value),
-                    recipient=ledger.target_identity,
-                    amount=float(evidence.damage_value),
+            if float(evidence.damage_value) > 0.0:
+                damage.append(
+                    CombatSimulationOutgoingDamage(
+                        time_seconds=float(action.time_seconds),
+                        sequence=int(action.sequence),
+                        source=str(action.name or action.kind.value),
+                        recipient=ledger.target_identity,
+                        amount=float(evidence.damage_value),
+                    )
                 )
-            )
+            if ledger.is_dead and terminated_at_seconds is None:
+                terminated_at_seconds = float(action.time_seconds)
+                terminated_at_sequence = int(action.sequence)
 
         return CombatSimulationSequentialDamageProjection(
             damage=tuple(damage),
             evidence=tuple(evidence_rows),
             unresolved=tuple(dict.fromkeys(unresolved)),
+            terminated_at_seconds=terminated_at_seconds,
+            terminated_at_sequence=terminated_at_sequence,
+            suppressed_action_keys=tuple(suppressed),
         )
 
     @staticmethod

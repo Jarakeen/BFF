@@ -137,3 +137,30 @@ def test_bridge_rejects_candidate_for_different_plan() -> None:
         assert "does not match" in str(exc)
     else:
         raise AssertionError("Expected mismatched candidate plan to fail closed")
+
+
+
+def test_bridge_marks_zero_damage_resolved_without_emitting_damage() -> None:
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD",
+        duration_seconds=2.0,
+        actions=(
+            RotationAction(
+                1.0,
+                0,
+                RotationActionKind.SKILL,
+                name="Resolved Non-Damage Activation",
+                bar="front",
+            ),
+        ),
+    )
+    provider = _DamageProvider({(1.0, 0): 0.0})
+
+    result = CombatSimulationOutgoingDamageService(
+        action_damage_evidence_provider=provider,
+    ).project(plan=plan, target_identity="Boss")
+
+    assert result.damage == ()
+    assert result.resolved_action_keys == ((1.0, 0),)
+    assert result.unresolved == ()

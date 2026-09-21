@@ -282,3 +282,8 @@ def test_saved_build_dd_orchestrator_feeds_simulated_health_into_later_damage() 
         and event.payload_dict().get("recipient") == "Boss"
     ]
     assert health == [4000, 0]
+    assert result.duration_seconds == 2.0
+    assert not any(
+        event.time_seconds > 2.0
+        for event in result.events
+    )

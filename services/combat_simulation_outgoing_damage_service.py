@@ -92,6 +92,9 @@ class CombatSimulationOutgoingDamageService:
                 unresolved.append(f"{identity}: damage consequence unavailable")
                 continue
 
+            resolved.append((float(action.time_seconds), int(action.sequence)))
+            if float(evidence.damage_value) <= 0.0:
+                continue
             projected.append(
                 CombatSimulationOutgoingDamage(
                     time_seconds=float(action.time_seconds),
@@ -101,7 +104,6 @@ class CombatSimulationOutgoingDamageService:
                     amount=float(evidence.damage_value),
                 )
             )
-            resolved.append((float(action.time_seconds), int(action.sequence)))
 
         return CombatSimulationOutgoingDamageProjection(
             damage=tuple(projected),

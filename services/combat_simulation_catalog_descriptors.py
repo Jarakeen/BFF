@@ -65,6 +65,27 @@ COMBAT_SIMULATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="simulation.fight_termination",
+        domain="simulation",
+        purpose=(
+            "Project the actually executed RotationPlan horizon when the simulated "
+            "damage target dies before the planned rotation ends."
+        ),
+        implementation_path="services.combat_simulation_fight_termination_service",
+        inputs=("RotationPlan", "TerminationTime", "TerminationSequence"),
+        outputs=("RotationPlan",),
+        responsibilities=("combat_simulation_fight_termination_projection",),
+        roles=("DD", "DPS", "Healer", "Tank"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.NONE,
+        notes=(
+            "The original plan remains immutable planning truth. The execution "
+            "projection prevents downstream resource/healing/effect services from "
+            "continuing beyond an already-proven terminal target death."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="simulation.saved_build_dd_provider",
         domain="simulation",
         purpose=(
@@ -113,6 +134,7 @@ COMBAT_SIMULATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         dependencies=(
             "simulation.saved_build_dd_provider",
             "simulation.sequential_dd_health_feedback",
+            "simulation.fight_termination",
             "simulation.outgoing_damage_bridge",
         ),
         responsibilities=("combat_simulation_saved_build_dd_execution",),
