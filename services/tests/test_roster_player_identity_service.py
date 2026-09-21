@@ -101,3 +101,20 @@ def test_alias_matching_is_exact_not_fuzzy(tmp_path: Path) -> None:
     assert len(service.matching_members("baronzaudrus521")) == 1
     assert len(service.matching_members("@BARONZAUDRUS521")) == 1
     assert service.matching_members("BARONZAUDRUS52") == []
+
+
+def test_matching_members_can_explicitly_include_archived_identity(tmp_path: Path) -> None:
+    database = EsoDatabase(tmp_path / "eso.db")
+    roster = RosterService(database)
+    member_id = roster.create_member(
+        _member("Rylo", character="Archived Toon", team="Performance Mode")
+    )
+    service = RosterPlayerIdentityService(database)
+    service.add_alias(member_id, "Old Rylo", source="former_gamertag")
+    roster.archive_member(member_id)
+
+    assert service.matching_members("Rylo") == []
+    assert service.matching_members("Old Rylo") == []
+    assert [row.PlayerName for row in service.matching_members(
+        "Old Rylo", include_archived=True
+    )] == ["Rylo"]
