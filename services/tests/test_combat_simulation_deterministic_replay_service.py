@@ -434,3 +434,44 @@ def test_combat_simulation_result_accepts_death_after_lethal_health_change() -> 
     result = _result(events=(health, death), target_state=state)
 
     assert result.events == (health, death)
+
+
+def test_combat_simulation_result_rejects_death_before_later_lethal_health_change() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=5000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    death = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.EXPIRATION),
+        sequence=0,
+        event_type="death",
+        source="Too Early",
+        payload=(("recipient", "Boss"),),
+    )
+    health = CombatSimulationEvent(
+        time_seconds=2.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Later Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("before", 5000),
+            ("after", 0),
+            ("maximum_health", 10000),
+        ),
+    )
+
+    try:
+        _result(events=(death, health), target_state=state)
+    except ValueError as exc:
+        assert "requires zero Health state" in str(exc)
+    else:
+        raise AssertionError("Expected premature death event to fail closed")
