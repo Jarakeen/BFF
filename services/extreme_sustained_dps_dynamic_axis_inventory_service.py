@@ -55,7 +55,7 @@ class ExtremeSustainedDPSDynamicAxisInventoryService:
         "encounter-demand rotation policy families",
         "runtime proc/cooldown/execute state beyond reviewed bridges",
         "strong proof-safe dominance/upper bounds across broad partial generated branches",
-        "concrete Extreme frontier adapters into the indexed branch-and-bound tree",
+        "gear and rotation-policy frontier adapters into the indexed branch-and-bound tree",
         "proof-safe sustained-DPS theoretical-maximum closure",
     )
 
