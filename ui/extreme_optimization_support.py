@@ -22,7 +22,7 @@ def install() -> None:
             return
 
         page = ExtremeSpecializedOptimizationPage()
-        # The page owns the canonical 31-record catalog and both shared-static and
+        # The page owns the canonical 32-record catalog and both shared-static and
         # specialized execution gateways. This installer only supplies the completed
         # from-scratch blueprint layer; it must not append or reclassify objectives.
         page.blueprint_service = ExtremeCompleteBlueprintService()
