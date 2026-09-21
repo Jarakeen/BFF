@@ -65,6 +65,52 @@ COMBAT_SIMULATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="simulation.plan_attacker_state",
+        domain="simulation",
+        purpose=(
+            "Project exact attacker CombatState from final-plan-owned evidence: "
+            "active bar, explicitly scheduled potion actions, and reviewed persistent toggles."
+        ),
+        implementation_path="services.combat_simulation_plan_attacker_state_service",
+        inputs=(
+            "PlayerBuild",
+            "CharacterProgression",
+            "RotationPlan",
+            "RuntimePoint",
+        ),
+        outputs=("RotationPlanRuntimeCombatStateResult",),
+        responsibilities=("combat_simulation_plan_owned_attacker_state",),
+        roles=("DD", "DPS", "Healer", "Tank"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Does not invent external proc, group-buff, encounter, or log-history "
+            "state. Potion and persistent-toggle semantics remain owned by their "
+            "existing Rotation services."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="simulation.damage_summary",
+        domain="simulation",
+        purpose=(
+            "Summarize one completed Combat Simulation damage stream into target "
+            "Health, kill time, source totals, and completeness-aware modeled DPS."
+        ),
+        implementation_path="services.combat_simulation_damage_summary_service",
+        inputs=("CombatSimulationResult", "TargetIdentity"),
+        outputs=("CombatSimulationDamageSummary",),
+        responsibilities=("combat_simulation_damage_summary",),
+        roles=("DD", "DPS", "Healer", "Tank"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Modeled DPS is withheld when unresolved damage evidence remains; the "
+            "summary never relabels incomplete modeled damage as a complete parse."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="simulation.fight_termination",
         domain="simulation",
         purpose=(
@@ -133,6 +179,7 @@ COMBAT_SIMULATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         outputs=("CombatSimulationResult",),
         dependencies=(
             "simulation.saved_build_dd_provider",
+            "simulation.plan_attacker_state",
             "simulation.sequential_dd_health_feedback",
             "simulation.fight_termination",
             "simulation.outgoing_damage_bridge",
