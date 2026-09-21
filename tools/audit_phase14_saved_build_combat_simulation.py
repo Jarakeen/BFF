@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import json
 from pathlib import Path
 import sys
@@ -15,6 +16,9 @@ from models.combat_simulation import CombatSimulationCombatant, CombatSimulation
 from models.effective_build_snapshot import EffectiveBuildSnapshot
 from services.combat_simulation_damage_summary_service import (
     CombatSimulationDamageSummaryService,
+)
+from services.combat_simulation_deterministic_replay_service import (
+    CombatSimulationDeterministicReplayService,
 )
 from services.combat_simulation_plan_attacker_state_service import (
     CombatSimulationPlanAttackerStateService,
@@ -339,17 +343,36 @@ def main() -> int:
     simulator = CombatSimulationSavedBuildDDService(
         provider_service=provider_service,
     )
-    result = simulator.simulate(
-        build_snapshot=EffectiveBuildSnapshot.from_saved_build(build),
-        plan=plan,
-        target_state=target_state,
-        damage_target_identity=target_name,
-        target_resistance=float(args.target_resistance),
-        target_combat_state_resolver=target_combat_state_resolver,
-        target_resistance_resolver=target_resistance_resolver,
-        runtime_build_context_resolver=runtime_build_context_resolver,
-        activation_anchor_resolver=activation_anchor_resolver,
-    )
+    build_snapshot = EffectiveBuildSnapshot.from_saved_build(build)
+
+    def run_once():
+        return simulator.simulate(
+            build_snapshot=build_snapshot,
+            plan=plan,
+            target_state=target_state,
+            damage_target_identity=target_name,
+            target_resistance=float(args.target_resistance),
+            target_combat_state_resolver=target_combat_state_resolver,
+            target_resistance_resolver=target_resistance_resolver,
+            runtime_build_context_resolver=runtime_build_context_resolver,
+            activation_anchor_resolver=activation_anchor_resolver,
+        )
+
+    replay = CombatSimulationDeterministicReplayService().verify(run_once)
+    result = replay.first
+    if not replay.deterministic:
+        result = replace(
+            result,
+            unresolved=tuple(
+                dict.fromkeys(
+                    (
+                        *result.unresolved,
+                        "deterministic replay mismatch: "
+                        + ", ".join(replay.differing_signature_fields),
+                    )
+                )
+            ),
+        )
     summary = CombatSimulationDamageSummaryService().summarize(
         result,
         target_identity=target_name,
@@ -364,6 +387,14 @@ def main() -> int:
     print(f"Planned duration:      {float(plan.duration_seconds):g}s")
     print(f"Executed duration:     {summary.duration_seconds:g}s")
     print(f"Generated actions:     {len(plan.actions)}")
+    print(
+        "Deterministic replay:  "
+        + (
+            "PASS"
+            if replay.deterministic
+            else "FAIL (" + ", ".join(replay.differing_signature_fields) + ")"
+        )
+    )
     print(f"Target:                {target_name}")
     print(f"Starting Health:       {int(args.target_health):,}")
     print(f"Target resistance:     {float(args.target_resistance):g}")
