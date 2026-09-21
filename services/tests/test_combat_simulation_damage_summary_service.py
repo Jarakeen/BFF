@@ -296,6 +296,7 @@ def test_damage_summary_allows_dps_when_only_non_damage_unresolved_remains() -> 
                 "health_change",
                 "Skill A",
                 recipient="Boss",
+                before=10000,
                 applied_damage=3000.0,
                 overkill=0.0,
                 after=7000,
