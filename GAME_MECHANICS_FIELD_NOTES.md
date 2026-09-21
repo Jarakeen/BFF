@@ -1254,3 +1254,9 @@ Armor, jewelry, and weapon traits or glyphs belong to actual equipped slots. Fou
 
 **Layman's version:** choose which boots exist before arguing about the enchantment on the boots.
 
+### 2026-09-21 — Wiring a finite policy family does not widen its proof
+
+Connecting an anchored Ultimate/potion frontier to the generated branch-and-bound tree proves that every member of that **anchored family** can be reached and evaluated. It does not prove that arbitrary continuous potion offsets, deliberately delayed Ultimates, execute substitutions, or Heavy Attack windows were included. FoundryDock therefore carries the frontier's original proof boundary through the adapter instead of treating successful wiring as theoretical rotation closure.
+
+**Layman's version:** putting every item from one shelf onto a checklist does not prove the whole warehouse was searched.
+
