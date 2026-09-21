@@ -71,3 +71,25 @@ def test_fight_termination_projection_is_catalogued() -> None:
     runner = SERVICE_CATALOG.get("simulation.saved_build_dd")
     assert runner is not None
     assert "simulation.fight_termination" in runner.dependencies
+
+
+
+def test_plan_attacker_state_and_damage_summary_are_catalogued() -> None:
+    attacker = SERVICE_CATALOG.get("simulation.plan_attacker_state")
+    summary = SERVICE_CATALOG.get("simulation.damage_summary")
+    runner = SERVICE_CATALOG.get("simulation.saved_build_dd")
+
+    assert attacker is not None
+    assert attacker.implementation_path == (
+        "services.combat_simulation_plan_attacker_state_service"
+    )
+    assert "combat_simulation_plan_owned_attacker_state" in attacker.responsibilities
+
+    assert summary is not None
+    assert summary.implementation_path == (
+        "services.combat_simulation_damage_summary_service"
+    )
+    assert "combat_simulation_damage_summary" in summary.responsibilities
+
+    assert runner is not None
+    assert "simulation.plan_attacker_state" in runner.dependencies
