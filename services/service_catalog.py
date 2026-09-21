@@ -809,6 +809,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.armor_trait_enchant_frontier",
+        domain="extreme",
+        purpose=(
+            "Count and page the complete modeled armor trait/enchant product for the actually "
+            "equipped armor slots without materializing the full Cartesian product."
+        ),
+        implementation_path="services.extreme_sustained_dps_armor_trait_enchant_frontier_service",
+        inputs=("PlayerBuild",),
+        outputs=("ExtremeSustainedDPSArmorTraitEnchantFrontier",),
+        dependencies=("extreme.sustained_dps.dynamic_axes",),
+        responsibilities=("extreme_sustained_dps_armor_trait_enchant_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Preserves the full modeled denominator lazily and makes no DPS-specific trait/glyph "
+            "dominance assumption. Enchant mutation is limited to slots already at the canonical "
+            "CP160 + Truly Superb static resolver boundary."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.mundus_provisioning_dominance",
         domain="extreme",
         purpose=(
