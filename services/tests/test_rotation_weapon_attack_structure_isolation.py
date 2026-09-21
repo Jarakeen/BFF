@@ -58,7 +58,7 @@ def _context(bar):
 class _StaticContext:
     resolved = True
     unresolved = ()
-    progression = SimpleNamespace(character_id="char-1")
+    progression = SimpleNamespace(character_id="char-1", resolved=True)
     contexts = (_context("front"), _context("back"))
 
 
