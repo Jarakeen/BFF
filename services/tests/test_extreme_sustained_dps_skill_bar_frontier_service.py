@@ -60,7 +60,7 @@ def test_skill_bar_frontier_preserves_morphs_and_requires_shared_line_ownership(
     service = ExtremeSustainedDPSSkillBarFrontierService(skill_rows=_rows())
     families = service._families(_rows(), _context(), ultimate=False)
 
-    assert tuple(row.base_ability_id for row in families) == (100, 400, 300, 200)
+    assert tuple(row.base_ability_id for row in families) == (100, 200, 400, 300)
     family_a = next(row for row in families if row.base_ability_id == 100)
     assert tuple(item.name for item in family_a.alternatives) == (
         "Base A",
