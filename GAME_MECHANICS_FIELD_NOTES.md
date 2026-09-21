@@ -1247,3 +1247,10 @@ Champion Points, potion choice, passive ranks, and skill bars each arrive with a
 ### 2026-09-21 — A coupled dominance proof should stay coupled when promoted
 
 The reviewed Mundus × provisioning search proves a ceiling over the **joint pair**, not two unrelated one-axis optima. FoundryDock therefore promotes that result as one coupled proof covering both canonical axes together. If even one Mundus/food combination remains unresolved, neither axis is marked dominated and no numeric ceiling is promoted.
+
+### 2026-09-21 — Trait search starts after the physical two-bar build exists
+
+Armor, jewelry, and weapon traits or glyphs belong to actual equipped slots. FoundryDock therefore closes front/back set compatibility and materializes the physical gear state first, then searches those slot-level choices on the same evolving build.
+
+**Layman's version:** choose which boots exist before arguing about the enchantment on the boots.
+
