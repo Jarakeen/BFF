@@ -838,3 +838,21 @@ def test_sustained_dps_generated_gear_axis_adapter_preserves_evolving_build() ->
     assert "same evolving materialized build" in service.notes
     assert "fail closed" in service.notes
 
+def test_sustained_dps_generated_rotation_axis_adapter_preserves_proof_scope() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_generated_rotation_axis_adapter"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.generated_rotation_axis_adapter"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.rotation_plan_frontier",
+        "extreme.sustained_dps.rotation_policy_frontier",
+        "extreme.sustained_dps.generated_frontier_wiring",
+    )
+    assert "plan-before-policy dependency" in service.notes
+    assert "does not claim closure" in service.notes
+
