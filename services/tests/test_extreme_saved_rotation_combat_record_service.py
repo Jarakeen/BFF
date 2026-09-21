@@ -105,6 +105,7 @@ def test_sustained_dps_consumes_saved_rotation_and_explicit_target_assumptions()
         target_dead=False,
         killing_source=None,
         complete_damage_evidence=True,
+        unresolved=(),
         damage_unresolved=(),
     )
     service, simulator, summary_service = _service(summary)
@@ -146,6 +147,7 @@ def test_sustained_dps_withholds_record_when_damage_evidence_is_incomplete() -> 
         target_dead=False,
         killing_source=None,
         complete_damage_evidence=False,
+        unresolved=("general simulation warning",),
         damage_unresolved=("periodic damage timing unresolved",),
     )
     service, _simulator, _summary_service = _service(summary)
