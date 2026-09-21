@@ -1216,3 +1216,6 @@ An optimistic upper bound is a shortcut that lets the optimizer skip a branch pr
 
 **Layman's version:** not knowing the safe answer without doing the work means “do the work,” not “the answer can never be known.”
 
+### 2026-09-21 — Skill order can change damage without changing the semi-static action count
+
+Within FoundryDock's generated semi-static seed family, permuting the ordinary skills changes **which** ability lands on each skill step but not the repeating step-kind pattern itself. Over the same horizon and starting route, the number of skill steps is therefore invariant under ordinary-skill permutation. Light-Attack weaving changes the damage-action count, so the weave-on state is included when proving the family maximum. Later Ultimate insertion is different because it can add a new damage action rather than replace an existing skill step.
