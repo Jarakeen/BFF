@@ -412,6 +412,23 @@ class CombatSimulationResult:
                         "combat simulation health change maximum does not match target state"
                     )
                 health_by_recipient[recipient] = after
+            for event in self.events:
+                if event.event_type != "death":
+                    continue
+                payload = event.payload_dict()
+                recipient = str(payload.get("recipient") or "").strip()
+                if not recipient:
+                    raise ValueError(
+                        "combat simulation death event requires recipient identity"
+                    )
+                if recipient not in health_by_recipient:
+                    raise ValueError(
+                        "combat simulation death recipient is not present in target state"
+                    )
+                if health_by_recipient[recipient] != 0:
+                    raise ValueError(
+                        "combat simulation death event requires zero Health state"
+                    )
         initial_bar = str(self.initial_bar or "").strip().casefold()
         final_bar = str(self.final_bar or "").strip().casefold()
         if initial_bar not in {"front", "back"} or final_bar not in {"front", "back"}:
