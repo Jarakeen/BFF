@@ -15,7 +15,10 @@ from services.finch_shared_import_service import (
     list_shared_raid_plans_from_finch,
     list_shared_teams_from_finch,
 )
-from services.finch_shared_provenance_service import format_shared_timestamp
+from services.finch_shared_provenance_service import (
+    FinchSharedProvenanceService,
+    format_shared_timestamp,
+)
 from services.finch_shared_readiness_service import list_shared_readiness_from_finch
 
 
@@ -28,6 +31,7 @@ class FinchCollaborationRow:
     status: str
     summary: str
     route: str
+    context_key: str = ""
     attention_tags: tuple[str, ...] = ()
 
 
@@ -60,6 +64,7 @@ def compose_collaboration_rows(
     raid_plans=(),
     readiness=(),
     coverage=(),
+    provenance: FinchSharedProvenanceService | None = None,
 ) -> tuple[FinchCollaborationRow, ...]:
     rows: list[FinchCollaborationRow] = []
 
@@ -83,6 +88,7 @@ def compose_collaboration_rows(
                 status=provenance,
                 summary=summary,
                 route="roster_workspace",
+                context_key=_clean(getattr(row, "local_key", "")),
                 attention_tags=tuple(tags),
             )
         )
@@ -110,6 +116,7 @@ def compose_collaboration_rows(
                 status=provenance,
                 summary=summary,
                 route="raid_plans",
+                context_key=_clean(getattr(row, "local_key", "")),
                 attention_tags=tuple(tags),
             )
         )
@@ -121,6 +128,15 @@ def compose_collaboration_rows(
         coverage_gaps = int(getattr(row, "coverage_gaps", 0) or 0)
         human_pending = max(0, total - human_ready)
         tags = ("readiness_gaps",) if (build_gaps or coverage_gaps or human_pending) else ()
+        local_copy = (
+            provenance.latest_copy_for(
+                kind="raid_plan",
+                snapshot_key=_clean(getattr(row, "snapshot_key", ""))
+                or _clean(getattr(row, "plan_id", "")),
+            )
+            if provenance is not None
+            else None
+        )
         rows.append(
             FinchCollaborationRow(
                 kind="Readiness",
@@ -133,6 +149,7 @@ def compose_collaboration_rows(
                     f"{build_gaps} build gap(s) • {coverage_gaps} coverage gap(s)"
                 ),
                 route="readiness",
+                context_key=local_copy.local_key if local_copy is not None else "",
                 attention_tags=tags,
             )
         )
@@ -145,6 +162,15 @@ def compose_collaboration_rows(
         duplicates = int(getattr(row, "duplicate_primary", 0) or 0)
         unresolved = int(getattr(row, "unresolved_chairs", 0) or 0)
         tags = ("coverage_gaps",) if (missing or attention or duplicates or unresolved) else ()
+        local_copy = (
+            provenance.latest_copy_for(
+                kind="raid_plan",
+                snapshot_key=_clean(getattr(row, "snapshot_key", ""))
+                or _clean(getattr(row, "plan_id", "")),
+            )
+            if provenance is not None
+            else None
+        )
         rows.append(
             FinchCollaborationRow(
                 kind="Coverage",
@@ -157,6 +183,7 @@ def compose_collaboration_rows(
                     f"{attention} need attention"
                 ),
                 route="console:7",
+                context_key=local_copy.local_key if local_copy is not None else "",
                 attention_tags=tags,
             )
         )
@@ -235,11 +262,15 @@ def load_finch_collaboration_overview(
             values[label] = ()
             errors.append(f"{label}: {type(exc).__name__}: {exc}")
 
+    provenance = FinchSharedProvenanceService(
+        plans_path.parent / "finch_shared_provenance.json"
+    )
     rows = compose_collaboration_rows(
         teams=values["Teams"],
         raid_plans=values["Raid Plans"],
         readiness=values["Readiness"],
         coverage=values["Coverage"],
+        provenance=provenance,
     )
     attention = FinchCollaborationAttentionSummary(
         changed=sum("changed" in row.attention_tags for row in rows),
