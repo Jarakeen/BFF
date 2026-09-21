@@ -46,7 +46,7 @@ def test_replay_verifier_identifies_signature_field_drift() -> None:
     results = iter(
         (
             _result(),
-            _result(final_bar="back", unresolved=("runtime drift",)),
+            _result(unresolved=("runtime drift",), damage_unresolved=("damage drift",)),
         )
     )
 
@@ -56,8 +56,8 @@ def test_replay_verifier_identifies_signature_field_drift() -> None:
 
     assert verification.deterministic is False
     assert verification.differing_signature_fields == (
-        "final_bar",
         "unresolved",
+        "damage_unresolved",
     )
 
 
