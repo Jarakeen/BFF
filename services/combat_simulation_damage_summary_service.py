@@ -120,6 +120,35 @@ class CombatSimulationDamageSummaryService:
             for event in health
             if event.payload_dict().get("origin_event_type") == "outgoing_damage"
         )
+        def damage_coordinate(event) -> tuple[float, int, str, str]:
+            payload = event.payload_dict()
+            return (
+                float(event.time_seconds),
+                int(event.sequence),
+                str(event.source or "").strip(),
+                str(payload.get("recipient") or "").strip(),
+            )
+
+        outgoing_coordinates = {
+            damage_coordinate(event)
+            for event in outgoing
+        }
+        outgoing_health_coordinates = {
+            damage_coordinate(event)
+            for event in outgoing_health
+        }
+        for coordinate in sorted(outgoing_coordinates - outgoing_health_coordinates):
+            time_seconds, sequence, source, recipient = coordinate
+            summary_damage_unresolved.append(
+                f"{source or 'unknown'} outgoing_damage at {time_seconds:g}s "
+                f"sequence {sequence} -> {recipient}: matching Health transition is unavailable"
+            )
+        for coordinate in sorted(outgoing_health_coordinates - outgoing_coordinates):
+            time_seconds, sequence, source, recipient = coordinate
+            summary_damage_unresolved.append(
+                f"{source or 'unknown'} health_change at {time_seconds:g}s "
+                f"sequence {sequence} -> {recipient}: matching raw outgoing damage is unavailable"
+            )
         for event in outgoing_health:
             payload = event.payload_dict()
             source = str(event.source or "unknown").strip() or "unknown"
