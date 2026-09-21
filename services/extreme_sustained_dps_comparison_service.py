@@ -143,12 +143,16 @@ class ExtremeSustainedDPSComparisonService:
 
         all_modeled = all(row.modeled_dps is not None for row in ranked)
         all_complete = all(row.mechanic_complete for row in ranked)
-        horizons = {
-            row.duration_seconds
+        horizons = tuple(
+            float(row.duration_seconds)
             for row in ranked
             if row.duration_seconds is not None
-        }
-        shared_horizon = len(horizons) == 1 and len(horizons) > 0
+        )
+        shared_horizon = (
+            len(horizons) == len(ranked)
+            and bool(horizons)
+            and max(horizons) - min(horizons) <= 1e-9
+        )
         if all_modeled and not shared_horizon:
             unresolved.append(
                 "Candidate execution horizons differ; sustained-DPS winner is withheld"
