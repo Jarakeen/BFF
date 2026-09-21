@@ -527,3 +527,48 @@ def test_kernel_marks_unapplied_outgoing_damage_incomplete_without_target_state(
         "target Health state is required to prove applied damage" in message
         for message in result.damage_unresolved
     )
+
+
+def test_kernel_marks_same_instant_cross_source_outgoing_collision_damage_unresolved() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = _service().simulate(
+        build_snapshot=_snapshot(),
+        plan=_healer_plan(),
+        target_state=state,
+        outgoing_damage=(
+            CombatSimulationOutgoingDamage(
+                time_seconds=3.0,
+                sequence=0,
+                source="Skill A",
+                recipient="Boss",
+                amount=2000.0,
+            ),
+            CombatSimulationOutgoingDamage(
+                time_seconds=3.0,
+                sequence=0,
+                source="Skill B",
+                recipient="Boss",
+                amount=3000.0,
+            ),
+        ),
+    )
+
+    assert any(
+        "Health consequence ordering is unresolved" in message
+        for message in result.damage_unresolved
+    )
+    assert not any(
+        event.event_type == "health_change"
+        and event.payload_dict().get("recipient") == "Boss"
+        for event in result.events
+    )
