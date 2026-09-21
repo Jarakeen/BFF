@@ -46,6 +46,10 @@ class CombatSimulationResourceService:
             resource=resource,
         )
         timeline = projection.run.timeline
+        if timeline.resource is not resource:
+            raise ValueError(
+                "resource timeline identity does not match requested simulation resource"
+            )
 
         events: list[CombatSimulationEvent] = []
         sequence = 0
@@ -70,11 +74,18 @@ class CombatSimulationResourceService:
                     "resource timeline events are not in canonical simulation order"
                 )
             prior_order_key = order_key
-            if int(item.before) != prior_after:
+            before = int(item.before)
+            applied_change = int(item.applied_change)
+            after = int(item.after)
+            if before != prior_after:
                 raise ValueError(
                     "resource timeline before/after chain is inconsistent"
                 )
-            prior_after = int(item.after)
+            if before + applied_change != after:
+                raise ValueError(
+                    "resource timeline event arithmetic is inconsistent"
+                )
+            prior_after = after
 
             events.append(
                 CombatSimulationEvent(
@@ -85,10 +96,10 @@ class CombatSimulationResourceService:
                     source=str(item.source),
                     payload=(
                         ("resource", resource.value),
-                        ("before", int(item.before)),
+                        ("before", before),
                         ("attempted_change", int(item.attempted_change)),
-                        ("applied_change", int(item.applied_change)),
-                        ("after", int(item.after)),
+                        ("applied_change", applied_change),
+                        ("after", after),
                         ("shortfall", int(item.shortfall)),
                         ("wasted_restore", int(item.wasted_restore)),
                     ),
