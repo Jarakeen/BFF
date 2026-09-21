@@ -54,9 +54,9 @@ class ExtremeSustainedDPSDynamicAxisInventoryService:
         "continuous potion-offset and delayed-Ultimate rotation policies",
         "encounter-demand rotation policy families",
         "runtime proc/cooldown/execute state beyond reviewed bridges",
-        "proof-safe dominance/scoring across generated refinement frontiers",
-        "global branch-and-bound frontier search",
-        "proof-safe sustained-DPS upper bound",
+        "strong proof-safe dominance/upper bounds across broad partial generated branches",
+        "full generated frontier wiring into the branch-and-bound coordinator",
+        "proof-safe sustained-DPS theoretical-maximum closure",
     )
 
     def __init__(
