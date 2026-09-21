@@ -690,3 +690,44 @@ def test_zero_outgoing_damage_is_resolved_without_health_loss() -> None:
     assert payload["overkill"] == 0.0
     assert payload["before"] == 10000
     assert payload["after"] == 10000
+
+
+def test_same_instant_cross_source_outgoing_damage_collision_is_damage_unresolved() -> None:
+    first = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="outgoing_damage",
+        source="Skill A",
+        payload=(("recipient", "Boss"), ("amount", 2000.0)),
+    )
+    second = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="outgoing_damage",
+        source="Skill B",
+        payload=(("recipient", "Boss"), ("amount", 3000.0)),
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = CombatSimulationHealthService().project(
+        events=(first, second),
+        target_state=state,
+    )
+
+    assert result.events == ()
+    assert any(
+        "Health consequence ordering is unresolved" in message
+        for message in result.damage_unresolved
+    )
+    assert result.damage_unresolved == result.unresolved
