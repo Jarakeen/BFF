@@ -51,8 +51,7 @@ class ExtremeSustainedDPSDynamicAxisInventoryService:
     )
 
     DEFERRED_AXES = (
-        "cross-axis ownership/context composition",
-        "generated RotationPlan candidates",
+        "Ultimate/potion/execute/Heavy-Attack/encounter-demand rotation policy families",
         "runtime proc/cooldown/execute state beyond reviewed bridges",
         "proof-safe dominance/scoring across generated refinement frontiers",
         "global branch-and-bound frontier search",
