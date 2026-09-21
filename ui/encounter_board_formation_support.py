@@ -310,7 +310,7 @@ def _set_more_tools_visible(board, visible: bool) -> None:
         panel.setVisible(bool(visible))
     button = getattr(board, "raid_map_more_tools_button", None)
     if button is not None:
-        button.setText("Less Tools ▴" if visible else "More Tools ▾")
+        button.setText("Hide Animation ▴" if visible else "To Animate ▾")
 
 
 def install() -> None:
@@ -419,10 +419,10 @@ def install() -> None:
             lambda _checked=False: rotate_rainbow(self, 90.0)
         )
 
-        self.raid_map_more_tools_button = QPushButton("More Tools ▾")
+        self.raid_map_more_tools_button = QPushButton("To Animate ▾")
         self.raid_map_more_tools_button.setCheckable(True)
         self.raid_map_more_tools_button.setToolTip(
-            "Show Timeline, Rename, and Reference controls only when you need them."
+            "Show the animation timeline and playback controls."
         )
 
         panel = QWidget(self)
@@ -438,20 +438,14 @@ def install() -> None:
         row.addStretch(1)
         row.addWidget(self.raid_map_more_tools_button)
 
-        # Keep the normal high-frequency controls visible, but collapse the
-        # four-row Timeline/Edit/Reference block behind one button. The arena
-        # gets the vertical space instead of the toolbar bureaucracy.
+        # Rename and Reference now live in the always-visible top toolbars.
+        # Only animation/timeline controls are collapsed behind To Animate.
         advanced = []
         timeline_combo = getattr(self, "position_timeline_step_combo", None)
         if timeline_combo is not None:
             timeline_panel = _top_level_panel(timeline_combo, self)
             if timeline_panel is not None:
                 advanced.append(timeline_panel)
-        custom_label = getattr(self, "raid_map_custom_label", None)
-        if custom_label is not None:
-            label_panel = _top_level_panel(custom_label, self)
-            if label_panel is not None and label_panel not in advanced:
-                advanced.append(label_panel)
         self._raid_map_advanced_panels = advanced
         self.raid_map_more_tools_button.toggled.connect(
             lambda checked: _set_more_tools_visible(self, checked)
