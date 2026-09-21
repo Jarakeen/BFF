@@ -116,6 +116,7 @@ class CombatSimulationSavedBuildDDService:
         replay_provider = resolution.provider
         execution_plan = plan
         execution_candidate = candidate
+        termination_coordinate: tuple[float, int] | None = None
         if resolution.provider is not None:
             sequential = self.sequential_damage_service.project(
                 plan=plan,
@@ -133,10 +134,14 @@ class CombatSimulationSavedBuildDDService:
                 sequential.terminated_at_seconds is not None
                 and sequential.terminated_at_sequence is not None
             ):
+                termination_coordinate = (
+                    float(sequential.terminated_at_seconds),
+                    int(sequential.terminated_at_sequence),
+                )
                 execution_plan = self.fight_termination_service.truncate(
                     plan,
-                    time_seconds=sequential.terminated_at_seconds,
-                    sequence=sequential.terminated_at_sequence,
+                    time_seconds=termination_coordinate[0],
+                    sequence=termination_coordinate[1],
                 )
                 execution_candidate = GeneratedRotationCandidate(
                     candidate_id=candidate.candidate_id,
@@ -144,6 +149,18 @@ class CombatSimulationSavedBuildDDService:
                     refresh_leads=candidate.refresh_leads,
                     action_claims=candidate.action_claims,
                 )
+
+        def within_execution_boundary(item) -> bool:
+            if termination_coordinate is None:
+                return item.time_seconds <= execution_plan.duration_seconds
+            terminal_time, terminal_sequence = termination_coordinate
+            return (
+                item.time_seconds < terminal_time
+                or (
+                    item.time_seconds == terminal_time
+                    and item.sequence <= terminal_sequence
+                )
+            )
 
         result = self.simulation_service.simulate(
             build_snapshot=build_snapshot,
@@ -153,12 +170,12 @@ class CombatSimulationSavedBuildDDService:
             incoming_damage=tuple(
                 item
                 for item in incoming_damage
-                if item.time_seconds <= execution_plan.duration_seconds
+                if within_execution_boundary(item)
             ),
             outgoing_damage=tuple(
                 item
                 for item in sequential_damage
-                if item.time_seconds <= execution_plan.duration_seconds
+                if within_execution_boundary(item)
             ),
             damage_target_identity=damage_target_identity,
             damage_candidate=execution_candidate,
