@@ -52,6 +52,9 @@ def test_related_records_share_execution_families() -> None:
         assert rows[key].status is ExtremeRecordExecutionStatus.SPECIALIZED
         assert rows[key].execution_family == "resource-timeline"
 
+    assert rows["sustained_dps"].status is ExtremeRecordExecutionStatus.SPECIALIZED
+    assert rows["sustained_dps"].execution_family == "combat-simulation"
+
     for key in ("movement_speed", "sprint_speed", "stealthed_movement_speed"):
         assert rows[key].status is ExtremeRecordExecutionStatus.SPECIALIZED
         assert rows[key].execution_family == "movement-state"
@@ -71,8 +74,8 @@ def test_execution_disposition_counts_make_remaining_work_explicit() -> None:
         counts[row.status] += 1
 
     assert counts[ExtremeRecordExecutionStatus.READY] == 19
-    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 12
-    assert counts[ExtremeRecordExecutionStatus.PENDING] == 1
+    assert counts[ExtremeRecordExecutionStatus.SPECIALIZED] == 13
+    assert counts[ExtremeRecordExecutionStatus.PENDING] == 0
     sustained = ExtremeRecordExecutionCatalogService.descriptor("sustained_dps")
-    assert sustained.status is ExtremeRecordExecutionStatus.PENDING
+    assert sustained.status is ExtremeRecordExecutionStatus.SPECIALIZED
     assert sustained.execution_family == "combat-simulation"
