@@ -1039,6 +1039,42 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_runtime_policy_axis_adapter",
+        domain="extreme",
+        purpose=(
+            "Adapt explicit canonical execute variants and caller-reviewed Heavy Attack "
+            "window families into ordered indexed generated-search axes."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_runtime_policy_axis_adapter_service",
+        inputs=(
+            "ExtremeSustainedDPSRotationPolicyCandidate",
+            "ExecuteRuntimeEvidence",
+            "ReviewedHeavyAttackWindows",
+        ),
+        outputs=(
+            "IndexedFrontierAxes",
+            "ExtremeSustainedDPSGeneratedRuntimePolicyAxisState",
+        ),
+        dependencies=(
+            "extreme.sustained_dps.execute_policy_frontier",
+            "extreme.sustained_dps.heavy_attack_policy_frontier",
+            "extreme.sustained_dps.generated_frontier_wiring",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_generated_runtime_policy_axis_adapter",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Execute policy receives explicit priorities, snapshot resolver, target identity, "
+            "and duration rules. Heavy Attack expansion is recomputed for each selected execute "
+            "candidate from caller-reviewed 1.8-second windows. The supplied finite policy "
+            "families do not establish broader theoretical runtime-policy closure."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_rotation_axis_adapter",
         domain="extreme",
         purpose=(
