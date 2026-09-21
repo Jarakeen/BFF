@@ -265,6 +265,24 @@ class CombatSimulationTargetState:
         )
         if len(set(binding_keys)) != len(binding_keys):
             raise ValueError("simulation recipient binding identities must be unique")
+        object.__setattr__(
+            self,
+            "recipient_bindings",
+            tuple(
+                sorted(
+                    self.recipient_bindings,
+                    key=lambda item: (
+                        float(item.time_seconds),
+                        int(item.sequence),
+                        str(item.event_type),
+                        str(item.source).casefold(),
+                        -1 if item.coefficient_number is None else int(item.coefficient_number),
+                        str(item.effect_name or ""),
+                        tuple(item.recipients),
+                    ),
+                )
+            ),
+        )
 
     def combatant(self, identity: str) -> CombatSimulationCombatant | None:
         wanted = str(identity or "").strip()
@@ -384,6 +402,16 @@ class CombatSimulationResult:
         if any(float(event.time_seconds) > duration_seconds for event in self.events):
             raise ValueError(
                 "combat simulation result cannot contain events beyond its duration"
+            )
+        if (
+            self.target_state is not None
+            and any(
+                float(binding.time_seconds) > duration_seconds
+                for binding in self.target_state.recipient_bindings
+            )
+        ):
+            raise ValueError(
+                "combat simulation recipient binding cannot occur beyond result duration"
             )
         event_keys = tuple(
             (
