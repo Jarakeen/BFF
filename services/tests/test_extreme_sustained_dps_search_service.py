@@ -77,6 +77,7 @@ def test_search_preserves_discovery_exclusions_and_comparison_gaps() -> None:
     exclusion = SimpleNamespace(
         label="Missing Rotation",
         reason="no saved canonical RotationPlan artifact",
+        blocking=True,
     )
     comparison_result = SimpleNamespace(
         comparison_complete=False,
@@ -120,3 +121,35 @@ def test_search_requires_two_eligible_saved_candidates_before_comparison() -> No
     assert result.leader is None
     assert comparison.calls == []
     assert any("at least two eligible" in row for row in result.unresolved)
+
+
+
+def test_search_treats_non_dd_exclusion_as_informational_only() -> None:
+    exclusion = SimpleNamespace(
+        label="Healer Build",
+        reason="saved build is not explicitly DD/DPS role",
+        blocking=False,
+    )
+    comparison_result = SimpleNamespace(
+        comparison_complete=True,
+        leader=SimpleNamespace(label="B"),
+        evidence=("comparison evidence",),
+        unresolved=(),
+    )
+    service = ExtremeSustainedDPSSearchService(
+        "data/eso.db",
+        discovery=_Discovery(
+            (_candidate("A"), _candidate("B")),
+            exclusions=(exclusion,),
+        ),
+        comparison=_Comparison(comparison_result),
+    )
+
+    result = service.search(
+        target_health=21_200_000,
+        target_resistance=18200.0,
+    )
+
+    assert result.search_complete_for_saved_denominator is True
+    assert result.unresolved == ()
+    assert any("Excluded Healer Build" in row for row in result.evidence)
