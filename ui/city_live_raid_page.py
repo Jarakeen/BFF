@@ -289,7 +289,7 @@ class CityLiveRaidPage(FoundryPage):
         self.run_notes_edit.setAcceptRichText(False)
         self.run_notes_edit.setPlaceholderText("Add manual pull notes, reminders, or observations…")
         self.run_notes_edit.setMinimumHeight(120)
-        notes.addWidget(self.run_notes_edit, 1)
+        notes.addWidget(self.run_notes_edit)
         self.save_run_notes_button = QPushButton("Save Run Notes")
         self.save_run_notes_button.setProperty("liveRaidNoteAction", True)
         self.save_run_notes_button.clicked.connect(self._save_run_notes)
