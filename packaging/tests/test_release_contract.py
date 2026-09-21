@@ -297,3 +297,21 @@ def test_release_embeds_sanitized_database_seed_instead_of_live_database() -> No
     assert manifest.SEED_DATAS == (("build/release_seed/eso.db", "_seed_data"),)
     assert '$ReleaseSeedDatabase = Join-Path $ReleaseSeedRoot "eso.db"' in build
     assert 'python tools\\build_release_database_seed.py --source $SourceDatabase --destination $ReleaseSeedDatabase' in build
+
+
+def test_private_updater_package_uses_production_gateway_without_committing_secret() -> None:
+    service = (ROOT / "services" / "application_update_service.py").read_text(encoding="utf-8")
+    release = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
+    friend = (ROOT / "packaging" / "build_friend.ps1").read_text(encoding="utf-8")
+
+    expected_domain = "https://bff-production-30c2.up.railway.app"
+    assert expected_domain in service
+    assert expected_domain in release
+    assert expected_domain in friend
+    assert "FOUNDRYDOCK_UPDATE_ACCESS_KEY" in release
+    assert "FOUNDRYDOCK_UPDATE_ACCESS_KEY" in friend
+    assert 'update_access.json' in release
+    assert 'update_access.json' in friend
+    assert "GITHUB_TOKEN" not in service
+    assert "GITHUB_TOKEN" not in release
+    assert "GITHUB_TOKEN" not in friend
