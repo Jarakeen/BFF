@@ -308,6 +308,26 @@ class CombatSimulationResult:
             raise ValueError(
                 "combat simulation result resource identities must be unique"
             )
+        resource_event_types = {
+            "action_cost",
+            "recovery_tick",
+            "restoration",
+            "resource_maximum",
+        }
+        event_resource_keys = {
+            str(event.payload_dict().get("resource") or "").strip().casefold()
+            for event in self.events
+            if event.event_type in resource_event_types
+        }
+        if "" in event_resource_keys:
+            raise ValueError(
+                "combat simulation resource events require resource identity"
+            )
+        undeclared_resources = event_resource_keys.difference(resource_keys)
+        if undeclared_resources:
+            raise ValueError(
+                "combat simulation resource events require matching resource summaries"
+            )
         initial_bar = str(self.initial_bar or "").strip().casefold()
         final_bar = str(self.final_bar or "").strip().casefold()
         if initial_bar not in {"front", "back"} or final_bar not in {"front", "back"}:
