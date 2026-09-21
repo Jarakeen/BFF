@@ -724,6 +724,35 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.NONE,
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.saved_rotation",
+        domain="extreme",
+        purpose=(
+            "Evaluate one saved DD build and its canonical saved RotationPlan through "
+            "Combat Simulation against explicit target Health/resistance assumptions."
+        ),
+        implementation_path="services.extreme_saved_rotation_combat_record_service",
+        inputs=(
+            "PlayerBuild",
+            "RotationPlan",
+            "TargetHealth",
+            "TargetResistance",
+        ),
+        outputs=("ExtremeSavedRotationSustainedDPSResult",),
+        dependencies=(
+            "combat.simulation.saved_build_dd",
+            "combat.simulation.damage_summary",
+        ),
+        responsibilities=("extreme_saved_rotation_sustained_dps_record",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Produces a constructive saved-build lower bound only. Global Extreme search "
+            "across alternate legal builds and rotations remains a separate optimization responsibility."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="combat.simulation.snapshot",
         domain="combat",
         purpose=(
