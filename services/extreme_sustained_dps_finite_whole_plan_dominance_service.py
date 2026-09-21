@@ -204,6 +204,7 @@ class ExtremeSustainedDPSFiniteWholePlanDominanceService:
             source=str(source or "").strip() or "finite whole-plan dominance",
             dominated_axes=tuple(axes) if complete else (),
             unresolved=deduped,
+            omitted_scope=omitted,
         )
         bound = ExtremeSustainedDPSBoundEvidence(
             candidate_key=key,
