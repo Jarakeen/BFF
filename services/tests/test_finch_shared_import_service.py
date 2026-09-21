@@ -41,7 +41,7 @@ class FakeClient:
         self.plan = FinchSharedSnapshot(
             kind="raid_plan",
             snapshot_key="rg-pm",
-            schema_version=1,
+            schema_version=2,
             payload={
                 "plan_id": "rg-pm",
                 "name": "Performance Mode RG",
@@ -56,6 +56,9 @@ class FakeClient:
                         "character_name": "Rylos Arcanist",
                         "role": "Damage Dealer",
                         "eso_class": "Arcanist",
+                        "primary_assignment": "Major Courage",
+                        "secondary_assignment": "Minor Toughness",
+                        "utility_assignments": ["Portal", "Interrupt"],
                     }
                 ],
             },
@@ -129,6 +132,9 @@ def test_shared_raid_plan_decodes_without_local_identity_or_build_state(tmp_path
     assert plan.members[0].player_id is None
     assert plan.members[0].character_id is None
     assert plan.members[0].selected_build_id is None
+    assert plan.members[0].primary_assignment == "Major Courage"
+    assert plan.members[0].secondary_assignment == "Minor Toughness"
+    assert plan.members[0].utility_assignments == ("Portal", "Interrupt")
     assert repository.list_plans() == ()
     assert roster.list_members() == []
 
@@ -161,3 +167,33 @@ def test_repeated_shared_imports_increment_local_copy_identity(tmp_path) -> None
     assert second_plan.plan_id == "rg-pm-shared-copy-2"
     assert repository.get("rg-pm-shared-copy") == first_plan
     assert repository.get("rg-pm-shared-copy-2") == second_plan
+
+
+def test_legacy_v1_shared_raid_plan_remains_readable(tmp_path) -> None:
+    _db, _roster, _repository, service = _service(tmp_path)
+    service.client.plan = FinchSharedSnapshot(
+        kind="raid_plan",
+        snapshot_key="legacy-plan",
+        schema_version=1,
+        payload={
+            "plan_id": "legacy-plan",
+            "name": "Legacy Shared Plan",
+            "trial_id": "sunspire",
+            "members": [
+                {
+                    "seat_id": "healer-1",
+                    "gamertag": "LegacyHealer",
+                    "role": "Healer",
+                    "eso_class": "Warden",
+                }
+            ],
+        },
+        published_by="BFF",
+        updated_at="2026-09-20T00:00:00+00:00",
+    )
+
+    plan = service.decoded_raid_plan("rg-pm")
+
+    assert plan.plan_id == "legacy-plan"
+    assert plan.members[0].primary_assignment is None
+    assert plan.members[0].utility_assignments == ()
