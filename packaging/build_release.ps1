@@ -197,7 +197,7 @@ try {
     # the in-place update archive.
     $UpdateBaseUrl = $env:FOUNDRYDOCK_UPDATE_BASE_URL
     $UpdateAccessKey = $env:FOUNDRYDOCK_UPDATE_ACCESS_KEY
-    if (-not [string]::IsNullOrWhiteSpace($UpdateBaseUrl) -and -not [string]::IsNullOrWhiteSpace($UpdateAccessKey)) {
+    if (-not [string]::IsNullOrWhiteSpace($UpdateAccessKey)) {
         $UpdateAccess = @{
             base_url = $UpdateBaseUrl.TrimEnd('/')
             access_key = $UpdateAccessKey
