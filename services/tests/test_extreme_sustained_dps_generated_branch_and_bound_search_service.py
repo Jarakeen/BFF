@@ -157,3 +157,25 @@ def test_duplicate_branch_identity_is_blocking_evidence() -> None:
 
     assert result.global_maximum_proven is False
     assert any("Duplicate generated search branch identity" in row for row in result.unresolved)
+
+def test_forced_open_bound_diagnostic_does_not_poison_exact_leaf_proof() -> None:
+    result = ExtremeSustainedDPSGeneratedBranchAndBoundSearchService.search(
+        (
+            _branch(
+                "leaf",
+                None,
+                safe=False,
+                leaf=True,
+                unresolved=("optimistic action ceiling is unavailable",),
+            ),
+        ),
+        expand_branch=lambda _branch: (),
+        evaluate_leaf=_leaf_eval({"leaf": 88.0}),
+        required_duration_seconds=10.0,
+    )
+
+    assert result.forced_open_branch_count == 1
+    assert result.best_modeled_dps == 88.0
+    assert result.global_maximum_proven is True
+    assert result.unresolved == ()
+
