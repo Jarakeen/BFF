@@ -875,6 +875,33 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.finite_axis_frontier_adapter",
+        domain="extreme",
+        purpose=(
+            "Expose complete generated Champion Point, passive-rank, and dual-bar named-gear "
+            "frontiers through the indexed finite-axis dominance contract without eager materialization."
+        ),
+        implementation_path="services.extreme_sustained_dps_finite_axis_frontier_adapter_service",
+        inputs=("GeneratedFiniteFrontier", "BaselineBuildOrProgression"),
+        outputs=("ExtremeSustainedDPSIndexedChoiceAdapter",),
+        dependencies=(
+            "extreme.sustained_dps.champion_point_frontier",
+            "extreme.sustained_dps.passive_rank_frontier",
+            "extreme.sustained_dps.dual_bar_gear_frontier",
+            "extreme.sustained_dps.finite_axis_action_dominance",
+        ),
+        responsibilities=("extreme_sustained_dps_finite_axis_frontier_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Adapters expose choice_count + choice_at(index) and preserve the source frontier's "
+            "denominator proof. CP maps to champion_points, passive ranks to passive_ranks, and "
+            "dual-bar named gear to gear_topology + named_gear_realization. Choices are materialized one at a time."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.finite_axis_action_dominance",
         domain="extreme",
         purpose=(
