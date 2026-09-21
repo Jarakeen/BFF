@@ -52,6 +52,9 @@ from services.rotation_candidate_ultimate_damage_evidence_service import (
 from services.rotation_dd_output_context_relevance_service import (
     RotationDDOutputContextRelevanceService,
 )
+from services.rotation_dd_relevant_static_context_service import (
+    RotationDDRelevantStaticContextService,
+)
 from services.rotation_dd_periodic_runtime_semantics_registry_service import (
     RotationDDPeriodicRuntimeSemanticsRegistryService,
 )
@@ -566,14 +569,17 @@ class CombatSimulationSavedBuildDDProviderService:
             if database_path is not None
             else get_data_dir() / "eso.db"
         )
-        self.static_context_service = (
-            static_context_service or RotationStaticBuildContextService()
+        static_delegate = static_context_service or RotationStaticBuildContextService()
+        self.static_context_service = RotationDDRelevantStaticContextService(
+            static_delegate,
+            relevance_service=(
+                relevance_service or RotationDDOutputContextRelevanceService()
+            ),
         )
         self.weapon_evaluation_service = (
             weapon_evaluation_service
             or RotationSavedBuildWeaponAttackEvaluationService(self.database_path)
         )
-        self.relevance_service = relevance_service or RotationDDOutputContextRelevanceService()
 
     def resolve(
         self,
@@ -598,9 +604,7 @@ class CombatSimulationSavedBuildDDProviderService:
                 ),
             )
 
-        static_context = self.static_context_service.resolve(player_build)
-        relevance = self.relevance_service.classify(static_context.unresolved)
-        filtered = replace(static_context, unresolved=tuple(relevance.relevant))
+        filtered = self.static_context_service.resolve(player_build)
         if not filtered.resolved:
             unresolved = tuple(filtered.unresolved)
             if not filtered.progression.resolved and not unresolved:
