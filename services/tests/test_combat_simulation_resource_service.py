@@ -374,3 +374,37 @@ def test_resource_adapter_rejects_summary_ending_mismatch() -> None:
         assert "ending amount does not match final event state" in str(exc)
     else:
         raise AssertionError("Expected mismatched resource ending amount to fail closed")
+
+
+class _EmptyButChangedSustainService:
+    def evaluate(self, *, build, plan, resource):
+        assert build.Name == "Magrat"
+        assert plan.build_name == "DF Healer"
+        assert resource is ResourceType.MAGICKA
+        timeline = ResourceTimelineResult(
+            resource=ResourceType.MAGICKA,
+            starting_amount=30000,
+            ending_amount=29000,
+            events=(),
+            starting_maximum=30000,
+            ending_maximum=30000,
+        )
+        return SimpleNamespace(
+            run=SimpleNamespace(timeline=timeline),
+            unresolved=(),
+        )
+
+
+def test_resource_adapter_rejects_unexplained_change_without_events() -> None:
+    try:
+        CombatSimulationResourceService(
+            sustain_service=_EmptyButChangedSustainService()
+        ).project(
+            build=_snapshot().materialize(),
+            plan=_plan(),
+            resource=ResourceType.MAGICKA,
+        )
+    except ValueError as exc:
+        assert "ending amount does not match final event state" in str(exc)
+    else:
+        raise AssertionError("Expected unexplained resource change to fail closed")
