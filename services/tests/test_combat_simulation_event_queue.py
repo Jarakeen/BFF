@@ -127,3 +127,41 @@ def test_recipient_binding_rejects_non_finite_time() -> None:
             assert "finite and non-negative" in str(exc)
         else:
             raise AssertionError("Expected non-finite recipient binding time to fail closed")
+
+
+def test_combat_simulation_event_rejects_invalid_payload_shape_and_keys() -> None:
+    bad_payloads = (
+        (("recipient", "Boss"), ("recipient", "Other")),
+        (("", "Boss"),),
+        (("recipient", "Boss", "extra"),),
+    )
+
+    for payload in bad_payloads:
+        try:
+            CombatSimulationEvent(
+                time_seconds=1.0,
+                priority=int(SimulationEventPriority.DIRECT_RESULT),
+                sequence=0,
+                event_type="outgoing_damage",
+                source="Skill",
+                payload=payload,
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Expected invalid event payload to fail closed")
+
+
+def test_combat_simulation_event_rejects_negative_priority() -> None:
+    try:
+        CombatSimulationEvent(
+            time_seconds=1.0,
+            priority=-1,
+            sequence=0,
+            event_type="action",
+            source="Invalid",
+        )
+    except ValueError as exc:
+        assert "priority cannot be negative" in str(exc)
+    else:
+        raise AssertionError("Expected negative event priority to fail closed")
