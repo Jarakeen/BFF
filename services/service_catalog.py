@@ -831,6 +831,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.structural_action_upper_bound",
+        domain="extreme",
+        purpose=(
+            "Convert a proven maximum damage-bearing action count and a proven absolute "
+            "per-action total-damage ceiling into a branch sustained-DPS upper bound."
+        ),
+        implementation_path="services.extreme_sustained_dps_structural_action_upper_bound_service",
+        inputs=("CandidateKey", "ExactDuration", "DamageActionCountProof", "AbsoluteActionDamageCeiling"),
+        outputs=("ExtremeSustainedDPSStructuralActionCeiling",),
+        dependencies=("extreme.sustained_dps.pruning",),
+        responsibilities=("extreme_sustained_dps_structural_action_upper_bound",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Arithmetic only. It infers no ESO action rate or damage formula. The action ceiling "
+            "must already cover all direct, periodic, and triggered consequences attributable "
+            "to one scheduled damage action inside the same horizon."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.partial_branch_upper_bound",
         domain="extreme",
         purpose=(
