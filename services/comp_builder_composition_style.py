@@ -56,7 +56,7 @@ _POLICIES = {
         style=CompCompositionStyle.OFF_META,
         label="Off-Meta Discovery",
         description=(
-            "Actively surface unusual evidence-backed roster/build options while keeping player uniqueness, chair fit, locked decisions, and assigned provider responsibilities intact."
+            "Actively surface unusual evidence-backed roster/build options while keeping player uniqueness, chair fit, locked decisions, and required providers intact."
         ),
         prefer_saved_builds=False,
         novelty_weight=1.5,
