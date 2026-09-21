@@ -875,6 +875,27 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_whole_plan_choice_evaluator",
+        domain="extreme",
+        purpose=(
+            "Evaluate generated dynamic plan choices against one fixed build/progression/gear/runtime/target witness "
+            "through the canonical generated sustained-DPS Combat Simulation path."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_whole_plan_choice_evaluator_service",
+        inputs=("WholePlanRuntimeScenario", "DynamicPlanChoice"),
+        outputs=("ExtremeSustainedDPSWholePlanEvaluation",),
+        dependencies=("extreme.sustained_dps.generated_runtime_evaluation",),
+        responsibilities=("extreme_sustained_dps_generated_whole_plan_choice_evaluator",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Holds build, explicit progression, dual-bar gear, authoritative runtime history, and target assumptions fixed. "
+            "Only the legal plan choice and its initial bar vary. Combat mechanics remain owned by generated runtime evaluation."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.finite_whole_plan_dominance",
         domain="extreme",
         purpose=(
