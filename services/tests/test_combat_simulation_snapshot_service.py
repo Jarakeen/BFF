@@ -771,3 +771,47 @@ def test_snapshot_model_rejects_invalid_bar_and_duplicate_identities() -> None:
             pass
         else:
             raise AssertionError("Expected invalid combat snapshot to fail closed")
+
+
+def test_snapshot_model_rejects_health_identity_or_maximum_mismatch_with_target_state() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+        )
+    )
+
+    bad_health_rows = (
+        CombatSimulationHealthSnapshot(
+            "Tank 2",
+            20000,
+            25000,
+            False,
+        ),
+        CombatSimulationHealthSnapshot(
+            "Tank 1",
+            20000,
+            24000,
+            False,
+        ),
+    )
+
+    for health in bad_health_rows:
+        try:
+            CombatSimulationSnapshot(
+                time_seconds=1.0,
+                active_bar="front",
+                resources=(),
+                health=(health,),
+                target_state=state,
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(
+                "Expected snapshot Health/target-state mismatch to fail closed"
+            )
