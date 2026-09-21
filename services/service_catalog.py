@@ -875,6 +875,30 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.mundus_provisioning_proof_adapter",
+        domain="extreme",
+        purpose=(
+            "Translate a complete joint Mundus × provisioning finite-grid dominance result "
+            "into canonical mutation-axis coverage and an absolute per-action damage ceiling."
+        ),
+        implementation_path="services.extreme_sustained_dps_mundus_provisioning_proof_adapter_service",
+        inputs=("ExtremeSustainedDPSMundusProvisioningDominanceResult",),
+        outputs=("ExtremeSustainedDPSMundusProvisioningProofAdapterResult",),
+        dependencies=(
+            "extreme.sustained_dps.mundus_provisioning_dominance",
+            "extreme.sustained_dps.axis_dominance_composition",
+        ),
+        responsibilities=("extreme_sustained_dps_mundus_provisioning_proof_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Promotes mundus+food only as one coupled proof. Incomplete joint denominators "
+            "promote neither canonical axis coverage nor numeric action ceiling."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.axis_dominance_composition",
         domain="extreme",
         purpose=(
