@@ -37,3 +37,22 @@ def test_finch_collaboration_route_is_registered_in_phase14_team_navigation() ->
     assert 'from ui.finch_collaboration_page import FinchCollaborationPage' in support
     assert '_register_page(window, "finch_collaboration", finch_collaboration)' in support
     assert "finch_collaboration.pageRequested.connect(window.show_page)" in support
+
+
+def test_finch_collaboration_page_exposes_attention_filters_and_counts() -> None:
+    source = _source("ui/finch_collaboration_page.py")
+
+    for label in (
+        "All Shared",
+        "Changed Since Copy",
+        "Not Copied",
+        "Readiness Gaps",
+        "Coverage Gaps",
+    ):
+        assert label in source
+
+    assert 'self.changed_label = QLabel("Changed since copy: 0")' in source
+    assert 'self.not_copied_label = QLabel("Not copied: 0")' in source
+    assert 'self.readiness_gap_label = QLabel("Readiness gaps: 0")' in source
+    assert 'self.coverage_gap_label = QLabel("Coverage gaps: 0")' in source
+    assert "tag in row.attention_tags" in source
