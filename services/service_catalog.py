@@ -944,6 +944,36 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.objective32_search",
+        domain="extreme",
+        purpose=(
+            "Run generated sustained-DPS search and produce one end-to-end Objective #32 result that keeps finite-denominator proof separate from theoretical maximum closure."
+        ),
+        implementation_path="services.extreme_sustained_dps_objective32_search_service",
+        inputs=(
+            "GeneratedAxisPipelineRoot",
+            "CanonicalAxisCoverageProofs",
+            "OptionalProvenLocalRuntimeStateFrontier",
+            "ExplicitTargetScenario",
+        ),
+        outputs=("ExtremeSustainedDPSObjective32SearchResult",),
+        dependencies=(
+            "extreme.sustained_dps.generated_axis_pipeline_search",
+            "extreme.sustained_dps.generated_runtime_state_axis_adapter",
+            "extreme.sustained_dps.axis_dominance_composition",
+            "extreme.sustained_dps.theoretical_maximum_closure",
+        ),
+        responsibilities=("extreme_sustained_dps_objective32_search",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The wrapper does not invent coverage. Callers supply proof objects for searched axes; a supplied local runtime frontier contributes only its proven runtime_state coverage. "
+            "The result reports finite-tree completion and theoretical Objective #32 closure as distinct facts."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_runtime_state_axis_adapter",
         domain="extreme",
         purpose=(
