@@ -1237,3 +1237,10 @@ A search does not need to create every possible build in memory at once to remai
 ### 2026-09-21 — Dominating an axis and bounding its damage are different proofs
 
 Proving that a search branch has fully accounted for an axis such as Champion Points or Mundus does **not** by itself prove how much damage that axis can add. FoundryDock now tracks axis coverage separately from numeric optimistic damage. Coverage proofs may be unioned across independent authorities; the action-bound layer still requires its own safe multiplier or absolute ceiling before pruning can use that coverage.
+
+### 2026-09-21 — Late search axes must meet before they alter one build
+
+Champion Points, potion choice, passive ranks, and skill bars each arrive with a convenient candidate snapshot, but those snapshots were created from different baselines. Applying each whole snapshot in sequence can erase an earlier choice, so FoundryDock keeps the selections separate and assembles only their owned fields after all four coordinates are known.
+
+**Layman's version:** four people can edit four sections of the same form, but passing around four complete photocopies means the last photocopy wins.
+
