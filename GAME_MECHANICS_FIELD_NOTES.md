@@ -1270,3 +1270,9 @@ A reviewed Heavy Attack window names an exact scheduled ordinary-skill slot. An 
 
 **Layman's version:** after changing the schedule, recheck which appointment slots are still valid.
 
+### 2026-09-21 — Axis lists compose only when their state transitions compose
+
+Two generated frontiers may each expose a valid indexed axis, yet their axis tuples cannot be concatenated if the downstream frontier expects a different state type. The completed gear state must yield the cross-axis context, the completed late state must yield the assembled build, and the completed rotation state must yield the selected policy plan. FoundryDock now makes those transitions explicit and clears downstream selections whenever an upstream coordinate changes.
+
+**Layman's version:** a relay team needs handoffs, not merely four runners listed on the same sheet.
+
