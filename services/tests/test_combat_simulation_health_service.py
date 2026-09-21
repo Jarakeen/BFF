@@ -799,3 +799,69 @@ def test_raw_non_finite_heal_fails_closed_without_damage_unresolved() -> None:
         assert result.events == ()
         assert result.damage_unresolved == ()
         assert any("modeled_heal must be finite" in message for message in result.unresolved)
+
+
+def test_raw_non_numeric_damage_fails_closed() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="outgoing_damage",
+        source="Invalid Damage",
+        payload=(
+            ("recipient", "Boss"),
+            ("amount", "banana"),
+        ),
+    )
+
+    result = CombatSimulationHealthService().project(
+        events=(event,),
+        target_state=state,
+    )
+
+    assert result.events == ()
+    assert result.damage_unresolved
+    assert any("damage amount must be numeric" in message for message in result.damage_unresolved)
+
+
+def test_raw_non_numeric_heal_fails_closed() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+        )
+    )
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="direct_heal",
+        source="Invalid Heal",
+        payload=(
+            ("modeled_heal", "banana"),
+            ("recipients", ("Tank 1",)),
+        ),
+    )
+
+    result = CombatSimulationHealthService().project(
+        events=(event,),
+        target_state=state,
+    )
+
+    assert result.events == ()
+    assert result.damage_unresolved == ()
+    assert any("modeled_heal must be numeric" in message for message in result.unresolved)
