@@ -29,8 +29,30 @@ if (Test-Path $BuildRoot) {
     Remove-Item $BuildRoot -Recurse -Force
 }
 
+# BFF.spec embeds the same privacy-safe database seed used by the release build.
+# Recreate it after cleaning build/ and before invoking PyInstaller.
+$SourceDatabase = Join-Path $ProjectRoot "data\eso.db"
+if (-not (Test-Path $SourceDatabase)) {
+    throw "Source database not found: $SourceDatabase"
+}
+$ReleaseSeedRoot = Join-Path $BuildRoot "release_seed"
+$ReleaseSeedDatabase = Join-Path $ReleaseSeedRoot "eso.db"
+New-Item -ItemType Directory -Force -Path $ReleaseSeedRoot | Out-Null
+
+Write-Host "Creating privacy-safe release database seed..."
+python tools\build_release_database_seed.py --source $SourceDatabase --destination $ReleaseSeedDatabase
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not create sanitized release database seed."
+}
+if (-not (Test-Path $ReleaseSeedDatabase)) {
+    throw "Sanitized release database seed was not created: $ReleaseSeedDatabase"
+}
+
 Write-Host "Building $ExeName..."
 python -m PyInstaller --clean $SpecPath
+if ($LASTEXITCODE -ne 0) {
+    throw "PyInstaller failed."
+}
 
 $BuiltExe = Join-Path $DistRoot $ExeName
 if (-not (Test-Path $BuiltExe)) {
@@ -43,14 +65,10 @@ New-Item -ItemType Directory -Force -Path $DataRoot | Out-Null
 
 Move-Item $BuiltExe (Join-Path $PackageRoot $ExeName) -Force
 
-# The reference DB remains external and writable. engine.config resolves data/
-# beside the executable when frozen.
-$SourceDatabase = Join-Path $ProjectRoot "data\eso.db"
+# First install gets a writable privacy-safe DB seed. Never ship the
+# developer's live eso.db in a tester package.
 $TargetDatabase = Join-Path $DataRoot "eso.db"
-if (-not (Test-Path $SourceDatabase)) {
-    throw "Source database not found: $SourceDatabase"
-}
-Copy-Item $SourceDatabase $TargetDatabase -Force
+Copy-Item $ReleaseSeedDatabase $TargetDatabase -Force
 
 # Copy useful non-database reference files while deliberately excluding the
 # developer's personal/session state. New users get a clean Builds roster.
