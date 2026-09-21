@@ -1066,3 +1066,66 @@ def test_combat_simulation_result_rejects_healing_excess_arithmetic_mismatch() -
         assert "healing overheal arithmetic is inconsistent" in str(exc)
     else:
         raise AssertionError("Expected invalid overheal arithmetic to fail closed")
+
+
+def test_combat_simulation_result_rejects_bad_resource_shortfall_evidence() -> None:
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.RESOURCE_COST),
+        sequence=0,
+        event_type="action_cost",
+        source="Too Expensive",
+        payload=(
+            ("resource", "magicka"),
+            ("before", 1000),
+            ("attempted_change", -1500),
+            ("applied_change", -1000),
+            ("after", 0),
+            ("shortfall", 400),
+            ("wasted_restore", 0),
+        ),
+    )
+    summary = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=1000,
+        ending_amount=0,
+        total_shortfall=400,
+    )
+
+    try:
+        _result(events=(event,), resources=(summary,))
+    except ValueError as exc:
+        assert "shortfall arithmetic is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected invalid result shortfall evidence to fail closed")
+
+
+def test_combat_simulation_result_rejects_bad_resource_restore_evidence() -> None:
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.RESOURCE_RESTORE),
+        sequence=0,
+        event_type="recovery_tick",
+        source="Recovery",
+        payload=(
+            ("resource", "magicka"),
+            ("before", 29000),
+            ("attempted_change", 1600),
+            ("applied_change", 1000),
+            ("after", 30000),
+            ("shortfall", 0),
+            ("wasted_restore", 500),
+        ),
+    )
+    summary = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=29000,
+        ending_amount=30000,
+    )
+
+    try:
+        _result(events=(event,), resources=(summary,))
+    except ValueError as exc:
+        assert "wasted restore arithmetic is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected invalid result restore evidence to fail closed")
