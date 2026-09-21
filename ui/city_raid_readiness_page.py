@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import DEFAULT_DATABASE, get_data_dir, get_resource_path
 from models.raid_plan import RaidPlan, RaidPlanMember
+from services.finch_shared_provenance_service import format_shared_timestamp
 from services.finch_shared_readiness_service import (
     list_shared_readiness_from_finch,
     publish_readiness_to_finch,
@@ -344,7 +345,9 @@ class CityRaidReadinessPage(FoundryPage):
         labels = [
             (
                 f"{row.name or row.plan_id} • {row.trial_id or 'Trial unknown'} • "
-                f"{row.human_ready}/{row.total} human ready"
+                f"{row.human_ready}/{row.total} human ready • "
+                f"{row.published_by or 'Unknown publisher'} • "
+                f"{format_shared_timestamp(row.updated_at)}"
             )
             for row in previews
         ]
@@ -373,7 +376,7 @@ class CityRaidReadinessPage(FoundryPage):
                 f"Trial: {row.trial_id or 'Unknown'}\n"
                 f"Team: {row.team_name or 'Not set'}\n"
                 f"Published by: {row.published_by or 'Unknown'}\n"
-                f"Updated: {row.updated_at or 'Unknown'}\n\n"
+                f"Updated: {format_shared_timestamp(row.updated_at)}\n\n"
                 f"Builds: {row.build_ready} ready, {row.build_planned} planned, "
                 f"{row.build_gaps} gaps\n"
                 f"Assignments: {row.assignment_ready}/{row.total} assigned\n"
