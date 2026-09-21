@@ -819,13 +819,38 @@ class CityLiveRaidPage(FoundryPage):
         self.timer_label.setText(f"{minutes:02d}:{second:02d}")
         self._render_encounter_context()
 
+    def _encounter_label(self, encounter_id: str) -> str:
+        wanted = _clean(encounter_id)
+        if not wanted:
+            return "Trial / General"
+        for index in range(self.encounter_combo.count()):
+            if _clean(self.encounter_combo.itemData(index)) == wanted:
+                text = _clean(self.encounter_combo.itemText(index))
+                return text.removeprefix("Encounter: ").strip() or wanted
+        return wanted
+
+    @staticmethod
+    def _duration_label(seconds: int | None) -> str:
+        if seconds is None:
+            return "active"
+        minutes, second = divmod(max(0, int(seconds)), 60)
+        return f"{minutes:02d}:{second:02d}"
+
     def _refresh_events(self) -> None:
         if self._plan is None:
             return
-        rows = self.user_state.events(self._plan.plan_id, limit=9)
-        self.events_label.setText(
-            "\n".join(f"{event.evidence}  {event.text}" for event in rows) or "No manual run events yet."
-        )
+        attempts = self.user_state.attempt_history(self._plan.plan_id)[:4]
+        attempt_lines = [
+            (
+                f"ATTEMPT #{row.attempt} • {self._encounter_label(row.encounter_id)} • "
+                f"{self._duration_label(row.duration_seconds)}"
+            )
+            for row in attempts
+        ]
+        rows = self.user_state.events(self._plan.plan_id, limit=5)
+        event_lines = [f"{event.evidence}  {event.text}" for event in rows]
+        lines = attempt_lines + event_lines
+        self.events_label.setText("\n".join(lines) or "No manual run events yet.")
 
     def _save_run_notes(self) -> None:
         if self._plan is None:
@@ -842,6 +867,7 @@ class CityLiveRaidPage(FoundryPage):
             notes=notes,
             started_at=_clean(state.get("started_at")),
             ended_at=_clean(state.get("ended_at")),
+            encounter_id=_clean(state.get("encounter_id")),
         )
         if archived is None:
             self.status.info("Blank notes cleared from the active Raid Plan.")
@@ -854,7 +880,10 @@ class CityLiveRaidPage(FoundryPage):
         if self._plan is None:
             self.status.warning("Select a Raid Plan before starting a pull.")
             return
-        self.user_state.start_pull(self._plan.plan_id)
+        self.user_state.start_pull(
+            self._plan.plan_id,
+            encounter_id=_clean(self.encounter_combo.currentData()),
+        )
         self._refresh_run_state()
         self._refresh_events()
 
