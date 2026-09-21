@@ -65,7 +65,7 @@ class ApplicationUpdateService:
 
     @staticmethod
     def _load_update_access() -> tuple[str, str]:
-        base_url = str(os.environ.get("FOUNDRYDOCK_UPDATE_BASE_URL") or DEFAULT_UPDATE_GATEWAY_BASE_URL).strip().rstrip("/")
+        base_url = str(os.environ.get("FOUNDRYDOCK_UPDATE_BASE_URL") or "").strip().rstrip("/")
         access_key = str(os.environ.get("FOUNDRYDOCK_UPDATE_ACCESS_KEY") or "").strip()
         config_path = Path(get_app_root()) / UPDATE_ACCESS_FILE
         if config_path.is_file():
@@ -75,6 +75,8 @@ class ApplicationUpdateService:
                 payload = {}
             base_url = str(payload.get("base_url") or base_url).strip().rstrip("/")
             access_key = str(payload.get("access_key") or access_key).strip()
+        if access_key and not base_url:
+            base_url = DEFAULT_UPDATE_GATEWAY_BASE_URL
         return base_url, access_key
 
     def _headers(self, *, binary: bool = False) -> dict[str, str]:
