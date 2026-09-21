@@ -1288,3 +1288,6 @@ The named-gear witness owns the selected weapon slots' set names and weapon type
 
 **Layman's version:** relabeling the weapon rack should not strip the enchantment off the weapon.
 
+### 2026-09-21 — Finite-axis dominance only works when the compared action stays the same action
+
+When FoundryDock varies CP, passive ranks, gear, or another finite axis to bound one scheduled action, every candidate must resolve the **same timestamp/sequence action coordinate**. If changing the axis changes which scheduled action is being measured, those numbers are not one comparable dominance grid. Coordinate drift therefore blocks both axis-coverage promotion and the numeric action ceiling.
