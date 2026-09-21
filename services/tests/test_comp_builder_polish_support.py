@@ -57,7 +57,7 @@ def test_polish_uses_build_catalog_role_language_and_circle_check_icon() -> None
     assert 'details.set_title("Selected Player / Build Recommendation")' in source
     assert 'card.set_icon("←")' in source
     assert '"▼ BUILD OPTIONS' in source
-    assert '"Choose what this player or Recruit slot should run"' in source
+    assert "Choose what this player or Recruit slot should run" in source
     assert "Keep the assignment cue in player/slot language" in source
     assert 'icon_label("circle-check", 15)' in source
     assert '"Load the team, select a player or Recruit slot"' in source
