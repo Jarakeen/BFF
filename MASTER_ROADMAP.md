@@ -1363,20 +1363,32 @@ Focused validation:
 
 **Phase 14J explicit death state status: green.**
 
-### Phase 14 closeout checkpoint — 2026-09-21
+### Phase 14 closeout checkpoint — 2026-09-20
 
 Dedicated closeout validation:
 
-- **198 passed in 6.22s**
-- deterministic event ordering and replay are green;
-- canonical resource, healing, reviewed skill-effect, and recipient-binding paths are
-  integrated through the main simulation;
-- Health, incoming/outgoing damage, death state, exact-time snapshots, and fight
-  termination are green;
-- saved-build DD simulation and sequential target-Health feedback are included in the
-  closeout gate;
+- **201 passed in 12.77s** across the focused Combat Simulation gate;
+- deterministic event ordering, canonical replay signatures, and exact-time snapshot
+  projection are green;
+- canonical resource, healing, reviewed skill-effect, recipient-binding, and DD damage
+  paths are integrated through the main simulation;
+- result-level resource summaries must reconcile with event continuity, shortfall,
+  restore-waste, and same-time resource-maximum ordering evidence;
+- Health transitions must reconcile before/after state, attempted/applied damage or
+  healing, overkill/overheal, lethal attribution, and no-resurrection semantics;
+- Damage Summary preserves proven partial totals but withholds modeled DPS whenever
+  damage-relevant evidence is incomplete, while keeping unrelated unresolved evidence
+  separate;
+- Health, incoming/outgoing damage, death state, exact-time snapshots, fight termination,
+  saved-build DD simulation, sequential target-Health feedback, and occurrence-level
+  periodic damage are included in the closeout gate;
+- canonical Combat Simulation kernel, saved-build DD bridge, Damage Summary, deterministic
+  replay, and snapshot responsibilities are registered in the service catalog so no
+  parallel authority is implied by discovery metadata;
 - unsupported mechanics remain explicit unresolved evidence rather than silently
-  improving modeled outcomes.
+  improving modeled outcomes;
+- real saved-build DD end-to-end audit remains data-gated when no actual saved DD/DPS
+  build exists; audit completion must not fabricate one.
 
 **Phase 14 Combat Simulation status: COMPLETE / GREEN.**
 
