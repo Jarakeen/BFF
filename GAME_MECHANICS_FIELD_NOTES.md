@@ -1085,3 +1085,7 @@ Combat Simulation reuses the established resource-timeline rule that action cost
 **Layman's version:** if a skill costs Magicka at the same instant a recovery tick lands, BFF cannot let one subsystem say the tick happened first while another says the cost happened first. Otherwise two parts of the same simulation can report different ending Magicka.
 
 **For BFF:** the Combat Simulation resource adapter now rejects noncanonical same-timestamp ordering instead of reordering contradictory before/after evidence. Final resource snapshots are regression-checked against the stored resource summary.
+
+### 2026-09-21 — Sustained DPS comparisons need the same execution horizon
+
+A modeled DPS number is not automatically comparable just because both values are expressed as damage per second. Saved rotations can cover different execution horizons, and ESO damage profiles can be heavily front-loaded, execute-weighted, or DoT-weighted. FoundryDock therefore withholds a sustained-DPS leader when candidate execution horizons differ, even when every individual simulation is mechanically complete. Non-DD saved builds are also informational exclusions only; they do not invalidate the DD search denominator.
