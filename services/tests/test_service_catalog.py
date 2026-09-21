@@ -894,3 +894,24 @@ def test_sustained_dps_generated_runtime_policy_adapter_requires_explicit_eviden
     assert "explicit priorities" in service.notes
     assert "do not establish broader theoretical" in service.notes
 
+def test_sustained_dps_generated_axis_pipeline_composes_adapter_states() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_generated_axis_pipeline"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.generated_axis_pipeline"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.generated_gear_axis_adapter",
+        "extreme.sustained_dps.generated_late_axis_adapter",
+        "extreme.sustained_dps.generated_rotation_axis_adapter",
+        "extreme.sustained_dps.generated_runtime_policy_axis_adapter",
+        "extreme.sustained_dps.generated_frontier_wiring",
+    )
+    assert service.encounter_aware is True
+    assert "reset downstream selections" in service.notes
+    assert "axis-local bound providers" in service.notes
+
