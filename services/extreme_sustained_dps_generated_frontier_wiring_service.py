@@ -65,6 +65,12 @@ class ExtremeSustainedDPSGeneratedFrontierNode:
         return len(self.coordinates)
 
 
+NodeBoundInputProvider = Callable[
+    [ExtremeSustainedDPSGeneratedFrontierNode],
+    tuple[ExtremeSustainedDPSBoundEnvelopeInput, ...],
+]
+
+
 class ExtremeSustainedDPSGeneratedFrontierLeafEvaluator(Protocol):
     def __call__(
         self,
@@ -114,6 +120,15 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
             return ()
         return tuple(provider(state))
 
+    @staticmethod
+    def _node_bound_inputs(
+        provider: NodeBoundInputProvider | None,
+        node: ExtremeSustainedDPSGeneratedFrontierNode,
+    ) -> tuple[ExtremeSustainedDPSBoundEnvelopeInput, ...]:
+        if provider is None:
+            return ()
+        return tuple(provider(node))
+
     @classmethod
     def search(
         cls,
@@ -124,6 +139,7 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
         required_duration_seconds: float,
         root_key: str = "generated-root",
         root_bound_inputs: BoundInputProvider | None = None,
+        branch_bound_inputs: NodeBoundInputProvider | None = None,
     ) -> ExtremeSustainedDPSGeneratedSearchResult:
         cls._validate_axes(axes)
         key = str(root_key or "").strip()
@@ -138,7 +154,10 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
         )
         root_envelope = ExtremeSustainedDPSPartialBranchUpperBoundService.compose(
             key,
-            cls._bound_inputs(root_bound_inputs, root_state),
+            (
+                *cls._bound_inputs(root_bound_inputs, root_state),
+                *cls._node_bound_inputs(branch_bound_inputs, root_node),
+            ),
         )
         root = ExtremeSustainedDPSGeneratedSearchBranch(
             candidate_key=key,
@@ -182,7 +201,10 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
                 )
                 envelope = ExtremeSustainedDPSPartialBranchUpperBoundService.compose(
                     child_key,
-                    cls._bound_inputs(axis.bound_inputs, state),
+                    (
+                        *cls._bound_inputs(axis.bound_inputs, state),
+                        *cls._node_bound_inputs(branch_bound_inputs, child_node),
+                    ),
                     inherited_parent_bound=branch.upper_bound,
                 )
                 children.append(
@@ -227,6 +249,7 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
 
 __all__ = [
     "BoundInputProvider",
+    "NodeBoundInputProvider",
     "ExtremeSustainedDPSGeneratedFrontierLeafEvaluator",
     "ExtremeSustainedDPSGeneratedFrontierNode",
     "ExtremeSustainedDPSGeneratedFrontierWiringService",
