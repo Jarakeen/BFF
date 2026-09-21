@@ -1037,3 +1037,11 @@ One skill can legitimately produce multiple direct damage components at the same
 **Layman's version:** if one skill hits for 2,000 magic plus 3,000 flame at the same instant, the boss took 5,000 from that skill. We should not let whichever component happens to be listed first decide how much overkill gets reported.
 
 **For BFF:** raw component events stay separate for audit/source detail, while Health projection coalesces same-source same-kind components at one coordinate before applying Health, overkill, and death. Different sources or damage/healing collisions still require explicit ordering evidence.
+
+## 2026-09-20 — Death at one action sequence ends later actions at the same timestamp
+
+Combat Simulation can have more than one scheduled action at the same clock timestamp, distinguished by sequence. A lethal hit at sequence 0 is therefore earlier than a sequence-1 action at that same timestamp.
+
+**Layman's version:** if the boss dies on the first thing that happens at 10.0 seconds, the second thing scheduled for 10.0 seconds does not still get to happen just because the clock display has not changed.
+
+**For BFF:** fight termination now preserves the exact lethal time-and-sequence coordinate. Later same-timestamp action sequences and injected combat events are excluded from execution, preventing resource costs, healing, effects, or other consequences from firing after target death.
