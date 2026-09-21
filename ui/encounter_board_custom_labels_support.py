@@ -170,9 +170,7 @@ def _apply_reference_lock(board, locked: bool) -> None:
     if hasattr(board, "raid_map_reference_lock"):
         board.raid_map_reference_lock.blockSignals(True)
         board.raid_map_reference_lock.setChecked(locked)
-        board.raid_map_reference_lock.setText(
-            "🔒 References" if locked else "🔓 References"
-        )
+        board.raid_map_reference_lock.setText("🔒" if locked else "🔓")
         board.raid_map_reference_lock.blockSignals(False)
     board.scene.update()
 
@@ -278,81 +276,85 @@ def _paint_reference(item, painter, option, widget=None) -> None:
     )
 
 
-def _label_and_key_panel(board) -> QWidget:
-    """Keep edit and reference tools together without forcing them onto one long row."""
+def _install_inline_controls(board) -> None:
+    """Place rename/reference controls into existing Raid Map toolbar rows."""
 
-    panel = QWidget(board)
-    stack = QVBoxLayout(panel)
-    stack.setContentsMargins(0, 0, 0, 0)
-    stack.setSpacing(4)
+    root = board.layout()
+    if root is None or root.count() < 3:
+        return
 
-    edit_row = QHBoxLayout()
-    edit_row.setContentsMargins(0, 0, 0, 0)
-    edit_row.setSpacing(6)
+    actor_toolbar = root.itemAt(0).layout()
+    layout_toolbar = root.itemAt(2).layout()
+    if actor_toolbar is None or layout_toolbar is None:
+        return
 
-    heading = QLabel("EDIT")
-    heading.setProperty("sidebarHeading", True)
-    heading.setMinimumWidth(110)
-    edit_row.addWidget(heading)
-
+    # ------------------------------------------------------------------
+    # LAYOUT row: rename stays visible on the left; destructive Delete is
+    # deliberately pushed all the way to the right.
+    # ------------------------------------------------------------------
     board.raid_map_custom_label = QLineEdit()
-    board.raid_map_custom_label.setMinimumWidth(220)
-    board.raid_map_custom_label.setPlaceholderText("Select one marker or zone to rename")
+    board.raid_map_custom_label.setMinimumWidth(260)
+    board.raid_map_custom_label.setPlaceholderText("Select marker or zone to rename")
     board.raid_map_custom_label.returnPressed.connect(lambda: _rename_selected(board))
-    edit_row.addWidget(board.raid_map_custom_label, 1)
 
     board.raid_map_apply_label = QPushButton("Rename")
     board.raid_map_apply_label.clicked.connect(lambda: _rename_selected(board))
-    edit_row.addWidget(board.raid_map_apply_label)
-    edit_row.addStretch(1)
-    stack.addLayout(edit_row)
 
-    reference_row = QHBoxLayout()
-    reference_row.setContentsMargins(0, 0, 0, 0)
-    reference_row.setSpacing(6)
+    delete_button = next(
+        (
+            button
+            for button in board.findChildren(QPushButton)
+            if button.text() == "Delete Selected"
+        ),
+        None,
+    )
+    if delete_button is not None:
+        layout_toolbar.removeWidget(delete_button)
 
+    # Caption remains first. Rename field/button immediately follow it.
+    layout_toolbar.insertWidget(1, board.raid_map_custom_label, 1)
+    layout_toolbar.insertWidget(2, board.raid_map_apply_label)
+
+    # The existing stretch keeps view/output controls grouped away from Rename.
+    # Re-adding Delete last makes it the far-right destructive action.
+    if delete_button is not None:
+        layout_toolbar.addWidget(delete_button)
+
+    # ------------------------------------------------------------------
+    # ACTORS row: static orientation references live at the far right after
+    # the row's existing stretch, where Entrance/Exit are always reachable.
+    # ------------------------------------------------------------------
     reference_heading = QLabel("REFERENCE")
     reference_heading.setProperty("sidebarHeading", True)
-    reference_heading.setMinimumWidth(110)
-    reference_row.addWidget(reference_heading)
 
     board.raid_map_reference_type = QComboBox()
     for name in REFERENCE_PRESETS:
         board.raid_map_reference_type.addItem(name)
-    board.raid_map_reference_type.setMaximumWidth(125)
+    board.raid_map_reference_type.setMaximumWidth(115)
     board.raid_map_reference_type.setToolTip(
-        "Static room reference point. Reference points persist across timeline steps."
+        "Add Entrance, Exit, or Banner as a static room reference."
     )
-    reference_row.addWidget(board.raid_map_reference_type)
 
-    add_reference = QPushButton("+ Add")
-    add_reference.setToolTip("Add the selected static reference point to the Raid Map")
-    add_reference.clicked.connect(lambda: _add_reference(board))
-    reference_row.addWidget(add_reference)
+    board.raid_map_add_reference = QPushButton("+ Add")
+    board.raid_map_add_reference.setToolTip(
+        "Add the selected static reference point to the Raid Map."
+    )
+    board.raid_map_add_reference.clicked.connect(lambda: _add_reference(board))
 
-    board.raid_map_reference_lock = QPushButton("🔓 References")
+    board.raid_map_reference_lock = QPushButton("🔓")
     board.raid_map_reference_lock.setCheckable(True)
+    board.raid_map_reference_lock.setFixedWidth(38)
     board.raid_map_reference_lock.setToolTip(
-        "Lock Entrance, Exit, and Banner reference points so they cannot be dragged accidentally"
+        "Lock Entrance, Exit, and Banner reference points."
     )
     board.raid_map_reference_lock.toggled.connect(
         lambda checked: _toggle_reference_lock(board, checked)
     )
-    reference_row.addWidget(board.raid_map_reference_lock)
 
-    key = QLabel(
-        "KEY  Boss • M mini-boss • T tank • H healer • D DD • P portal • "
-        "! AOE • + stack • IN entrance • OUT exit • ⚑ banner"
-    )
-    key.setProperty("muted", True)
-    key.setWordWrap(True)
-    key.setToolTip(
-        "Marker type controls its symbol/style. Visible labels are freeform. "
-        "Entrance, Exit, and Banner are static orientation references."
-    )
-    reference_row.addWidget(key, 1)
-    stack.addLayout(reference_row)
-    return panel
+    actor_toolbar.addWidget(reference_heading)
+    actor_toolbar.addWidget(board.raid_map_reference_type)
+    actor_toolbar.addWidget(board.raid_map_add_reference)
+    actor_toolbar.addWidget(board.raid_map_reference_lock)
 
 
 def install() -> None:
@@ -373,9 +375,7 @@ def install() -> None:
         root = self.layout()
         if root is None:
             return
-        # Reuse the existing label/key row. No additional toolbar row is created.
-        insert_at = max(0, root.count() - 1)
-        root.insertWidget(insert_at, _label_and_key_panel(self))
+        _install_inline_controls(self)
 
     def save_state_with_reference_lock(self):
         original_save_state(self)
