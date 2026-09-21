@@ -1,0 +1,41 @@
+name: Phase 14 combat simulation closeout
+
+on:
+  push:
+    branches: [phase14]
+    paths:
+      - "services/combat_simulation_*.py"
+      - "services/tests/test_combat_simulation_*.py"
+      - ".github/workflows/phase14-combat-simulation-closeout.yml"
+  workflow_dispatch:
+
+jobs:
+  closeout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install closeout test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+      - name: Run Phase 14 closeout suite
+        run: |
+          pytest \
+            services/tests/test_combat_simulation_event_queue.py \
+            services/tests/test_combat_simulation_deterministic_replay_service.py \
+            services/tests/test_combat_simulation_resource_service.py \
+            services/tests/test_combat_simulation_healing_service.py \
+            services/tests/test_combat_simulation_skill_effect_service.py \
+            services/tests/test_combat_simulation_target_binding_service.py \
+            services/tests/test_combat_simulation_health_service.py \
+            services/tests/test_combat_simulation_snapshot_service.py \
+            services/tests/test_combat_simulation_outgoing_damage_service.py \
+            services/tests/test_combat_simulation_damage_summary_service.py \
+            services/tests/test_combat_simulation_fight_termination_service.py \
+            services/tests/test_combat_simulation_sequential_dd_damage_service.py \
+            services/tests/test_combat_simulation_saved_build_dd_service.py \
+            services/tests/test_combat_simulation_saved_build_dd_provider_service.py \
+            services/tests/test_combat_simulation_service.py -q
