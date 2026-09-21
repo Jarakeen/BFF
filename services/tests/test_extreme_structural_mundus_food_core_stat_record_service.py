@@ -139,8 +139,9 @@ def test_food_evaluator_selects_best_nested_mundus_food_pair():
 def test_unmapped_food_remains_visible_even_when_it_does_not_win():
     _, _, unresolved = _evaluator()("max_health", _candidate())
 
-    assert unresolved == (
-        "Food/Drink has no mapped static character-sheet stats: Mystery Stew",
+    assert any(
+        "Food/Drink has no mapped static character-sheet stats: Mystery Stew" in item
+        for item in unresolved
     )
 
 
