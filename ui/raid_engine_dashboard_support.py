@@ -381,6 +381,52 @@ def _route_plan_page(window, source_page, target: str) -> None:
     window.show_page(target)
 
 
+def _open_finch_collaboration_workspace(
+    window,
+    route: str,
+    context_key: str,
+) -> None:
+    """Open the owning workspace and restore exact local context when provenance has one."""
+    route = str(route or "").strip()
+    context_key = str(context_key or "").strip()
+    if not route:
+        return
+
+    if route == "raid_plans" and context_key:
+        page = window.pages.get("raid_plans")
+        loader = getattr(page, "load_plan_by_id", None)
+        if callable(loader) and loader(context_key):
+            window.show_page(route)
+            return
+
+    if route == "readiness" and context_key:
+        page = window.pages.get("readiness")
+        if page is not None:
+            refresh = getattr(page, "refresh_plans", None)
+            if callable(refresh):
+                refresh()
+            combo = getattr(page, "plan_combo", None)
+            if combo is not None:
+                index = combo.findData(context_key)
+                if index >= 0:
+                    combo.setCurrentIndex(index)
+            window.show_page(route)
+            return
+
+    if route == "console:7" and context_key:
+        coverage = window.pages.get("console:7")
+        raid_plans = window.pages.get("raid_plans")
+        repository = getattr(raid_plans, "plan_repository", None)
+        plan = repository.get(context_key) if repository is not None else None
+        setter = getattr(coverage, "set_raid_plan_scope", None)
+        if plan is not None and callable(setter):
+            setter(plan)
+            window.show_page(route)
+            return
+
+    window.show_page(route)
+
+
 def _open_exact_build(window, build_id: str) -> None:
     build_id = str(build_id or "").strip()
     if not build_id:
@@ -460,6 +506,13 @@ def register_raid_engine_pages(window) -> None:
 
     finch_collaboration = FinchCollaborationPage()
     finch_collaboration.pageRequested.connect(window.show_page)
+    finch_collaboration.workspaceRequested.connect(
+        lambda route, context_key: _open_finch_collaboration_workspace(
+            window,
+            route,
+            context_key,
+        )
+    )
     _register_page(window, "finch_collaboration", finch_collaboration)
 
     live_raid = CityLiveRaidPage()
