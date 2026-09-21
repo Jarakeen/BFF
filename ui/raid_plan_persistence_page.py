@@ -38,12 +38,6 @@ _FINCH_PLAN_PUBLISH_EXECUTOR = ThreadPoolExecutor(
 )
 
 
-_FINCH_RAID_PLAN_PUBLISH_EXECUTOR = ThreadPoolExecutor(
-    max_workers=1,
-    thread_name_prefix="finch-raid-plan-publish",
-)
-
-
 def _same_player_identity(prior, visible) -> bool:
     """Prefer stable player ids; use gamertag only for fully legacy rows."""
     prior_id = _clean(getattr(prior, "player_id", ""))
@@ -187,13 +181,6 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         delete_button = QPushButton("Delete")
         delete_button.clicked.connect(self.delete_selected_plan)
         row.addWidget(delete_button)
-
-        self.publish_finch_button = QPushButton("Publish to Finch")
-        self.publish_finch_button.setToolTip(
-            "Publish the currently saved Raid Plan snapshot to Finch. Save local changes first."
-        )
-        self.publish_finch_button.clicked.connect(self.publish_selected_plan_to_finch)
-        row.addWidget(self.publish_finch_button)
 
         layout.addLayout(row)
         self.header.add_context_widget(controls)
@@ -492,50 +479,6 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         if persisted is None:
             return
         self.assignmentsRequested.emit(persisted.plan_id)
-
-    def publish_selected_plan_to_finch(self) -> None:
-        plan_id = self.saved_plan_combo.currentData()
-        if not isinstance(plan_id, str) or not plan_id.strip():
-            self.status.warning("Save and select a Raid Plan before publishing to Finch.")
-            return
-        if self.has_pending_changes():
-            self.status.warning("Save Raid Plan changes before publishing to Finch.")
-            return
-        if (
-            self._finch_plan_publish_future is not None
-            and not self._finch_plan_publish_future.done()
-        ):
-            self.status.info("A Finch Raid Plan publish is already running.")
-            return
-
-        self.publish_finch_button.setEnabled(False)
-        self.status.info("Publishing saved Raid Plan to Finch…")
-        self._finch_plan_publish_future = _FINCH_RAID_PLAN_PUBLISH_EXECUTOR.submit(
-            publish_raid_plan_to_finch,
-            database_path=Path(get_data_dir()) / "eso.db",
-            raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
-            plan_id=plan_id,
-            settings_path=Path("settings.json"),
-        )
-        self._finch_plan_publish_timer.start()
-
-    def _poll_finch_plan_publish(self) -> None:
-        future = self._finch_plan_publish_future
-        if future is None or not future.done():
-            return
-
-        self._finch_plan_publish_timer.stop()
-        self._finch_plan_publish_future = None
-        self.publish_finch_button.setEnabled(True)
-        try:
-            result = future.result()
-        except Exception as exc:
-            self.status.error(f"Finch Raid Plan publish failed: {exc}")
-            return
-
-        self.status.success(
-            f"Published Raid Plan to Finch: {result.snapshot_key}."
-        )
 
     def load_plan_by_id(self, plan_id: str) -> bool:
         """Load one exact saved Raid Plan without relying on navigation history."""
