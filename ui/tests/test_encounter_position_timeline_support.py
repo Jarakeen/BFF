@@ -8,7 +8,8 @@ def test_position_timeline_support_exposes_expected_controls() -> None:
     source = Path(encounter_position_timeline_support.__file__).read_text(encoding="utf-8")
 
     for text in (
-        "POSITION TIMELINE",
+        "TIMELINE STEPS",
+        "PLAYBACK",
         "+ Step",
         "Duplicate",
         "Save Step",
