@@ -133,3 +133,13 @@ def test_combat_simulation_result_rejects_out_of_order_events() -> None:
         assert "canonical timeline order" in str(exc)
     else:
         raise AssertionError("Expected out-of-order result events to fail closed")
+
+
+def test_combat_simulation_result_rejects_invalid_bar_state() -> None:
+    for field in ("initial_bar", "final_bar"):
+        try:
+            _result(**{field: "sideways"})
+        except ValueError as exc:
+            assert "front or back" in str(exc)
+        else:
+            raise AssertionError("Expected invalid combat result bar state to fail closed")
