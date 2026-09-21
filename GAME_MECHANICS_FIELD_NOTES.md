@@ -1260,3 +1260,6 @@ Connecting an anchored Ultimate/potion frontier to the generated branch-and-boun
 
 **Layman's version:** putting every item from one shelf onto a checklist does not prove the whole warehouse was searched.
 
+### 2026-09-21 — Enumerating every legal state does not tell us how much damage that axis can add
+
+A complete dual-bar gear denominator, Champion Point denominator, or passive-rank denominator proves that FoundryDock has represented those legal choices. It does **not** automatically turn any one observed action into an upper bound across those choices. Structural coverage and numeric damage dominance remain separate proofs; a finite action search or another reviewed bound authority must still close the damage side.
