@@ -787,6 +787,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.dynamic_axes",
+        domain="extreme",
+        purpose=(
+            "Inventory canonical dynamic refinement choices around one generated structural "
+            "sustained-DPS candidate without promoting static character-sheet choices into "
+            "an unsupported DPS upper bound."
+        ),
+        implementation_path="services.extreme_sustained_dps_dynamic_axis_inventory_service",
+        inputs=("ExtremeSustainedDPSStructuralCandidate",),
+        outputs=("ExtremeSustainedDPSDynamicAxisInventory",),
+        dependencies=("extreme.sustained_dps.generated_frontier",),
+        responsibilities=("extreme_sustained_dps_dynamic_axis_inventory",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Enumerates only canonical currently supported refinement axes. Sustained-DPS "
+            "pruning remains fail-open until a proven optimistic action/rotation ceiling exists."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.pruning",
         domain="extreme",
         purpose=(
