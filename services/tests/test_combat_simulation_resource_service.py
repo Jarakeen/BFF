@@ -140,10 +140,18 @@ def test_resource_adapter_preserves_phase4_before_after_and_shortfall_evidence()
     assert first.payload_dict()["after"] == 27000
     assert first.payload_dict()["applied_change"] == -3000
 
-    recovery = projection.events[1]
+    second_cost = projection.events[1]
+    assert second_cost.event_type == "action_cost"
+    assert second_cost.source == "Illustrious Healing"
+    assert second_cost.priority == int(SimulationEventPriority.RESOURCE_COST)
+    assert second_cost.payload_dict()["before"] == 27000
+    assert second_cost.payload_dict()["after"] == 25000
+
+    recovery = projection.events[2]
     assert recovery.event_type == "recovery_tick"
     assert recovery.priority == int(SimulationEventPriority.RESOURCE_RESTORE)
-    assert recovery.payload_dict()["after"] == 28600
+    assert recovery.payload_dict()["before"] == 25000
+    assert recovery.payload_dict()["after"] == 26600
 
 
 def test_simulation_merges_healer_actions_and_resource_events_deterministically() -> None:
