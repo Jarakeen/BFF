@@ -1295,3 +1295,7 @@ When FoundryDock varies CP, passive ranks, gear, or another finite axis to bound
 ### 2026-09-21 — A finite proof denominator does not have to be materialized all at once
 
 A search space can be finite and fully indexed without building every candidate object in memory. FoundryDock's CP, passive-rank, and dual-bar gear dominance adapters now expose deterministic `choice_at(index)` access and evaluate one candidate at a time. This preserves denominator proof while avoiding an eager Cartesian allocation that would defeat the purpose of branch-and-bound.
+
+### 2026-09-21 — Generated choices can reuse saved-build damage authority without becoming saved builds
+
+A generated CP, passive-rank, or dual-bar gear candidate does not need its own damage formula stack. FoundryDock can adapt that explicit mutation onto a fixed build/progression witness and ask the canonical Combat Simulation DD provider for the exact scheduled action consequence. The generated candidate remains generated; only the already-reviewed damage authority is reused. If that provider cannot resolve runtime set behavior, periodic timing, weapon math, or another mechanic, the finite-axis dominance branch stays open.
