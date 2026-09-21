@@ -40,7 +40,13 @@ class RaidSectionStateService:
 
     def _read(self) -> dict:
         if not self.path.exists():
-            return {"human_ready": {}, "runs": {}, "events": [], "reviews": []}
+            return {
+                "human_ready": {},
+                "runs": {},
+                "events": [],
+                "reviews": [],
+                "raid_map_links": {},
+            }
         try:
             payload = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError, TypeError):
@@ -51,6 +57,7 @@ class RaidSectionStateService:
         payload.setdefault("runs", {})
         payload.setdefault("events", [])
         payload.setdefault("reviews", [])
+        payload.setdefault("raid_map_links", {})
         return payload
 
     def _write(self, payload: dict) -> None:
@@ -82,6 +89,36 @@ class RaidSectionStateService:
 
     def selected_encounter_id(self, plan_id: str) -> str:
         return _clean(self.run_state(plan_id).get("encounter_id"))
+
+    def linked_raid_map_id(self, plan_id: str, encounter_id: str) -> str:
+        payload = self._read()
+        links = payload.get("raid_map_links", {})
+        plan_links = links.get(_clean(plan_id), {}) if isinstance(links, dict) else {}
+        if not isinstance(plan_links, dict):
+            return ""
+        return _clean(plan_links.get(_clean(encounter_id)))
+
+    def set_linked_raid_map_id(
+        self,
+        plan_id: str,
+        encounter_id: str,
+        map_id: str,
+    ) -> None:
+        plan_key = _clean(plan_id)
+        encounter_key = _clean(encounter_id)
+        if not plan_key or not encounter_key:
+            raise ValueError("plan_id and encounter_id are required for a Raid Map link")
+        payload = self._read()
+        links = payload.setdefault("raid_map_links", {})
+        plan_links = links.setdefault(plan_key, {})
+        value = _clean(map_id)
+        if value:
+            plan_links[encounter_key] = value
+        else:
+            plan_links.pop(encounter_key, None)
+            if not plan_links:
+                links.pop(plan_key, None)
+        self._write(payload)
 
     def set_selected_encounter_id(self, plan_id: str, encounter_id: str) -> dict:
         payload = self._read()
