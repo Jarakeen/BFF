@@ -8,9 +8,9 @@ def test_custom_label_support_exposes_label_editor_and_key() -> None:
     source = Path(encounter_board_custom_labels_support.__file__).read_text(encoding="utf-8")
 
     for text in (
-        "EDIT & REFERENCE",
+        "EDIT",
         "Rename",
-        "REFERENCE POINTS",
+        "REFERENCE",
         "KEY  Boss",
         "P portal",
         "IN entrance",
@@ -39,14 +39,16 @@ def test_custom_label_updates_timeline_human_label_without_changing_item_id() ->
     assert "item._position_timeline_id = stable_id" in source
 
 
-def test_reference_points_use_existing_label_key_row_not_a_new_row() -> None:
+def test_reference_points_share_one_edit_reference_panel() -> None:
     source = Path(encounter_board_custom_labels_support.__file__).read_text(encoding="utf-8")
 
-    assert '"REFERENCE POINTS"' in source
+    assert '"REFERENCE"' in source
     assert '"Entrance"' in source
     assert '"Exit"' in source
     assert '"Banner"' in source
-    assert "Reuse the existing label/key row" in source
+    assert "QVBoxLayout(panel)" in source
+    assert "stack.addLayout(edit_row)" in source
+    assert "stack.addLayout(reference_row)" in source
     assert "root.insertWidget(insert_at, _label_and_key_panel(self))" in source
 
 
