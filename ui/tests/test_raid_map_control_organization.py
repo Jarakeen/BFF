@@ -42,10 +42,13 @@ def test_edit_reference_and_timeline_keep_distinct_functional_sections() -> None
     labels = _source("ui/encounter_board_custom_labels_support.py")
     timeline = _source("ui/encounter_position_timeline_support.py")
 
-    assert 'QLabel("EDIT & REFERENCE")' in labels
-    assert 'QLabel("REFERENCE POINTS")' in labels
+    assert 'QLabel("EDIT")' in labels
+    assert 'QLabel("REFERENCE")' in labels
     assert 'QPushButton("Rename")' in labels
-    assert 'QLabel("POSITION TIMELINE")' in timeline
+    assert "QVBoxLayout(panel)" in labels
+    assert 'QLabel("TIMELINE STEPS")' in timeline
+    assert 'QLabel("PLAYBACK")' in timeline
+    assert "QVBoxLayout(panel)" in timeline
 
 
 def test_map_help_text_is_short_and_task_oriented() -> None:
@@ -54,3 +57,13 @@ def test_map_help_text_is_short_and_task_oriented() -> None:
     assert "Drag items to position them." in source
     assert "Timeline and reference tools below preserve their own saved state." in source
     assert "Up to six mini-boss markers may be placed." not in source
+
+
+def test_timeline_export_stays_with_step_management_row() -> None:
+    export = _source("ui/encounter_position_gif_export_support.py")
+    timeline = _source("ui/encounter_position_timeline_support.py")
+
+    assert "combo.parentWidget()" in export
+    assert "row.addWidget(button)" in export
+    assert "step_row_widget = QWidget(panel)" in timeline
+    assert "board.position_timeline_step_combo = QComboBox(step_row_widget)" in timeline
