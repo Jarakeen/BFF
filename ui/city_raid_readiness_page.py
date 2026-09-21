@@ -7,15 +7,18 @@ Build/assignment presence is known from RaidPlan. Rotation, sustain, and coverag
 NEEDS REVIEW until their owning engines provide evidence. Human Ready is explicit user state.
 """
 
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QTimer, Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QTableWidget,
@@ -26,6 +29,10 @@ from PySide6.QtWidgets import (
 
 from engine.config import DEFAULT_DATABASE, get_data_dir, get_resource_path
 from models.raid_plan import RaidPlan, RaidPlanMember
+from services.finch_shared_readiness_service import (
+    list_shared_readiness_from_finch,
+    publish_readiness_to_finch,
+)
 from services.raid_plan_repository import RaidPlanRepository
 from services.raid_readiness_evidence_service import RaidReadinessEvidenceService
 from services.raid_section_state_service import RaidSectionStateService
@@ -99,6 +106,12 @@ class _ReadinessArt(QLabel):
         self._refresh_pixmap()
 
 
+_FINCH_READINESS_EXECUTOR = ThreadPoolExecutor(
+    max_workers=2,
+    thread_name_prefix="finch-readiness",
+)
+
+
 class CityRaidReadinessPage(FoundryPage):
     pageRequested = Signal(str)
     buildRequested = Signal(str)
@@ -113,6 +126,14 @@ class CityRaidReadinessPage(FoundryPage):
         )
         self._plan: RaidPlan | None = None
         self._evidence = None
+        self._finch_publish_future: Future | None = None
+        self._finch_shared_future: Future | None = None
+        self._finch_publish_timer = QTimer(self)
+        self._finch_publish_timer.setInterval(100)
+        self._finch_publish_timer.timeout.connect(self._poll_finch_publish)
+        self._finch_shared_timer = QTimer(self)
+        self._finch_shared_timer.setInterval(100)
+        self._finch_shared_timer.timeout.connect(self._poll_finch_shared)
         self._build_ui()
         self.refresh_plans()
 
@@ -133,6 +154,13 @@ class CityRaidReadinessPage(FoundryPage):
         refresh.setProperty("primary", True)
         refresh.clicked.connect(self.refresh_plans)
         self.header.add_context_widget(refresh)
+
+        self.publish_finch = QPushButton("Publish Readiness")
+        self.publish_finch.clicked.connect(self._publish_readiness_to_finch)
+        self.header.add_context_widget(self.publish_finch)
+        self.get_shared_finch = QPushButton("Get Shared Readiness")
+        self.get_shared_finch.clicked.connect(self._get_shared_readiness_from_finch)
+        self.header.add_context_widget(self.get_shared_finch)
 
         body = QWidget()
         root = QHBoxLayout(body)
@@ -240,6 +268,124 @@ class CityRaidReadinessPage(FoundryPage):
         self.add_workspace(body)
         self.status = FoundryStatusBar()
         self.set_status(self.status)
+
+    def _publish_readiness_to_finch(self) -> None:
+        plan = self._plan
+        if plan is None:
+            self.status.warning("Select a saved Raid Plan before publishing Readiness.")
+            return
+        if self._finch_publish_future is not None and not self._finch_publish_future.done():
+            self.status.info("Finch Readiness publish is already running.")
+            return
+
+        self.publish_finch.setEnabled(False)
+        self.status.info(f"Publishing Readiness for {plan.name} to Finch…")
+        self._finch_publish_future = _FINCH_READINESS_EXECUTOR.submit(
+            publish_readiness_to_finch,
+            plan_id=plan.plan_id,
+            raid_plans_path=self.repository.path,
+            data_dir=get_data_dir(),
+            database_path=DEFAULT_DATABASE,
+            settings_path=Path("settings.json"),
+        )
+        self._finch_publish_timer.start()
+
+    def _poll_finch_publish(self) -> None:
+        future = self._finch_publish_future
+        if future is None or not future.done():
+            return
+        self._finch_publish_timer.stop()
+        self.publish_finch.setEnabled(True)
+        self._finch_publish_future = None
+        try:
+            result = future.result()
+        except Exception as exc:
+            self.status.warning(
+                f"Finch Readiness publish failed: {type(exc).__name__}: {exc}"
+            )
+            return
+        self.status.success(
+            f"Published Readiness to Finch: {result.snapshot_key}."
+        )
+
+    def _get_shared_readiness_from_finch(self) -> None:
+        if self._finch_shared_future is not None and not self._finch_shared_future.done():
+            self.status.info("Finch shared Readiness fetch is already running.")
+            return
+
+        self.get_shared_finch.setEnabled(False)
+        self.status.info("Getting shared Readiness from Finch…")
+        self._finch_shared_future = _FINCH_READINESS_EXECUTOR.submit(
+            list_shared_readiness_from_finch,
+            data_dir=get_data_dir(),
+            database_path=DEFAULT_DATABASE,
+            settings_path=Path("settings.json"),
+        )
+        self._finch_shared_timer.start()
+
+    def _poll_finch_shared(self) -> None:
+        future = self._finch_shared_future
+        if future is None or not future.done():
+            return
+        self._finch_shared_timer.stop()
+        self.get_shared_finch.setEnabled(True)
+        self._finch_shared_future = None
+        try:
+            previews = tuple(future.result())
+        except Exception as exc:
+            self.status.warning(
+                f"Finch shared Readiness fetch failed: {type(exc).__name__}: {exc}"
+            )
+            return
+        if not previews:
+            self.status.info("Finch has no shared Readiness snapshots.")
+            return
+
+        labels = [
+            (
+                f"{row.name or row.plan_id} • {row.trial_id or 'Trial unknown'} • "
+                f"{row.human_ready}/{row.total} human ready"
+            )
+            for row in previews
+        ]
+        selected, accepted = QInputDialog.getItem(
+            self,
+            "Shared Readiness on Finch",
+            "View shared Readiness snapshot:",
+            labels,
+            0,
+            False,
+        )
+        if not accepted:
+            self.status.info("Shared Readiness view cancelled.")
+            return
+        try:
+            row = previews[labels.index(selected)]
+        except (ValueError, IndexError):
+            self.status.warning("The selected shared Readiness snapshot is unavailable.")
+            return
+
+        QMessageBox.information(
+            self,
+            "Shared Readiness",
+            (
+                f"{row.name or row.plan_id}\n"
+                f"Trial: {row.trial_id or 'Unknown'}\n"
+                f"Team: {row.team_name or 'Not set'}\n"
+                f"Published by: {row.published_by or 'Unknown'}\n"
+                f"Updated: {row.updated_at or 'Unknown'}\n\n"
+                f"Builds: {row.build_ready} ready, {row.build_planned} planned, "
+                f"{row.build_gaps} gaps\n"
+                f"Assignments: {row.assignment_ready}/{row.total} assigned\n"
+                f"Coverage: {row.coverage_covered} covered, {row.coverage_gaps} gaps\n"
+                f"Human Ready: {row.human_ready}/{row.total} "
+                f"({row.human_pending} pending)\n\n"
+                "This is a read-only Finch snapshot. Local Readiness was not changed."
+            ),
+        )
+        self.status.info(
+            f"Viewed shared Readiness for {row.name or row.plan_id}; local state unchanged."
+        )
 
     def refresh_plans(self) -> None:
         current = self.plan_combo.currentData()
