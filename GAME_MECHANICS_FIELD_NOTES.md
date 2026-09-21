@@ -1263,3 +1263,10 @@ Connecting an anchored Ultimate/potion frontier to the generated branch-and-boun
 ### 2026-09-21 — Enumerating every legal state does not tell us how much damage that axis can add
 
 A complete dual-bar gear denominator, Champion Point denominator, or passive-rank denominator proves that FoundryDock has represented those legal choices. It does **not** automatically turn any one observed action into an upper bound across those choices. Structural coverage and numeric damage dominance remain separate proofs; a finite action search or another reviewed bound authority must still close the damage side.
+
+### 2026-09-21 — A downstream policy denominator can depend on the upstream mutation
+
+A reviewed Heavy Attack window names an exact scheduled ordinary-skill slot. An execute policy may first change the skill occupying that slot while preserving its time and sequence, and other policy mutations could make the window incompatible altogether. FoundryDock therefore rebuilds the Heavy Attack frontier for each selected execute candidate instead of counting one global Heavy Attack family and blindly multiplying it across every upstream plan.
+
+**Layman's version:** after changing the schedule, recheck which appointment slots are still valid.
+
