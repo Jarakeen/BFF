@@ -3,7 +3,10 @@ from __future__ import annotations
 from typing import Protocol
 
 from minmax.rotation_plan import RotationAction, RotationActionKind
-from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
+from services.rotation_candidate_dd_role_output_service import (
+    RotationActionDamageEvidence,
+    RotationActionDamageOccurrenceEvidence,
+)
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 
 
@@ -79,6 +82,47 @@ class RotationCandidateUltimateDamageEvidenceService:
                 f"got ({evidence.time_seconds:g}s, {evidence.sequence})"
             )
         return evidence
+
+
+    def evaluate_action_occurrences(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageOccurrenceEvidence:
+        if action.kind is not RotationActionKind.ULTIMATE:
+            return RotationActionDamageOccurrenceEvidence(
+                action_time_seconds=action.time_seconds,
+                action_sequence=action.sequence,
+                unresolved=(
+                    f"{action.kind.value} is not an Ultimate action for Ultimate damage evaluation",
+                ),
+            )
+
+        if not hasattr(self.skill_damage_delegate, "evaluate_action_occurrences"):
+            evidence = self.evaluate_action(candidate=candidate, action=action)
+            if evidence.unresolved:
+                return RotationActionDamageOccurrenceEvidence(
+                    action_time_seconds=action.time_seconds,
+                    action_sequence=action.sequence,
+                    unresolved=evidence.unresolved,
+                )
+            return RotationActionDamageOccurrenceEvidence(
+                action_time_seconds=action.time_seconds,
+                action_sequence=action.sequence,
+            )
+
+        skill_action = RotationAction(
+            time_seconds=action.time_seconds,
+            sequence=action.sequence,
+            kind=RotationActionKind.SKILL,
+            name=action.name,
+            bar=action.bar,
+        )
+        return self.skill_damage_delegate.evaluate_action_occurrences(
+            candidate=candidate,
+            action=skill_action,
+        )
 
 
 __all__ = [
