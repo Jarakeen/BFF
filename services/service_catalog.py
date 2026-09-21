@@ -831,6 +831,50 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.potion_frontier",
+        domain="extreme",
+        purpose=(
+            "Enumerate the finite canonical potion effect-family selection denominator "
+            "for generated sustained-DPS search without assuming potion activation."
+        ),
+        implementation_path="services.extreme_sustained_dps_potion_frontier_service",
+        inputs=("PlayerBuild", "PotionAvailabilityRepository"),
+        outputs=("ExtremeSustainedDPSPotionFrontier",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_potion_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Exact reagent formulas sharing one canonical trait family are mechanically "
+            "deduplicated. No-potion remains legal. Activation, cooldown, duration, and "
+            "Medicinal Use remain runtime-owned."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.passive_rank_frontier",
+        domain="extreme",
+        purpose=(
+            "Index legal passive-rank states for candidate class lines and explicitly "
+            "owned combat skill lines without inventing additional line ownership."
+        ),
+        implementation_path="services.extreme_sustained_dps_passive_rank_frontier_service",
+        inputs=("CharacterProgression", "CandidateClass", "ExtremeSkillUniverse"),
+        outputs=("ExtremeSustainedDPSPassiveRankFrontier",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_passive_rank_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Enumerates rank 0 through canonical max rank lazily. Native class lines are "
+            "allowed automatically; shared line ownership must already be explicit. "
+            "Racial passive progression remains race-owned."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_effect_projection",
         domain="extreme",
         purpose=(
