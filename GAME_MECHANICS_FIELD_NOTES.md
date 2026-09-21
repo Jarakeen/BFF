@@ -1019,3 +1019,12 @@ Damage and healing can target the same combatant at the same clock time. If the 
 **Layman's version:** a hit and a heal both stamped 10.0 seconds are not safely ordered just because one event name sorts before the other in the alphabet.
 
 **For BFF:** Phase 14 now blocks Health projection for that recipient from the ambiguous boundary onward unless timestamp/priority/sequence already proves the order. Earlier Health history remains valid. Exact-time snapshots can also request a sequence boundary so state at one timestamp can be inspected between ordered actions.
+
+
+## 2026-09-20 — A simulator event stream needs cause before state change
+
+Combat Simulation distinguishes an event that *causes* Health change from the derived Health transition itself. If both share the same ordering coordinate, a naive generic sort can place the derived state change before the damage/heal event that caused it.
+
+**Layman's version:** the hit has to happen before the Health bar changes, and the Health bar has to reach zero before the death transition exists. Alphabetical sorting is not a combat mechanic.
+
+**For BFF:** raw direct damage/healing now precedes derived Health changes through explicit event priority, death remains later, queue ordering never compares payload contents, and already-dead recipients do not receive synthetic 0-to-0 damage transitions. Exact-time sequence snapshots now apply the same boundary to bar, resources, Health, and active effect windows.
