@@ -88,7 +88,7 @@ def test_unresolved_canonical_evidence_keeps_branch_open() -> None:
     assert "slot eligibility unresolved" in result.unresolved
 
 
-def test_exhaustive_branch_with_no_physical_witness_is_not_silently_proven() -> None:
+def test_exhaustive_branch_with_no_physical_witness_is_proven_empty() -> None:
     service = ExtremeSustainedDPSGearTopologyRealizationService(
         topology_service=_TopologyService(),
         realization_service=_RealizationService(
@@ -98,5 +98,6 @@ def test_exhaustive_branch_with_no_physical_witness_is_not_silently_proven() -> 
 
     result = service.realize(0)
 
-    assert result.denominator_proven is False
-    assert any("no physically realizable" in row.casefold() for row in result.unresolved)
+    assert result.denominator_proven is True
+    assert result.unresolved == ()
+    assert any("proven empty" in row.casefold() for row in result.evidence)
