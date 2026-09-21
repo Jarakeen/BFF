@@ -3,6 +3,7 @@ from __future__ import annotations
 """Project explicit recipient-bound healing into deterministic health changes."""
 
 from dataclasses import dataclass
+from math import isfinite
 
 from models.combat_simulation import (
     CombatSimulationEvent,
@@ -73,6 +74,9 @@ class CombatSimulationHealthService:
             try:
                 numeric = [float(amount) for amount in amounts]
             except (TypeError, ValueError):
+                combined.extend(rows)
+                continue
+            if any(not isfinite(amount) for amount in numeric):
                 combined.extend(rows)
                 continue
 
@@ -239,6 +243,12 @@ class CombatSimulationHealthService:
                     )
                     continue
                 attempted_damage = float(amount)
+                if not isfinite(attempted_damage):
+                    add_unresolved(
+                        f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: damage amount must be finite",
+                        damage_blocking=(event.event_type == "outgoing_damage"),
+                    )
+                    continue
                 if attempted_damage < 0:
                     add_unresolved(
                         f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: damage amount cannot be negative",
@@ -298,6 +308,11 @@ class CombatSimulationHealthService:
                 )
                 continue
             attempted_value = float(attempted)
+            if not isfinite(attempted_value):
+                unresolved.append(
+                    f"{event.source} {event.event_type} at {event.time_seconds:g}s: modeled_heal must be finite"
+                )
+                continue
             if attempted_value < 0:
                 unresolved.append(
                     f"{event.source} {event.event_type} at {event.time_seconds:g}s: modeled_heal cannot be negative"
