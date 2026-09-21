@@ -1192,3 +1192,46 @@ def test_combat_simulation_result_rejects_shortfall_without_resource_events() ->
         assert "cannot record shortfall without event evidence" in str(exc)
     else:
         raise AssertionError("Expected unexplained resource shortfall to fail closed")
+
+
+def test_combat_simulation_result_canonicalizes_resource_summary_order() -> None:
+    magicka = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=30000,
+        ending_amount=30000,
+    )
+    stamina = CombatSimulationResourceResult(
+        resource="stamina",
+        starting_amount=20000,
+        ending_amount=20000,
+    )
+
+    result = _result(resources=(stamina, magicka))
+
+    assert [item.resource for item in result.resources] == ["magicka", "stamina"]
+
+
+def test_replay_treats_resource_summary_order_as_equivalent() -> None:
+    magicka = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=30000,
+        ending_amount=30000,
+    )
+    stamina = CombatSimulationResourceResult(
+        resource="stamina",
+        starting_amount=20000,
+        ending_amount=20000,
+    )
+    results = iter(
+        (
+            _result(resources=(magicka, stamina)),
+            _result(resources=(stamina, magicka)),
+        )
+    )
+
+    verification = CombatSimulationDeterministicReplayService().verify(
+        lambda: next(results)
+    )
+
+    assert verification.deterministic is True
+    assert verification.differing_signature_fields == ()
