@@ -421,8 +421,13 @@ def install() -> None:
         painter.drawEllipse(QPointF(0, 0), self.radius + 2, self.radius + 2)
 
     def raid_map_tab(self) -> QWidget:
+        # Resolve the layout class locally. PyInstaller one-file packaging has
+        # previously produced a stale/global binding failure here even when the
+        # module-level import was present in source.
+        from PySide6.QtWidgets import QVBoxLayout as _QVBoxLayout
+
         tab = QWidget()
-        root = QVBoxLayout(tab)
+        root = _QVBoxLayout(tab)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
 
