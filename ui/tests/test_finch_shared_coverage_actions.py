@@ -46,3 +46,10 @@ def test_coverage_publish_requires_saved_raid_plan_scope() -> None:
 
     assert 'data.startswith("raid_plan:")' in source
     assert "Select a saved Raid Plan before publishing Coverage." in source
+
+
+def test_shared_coverage_picker_shows_publisher_and_utc_time() -> None:
+    source = _source("ui/coverage_page.py")
+
+    assert "row.published_by" in source
+    assert "format_shared_timestamp(row.updated_at)" in source
