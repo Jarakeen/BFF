@@ -119,9 +119,13 @@ def test_shared_raid_plan_payload_excludes_local_ids_builds_and_notes() -> None:
                 role="Damage Dealer",
                 eso_class="Arcanist",
                 selected_build_id="build-local-id",
-                selected_build_name="Corpsebuster",
+                selected_build_name="Corpsebuster Support",
+                build_source_kind="comp",
+                build_source_name="Performance Mode RG",
+                build_source_url="https://private.example/build",
                 planned_gear_sets=("Corpsebuster", "Null Arca"),
                 planned_skills=("Fatecarver",),
+                planned_mundus="The Thief",
                 primary_assignment="Major Courage",
                 secondary_assignment="Minor Toughness",
                 utility_assignments=("Portal", "Interrupt"),
@@ -143,6 +147,13 @@ def test_shared_raid_plan_payload_excludes_local_ids_builds_and_notes() -> None:
             "primary_assignment": "Major Courage",
             "secondary_assignment": "Minor Toughness",
             "utility_assignments": ["Portal", "Interrupt"],
+            "build_summary": {
+                "name": "Corpsebuster Support",
+                "source_kind": "comp",
+                "source_name": "Performance Mode RG",
+                "planned_gear_sets": ["Corpsebuster", "Null Arca"],
+                "planned_mundus": "The Thief",
+            },
         }
     ]
     rendered = repr(payload)
@@ -153,6 +164,7 @@ def test_shared_raid_plan_payload_excludes_local_ids_builds_and_notes() -> None:
         "Corpsebuster",
         "Null Arca",
         "Fatecarver",
+        "https://private.example/build",
         "private raid lead note",
         "private chair note",
     ):
@@ -177,6 +189,6 @@ def test_publish_service_uses_versioned_snapshots(tmp_path: Path) -> None:
     assert client.team_calls[0][0] == "Performance Mode"
     assert client.team_calls[0][2] == 1
     assert client.plan_calls[0][0] == "rg-pm"
-    assert client.plan_calls[0][2] == 2
+    assert client.plan_calls[0][2] == 3
     assert team_result.kind == "team"
     assert plan_result.kind == "raid_plan"
