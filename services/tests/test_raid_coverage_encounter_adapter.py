@@ -27,24 +27,24 @@ def test_coverage_adapter_emits_only_exact_mapped_provider_requirement():
 
     rows = adapter.requirements("oaxiltso")
 
-    assert len(rows) == 1
-    assert rows[0].requirement_id == "oaxiltso:coverage:war_horn"
-    assert rows[0].encounter_id == "oaxiltso"
-    assert rows[0].mechanic_id == "coverage-profile:default_raid_coverage"
-    assert rows[0].mechanic_name == "War Horn"
-    assert rows[0].requirement_type == "force"
-    assert rows[0].interpretation_status == "configured_raid_coverage"
+    assert len(rows) == len(DEFAULT_RAID_COVERAGE_PROFILE.mapped_required)
+    war_horn = next(row for row in rows if row.requirement_id == "oaxiltso:coverage:war_horn")
+    assert war_horn.encounter_id == "oaxiltso"
+    assert war_horn.mechanic_id == "coverage-profile:default_raid_coverage"
+    assert war_horn.mechanic_name == "War Horn"
+    assert war_horn.requirement_type == "force"
+    assert war_horn.interpretation_status == "configured_raid_coverage"
 
 
 def test_coverage_adapter_marks_mapped_capability_as_provider_semantics():
     adapter = RaidCoverageEncounterAdapter(DEFAULT_RAID_COVERAGE_PROFILE)
 
-    assert adapter.requirement_semantics() == {
-        "force": RequirementSemantics.PROVIDER_CAPABILITY
-    }
-    assert adapter.required_provider_counts("oaxiltso") == {
-        "oaxiltso:coverage:war_horn": 1
-    }
+    semantics = adapter.requirement_semantics()
+    assert semantics
+    assert set(semantics.values()) == {RequirementSemantics.PROVIDER_CAPABILITY}
+    counts = adapter.required_provider_counts("oaxiltso")
+    assert counts["oaxiltso:coverage:war_horn"] == 1
+    assert len(counts) == len(DEFAULT_RAID_COVERAGE_PROFILE.mapped_required)
 
 
 def test_coverage_adapter_exposes_exact_effect_identity_map():
@@ -52,9 +52,9 @@ def test_coverage_adapter_exposes_exact_effect_identity_map():
 
     maps = adapter.capability_identity_maps()
 
-    assert len(maps) == 1
-    assert maps[0].capability_type == "force"
-    assert maps[0].effect_names == frozenset({"force"})
+    assert len(maps) == len(DEFAULT_RAID_COVERAGE_PROFILE.mapped_required)
+    force = next(item for item in maps if item.capability_type == "force")
+    assert force.effect_names == frozenset({"force"})
 
 
 def test_requirement_overlay_preserves_canonical_rows_and_appends_profile_rows():
@@ -66,7 +66,12 @@ def test_requirement_overlay_preserves_canonical_rows_and_appends_profile_rows()
 
     rows = overlay.requirements("oaxiltso")
 
-    assert [row.requirement_type for row in rows] == ["movement", "force"]
+    assert rows[0].requirement_type == "movement"
+    assert [row.requirement_type for row in rows[1:]] == [
+        row.capability_type
+        for row in DEFAULT_RAID_COVERAGE_PROFILE.mapped_required
+        if row.capability_type is not None
+    ]
 
 
 def test_requirement_overlay_rejects_wrong_encounter_identity():
