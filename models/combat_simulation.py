@@ -340,6 +340,25 @@ class CombatSimulationSnapshot:
         health_keys = tuple(item.identity for item in self.health)
         if len(set(health_keys)) != len(health_keys):
             raise ValueError("combat simulation snapshot Health identities must be unique")
+        if self.target_state is not None:
+            target_by_identity = {
+                item.identity: item
+                for item in self.target_state.combatants
+            }
+            for item in self.health:
+                if item.identity not in target_by_identity:
+                    raise ValueError(
+                        "combat simulation snapshot Health identity is not present in target state"
+                    )
+                target = target_by_identity[item.identity]
+                if (
+                    item.maximum_health is not None
+                    and target.maximum_health is not None
+                    and int(item.maximum_health) != int(target.maximum_health)
+                ):
+                    raise ValueError(
+                        "combat simulation snapshot maximum Health does not match target state"
+                    )
         object.__setattr__(self, "time_seconds", time_seconds)
         object.__setattr__(self, "active_bar", active_bar)
 
