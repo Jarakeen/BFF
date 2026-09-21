@@ -408,3 +408,81 @@ def test_resource_adapter_rejects_unexplained_change_without_events() -> None:
         assert "ending amount does not match final event state" in str(exc)
     else:
         raise AssertionError("Expected unexplained resource change to fail closed")
+
+
+class _WrongResourceSustainService:
+    def evaluate(self, *, build, plan, resource):
+        assert build.Name == "Magrat"
+        assert plan.build_name == "DF Healer"
+        assert resource is ResourceType.MAGICKA
+        timeline = ResourceTimelineResult(
+            resource=ResourceType.STAMINA,
+            starting_amount=30000,
+            ending_amount=30000,
+            events=(),
+            starting_maximum=30000,
+            ending_maximum=30000,
+        )
+        return SimpleNamespace(
+            run=SimpleNamespace(timeline=timeline),
+            unresolved=(),
+        )
+
+
+class _BadArithmeticSustainService:
+    def evaluate(self, *, build, plan, resource):
+        assert build.Name == "Magrat"
+        assert plan.build_name == "DF Healer"
+        assert resource is ResourceType.MAGICKA
+        timeline = ResourceTimelineResult(
+            resource=ResourceType.MAGICKA,
+            starting_amount=30000,
+            ending_amount=26000,
+            events=(
+                AppliedResourceTimelineEvent(
+                    time_seconds=0.0,
+                    kind=ResourceTimelineEventKind.ACTION_COST,
+                    source="Impossible Cost",
+                    before=30000,
+                    attempted_change=-3000,
+                    applied_change=-3000,
+                    after=26000,
+                ),
+            ),
+            starting_maximum=30000,
+            ending_maximum=30000,
+        )
+        return SimpleNamespace(
+            run=SimpleNamespace(timeline=timeline),
+            unresolved=(),
+        )
+
+
+def test_resource_adapter_rejects_wrong_resource_identity() -> None:
+    try:
+        CombatSimulationResourceService(
+            sustain_service=_WrongResourceSustainService()
+        ).project(
+            build=_snapshot().materialize(),
+            plan=_plan(),
+            resource=ResourceType.MAGICKA,
+        )
+    except ValueError as exc:
+        assert "identity does not match requested" in str(exc)
+    else:
+        raise AssertionError("Expected mismatched resource timeline identity to fail closed")
+
+
+def test_resource_adapter_rejects_impossible_event_arithmetic() -> None:
+    try:
+        CombatSimulationResourceService(
+            sustain_service=_BadArithmeticSustainService()
+        ).project(
+            build=_snapshot().materialize(),
+            plan=_plan(),
+            resource=ResourceType.MAGICKA,
+        )
+    except ValueError as exc:
+        assert "event arithmetic is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected impossible resource event arithmetic to fail closed")
