@@ -943,3 +943,60 @@ def test_damage_summary_requires_one_health_transition_per_distinct_raw_sequence
         "matching Health transition is unavailable" in message
         for message in summary.damage_unresolved
     )
+
+
+def test_damage_summary_preserves_dps_but_marks_missing_death_attribution_unresolved() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=3000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    result = CombatSimulationResult(
+        duration_seconds=2.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(
+            _event(
+                1.0,
+                0,
+                "outgoing_damage",
+                "Execute",
+                recipient="Boss",
+                amount=5000.0,
+            ),
+            _event(
+                1.0,
+                0,
+                "health_change",
+                "Execute",
+                recipient="Boss",
+                before=3000,
+                attempted_damage=5000.0,
+                applied_damage=3000.0,
+                overkill=2000.0,
+                after=0,
+                origin_event_type="outgoing_damage",
+            ),
+        ),
+        target_state=state,
+    )
+
+    summary = CombatSimulationDamageSummaryService().summarize(
+        result,
+        target_identity="Boss",
+    )
+
+    assert summary.complete_damage_evidence is True
+    assert summary.modeled_dps == 1500.0
+    assert summary.target_dead is True
+    assert summary.killing_source is None
+    assert summary.death_time_seconds is None
+    assert any(
+        "death attribution event is unavailable" in message
+        for message in summary.unresolved
+    )
