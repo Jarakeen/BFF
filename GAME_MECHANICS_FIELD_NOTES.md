@@ -1291,3 +1291,7 @@ The named-gear witness owns the selected weapon slots' set names and weapon type
 ### 2026-09-21 — Finite-axis dominance only works when the compared action stays the same action
 
 When FoundryDock varies CP, passive ranks, gear, or another finite axis to bound one scheduled action, every candidate must resolve the **same timestamp/sequence action coordinate**. If changing the axis changes which scheduled action is being measured, those numbers are not one comparable dominance grid. Coordinate drift therefore blocks both axis-coverage promotion and the numeric action ceiling.
+
+### 2026-09-21 — A finite proof denominator does not have to be materialized all at once
+
+A search space can be finite and fully indexed without building every candidate object in memory. FoundryDock's CP, passive-rank, and dual-bar gear dominance adapters now expose deterministic `choice_at(index)` access and evaluate one candidate at a time. This preserves denominator proof while avoiding an eager Cartesian allocation that would defeat the purpose of branch-and-bound.
