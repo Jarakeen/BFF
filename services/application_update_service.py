@@ -21,6 +21,7 @@ from engine.config import get_app_root
 
 
 LATEST_RELEASE_API = "https://api.github.com/repos/Jarakeen/BFF/releases/latest"
+DEFAULT_UPDATE_GATEWAY_BASE_URL = "https://bff-production-30c2.up.railway.app"
 UPDATE_ACCESS_FILE = "update_access.json"
 UPDATE_ASSET_NAMES = ("FoundryDock-update.zip", "BFF-update.zip")
 
@@ -64,7 +65,7 @@ class ApplicationUpdateService:
 
     @staticmethod
     def _load_update_access() -> tuple[str, str]:
-        base_url = str(os.environ.get("FOUNDRYDOCK_UPDATE_BASE_URL") or "").strip().rstrip("/")
+        base_url = str(os.environ.get("FOUNDRYDOCK_UPDATE_BASE_URL") or DEFAULT_UPDATE_GATEWAY_BASE_URL).strip().rstrip("/")
         access_key = str(os.environ.get("FOUNDRYDOCK_UPDATE_ACCESS_KEY") or "").strip()
         config_path = Path(get_app_root()) / UPDATE_ACCESS_FILE
         if config_path.is_file():
