@@ -963,6 +963,35 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_late_axis_adapter",
+        domain="extreme",
+        purpose=(
+            "Adapt canonical Champion Point, potion-family, passive-rank, and two-bar "
+            "skill frontiers into ordered indexed search axes and assemble their final state."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_late_axis_adapter_service",
+        inputs=("ExtremeSustainedDPSCrossAxisContext",),
+        outputs=("IndexedFrontierAxes", "ExtremeSustainedDPSGeneratedLateAxisState"),
+        dependencies=(
+            "extreme.sustained_dps.champion_point_frontier",
+            "extreme.sustained_dps.potion_frontier",
+            "extreme.sustained_dps.passive_rank_frontier",
+            "extreme.sustained_dps.skill_bar_frontier",
+            "extreme.sustained_dps.generated_candidate_assembly",
+            "extreme.sustained_dps.generated_frontier_wiring",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_late_axis_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Selections remain separate until all four coordinates exist, then canonical "
+            "candidate assembly copies only axis-owned state. Unresolved or empty frontier "
+            "denominators fail closed before candidate materialization."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_frontier_wiring",
         domain="extreme",
         purpose=(
