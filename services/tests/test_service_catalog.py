@@ -563,3 +563,18 @@ def test_sustained_dps_runtime_effect_projection_is_not_a_timing_authority() -> 
     ) == ("extreme.sustained_dps.gear_runtime_semantics",)
     assert "no trigger, timing, cooldown" in service.notes.casefold()
     assert "weapon_spell_damage" in service.notes
+
+
+def test_sustained_dps_potion_and_passive_frontiers_preserve_ownership_boundaries() -> None:
+    potion = canonical_service_for("extreme_sustained_dps_potion_frontier")
+    passive = canonical_service_for("extreme_sustained_dps_passive_rank_frontier")
+
+    assert potion is not None
+    assert passive is not None
+    assert potion.service_id == "extreme.sustained_dps.potion_frontier"
+    assert passive.service_id == "extreme.sustained_dps.passive_rank_frontier"
+    assert SERVICE_CATALOG.dependencies_of(potion.service_id) == ()
+    assert SERVICE_CATALOG.dependencies_of(passive.service_id) == ()
+    assert "Medicinal Use remain runtime-owned" in potion.notes
+    assert "shared line ownership must already be explicit" in passive.notes
+    assert "Racial passive progression remains race-owned" in passive.notes
