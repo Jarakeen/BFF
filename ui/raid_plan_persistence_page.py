@@ -7,14 +7,17 @@ surface. Loading a plan restores only RaidPlan-owned choices; Personnel, Charact
 Saved Builds, Team records, and Rotation runtime state remain independently owned.
 """
 
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import replace
+from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from engine.config import get_data_dir
 from models.raid_plan import RaidPlan
 from services.comp_builder_trial_scope import COMP_MAKER_TRIALS
+from services.finch_shared_publish_service import publish_raid_plan_to_finch
 from services.raid_plan_member_identity_resolution_service import (
     RaidPlanMemberIdentityResolutionService,
 )
@@ -27,6 +30,12 @@ from ui.raid_plan_page import (
     new_personnel_member,
 )
 from ui.raid_plan_stable_identity_selection_page import RaidPlanStableIdentitySelectionPage
+
+
+_FINCH_PLAN_PUBLISH_EXECUTOR = ThreadPoolExecutor(
+    max_workers=1,
+    thread_name_prefix="finch-plan-publish",
+)
 
 
 def _same_player_identity(prior, visible) -> bool:
@@ -123,7 +132,11 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.plan_repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
         self._loading_plan = False
         self._loaded_plan_snapshot: RaidPlan | None = None
+        self._finch_plan_publish_future: Future | None = None
         super().__init__(parent)
+        self._finch_plan_publish_timer = QTimer(self)
+        self._finch_plan_publish_timer.setInterval(100)
+        self._finch_plan_publish_timer.timeout.connect(self._poll_raid_plan_publish)
         lower_save = getattr(self, "lower_save_plan_button", None)
         if lower_save is not None:
             lower_save.clicked.connect(self.save_current_plan)
@@ -158,12 +171,67 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         save_button.clicked.connect(self.save_current_plan)
         row.addWidget(save_button)
 
+        self.publish_plan_finch_button = QPushButton("Publish")
+        self.publish_plan_finch_button.setToolTip(
+            "Publish this saved Raid Plan outline to Finch. Unsaved edits must be saved first."
+        )
+        self.publish_plan_finch_button.clicked.connect(self._publish_saved_plan_to_finch)
+        row.addWidget(self.publish_plan_finch_button)
+
         delete_button = QPushButton("Delete")
         delete_button.clicked.connect(self.delete_selected_plan)
         row.addWidget(delete_button)
 
         layout.addLayout(row)
         self.header.add_context_widget(controls)
+
+    def _publish_saved_plan_to_finch(self) -> None:
+        if self.has_pending_changes():
+            self.status.warning("Save Raid Plan changes before publishing to Finch.")
+            return
+
+        plan_id = self.saved_plan_combo.currentData()
+        if not isinstance(plan_id, str) or not plan_id.strip():
+            loaded = getattr(self, "_loaded_plan_snapshot", None)
+            plan_id = str(getattr(loaded, "plan_id", "") or "").strip()
+        if not plan_id:
+            self.status.warning("Save this Raid Plan before publishing to Finch.")
+            return
+
+        if (
+            self._finch_plan_publish_future is not None
+            and not self._finch_plan_publish_future.done()
+        ):
+            self.status.info("A Finch Raid Plan publish is already running.")
+            return
+
+        self.publish_plan_finch_button.setEnabled(False)
+        self.status.info("Publishing saved Raid Plan to Finch…")
+        self._finch_plan_publish_future = _FINCH_PLAN_PUBLISH_EXECUTOR.submit(
+            publish_raid_plan_to_finch,
+            database_path=Path(get_data_dir()) / "eso.db",
+            raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+            plan_id=plan_id,
+            settings_path=Path("settings.json"),
+        )
+        self._finch_plan_publish_timer.start()
+
+    def _poll_raid_plan_publish(self) -> None:
+        future = self._finch_plan_publish_future
+        if future is None or not future.done():
+            return
+
+        self._finch_plan_publish_timer.stop()
+        self._finch_plan_publish_future = None
+        self.publish_plan_finch_button.setEnabled(True)
+        try:
+            result = future.result()
+        except Exception as exc:
+            self.status.error(f"Finch Raid Plan publish failed: {exc}")
+            return
+        self.status.success(
+            f"Published Raid Plan to Finch: {result.snapshot_key}"
+        )
 
     def _selected_build_ids_by_seat(self) -> dict[str, str]:
         """Read stable BuildIds from the exact saved-build rows selected in the UI."""
