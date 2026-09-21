@@ -8,6 +8,7 @@ from services.extreme_sustained_dps_generated_branch_and_bound_search_service im
     ExtremeSustainedDPSGeneratedSearchResult,
 )
 from services.extreme_sustained_dps_objective32_search_service import (
+    ExtremeSustainedDPSObjective32SearchScopeProof,
     ExtremeSustainedDPSObjective32SearchService,
 )
 from services.extreme_sustained_dps_runtime_state_frontier_service import (
@@ -77,6 +78,11 @@ def test_objective32_wrapper_can_close_theory_only_when_search_and_all_axes_clos
     result = service.search(
         "root",
         coverage_proofs=(_proof_without_runtime(),),
+        scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
+            root_candidate_key="generated-root",
+            coverage_matches_search_denominator=True,
+            source="test exact search denominator proof",
+        ),
         required_duration_seconds=20.0,
         runtime_snapshot="fallback",
         target_health=1_000_000,
@@ -100,6 +106,11 @@ def test_objective32_wrapper_preserves_local_runtime_omission_and_withholds_theo
     result = service.search(
         "root",
         coverage_proofs=(_proof_without_runtime(),),
+        scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
+            root_candidate_key="generated-root",
+            coverage_matches_search_denominator=True,
+            source="test exact search denominator proof",
+        ),
         required_duration_seconds=20.0,
         runtime_snapshot="fallback",
         target_health=1_000_000,
@@ -124,6 +135,11 @@ def test_objective32_wrapper_does_not_turn_incomplete_finite_search_into_theory(
     result = service.search(
         "root",
         coverage_proofs=(_proof_without_runtime(),),
+        scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
+            root_candidate_key="generated-root",
+            coverage_matches_search_denominator=True,
+            source="test exact search denominator proof",
+        ),
         required_duration_seconds=20.0,
         runtime_snapshot="fallback",
         target_health=1_000_000,
@@ -133,3 +149,60 @@ def test_objective32_wrapper_does_not_turn_incomplete_finite_search_into_theory(
 
     assert result.finite_denominator_maximum_proven is False
     assert result.theoretical_maximum_proven is False
+
+
+
+def test_objective32_wrapper_rejects_coverage_scope_for_different_search_root() -> None:
+    service = ExtremeSustainedDPSObjective32SearchService(
+        pipeline_search=_PipelineSearch(_search_result())
+    )
+
+    result = service.search(
+        "root",
+        coverage_proofs=(_proof_without_runtime(),),
+        scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
+            root_candidate_key="some-other-root",
+            coverage_matches_search_denominator=True,
+            source="mismatched test scope",
+        ),
+        required_duration_seconds=20.0,
+        runtime_snapshot="fallback",
+        target_health=1_000_000,
+        target_resistance=18_200.0,
+        runtime_state_frontier=_runtime_frontier(),
+    )
+
+    assert result.finite_denominator_maximum_proven is True
+    assert result.theoretical_maximum_proven is False
+    assert any(
+        "different generated search root" in item
+        for item in result.closure.omitted_scope
+    )
+
+
+def test_objective32_wrapper_requires_explicit_denominator_equivalence() -> None:
+    service = ExtremeSustainedDPSObjective32SearchService(
+        pipeline_search=_PipelineSearch(_search_result())
+    )
+
+    result = service.search(
+        "root",
+        coverage_proofs=(_proof_without_runtime(),),
+        scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
+            root_candidate_key="generated-root",
+            coverage_matches_search_denominator=False,
+            source="test proof intentionally open",
+        ),
+        required_duration_seconds=20.0,
+        runtime_snapshot="fallback",
+        target_health=1_000_000,
+        target_resistance=18_200.0,
+        runtime_state_frontier=_runtime_frontier(),
+    )
+
+    assert result.finite_denominator_maximum_proven is True
+    assert result.theoretical_maximum_proven is False
+    assert any(
+        "not proven to match" in item
+        for item in result.closure.omitted_scope
+    )
