@@ -875,6 +875,32 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.finite_axis_action_dominance",
+        domain="extreme",
+        purpose=(
+            "Exhaust one caller-supplied proven finite mutation-axis denominator for one "
+            "exact scheduled damage action and promote both canonical axis coverage and "
+            "the largest exact action consequence."
+        ),
+        implementation_path="services.extreme_sustained_dps_finite_axis_action_dominance_service",
+        inputs=("CandidateKey", "CanonicalAxes", "FiniteChoices", "ExactActionEvaluator"),
+        outputs=("ExtremeSustainedDPSFiniteAxisActionDominanceResult",),
+        dependencies=(
+            "extreme.sustained_dps.axis_dominance_composition",
+            "extreme.sustained_dps.structural_action_upper_bound",
+        ),
+        responsibilities=("extreme_sustained_dps_finite_axis_action_dominance",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Every non-target axis remains caller-fixed. Every finite choice must resolve the "
+            "same scheduled action coordinate. Incomplete denominators, coordinate drift, or "
+            "unresolved action consequences promote neither axis coverage nor numeric ceiling."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.gear_progression_axis_coverage",
         domain="extreme",
         purpose=(
