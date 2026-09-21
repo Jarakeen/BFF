@@ -1077,3 +1077,11 @@ Two different outgoing damage sources can share the same timestamp, priority, an
 **Layman's version:** if two different hits are stamped at the exact same combat coordinate and we cannot prove which applies first, we cannot safely claim the resulting applied damage or DPS is complete.
 
 **For BFF:** cross-source same-instant outgoing-damage collisions now populate damage_unresolved as well as general unresolved. Modeled DPS is withheld until an authoritative ordering rule exists. Same-source components of one hit remain safely coalesced for Health.
+
+## 2026-09-21 — Same-timestamp resource ordering must preserve one Health-independent sustain truth
+
+Combat Simulation reuses the established resource-timeline rule that action costs resolve before same-timestamp recovery/restoration. If a supplied resource timeline reverses that order, its before/after chain can disagree with the simulator's canonical event order and produce a different final resource value in snapshots.
+
+**Layman's version:** if a skill costs Magicka at the same instant a recovery tick lands, BFF cannot let one subsystem say the tick happened first while another says the cost happened first. Otherwise two parts of the same simulation can report different ending Magicka.
+
+**For BFF:** the Combat Simulation resource adapter now rejects noncanonical same-timestamp ordering instead of reordering contradictory before/after evidence. Final resource snapshots are regression-checked against the stored resource summary.
