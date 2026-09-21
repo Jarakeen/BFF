@@ -1349,9 +1349,19 @@ This slice does **not** model resurrection, soul gems, revive channel timing, en
 wipe logic, corpse targetability, death-triggered set behavior, or encounter-specific
 failure conditions.
 
-**Phase 14J validation pending:** death transitions, Health/damage/healing projection,
-snapshots, target binding, and main simulation integration must pass before this slice
-is green.
+### Phase 14J validation checkpoint — 2026-09-21
+
+Focused validation:
+
+- **87 passed in 2.56s**
+- explicit death transitions, Health/damage/healing projection, exact-time snapshots,
+  recipient/target binding, outgoing damage, and main simulation integration are green;
+- lethal damage emits one causal death transition after the Health change;
+- nonlethal damage emits no death transition;
+- dead recipients remain dead until explicit resurrection semantics exist;
+- snapshots expose deterministic `is_dead` state without inventing revive behavior.
+
+**Phase 14J explicit death state status: green.**
 
 
 **Comp Maker / Optimizer ownership update (2026-09-19):** Assignments owns WHO
