@@ -60,6 +60,7 @@ def test_anchored_policy_promotes_finite_family_but_preserves_continuous_omissio
         "potion_timing_policy",
     )
     assert len(result.omitted_scope) == 2
+    assert result.proof.omitted_scope == result.omitted_scope
     assert any("continuous potion" in row for row in result.omitted_scope)
     assert any("Ultimate delay" in row for row in result.omitted_scope)
 
@@ -87,4 +88,5 @@ def test_complete_heavy_policy_promotes_only_reviewed_window_family() -> None:
     )
 
     assert result.proof.dominated_axes == ("heavy_attack_policy",)
+    assert result.proof.omitted_scope == result.omitted_scope
     assert any("caller-supplied reviewed safe set" in row for row in result.omitted_scope)
