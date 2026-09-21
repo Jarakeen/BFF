@@ -278,44 +278,56 @@ def _paint_reference(item, painter, option, widget=None) -> None:
 
 
 def _label_and_key_panel(board) -> QWidget:
-    """Use the existing label/key row so the top of the map gains no new row."""
+    """Keep edit and reference tools together without forcing them onto one long row."""
 
     panel = QWidget(board)
-    row = QHBoxLayout(panel)
-    row.setContentsMargins(0, 0, 0, 0)
-    row.setSpacing(6)
+    stack = QVBoxLayout(panel)
+    stack.setContentsMargins(0, 0, 0, 0)
+    stack.setSpacing(4)
 
-    heading = QLabel("EDIT & REFERENCE")
+    edit_row = QHBoxLayout()
+    edit_row.setContentsMargins(0, 0, 0, 0)
+    edit_row.setSpacing(6)
+
+    heading = QLabel("EDIT")
     heading.setProperty("sidebarHeading", True)
-    row.addWidget(heading)
+    heading.setMinimumWidth(110)
+    edit_row.addWidget(heading)
 
     board.raid_map_custom_label = QLineEdit()
-    board.raid_map_custom_label.setMinimumWidth(150)
+    board.raid_map_custom_label.setMinimumWidth(220)
     board.raid_map_custom_label.setPlaceholderText("Select one marker or zone to rename")
     board.raid_map_custom_label.returnPressed.connect(lambda: _rename_selected(board))
-    row.addWidget(board.raid_map_custom_label, 1)
+    edit_row.addWidget(board.raid_map_custom_label, 1)
 
     board.raid_map_apply_label = QPushButton("Rename")
     board.raid_map_apply_label.clicked.connect(lambda: _rename_selected(board))
-    row.addWidget(board.raid_map_apply_label)
+    edit_row.addWidget(board.raid_map_apply_label)
+    edit_row.addStretch(1)
+    stack.addLayout(edit_row)
 
-    reference_heading = QLabel("REFERENCE POINTS")
+    reference_row = QHBoxLayout()
+    reference_row.setContentsMargins(0, 0, 0, 0)
+    reference_row.setSpacing(6)
+
+    reference_heading = QLabel("REFERENCE")
     reference_heading.setProperty("sidebarHeading", True)
-    row.addWidget(reference_heading)
+    reference_heading.setMinimumWidth(110)
+    reference_row.addWidget(reference_heading)
 
     board.raid_map_reference_type = QComboBox()
     for name in REFERENCE_PRESETS:
         board.raid_map_reference_type.addItem(name)
-    board.raid_map_reference_type.setMaximumWidth(105)
+    board.raid_map_reference_type.setMaximumWidth(125)
     board.raid_map_reference_type.setToolTip(
         "Static room reference point. Reference points persist across timeline steps."
     )
-    row.addWidget(board.raid_map_reference_type)
+    reference_row.addWidget(board.raid_map_reference_type)
 
     add_reference = QPushButton("+ Add")
     add_reference.setToolTip("Add the selected static reference point to the Raid Map")
     add_reference.clicked.connect(lambda: _add_reference(board))
-    row.addWidget(add_reference)
+    reference_row.addWidget(add_reference)
 
     board.raid_map_reference_lock = QPushButton("🔓 References")
     board.raid_map_reference_lock.setCheckable(True)
@@ -325,7 +337,7 @@ def _label_and_key_panel(board) -> QWidget:
     board.raid_map_reference_lock.toggled.connect(
         lambda checked: _toggle_reference_lock(board, checked)
     )
-    row.addWidget(board.raid_map_reference_lock)
+    reference_row.addWidget(board.raid_map_reference_lock)
 
     key = QLabel(
         "KEY  Boss • M mini-boss • T tank • H healer • D DD • P portal • "
@@ -337,7 +349,8 @@ def _label_and_key_panel(board) -> QWidget:
         "Marker type controls its symbol/style. Visible labels are freeform. "
         "Entrance, Exit, and Banner are static orientation references."
     )
-    row.addWidget(key, 3)
+    reference_row.addWidget(key, 1)
+    stack.addLayout(reference_row)
     return panel
 
 
