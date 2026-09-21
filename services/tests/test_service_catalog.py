@@ -751,3 +751,20 @@ def test_sustained_dps_closed_descendant_action_ceiling_requires_local_denominat
     assert "every descendant and every damage-bearing action" in service.notes
     assert "direct/periodic/triggered completeness" in service.notes
     assert "never extrapolated outward" in service.notes
+
+def test_sustained_dps_generated_frontier_wiring_keeps_authorities_external() -> None:
+    service = canonical_service_for("extreme_sustained_dps_generated_frontier_wiring")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.generated_frontier_wiring"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.partial_branch_upper_bound",
+        "extreme.sustained_dps.generated_branch_and_bound",
+    )
+    assert "without materializing" in service.purpose
+    assert "legality" in service.notes
+    assert "exact Combat Simulation remain external" in service.notes
+
