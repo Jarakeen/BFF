@@ -831,6 +831,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.partial_branch_upper_bound",
+        domain="extreme",
+        purpose=(
+            "Intersect independent externally proven optimistic sustained-DPS ceilings "
+            "for one partial generated branch and inherit any proven parent ceiling."
+        ),
+        implementation_path="services.extreme_sustained_dps_partial_branch_upper_bound_service",
+        inputs=("CandidateKey", "UpperBoundEvidenceSources", "OptionalParentBound"),
+        outputs=("ExtremeSustainedDPSBoundEnvelope",),
+        dependencies=("extreme.sustained_dps.pruning",),
+        responsibilities=("extreme_sustained_dps_partial_branch_upper_bound",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Safe ceilings for the same branch are intersected with min(), never summed, "
+            "so overlapping mechanics cannot double-count optimistic contribution. "
+            "Missing/unproven local evidence cannot weaken an inherited proven parent ceiling."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_branch_and_bound",
         domain="extreme",
         purpose=(
