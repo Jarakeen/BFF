@@ -578,3 +578,14 @@ def test_sustained_dps_potion_and_passive_frontiers_preserve_ownership_boundarie
     assert "Medicinal Use remain runtime-owned" in potion.notes
     assert "shared line ownership must already be explicit" in passive.notes
     assert "Racial passive progression remains race-owned" in passive.notes
+
+
+def test_sustained_dps_skill_bar_frontier_preserves_morph_and_ownership_denominator() -> None:
+    service = canonical_service_for("extreme_sustained_dps_skill_bar_frontier")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.skill_bar_frontier"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "base/morph alternatives" in service.notes
+    assert "explicit shared-line ownership" in service.notes
+    assert "Normal-slot permutations are collapsed" in service.notes
