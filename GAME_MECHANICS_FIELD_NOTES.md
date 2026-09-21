@@ -1101,3 +1101,7 @@ For MOST Sustained DPS, a generated branch whose proof-safe optimistic ceiling e
 ### 2026-09-21 — Static character-sheet maxima are not sustained-DPS ceilings
 
 A build can have a larger Weapon/Spell Damage, crit, penetration, resource pool, or Mundus contribution and still fail to provide a proof-safe upper bound on **sustained DPS**. Skill coefficients, cast cadence, DoT timing, proc frequency, execute behavior, cooldowns, resource failure, and rotation composition can all change the final rate. FoundryDock therefore treats static dynamic-axis refinement as candidate evidence only. It will not prune a sustained-DPS branch until an optimistic action/rotation ceiling is proven separately.
+
+### 2026-09-21 — A direct-hit ceiling is not a rotation ceiling
+
+For sustained DPS, an optimistic bound on a cast's immediate hit is insufficient if that cast can also create a DoT, delayed hit, proc, or other triggered damage inside the comparison horizon. A proof-safe rotation ceiling must bound the **entire damage consequence owned by each scheduled action**, not merely the button-press hit. FoundryDock now withholds the whole-plan ceiling if even one damage action has only partial consequence coverage.
