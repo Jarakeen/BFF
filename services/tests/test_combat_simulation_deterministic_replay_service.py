@@ -2,6 +2,7 @@ from dataclasses import replace
 
 from models.combat_simulation import (
     CombatSimulationEvent,
+    CombatSimulationResourceResult,
     CombatSimulationResult,
     SimulationEventPriority,
 )
@@ -143,3 +144,20 @@ def test_combat_simulation_result_rejects_invalid_bar_state() -> None:
             assert "front or back" in str(exc)
         else:
             raise AssertionError("Expected invalid combat result bar state to fail closed")
+
+
+def test_combat_simulation_resource_result_rejects_invalid_summary_values() -> None:
+    bad_cases = (
+        dict(resource="", starting_amount=100, ending_amount=100, total_shortfall=0),
+        dict(resource="magicka", starting_amount=-1, ending_amount=100, total_shortfall=0),
+        dict(resource="magicka", starting_amount=100, ending_amount=-1, total_shortfall=0),
+        dict(resource="magicka", starting_amount=100, ending_amount=100, total_shortfall=-1),
+    )
+
+    for kwargs in bad_cases:
+        try:
+            CombatSimulationResourceResult(**kwargs)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Expected invalid combat resource summary to fail closed")
