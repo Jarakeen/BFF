@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from urllib.error import HTTPError, URLError
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 
@@ -29,6 +30,16 @@ class FinchGearNeedRequest:
     player_name: str
     gear_needed: str
     created_at: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class FinchSharedSnapshot:
+    kind: str
+    snapshot_key: str
+    schema_version: int
+    payload: dict[str, object]
+    published_by: str = ""
+    updated_at: str = ""
 
 
 class FinchApiError(RuntimeError):
@@ -143,6 +154,81 @@ class FinchApiClient:
             )
         return tuple(result)
 
+
+    @staticmethod
+    def _shared_snapshot(payload: object) -> FinchSharedSnapshot:
+        if not isinstance(payload, dict):
+            raise FinchApiError("Finch returned an invalid shared snapshot.")
+        body = payload.get("payload")
+        if not isinstance(body, dict):
+            raise FinchApiError("Finch returned a shared snapshot without an object payload.")
+        try:
+            schema_version = int(payload.get("schema_version") or 0)
+        except (TypeError, ValueError) as exc:
+            raise FinchApiError("Finch returned an invalid shared snapshot version.") from exc
+        return FinchSharedSnapshot(
+            kind=str(payload.get("kind") or "").strip(),
+            snapshot_key=str(payload.get("snapshot_key") or "").strip(),
+            schema_version=schema_version,
+            payload=dict(body),
+            published_by=str(payload.get("published_by") or "").strip(),
+            updated_at=str(payload.get("updated_at") or "").strip(),
+        )
+
+    def publish_shared_team(
+        self,
+        *,
+        snapshot_key: str,
+        payload: dict[str, object],
+        schema_version: int = 1,
+    ) -> FinchSharedSnapshot:
+        key = str(snapshot_key or "").strip()
+        if not key:
+            raise ValueError("shared Team key is required")
+        response = self._request_json(
+            "/api/v1/shared/teams/" + quote(key, safe=""),
+            method="PUT",
+            payload={
+                "schema_version": int(schema_version),
+                "payload": dict(payload),
+            },
+        )
+        return self._shared_snapshot(response.get("snapshot"))
+
+    def publish_shared_raid_plan(
+        self,
+        *,
+        snapshot_key: str,
+        payload: dict[str, object],
+        schema_version: int = 1,
+    ) -> FinchSharedSnapshot:
+        key = str(snapshot_key or "").strip()
+        if not key:
+            raise ValueError("shared Raid Plan key is required")
+        response = self._request_json(
+            "/api/v1/shared/raid-plans/" + quote(key, safe=""),
+            method="PUT",
+            payload={
+                "schema_version": int(schema_version),
+                "payload": dict(payload),
+            },
+        )
+        return self._shared_snapshot(response.get("snapshot"))
+
+    def shared_teams(self) -> tuple[FinchSharedSnapshot, ...]:
+        response = self._request_json("/api/v1/shared/teams")
+        rows = response.get("teams")
+        if not isinstance(rows, list):
+            raise FinchApiError("Finch returned an invalid shared Teams response.")
+        return tuple(self._shared_snapshot(row) for row in rows)
+
+    def shared_raid_plans(self) -> tuple[FinchSharedSnapshot, ...]:
+        response = self._request_json("/api/v1/shared/raid-plans")
+        rows = response.get("raid_plans")
+        if not isinstance(rows, list):
+            raise FinchApiError("Finch returned an invalid shared Raid Plans response.")
+        return tuple(self._shared_snapshot(row) for row in rows)
+
     def acknowledge_gear_need(
         self,
         request_id: int,
@@ -168,4 +254,5 @@ __all__ = [
     "FinchApiError",
     "FinchConnectionStatus",
     "FinchGearNeedRequest",
+    "FinchSharedSnapshot",
 ]
