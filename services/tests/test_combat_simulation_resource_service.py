@@ -224,6 +224,7 @@ class _OutOfOrderSustainService:
                     attempted_change=1600,
                     applied_change=0,
                     after=30000,
+                    wasted_restore=1600,
                 ),
                 AppliedResourceTimelineEvent(
                     time_seconds=2.0,
