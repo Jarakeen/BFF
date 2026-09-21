@@ -75,16 +75,19 @@ def test_house_and_rainbow_presets_have_expected_role_counts() -> None:
         assert len(set(preset.dps_positions)) == 8
 
 
-def test_house_stacks_matches_requested_numbered_pair_layout() -> None:
+def test_house_stacks_use_canonical_top_5_to_8_bottom_1_to_4_numbering() -> None:
     house = next(
         preset for preset in formations.FORMATION_PRESETS
         if preset.key == "house_stacks"
     )
-    assert house.dps_positions[1][1] < house.dps_positions[0][1]
-    assert house.dps_positions[2][1] < house.dps_positions[3][1]
-    assert house.dps_positions[5][1] < house.dps_positions[4][1]
-    assert house.dps_positions[6][1] < house.dps_positions[7][1]
-    assert house.dps_positions[3][0] < house.dps_positions[4][0]
+    bottom = house.dps_positions[:4]
+    top = house.dps_positions[4:]
+
+    assert [x for x, _y in bottom] == sorted(x for x, _y in bottom)
+    assert [x for x, _y in top] == sorted(x for x, _y in top)
+    assert {y for _x, y in bottom} == {315.0}
+    assert {y for _x, y in top} == {255.0}
+    assert [x for x, _y in bottom] == [x for x, _y in top]
 
 
 def test_rainbow_stacks_have_four_front_and_four_back_dds() -> None:
