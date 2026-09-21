@@ -50,6 +50,7 @@ class FinchSharedTeamPreview:
     published_by: str
     updated_at: str
     provenance: str
+    local_key: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,6 +65,7 @@ class FinchSharedRaidPlanPreview:
     published_by: str
     updated_at: str
     provenance: str
+    local_key: str
 
 
 class FinchSharedImportService:
@@ -102,6 +104,17 @@ class FinchSharedImportService:
             published_by=snapshot.published_by,
             updated_at=snapshot.updated_at,
             provenance=self.provenance.relation_for(snapshot),
+            local_key=(
+                self.provenance.latest_copy_for(
+                    kind=snapshot.kind,
+                    snapshot_key=snapshot.snapshot_key,
+                ).local_key
+                if self.provenance.latest_copy_for(
+                    kind=snapshot.kind,
+                    snapshot_key=snapshot.snapshot_key,
+                ) is not None
+                else ""
+            ),
         )
 
     def raid_plan_preview(
@@ -123,6 +136,17 @@ class FinchSharedImportService:
             published_by=snapshot.published_by,
             updated_at=snapshot.updated_at,
             provenance=self.provenance.relation_for(snapshot),
+            local_key=(
+                self.provenance.latest_copy_for(
+                    kind=snapshot.kind,
+                    snapshot_key=snapshot.snapshot_key,
+                ).local_key
+                if self.provenance.latest_copy_for(
+                    kind=snapshot.kind,
+                    snapshot_key=snapshot.snapshot_key,
+                ) is not None
+                else ""
+            ),
         )
 
     def list_shared_teams(self) -> tuple[FinchSharedTeamPreview, ...]:
