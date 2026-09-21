@@ -996,3 +996,19 @@ def test_sustained_dps_finite_axis_frontier_adapter_preserves_lazy_denominator_i
     )
     assert "choice_count + choice_at(index)" in service.notes
     assert "materialized one at a time" in service.notes
+
+
+def test_sustained_dps_finite_axis_canonical_action_evaluator_delegates_damage_authority() -> None:
+    service = canonical_service_for("extreme_sustained_dps_finite_axis_canonical_action_evaluator")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.finite_axis_canonical_action_evaluator"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "simulation.saved_build_dd",
+        "extreme.sustained_dps.finite_axis_frontier_adapter",
+    )
+    assert "Owns adaptation only, not ESO damage math" in service.notes
+    assert "Unresolved runtime mechanics remain fail-closed" in service.notes
