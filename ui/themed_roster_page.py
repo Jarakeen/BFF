@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from zoneinfo import available_timezones
 
-from PySide6.QtCore import QTime
+from PySide6.QtCore import QTime, QTimer
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -25,6 +26,7 @@ from engine.config import get_data_dir
 from models.team_schedule import TeamSchedule
 from services.accessibility_preferences import AccessibilityPreferences
 from services.build_service import BuildService
+from services.finch_shared_publish_service import publish_team_to_finch
 from services.roster_share_formats import discord_roster_text, export_roster_csv
 from services.team_schedule_share_export import TeamScheduleShareDocumentExporter
 from services.team_deletion_service import delete_team_everywhere
@@ -40,6 +42,11 @@ _DAY_ORDER = (
     ("Fri", "Friday"),
     ("Sat", "Saturday"),
     ("Sun", "Sunday"),
+)
+
+_FINCH_TEAM_PUBLISH_EXECUTOR = ThreadPoolExecutor(
+    max_workers=1,
+    thread_name_prefix="finch-team-publish",
 )
 
 _COMMON_TIMEZONES = (
@@ -64,6 +71,10 @@ class RosterPage(BaseRosterPage):
 
     def _build_ui(self):
         super()._build_ui()
+        self._finch_team_publish_future: Future | None = None
+        self._finch_team_publish_timer = QTimer(self)
+        self._finch_team_publish_timer.setInterval(100)
+        self._finch_team_publish_timer.timeout.connect(self._poll_team_publish)
         self.tabs.addTab(self._build_team_schedule_tab(), "TEAM SCHEDULE")
 
         self.export_share_button = QPushButton("Share Roster ▾")
@@ -213,6 +224,13 @@ class RosterPage(BaseRosterPage):
         save.setProperty("primary", True)
         save.clicked.connect(self._save_team_schedule)
         preview_row.addWidget(save)
+
+        self.publish_team_finch_button = QPushButton("Publish Team to Finch")
+        self.publish_team_finch_button.setToolTip(
+            "Publish the selected Team's saved schedule and basic active roster identity to Finch."
+        )
+        self.publish_team_finch_button.clicked.connect(self._publish_selected_team_to_finch)
+        preview_row.addWidget(self.publish_team_finch_button)
         card.addLayout(preview_row)
 
         for check in self.schedule_day_checks.values():
@@ -364,6 +382,45 @@ class RosterPage(BaseRosterPage):
             self.status.success(f"Saved {schedule.TeamName}: {schedule.display_text}")
         except Exception as exc:
             self.status.error(f"Team schedule save failed: {exc}")
+
+    def _publish_selected_team_to_finch(self) -> None:
+        team = self.schedule_team_combo.currentText().strip()
+        if not team:
+            self.status.warning("Select a Team before publishing to Finch.")
+            return
+        if (
+            self._finch_team_publish_future is not None
+            and not self._finch_team_publish_future.done()
+        ):
+            self.status.info("A Finch Team publish is already running.")
+            return
+
+        self.publish_team_finch_button.setEnabled(False)
+        self.status.info(f"Publishing {team} to Finch…")
+        self._finch_team_publish_future = _FINCH_TEAM_PUBLISH_EXECUTOR.submit(
+            publish_team_to_finch,
+            database_path=Path(get_data_dir()) / "eso.db",
+            team_name=team,
+            settings_path=Path("settings.json"),
+        )
+        self._finch_team_publish_timer.start()
+
+    def _poll_team_publish(self) -> None:
+        future = self._finch_team_publish_future
+        if future is None or not future.done():
+            return
+
+        self._finch_team_publish_timer.stop()
+        self._finch_team_publish_future = None
+        self.publish_team_finch_button.setEnabled(True)
+        try:
+            result = future.result()
+        except Exception as exc:
+            self.status.error(f"Finch Team publish failed: {exc}")
+            return
+        self.status.success(
+            f"Published Team to Finch: {result.snapshot_key}"
+        )
 
     def _visible_assignment_rows(self) -> list[dict[str, str]]:
         rows: list[dict[str, str]] = []
