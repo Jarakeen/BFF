@@ -663,67 +663,6 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
-        service_id="combat.simulation.saved_build_dd",
-        domain="combat",
-        purpose=(
-            "Run a saved DD build through the deterministic Combat Simulation kernel "
-            "using canonical DD damage/runtime evidence providers."
-        ),
-        implementation_path="services.combat_simulation_saved_build_dd_service",
-        inputs=(
-            "EffectiveBuildSnapshot",
-            "RotationPlan",
-            "CombatSimulationTargetState",
-        ),
-        outputs=("CombatSimulationResult",),
-        dependencies=("combat.simulation.kernel",),
-        responsibilities=("combat_simulation_saved_build_dd_execution",),
-        behavior=ServiceBehavior.DETERMINISTIC,
-        roles=("DPS",),
-        encounter_aware=True,
-        evidence_class=EvidenceClass.MIXED,
-        notes=(
-            "Real saved-build validation requires an actual saved DD/DPS build; "
-            "the service must not fabricate one for audit completion."
-        ),
-    ),
-    ServiceDescriptor(
-        service_id="combat.simulation.damage_summary",
-        domain="combat",
-        purpose=(
-            "Summarize proven outgoing damage, target Health, overkill, death attribution, "
-            "and source totals without mutating simulation truth."
-        ),
-        implementation_path="services.combat_simulation_damage_summary_service",
-        inputs=("CombatSimulationResult", "TargetIdentity"),
-        outputs=("CombatSimulationDamageSummary",),
-        dependencies=("combat.simulation.kernel",),
-        responsibilities=("combat_simulation_damage_summary",),
-        behavior=ServiceBehavior.DETERMINISTIC,
-        ui_safe=True,
-        encounter_aware=True,
-        evidence_class=EvidenceClass.MIXED,
-        notes=(
-            "Modeled DPS is withheld when damage-relevant evidence is incomplete; "
-            "non-damage unresolved evidence remains visible separately."
-        ),
-    ),
-    ServiceDescriptor(
-        service_id="combat.simulation.replay_verification",
-        domain="combat",
-        purpose=(
-            "Verify deterministic replay by comparing canonical CombatSimulationResult "
-            "signatures across repeated runs."
-        ),
-        implementation_path="services.combat_simulation_deterministic_replay_service",
-        inputs=("CombatSimulationRunner",),
-        outputs=("CombatSimulationReplayVerification",),
-        dependencies=("combat.simulation.kernel",),
-        responsibilities=("combat_simulation_deterministic_replay_verification",),
-        behavior=ServiceBehavior.DETERMINISTIC,
-        evidence_class=EvidenceClass.NONE,
-    ),
-    ServiceDescriptor(
         service_id="extreme.sustained_dps.saved_rotation",
         domain="extreme",
         purpose=(
@@ -739,8 +678,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
         outputs=("ExtremeSavedRotationSustainedDPSResult",),
         dependencies=(
-            "combat.simulation.saved_build_dd",
-            "combat.simulation.damage_summary",
+            "simulation.saved_build_dd",
+            "simulation.damage_summary",
         ),
         responsibilities=("extreme_saved_rotation_sustained_dps_record",),
         behavior=ServiceBehavior.DETERMINISTIC,
