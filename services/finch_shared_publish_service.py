@@ -27,6 +27,19 @@ def _clean(value: object) -> str:
     return " ".join(str(value or "").strip().split())
 
 
+def _shared_role(value: object) -> str:
+    """Return stable human-facing role labels for cross-client snapshots."""
+    role = _clean(value)
+    folded = role.casefold()
+    if folded in {"dd", "dps", "damage", "damage dealer"}:
+        return "Damage Dealer"
+    if folded in {"tank"}:
+        return "Tank"
+    if folded in {"healer", "heal", "heals", "healing"}:
+        return "Healer"
+    return role
+
+
 def _team_members(roster: RosterService, team_name: str) -> list[dict[str, object]]:
     wanted = _clean(team_name).casefold()
     members: list[dict[str, object]] = []
@@ -43,8 +56,8 @@ def _team_members(roster: RosterService, team_name: str) -> list[dict[str, objec
                 "player_name": _clean(member.PlayerName),
                 "character_name": _clean(member.CharacterName),
                 "eso_class": _clean(member.EsoClass),
-                "primary_role": _clean(member.PrimaryRole),
-                "secondary_role": _clean(member.SecondaryRole),
+                "primary_role": _shared_role(member.PrimaryRole),
+                "secondary_role": _shared_role(member.SecondaryRole),
                 "status": _clean(member.Status),
             }
         )
@@ -110,7 +123,7 @@ def shared_raid_plan_payload(plan: RaidPlan) -> dict[str, object]:
                 "seat_id": member.seat_id,
                 "gamertag": member.gamertag,
                 "character_name": member.character_name or "",
-                "role": member.role or "",
+                "role": _shared_role(member.role),
                 "eso_class": member.eso_class or "",
             }
             for member in plan.members
