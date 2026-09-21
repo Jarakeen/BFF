@@ -737,3 +737,17 @@ def test_sustained_dps_ultimate_added_action_count_proof_uses_canonical_affordab
     ) == ("extreme.sustained_dps.rotation_policy_frontier",)
     assert "UltimateResourceTimeline" in service.notes
     assert "not a claim that every cast occurs" in service.notes
+
+
+def test_sustained_dps_closed_descendant_action_ceiling_requires_local_denominator_closure() -> None:
+    service = canonical_service_for("extreme_sustained_dps_closed_descendant_action_ceiling")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.closed_descendant_action_ceiling"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.structural_action_upper_bound",)
+    assert "every descendant and every damage-bearing action" in service.notes
+    assert "direct/periodic/triggered completeness" in service.notes
+    assert "never extrapolated outward" in service.notes
