@@ -498,3 +498,89 @@ def test_damage_after_death_does_not_emit_zero_to_zero_health_change() -> None:
         and event.time_seconds == 2.0
         for event in result.events
     )
+
+
+
+def test_same_source_same_kind_damage_components_are_allowed() -> None:
+    first = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="outgoing_damage",
+        source="Mixed Skill",
+        payload=(
+            ("recipient", "Boss"),
+            ("amount", 2000.0),
+            ("damage_type", "magic"),
+        ),
+    )
+    second = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="outgoing_damage",
+        source="Mixed Skill",
+        payload=(
+            ("recipient", "Boss"),
+            ("amount", 3000.0),
+            ("damage_type", "flame"),
+        ),
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = CombatSimulationHealthService().project(
+        events=(first, second),
+        target_state=state,
+    )
+
+    assert result.unresolved == ()
+    assert [event.payload_dict()["before"] for event in result.events] == [
+        10000,
+        8000,
+    ]
+    assert [event.payload_dict()["after"] for event in result.events] == [
+        8000,
+        5000,
+    ]
+
+
+def test_same_source_mixed_damage_and_heal_still_fails_closed() -> None:
+    damage = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="incoming_damage",
+        source="Shared Source",
+        payload=(("recipient", "Tank 1"), ("amount", 3000.0)),
+    )
+    heal = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="direct_heal",
+        source="Shared Source",
+        payload=(
+            ("modeled_heal", 2000.0),
+            ("recipients", ("Tank 1",)),
+        ),
+    )
+
+    result = CombatSimulationHealthService().project(
+        events=(damage, heal),
+        target_state=_state(current=20000, maximum=25000),
+    )
+
+    assert result.events == ()
+    assert any(
+        "Health consequence ordering is unresolved" in message
+        for message in result.unresolved
+    )
