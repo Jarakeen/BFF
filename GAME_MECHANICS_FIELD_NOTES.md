@@ -1133,3 +1133,7 @@ A familiar count shape such as **5 + 5 + 2** proves only that twelve active-snap
 ### 2026-09-21 — An active-bar gear witness is not a complete two-bar build
 
 A legal active-snapshot set arrangement does not prove that the same character can carry a compatible backup weapon state. Shared armor and jewelry must agree across both snapshots, weapon assignments may differ by bar, and one-bar rules such as Oakensoul can change which bar is actually activatable. FoundryDock therefore proves complete front/back coexistence before treating a named-gear witness as a generated-build candidate.
+
+### 2026-09-21 — Knowing a set proc exists is not the same as proving it happened
+
+A verified set mapping can tell FoundryDock that a bonus grants a specific proc, buff, debuff, passive, duration, cooldown, or trigger. That proves **mechanic identity**, not that the effect fired in a particular rotation. Sustained-DPS scoring still needs the actual trigger event, cooldown history, bar state, source persistence, target state, and timing before the effect contributes damage or power.
