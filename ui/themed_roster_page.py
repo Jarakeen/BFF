@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QGridLayout,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMenu,
@@ -26,6 +27,10 @@ from engine.config import get_data_dir
 from models.team_schedule import TeamSchedule
 from services.accessibility_preferences import AccessibilityPreferences
 from services.build_service import BuildService
+from services.finch_shared_import_service import (
+    import_shared_team_from_finch,
+    list_shared_teams_from_finch,
+)
 from services.finch_shared_publish_service import publish_team_to_finch
 from services.roster_share_formats import discord_roster_text, export_roster_csv
 from services.team_schedule_share_export import TeamScheduleShareDocumentExporter
@@ -47,6 +52,10 @@ _DAY_ORDER = (
 _FINCH_TEAM_PUBLISH_EXECUTOR = ThreadPoolExecutor(
     max_workers=1,
     thread_name_prefix="finch-team-publish",
+)
+_FINCH_TEAM_READ_EXECUTOR = ThreadPoolExecutor(
+    max_workers=1,
+    thread_name_prefix="finch-team-read",
 )
 
 _COMMON_TIMEZONES = (
@@ -75,6 +84,11 @@ class RosterPage(BaseRosterPage):
         self._finch_team_publish_timer = QTimer(self)
         self._finch_team_publish_timer.setInterval(100)
         self._finch_team_publish_timer.timeout.connect(self._poll_team_publish)
+        self._finch_team_read_future: Future | None = None
+        self._finch_team_read_mode = ""
+        self._finch_team_read_timer = QTimer(self)
+        self._finch_team_read_timer.setInterval(100)
+        self._finch_team_read_timer.timeout.connect(self._poll_shared_team_read)
         self.tabs.addTab(self._build_team_schedule_tab(), "TEAM SCHEDULE")
 
         self.export_share_button = QPushButton("Share Roster ▾")
@@ -231,6 +245,13 @@ class RosterPage(BaseRosterPage):
         )
         self.publish_team_finch_button.clicked.connect(self._publish_selected_team_to_finch)
         preview_row.addWidget(self.publish_team_finch_button)
+
+        self.get_shared_teams_button = QPushButton("Get Shared Teams")
+        self.get_shared_teams_button.setToolTip(
+            "Browse Teams published to Finch. Importing brings in Team schedule/focus only, not Personnel."
+        )
+        self.get_shared_teams_button.clicked.connect(self._get_shared_teams)
+        preview_row.addWidget(self.get_shared_teams_button)
         card.addLayout(preview_row)
 
         for check in self.schedule_day_checks.values():
@@ -420,6 +441,101 @@ class RosterPage(BaseRosterPage):
             return
         self.status.success(
             f"Published Team to Finch: {result.snapshot_key}"
+        )
+
+    def _get_shared_teams(self) -> None:
+        if self._finch_team_read_future is not None and not self._finch_team_read_future.done():
+            self.status.info("A Finch shared-Team request is already running.")
+            return
+        self.get_shared_teams_button.setEnabled(False)
+        self._finch_team_read_mode = "list"
+        self.status.info("Fetching shared Teams from Finch…")
+        self._finch_team_read_future = _FINCH_TEAM_READ_EXECUTOR.submit(
+            list_shared_teams_from_finch,
+            database_path=Path(get_data_dir()) / "eso.db",
+            raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+            settings_path=Path("settings.json"),
+        )
+        self._finch_team_read_timer.start()
+
+    def _poll_shared_team_read(self) -> None:
+        future = self._finch_team_read_future
+        if future is None or not future.done():
+            return
+
+        mode = self._finch_team_read_mode
+        self._finch_team_read_future = None
+        self._finch_team_read_mode = ""
+
+        try:
+            result = future.result()
+        except Exception as exc:
+            self._finch_team_read_timer.stop()
+            self.get_shared_teams_button.setEnabled(True)
+            self.status.error(f"Finch shared Team request failed: {exc}")
+            return
+
+        if mode == "list":
+            previews = tuple(result)
+            if not previews:
+                self._finch_team_read_timer.stop()
+                self.get_shared_teams_button.setEnabled(True)
+                self.status.info("Finch has no shared Teams yet.")
+                return
+            labels = [
+                (
+                    f"{row.team_name} • {row.member_count} member(s)"
+                    + (f" • {row.current_focus}" if row.current_focus else "")
+                )
+                for row in previews
+            ]
+            selected, ok = QInputDialog.getItem(
+                self,
+                "Shared Teams on Finch",
+                "Import saved Team metadata:",
+                labels,
+                0,
+                False,
+            )
+            if not ok:
+                self._finch_team_read_timer.stop()
+                self.get_shared_teams_button.setEnabled(True)
+                self.status.info("Shared Team import cancelled.")
+                return
+            index = labels.index(selected)
+            preview = previews[index]
+            answer = QMessageBox.question(
+                self,
+                "Import Shared Team",
+                (
+                    f'Import "{preview.team_name}" Team metadata from Finch?\n\n'
+                    "This imports the Team identity, raid schedule, time zone, and current focus. "
+                    "It does not create Personnel or overwrite player records."
+                ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                self._finch_team_read_timer.stop()
+                self.get_shared_teams_button.setEnabled(True)
+                self.status.info("Shared Team import cancelled.")
+                return
+            self._finch_team_read_mode = "import"
+            self._finch_team_read_future = _FINCH_TEAM_READ_EXECUTOR.submit(
+                import_shared_team_from_finch,
+                snapshot_key=preview.snapshot_key,
+                database_path=Path(get_data_dir()) / "eso.db",
+                raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+                settings_path=Path("settings.json"),
+            )
+            return
+
+        self._finch_team_read_timer.stop()
+        self.get_shared_teams_button.setEnabled(True)
+        canonical = str(result or "").strip()
+        self._reload_schedule_teams(canonical)
+        self.status.success(
+            f"Imported shared Team metadata from Finch: {canonical}."
         )
 
     def _visible_assignment_rows(self) -> list[dict[str, str]]:
