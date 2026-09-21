@@ -642,3 +642,22 @@ def test_sustained_dps_rotation_policy_frontier_keeps_mechanics_authorities_exte
     assert "RotationScheduledActionResourceLegalityService" in service.notes
     assert "continuous potion offsets" in service.notes
     assert "post-affordability Ultimate delays" in service.notes
+
+
+def test_sustained_dps_execute_and_heavy_policy_frontiers_keep_mechanics_external() -> None:
+    execute = canonical_service_for("extreme_sustained_dps_execute_policy_frontier")
+    heavy = canonical_service_for("extreme_sustained_dps_heavy_attack_policy_frontier")
+
+    assert execute is not None
+    assert heavy is not None
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(execute.service_id)
+    ) == ("extreme.sustained_dps.rotation_policy_frontier",)
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(heavy.service_id)
+    ) == ("extreme.sustained_dps.rotation_policy_frontier",)
+    assert "Does not infer execute superiority" in execute.notes
+    assert "1.8s windows" in heavy.notes
+    assert "RotationCandidateHeavyAttackDamageEvidenceService" in heavy.notes
