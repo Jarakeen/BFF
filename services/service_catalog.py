@@ -898,6 +898,29 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.finite_family_node_bound",
+        domain="extreme",
+        purpose=(
+            "Bind one proven finite-family branch ceiling to the exact generated frontier node identity before it enters the partial-branch bound envelope."
+        ),
+        implementation_path="services.extreme_sustained_dps_finite_family_node_bound_service",
+        inputs=("GeneratedFrontierNode", "FiniteWholePlanDominanceResult", "FiniteFamilyBranchScopeProof"),
+        outputs=("ExtremeSustainedDPSBoundEnvelopeInput",),
+        dependencies=(
+            "extreme.sustained_dps.finite_family_branch_bound_adapter",
+            "extreme.sustained_dps.partial_branch_upper_bound",
+        ),
+        responsibilities=("extreme_sustained_dps_finite_family_node_bound",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Fails closed when the branch-scope proof names any node other than the generated node receiving the bound. "
+            "The bridge never rewrites a proof onto a sibling branch and never strengthens an unsafe local-family result."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_state_frontier",
         domain="extreme",
         purpose=(
