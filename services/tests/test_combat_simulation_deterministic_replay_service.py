@@ -221,3 +221,41 @@ def test_combat_simulation_result_rejects_resource_event_without_identity() -> N
         assert "require resource identity" in str(exc)
     else:
         raise AssertionError("Expected anonymous resource event to fail closed")
+
+
+def test_combat_simulation_result_rejects_resource_summary_state_mismatch() -> None:
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.RESOURCE_COST),
+        sequence=0,
+        event_type="action_cost",
+        source="Skill",
+        payload=(
+            ("resource", "magicka"),
+            ("before", 30000),
+            ("after", 27000),
+        ),
+    )
+    wrong_start = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=29000,
+        ending_amount=27000,
+    )
+    wrong_end = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=30000,
+        ending_amount=26000,
+    )
+
+    for summary, expected in (
+        (wrong_start, "summary start does not match"),
+        (wrong_end, "summary end does not match"),
+    ):
+        try:
+            _result(events=(event,), resources=(summary,))
+        except ValueError as exc:
+            assert expected in str(exc)
+        else:
+            raise AssertionError(
+                "Expected resource summary/event state mismatch to fail closed"
+            )
