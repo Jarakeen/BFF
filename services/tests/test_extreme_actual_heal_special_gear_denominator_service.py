@@ -19,7 +19,11 @@ def test_special_gear_denominator_summary_counts_families_and_fail_closed_rows()
                 2, "Mythic A", "mythic", (), ()
             ),
             ExtremeActualHealSpecialGearDisposition(
-                3, "Arena A", "arena_weapon", (), ("spell_damage: unresolved",)
+                3,
+                "Arena A",
+                "arena_weapon",
+                (),
+                unresolved=("spell_damage: unresolved",),
             ),
         )
     )
