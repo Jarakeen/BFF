@@ -32,8 +32,8 @@ class RotationPlanRuntimeCombatStateResult:
     sequence: int | None
     active_bar: str
     combat_state: CombatState | None
-    active_effects: tuple[EffectVariant, ...] = ()
     unresolved: tuple[str, ...] = ()
+    active_effects: tuple[EffectVariant, ...] = ()
 
     @property
     def resolved(self) -> bool:
