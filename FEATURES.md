@@ -398,6 +398,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - The selected encounter is stored as per-plan manual run state and survives pull start/end actions without mutating the Raid Plan.
 - Selected encounter context is projected from canonical boss-guide and reviewed encounter-evidence services.
 - The hero card shows the selected encounter and reviewed phase guide without claiming unobserved live boss phase.
+- **Next 60 Seconds** projects only reviewed wall-clock encounter facts from canonical persistence, recalculates the visible window from the manual pull timer, and keeps health/phase thresholds labeled as guide context rather than converting them into invented clock times.
 - **Current Callouts** combines reviewed encounter handling with encounter-scoped Raid Plan responsibilities.
 - **Next 60 Seconds** uses only reviewed facts with explicit persisted wall-clock fields; health/phase thresholds remain threshold-based and are never converted to guessed timestamps.
 - **Quick Notes / Run Sheet** shows read-only encounter checklist context separately from editable manual run notes.
