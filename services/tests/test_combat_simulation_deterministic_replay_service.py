@@ -1129,3 +1129,35 @@ def test_combat_simulation_result_rejects_bad_resource_restore_evidence() -> Non
         assert "wasted restore arithmetic is inconsistent" in str(exc)
     else:
         raise AssertionError("Expected invalid result restore evidence to fail closed")
+
+
+def test_combat_simulation_result_rejects_resource_summary_shortfall_mismatch() -> None:
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.RESOURCE_COST),
+        sequence=0,
+        event_type="action_cost",
+        source="Too Expensive",
+        payload=(
+            ("resource", "magicka"),
+            ("before", 1000),
+            ("attempted_change", -1500),
+            ("applied_change", -1000),
+            ("after", 0),
+            ("shortfall", 500),
+            ("wasted_restore", 0),
+        ),
+    )
+    summary = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=1000,
+        ending_amount=0,
+        total_shortfall=0,
+    )
+
+    try:
+        _result(events=(event,), resources=(summary,))
+    except ValueError as exc:
+        assert "summary shortfall does not match event evidence" in str(exc)
+    else:
+        raise AssertionError("Expected resource summary shortfall mismatch to fail closed")
