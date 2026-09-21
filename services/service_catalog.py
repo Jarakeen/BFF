@@ -809,6 +809,27 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.action_upper_bound",
+        domain="extreme",
+        purpose=(
+            "Promote exact canonical action-damage occurrences into proof-safe optimistic "
+            "action ceilings only when every required future mutation axis is explicitly dominated."
+        ),
+        implementation_path="services.extreme_sustained_dps_action_upper_bound_service",
+        inputs=("RotationActionDamageOccurrenceEvidence", "SustainedDPSActionDominanceProof"),
+        outputs=("ExtremeSustainedDPSActionUpperBoundResult",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_action_upper_bound_promotion",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Exact action damage is not automatically an upper bound over unsynthesized gear, "
+            "CP, passive, skill-bar, or runtime mutations. Missing dominance proof keeps pruning fail-open."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.rotation_upper_bound",
         domain="extreme",
         purpose=(
