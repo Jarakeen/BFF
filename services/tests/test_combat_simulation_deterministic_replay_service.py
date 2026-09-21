@@ -3,6 +3,7 @@ from dataclasses import replace
 from models.combat_simulation import (
     CombatSimulationCombatant,
     CombatSimulationEvent,
+    CombatSimulationRecipientBinding,
     CombatSimulationResourceResult,
     CombatSimulationResult,
     CombatSimulationTargetState,
@@ -765,3 +766,25 @@ def test_replay_treats_whitespace_and_duplicate_unresolved_evidence_as_equivalen
 
     assert verification.deterministic is True
     assert verification.differing_signature_fields == ()
+
+
+def test_combat_simulation_result_rejects_recipient_binding_beyond_duration() -> None:
+    binding = CombatSimulationRecipientBinding(
+        time_seconds=6.0,
+        sequence=0,
+        event_type="direct_heal",
+        source="Combat Prayer",
+        coefficient_number=1,
+        recipients=("Tank 1",),
+    )
+    state = CombatSimulationTargetState(
+        combatants=(CombatSimulationCombatant("Tank 1", "ally"),),
+        recipient_bindings=(binding,),
+    )
+
+    try:
+        _result(target_state=state)
+    except ValueError as exc:
+        assert "recipient binding cannot occur beyond result duration" in str(exc)
+    else:
+        raise AssertionError("Expected future recipient binding to fail closed")
