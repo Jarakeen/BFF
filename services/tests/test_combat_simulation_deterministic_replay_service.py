@@ -944,3 +944,51 @@ def test_combat_simulation_result_rejects_health_change_after_death() -> None:
         assert "cannot change after death" in str(exc)
     else:
         raise AssertionError("Expected post-death Health change to fail closed")
+
+
+def test_combat_simulation_result_rejects_death_overkill_mismatch() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=3000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    lethal = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("before", 3000),
+            ("applied_damage", 3000.0),
+            ("overkill", 5000.0),
+            ("after", 0),
+            ("maximum_health", 10000),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+    death = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.EXPIRATION),
+        sequence=0,
+        event_type="death",
+        source="Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("overkill", 4000.0),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+
+    try:
+        _result(events=(lethal, death), target_state=state)
+    except ValueError as exc:
+        assert "death overkill does not match" in str(exc)
+    else:
+        raise AssertionError("Expected mismatched death overkill to fail closed")
