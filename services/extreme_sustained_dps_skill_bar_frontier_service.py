@@ -65,6 +65,7 @@ class ExtremeSustainedDPSSkillFamily:
 @dataclass(frozen=True)
 class ExtremeSustainedDPSSkillBarLegalityContext:
     character_class: str
+    class_skill_lines: tuple[str, ...] = ()
     owned_skill_lines: tuple[str, ...] = ()
     weapon_skill_lines: tuple[str, ...] = ()
     armor_skill_lines: tuple[str, ...] = ()
@@ -254,6 +255,29 @@ class ExtremeSustainedDPSSkillBarFrontierService:
     ) -> bool:
         if not is_player_active(row):
             return False
+
+        ultimate = is_ultimate(row)
+        if slot_index == BAR_SKILL_COUNT and not ultimate:
+            return False
+        if slot_index < BAR_SKILL_COUNT and ultimate:
+            return False
+
+        owner = _key(row.get("class_type"))
+        line = _line_key(row.get("skill_line"))
+        if owner:
+            explicit_class_lines = {
+                _line_key(value)
+                for value in context.class_skill_lines
+                if _line_key(value)
+            }
+            if not explicit_class_lines:
+                selected_class = _key(context.character_class)
+                explicit_class_lines = {
+                    _line_key(value)
+                    for value in CLASS_SKILL_LINES.get(selected_class, frozenset())
+                }
+            return line in explicit_class_lines
+
         if not is_eligible(
             row,
             character_class=context.character_class,
@@ -269,14 +293,7 @@ class ExtremeSustainedDPSSkillBarFrontierService:
             if int(row.get("ability_id") or 0) not in allowed:
                 return False
 
-        owner = _key(row.get("class_type"))
         line = _line_key(row.get("skill_line"))
-        selected_class = _key(context.character_class)
-        if owner:
-            return owner == selected_class and line in {
-                _line_key(value)
-                for value in CLASS_SKILL_LINES.get(selected_class, frozenset())
-            }
         if line in NON_COMBAT_SKILL_LINES:
             return False
         if line in SHARED_COMBAT_SKILL_LINES or line in {
@@ -396,6 +413,7 @@ class ExtremeSustainedDPSSkillBarFrontierService:
                 "Empty normal slots and empty Ultimate slots remain legal states",
                 "Normal-slot permutations are proof-safely collapsed to canonical family order",
                 "One base/morph family may appear at most once per bar; front/back duplication remains legal",
+                "Class skills follow the explicit generated class-route lines, including legal subclass lines",
                 "Shared combat skill lines require explicit ownership or matching equipped weapon/armor evidence",
             ),
             unresolved=final_unresolved,
