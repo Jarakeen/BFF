@@ -122,6 +122,9 @@ def test_shared_raid_plan_payload_excludes_local_ids_builds_and_notes() -> None:
                 selected_build_name="Corpsebuster",
                 planned_gear_sets=("Corpsebuster", "Null Arca"),
                 planned_skills=("Fatecarver",),
+                primary_assignment="Major Courage",
+                secondary_assignment="Minor Toughness",
+                utility_assignments=("Portal", "Interrupt"),
                 notes="private chair note",
             ),
         ),
@@ -137,6 +140,9 @@ def test_shared_raid_plan_payload_excludes_local_ids_builds_and_notes() -> None:
             "character_name": "Rylos Arcanist",
             "role": "Damage Dealer",
             "eso_class": "Arcanist",
+            "primary_assignment": "Major Courage",
+            "secondary_assignment": "Minor Toughness",
+            "utility_assignments": ["Portal", "Interrupt"],
         }
     ]
     rendered = repr(payload)
@@ -171,6 +177,6 @@ def test_publish_service_uses_versioned_snapshots(tmp_path: Path) -> None:
     assert client.team_calls[0][0] == "Performance Mode"
     assert client.team_calls[0][2] == 1
     assert client.plan_calls[0][0] == "rg-pm"
-    assert client.plan_calls[0][2] == 1
+    assert client.plan_calls[0][2] == 2
     assert team_result.kind == "team"
     assert plan_result.kind == "raid_plan"
