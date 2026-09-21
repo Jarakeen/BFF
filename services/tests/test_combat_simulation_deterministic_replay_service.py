@@ -788,3 +788,95 @@ def test_combat_simulation_result_rejects_recipient_binding_beyond_duration() ->
         assert "recipient binding cannot occur beyond result duration" in str(exc)
     else:
         raise AssertionError("Expected future recipient binding to fail closed")
+
+
+def test_combat_simulation_result_rejects_death_attribution_mismatch() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=5000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    health = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Actual Killer",
+        payload=(
+            ("recipient", "Boss"),
+            ("before", 5000),
+            ("applied_damage", 5000.0),
+            ("after", 0),
+            ("maximum_health", 10000),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+    wrong_source_death = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.EXPIRATION),
+        sequence=0,
+        event_type="death",
+        source="Credit Thief",
+        payload=(
+            ("recipient", "Boss"),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+
+    try:
+        _result(events=(health, wrong_source_death), target_state=state)
+    except ValueError as exc:
+        assert "does not match lethal Health transition" in str(exc)
+    else:
+        raise AssertionError("Expected mismatched death attribution to fail closed")
+
+
+def test_combat_simulation_result_rejects_duplicate_death_transition() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=5000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    health = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("before", 5000),
+            ("applied_damage", 5000.0),
+            ("after", 0),
+            ("maximum_health", 10000),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+    death = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.EXPIRATION),
+        sequence=0,
+        event_type="death",
+        source="Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+
+    try:
+        _result(events=(health, death, death), target_state=state)
+    except ValueError as exc:
+        assert "death transition cannot be duplicated" in str(exc)
+    else:
+        raise AssertionError("Expected duplicate death transition to fail closed")
