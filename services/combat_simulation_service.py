@@ -96,6 +96,7 @@ class CombatSimulationService:
 
         assessment = self.active_bar_assessor.assess(plan, initial_bar=initial_bar)
         unresolved: list[str] = list(plan.unresolved)
+        damage_unresolved: list[str] = []
         for violation in assessment.violations:
             unresolved.append(
                 f"{violation.time_seconds:g}s {violation.action_name}: {violation.reason}"
@@ -152,9 +153,11 @@ class CombatSimulationService:
 
         if projection_service is not None:
             if not str(damage_target_identity or "").strip():
-                unresolved.append(
+                message = (
                     "canonical outgoing damage projection requires explicit target identity"
                 )
+                unresolved.append(message)
+                damage_unresolved.append(message)
             else:
                 projection = projection_service.project(
                     plan=plan,
@@ -162,6 +165,7 @@ class CombatSimulationService:
                     candidate=damage_candidate,
                 )
                 unresolved.extend(projection.unresolved)
+                damage_unresolved.extend(projection.unresolved)
                 resolved_damage_actions.update(projection.resolved_action_keys)
                 for item in projection.damage:
                     if item.time_seconds > plan.duration_seconds:
@@ -237,11 +241,13 @@ class CombatSimulationService:
                             "skill consequences are unresolved"
                         )
                     else:
-                        unresolved.append(
+                        message = (
                             f"{event.time_seconds:g}s {event.source}: "
                             "remaining skill consequences (for example damage or unsupported effects) "
                             "not yet wired in Phase 14"
                         )
+                        unresolved.append(message)
+                        damage_unresolved.append(message)
                     continue
 
                 if kind in {
@@ -257,10 +263,17 @@ class CombatSimulationService:
                         )
                     continue
 
-                unresolved.append(
+                message = (
                     f"{event.time_seconds:g}s {event.source}: "
                     f"{kind.value} consequence projection not yet wired in Phase 14"
                 )
+                unresolved.append(message)
+                if kind in {
+                    RotationActionKind.LIGHT_ATTACK,
+                    RotationActionKind.HEAVY_ATTACK,
+                    RotationActionKind.ULTIMATE,
+                }:
+                    damage_unresolved.append(message)
 
         target_projection = self.target_binding_service.bind(
             events=tuple(events),
@@ -296,6 +309,7 @@ class CombatSimulationService:
             effect_windows=tuple(effects.windows),
             target_state=target_state,
             unresolved=tuple(dict.fromkeys(unresolved)),
+            damage_unresolved=tuple(dict.fromkeys(damage_unresolved)),
         )
 
 
