@@ -241,10 +241,12 @@ def test_combat_simulation_services_are_canonical_and_discoverable() -> None:
     ) is CapabilityStatus.IMPLEMENTED
     assert {row.service_id for row in services_by_domain("combat", available_only=True)} >= {
         "combat.simulation.kernel",
+        "combat.simulation.snapshot",
+    }
+    assert {row.service_id for row in services_by_domain("simulation", available_only=True)} >= {
         "simulation.saved_build_dd",
         "simulation.damage_summary",
         "simulation.deterministic_replay",
-        "combat.simulation.snapshot",
     }
 
 
