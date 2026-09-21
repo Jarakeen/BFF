@@ -935,6 +935,7 @@ def test_sustained_dps_pipeline_leaf_bridge_uses_final_runtime_plan() -> None:
         "extreme.sustained_dps.generated_search_evidence_adapter",
     )
     assert "final downstream runtime-policy plan" in service.notes
+    assert "overrides the fallback search snapshot" in service.notes
     assert "without invoking simulation" in service.notes
 
 def test_sustained_dps_generated_axis_pipeline_search_shares_scenario() -> None:
@@ -954,9 +955,11 @@ def test_sustained_dps_generated_axis_pipeline_search_shares_scenario() -> None:
         "extreme.sustained_dps.generated_axis_pipeline",
         "extreme.sustained_dps.generated_axis_pipeline_leaf_evaluation",
         "extreme.sustained_dps.generated_frontier_wiring",
+        "extreme.sustained_dps.generated_runtime_state_axis_adapter",
         "extreme.sustained_dps.generated_branch_and_bound",
     )
     assert "All exact leaves share" in service.notes
+    assert "proven runtime family is a final indexed axis" in service.notes
     assert "missing bounds force refinement" in service.notes
 
 
@@ -1149,6 +1152,28 @@ def test_sustained_dps_finite_family_node_bound_is_identity_safe() -> None:
     assert "exact generated frontier node identity" in service.purpose
     assert "never rewrites a proof onto a sibling branch" in service.notes
 
+
+
+def test_sustained_dps_generated_runtime_state_axis_requires_local_proof() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_generated_runtime_state_axis_adapter"
+    )
+
+    assert service is not None
+    assert (
+        service.service_id
+        == "extreme.sustained_dps.generated_runtime_state_axis_adapter"
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.runtime_state_frontier",
+        "extreme.sustained_dps.generated_frontier_wiring",
+        "extreme.sustained_dps.axis_dominance_composition",
+    )
+    assert "caller-proven local runtime-state denominator" in service.purpose
+    assert "Rejects unproven or unresolved runtime families" in service.notes
 
 
 def test_sustained_dps_theoretical_maximum_closure_is_explicit() -> None:
