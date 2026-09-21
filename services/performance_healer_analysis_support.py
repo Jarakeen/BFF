@@ -208,7 +208,10 @@ def _select_high_damage_events(
         return []
 
     amounts = sorted(_event_amount(event) for event in usable)
-    quartile_index = int(round((len(amounts) - 1) * 0.75))
+    # The upper quartile is the top 25% of observed events. Using an index on
+    # (n - 1) with round() over-selects small samples (8 rows became 3 instead
+    # of 2). Start at floor(0.75 * n), clamped to the final observation.
+    quartile_index = min(len(amounts) - 1, int(len(amounts) * 0.75))
     threshold = amounts[quartile_index]
     selected = [event for event in usable if _event_amount(event) >= threshold]
     selected.sort(key=lambda event: _event_amount(event), reverse=True)
