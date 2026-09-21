@@ -321,8 +321,8 @@ class CombatSimulationSequentialDDDamageService:
                     f"got ({evidence.time_seconds:g}s, {evidence.sequence})"
                 )
 
-            evidence_rows.append((*action_key, evidence))
             if evidence.unresolved:
+                evidence_rows.append((*action_key, evidence))
                 unresolved.extend(
                     f"{identity}: {message}"
                     for message in evidence.unresolved
@@ -330,9 +330,20 @@ class CombatSimulationSequentialDDDamageService:
                 )
                 continue
             if evidence.damage_value is None:
+                evidence_rows.append((*action_key, evidence))
                 unresolved.append(f"{identity}: damage consequence unavailable")
                 continue
 
+            evidence_rows.append(
+                (
+                    *action_key,
+                    RotationActionDamageEvidence(
+                        time_seconds=action.time_seconds,
+                        sequence=action.sequence,
+                        damage_value=0.0,
+                    ),
+                )
+            )
             apply_occurrence(
                 RotationActionDamageOccurrence(
                     time_seconds=float(action.time_seconds),
