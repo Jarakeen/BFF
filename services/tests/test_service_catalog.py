@@ -310,3 +310,20 @@ def test_combat_simulation_core_responsibilities_have_one_canonical_authority() 
             responsibility,
             tuple(row.service_id for row in matches),
         )
+
+
+
+def test_sustained_dps_comparison_consumes_single_witness_evaluator() -> None:
+    comparison = canonical_service_for("extreme_sustained_dps_candidate_comparison")
+
+    assert comparison is not None
+    assert comparison.service_id == "extreme.sustained_dps.comparison"
+    assert comparison.behavior is ServiceBehavior.DETERMINISTIC
+    assert comparison.encounter_aware is True
+    assert set(comparison.roles) == {"DPS"}
+    assert {
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(comparison.service_id)
+    } == {"extreme.sustained_dps.saved_rotation"}
+    assert "explicitly supplied comparable candidate set" in comparison.notes
+    assert "does not prove the global Extreme maximum" in comparison.notes
