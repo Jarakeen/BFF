@@ -65,6 +65,48 @@ COMBAT_SIMULATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="simulation.health_ordering",
+        domain="simulation",
+        purpose=(
+            "Detect same-instant per-recipient Health consequences whose ordering "
+            "is not proven by timestamp, priority, or sequence."
+        ),
+        implementation_path="services.combat_simulation_health_ordering_service",
+        inputs=("CombatSimulationEventStream",),
+        outputs=("CombatSimulationHealthOrderingCollision",),
+        responsibilities=("combat_simulation_health_ordering_guard",),
+        roles=("DD", "DPS", "Healer", "Tank"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "No alphabetical or source-name tie break is treated as ESO truth. "
+            "Ambiguous same-instant Health state fails closed per recipient."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="simulation.deterministic_replay",
+        domain="simulation",
+        purpose=(
+            "Run an identical deterministic Combat Simulation twice and compare "
+            "the canonical deterministic signatures field by field."
+        ),
+        implementation_path=(
+            "services.combat_simulation_deterministic_replay_service"
+        ),
+        inputs=("CombatSimulationRunner",),
+        outputs=("CombatSimulationReplayVerification",),
+        responsibilities=("combat_simulation_deterministic_replay_verification",),
+        roles=("DD", "DPS", "Healer", "Tank"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.NONE,
+        notes=(
+            "Verification reports exactly which canonical signature fields drift "
+            "instead of reducing replay failure to a boolean."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="simulation.plan_attacker_state",
         domain="simulation",
         purpose=(
