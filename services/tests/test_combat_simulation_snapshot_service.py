@@ -422,3 +422,143 @@ def test_snapshot_marks_enemy_dead_after_lethal_outgoing_damage() -> None:
     assert snapshot.health[0].identity == "Boss"
     assert snapshot.health[0].current_health == 0
     assert snapshot.health[0].is_dead is True
+
+
+
+def test_snapshot_can_stop_at_exact_same_time_sequence_boundary() -> None:
+    from dataclasses import replace
+
+    base = _result()
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+        ),
+    )
+    first = CombatSimulationEvent(
+        time_seconds=4.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="health_change",
+        source="First",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 20000),
+            ("attempted_damage", 3000.0),
+            ("applied_damage", 3000.0),
+            ("after", 17000),
+            ("maximum_health", 25000),
+            ("origin_event_type", "incoming_damage"),
+        ),
+    )
+    second = CombatSimulationEvent(
+        time_seconds=4.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=1,
+        event_type="health_change",
+        source="Second",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 17000),
+            ("attempted_heal", 2000.0),
+            ("applied_heal", 2000.0),
+            ("after", 19000),
+            ("maximum_health", 25000),
+            ("origin_event_type", "direct_heal"),
+        ),
+    )
+    result = replace(
+        base,
+        events=tuple(sorted((*base.events, first, second))),
+        target_state=state,
+    )
+
+    after_first = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=4.0,
+        sequence=0,
+    )
+    after_second = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=4.0,
+        sequence=1,
+    )
+    end_of_timestamp = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=4.0,
+    )
+
+    assert after_first.health[0].current_health == 17000
+    assert after_second.health[0].current_health == 19000
+    assert end_of_timestamp.health[0].current_health == 19000
+
+
+def test_snapshot_sequence_boundary_applies_to_bar_and_resources() -> None:
+    from dataclasses import replace
+
+    base = _result()
+    swap = CombatSimulationEvent(
+        time_seconds=4.0,
+        priority=int(SimulationEventPriority.ACTION),
+        sequence=1,
+        event_type="action",
+        source="bar_swap",
+        payload=(
+            ("kind", "bar_swap"),
+            ("bar", "front"),
+            ("target_key", ""),
+        ),
+    )
+    cost = CombatSimulationEvent(
+        time_seconds=4.0,
+        priority=int(SimulationEventPriority.RESOURCE_COST),
+        sequence=1,
+        event_type="action_cost",
+        source="Skill",
+        payload=(
+            ("resource", "magicka"),
+            ("before", 28600),
+            ("attempted_change", -3000),
+            ("applied_change", -3000),
+            ("after", 25600),
+            ("shortfall", 0),
+            ("wasted_restore", 0),
+        ),
+    )
+    result = replace(
+        base,
+        events=tuple(sorted((*base.events, swap, cost))),
+    )
+
+    before_sequence_one = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=4.0,
+        sequence=0,
+    )
+    after_sequence_one = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=4.0,
+        sequence=1,
+    )
+
+    assert before_sequence_one.active_bar == "back"
+    assert before_sequence_one.resources[0].current_amount == 28600
+    assert after_sequence_one.active_bar == "front"
+    assert after_sequence_one.resources[0].current_amount == 25600
+
+
+def test_snapshot_rejects_negative_sequence_boundary() -> None:
+    try:
+        CombatSimulationSnapshotService().snapshot_at(
+            _result(),
+            time_seconds=1.0,
+            sequence=-1,
+        )
+    except ValueError as exc:
+        assert "snapshot sequence" in str(exc)
+    else:
+        raise AssertionError("Expected negative sequence boundary to fail closed")
