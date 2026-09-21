@@ -218,3 +218,35 @@ def test_partition_rejects_negative_sequence_boundary() -> None:
             at_time_seconds=1.0,
             at_sequence=-1,
         )
+
+
+def test_runtime_effect_window_normalizes_identity_and_numeric_fields() -> None:
+    window = RuntimeEffectActiveWindow(
+        effect_name=" major_slayer ",
+        source=" Skill ",
+        start_time_seconds=1,
+        end_time_seconds=6,
+        target=" group ",
+        sequence=2,
+        magnitude=10,
+    )
+
+    assert window.effect_name == "major_slayer"
+    assert window.source == "Skill"
+    assert window.start_time_seconds == 1.0
+    assert window.end_time_seconds == 6.0
+    assert window.target == "group"
+    assert window.sequence == 2
+    assert window.magnitude == 10.0
+
+
+def test_runtime_effect_window_normalizes_blank_target_to_none() -> None:
+    window = RuntimeEffectActiveWindow(
+        effect_name="major_slayer",
+        source="Skill",
+        start_time_seconds=1.0,
+        end_time_seconds=6.0,
+        target="   ",
+    )
+
+    assert window.target is None
