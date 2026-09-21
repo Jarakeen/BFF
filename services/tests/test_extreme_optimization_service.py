@@ -85,13 +85,13 @@ def test_optimizer_can_accept_proven_stat_gain_even_when_unrelated_effects_are_u
     assert "unrelated dynamic set effect unresolved" in result.unresolved
 
 
-def test_tools_navigation_exposes_extreme_build_lab():
+def test_build_navigation_exposes_extreme_builder():
     from ui.components.foundry_sidebar import CORE_NAV_SECTIONS
 
-    tool_section = next(
+    build_section = next(
         section
         for section in CORE_NAV_SECTIONS
-        if isinstance(section, dict) and section.get("label") == "Tool"
+        if isinstance(section, dict) and section.get("label") == "Build"
     )
 
-    assert ("Extreme Build Lab", "extreme_optimization") in tool_section["children"]
+    assert ("Extreme Builder", "extreme_optimization") in build_section["children"]
