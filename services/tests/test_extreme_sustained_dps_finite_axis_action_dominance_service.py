@@ -154,3 +154,36 @@ def test_unknown_axis_is_rejected() -> None:
 
     assert result.action_ceiling.complete is False
     assert any("Unknown sustained-DPS mutation axis" in row for row in result.unresolved)
+
+
+def test_indexed_frontier_is_consumed_one_choice_at_a_time() -> None:
+    accessed = []
+
+    class _Frontier:
+        axes = ("champion_points",)
+        choice_count = 3
+        denominator_proven = True
+
+        def choice_at(self, index):
+            accessed.append(index)
+            return ExtremeSustainedDPSFiniteAxisChoice(
+                f"cp:{index}",
+                str(index),
+            )
+
+    result = ExtremeSustainedDPSFiniteAxisActionDominanceService.evaluate_indexed(
+        candidate_key="branch:indexed",
+        frontier=_Frontier(),
+        evaluator=_Evaluator(
+            {
+                "0": {"damage": (100.0,)},
+                "1": {"damage": (110.0,)},
+                "2": {"damage": (120.0,)},
+            }
+        ),
+        source="indexed CP search",
+    )
+
+    assert accessed == [0, 1, 2]
+    assert result.upper_bound_damage == 120.0
+    assert result.axis_coverage.dominated_axes == ("champion_points",)
