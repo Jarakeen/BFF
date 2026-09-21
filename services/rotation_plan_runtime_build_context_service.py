@@ -3,12 +3,27 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from minmax.character_build.effect_instance import EffectVariant
+from minmax.effects import Effect
+
 from minmax.build_calculation_context import BuildCalculationContext
 from models.build_model import PlayerBuild
 from services.rotation_plan_runtime_combat_state_service import (
     RotationPlanRuntimeCombatStateResult,
 )
 from services.rotation_static_build_context_service import RotationStaticBuildContextService
+
+
+class RuntimeEffectProjectionResult(Protocol):
+    effects: tuple[Effect, ...]
+    unresolved: tuple[str, ...]
+
+
+class RuntimeEffectProjector(Protocol):
+    def project(
+        self,
+        variants: tuple[EffectVariant, ...],
+    ) -> RuntimeEffectProjectionResult: ...
 
 
 class RotationRuntimeCombatStateResolver(Protocol):
@@ -57,8 +72,10 @@ class RotationPlanRuntimeBuildContextService:
         self,
         *,
         static_context_service: RotationStaticBuildContextService,
+        runtime_effect_projector: RuntimeEffectProjector | None = None,
     ) -> None:
         self.static_context_service = static_context_service
+        self.runtime_effect_projector = runtime_effect_projector
 
     def resolve(
         self,
@@ -89,10 +106,31 @@ class RotationPlanRuntimeBuildContextService:
                 unresolved=unresolved,
             )
 
+        additional_effects: tuple[Effect, ...] = ()
+        if runtime.active_effects and self.runtime_effect_projector is not None:
+            projection = self.runtime_effect_projector.project(runtime.active_effects)
+            projection_unresolved = tuple(
+                dict.fromkeys(
+                    str(message).strip()
+                    for message in projection.unresolved
+                    if str(message).strip()
+                )
+            )
+            if projection_unresolved:
+                return RotationPlanRuntimeBuildContextResult(
+                    time_seconds=float(runtime.time_seconds),
+                    sequence=runtime.sequence,
+                    active_bar=str(runtime.active_bar),
+                    context=None,
+                    unresolved=projection_unresolved,
+                )
+            additional_effects = tuple(projection.effects)
+
         rebuilt = self.static_context_service.resolve(
             build,
             bars=(runtime.active_bar,),
             combat_state=runtime.combat_state,
+            additional_effects=additional_effects,
         )
         unresolved = tuple(
             dict.fromkeys(
@@ -120,5 +158,7 @@ __all__ = [
     "RotationPlanRuntimeBuildContextResult",
     "RotationPlanRuntimeBuildContextService",
     "RotationRuntimeBuildContextResolver",
+    "RuntimeEffectProjector",
+    "RuntimeEffectProjectionResult",
     "RotationRuntimeCombatStateResolver",
 ]
