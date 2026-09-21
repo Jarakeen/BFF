@@ -67,6 +67,8 @@ class CombatSimulationSnapshotService:
             for event in result.events:
                 if event.time_seconds > instant:
                     break
+                if not visible(event):
+                    continue
                 if event.event_type not in {
                     "action_cost",
                     "recovery_tick",
@@ -99,6 +101,8 @@ class CombatSimulationSnapshotService:
             for event in result.events:
                 if event.time_seconds > instant:
                     break
+                if not visible(event):
+                    continue
                 if event.event_type != "health_change":
                     continue
                 payload = event.payload_dict()
