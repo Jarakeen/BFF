@@ -16,8 +16,10 @@ from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QPushButton,
+    QMenu,
     QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
@@ -28,6 +30,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from models.raid_plan import RaidPlan
+from services.encounter_raid_map_store import EncounterRaidMapStore
 from services.live_raid_encounter_projection_service import (
     LiveRaidEncounterContext,
     LiveRaidEncounterProjectionService,
@@ -60,6 +63,7 @@ def _parse_iso(value: object) -> datetime | None:
 
 class CityLiveRaidPage(FoundryPage):
     pageRequested = Signal(str)
+    raidMapRequested = Signal(str, str)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -69,6 +73,7 @@ class CityLiveRaidPage(FoundryPage):
             get_data_dir() / "eso.db",
             get_data_dir(),
         )
+        self.raid_map_store = EncounterRaidMapStore(get_data_dir())
         self._plan: RaidPlan | None = None
         self._encounter_context: LiveRaidEncounterContext | None = None
         self._timer = QTimer(self)
@@ -223,10 +228,21 @@ class CityLiveRaidPage(FoundryPage):
         self.spots_table.setAlternatingRowColors(False)
         self.spots_table.setShowGrid(False)
         spots.addWidget(self.spots_table)
-        view_assignments = QPushButton("View Assignments")
+        raid_spot_actions = QHBoxLayout()
+        raid_spot_actions.setContentsMargins(0, 0, 0, 0)
+        raid_spot_actions.setSpacing(6)
+
+        view_assignments = QPushButton("Assignments")
         view_assignments.setProperty("liveRaidSecondaryAction", True)
         view_assignments.clicked.connect(lambda: self.pageRequested.emit("assignments"))
-        spots.addWidget(view_assignments)
+        raid_spot_actions.addWidget(view_assignments, 1)
+
+        self.raid_map_button = QPushButton("Raid Map ▾")
+        self.raid_map_button.setProperty("liveRaidSecondaryAction", True)
+        self.raid_map_button.clicked.connect(self._show_raid_map_menu)
+        raid_spot_actions.addWidget(self.raid_map_button, 1)
+
+        spots.addLayout(raid_spot_actions)
         middle.addWidget(spots, 5)
 
         callouts = self._style_live_card(FoundryCard("Current Callouts", "warning"), "callouts")
@@ -440,6 +456,122 @@ class CityLiveRaidPage(FoundryPage):
                 )
             )
 
+    def _current_linked_raid_map_id(self) -> str:
+        if self._plan is None:
+            return ""
+        encounter_id = _clean(self.encounter_combo.currentData())
+        if not encounter_id:
+            return ""
+        return self.user_state.linked_raid_map_id(self._plan.plan_id, encounter_id)
+
+    def _show_raid_map_menu(self) -> None:
+        menu = QMenu(self)
+        encounter_id = _clean(self.encounter_combo.currentData())
+        linked_map_id = self._current_linked_raid_map_id()
+
+        open_action = menu.addAction("Open Linked Raid Map")
+        open_action.setEnabled(bool(encounter_id and linked_map_id))
+        open_action.triggered.connect(self._open_linked_raid_map)
+
+        link_action = menu.addAction(
+            "Change Raid Map…" if linked_map_id else "Link Raid Map…"
+        )
+        link_action.setEnabled(bool(encounter_id))
+        link_action.triggered.connect(self._link_raid_map)
+
+        clear_action = menu.addAction("Clear Raid Map Link")
+        clear_action.setEnabled(bool(linked_map_id))
+        clear_action.triggered.connect(self._clear_raid_map_link)
+
+        if not encounter_id:
+            menu.addSeparator()
+            note = menu.addAction("Select an encounter first")
+            note.setEnabled(False)
+
+        menu.exec(self.raid_map_button.mapToGlobal(self.raid_map_button.rect().bottomLeft()))
+
+    def _link_raid_map(self) -> None:
+        if self._plan is None:
+            return
+        encounter_id = _clean(self.encounter_combo.currentData())
+        if not encounter_id:
+            self.status.warning("Select an encounter before linking a Raid Map.")
+            return
+        maps = self.raid_map_store.list_maps(encounter_id)
+        if not maps:
+            self.status.warning(
+                "No Raid Maps are saved for this encounter yet. Add one from Mechanics first."
+            )
+            return
+
+        labels = [row.label for row in maps]
+        current_map_id = self._current_linked_raid_map_id()
+        current_index = next(
+            (index for index, row in enumerate(maps) if row.map_id == current_map_id),
+            0,
+        )
+        selected, ok = QInputDialog.getItem(
+            self,
+            "Link Raid Map",
+            "Raid Map for this Live Plan encounter:",
+            labels,
+            current_index,
+            False,
+        )
+        if not ok:
+            return
+        index = labels.index(selected)
+        record = maps[index]
+        self.user_state.set_linked_raid_map_id(
+            self._plan.plan_id,
+            encounter_id,
+            record.map_id,
+        )
+        self.raid_map_button.setText(f"Raid Map: {record.label} ▾")
+        self.status.success(
+            f"Linked {record.label} to {self._plan.name} • {self.encounter_combo.currentText()}."
+        )
+
+    def _clear_raid_map_link(self) -> None:
+        if self._plan is None:
+            return
+        encounter_id = _clean(self.encounter_combo.currentData())
+        if not encounter_id:
+            return
+        self.user_state.set_linked_raid_map_id(
+            self._plan.plan_id,
+            encounter_id,
+            "",
+        )
+        self.raid_map_button.setText("Raid Map ▾")
+        self.status.info("Raid Map link cleared for this Live Plan encounter.")
+
+    def _open_linked_raid_map(self) -> None:
+        encounter_id = _clean(self.encounter_combo.currentData())
+        map_id = self._current_linked_raid_map_id()
+        if not encounter_id or not map_id:
+            self.status.warning("Link a Raid Map to this encounter first.")
+            return
+        self.raidMapRequested.emit(encounter_id, map_id)
+
+    def _refresh_raid_map_button(self) -> None:
+        if not hasattr(self, "raid_map_button"):
+            return
+        encounter_id = _clean(self.encounter_combo.currentData())
+        if self._plan is None or not encounter_id:
+            self.raid_map_button.setText("Raid Map ▾")
+            self.raid_map_button.setEnabled(bool(self._plan is not None))
+            return
+        map_id = self._current_linked_raid_map_id()
+        record = next(
+            (row for row in self.raid_map_store.list_maps(encounter_id) if row.map_id == map_id),
+            None,
+        ) if map_id else None
+        self.raid_map_button.setText(
+            f"Raid Map: {record.label} ▾" if record is not None else "Raid Map ▾"
+        )
+        self.raid_map_button.setEnabled(True)
+
     def _refresh_encounters(self) -> None:
         self.encounter_combo.blockSignals(True)
         self.encounter_combo.clear()
@@ -460,6 +592,7 @@ class CityLiveRaidPage(FoundryPage):
                     self.encounter_combo.setCurrentIndex(index)
         self.encounter_combo.blockSignals(False)
         self._load_encounter_context()
+        self._refresh_raid_map_button()
 
     def _encounter_changed(self, *_args) -> None:
         if self._plan is not None:
@@ -468,6 +601,7 @@ class CityLiveRaidPage(FoundryPage):
                 _clean(self.encounter_combo.currentData()),
             )
         self._load_encounter_context()
+        self._refresh_raid_map_button()
         self._render_encounter_context()
 
     def _load_encounter_context(self) -> None:

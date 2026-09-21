@@ -393,6 +393,20 @@ def _open_exact_build(window, build_id: str) -> None:
         opener(build_id)
 
 
+def _open_live_raid_map(window, encounter_id: str, map_id: str) -> None:
+    encounter_id = str(encounter_id or "").strip()
+    map_id = str(map_id or "").strip()
+    if not encounter_id or not map_id:
+        return
+    window.show_page("console:4")
+    mechanics = window.pages.get("console:4")
+    if mechanics is None:
+        return
+    opener = getattr(mechanics, "open_exact_raid_map", None)
+    if callable(opener):
+        opener(encounter_id, map_id)
+
+
 def _register_page(window, route: str, page) -> None:
     window.pages[route] = page
     container = window.wrap_page(page)
@@ -444,6 +458,13 @@ def register_raid_engine_pages(window) -> None:
 
     live_raid = CityLiveRaidPage()
     live_raid.pageRequested.connect(window.show_page)
+    live_raid.raidMapRequested.connect(
+        lambda encounter_id, map_id: _open_live_raid_map(
+            window,
+            encounter_id,
+            map_id,
+        )
+    )
     _register_page(window, "live_raid", live_raid)
 
     dashboard = RaidEngineDashboardPage()
