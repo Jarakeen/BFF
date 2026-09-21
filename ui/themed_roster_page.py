@@ -27,6 +27,7 @@ from engine.config import get_data_dir
 from models.team_schedule import TeamSchedule
 from services.accessibility_preferences import AccessibilityPreferences
 from services.build_service import BuildService
+from services.finch_shared_provenance_service import format_shared_timestamp
 from services.finch_shared_import_service import (
     import_shared_team_from_finch,
     list_shared_teams_from_finch,
@@ -486,6 +487,9 @@ class RosterPage(BaseRosterPage):
                 (
                     f"{row.team_name} • {row.member_count} member(s)"
                     + (f" • {row.current_focus}" if row.current_focus else "")
+                    + f" • {row.published_by or 'Unknown publisher'}"
+                    + f" • {format_shared_timestamp(row.updated_at)}"
+                    + f" • {row.provenance}"
                 )
                 for row in previews
             ]
@@ -509,6 +513,9 @@ class RosterPage(BaseRosterPage):
                 "Copy Shared Team to Local",
                 (
                     f'Copy "{preview.team_name}" from Finch into a new local Team?\n\n'
+                    f"Published by: {preview.published_by or 'Unknown'}\n"
+                    f"Updated: {format_shared_timestamp(preview.updated_at)}\n"
+                    f"Status: {preview.provenance}\n\n"
                     "This creates a separate local Team copy with raid schedule, time zone, and current focus. "
                     "It never overwrites an existing Team and does not create Personnel."
                 ),
