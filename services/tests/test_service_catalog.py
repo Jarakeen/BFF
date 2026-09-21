@@ -415,3 +415,16 @@ def test_sustained_dps_rotation_upper_bound_is_arithmetic_authority() -> None:
     assert "does not calculate ESO damage" in ceiling.notes
     assert "periodic" in ceiling.notes
     assert "triggered" in ceiling.notes
+
+
+def test_sustained_dps_action_upper_bound_requires_mutation_dominance() -> None:
+    service = canonical_service_for("extreme_sustained_dps_action_upper_bound_promotion")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.action_upper_bound"
+    assert service.behavior is ServiceBehavior.DETERMINISTIC
+    assert service.encounter_aware is False
+    assert set(service.roles) == {"DPS"}
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "not automatically an upper bound" in service.notes
+    assert "fail-open" in service.notes
