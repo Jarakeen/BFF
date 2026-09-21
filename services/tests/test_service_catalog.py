@@ -478,3 +478,16 @@ def test_sustained_dps_equipment_frontiers_are_canonical_axes() -> None:
         for row in SERVICE_CATALOG.dependencies_of(weapon.service_id)
     ) == ("extreme.sustained_dps.dynamic_axes",)
     assert "runtime-owned" in weapon.notes
+
+
+def test_sustained_dps_champion_point_frontier_uses_canonical_loadout_legality() -> None:
+    service = canonical_service_for("extreme_sustained_dps_champion_point_frontier")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.champion_point_frontier"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("champion_point.loadout",)
+    assert "four-slots-per-discipline" in service.purpose
+    assert "Dynamic/runtime" in service.notes
