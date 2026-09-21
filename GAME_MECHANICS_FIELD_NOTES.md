@@ -1311,3 +1311,7 @@ FoundryDock can completely enumerate the anchored potion policies generated from
 ### 2026-09-21 — When the action changes, compare the whole plan instead of pretending the action did not change
 
 Skill-bar, rotation-order, execute, and Heavy Attack policies can legitimately change which action occurs at a given timeline coordinate. Those variants should not be forced into an action-level dominance grid. If the finite family is closed, FoundryDock can instead compare complete modeled sustained DPS over the same exact horizon and use the largest whole-plan score as the family ceiling.
+
+### 2026-09-21 — Dynamic plan comparisons should vary the plan, not quietly vary the build underneath it
+
+When FoundryDock compares rotation-order, weave, execute, Ultimate, potion, or Heavy Attack policy variants, the build, explicit progression, dual-bar gear state, runtime history, target Health/resistance, and horizon must stay fixed unless those are intentionally part of the searched axis set. Otherwise a supposed rotation-policy ceiling is partly a build comparison and no longer proves what its label claims.
