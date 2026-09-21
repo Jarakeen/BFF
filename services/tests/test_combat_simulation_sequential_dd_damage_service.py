@@ -576,3 +576,27 @@ def test_periodic_tick_before_later_action_remains_authoritative() -> None:
         (1.5, "Later", 3000.0),
     ]
     assert result.unresolved == ()
+
+
+def test_health_ledger_rejects_dead_target_at_simulation_start() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=0,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    try:
+        CombatSimulationTargetHealthLedger(
+            target_state=state,
+            target_identity="Boss",
+            player_identity="Damage Tester",
+        )
+    except ValueError as exc:
+        assert "living target" in str(exc)
+    else:
+        raise AssertionError("Expected dead starting target to be rejected")
