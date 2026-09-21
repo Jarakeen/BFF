@@ -1097,3 +1097,7 @@ ESO's 64 attribute points can be distributed across Health, Magicka, and Stamina
 ### 2026-09-21 — A tie-capable upper bound cannot be safely pruned
 
 For MOST Sustained DPS, a generated branch whose proof-safe optimistic ceiling exactly matches the current incumbent must stay alive. It may not be able to beat the incumbent, but it can still **tie** it, which changes whether FoundryDock may claim a unique leader. Only a ceiling that is strictly below the incumbent can be discarded. Missing or unproven ceilings stay open too. Optimization is apparently also a bureaucracy.
+
+### 2026-09-21 — Static character-sheet maxima are not sustained-DPS ceilings
+
+A build can have a larger Weapon/Spell Damage, crit, penetration, resource pool, or Mundus contribution and still fail to provide a proof-safe upper bound on **sustained DPS**. Skill coefficients, cast cadence, DoT timing, proc frequency, execute behavior, cooldowns, resource failure, and rotation composition can all change the final rate. FoundryDock therefore treats static dynamic-axis refinement as candidate evidence only. It will not prune a sustained-DPS branch until an optimistic action/rotation ceiling is proven separately.
