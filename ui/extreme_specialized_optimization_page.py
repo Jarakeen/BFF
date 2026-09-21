@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QInputDialog, QTableWidgetItem
+from PySide6.QtWidgets import QInputDialog, QPushButton, QTableWidgetItem
 
 from services.extreme_record_execution_catalog_service import (
     ExtremeRecordExecutionStatus,
+)
+from services.extreme_sustained_dps_search_service import (
+    ExtremeSustainedDPSSearchResult,
+    ExtremeSustainedDPSSearchService,
 )
 from services.extreme_specialized_execution_service import (
     ExtremeSpecializedExecutionResult,
@@ -26,6 +30,12 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
         self.specialized_service = ExtremeSpecializedExecutionService(
             database_path=self.service.database_path,
         )
+        self.sustained_dps_search_service = ExtremeSustainedDPSSearchService(
+            database_path=self.service.database_path,
+        )
+        self.saved_dps_search_button = QPushButton("Search Saved DD Builds")
+        self.saved_dps_search_button.clicked.connect(self._run_saved_sustained_dps_search)
+        self.header.add_context_widget(self.saved_dps_search_button)
         self._objective_changed()
 
     @staticmethod
@@ -45,6 +55,14 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
         descriptor = self._current_execution_descriptor()
         objective_key = descriptor.objective.key
         scratch = self.source_combo.currentData() == "scratch"
+        if hasattr(self, "saved_dps_search_button"):
+            saved_search_visible = objective_key == "sustained_dps" and not scratch
+            self.saved_dps_search_button.setVisible(saved_search_visible)
+            self.saved_dps_search_button.setEnabled(saved_search_visible)
+        if hasattr(self, "change_table"):
+            self.change_table.setHorizontalHeaderLabels(
+                ["CHANGE", "BEFORE", "AFTER", "STAT GAIN"]
+            )
         route_kind = (
             self._specialized_route_kind(objective_key)
             if descriptor.status is ExtremeRecordExecutionStatus.SPECIALIZED
@@ -186,7 +204,154 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
                 f"Extreme search produced a reviewed result for {result.label}: {value}; unresolved evidence remains."
             )
 
+    def _run_saved_sustained_dps_search(self) -> None:
+        objective_key = str(self.objective_combo.currentData() or "")
+        if objective_key != "sustained_dps":
+            self.status.warning("Saved DD library search is available only for MOST Sustained DPS.")
+            return
+        if self.source_combo.currentData() == "scratch":
+            self.status.warning("Saved DD library search requires saved builds, not blueprint mode.")
+            return
+
+        target_health, accepted = QInputDialog.getInt(
+            self,
+            "MOST Sustained DPS Saved Search Target Health",
+            "Target Health:",
+            21200000,
+            1,
+            2147483647,
+            1000,
+        )
+        if not accepted:
+            return
+        target_resistance, accepted = QInputDialog.getDouble(
+            self,
+            "MOST Sustained DPS Saved Search Target Resistance",
+            "Target resistance:",
+            18200.0,
+            0.0,
+            1000000.0,
+            0,
+        )
+        if not accepted:
+            return
+
+        self.status.info(
+            "Searching every eligible saved DD/DPS build with a canonical saved rotation."
+        )
+        try:
+            result = self.sustained_dps_search_service.search(
+                target_health=int(target_health),
+                target_resistance=float(target_resistance),
+            )
+        except Exception as exc:
+            self.status.error(f"Saved sustained-DPS search failed: {exc}")
+            return
+
+        self.current_result = result
+        self._show_saved_sustained_dps_search_result(result)
+        if result.search_complete_for_saved_denominator and result.leader is not None:
+            self.status.success(
+                "Saved DD library search complete; a unique saved-state leader is available."
+            )
+        else:
+            self.status.warning(
+                "Saved DD library search finished with unresolved or incomparable evidence."
+            )
+
+    def _show_saved_sustained_dps_search_result(
+        self,
+        result: ExtremeSustainedDPSSearchResult,
+    ) -> None:
+        leader = result.leader
+        leader_value = None if leader is None else leader.modeled_dps
+        self.baseline_value.setText("—")
+        self.optimized_value.setText(
+            "—" if leader_value is None else f"{leader_value:,.1f}"
+        )
+        self.delta_value.setText("—")
+
+        self.change_table.setHorizontalHeaderLabels(
+            ["CANDIDATE", "MODELED DPS", "HORIZON", "STATUS"]
+        )
+        self.change_table.setRowCount(0)
+        ranked = ()
+        if result.comparison is not None:
+            ranked = result.comparison.ranked_candidates
+        for candidate in ranked:
+            row = self.change_table.rowCount()
+            self.change_table.insertRow(row)
+            self.change_table.setItem(row, 0, QTableWidgetItem(candidate.label))
+            self.change_table.setItem(
+                row,
+                1,
+                QTableWidgetItem(
+                    "—"
+                    if candidate.modeled_dps is None
+                    else f"{candidate.modeled_dps:,.1f}"
+                ),
+            )
+            self.change_table.setItem(
+                row,
+                2,
+                QTableWidgetItem(
+                    "—"
+                    if candidate.duration_seconds is None
+                    else f"{candidate.duration_seconds:g}s"
+                ),
+            )
+            self.change_table.setItem(
+                row,
+                3,
+                QTableWidgetItem(
+                    "COMPLETE" if candidate.mechanic_complete else "UNRESOLVED"
+                ),
+            )
+        self.change_table.resizeColumnsToContents()
+
+        blocking = tuple(
+            row
+            for row in result.discovery.exclusions
+            if bool(getattr(row, "blocking", True))
+        )
+        informational = tuple(
+            row
+            for row in result.discovery.exclusions
+            if not bool(getattr(row, "blocking", True))
+        )
+        sections = [
+            "SAVED LIBRARY SEARCH\n"
+            f"  Eligible DD/DPS candidates: {result.discovery.candidate_count}\n"
+            f"  Blocking exclusions: {len(blocking)}\n"
+            f"  Informational non-DD exclusions: {len(informational)}\n"
+            "  Scope: canonical saved user-state only, not a theoretical ESO-wide optimum."
+        ]
+        if blocking:
+            sections.append(
+                "BLOCKING EXCLUSIONS\n"
+                + "\n".join(f"  ? {row.label}: {row.reason}" for row in blocking)
+            )
+        if informational:
+            sections.append(
+                "INFORMATIONAL EXCLUSIONS\n"
+                + "\n".join(f"  ○ {row.label}: {row.reason}" for row in informational)
+            )
+        if result.unresolved:
+            sections.append(
+                "UNRESOLVED\n"
+                + "\n".join(f"  ? {message}" for message in result.unresolved)
+            )
+        if result.evidence:
+            sections.append(
+                "EVIDENCE\n"
+                + "\n".join(f"  ✓ {message}" for message in result.evidence)
+            )
+        self.scope_text.setPlainText("\n\n".join(sections))
+
     def _show_specialized_result(self, result: ExtremeSpecializedExecutionResult) -> None:
+        self.change_table.setHorizontalHeaderLabels(
+            ["CHANGE", "BEFORE", "AFTER", "STAT GAIN"]
+        )
         value = result.value_text or (
             "—" if result.value is None else f"{result.value:,.0f}"
         )
