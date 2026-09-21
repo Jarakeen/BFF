@@ -227,9 +227,58 @@ class CombatSimulationSequentialDDDamageService:
             "evaluate_action_occurrences",
         )
 
-        for action in actions:
+        for action_index, action in enumerate(actions):
             flush_before(action.time_seconds)
             action_key = (float(action.time_seconds), int(action.sequence))
+
+            same_time_pending = tuple(
+                item
+                for item in pending
+                if float(item.time_seconds) == float(action.time_seconds)
+            )
+            if same_time_pending:
+                reason = (
+                    f"{float(action.time_seconds):g}s damage ordering is unresolved: "
+                    "one or more periodic damage occurrences share the exact timestamp "
+                    "with a scheduled damage action, and no reviewed cross-source "
+                    "same-instant ordering rule is available"
+                )
+                unresolved.append(reason)
+                remaining_actions = actions[action_index:]
+                for remaining in remaining_actions:
+                    remaining_key = (
+                        float(remaining.time_seconds),
+                        int(remaining.sequence),
+                    )
+                    evidence_rows.append(
+                        (
+                            *remaining_key,
+                            RotationActionDamageEvidence(
+                                time_seconds=remaining.time_seconds,
+                                sequence=remaining.sequence,
+                                damage_value=None,
+                                unresolved=(reason,),
+                            ),
+                        )
+                    )
+                return CombatSimulationSequentialDamageProjection(
+                    damage=tuple(
+                        sorted(
+                            damage,
+                            key=lambda item: (
+                                float(item.time_seconds),
+                                int(item.sequence),
+                                item.source.casefold(),
+                            ),
+                        )
+                    ),
+                    evidence=tuple(evidence_rows),
+                    unresolved=tuple(dict.fromkeys(unresolved)),
+                    terminated_at_seconds=terminated_at_seconds,
+                    terminated_at_sequence=terminated_at_sequence,
+                    suppressed_action_keys=tuple(suppressed),
+                )
+
             if ledger.is_dead:
                 suppressed.append(action_key)
                 evidence_rows.append(
