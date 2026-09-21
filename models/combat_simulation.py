@@ -278,11 +278,43 @@ class CombatSimulationHealthSnapshot:
     maximum_health: int | None
     is_dead: bool = False
 
+    def __post_init__(self) -> None:
+        identity = str(self.identity or "").strip()
+        if not identity:
+            raise ValueError("combat simulation Health snapshot identity is required")
+        current = None if self.current_health is None else int(self.current_health)
+        maximum = None if self.maximum_health is None else int(self.maximum_health)
+        if current is not None and current < 0:
+            raise ValueError("combat simulation Health snapshot current Health cannot be negative")
+        if maximum is not None and maximum <= 0:
+            raise ValueError("combat simulation Health snapshot maximum Health must be positive")
+        if current is not None and maximum is not None and current > maximum:
+            raise ValueError("combat simulation Health snapshot current Health cannot exceed maximum")
+        is_dead = bool(self.is_dead)
+        if is_dead and current != 0:
+            raise ValueError("combat simulation Health snapshot dead state requires zero Health")
+        if current == 0 and not is_dead:
+            raise ValueError("combat simulation Health snapshot zero Health requires dead state")
+        object.__setattr__(self, "identity", identity)
+        object.__setattr__(self, "current_health", current)
+        object.__setattr__(self, "maximum_health", maximum)
+        object.__setattr__(self, "is_dead", is_dead)
+
 
 @dataclass(frozen=True)
 class CombatSimulationResourceSnapshot:
     resource: str
     current_amount: int
+
+    def __post_init__(self) -> None:
+        resource = str(self.resource or "").strip().casefold()
+        if not resource:
+            raise ValueError("combat simulation resource snapshot identity is required")
+        current_amount = int(self.current_amount)
+        if current_amount < 0:
+            raise ValueError("combat simulation resource snapshot amount cannot be negative")
+        object.__setattr__(self, "resource", resource)
+        object.__setattr__(self, "current_amount", current_amount)
 
 
 @dataclass(frozen=True)
@@ -294,6 +326,22 @@ class CombatSimulationSnapshot:
     active_effect_windows: tuple[RuntimeEffectActiveWindow, ...] = ()
     target_state: CombatSimulationTargetState | None = None
     unresolved: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        time_seconds = float(self.time_seconds)
+        if not isfinite(time_seconds) or time_seconds < 0:
+            raise ValueError("combat simulation snapshot time must be finite and non-negative")
+        active_bar = str(self.active_bar or "").strip().casefold()
+        if active_bar not in {"front", "back"}:
+            raise ValueError("combat simulation snapshot active bar must be front or back")
+        resource_keys = tuple(item.resource for item in self.resources)
+        if len(set(resource_keys)) != len(resource_keys):
+            raise ValueError("combat simulation snapshot resource identities must be unique")
+        health_keys = tuple(item.identity for item in self.health)
+        if len(set(health_keys)) != len(health_keys):
+            raise ValueError("combat simulation snapshot Health identities must be unique")
+        object.__setattr__(self, "time_seconds", time_seconds)
+        object.__setattr__(self, "active_bar", active_bar)
 
 
 @dataclass(frozen=True)
