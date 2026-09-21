@@ -29,3 +29,23 @@ def test_raid_plan_publish_has_only_one_publish_button_and_one_poller() -> None:
     assert "Publish to Finch" not in source
     assert source.count("def _poll_raid_plan_publish") == 1
     assert "def _poll_finch_plan_publish" not in source
+
+
+def test_team_schedule_has_explicit_shared_team_read_import_action() -> None:
+    source = Path("ui/themed_roster_page.py").read_text(encoding="utf-8")
+
+    assert 'QPushButton("Get Shared Teams")' in source
+    assert "list_shared_teams_from_finch" in source
+    assert "import_shared_team_from_finch" in source
+    assert "It does not create Personnel or overwrite player records." in source
+    assert "_FINCH_TEAM_READ_EXECUTOR" in source
+
+
+def test_raid_plan_has_explicit_shared_plan_read_import_action() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+
+    assert 'QPushButton("Get Shared Plans")' in source
+    assert "list_shared_raid_plans_from_finch" in source
+    assert "import_shared_raid_plan_from_finch" in source
+    assert "It does not create Personnel or saved builds." in source
+    assert "_FINCH_PLAN_READ_EXECUTOR" in source
