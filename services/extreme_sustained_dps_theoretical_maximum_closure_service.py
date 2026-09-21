@@ -51,7 +51,10 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
         omitted = tuple(
             dict.fromkeys(
                 str(item).strip()
-                for item in omitted_scope
+                for item in (
+                    *axis_coverage.omitted_scope,
+                    *tuple(omitted_scope),
+                )
                 if str(item).strip()
             )
         )
