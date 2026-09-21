@@ -1406,8 +1406,23 @@ Target behavior:
 - Prefer compact, raid-lead-readable presentation with the detailed boss/encounter
   pages remaining available for deeper reference.
 
-**Status:** PARKED / TODO. This is a Live Raid product integration item, not a reason to
-duplicate encounter truth or reopen canonical encounter ownership.
+### Live Raid encounter-intelligence validation checkpoint — 2026-09-21
+
+Implemented and validated:
+
+- Live Raid consumes the selected Raid Plan trial and explicit encounter selection;
+- canonical boss-guide and reviewed encounter-evidence services supply phase guides,
+  callouts, checklists, threshold conditions, and reviewed wall-clock timeline facts;
+- **Next 60 Seconds** is driven only by reviewed persisted clock facts plus the manual
+  pull timer;
+- health/phase thresholds remain threshold guidance and are never converted into guessed
+  timestamps;
+- Live Raid remains a consumer of encounter truth and labels guide/reference state
+  separately from unavailable observed telemetry;
+- focused encounter-context validation: **7 passed in 0.46s**.
+
+**Status: COMPLETE / VALIDATED.** The parked integration is closed without duplicating
+encounter authority or claiming unsupported live telemetry.
 
 ---
 
