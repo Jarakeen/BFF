@@ -287,10 +287,12 @@ class CombatSimulationResult:
             raise ValueError(
                 "combat simulation result events must be in canonical timeline order"
             )
-        initial_bar = str(self.initial_bar or "").strip()
-        final_bar = str(self.final_bar or "").strip()
-        if not initial_bar or not final_bar:
-            raise ValueError("combat simulation result requires initial and final bar")
+        initial_bar = str(self.initial_bar or "").strip().casefold()
+        final_bar = str(self.final_bar or "").strip().casefold()
+        if initial_bar not in {"front", "back"} or final_bar not in {"front", "back"}:
+            raise ValueError(
+                "combat simulation result bars must be front or back"
+            )
         object.__setattr__(self, "duration_seconds", duration_seconds)
         object.__setattr__(self, "initial_bar", initial_bar)
         object.__setattr__(self, "final_bar", final_bar)
