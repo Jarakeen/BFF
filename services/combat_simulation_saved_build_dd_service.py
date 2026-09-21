@@ -28,6 +28,9 @@ from services.combat_simulation_sequential_dd_damage_service import (
 )
 from services.combat_simulation_service import CombatSimulationService
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+from services.rotation_plan_runtime_build_context_service import (
+    RotationRuntimeBuildContextResolver,
+)
 
 
 class CombatSimulationSavedBuildDDService:
@@ -66,6 +69,7 @@ class CombatSimulationSavedBuildDDService:
         target_combat_state_resolver: TargetCombatStateResolver | None = None,
         target_resistance_resolver: TargetResistanceResolver | None = None,
         target_snapshot_resolver: TargetSnapshotResolver | None = None,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
     ) -> CombatSimulationResult:
         build = build_snapshot.materialize()
         candidate = damage_candidate or GeneratedRotationCandidate(
@@ -98,6 +102,7 @@ class CombatSimulationSavedBuildDDService:
             target_combat_state_resolver=target_combat_state_resolver,
             target_resistance_resolver=target_resistance_resolver,
             target_snapshot_resolver=effective_snapshot_resolver,
+            runtime_build_context_resolver=runtime_build_context_resolver,
             execute_target_identity=damage_target_identity,
         )
 
