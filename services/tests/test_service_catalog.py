@@ -1115,3 +1115,19 @@ def test_sustained_dps_runtime_state_search_keeps_local_scope_explicit() -> None
     assert "explicitly proven local branch" in frontier.notes
     assert "Only ExtremeRuntimeSnapshot varies" in evaluator.notes
     assert "Omitted runtime scope remains separate" in search.notes
+
+
+def test_sustained_dps_finite_family_branch_bound_adapter_requires_exact_scope() -> None:
+    service = canonical_service_for("extreme_sustained_dps_finite_family_branch_bound_adapter")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.finite_family_branch_bound_adapter"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.finite_whole_plan_dominance",
+        "extreme.sustained_dps.generated_branch_and_bound_search",
+    )
+    assert "exactly that family" in service.notes
+    assert "omitted-scope item" in service.notes
