@@ -718,6 +718,52 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.discovery",
+        domain="extreme",
+        purpose=(
+            "Discover the canonical saved DD/DPS build denominator that has stable "
+            "build identity and valid saved RotationPlan evidence."
+        ),
+        implementation_path="services.extreme_sustained_dps_candidate_discovery_service",
+        inputs=("CanonicalSavedBuildLibrary", "SavedRotationArtifacts"),
+        outputs=("ExtremeSustainedDPSDiscoveryResult",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_candidate_discovery",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Discovery does not synthesize builds or infer DD role from gear. "
+            "Every excluded saved row remains visible with a reason."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.saved_state_search",
+        domain="extreme",
+        purpose=(
+            "Search the complete eligible canonical saved DD/DPS denominator by "
+            "discovering candidates and comparing every saved build/rotation witness "
+            "under one explicit target scenario."
+        ),
+        implementation_path="services.extreme_sustained_dps_search_service",
+        inputs=("CanonicalSavedBuildLibrary", "TargetHealth", "TargetResistance"),
+        outputs=("ExtremeSustainedDPSSearchResult",),
+        dependencies=(
+            "extreme.sustained_dps.discovery",
+            "extreme.sustained_dps.comparison",
+        ),
+        responsibilities=("extreme_sustained_dps_saved_state_search",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Complete only for the eligible saved user-state denominator. It does not "
+            "generate unsaved builds/rotations or prove the theoretical ESO-wide maximum."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="combat.simulation.snapshot",
         domain="combat",
         purpose=(
