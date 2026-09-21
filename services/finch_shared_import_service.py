@@ -31,7 +31,8 @@ def _payload(snapshot: FinchSharedSnapshot, *, kind: str) -> dict[str, object]:
         raise ValueError(
             f"Expected Finch shared {kind!r} snapshot, got {snapshot.kind!r}."
         )
-    if snapshot.schema_version != 1:
+    allowed_versions = {1} if kind == "team" else {1, 2}
+    if snapshot.schema_version not in allowed_versions:
         raise ValueError(
             f"Unsupported Finch shared {kind} schema version: {snapshot.schema_version}"
         )
@@ -198,6 +199,17 @@ class FinchSharedImportService:
                         character_name=_clean(raw.get("character_name")) or None,
                         role=_clean(raw.get("role")) or None,
                         eso_class=_clean(raw.get("eso_class")) or None,
+                        primary_assignment=_clean(raw.get("primary_assignment")) or None,
+                        secondary_assignment=_clean(raw.get("secondary_assignment")) or None,
+                        utility_assignments=tuple(
+                            _clean(value)
+                            for value in (
+                                raw.get("utility_assignments")
+                                if isinstance(raw.get("utility_assignments"), list)
+                                else []
+                            )
+                            if _clean(value)
+                        ),
                     )
                 )
 
