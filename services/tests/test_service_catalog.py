@@ -290,3 +290,23 @@ def test_extreme_sustained_dps_consumes_combat_simulation_authority() -> None:
     }
     assert "lower bound" in sustained.notes
     assert "optimization responsibility" in sustained.notes
+
+
+
+def test_combat_simulation_core_responsibilities_have_one_canonical_authority() -> None:
+    for responsibility in (
+        "combat_simulation_saved_build_dd_execution",
+        "combat_simulation_damage_summary",
+        "combat_simulation_deterministic_replay_verification",
+    ):
+        matches = tuple(
+            row
+            for row in SERVICE_CATALOG.descriptors
+            if responsibility in row.responsibilities
+            and row.authority is ServiceAuthority.CANONICAL
+            and row.lifecycle is not ServiceLifecycle.DISABLED
+        )
+        assert len(matches) == 1, (
+            responsibility,
+            tuple(row.service_id for row in matches),
+        )
