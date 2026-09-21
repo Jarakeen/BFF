@@ -72,6 +72,11 @@ class CombatSimulationDamageSummaryService:
             if event.event_type == "outgoing_damage"
             and str(event.payload_dict().get("recipient") or "").strip() == target
         )
+        summary_damage_unresolved = list(result.damage_unresolved)
+        if result.target_state is None and outgoing:
+            summary_damage_unresolved.append(
+                f"{target}: target Health state is required to prove applied outgoing damage"
+            )
         health = tuple(
             event
             for event in result.events
@@ -194,7 +199,7 @@ class CombatSimulationDamageSummaryService:
                 )
             ),
             unresolved=tuple(result.unresolved),
-            damage_unresolved=tuple(result.damage_unresolved),
+            damage_unresolved=tuple(dict.fromkeys(summary_damage_unresolved)),
         )
 
 
