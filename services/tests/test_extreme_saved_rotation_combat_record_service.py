@@ -22,9 +22,20 @@ class _ArtifactService:
 
 
 class _CatalogService:
-    def resolve_build_id(self, build):
-        del build
-        return "build-dd"
+    def load(self):
+        return {
+            "builds": (
+                {
+                    "build_id": "build-dd",
+                    "name": "Parse",
+                    "payload": {
+                        "Name": "Damage Tester",
+                        "Gamertag": "",
+                        "BuildName": "Parse",
+                    },
+                },
+            )
+        }
 
 
 class _Simulator:
