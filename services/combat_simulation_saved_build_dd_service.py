@@ -102,6 +102,7 @@ class CombatSimulationSavedBuildDDService:
         )
 
         sequential_unresolved: tuple[str, ...] = ()
+        sequential_damage = ()
         replay_provider = resolution.provider
         execution_plan = plan
         execution_candidate = candidate
@@ -116,6 +117,7 @@ class CombatSimulationSavedBuildDDService:
                 ledger=ledger,
             )
             sequential_unresolved = sequential.unresolved
+            sequential_damage = sequential.damage
             replay_provider = sequential.evidence_provider()
             if (
                 sequential.terminated_at_seconds is not None
@@ -141,6 +143,11 @@ class CombatSimulationSavedBuildDDService:
             incoming_damage=tuple(
                 item
                 for item in incoming_damage
+                if item.time_seconds <= execution_plan.duration_seconds
+            ),
+            outgoing_damage=tuple(
+                item
+                for item in sequential_damage
                 if item.time_seconds <= execution_plan.duration_seconds
             ),
             damage_target_identity=damage_target_identity,
