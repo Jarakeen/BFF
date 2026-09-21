@@ -1227,3 +1227,10 @@ For one selected Ultimate with a resolved cost and explicit generation timeline,
 ### 2026-09-21 — A local action maximum is only a ceiling for the denominator that proved it
 
 If FoundryDock completely evaluates every descendant inside one partial branch and the largest total consequence of any one damage action is **X**, then **X** is a safe absolute per-action ceiling for that closed branch. It is not automatically a ceiling for its parent, sibling branches, or the global ESO search space. The proof travels downward to subsets, not outward to candidates that were never included in the denominator.
+
+### 2026-09-21 — Lazy frontier traversal does not shrink the build denominator
+
+A search does not need to create every possible build in memory at once to remain exhaustive. If each frontier reports its complete count and can materialize any indexed candidate, branch-and-bound can open one coordinate at a time while preserving the same legal denominator.
+
+**Layman's version:** checking every drawer one at a time is still checking the whole cabinet; it simply avoids dumping the cabinet onto the floor.
+
