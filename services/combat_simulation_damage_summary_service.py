@@ -128,26 +128,49 @@ class CombatSimulationDamageSummaryService:
                 str(payload.get("recipient") or "").strip(),
             )
 
-        outgoing_coordinates = {
-            damage_coordinate(event)
-            for event in outgoing
-        }
-        outgoing_health_coordinates = {
-            damage_coordinate(event)
-            for event in outgoing_health
-        }
-        for coordinate in sorted(outgoing_coordinates - outgoing_health_coordinates):
-            time_seconds, source, recipient = coordinate
-            summary_damage_unresolved.append(
-                f"{source or 'unknown'} outgoing_damage at {time_seconds:g}s "
-                f"-> {recipient}: matching Health transition is unavailable"
+        outgoing_sequences_by_coordinate: dict[
+            tuple[float, str, str],
+            set[int],
+        ] = {}
+        for event in outgoing:
+            outgoing_sequences_by_coordinate.setdefault(
+                damage_coordinate(event),
+                set(),
+            ).add(int(event.sequence))
+
+        outgoing_health_count_by_coordinate: dict[
+            tuple[float, str, str],
+            int,
+        ] = {}
+        for event in outgoing_health:
+            coordinate = damage_coordinate(event)
+            outgoing_health_count_by_coordinate[coordinate] = (
+                outgoing_health_count_by_coordinate.get(coordinate, 0) + 1
             )
-        for coordinate in sorted(outgoing_health_coordinates - outgoing_coordinates):
+
+        all_damage_coordinates = (
+            set(outgoing_sequences_by_coordinate)
+            | set(outgoing_health_count_by_coordinate)
+        )
+        for coordinate in sorted(all_damage_coordinates):
             time_seconds, source, recipient = coordinate
-            summary_damage_unresolved.append(
-                f"{source or 'unknown'} health_change at {time_seconds:g}s "
-                f"-> {recipient}: matching raw outgoing damage is unavailable"
+            expected_transitions = len(
+                outgoing_sequences_by_coordinate.get(coordinate, set())
             )
+            actual_transitions = outgoing_health_count_by_coordinate.get(
+                coordinate,
+                0,
+            )
+            if actual_transitions < expected_transitions:
+                summary_damage_unresolved.append(
+                    f"{source or 'unknown'} outgoing_damage at {time_seconds:g}s "
+                    f"-> {recipient}: matching Health transition is unavailable"
+                )
+            elif actual_transitions > expected_transitions:
+                summary_damage_unresolved.append(
+                    f"{source or 'unknown'} health_change at {time_seconds:g}s "
+                    f"-> {recipient}: matching raw outgoing damage is unavailable"
+                )
         for event in outgoing_health:
             payload = event.payload_dict()
             source = str(event.source or "unknown").strip() or "unknown"
