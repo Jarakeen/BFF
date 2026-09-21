@@ -232,6 +232,7 @@ class CombatSimulationResult:
     effect_windows: tuple[RuntimeEffectActiveWindow, ...] = ()
     target_state: CombatSimulationTargetState | None = None
     unresolved: tuple[str, ...] = ()
+    damage_unresolved: tuple[str, ...] = ()
 
     @property
     def deterministic_signature(self) -> tuple:
@@ -244,6 +245,7 @@ class CombatSimulationResult:
             self.effect_windows,
             self.target_state,
             self.unresolved,
+            self.damage_unresolved,
         )
 
 
