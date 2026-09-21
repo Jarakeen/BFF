@@ -616,3 +616,85 @@ def test_external_event_after_same_time_lethal_sequence_is_excluded() -> None:
         event.source == "Post-Death Hazard"
         for event in result.events
     )
+
+
+class _BeyondHorizonPeriodicProvider:
+    def evaluate_action_occurrences(self, *, candidate, action):
+        del candidate
+        return RotationActionDamageOccurrenceEvidence(
+            action_time_seconds=action.time_seconds,
+            action_sequence=action.sequence,
+            occurrences=(
+                RotationActionDamageOccurrence(
+                    time_seconds=action.time_seconds,
+                    sequence=action.sequence,
+                    damage_value=1000.0,
+                    source_name=str(action.name),
+                    coefficient_number=1,
+                ),
+                RotationActionDamageOccurrence(
+                    time_seconds=6.0,
+                    sequence=0,
+                    damage_value=50000.0,
+                    source_name=str(action.name),
+                    coefficient_number=2,
+                    occurrence_index=0,
+                ),
+            ),
+        )
+
+
+class _BeyondHorizonPeriodicProviderService:
+    def resolve(self, **_kwargs):
+        return CombatSimulationSavedBuildDDProviderResolution(
+            provider=_BeyondHorizonPeriodicProvider(),
+            unresolved=(),
+        )
+
+
+def test_periodic_occurrence_beyond_simulation_horizon_is_not_applied() -> None:
+    service = CombatSimulationSavedBuildDDService(
+        provider_service=_BeyondHorizonPeriodicProviderService(),
+        simulation_service=_simulation_service(),
+    )
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=5.0,
+        actions=(
+            RotationAction(
+                time_seconds=4.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Late DoT",
+                bar="front",
+            ),
+        ),
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = service.simulate(
+        build_snapshot=_snapshot(),
+        plan=plan,
+        target_state=state,
+        damage_target_identity="Boss",
+        target_resistance=18200.0,
+    )
+
+    assert result.duration_seconds == 5.0
+    outgoing = [
+        (event.time_seconds, event.source, event.payload_dict()["amount"])
+        for event in result.events
+        if event.event_type == "outgoing_damage"
+    ]
+    assert outgoing == [(4.0, "Late DoT", 1000.0)]
+    assert not any(event.time_seconds > 5.0 for event in result.events)
