@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 import pytest
 
@@ -35,6 +36,29 @@ class _Route:
 class _MundusRepository:
     def list_names(self):
         return ["The Mage", "The Lord", "The Mage", ""]
+
+
+class _ProvenMundusRepository(_MundusRepository):
+    def get_records(self, name):
+        if name == "The Lord":
+            return (
+                SimpleNamespace(
+                    stat_id="max_health",
+                    supported=True,
+                    unit="flat",
+                    value=2231.0,
+                    notes="",
+                ),
+            )
+        return (
+            SimpleNamespace(
+                stat_id="spell_damage",
+                supported=True,
+                unit="flat",
+                value=238.0,
+                notes="",
+            ),
+        )
 
 
 class _CanonicalEvaluator:
@@ -162,7 +186,7 @@ def test_record_can_be_proven_only_when_no_other_dynamic_axes_remain():
         search_service=_SearchService(structural),
         mundus_evaluator=ExtremeBestMundusStructuralStatEvaluator(
             evaluator=_CanonicalEvaluator(),
-            mundus_repository=_MundusRepository(),
+            mundus_repository=_ProvenMundusRepository(),
         ),
     )
 
@@ -170,7 +194,7 @@ def test_record_can_be_proven_only_when_no_other_dynamic_axes_remain():
 
     assert record.proof_status is ExtremeRecordProofStatus.PROVEN
     assert record.globally_proven is True
-    assert record.search_coverage.candidates_screened == 6
+    assert record.search_coverage.candidates_screened == 2
 
 
 def test_cataloged_non_core_objective_fails_closed():
