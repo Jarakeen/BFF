@@ -1105,3 +1105,7 @@ A build can have a larger Weapon/Spell Damage, crit, penetration, resource pool,
 ### 2026-09-21 — A direct-hit ceiling is not a rotation ceiling
 
 For sustained DPS, an optimistic bound on a cast's immediate hit is insufficient if that cast can also create a DoT, delayed hit, proc, or other triggered damage inside the comparison horizon. A proof-safe rotation ceiling must bound the **entire damage consequence owned by each scheduled action**, not merely the button-press hit. FoundryDock now withholds the whole-plan ceiling if even one damage action has only partial consequence coverage.
+
+### 2026-09-21 — Exact damage is not automatically an optimistic ceiling
+
+A fully resolved skill cast can have an exact canonical total for one concrete build and rotation witness, including its direct and periodic occurrences, without proving anything about stronger **future mutations** of that candidate. Gear, CP, passives, bar choices, or runtime states may still raise the result. FoundryDock now promotes exact action damage into a pruning ceiling only when every still-open mutation axis is explicitly covered by a dominance proof. Otherwise the candidate stays open.
