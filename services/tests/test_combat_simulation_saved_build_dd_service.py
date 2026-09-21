@@ -478,3 +478,81 @@ def test_periodic_tick_can_terminate_saved_build_simulation() -> None:
         (1.0, "DoT"),
     ]
     assert not any(event.time_seconds > 1.0 for event in result.events)
+
+
+class _LethalSameTimestampProvider:
+    def evaluate_action(self, *, candidate, action):
+        del candidate
+        if action.name == "Killing Hit":
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=12000.0,
+            )
+        raise AssertionError("later same-timestamp action should not execute after death")
+
+
+class _LethalSameTimestampProviderService:
+    def resolve(self, **_kwargs):
+        return CombatSimulationSavedBuildDDProviderResolution(
+            provider=_LethalSameTimestampProvider(),
+            unresolved=(),
+        )
+
+
+def test_same_timestamp_later_sequence_is_excluded_after_lethal_action() -> None:
+    service = CombatSimulationSavedBuildDDService(
+        provider_service=_LethalSameTimestampProviderService(),
+        simulation_service=_simulation_service(),
+    )
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=5.0,
+        actions=(
+            RotationAction(
+                time_seconds=1.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Killing Hit",
+                bar="front",
+            ),
+            RotationAction(
+                time_seconds=1.0,
+                sequence=1,
+                kind=RotationActionKind.SKILL,
+                name="Too Late Same Timestamp",
+                bar="front",
+            ),
+        ),
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = service.simulate(
+        build_snapshot=_snapshot(),
+        plan=plan,
+        target_state=state,
+        damage_target_identity="Boss",
+        target_resistance=18200.0,
+    )
+
+    actions = [
+        (event.time_seconds, event.sequence, event.source)
+        for event in result.events
+        if event.event_type == "action"
+    ]
+    assert actions == [(1.0, 0, "Killing Hit")]
+    assert result.duration_seconds == 1.0
+    assert not any(
+        event.time_seconds == 1.0 and event.sequence > 0
+        for event in result.events
+    )
