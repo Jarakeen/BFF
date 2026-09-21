@@ -130,7 +130,11 @@ def test_unmapped_food_and_missing_dps_bound_remain_explicit() -> None:
 
     assert "unmapped food" in result.unresolved
     assert any("No proof-safe sustained-DPS upper bound" in row for row in result.unresolved)
-    assert "proof-safe sustained-DPS upper bound" in result.deferred_axes
+    assert any(
+        "proof-safe" in row and "upper bound" in row
+        for row in result.deferred_axes
+    )
+    assert all("adapter" not in row for row in result.deferred_axes)
     assert any("pruning remains fail-open" in row for row in result.evidence)
 
 
