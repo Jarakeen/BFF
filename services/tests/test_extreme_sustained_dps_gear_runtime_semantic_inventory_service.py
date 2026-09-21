@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from minmax.gear_physical_slot_realization import ExtremeWeaponSlotShape
+from services.extreme_gear_physical_slot_realization_service import ExtremeWeaponSlotShape
 from minmax.gear_sets import GearSetBonus
 from services.extreme_dual_bar_gear_state_service import ExtremeDualBarGearState
 from services.extreme_named_gear_set_realization_service import (
