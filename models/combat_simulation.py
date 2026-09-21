@@ -178,14 +178,17 @@ class CombatSimulationRecipientBinding:
     effect_name: str | None = None
 
     def __post_init__(self) -> None:
-        if self.time_seconds < 0:
-            raise ValueError("recipient binding time cannot be negative")
+        time_seconds = float(self.time_seconds)
+        if not isfinite(time_seconds) or time_seconds < 0:
+            raise ValueError("recipient binding time must be finite and non-negative")
         if self.sequence < 0:
             raise ValueError("recipient binding sequence cannot be negative")
         if not str(self.event_type or "").strip():
             raise ValueError("recipient binding event_type is required")
         if not str(self.source or "").strip():
             raise ValueError("recipient binding source is required")
+        object.__setattr__(self, "time_seconds", time_seconds)
+        object.__setattr__(self, "sequence", int(self.sequence))
         recipients = tuple(str(value or "").strip() for value in self.recipients)
         if any(not value for value in recipients):
             raise ValueError("recipient binding identities must be non-empty")
