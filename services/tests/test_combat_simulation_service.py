@@ -617,3 +617,23 @@ def test_injected_damage_rejects_non_finite_amount() -> None:
                 raise AssertionError(
                     f"Expected non-finite {label} damage amount to fail closed"
                 )
+
+
+def test_typed_damage_inputs_normalize_sequence() -> None:
+    incoming = CombatSimulationIncomingDamage(
+        time_seconds=1,
+        sequence="2",
+        source="Boss Hit",
+        recipient="Magrat",
+        amount=1000,
+    )
+    outgoing = CombatSimulationOutgoingDamage(
+        time_seconds=1,
+        sequence="3",
+        source="Player Hit",
+        recipient="Boss",
+        amount=1000,
+    )
+
+    assert incoming.sequence == 2
+    assert outgoing.sequence == 3
