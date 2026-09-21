@@ -1,13 +1,18 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from concurrent.futures import Future, ThreadPoolExecutor
+from pathlib import Path
+
+from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
     QComboBox,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QTabWidget,
     QTableWidget,
@@ -19,6 +24,10 @@ from PySide6.QtWidgets import (
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
+from services.finch_shared_coverage_service import (
+    list_shared_coverage_from_finch,
+    publish_coverage_to_finch,
+)
 from services.saved_build_capability_service import SavedBuildCapabilityService, summarize_raid_coverage
 from services.performance_raid_review_runner_service import PerformanceRaidReviewRunnerService
 from services.performance_raid_review_selection_mode_service import (
@@ -31,6 +40,8 @@ from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
 from ui.raid_review_async_task import RaidReviewAsyncTask
 
+
+_FINCH_COVERAGE_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="finch-coverage")
 
 CORE_COVERAGE = tuple(row.display_name for row in DEFAULT_RAID_COVERAGE_PROFILE.requirements if row.required)
 DEBUFFS = {"Major Vulnerability", "Major Breach", "Crusher", "Minor Brittle", "Minor Maim"}
@@ -50,6 +61,14 @@ class CoveragePage(FoundryPage):
         self.raid_review_runner = raid_review_runner or PerformanceRaidReviewRunnerService()
         self.raid_review_selection_mode_service = PerformanceRaidReviewSelectionModeService()
         self._raid_review_task: RaidReviewAsyncTask | None = None
+        self._finch_publish_future: Future | None = None
+        self._finch_shared_future: Future | None = None
+        self._finch_publish_timer = QTimer(self)
+        self._finch_publish_timer.setInterval(100)
+        self._finch_publish_timer.timeout.connect(self._poll_finch_publish)
+        self._finch_shared_timer = QTimer(self)
+        self._finch_shared_timer.setInterval(100)
+        self._finch_shared_timer.timeout.connect(self._poll_finch_shared)
         self.roster = BuildRoster()
         self._build_ui()
         self.refresh()
@@ -71,6 +90,12 @@ class CoveragePage(FoundryPage):
         self.scope_combo.addItem("All Saved Builds", "all")
         self.scope_combo.currentIndexChanged.connect(self.refresh)
         self.header.add_context_widget(self._context_field("BUILD SCOPE", self.scope_combo))
+        self.publish_finch = QPushButton("Publish Coverage")
+        self.publish_finch.clicked.connect(self._publish_coverage_to_finch)
+        self.header.add_context_widget(self.publish_finch)
+        self.get_shared_finch = QPushButton("Get Shared Coverage")
+        self.get_shared_finch.clicked.connect(self._get_shared_coverage_from_finch)
+        self.header.add_context_widget(self.get_shared_finch)
 
         self.tabs = QTabWidget()
         self.tabs.addTab(self._coverage_tab(), "BUFFS & DEBUFFS")
@@ -82,6 +107,122 @@ class CoveragePage(FoundryPage):
 
         self.status = FoundryStatusBar()
         self.set_status(self.status)
+
+    def _selected_raid_plan_id_for_finch(self) -> str:
+        data = str(self.scope_combo.currentData() or "").strip()
+        return data.split(":", 1)[1].strip() if data.startswith("raid_plan:") else ""
+
+    def _publish_coverage_to_finch(self) -> None:
+        plan_id = self._selected_raid_plan_id_for_finch()
+        if not plan_id:
+            self.status.warning("Select a saved Raid Plan before publishing Coverage.")
+            return
+        if self._finch_publish_future is not None and not self._finch_publish_future.done():
+            self.status.info("Finch Coverage publish is already running.")
+            return
+        self.publish_finch.setEnabled(False)
+        self.status.info("Publishing Coverage to Finch…")
+        self._finch_publish_future = _FINCH_COVERAGE_EXECUTOR.submit(
+            publish_coverage_to_finch,
+            plan_id=plan_id,
+            raid_plans_path=get_data_dir() / "raid_plans.json",
+            data_dir=get_data_dir(),
+            database_path=DEFAULT_DATABASE,
+            settings_path=Path("settings.json"),
+        )
+        self._finch_publish_timer.start()
+
+    def _poll_finch_publish(self) -> None:
+        future = self._finch_publish_future
+        if future is None or not future.done():
+            return
+        self._finch_publish_timer.stop()
+        self.publish_finch.setEnabled(True)
+        self._finch_publish_future = None
+        try:
+            result = future.result()
+        except Exception as exc:
+            self.status.warning(f"Finch Coverage publish failed: {type(exc).__name__}: {exc}")
+            return
+        self.status.success(f"Published Coverage to Finch: {result.snapshot_key}.")
+
+    def _get_shared_coverage_from_finch(self) -> None:
+        if self._finch_shared_future is not None and not self._finch_shared_future.done():
+            self.status.info("Finch shared Coverage fetch is already running.")
+            return
+        self.get_shared_finch.setEnabled(False)
+        self.status.info("Getting shared Coverage from Finch…")
+        self._finch_shared_future = _FINCH_COVERAGE_EXECUTOR.submit(
+            list_shared_coverage_from_finch,
+            data_dir=get_data_dir(),
+            database_path=DEFAULT_DATABASE,
+            settings_path=Path("settings.json"),
+        )
+        self._finch_shared_timer.start()
+
+    def _poll_finch_shared(self) -> None:
+        future = self._finch_shared_future
+        if future is None or not future.done():
+            return
+        self._finch_shared_timer.stop()
+        self.get_shared_finch.setEnabled(True)
+        self._finch_shared_future = None
+        try:
+            previews = tuple(future.result())
+        except Exception as exc:
+            self.status.warning(f"Finch shared Coverage fetch failed: {type(exc).__name__}: {exc}")
+            return
+        if not previews:
+            self.status.info("Finch has no shared Coverage snapshots.")
+            return
+
+        labels = [
+            f"{row.name or row.plan_id} • {row.trial_id or 'Trial unknown'} • {row.covered}/{row.total_effects} covered"
+            for row in previews
+        ]
+        selected, accepted = QInputDialog.getItem(
+            self, "Shared Coverage on Finch", "View shared Coverage snapshot:", labels, 0, False
+        )
+        if not accepted:
+            self.status.info("Shared Coverage view cancelled.")
+            return
+        try:
+            row = previews[labels.index(selected)]
+        except (ValueError, IndexError):
+            self.status.warning("The selected shared Coverage snapshot is unavailable.")
+            return
+
+        problem_rows = [
+            effect for effect in row.effects
+            if effect.coverage_state == "missing" or effect.needs_attention
+        ]
+        details = []
+        for effect in problem_rows[:8]:
+            providers = effect.primary or effect.static_providers or effect.conditional_providers
+            provider_text = ", ".join(providers) if providers else "No provider"
+            details.append(f"• {effect.effect_name}: {effect.label} • {provider_text}")
+        if len(problem_rows) > 8:
+            details.append(f"• +{len(problem_rows) - 8} more review item(s)")
+
+        QMessageBox.information(
+            self,
+            "Shared Coverage",
+            (
+                f"{row.name or row.plan_id}\n"
+                f"Trial: {row.trial_id or 'Unknown'}\n"
+                f"Team: {row.team_name or 'Not set'}\n"
+                f"Published by: {row.published_by or 'Unknown'}\n"
+                f"Updated: {row.updated_at or 'Unknown'}\n\n"
+                f"Covered: {row.covered}/{row.total_effects}\n"
+                f"Missing: {row.missing}\n"
+                f"Needs attention: {row.needs_attention}\n"
+                f"Duplicate primary: {row.duplicate_primary}\n"
+                f"Unresolved chairs: {row.unresolved_chairs}\n\n"
+                + ("Review items:\n" + "\n".join(details) + "\n\n" if details else "")
+                + "This is a read-only Finch snapshot. Local Coverage was not changed."
+            ),
+        )
+        self.status.info(f"Viewed shared Coverage for {row.name or row.plan_id}; local state unchanged.")
 
     @staticmethod
     def _context_field(title: str, widget: QWidget) -> QWidget:
