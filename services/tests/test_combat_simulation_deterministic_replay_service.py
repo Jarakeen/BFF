@@ -622,3 +622,24 @@ def test_combat_simulation_result_rejects_final_bar_mismatch() -> None:
         assert "final bar does not match event state" in str(exc)
     else:
         raise AssertionError("Expected final bar/event mismatch to fail closed")
+
+
+def test_combat_simulation_result_rejects_invalid_bar_swap_destination() -> None:
+    swap = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.ACTION),
+        sequence=0,
+        event_type="action",
+        source="bar_swap",
+        payload=(
+            ("kind", "bar_swap"),
+            ("bar", "sideways"),
+        ),
+    )
+
+    try:
+        _result(events=(swap,))
+    except ValueError as exc:
+        assert "bar swap requires front or back destination" in str(exc)
+    else:
+        raise AssertionError("Expected invalid bar swap destination to fail closed")
