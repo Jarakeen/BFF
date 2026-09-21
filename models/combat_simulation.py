@@ -633,9 +633,25 @@ class CombatSimulationResult:
             raise ValueError(
                 "combat simulation final bar does not match event state"
             )
+        unresolved = tuple(
+            dict.fromkeys(
+                str(message).strip()
+                for message in self.unresolved
+                if str(message).strip()
+            )
+        )
+        damage_unresolved = tuple(
+            dict.fromkeys(
+                str(message).strip()
+                for message in self.damage_unresolved
+                if str(message).strip()
+            )
+        )
         object.__setattr__(self, "duration_seconds", duration_seconds)
         object.__setattr__(self, "initial_bar", initial_bar)
         object.__setattr__(self, "final_bar", final_bar)
+        object.__setattr__(self, "unresolved", unresolved)
+        object.__setattr__(self, "damage_unresolved", damage_unresolved)
 
     @property
     def deterministic_signature(self) -> tuple:
