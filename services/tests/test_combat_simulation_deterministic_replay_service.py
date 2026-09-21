@@ -992,3 +992,77 @@ def test_combat_simulation_result_rejects_death_overkill_mismatch() -> None:
         assert "death overkill does not match" in str(exc)
     else:
         raise AssertionError("Expected mismatched death overkill to fail closed")
+
+
+def test_combat_simulation_result_rejects_damage_excess_arithmetic_mismatch() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=3000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("before", 3000),
+            ("attempted_damage", 8000.0),
+            ("applied_damage", 3000.0),
+            ("overkill", 4000.0),
+            ("after", 0),
+            ("maximum_health", 10000),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+
+    try:
+        _result(events=(event,), target_state=state)
+    except ValueError as exc:
+        assert "damage overkill arithmetic is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected invalid overkill arithmetic to fail closed")
+
+
+def test_combat_simulation_result_rejects_healing_excess_arithmetic_mismatch() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=24000,
+                maximum_health=25000,
+            ),
+        )
+    )
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Heal",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 24000),
+            ("attempted_heal", 4000.0),
+            ("applied_heal", 1000.0),
+            ("overheal", 2000.0),
+            ("after", 25000),
+            ("maximum_health", 25000),
+            ("origin_event_type", "direct_heal"),
+        ),
+    )
+
+    try:
+        _result(events=(event,), target_state=state)
+    except ValueError as exc:
+        assert "healing overheal arithmetic is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected invalid overheal arithmetic to fail closed")
