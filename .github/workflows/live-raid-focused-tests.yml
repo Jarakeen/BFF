@@ -30,4 +30,8 @@ jobs:
           python -m pip install pytest PySide6
       - name: Run focused Live Raid encounter tests
         run: |
-          pytest             services/tests/test_live_raid_encounter_projection_service.py             ui/tests/test_city_live_raid_encounter_context.py -q
+          pytest \
+            services/tests/test_live_raid_encounter_projection_service.py \
+            services/tests/test_raid_section_state_attempt_history.py \
+            ui/tests/test_city_live_raid_encounter_context.py \
+            ui/tests/test_city_live_raid_attempt_history.py -q
