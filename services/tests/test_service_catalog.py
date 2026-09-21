@@ -802,3 +802,19 @@ def test_sustained_dps_late_axis_adapter_preserves_frontier_authority() -> None:
     assert "axis-owned state" in service.notes
     assert "fail closed" in service.notes
 
+
+
+def test_sustained_dps_mundus_provisioning_adapter_preserves_joint_dominance() -> None:
+    service = canonical_service_for("extreme_sustained_dps_mundus_provisioning_proof_adapter")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.mundus_provisioning_proof_adapter"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.mundus_provisioning_dominance",
+        "extreme.sustained_dps.axis_dominance_composition",
+    )
+    assert "one coupled proof" in service.notes
+    assert "promote neither canonical axis coverage nor numeric action ceiling" in service.notes
