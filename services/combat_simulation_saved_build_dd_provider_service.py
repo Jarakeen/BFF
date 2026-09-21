@@ -25,7 +25,10 @@ from services.rotation_candidate_action_damage_evidence_service import (
     RotationActionDamageProvider,
     RotationCandidateActionDamageEvidenceService,
 )
-from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
+from services.rotation_candidate_dd_role_output_service import (
+    RotationActionDamageEvidence,
+    RotationActionDamageOccurrenceEvidence,
+)
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_candidate_heavy_attack_damage_evidence_service import (
     RotationCandidateHeavyAttackDamageEvidenceService,
@@ -119,6 +122,27 @@ class _SimulationTemporalSkillProvider:
                     ),
                 )
         return self.delegate.evaluate_action(candidate=candidate, action=action)
+
+    def evaluate_action_occurrences(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageOccurrenceEvidence:
+        if hasattr(self.delegate, "evaluate_action_occurrences"):
+            return self.delegate.evaluate_action_occurrences(
+                candidate=candidate,
+                action=action,
+            )
+        evidence = self.evaluate_action(candidate=candidate, action=action)
+        return RotationActionDamageOccurrenceEvidence(
+            action_time_seconds=action.time_seconds,
+            action_sequence=action.sequence,
+            unresolved=evidence.unresolved
+            or (
+                f"{action.name or action.kind.value}: exact-time damage occurrences are unavailable",
+            ),
+        )
 
 
 class _UnresolvedDamageProvider:
@@ -221,6 +245,58 @@ class _StaticBarAwareSkillProvider:
             runtime_target_snapshot_resolver=self.target_snapshot_resolver,
             execute_target_identity=self.execute_target_identity,
         ).evaluate_action(
+            candidate=candidate,
+            action=action,
+        )
+
+
+    def evaluate_action_occurrences(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageOccurrenceEvidence:
+        if action.kind is not RotationActionKind.SKILL:
+            return RotationActionDamageOccurrenceEvidence(
+                action_time_seconds=action.time_seconds,
+                action_sequence=action.sequence,
+                unresolved=(
+                    f"{action.kind.value} damage requires its dedicated canonical action evaluator",
+                ),
+            )
+
+        resolver = RotationActiveBarContextResolverService(
+            static_context=self.static_context,
+            plan=candidate.plan,
+            initial_bar=self.initial_bar,
+        )
+        context = resolver.context_at(action.time_seconds, action.sequence)
+        target_resistance = (
+            float(self.target_resistance_resolver(action.time_seconds, action.sequence))
+            if self.target_resistance_resolver is not None
+            else self.target_resistance
+        )
+        context = replace(
+            context,
+            target_resistance=target_resistance,
+            fight_duration=float(candidate.plan.duration_seconds),
+        )
+        target_state = (
+            self.target_combat_state_resolver(action.time_seconds, action.sequence)
+            if self.target_combat_state_resolver is not None
+            else None
+        )
+        return RotationCandidateSkillDamageEvidenceService(
+            database_path=self.database_path,
+            context=context,
+            target_combat_state=target_state,
+            periodic_runtime_projection_service=self.periodic_projection,
+            periodic_runtime_semantics=self.semantics,
+            runtime_target_combat_state_resolver=self.target_combat_state_resolver,
+            runtime_target_resistance_resolver=self.target_resistance_resolver,
+            runtime_target_snapshot_resolver=self.target_snapshot_resolver,
+            execute_target_identity=self.execute_target_identity,
+        ).evaluate_action_occurrences(
             candidate=candidate,
             action=action,
         )
