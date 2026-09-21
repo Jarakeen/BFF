@@ -831,6 +831,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.skill_bar_frontier",
+        domain="extreme",
+        purpose=(
+            "Count and page the legal generated front/back active-skill denominator while "
+            "preserving base/morph alternatives and explicit skill-line ownership."
+        ),
+        implementation_path="services.extreme_sustained_dps_skill_bar_frontier_service",
+        inputs=("PlayerBuild", "FrontSkillLegalityContext", "BackSkillLegalityContext"),
+        outputs=("ExtremeSustainedDPSSkillBarFrontier",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_skill_bar_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Preserves empty slots, base/morph alternatives, one-family-per-bar legality, "
+            "front/back duplication, one-bar states, and explicit shared-line ownership. "
+            "Normal-slot permutations are collapsed because slot order does not change build mechanics."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.potion_frontier",
         domain="extreme",
         purpose=(
