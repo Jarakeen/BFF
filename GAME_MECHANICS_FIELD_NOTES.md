@@ -1276,3 +1276,9 @@ Two generated frontiers may each expose a valid indexed axis, yet their axis tup
 
 **Layman's version:** a relay team needs handoffs, not merely four runners listed on the same sheet.
 
+### 2026-09-21 — Exact evaluation must use the last policy-mutated plan
+
+The anchored Ultimate/potion plan is not necessarily the plan that reaches simulation. Execute policy may replace filler skills, and Heavy Attack policy may then replace exact scheduled skill slots and remove same-timestamp Light Attacks. FoundryDock therefore evaluates the final downstream generated candidate rather than accidentally scoring the earlier anchored plan while labeling it with later policy coordinates.
+
+**Layman's version:** score the final edited schedule, not the draft from two edits ago.
+
