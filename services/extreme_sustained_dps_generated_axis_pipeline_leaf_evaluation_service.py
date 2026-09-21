@@ -1,0 +1,130 @@
+from __future__ import annotations
+
+"""Exact-leaf bridge from the generated axis pipeline to canonical runtime evaluation."""
+
+from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
+    ExtremeSustainedDPSExactLeafEvaluation,
+)
+from services.extreme_sustained_dps_generated_frontier_wiring_service import (
+    ExtremeSustainedDPSGeneratedFrontierNode,
+)
+from services.extreme_sustained_dps_generated_search_evidence_adapter_service import (
+    ExtremeSustainedDPSGeneratedSearchEvidenceAdapterService,
+)
+
+
+class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
+    """Extract one completed pipeline witness and run canonical exact simulation."""
+
+    def __init__(self, *, runtime_evaluation: object) -> None:
+        self.runtime_evaluation = runtime_evaluation
+
+    @staticmethod
+    def _incomplete(
+        node: ExtremeSustainedDPSGeneratedFrontierNode,
+        message: str,
+    ) -> ExtremeSustainedDPSExactLeafEvaluation:
+        return ExtremeSustainedDPSExactLeafEvaluation(
+            candidate_key=node.candidate_key,
+            modeled_dps=None,
+            duration_seconds=None,
+            mechanic_complete=False,
+            evidence=tuple(node.evidence),
+            unresolved=(str(message),),
+        )
+
+    def evaluate(
+        self,
+        node: ExtremeSustainedDPSGeneratedFrontierNode,
+        *,
+        runtime_snapshot: object,
+        target_health: int,
+        target_resistance: float,
+        target_name: str = "Boss",
+        initial_bar: str = "front",
+    ) -> ExtremeSustainedDPSExactLeafEvaluation:
+        state = node.state
+        if not bool(getattr(state, "complete", False)):
+            return self._incomplete(
+                node,
+                "Generated axis pipeline leaf is incomplete",
+            )
+
+        gear = getattr(state, "gear", None)
+        late = getattr(state, "late", None)
+        runtime = getattr(state, "runtime", None)
+        assembled = getattr(late, "assembled", None)
+        final_policy_candidate = getattr(runtime, "current_candidate", None)
+
+        build = getattr(assembled, "build", None)
+        progression = getattr(gear, "progression", None)
+        gear_state = getattr(gear, "gear_state", None)
+        plan = getattr(final_policy_candidate, "plan", None)
+
+        missing = tuple(
+            label
+            for label, value in (
+                ("assembled build", build),
+                ("generated progression", progression),
+                ("dual-bar gear state", gear_state),
+                ("final runtime-policy plan", plan),
+            )
+            if value is None
+        )
+        if missing:
+            return self._incomplete(
+                node,
+                "Generated axis pipeline leaf is missing " + ", ".join(missing),
+            )
+
+        result = self.runtime_evaluation.evaluate(
+            build,
+            progression=progression,
+            gear_state=gear_state,
+            plan=plan,
+            runtime_snapshot=runtime_snapshot,
+            target_health=int(target_health),
+            target_resistance=float(target_resistance),
+            target_name=target_name,
+            initial_bar=initial_bar,
+        )
+        exact = ExtremeSustainedDPSGeneratedSearchEvidenceAdapterService.exact_leaf(
+            node.candidate_key,
+            result,
+        )
+        return ExtremeSustainedDPSExactLeafEvaluation(
+            candidate_key=exact.candidate_key,
+            modeled_dps=exact.modeled_dps,
+            duration_seconds=exact.duration_seconds,
+            mechanic_complete=exact.mechanic_complete,
+            evidence=tuple((*node.evidence, *exact.evidence)),
+            unresolved=tuple(exact.unresolved),
+        )
+
+    def evaluator(
+        self,
+        *,
+        runtime_snapshot: object,
+        target_health: int,
+        target_resistance: float,
+        target_name: str = "Boss",
+        initial_bar: str = "front",
+    ):
+        def evaluate(
+            node: ExtremeSustainedDPSGeneratedFrontierNode,
+        ) -> ExtremeSustainedDPSExactLeafEvaluation:
+            return self.evaluate(
+                node,
+                runtime_snapshot=runtime_snapshot,
+                target_health=target_health,
+                target_resistance=target_resistance,
+                target_name=target_name,
+                initial_bar=initial_bar,
+            )
+
+        return evaluate
+
+
+__all__ = [
+    "ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService",
+]
