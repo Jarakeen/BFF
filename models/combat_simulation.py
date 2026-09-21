@@ -555,6 +555,10 @@ class CombatSimulationResult:
                         )
                     dead_recipients.add(recipient)
                     continue
+                if recipient in dead_recipients:
+                    raise ValueError(
+                        "combat simulation Health cannot change after death without resurrection semantics"
+                    )
                 if "before" not in payload or "after" not in payload:
                     raise ValueError(
                         "combat simulation health changes require before/after state"
