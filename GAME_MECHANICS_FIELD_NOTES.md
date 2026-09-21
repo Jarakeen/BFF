@@ -1319,3 +1319,7 @@ When FoundryDock compares rotation-order, weave, execute, Ultimate, potion, or H
 ### 2026-09-21 — A dynamic family adapter must carry its omissions with it
 
 Turning a rotation or policy frontier into a lazy indexed search source must not strip away what that frontier explicitly does **not** cover. Anchored potion timing still omits continuous first-use offsets, explicit Ultimate policy still omits arbitrary delayed casts, and reviewed Heavy Attack windows still omit unreviewed windows. FoundryDock carries those omissions alongside the finite denominator so branch-and-bound cannot mistake searchable scope for theoretical closure.
+
+### 2026-09-21 — A closed runtime family is local proof, not proof that every runtime timeline has been imagined
+
+A caller may be able to prove a finite runtime-state family complete for one branch, such as a reviewed set of proc/cooldown/condition states under fixed encounter assumptions. That can safely close the canonical `runtime_state` axis **for that branch**. It does not prove that ESO has no other legal runtime histories. FoundryDock therefore keeps omitted runtime scope attached to the family instead of silently upgrading local closure into a global runtime theorem.
