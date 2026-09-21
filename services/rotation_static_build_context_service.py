@@ -8,6 +8,7 @@ from engine.config import get_data_dir
 from minmax.build_calculation_context import BuildCalculationContext
 from minmax.combat_state import CombatState
 from minmax.context_factory import BuildCalculationContextFactory
+from minmax.effects import Effect
 from minmax.gear_set_repository import GearSetRepository
 from minmax.race_repository import RaceRepository
 from minmax.resource_costs import ResourceType
@@ -273,6 +274,7 @@ class RotationStaticBuildContextService:
         *,
         bars: tuple[str, ...] = ("front", "back"),
         combat_state: CombatState = CombatState(),
+        additional_effects: tuple[Effect, ...] = (),
     ) -> RotationStaticBuildContextResolution:
         requested = self._normalize_bars(bars)
         progression = self.progression_adapter.resolve(player_build)
@@ -337,6 +339,7 @@ class RotationStaticBuildContextService:
                 progression=progression.progression,
                 active_bar=bar,
                 combat_state=combat_state,
+                additional_effects=additional_effects,
             )
             if dd_damage_done is not None:
                 charged_bonus = (
