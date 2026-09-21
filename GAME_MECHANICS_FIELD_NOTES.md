@@ -1234,3 +1234,6 @@ A search does not need to create every possible build in memory at once to remai
 
 **Layman's version:** checking every drawer one at a time is still checking the whole cabinet; it simply avoids dumping the cabinet onto the floor.
 
+### 2026-09-21 — Dominating an axis and bounding its damage are different proofs
+
+Proving that a search branch has fully accounted for an axis such as Champion Points or Mundus does **not** by itself prove how much damage that axis can add. FoundryDock now tracks axis coverage separately from numeric optimistic damage. Coverage proofs may be unioned across independent authorities; the action-bound layer still requires its own safe multiplier or absolute ceiling before pruning can use that coverage.
