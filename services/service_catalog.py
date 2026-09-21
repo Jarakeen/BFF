@@ -831,6 +831,63 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.cross_axis_context",
+        domain="extreme",
+        purpose=(
+            "Bind one generated build/progression/dual-bar gear witness into coherent "
+            "class-route, explicit ownership, equipped weapon/armor, transformation, "
+            "scribed-skill, and bar-access legality contexts."
+        ),
+        implementation_path="services.extreme_sustained_dps_cross_axis_context_service",
+        inputs=("PlayerBuild", "CharacterProgression", "ExtremeDualBarGearState"),
+        outputs=("ExtremeSustainedDPSCrossAxisContext",),
+        dependencies=("extreme.sustained_dps.dual_bar_gear_frontier",),
+        responsibilities=("extreme_sustained_dps_cross_axis_context",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Keeps native/equipped/explicitly-owned line evidence distinct, carries legal "
+            "subclass route lines explicitly, and binds Oakensoul bar access before skill search. "
+            "Configured scribed skills fail closed until canonical ability-ID mapping exists."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_candidate_assembly",
+        domain="extreme",
+        purpose=(
+            "Assemble one coherent generated refinement candidate by applying CP, potion, "
+            "passive-rank, and two-bar skill states onto the cross-axis-authoritative build."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_candidate_assembly_service",
+        inputs=(
+            "ExtremeSustainedDPSCrossAxisContext",
+            "ChampionPointCandidate",
+            "PotionCandidate",
+            "PassiveRankCandidate",
+            "SkillBarCandidate",
+        ),
+        outputs=("ExtremeSustainedDPSAssembledCandidate",),
+        dependencies=(
+            "extreme.sustained_dps.cross_axis_context",
+            "extreme.sustained_dps.champion_point_frontier",
+            "extreme.sustained_dps.potion_frontier",
+            "extreme.sustained_dps.passive_rank_frontier",
+            "extreme.sustained_dps.skill_bar_frontier",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_candidate_assembly",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Each axis contributes only the state it owns; stale convenience build snapshots "
+            "from other frontiers cannot overwrite gear/class/identity state. One-bar and "
+            "explicit ownership invariants fail closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.skill_bar_frontier",
         domain="extreme",
         purpose=(
