@@ -285,7 +285,7 @@ def _label_and_key_panel(board) -> QWidget:
     row.setContentsMargins(0, 0, 0, 0)
     row.setSpacing(6)
 
-    heading = QLabel("LABEL")
+    heading = QLabel("EDIT & REFERENCE")
     heading.setProperty("sidebarHeading", True)
     row.addWidget(heading)
 
@@ -295,11 +295,11 @@ def _label_and_key_panel(board) -> QWidget:
     board.raid_map_custom_label.returnPressed.connect(lambda: _rename_selected(board))
     row.addWidget(board.raid_map_custom_label, 1)
 
-    board.raid_map_apply_label = QPushButton("Apply")
+    board.raid_map_apply_label = QPushButton("Rename")
     board.raid_map_apply_label.clicked.connect(lambda: _rename_selected(board))
     row.addWidget(board.raid_map_apply_label)
 
-    reference_heading = QLabel("REFERENCE")
+    reference_heading = QLabel("REFERENCE POINTS")
     reference_heading.setProperty("sidebarHeading", True)
     row.addWidget(reference_heading)
 
@@ -328,7 +328,7 @@ def _label_and_key_panel(board) -> QWidget:
     row.addWidget(board.raid_map_reference_lock)
 
     key = QLabel(
-        "KEY  Boss • M mini-boss • T tank • H healer • D DD • P portal-style • "
+        "KEY  Boss • M mini-boss • T tank • H healer • D DD • P portal • "
         "! AOE • + stack • IN entrance • OUT exit • ⚑ banner"
     )
     key.setProperty("muted", True)
