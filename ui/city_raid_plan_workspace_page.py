@@ -31,6 +31,7 @@ from services.raid_plan_build_export_service import (
 )
 from ui.components.foundry_card import FoundryCard
 from ui.raid_plan_adviser_page import RaidPlanAdviserPage
+from ui.raid_plan_header_controls import rehome_plan_header_controls
 from ui.raid_trial_banner_support import TrialBannerLabel, trial_banner_path
 
 
@@ -108,7 +109,6 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         csv_action.triggered.connect(self._export_plan_builds_csv)
         discord_action.triggered.connect(self._copy_plan_builds_discord)
         self.share_builds_button.setMenu(share_menu)
-        self.header.add_context_widget(self.share_builds_button)
 
         # Preserve canonical role/spot controls without adding another decorative
         # field-note card above them. Duties live on the dedicated Assignments page.
@@ -124,6 +124,11 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             elif item.layout() is not None:
                 roles_layout.addLayout(item.layout())
         self.roles_surface = roles_surface
+
+        plan_context_bar = rehome_plan_header_controls(
+            self,
+            trailing_widgets=(self.share_builds_button,),
+        )
 
         assignment_card = _foundry_card_ancestor(getattr(self, "assignment_table", None))
         if assignment_card is not None:
@@ -158,6 +163,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
                 button.clicked.connect(lambda _=False, target=route: self.pageRequested.emit(target))
             nav.addWidget(button)
             self.context_buttons[title] = button
+        self.workspace_layout.addWidget(plan_context_bar)
         self.workspace_layout.addWidget(nav_host)
 
         self.local_stack = QStackedWidget()
