@@ -9,7 +9,7 @@ Shared Raid Plan import writes only a RaidPlan snapshot keyed by stable plan_id.
 It never creates Personnel, Characters, Saved Builds, or local build identity.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from engine.config import get_data_dir
@@ -153,7 +153,14 @@ class FinchSharedImportService:
                         )
                     )
 
-        canonical = self.roster.ensure_team_name(team_name)
+        existing_names = {name.casefold() for name in self.roster.list_team_names()}
+        local_team_name = f"{team_name} (Shared Copy)"
+        suffix = 2
+        while local_team_name.casefold() in existing_names:
+            local_team_name = f"{team_name} (Shared Copy) {suffix}"
+            suffix += 1
+
+        canonical = self.roster.ensure_team_name(local_team_name)
         self.roster.set_team_schedule(
             TeamSchedule(
                 TeamName=canonical,
@@ -206,7 +213,25 @@ class FinchSharedImportService:
 
     def import_raid_plan(self, snapshot_key: str) -> RaidPlan:
         plan = self.decoded_raid_plan(snapshot_key)
-        return self.raid_plans.save(plan)
+
+        base_id = f"{plan.plan_id}-shared-copy"
+        local_plan_id = base_id
+        suffix = 2
+        while self.raid_plans.get(local_plan_id) is not None:
+            local_plan_id = f"{base_id}-{suffix}"
+            suffix += 1
+
+        existing_names = {row.name.casefold() for row in self.raid_plans.list_plans()}
+        base_name = f"{plan.name} (Shared Copy)"
+        local_name = base_name
+        suffix = 2
+        while local_name.casefold() in existing_names:
+            local_name = f"{base_name} {suffix}"
+            suffix += 1
+
+        return self.raid_plans.save(
+            replace(plan, plan_id=local_plan_id, name=local_name)
+        )
 
 
 def _configured_client(
