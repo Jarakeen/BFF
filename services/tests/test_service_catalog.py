@@ -953,7 +953,7 @@ def test_sustained_dps_generated_axis_pipeline_search_shares_scenario() -> None:
         "extreme.sustained_dps.generated_axis_pipeline",
         "extreme.sustained_dps.generated_axis_pipeline_leaf_evaluation",
         "extreme.sustained_dps.generated_frontier_wiring",
-        "extreme.sustained_dps.generated_branch_and_bound_search",
+        "extreme.sustained_dps.generated_branch_and_bound",
     )
     assert "All exact leaves share" in service.notes
     assert "missing bounds force refinement" in service.notes
