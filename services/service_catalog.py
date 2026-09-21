@@ -809,6 +809,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.rotation_upper_bound",
+        domain="extreme",
+        purpose=(
+            "Aggregate externally proven per-action optimistic damage ceilings into one "
+            "proof-safe sustained-DPS ceiling for an explicit RotationPlan horizon."
+        ),
+        implementation_path="services.extreme_sustained_dps_rotation_upper_bound_service",
+        inputs=("RotationPlan", "SustainedDPSActionUpperBounds"),
+        outputs=("ExtremeSustainedDPSRotationUpperBound",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_rotation_upper_bound",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Arithmetic only: this service does not calculate ESO damage. Every damage-bearing "
+            "scheduled action must have a proven optimistic ceiling that includes all periodic "
+            "and triggered consequences within the plan horizon or the whole-plan ceiling is withheld."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.pruning",
         domain="extreme",
         purpose=(
