@@ -50,11 +50,28 @@ class CombatSimulationEvent:
         source = str(self.source or "").strip()
         if not source:
             raise ValueError("combat simulation event source is required")
+        priority = int(self.priority)
+        if priority < 0:
+            raise ValueError("combat simulation event priority cannot be negative")
+        payload = tuple(self.payload)
+        payload_keys: list[str] = []
+        normalized_payload: list[tuple[str, Any]] = []
+        for item in payload:
+            if not isinstance(item, tuple) or len(item) != 2:
+                raise ValueError("combat simulation event payload entries must be key/value pairs")
+            key = str(item[0] or "").strip()
+            if not key:
+                raise ValueError("combat simulation event payload keys must be non-empty")
+            payload_keys.append(key)
+            normalized_payload.append((key, item[1]))
+        if len(set(payload_keys)) != len(payload_keys):
+            raise ValueError("combat simulation event payload keys must be unique")
         object.__setattr__(self, "time_seconds", time_seconds)
-        object.__setattr__(self, "priority", int(self.priority))
+        object.__setattr__(self, "priority", priority)
         object.__setattr__(self, "sequence", sequence)
         object.__setattr__(self, "event_type", event_type)
         object.__setattr__(self, "source", source)
+        object.__setattr__(self, "payload", tuple(normalized_payload))
 
     def payload_dict(self) -> dict[str, Any]:
         return dict(self.payload)
