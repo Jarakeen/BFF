@@ -102,6 +102,21 @@ def test_rainbow_stacks_have_four_front_and_four_back_dds() -> None:
     assert max(y for _x, y in front) < max(y for _x, y in back)
 
 
+
+
+def test_rainbow_healers_are_above_the_dd_arc() -> None:
+    rainbow = next(
+        preset for preset in formations.FORMATION_PRESETS
+        if preset.key == "rainbow_stacks"
+    )
+    healer_1, healer_2 = rainbow.healer_positions
+
+    assert healer_1 == (365.0, 195.0)
+    assert healer_2 == (595.0, 195.0)
+    assert healer_1[1] < min(y for _x, y in rainbow.dps_positions)
+    assert healer_2[1] < min(y for _x, y in rainbow.dps_positions)
+
+
 def test_apply_formation_creates_missing_roles_and_keeps_extras() -> None:
     extra = _Token("dps", "Special DD", 800.0, 450.0)
     board = _Board([extra])
