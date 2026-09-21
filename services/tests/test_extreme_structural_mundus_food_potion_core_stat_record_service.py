@@ -68,9 +68,13 @@ class _PotionRepository:
     def __init__(self, *, catalog_unresolved=()):
         self.catalog_unresolved = tuple(catalog_unresolved)
         self.formulas = (
-            SimpleNamespace(canonical_id="alchemy_formula:u50:health:restore_health"),
             SimpleNamespace(
-                canonical_id="alchemy_formula:u50:spell:increase_spell_power+spell_critical"
+                canonical_id="alchemy_formula:u50:health:restore_health",
+                traits=("Restore Health",),
+            ),
+            SimpleNamespace(
+                canonical_id="alchemy_formula:u50:spell:increase_spell_power+spell_critical",
+                traits=("Increase Spell Power", "Spell Critical"),
             ),
         )
 
