@@ -565,3 +565,53 @@ def test_resource_adapter_rejects_bad_wasted_restore_arithmetic() -> None:
         assert "wasted restore arithmetic is inconsistent" in str(exc)
     else:
         raise AssertionError("Expected invalid wasted restore arithmetic to fail closed")
+
+
+class _MaximumBeforeCostSustainService:
+    def evaluate(self, *, build, plan, resource):
+        timeline = ResourceTimelineResult(
+            resource=ResourceType.MAGICKA,
+            starting_amount=30000,
+            ending_amount=24000,
+            events=(
+                AppliedResourceTimelineEvent(
+                    time_seconds=2.0,
+                    kind=ResourceTimelineEventKind.RESOURCE_MAXIMUM,
+                    source="bar swap to back",
+                    before=30000,
+                    attempted_change=0,
+                    applied_change=-5000,
+                    after=25000,
+                ),
+                AppliedResourceTimelineEvent(
+                    time_seconds=2.0,
+                    kind=ResourceTimelineEventKind.ACTION_COST,
+                    source="Back Bar Skill",
+                    before=25000,
+                    attempted_change=-1000,
+                    applied_change=-1000,
+                    after=24000,
+                ),
+            ),
+            starting_maximum=30000,
+            ending_maximum=25000,
+        )
+        return SimpleNamespace(run=SimpleNamespace(timeline=timeline), unresolved=())
+
+
+def test_resource_adapter_orders_maximum_change_before_same_time_cost() -> None:
+    projection = CombatSimulationResourceService(
+        sustain_service=_MaximumBeforeCostSustainService()
+    ).project(
+        build=_snapshot().materialize(),
+        plan=_plan(),
+        resource=ResourceType.MAGICKA,
+    )
+
+    assert [
+        (event.priority, event.event_type, event.payload_dict()["before"], event.payload_dict()["after"])
+        for event in projection.events
+    ] == [
+        (int(SimulationEventPriority.RESOURCE_MAXIMUM), "resource_maximum", 30000, 25000),
+        (int(SimulationEventPriority.RESOURCE_COST), "action_cost", 25000, 24000),
+    ]
