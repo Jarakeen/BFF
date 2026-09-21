@@ -627,3 +627,18 @@ def test_sustained_dps_rotation_plan_frontier_is_seed_family_not_policy_closure(
     assert "ordinary-skill ordering" in service.notes
     assert "Light-Attack weave on/off" in service.notes
     assert "remain separate open axes" in service.notes
+
+
+def test_sustained_dps_rotation_policy_frontier_keeps_mechanics_authorities_external() -> None:
+    service = canonical_service_for("extreme_sustained_dps_rotation_policy_frontier")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.rotation_policy_frontier"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.rotation_plan_frontier",)
+    assert "RotationUltimateService" in service.notes
+    assert "RotationScheduledActionResourceLegalityService" in service.notes
+    assert "continuous potion offsets" in service.notes
+    assert "post-affordability Ultimate delays" in service.notes
