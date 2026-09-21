@@ -1145,3 +1145,11 @@ Canonical named buffs such as **Major Courage** can travel through the shared ru
 ### 2026-09-21 — A timed proc belongs in the exact stat snapshot, not the standing sheet
 
 A temporary raw Weapon/Spell Damage proc is neither a permanent build stat nor merely a label saying the proc happened. Once the shared runtime timeline proves that its window is active, FoundryDock now projects the reviewed `weapon_spell_damage` identity into canonical Weapon Damage and Spell Damage inputs **for that exact runtime instant only**. When the window expires, the contribution disappears from later snapshots automatically.
+
+### 2026-09-21 — Potion recipes can differ while the combat effect family is identical
+
+Different reagent combinations can produce the same exact canonical Alchemy trait set. For sustained-DPS search, those recipes are mechanically equivalent selections, so FoundryDock now keeps one effect-family candidate instead of multiplying the search denominator by reagent permutations. The selected family still proves availability only; actual use, cooldown, duration, and **Medicinal Use** remain temporal runtime facts.
+
+### 2026-09-21 — Passive rank search must not invent skill-line ownership
+
+A passive having a useful max rank in the database does not prove a generated character can own that line. Native class lines come from the candidate class, while guild, weapon, armor, Alliance War, Vampire/Werewolf, and other shared lines require separate ownership evidence. FoundryDock therefore searches ranks only inside already-legal line ownership and leaves line acquisition to the appropriate structural axis.
