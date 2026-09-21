@@ -535,3 +535,38 @@ def test_damage_summary_rejects_target_missing_from_target_state() -> None:
         assert "not present in target state" in str(exc)
     else:
         raise AssertionError("Expected mismatched summary target to fail closed")
+
+
+def test_damage_summary_withholds_dps_without_target_health_state() -> None:
+    result = CombatSimulationResult(
+        duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(
+            _event(
+                1.0,
+                0,
+                "outgoing_damage",
+                "Resolved Hit",
+                recipient="Boss",
+                amount=2500.0,
+            ),
+        ),
+        unresolved=(),
+        damage_unresolved=(),
+        target_state=None,
+    )
+
+    summary = CombatSimulationDamageSummaryService().summarize(
+        result,
+        target_identity="Boss",
+    )
+
+    assert summary.attempted_damage == 2500.0
+    assert summary.applied_damage == 0.0
+    assert summary.complete_damage_evidence is False
+    assert summary.modeled_dps is None
+    assert any(
+        "target Health state is required to prove applied outgoing damage" in message
+        for message in summary.damage_unresolved
+    )
