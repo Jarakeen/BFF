@@ -85,14 +85,14 @@ def _context(bar: str, *, dd_exploiter_bonus=0.0):
 class _StaticContext:
     resolved = True
     unresolved = ()
-    progression = SimpleNamespace(character_id="char-1")
+    progression = SimpleNamespace(character_id="char-1", resolved=True)
     contexts = (_context("front"), _context("back"))
 
 
 class _StaticContextWithExploiter:
     resolved = True
     unresolved = ()
-    progression = SimpleNamespace(character_id="char-1")
+    progression = SimpleNamespace(character_id="char-1", resolved=True)
     contexts = (
         _context("front", dd_exploiter_bonus=0.04),
         _context("back", dd_exploiter_bonus=0.04),
