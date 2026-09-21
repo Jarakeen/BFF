@@ -31,7 +31,7 @@ def _payload(snapshot: FinchSharedSnapshot, *, kind: str) -> dict[str, object]:
         raise ValueError(
             f"Expected Finch shared {kind!r} snapshot, got {snapshot.kind!r}."
         )
-    allowed_versions = {1} if kind == "team" else {1, 2}
+    allowed_versions = {1} if kind == "team" else {1, 2, 3}
     if snapshot.schema_version not in allowed_versions:
         raise ValueError(
             f"Unsupported Finch shared {kind} schema version: {snapshot.schema_version}"
@@ -192,6 +192,10 @@ class FinchSharedImportService:
                 seat_id = _clean(raw.get("seat_id"))
                 if not seat_id:
                     continue
+                build_summary = raw.get("build_summary")
+                if not isinstance(build_summary, dict):
+                    build_summary = {}
+                planned_gear_sets = build_summary.get("planned_gear_sets")
                 members.append(
                     RaidPlanMember(
                         seat_id=seat_id,
@@ -210,6 +214,19 @@ class FinchSharedImportService:
                             )
                             if _clean(value)
                         ),
+                        selected_build_name=_clean(build_summary.get("name")) or None,
+                        build_source_kind=_clean(build_summary.get("source_kind")) or None,
+                        build_source_name=_clean(build_summary.get("source_name")) or None,
+                        planned_gear_sets=tuple(
+                            _clean(value)
+                            for value in (
+                                planned_gear_sets
+                                if isinstance(planned_gear_sets, list)
+                                else []
+                            )
+                            if _clean(value)
+                        ),
+                        planned_mundus=_clean(build_summary.get("planned_mundus")) or None,
                     )
                 )
 
