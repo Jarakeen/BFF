@@ -3,6 +3,7 @@ from models.combat_simulation import (
     CombatSimulationEvent,
     CombatSimulationResult,
     CombatSimulationTargetState,
+    SimulationEventPriority,
 )
 from services.combat_simulation_damage_summary_service import (
     CombatSimulationDamageSummaryService,
@@ -10,9 +11,14 @@ from services.combat_simulation_damage_summary_service import (
 
 
 def _event(time, sequence, event_type, source, **payload):
+    priority = {
+        "outgoing_damage": int(SimulationEventPriority.DIRECT_RESULT),
+        "health_change": int(SimulationEventPriority.HEALTH_CHANGE),
+        "death": int(SimulationEventPriority.EXPIRATION),
+    }.get(event_type, int(SimulationEventPriority.TRIGGER))
     return CombatSimulationEvent(
         time_seconds=time,
-        priority=40,
+        priority=priority,
         sequence=sequence,
         event_type=event_type,
         source=source,
