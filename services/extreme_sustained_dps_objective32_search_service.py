@@ -23,10 +23,28 @@ from services.extreme_sustained_dps_theoretical_maximum_closure_service import (
 
 
 @dataclass(frozen=True)
+class ExtremeSustainedDPSObjective32SearchScopeProof:
+    root_candidate_key: str
+    coverage_matches_search_denominator: bool
+    source: str = "caller-supplied Objective #32 search-scope proof"
+
+    def __post_init__(self) -> None:
+        key = str(self.root_candidate_key or "").strip()
+        source = str(self.source or "").strip()
+        if not key:
+            raise ValueError("Objective #32 search-scope proof requires root_candidate_key")
+        if not source:
+            raise ValueError("Objective #32 search-scope proof requires source")
+        object.__setattr__(self, "root_candidate_key", key)
+        object.__setattr__(self, "source", source)
+
+
+@dataclass(frozen=True)
 class ExtremeSustainedDPSObjective32SearchResult:
     search: ExtremeSustainedDPSGeneratedSearchResult
     axis_coverage: ExtremeSustainedDPSAxisDominanceComposition
     closure: ExtremeSustainedDPSTheoreticalMaximumClosure
+    scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof
 
     @property
     def best_modeled_dps(self) -> float | None:
@@ -52,6 +70,7 @@ class ExtremeSustainedDPSObjective32SearchService:
         root_state: object,
         *,
         coverage_proofs: tuple[ExtremeSustainedDPSAxisCoverageProof, ...],
+        scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof,
         required_duration_seconds: float,
         runtime_snapshot: object,
         target_health: int,
@@ -88,24 +107,40 @@ class ExtremeSustainedDPSObjective32SearchService:
             )
 
         coverage = ExtremeSustainedDPSAxisDominanceCompositionService.compose(
-            "extreme-objective-32",
+            str(root_key or "").strip() or "generated-root",
             required_axes=tuple(CANONICAL_SUSTAINED_DPS_MUTATION_AXES),
             proofs=proofs,
         )
+        scope_unresolved: tuple[str, ...] = ()
+        normalized_root = str(root_key or "").strip() or "generated-root"
+        if scope_proof.root_candidate_key != normalized_root:
+            scope_unresolved = (
+                "Objective #32 coverage proof scope names a different generated search root",
+            )
+        elif not scope_proof.coverage_matches_search_denominator:
+            scope_unresolved = (
+                "Objective #32 axis coverage is not proven to match the generated search denominator",
+            )
+
         closure = ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
             search,
             axis_coverage=coverage,
-            omitted_scope=tuple(omitted_scope),
+            omitted_scope=(
+                *tuple(omitted_scope),
+                *scope_unresolved,
+            ),
         )
 
         return ExtremeSustainedDPSObjective32SearchResult(
             search=search,
             axis_coverage=coverage,
             closure=closure,
+            scope_proof=scope_proof,
         )
 
 
 __all__ = [
+    "ExtremeSustainedDPSObjective32SearchScopeProof",
     "ExtremeSustainedDPSObjective32SearchResult",
     "ExtremeSustainedDPSObjective32SearchService",
 ]
