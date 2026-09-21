@@ -30,6 +30,20 @@ _FIELD_BADGE_TONES = (
     "#91BFC0",
 )
 
+# A handful of the approved Urban Wilderness badges include long lower
+# ornaments/pedestals that crowd the progress meter even after neighboring
+# sprite-sheet spill is removed. These are presentation crops only. The source
+# assets stay untouched.
+_CITY_BADGE_DISPLAY_CROPS: dict[str, tuple[float, float, float, float]] = {
+    # label: (left, top, right, bottom) fractions to trim
+    "Polymorphs": (0.00, 0.00, 0.00, 0.10),
+    "Assistants": (0.00, 0.00, 0.00, 0.16),
+    "Companions": (0.00, 0.00, 0.00, 0.20),
+    "Head Markings": (0.00, 0.00, 0.00, 0.16),
+    "Hair": (0.00, 0.00, 0.00, 0.18),
+    "Hats": (0.00, 0.00, 0.00, 0.16),
+}
+
 
 def _tone_for(label: str, labels: tuple[str, ...], tones: tuple[str, ...]) -> str:
     try:
@@ -166,6 +180,33 @@ def _keep_center_component(image: QImage) -> QImage:
             color.setAlpha(0)
             image.setPixelColor(x, y, color)
     return image
+
+
+def _clip_city_badge_for_display(label: str, pixmap: QPixmap | None) -> QPixmap | None:
+    """Apply small per-category presentation crops without editing source art."""
+    if pixmap is None or pixmap.isNull():
+        return pixmap
+    crop = _CITY_BADGE_DISPLAY_CROPS.get(str(label))
+    if crop is None:
+        return pixmap
+
+    left_fraction, top_fraction, right_fraction, bottom_fraction = crop
+    width = pixmap.width()
+    height = pixmap.height()
+    left = max(0, round(width * left_fraction))
+    top = max(0, round(height * top_fraction))
+    right = max(left + 1, width - round(width * right_fraction))
+    bottom = max(top + 1, height - round(height * bottom_fraction))
+    return _trim_alpha(
+        pixmap.copy(
+            QRect(
+                left,
+                top,
+                max(1, right - left),
+                max(1, bottom - top),
+            )
+        )
+    )
 
 
 def _prepare_city_badge(pixmap: QPixmap | None) -> QPixmap | None:
@@ -331,7 +372,10 @@ def install() -> None:
             return _recolor_badge(source, _tone_for(label, labels, _FIELD_BADGE_TONES))
 
         if theme.key == city_theme.key:
-            return dedicated_badge(city_theme, city_badges.get(label))
+            return _clip_city_badge_for_display(
+                label,
+                dedicated_badge(city_theme, city_badges.get(label)),
+            )
 
         return original_badge_sprite(theme, label)
 
