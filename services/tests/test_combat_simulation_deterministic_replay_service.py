@@ -1,6 +1,10 @@
 from dataclasses import replace
 
-from models.combat_simulation import CombatSimulationResult
+from models.combat_simulation import (
+    CombatSimulationEvent,
+    CombatSimulationResult,
+    SimulationEventPriority,
+)
 from services.combat_simulation_deterministic_replay_service import (
     CombatSimulationDeterministicReplayService,
 )
@@ -78,3 +82,30 @@ def test_replay_verifier_reports_damage_unresolved_drift() -> None:
 
     assert verification.deterministic is False
     assert verification.differing_signature_fields == ("damage_unresolved",)
+
+
+def test_combat_simulation_result_rejects_non_finite_or_negative_duration() -> None:
+    for value in (-1.0, float("nan"), float("inf"), float("-inf")):
+        try:
+            _result(duration_seconds=value)
+        except ValueError as exc:
+            assert "finite and non-negative" in str(exc)
+        else:
+            raise AssertionError("Expected invalid simulation result duration to fail closed")
+
+
+def test_combat_simulation_result_rejects_event_beyond_duration() -> None:
+    event = CombatSimulationEvent(
+        time_seconds=6.0,
+        priority=int(SimulationEventPriority.ACTION),
+        sequence=0,
+        event_type="action",
+        source="Too Late",
+    )
+
+    try:
+        _result(events=(event,))
+    except ValueError as exc:
+        assert "beyond its duration" in str(exc)
+    else:
+        raise AssertionError("Expected post-horizon result event to fail closed")
