@@ -93,3 +93,24 @@ def test_plan_attacker_state_and_damage_summary_are_catalogued() -> None:
 
     assert runner is not None
     assert "simulation.plan_attacker_state" in runner.dependencies
+
+
+
+def test_health_ordering_and_replay_services_are_catalogued() -> None:
+    ordering = SERVICE_CATALOG.get("simulation.health_ordering")
+    replay = SERVICE_CATALOG.get("simulation.deterministic_replay")
+
+    assert ordering is not None
+    assert ordering.implementation_path == (
+        "services.combat_simulation_health_ordering_service"
+    )
+    assert "combat_simulation_health_ordering_guard" in ordering.responsibilities
+
+    assert replay is not None
+    assert replay.implementation_path == (
+        "services.combat_simulation_deterministic_replay_service"
+    )
+    assert (
+        "combat_simulation_deterministic_replay_verification"
+        in replay.responsibilities
+    )
