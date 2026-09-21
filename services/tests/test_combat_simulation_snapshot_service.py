@@ -535,6 +535,7 @@ def test_snapshot_sequence_boundary_applies_to_bar_and_resources() -> None:
     result = replace(
         base,
         events=tuple(sorted((*base.events, swap, cost))),
+        final_bar="front",
         resources=(
             CombatSimulationResourceResult(
                 resource="magicka",
@@ -636,6 +637,7 @@ def test_snapshot_sequence_boundary_is_consistent_across_state_domains() -> None
     result = replace(
         base,
         events=tuple(sorted((*base.events, swap, cost, health))),
+        final_bar="front",
         resources=(
             CombatSimulationResourceResult(
                 resource="magicka",
