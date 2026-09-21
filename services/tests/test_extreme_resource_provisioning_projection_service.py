@@ -114,7 +114,7 @@ def test_projection_fails_closed_when_food_drink_identity_is_not_proven(tmp_path
     assert any("no canonical food/drink identity" in row for row in result.unresolved)
 
 
-@pytest.mark.parametrize("objective", ("max_health", "spell_damage"))
+@pytest.mark.parametrize("objective", ("spell_damage", "healing_done"))
 def test_projection_rejects_unreviewed_objectives(tmp_path, objective):
     path = _database(tmp_path, (("food", "Meal"),))
     repository = _Repository(path, ("Meal",), {})
