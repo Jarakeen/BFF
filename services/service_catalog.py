@@ -831,6 +831,30 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.rotation_plan_frontier",
+        domain="extreme",
+        purpose=(
+            "Lazily enumerate proof-neutral semi-static RotationPlan seed/cadence families "
+            "for one coherent generated sustained-DPS candidate."
+        ),
+        implementation_path="services.extreme_sustained_dps_rotation_plan_frontier_service",
+        inputs=("ExtremeSustainedDPSAssembledCandidate", "ExplicitDurationSeconds"),
+        outputs=("ExtremeSustainedDPSRotationFamilyFrontier", "ExtremeSustainedDPSRotationPlanCandidate"),
+        dependencies=("extreme.sustained_dps.generated_candidate_assembly",),
+        responsibilities=("extreme_sustained_dps_rotation_plan_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Preserves every ordinary-skill ordering per populated bar, both legal start-bar "
+            "routes when two bars are populated, and Light-Attack weave on/off. Canonical "
+            "SemiStaticRotationPlanner builds each plan and duration refinement may be applied. "
+            "Ultimate, potion, execute, Heavy Attack, encounter-demand, and broader policy "
+            "families remain separate open axes."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.cross_axis_context",
         domain="extreme",
         purpose=(
