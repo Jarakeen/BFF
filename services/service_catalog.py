@@ -875,6 +875,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.combat_dynamic_axis_coverage",
+        domain="extreme",
+        purpose=(
+            "Promote proven finite skill-bar, seed-rotation, anchored Ultimate/potion, execute, "
+            "and reviewed Heavy Attack policy denominators into canonical dynamic-axis coverage."
+        ),
+        implementation_path="services.extreme_sustained_dps_combat_dynamic_axis_coverage_service",
+        inputs=("GeneratedCombatDynamicFrontier",),
+        outputs=("ExtremeSustainedDPSCombatDynamicAxisCoverageResult",),
+        dependencies=("extreme.sustained_dps.axis_dominance_composition",),
+        responsibilities=("extreme_sustained_dps_combat_dynamic_axis_coverage",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Promotes only finite denominator closure actually proven by each frontier. Anchored potion timing "
+            "does not close continuous first-use offsets; Ultimate affordability choice does not close arbitrary "
+            "post-affordability delay; Heavy Attack coverage is limited to caller-reviewed safe windows."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.finite_family_dominance_search",
         domain="extreme",
         purpose=(
