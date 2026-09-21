@@ -22,10 +22,13 @@ def test_specialized_page_routes_supported_families_through_gateway() -> None:
     assert "database_path=self.service.database_path" in source
     assert "ExtremeSpecializedExecutionService.can_execute_without_extra_inputs" in source
     assert "ExtremeSpecializedExecutionService.can_execute_with_duration_input" in source
+    assert "ExtremeSpecializedExecutionService.can_execute_with_combat_target_inputs" in source
     assert "ExtremeSpecializedExecutionService.requires_saved_build" in source
     assert "self._specialized_route_kind(objective_key)" in source
     assert "self.specialized_service.execute(" in source
     assert "duration_seconds=duration_seconds" in source
+    assert "target_health=target_health" in source
+    assert "target_resistance=target_resistance" in source
     assert "result.value_text" in source
     assert "super()._run_extreme_search()" in source
 
@@ -37,6 +40,7 @@ def test_all_zero_input_specialized_routes_are_explicit() -> None:
         "damage_shield",
         "bash_damage",
         "resource_sustain",
+        "sustained_dps",
         "ultimate_generation",
         "movement_speed",
         "sprint_speed",
@@ -47,6 +51,7 @@ def test_all_zero_input_specialized_routes_are_explicit() -> None:
         assert ExtremeSpecializedExecutionService.can_execute_without_extra_inputs(key)
 
     assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("invisibility_uptime")
+    assert not ExtremeSpecializedExecutionService.can_execute_without_extra_inputs("sustained_dps")
 
 
 def test_invisibility_uptime_uses_generic_duration_route() -> None:
@@ -87,3 +92,17 @@ def test_specialized_page_allows_scratch_execution_when_family_is_build_independ
     assert "build = None" in source
     assert "if not scratch:" in source
     assert "if scratch and saved_build_required:" in source
+
+
+
+def test_sustained_dps_uses_generic_combat_target_route() -> None:
+    assert ExtremeSpecializedExecutionService.can_execute_with_combat_target_inputs(
+        "sustained_dps"
+    )
+    assert ExtremeSpecializedExecutionService.requires_saved_build("sustained_dps")
+
+    source = Path(extreme_specialized_optimization_page.__file__).read_text(encoding="utf-8")
+    assert 'return "combat_target"' in source
+    assert 'if route_kind == "combat_target":' in source
+    assert '"Target Health:"' in source
+    assert '"Target resistance:"' in source
