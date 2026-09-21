@@ -518,7 +518,10 @@ class CombatSimulationResult:
                 item.identity: item.maximum_health
                 for item in self.target_state.combatants
             }
-            lethal_transition_by_recipient: dict[str, tuple[float, int, str, str | None]] = {}
+            lethal_transition_by_recipient: dict[
+                str,
+                tuple[float, int, str, str | None, float | None],
+            ] = {}
             dead_recipients: set[str] = set()
             for event in self.events:
                 if event.event_type not in {"health_change", "death"}:
@@ -543,15 +546,35 @@ class CombatSimulationResult:
                             "combat simulation death event requires zero Health state"
                         )
                     expected = lethal_transition_by_recipient.get(recipient)
-                    actual = (
+                    death_overkill = payload.get("overkill")
+                    normalized_death_overkill = None
+                    if death_overkill is not None:
+                        normalized_death_overkill = float(death_overkill)
+                        if (
+                            not isfinite(normalized_death_overkill)
+                            or normalized_death_overkill < 0
+                        ):
+                            raise ValueError(
+                                "combat simulation death overkill must be finite and non-negative"
+                            )
+                    actual_core = (
                         float(event.time_seconds),
                         int(event.sequence),
                         str(event.source),
                         str(payload.get("origin_event_type") or "").strip() or None,
                     )
-                    if expected != actual:
+                    if expected is None or expected[:4] != actual_core:
                         raise ValueError(
                             "combat simulation death event does not match lethal Health transition"
+                        )
+                    lethal_overkill = expected[4]
+                    if (
+                        lethal_overkill is not None
+                        and normalized_death_overkill is not None
+                        and lethal_overkill != normalized_death_overkill
+                    ):
+                        raise ValueError(
+                            "combat simulation death overkill does not match lethal Health transition"
                         )
                     dead_recipients.add(recipient)
                     continue
@@ -623,11 +646,23 @@ class CombatSimulationResult:
                         )
                 health_by_recipient[recipient] = after
                 if before > 0 and after == 0:
+                    lethal_overkill = payload.get("overkill")
+                    normalized_lethal_overkill = None
+                    if lethal_overkill is not None:
+                        normalized_lethal_overkill = float(lethal_overkill)
+                        if (
+                            not isfinite(normalized_lethal_overkill)
+                            or normalized_lethal_overkill < 0
+                        ):
+                            raise ValueError(
+                                "combat simulation lethal overkill must be finite and non-negative"
+                            )
                     lethal_transition_by_recipient[recipient] = (
                         float(event.time_seconds),
                         int(event.sequence),
                         str(event.source),
                         str(payload.get("origin_event_type") or "").strip() or None,
+                        normalized_lethal_overkill,
                     )
         window_keys = tuple(
             (
