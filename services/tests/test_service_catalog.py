@@ -1127,7 +1127,7 @@ def test_sustained_dps_finite_family_branch_bound_adapter_requires_exact_scope()
         for row in SERVICE_CATALOG.dependencies_of(service.service_id)
     ) == (
         "extreme.sustained_dps.finite_whole_plan_dominance",
-        "extreme.sustained_dps.generated_branch_and_bound_search",
+        "extreme.sustained_dps.generated_branch_and_bound",
     )
     assert "exactly that family" in service.notes
     assert "omitted-scope item" in service.notes
