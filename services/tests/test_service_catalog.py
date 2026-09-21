@@ -231,9 +231,9 @@ def test_combat_simulation_services_are_canonical_and_discoverable() -> None:
     assert snapshot is not None
 
     assert kernel.service_id == "combat.simulation.kernel"
-    assert saved_dd.service_id == "combat.simulation.saved_build_dd"
-    assert summary.service_id == "combat.simulation.damage_summary"
-    assert replay.service_id == "combat.simulation.replay_verification"
+    assert saved_dd.service_id == "simulation.saved_build_dd"
+    assert summary.service_id == "simulation.damage_summary"
+    assert replay.service_id == "simulation.deterministic_replay"
     assert snapshot.service_id == "combat.simulation.snapshot"
 
     assert capability_status(
@@ -241,9 +241,9 @@ def test_combat_simulation_services_are_canonical_and_discoverable() -> None:
     ) is CapabilityStatus.IMPLEMENTED
     assert {row.service_id for row in services_by_domain("combat", available_only=True)} >= {
         "combat.simulation.kernel",
-        "combat.simulation.saved_build_dd",
-        "combat.simulation.damage_summary",
-        "combat.simulation.replay_verification",
+        "simulation.saved_build_dd",
+        "simulation.damage_summary",
+        "simulation.deterministic_replay",
         "combat.simulation.snapshot",
     }
 
@@ -262,11 +262,11 @@ def test_combat_simulation_catalog_preserves_authority_boundaries() -> None:
     assert kernel.encounter_aware is True
     assert "does not invent" in kernel.notes
 
-    assert kernel.service_id in saved_dd.dependencies
-    assert "must not fabricate" in saved_dd.notes
+    assert "simulation.saved_build_dd_provider" in saved_dd.dependencies
+    assert "never coerced to zero" in saved_dd.notes
 
-    assert summary.ui_safe is True
-    assert kernel.service_id in summary.dependencies
+    assert summary.service_id == "simulation.damage_summary"
+    assert summary.behavior is ServiceBehavior.DETERMINISTIC
     assert "withheld" in summary.notes
 
 
@@ -283,8 +283,8 @@ def test_extreme_sustained_dps_consumes_combat_simulation_authority() -> None:
         row.service_id
         for row in SERVICE_CATALOG.dependencies_of(sustained.service_id)
     } == {
-        "combat.simulation.saved_build_dd",
-        "combat.simulation.damage_summary",
+        "simulation.saved_build_dd",
+        "simulation.damage_summary",
     }
     assert "lower bound" in sustained.notes
     assert "optimization responsibility" in sustained.notes
