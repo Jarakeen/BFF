@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 
 from models.raid_plan import RaidPlan, RaidPlanMember
@@ -129,7 +130,7 @@ def test_shared_coverage_payload_is_operational_evidence_only(monkeypatch) -> No
     payload = shared_coverage_payload(
         _plan(),
         build_service=SimpleNamespace(),
-        database_path=SimpleNamespace(),
+        database_path=Path("unused.db"),
     )
 
     courage = next(
