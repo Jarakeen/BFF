@@ -689,3 +689,93 @@ def test_damage_summary_fails_closed_when_outgoing_health_evidence_is_incomplete
         "outgoing damage overkill is unavailable or invalid" in message
         for message in summary.damage_unresolved
     )
+
+
+def test_damage_summary_withholds_dps_when_raw_outgoing_has_no_health_transition() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    result = CombatSimulationResult(
+        duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(
+            _event(
+                1.0,
+                0,
+                "outgoing_damage",
+                "Unapplied Hit",
+                recipient="Boss",
+                amount=3000.0,
+            ),
+        ),
+        target_state=state,
+    )
+
+    summary = CombatSimulationDamageSummaryService().summarize(
+        result,
+        target_identity="Boss",
+    )
+
+    assert summary.attempted_damage == 3000.0
+    assert summary.applied_damage == 0.0
+    assert summary.complete_damage_evidence is False
+    assert summary.modeled_dps is None
+    assert any(
+        "matching Health transition is unavailable" in message
+        for message in summary.damage_unresolved
+    )
+
+
+def test_damage_summary_withholds_dps_when_outgoing_health_has_no_raw_damage_event() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    result = CombatSimulationResult(
+        duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(
+            _event(
+                1.0,
+                0,
+                "health_change",
+                "Orphan Applied Hit",
+                recipient="Boss",
+                before=10000,
+                applied_damage=3000.0,
+                overkill=0.0,
+                after=7000,
+                origin_event_type="outgoing_damage",
+            ),
+        ),
+        target_state=state,
+    )
+
+    summary = CombatSimulationDamageSummaryService().summarize(
+        result,
+        target_identity="Boss",
+    )
+
+    assert summary.attempted_damage == 0.0
+    assert summary.applied_damage == 3000.0
+    assert summary.complete_damage_evidence is False
+    assert summary.modeled_dps is None
+    assert any(
+        "matching raw outgoing damage is unavailable" in message
+        for message in summary.damage_unresolved
+    )
