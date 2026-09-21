@@ -958,3 +958,19 @@ def test_sustained_dps_generated_axis_pipeline_search_shares_scenario() -> None:
     assert "All exact leaves share" in service.notes
     assert "missing bounds force refinement" in service.notes
 
+
+
+def test_sustained_dps_finite_axis_action_dominance_requires_complete_same_coordinate_evidence() -> None:
+    service = canonical_service_for("extreme.sustained_dps.finite_axis_action_dominance")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.finite_axis_action_dominance"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.axis_dominance_composition",
+        "extreme.sustained_dps.structural_action_upper_bound",
+    )
+    assert "same scheduled action coordinate" in service.notes
+    assert "promote neither axis coverage nor numeric ceiling" in service.notes
