@@ -1148,3 +1148,20 @@ def test_sustained_dps_finite_family_node_bound_is_identity_safe() -> None:
     )
     assert "exact generated frontier node identity" in service.purpose
     assert "never rewrites a proof onto a sibling branch" in service.notes
+
+
+
+def test_sustained_dps_theoretical_maximum_closure_is_explicit() -> None:
+    service = canonical_service_for("extreme_sustained_dps_theoretical_maximum_closure")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.theoretical_maximum_closure"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.axis_dominance_composition",
+        "extreme.sustained_dps.generated_branch_and_bound",
+    )
+    assert "full theoretical MOST Sustained DPS objective" in service.purpose
+    assert "finite-tree maximum is not promoted" in service.notes
