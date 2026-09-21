@@ -883,6 +883,8 @@ class CityLiveRaidPage(FoundryPage):
         self.user_state.start_pull(
             self._plan.plan_id,
             encounter_id=_clean(self.encounter_combo.currentData()),
+            trial_id=self._plan.trial_id,
+            plan_name=self._plan.name,
         )
         self._refresh_run_state()
         self._refresh_events()
