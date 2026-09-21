@@ -831,6 +831,58 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.execute_policy_frontier",
+        domain="extreme",
+        purpose=(
+            "Preserve baseline and canonical execute-upgrade rotation variants using "
+            "reviewed execute opportunity, runtime threshold, exact-slot damage comparison, "
+            "and mutation services."
+        ),
+        implementation_path="services.extreme_sustained_dps_execute_policy_frontier_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "AbilityPriorityList",
+            "ExecuteSnapshotResolver",
+            "TargetIdentity",
+            "DurationRules",
+        ),
+        outputs=("ExtremeSustainedDPSExecutePolicyFrontier",),
+        dependencies=("extreme.sustained_dps.rotation_policy_frontier",),
+        responsibilities=("extreme_sustained_dps_execute_policy_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Does not infer execute superiority. Canonical execute services decide whether "
+            "runtime threshold evidence exists and whether exact-slot execute damage is strictly greater. "
+            "The baseline remains a separate candidate."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.heavy_attack_policy_frontier",
+        domain="extreme",
+        purpose=(
+            "Enumerate all compatible subsets of explicit caller-proven safe fully charged "
+            "1.8-second Heavy Attack windows over one generated rotation candidate."
+        ),
+        implementation_path="services.extreme_sustained_dps_heavy_attack_policy_frontier_service",
+        inputs=("GeneratedRotationCandidate", "ExplicitHeavyAttackWindows"),
+        outputs=("ExtremeSustainedDPSHeavyAttackPolicyFrontier",),
+        dependencies=("extreme.sustained_dps.rotation_policy_frontier",),
+        responsibilities=("extreme_sustained_dps_heavy_attack_policy_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Only exact ordinary skill slots in non-overlapping caller-proven safe 1.8s windows "
+            "are mutated. Same-timestamp Light Attacks are removed, canonical reservation provenance "
+            "is recorded, and shared full-charge completion evidence must promote every selected heavy. "
+            "Damage remains owned by RotationCandidateHeavyAttackDamageEvidenceService."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.rotation_policy_frontier",
         domain="extreme",
         purpose=(
