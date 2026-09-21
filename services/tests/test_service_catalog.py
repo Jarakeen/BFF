@@ -14,6 +14,7 @@ from services.service_catalog import (
     ServiceLifecycle,
     canonical_service_for,
     capability_status,
+    get_service,
     services_by_domain,
     services_consuming,
     services_producing,
