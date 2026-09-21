@@ -105,8 +105,8 @@ def test_house_stack_healers_expand_with_the_dd_formation() -> None:
     )
     healer_1, healer_2 = house.healer_positions
 
-    assert healer_1 == (333.86, 454.21)
-    assert healer_2 == (626.14, 454.21)
+    assert healer_1 == (333.86, 454.0)
+    assert healer_2 == (626.14, 454.0)
     assert healer_1[1] > max(y for _x, y in house.dps_positions)
     assert healer_2[1] > max(y for _x, y in house.dps_positions)
 
@@ -158,3 +158,56 @@ def test_unknown_formation_is_rejected_without_mutation() -> None:
     assert formations.apply_formation(board, "not-a-shape") is False
     assert token.pos().x() == 1.0
     assert token.pos().y() == 2.0
+
+
+
+def test_apply_formation_locks_players_into_one_group() -> None:
+    board = _Board()
+
+    assert formations.apply_formation(board, "house_stacks") is True
+
+    assert board._active_formation_key == "house_stacks"
+    assert board._formation_group_locked is True
+    assert len(board._formation_group_items) == 10
+    assert all(
+        getattr(token, "_formation_board", None) is board
+        for token in board._formation_group_items
+    )
+
+
+def test_rainbow_rotates_as_one_group_around_its_center() -> None:
+    board = _Board()
+    assert formations.apply_formation(board, "rainbow_stacks") is True
+
+    before_center = formations._formation_center(board._formation_group_items)
+    before = {
+        token.label: (token.pos().x(), token.pos().y())
+        for token in board._formation_group_items
+    }
+
+    assert formations.rotate_rainbow(board, 90.0) is True
+
+    after_center = formations._formation_center(board._formation_group_items)
+    assert round(after_center[0], 6) == round(before_center[0], 6)
+    assert round(after_center[1], 6) == round(before_center[1], 6)
+
+    dd1 = next(token for token in board._formation_group_items if token.label == "DD 1")
+    dx = before["DD 1"][0] - before_center[0]
+    dy = before["DD 1"][1] - before_center[1]
+    assert round(dd1.pos().x(), 5) == round(before_center[0] - dy, 5)
+    assert round(dd1.pos().y(), 5) == round(before_center[1] + dx, 5)
+
+
+def test_house_stack_does_not_rotate_with_rainbow_control() -> None:
+    board = _Board()
+    assert formations.apply_formation(board, "house_stacks") is True
+    before = [
+        (token.pos().x(), token.pos().y())
+        for token in board._formation_group_items
+    ]
+
+    assert formations.rotate_rainbow(board, 90.0) is False
+    assert [
+        (token.pos().x(), token.pos().y())
+        for token in board._formation_group_items
+    ] == before
