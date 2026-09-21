@@ -1056,7 +1056,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.generated_axis_pipeline",
             "extreme.sustained_dps.generated_axis_pipeline_leaf_evaluation",
             "extreme.sustained_dps.generated_frontier_wiring",
-            "extreme.sustained_dps.generated_branch_and_bound_search",
+            "extreme.sustained_dps.generated_branch_and_bound",
         ),
         responsibilities=(
             "extreme_sustained_dps_generated_axis_pipeline_search",
