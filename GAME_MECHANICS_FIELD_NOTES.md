@@ -992,3 +992,12 @@ The Rotation DD scorer can correctly store a periodic skill's full within-horizo
 **Layman's version:** if a 10-second DoT will eventually do 20,000 damage, the boss does not lose all 20,000 Health the instant the skill is cast. Doing that would push execute thresholds and death earlier than they really happen.
 
 **For BFF:** whole-plan periodic totals are now blocked from the live target-Health ledger. Direct hits may affect Health immediately; periodic skills stay unresolved in Combat Simulation until the existing reviewed tick schedule can also supply occurrence-level damage magnitude.
+
+
+### Follow-up — periodic damage now lands on its reviewed occurrence timestamps
+
+The simulator now carries canonical periodic damage as individual occurrences rather than one parent-cast total. Mixed skills can therefore deal an immediate hit at cast time and separate DoT ticks later. Reviewed snapshot-at-cast magnitude keeps the source-side magnitude frozen while exact-time recipient state can still vary at each tick; reviewed dynamic-at-tick magnitude can recalculate from an exact runtime build context when the caller supplies one.
+
+**Layman's version:** the first hit happens when you press the skill, and the DoT keeps hitting later. The boss Health bar now changes on those later hits instead of pretending the entire DoT happened up front.
+
+**For BFF:** execute thresholds, death timing, and later actions can now react to the Health produced by earlier periodic ticks. Missing runtime context or unreviewed periodic semantics remain unresolved instead of being guessed.
