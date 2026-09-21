@@ -354,14 +354,23 @@ class CombatSimulationResult:
                 raise ValueError(
                     "combat simulation resource summary end does not match event state"
                 )
-        health_events_present = any(
-            event.event_type in {"health_change", "death"}
+        health_change_present = any(
+            event.event_type == "health_change"
             for event in self.events
         )
-        if health_events_present and self.target_state is None:
-            raise ValueError(
-                "combat simulation Health events require target state"
-            )
+        death_present = any(
+            event.event_type == "death"
+            for event in self.events
+        )
+        if self.target_state is None:
+            if health_change_present:
+                raise ValueError(
+                    "combat simulation health changes require target state"
+                )
+            if death_present:
+                raise ValueError(
+                    "combat simulation death events require target state"
+                )
         if self.target_state is not None:
             health_by_recipient: dict[str, int | None] = {
                 item.identity: item.current_health
