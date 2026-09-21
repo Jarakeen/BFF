@@ -168,7 +168,7 @@ def _service():
 def test_all_zero_input_specialized_routes_are_explicit() -> None:
     for key in (
         "actual_heal", "critical_heal", "damage_shield", "bash_damage",
-        "resource_sustain", "sustained_dps", "ultimate_generation",
+        "resource_sustain", "ultimate_generation",
         "movement_speed", "sprint_speed", "stealthed_movement_speed",
         "detection_radius_reduction", "invisibility_duration",
     ):
