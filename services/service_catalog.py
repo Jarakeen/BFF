@@ -831,6 +831,35 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_runtime_evaluation",
+        domain="extreme",
+        purpose=(
+            "Evaluate one explicit generated DD build, dual-bar gear state, RotationPlan, "
+            "runtime history, and target through canonical Combat Simulation."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_runtime_evaluation_service",
+        inputs=(
+            "PlayerBuild",
+            "CharacterProgression",
+            "ExtremeDualBarGearState",
+            "RotationPlan",
+            "ExtremeRuntimeSnapshot",
+            "ExplicitTargetAssumptions",
+        ),
+        outputs=("ExtremeGeneratedSustainedDPSRuntimeResult",),
+        dependencies=("extreme.sustained_dps.gear_runtime_semantics", "simulation.saved_build_dd"),
+        responsibilities=("extreme_sustained_dps_generated_runtime_evaluation",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Generated progression is caller-owned rather than resolved through saved-build persistence. "
+            "Bar-legal named gear buffs flow through the shared runtime CombatState path. Active non-named "
+            "gear effects fail closed until a generic timed-effect to runtime build-context bridge exists."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.gear_runtime_semantics",
         domain="extreme",
         purpose=(
