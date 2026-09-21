@@ -34,6 +34,37 @@ COMBAT_SIMULATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="simulation.sequential_dd_health_feedback",
+        domain="simulation",
+        purpose=(
+            "Evaluate canonical DD actions in exact schedule order while feeding the "
+            "simulated target Health created by earlier actions back into later "
+            "target-Health-sensitive damage evaluation."
+        ),
+        implementation_path=(
+            "services.combat_simulation_sequential_dd_damage_service"
+        ),
+        inputs=(
+            "RotationPlan",
+            "GeneratedRotationCandidate",
+            "RotationActionDamageEvidenceProvider",
+            "CombatSimulationTargetState",
+            "TargetIdentity",
+        ),
+        outputs=("CombatSimulationSequentialDamageProjection",),
+        dependencies=("simulation.outgoing_damage_bridge",),
+        responsibilities=("combat_simulation_sequential_target_health_feedback",),
+        roles=("DD", "DPS"),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Owns only target Health progression between already-resolved actions. "
+            "Execute thresholds, amplification, skill formulas, mitigation, and "
+            "target-state mechanics remain with existing canonical Rotation services."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="simulation.saved_build_dd_provider",
         domain="simulation",
         purpose=(
@@ -81,6 +112,7 @@ COMBAT_SIMULATION_SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         outputs=("CombatSimulationResult",),
         dependencies=(
             "simulation.saved_build_dd_provider",
+            "simulation.sequential_dd_health_feedback",
             "simulation.outgoing_damage_bridge",
         ),
         responsibilities=("combat_simulation_saved_build_dd_execution",),
