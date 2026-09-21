@@ -361,16 +361,17 @@ def main() -> int:
     replay = CombatSimulationDeterministicReplayService().verify(run_once)
     result = replay.first
     if not replay.deterministic:
+        replay_message = (
+            "deterministic replay mismatch: "
+            + ", ".join(replay.differing_signature_fields)
+        )
         result = replace(
             result,
             unresolved=tuple(
-                dict.fromkeys(
-                    (
-                        *result.unresolved,
-                        "deterministic replay mismatch: "
-                        + ", ".join(replay.differing_signature_fields),
-                    )
-                )
+                dict.fromkeys((*result.unresolved, replay_message))
+            ),
+            damage_unresolved=tuple(
+                dict.fromkeys((*result.damage_unresolved, replay_message))
             ),
         )
     summary = CombatSimulationDamageSummaryService().summarize(
@@ -456,10 +457,24 @@ def main() -> int:
         print("none")
     print()
 
-    print("UNRESOLVED")
-    print("----------")
-    if summary.unresolved:
-        for index, message in enumerate(summary.unresolved, start=1):
+    print("DAMAGE UNRESOLVED")
+    print("-----------------")
+    if summary.damage_unresolved:
+        for index, message in enumerate(summary.damage_unresolved, start=1):
+            print(f"{index:3d}. {message}")
+    else:
+        print("none")
+    print()
+
+    print("OTHER / GENERAL UNRESOLVED")
+    print("--------------------------")
+    other_unresolved = tuple(
+        message
+        for message in summary.unresolved
+        if message not in set(summary.damage_unresolved)
+    )
+    if other_unresolved:
+        for index, message in enumerate(other_unresolved, start=1):
             print(f"{index:3d}. {message}")
     else:
         print("none")
@@ -491,8 +506,8 @@ def main() -> int:
     print(
         "Interpretation: this is the deterministic modeled damage currently proven by "
         "the saved build, generated plan, reviewed runtime semantics, and caller-owned "
-        "target assumptions. A DPS number is withheld whenever any damage consequence "
-        "remains unresolved."
+        "target assumptions. Modeled DPS is withheld only when damage-relevant evidence "
+        "remains unresolved; unrelated simulator gaps remain visible separately."
     )
     return 0 if not summary.unresolved else 2
 
