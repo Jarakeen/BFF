@@ -435,18 +435,32 @@ class CombatSimulationResult:
             ]
             if not rows:
                 continue
-            first_payload = rows[0].payload_dict()
-            last_payload = rows[-1].payload_dict()
-            if "before" not in first_payload or "after" not in last_payload:
-                raise ValueError(
-                    "combat simulation resource events require before/after state"
-                )
             summary = summaries_by_resource[resource_key]
-            if int(first_payload["before"]) != int(summary.starting_amount):
-                raise ValueError(
-                    "combat simulation resource summary start does not match event state"
-                )
-            if int(last_payload["after"]) != int(summary.ending_amount):
+            expected_before = int(summary.starting_amount)
+            for row in rows:
+                payload = row.payload_dict()
+                if "before" not in payload or "after" not in payload:
+                    raise ValueError(
+                        "combat simulation resource events require before/after state"
+                    )
+                before = int(payload["before"])
+                after = int(payload["after"])
+                if before != expected_before:
+                    raise ValueError(
+                        "combat simulation resource event before/after chain is inconsistent"
+                    )
+                if before < 0 or after < 0:
+                    raise ValueError(
+                        "combat simulation resource event state cannot be negative"
+                    )
+                if "applied_change" in payload:
+                    applied_change = int(payload["applied_change"])
+                    if before + applied_change != after:
+                        raise ValueError(
+                            "combat simulation resource event arithmetic is inconsistent"
+                        )
+                expected_before = after
+            if expected_before != int(summary.ending_amount):
                 raise ValueError(
                     "combat simulation resource summary end does not match event state"
                 )
