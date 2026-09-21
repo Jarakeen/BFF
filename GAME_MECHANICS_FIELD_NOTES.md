@@ -1223,3 +1223,7 @@ Within FoundryDock's generated semi-static seed family, permuting the ordinary s
 ### 2026-09-21 — Ultimate affordability count is a capacity bound, not a cast schedule
 
 For one selected Ultimate with a resolved cost and explicit generation timeline, the canonical Ultimate resource projector repeatedly reserves that cost whenever the shared pool can afford another activation. The resulting availability count therefore bounds how many Ultimate damage actions that policy could possibly add over the horizon. It does **not** prove every available cast is actually scheduled, tactically desirable, or damage-optimal; it is a safe capacity ceiling for search.
+
+### 2026-09-21 — A local action maximum is only a ceiling for the denominator that proved it
+
+If FoundryDock completely evaluates every descendant inside one partial branch and the largest total consequence of any one damage action is **X**, then **X** is a safe absolute per-action ceiling for that closed branch. It is not automatically a ceiling for its parent, sibling branches, or the global ESO search space. The proof travels downward to subsets, not outward to candidates that were never included in the denominator.
