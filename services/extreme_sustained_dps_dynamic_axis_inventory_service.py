@@ -51,15 +51,11 @@ class ExtremeSustainedDPSDynamicAxisInventoryService:
     )
 
     DEFERRED_AXES = (
-        "legal gear-set/package topology",
-        "jewelry traits and enchants",
-        "weapon types, traits, and enchants",
-        "Champion Point loadouts",
-        "passive ranks outside structural class-route ownership",
-        "potions",
-        "skill-bar combination topology and morph mutual exclusion",
+        "cross-axis ownership/context composition",
         "generated RotationPlan candidates",
-        "runtime proc/cooldown/execute state",
+        "runtime proc/cooldown/execute state beyond reviewed bridges",
+        "proof-safe dominance/scoring across generated refinement frontiers",
+        "global branch-and-bound frontier search",
         "proof-safe sustained-DPS upper bound",
     )
 
