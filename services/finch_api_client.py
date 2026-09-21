@@ -215,6 +215,26 @@ class FinchApiClient:
         )
         return self._shared_snapshot(response.get("snapshot"))
 
+    def publish_shared_readiness(
+        self,
+        *,
+        snapshot_key: str,
+        payload: dict[str, object],
+        schema_version: int = 1,
+    ) -> FinchSharedSnapshot:
+        key = str(snapshot_key or "").strip()
+        if not key:
+            raise ValueError("shared readiness key is required")
+        response = self._request_json(
+            "/api/v1/shared/readiness/" + quote(key, safe=""),
+            method="PUT",
+            payload={
+                "schema_version": int(schema_version),
+                "payload": dict(payload),
+            },
+        )
+        return self._shared_snapshot(response.get("snapshot"))
+
     def shared_team(self, snapshot_key: str) -> FinchSharedSnapshot:
         key = str(snapshot_key or "").strip()
         if not key:
@@ -233,6 +253,15 @@ class FinchApiClient:
         )
         return self._shared_snapshot(response.get("snapshot"))
 
+    def shared_readiness(self, snapshot_key: str) -> FinchSharedSnapshot:
+        key = str(snapshot_key or "").strip()
+        if not key:
+            raise ValueError("shared readiness key is required")
+        response = self._request_json(
+            "/api/v1/shared/readiness/" + quote(key, safe="")
+        )
+        return self._shared_snapshot(response.get("snapshot"))
+
     def shared_teams(self) -> tuple[FinchSharedSnapshot, ...]:
         response = self._request_json("/api/v1/shared/teams")
         rows = response.get("teams")
@@ -245,6 +274,13 @@ class FinchApiClient:
         rows = response.get("raid_plans")
         if not isinstance(rows, list):
             raise FinchApiError("Finch returned an invalid shared Raid Plans response.")
+        return tuple(self._shared_snapshot(row) for row in rows)
+
+    def shared_readiness_snapshots(self) -> tuple[FinchSharedSnapshot, ...]:
+        response = self._request_json("/api/v1/shared/readiness")
+        rows = response.get("readiness")
+        if not isinstance(rows, list):
+            raise FinchApiError("Finch returned an invalid shared readiness response.")
         return tuple(self._shared_snapshot(row) for row in rows)
 
     def acknowledge_gear_need(
