@@ -473,3 +473,28 @@ def test_health_collision_blocks_only_affected_recipient() -> None:
     assert payload["before"] == 18000
     assert payload["after"] == 15000
     assert any("Tank 1" in message for message in result.unresolved)
+
+
+
+def test_damage_after_death_does_not_emit_zero_to_zero_health_change() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(
+            _damage_event(time_seconds=1.0, sequence=0, amount=25000.0),
+            _damage_event(time_seconds=2.0, sequence=0, amount=5000.0),
+        ),
+        target_state=_state(current=5000, maximum=25000),
+    )
+
+    assert [event.event_type for event in result.events] == [
+        "health_change",
+        "death",
+    ]
+    assert any(
+        "recipient is dead; additional damage is not applied" in message
+        for message in result.unresolved
+    )
+    assert not any(
+        event.event_type == "health_change"
+        and event.time_seconds == 2.0
+        for event in result.events
+    )
