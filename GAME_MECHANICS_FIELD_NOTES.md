@@ -1244,3 +1244,6 @@ Champion Points, potion choice, passive ranks, and skill bars each arrive with a
 
 **Layman's version:** four people can edit four sections of the same form, but passing around four complete photocopies means the last photocopy wins.
 
+### 2026-09-21 — A coupled dominance proof should stay coupled when promoted
+
+The reviewed Mundus × provisioning search proves a ceiling over the **joint pair**, not two unrelated one-axis optima. FoundryDock therefore promotes that result as one coupled proof covering both canonical axes together. If even one Mundus/food combination remains unresolved, neither axis is marked dominated and no numeric ceiling is promoted.
