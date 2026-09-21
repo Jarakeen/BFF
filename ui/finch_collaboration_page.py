@@ -72,17 +72,14 @@ class FinchCollaborationPage(FoundryPage):
         header.add_context_widget(self.open_button)
         self.set_header(header)
 
-        note = FoundryCard("How This Board Works", "feather")
+        overview = FoundryCard("Collaboration Guide", "feather")
         text = QLabel(
-            "This page is a read-only overview. Teams and Raid Plans show copy provenance; "
-            "Readiness and Coverage are remote snapshots only. Publishing and Copy to Local "
-            "still happen in their owning workspaces."
+            "Read-only overview: Teams and Raid Plans show copy provenance; Readiness and "
+            "Coverage are remote snapshots. Publish and Copy to Local remain in their owning workspaces."
         )
         text.setWordWrap(True)
-        note.addWidget(text)
-        self.workspace_layout.addWidget(note)
+        overview.addWidget(text)
 
-        attention = FoundryCard("Attention Summary", "compass")
         attention_row = QHBoxLayout()
         attention_row.setContentsMargins(0, 0, 0, 0)
         attention_row.setSpacing(18)
@@ -99,10 +96,10 @@ class FinchCollaborationPage(FoundryPage):
             label.setProperty("sidebarMeta", True)
             attention_row.addWidget(label)
         attention_row.addStretch()
-        attention.addLayout(attention_row)
-        self.workspace_layout.addWidget(attention)
+        overview.addLayout(attention_row)
+        self.workspace_layout.addWidget(overview)
 
-        card = FoundryCard("Shared Snapshots", "team")
+        card = FoundryCard("Shared Snapshots", "archive")
         self.table = QTableWidget(0, 6)
         self.table.setHorizontalHeaderLabels(
             ["TYPE", "ITEM", "PUBLISHER", "UPDATED", "STATUS", "SUMMARY"]
@@ -119,6 +116,13 @@ class FinchCollaborationPage(FoundryPage):
                 column,
                 header_view.ResizeMode.ResizeToContents,
             )
+        self.empty_state_label = QLabel(
+            "No shared Finch snapshots yet. Published Teams, Raid Plans, Readiness, and Coverage will appear here."
+        )
+        self.empty_state_label.setProperty("muted", True)
+        self.empty_state_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.empty_state_label.setWordWrap(True)
+        card.addWidget(self.empty_state_label)
         card.addWidget(self.table)
         self.workspace_layout.addWidget(card, 1)
 
@@ -195,6 +199,8 @@ class FinchCollaborationPage(FoundryPage):
 
     def _render_rows(self) -> None:
         self.table.setRowCount(len(self._rows))
+        self.empty_state_label.setVisible(not self._rows)
+        self.table.setVisible(bool(self._rows))
         for row_index, row in enumerate(self._rows):
             values = (
                 row.kind,
