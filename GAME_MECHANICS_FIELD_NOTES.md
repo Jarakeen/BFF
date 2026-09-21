@@ -1282,3 +1282,9 @@ The anchored Ultimate/potion plan is not necessarily the plan that reaches simul
 
 **Layman's version:** score the final edited schedule, not the draft from two edits ago.
 
+### 2026-09-21 — Rematerializing set identity must not erase later weapon choices
+
+The named-gear witness owns the selected weapon slots' set names and weapon types. Weapon trait, enchant, quality, tier, and level belong to later generated axes. Exact runtime setup may reapply the physical front/back set witness for activation evidence, so replacing the entire weapon slot at that point silently discards those later choices. FoundryDock now updates only the fields owned by named-gear materialization and preserves the downstream weapon refinement.
+
+**Layman's version:** relabeling the weapon rack should not strip the enchantment off the weapon.
+
