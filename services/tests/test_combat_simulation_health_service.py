@@ -386,3 +386,90 @@ def test_two_same_instant_damage_sources_fail_closed() -> None:
         "Boss Cleave" in message and "Second Hit" in message
         for message in result.unresolved
     )
+
+
+
+def test_health_change_priority_follows_causal_damage_event() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(_damage_event(time_seconds=1.0, sequence=0, amount=3000.0),),
+        target_state=_state(current=20000, maximum=25000),
+    )
+
+    assert [event.priority for event in result.events] == [
+        int(SimulationEventPriority.HEALTH_CHANGE),
+    ]
+    assert int(SimulationEventPriority.DIRECT_RESULT) < int(
+        SimulationEventPriority.HEALTH_CHANGE
+    )
+
+
+def test_earliest_health_collision_remains_blocking_boundary() -> None:
+    second_damage = CombatSimulationEvent(
+        time_seconds=2.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="incoming_damage",
+        source="Second Boss Hit",
+        payload=(("recipient", "Tank 1"), ("amount", 1000.0)),
+    )
+    second_heal = _heal_event(
+        time_seconds=2.0,
+        sequence=0,
+        amount=500.0,
+    )
+    result = CombatSimulationHealthService().project(
+        events=(
+            _damage_event(time_seconds=1.0, sequence=0, amount=6000.0),
+            _heal_event(time_seconds=1.0, sequence=0, amount=4000.0),
+            second_damage,
+            second_heal,
+        ),
+        target_state=_state(current=20000, maximum=25000),
+    )
+
+    assert result.events == ()
+    assert any("1s #0 -> Tank 1" in message for message in result.unresolved)
+    assert any("2s #0 -> Tank 1" in message for message in result.unresolved)
+
+
+def test_health_collision_blocks_only_affected_recipient() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+            CombatSimulationCombatant(
+                "Tank 2",
+                "ally",
+                current_health=18000,
+                maximum_health=25000,
+            ),
+        ),
+    )
+    tank2_damage = CombatSimulationEvent(
+        time_seconds=1.5,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="incoming_damage",
+        source="Tank 2 Hit",
+        payload=(("recipient", "Tank 2"), ("amount", 3000.0)),
+    )
+
+    result = CombatSimulationHealthService().project(
+        events=(
+            _damage_event(time_seconds=1.0, sequence=0, amount=6000.0),
+            _heal_event(time_seconds=1.0, sequence=0, amount=4000.0),
+            tank2_damage,
+        ),
+        target_state=state,
+    )
+
+    assert len(result.events) == 1
+    payload = result.events[0].payload_dict()
+    assert payload["recipient"] == "Tank 2"
+    assert payload["before"] == 18000
+    assert payload["after"] == 15000
+    assert any("Tank 1" in message for message in result.unresolved)
