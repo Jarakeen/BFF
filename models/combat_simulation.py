@@ -491,11 +491,47 @@ class CombatSimulationResult:
                             "combat simulation healing Health arithmetic is inconsistent"
                         )
                 health_by_recipient[recipient] = after
+        window_keys = tuple(
+            (
+                float(window.start_time_seconds),
+                int(window.sequence),
+                str(window.effect_name),
+                str(window.source),
+                str(window.target or ""),
+            )
+            for window in self.effect_windows
+        )
+        if window_keys != tuple(sorted(window_keys)):
+            raise ValueError(
+                "combat simulation effect windows must be in canonical timeline order"
+            )
+        if any(
+            float(window.start_time_seconds) > duration_seconds
+            for window in self.effect_windows
+        ):
+            raise ValueError(
+                "combat simulation effect window cannot start beyond result duration"
+            )
+
         initial_bar = str(self.initial_bar or "").strip().casefold()
         final_bar = str(self.final_bar or "").strip().casefold()
         if initial_bar not in {"front", "back"} or final_bar not in {"front", "back"}:
             raise ValueError(
                 "combat simulation result bars must be front or back"
+            )
+        projected_final_bar = initial_bar
+        for event in self.events:
+            if event.event_type != "action":
+                continue
+            payload = event.payload_dict()
+            if payload.get("kind") != "bar_swap":
+                continue
+            destination = str(payload.get("bar") or "").strip().casefold()
+            if destination in {"front", "back"}:
+                projected_final_bar = destination
+        if projected_final_bar != final_bar:
+            raise ValueError(
+                "combat simulation final bar does not match event state"
             )
         object.__setattr__(self, "duration_seconds", duration_seconds)
         object.__setattr__(self, "initial_bar", initial_bar)
