@@ -51,6 +51,7 @@ def _rows():
 def _context():
     return ExtremeSustainedDPSSkillBarLegalityContext(
         character_class="Warden",
+        class_skill_lines=("Animal Companions", "Green Balance", "Winter's Embrace"),
         owned_skill_lines=("Fighters Guild",),
         weapon_skill_lines=("Destruction Staff",),
     )
@@ -148,3 +149,27 @@ def test_invalid_two_bar_index_fails_closed() -> None:
             back_context=context,
             index=frontier.candidate_count,
         )
+
+
+def test_explicit_subclass_line_is_legal_even_when_owned_by_foreign_base_class() -> None:
+    rows = (
+        *_rows(),
+        _row(
+            701,
+            700,
+            "Foreign Class Skill",
+            "Ardent Flame",
+            class_type="Dragonknight",
+        ),
+    )
+    context = ExtremeSustainedDPSSkillBarLegalityContext(
+        character_class="Warden",
+        class_skill_lines=("Animal Companions", "Green Balance", "Ardent Flame"),
+        owned_skill_lines=("Fighters Guild",),
+        weapon_skill_lines=("Destruction Staff",),
+    )
+    families = ExtremeSustainedDPSSkillBarFrontierService(
+        skill_rows=rows
+    )._families(rows, context, ultimate=False)
+
+    assert any(row.base_ability_id == 700 for row in families)
