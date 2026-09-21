@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -313,59 +314,76 @@ def _stop_playback(board) -> None:
 
 def _timeline_panel(board) -> QWidget:
     panel = QWidget(board)
-    row = QHBoxLayout(panel)
-    row.setContentsMargins(0, 0, 0, 0)
-    row.setSpacing(5)
+    stack = QVBoxLayout(panel)
+    stack.setContentsMargins(0, 0, 0, 0)
+    stack.setSpacing(4)
 
-    title = QLabel("POSITION TIMELINE")
+    step_row_widget = QWidget(panel)
+    step_row = QHBoxLayout(step_row_widget)
+    step_row.setContentsMargins(0, 0, 0, 0)
+    step_row.setSpacing(5)
+
+    title = QLabel("TIMELINE STEPS")
     title.setProperty("sidebarHeading", True)
-    row.addWidget(title)
+    title.setMinimumWidth(110)
+    step_row.addWidget(title)
 
-    board.position_timeline_step_combo = QComboBox()
-    board.position_timeline_step_combo.setMinimumWidth(150)
+    board.position_timeline_step_combo = QComboBox(step_row_widget)
+    board.position_timeline_step_combo.setMinimumWidth(170)
     board.position_timeline_step_combo.currentIndexChanged.connect(
         lambda index: _select_step(board, index)
     )
-    row.addWidget(board.position_timeline_step_combo)
+    step_row.addWidget(board.position_timeline_step_combo)
 
     add = QPushButton("+ Step")
     add.clicked.connect(lambda: _add_step(board))
-    row.addWidget(add)
+    step_row.addWidget(add)
 
     duplicate = QPushButton("Duplicate")
     duplicate.clicked.connect(lambda: _duplicate_step(board))
-    row.addWidget(duplicate)
+    step_row.addWidget(duplicate)
 
     save = QPushButton("Save Step")
     save.clicked.connect(lambda: _save_current_step(board))
-    row.addWidget(save)
+    step_row.addWidget(save)
 
-    delete = QPushButton("Delete")
+    delete = QPushButton("Delete Step")
     delete.clicked.connect(lambda: _delete_step(board))
-    row.addWidget(delete)
+    step_row.addWidget(delete)
+    step_row.addStretch(1)
+    stack.addWidget(step_row_widget)
+
+    playback_row = QHBoxLayout()
+    playback_row.setContentsMargins(0, 0, 0, 0)
+    playback_row.setSpacing(5)
+
+    playback_title = QLabel("PLAYBACK")
+    playback_title.setProperty("sidebarHeading", True)
+    playback_title.setMinimumWidth(110)
+    playback_row.addWidget(playback_title)
 
     previous = QPushButton("◀")
     previous.setToolTip("Previous positioning step")
     previous.clicked.connect(lambda: _move_step(board, -1))
-    row.addWidget(previous)
+    playback_row.addWidget(previous)
 
     board.position_timeline_play_button = QPushButton("▶ Play")
     board.position_timeline_play_button.setProperty("primary", True)
     board.position_timeline_play_button.clicked.connect(lambda: _play(board))
-    row.addWidget(board.position_timeline_play_button)
+    playback_row.addWidget(board.position_timeline_play_button)
 
     pause = QPushButton("⏸")
     pause.setToolTip("Pause positioning playback")
     pause.clicked.connect(lambda: _stop_playback(board))
-    row.addWidget(pause)
+    playback_row.addWidget(pause)
 
     next_button = QPushButton("▶")
     next_button.setToolTip("Next positioning step")
     next_button.clicked.connect(lambda: _move_step(board, 1))
-    row.addWidget(next_button)
+    playback_row.addWidget(next_button)
 
     duration_label = QLabel("Move")
-    row.addWidget(duration_label)
+    playback_row.addWidget(duration_label)
     board.position_timeline_duration = QDoubleSpinBox()
     board.position_timeline_duration.setRange(0.2, 30.0)
     board.position_timeline_duration.setSingleStep(0.5)
@@ -373,12 +391,13 @@ def _timeline_panel(board) -> QWidget:
     board.position_timeline_duration.setSuffix(" s")
     board.position_timeline_duration.setValue(2.0)
     board.position_timeline_duration.setToolTip("Time used to move into this step")
-    row.addWidget(board.position_timeline_duration)
+    playback_row.addWidget(board.position_timeline_duration)
 
     board.position_timeline_note = QLineEdit()
     board.position_timeline_note.setPlaceholderText("Step note, e.g. Healers split; DDs collapse center")
-    board.position_timeline_note.setMinimumWidth(240)
-    row.addWidget(board.position_timeline_note, 1)
+    board.position_timeline_note.setMinimumWidth(280)
+    playback_row.addWidget(board.position_timeline_note, 1)
+    stack.addLayout(playback_row)
 
     return panel
 
