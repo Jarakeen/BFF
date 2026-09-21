@@ -1170,6 +1170,7 @@ def test_sustained_dps_objective32_search_keeps_proof_levels_distinct() -> None:
     )
     assert "end-to-end Objective #32 result" in service.purpose
     assert "does not invent coverage" in service.notes
+    assert "same generated search denominator" in service.notes
     assert "distinct facts" in service.notes
 
 
