@@ -330,6 +330,8 @@ class CombatSimulationSequentialDDDamageService:
                     )
                 )
                 for occurrence in occurrence_evidence.occurrences:
+                    if float(occurrence.time_seconds) > float(plan.duration_seconds):
+                        continue
                     if float(occurrence.time_seconds) < float(action.time_seconds):
                         unresolved.append(
                             f"{identity}: damage occurrence precedes its parent action "
@@ -392,7 +394,11 @@ class CombatSimulationSequentialDDDamageService:
             )
 
         for occurrence in sorted(
-            pending,
+            (
+                item
+                for item in pending
+                if float(item.time_seconds) <= float(plan.duration_seconds)
+            ),
             key=lambda item: (
                 float(item.time_seconds),
                 int(item.sequence),
