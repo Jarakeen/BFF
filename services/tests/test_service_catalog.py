@@ -710,3 +710,17 @@ def test_sustained_dps_structural_action_bound_requires_external_complete_proofs
     ) == ("extreme.sustained_dps.pruning",)
     assert "infers no ESO action rate or damage formula" in service.notes
     assert "direct, periodic, and triggered consequences" in service.notes
+
+
+def test_sustained_dps_rotation_family_action_count_proof_avoids_permutation_materialization() -> None:
+    service = canonical_service_for("extreme_sustained_dps_rotation_family_action_count_proof")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.rotation_family_action_count_proof"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.rotation_plan_frontier",)
+    assert "Skill permutation does not change the cycle shape" in service.notes
+    assert "Weave-on is included" in service.notes
+    assert "must supply its own proven count ceiling" in service.notes
