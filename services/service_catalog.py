@@ -953,6 +953,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         inputs=(
             "GeneratedAxisPipelineRoot",
             "CanonicalAxisCoverageProofs",
+            "Objective32SearchScopeProof",
             "OptionalProvenLocalRuntimeStateFrontier",
             "ExplicitTargetScenario",
         ),
@@ -969,8 +970,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "The wrapper does not invent coverage. Callers supply proof objects for searched axes; a supplied local runtime frontier contributes only its proven runtime_state coverage. "
-            "The result reports finite-tree completion and theoretical Objective #32 closure as distinct facts."
+            "The wrapper does not invent coverage. Callers supply proof objects for searched axes and an explicit scope proof that those proofs describe the same generated search denominator; "
+            "a supplied local runtime frontier contributes only its proven runtime_state coverage. The result reports finite-tree completion and theoretical Objective #32 closure as distinct facts."
         ),
     ),
     ServiceDescriptor(
