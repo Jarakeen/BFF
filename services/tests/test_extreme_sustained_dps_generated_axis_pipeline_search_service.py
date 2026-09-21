@@ -101,3 +101,34 @@ def test_forwards_root_bound_provider_to_lazy_wiring() -> None:
 
     assert result.global_maximum_proven is True
     assert seen == [_State()]
+
+
+
+def test_forwards_node_bound_provider_to_lazy_wiring() -> None:
+    leaf = _LeafEvaluation()
+    service = ExtremeSustainedDPSGeneratedAxisPipelineSearchService(
+        pipeline=_Pipeline(),
+        leaf_evaluation=leaf,
+    )
+    seen = []
+
+    def branch_bounds(node):
+        seen.append((node.candidate_key, node.depth))
+        return ()
+
+    result = service.search(
+        _State(),
+        required_duration_seconds=10.0,
+        runtime_snapshot="snapshot",
+        target_health=100,
+        target_resistance=0.0,
+        root_key="structural:0",
+        branch_bound_inputs=branch_bounds,
+    )
+
+    assert result.global_maximum_proven is True
+    assert seen == [
+        ("structural:0", 0),
+        ("structural:0|choice:0", 1),
+        ("structural:0|choice:1", 1),
+    ]
