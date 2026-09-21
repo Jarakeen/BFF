@@ -266,6 +266,15 @@ class ExtremeSpecializedExecutionService:
         )
 
     @classmethod
+    def can_execute_with_combat_target_inputs(cls, objective_key: str) -> bool:
+        key = str(objective_key or "").strip().casefold()
+        requirements = cls.requirements_for(key)
+        return tuple(row.key for row in requirements) == (
+            "target_health",
+            "target_resistance",
+        )
+
+    @classmethod
     def requires_saved_build(cls, objective_key: str) -> bool:
         return str(objective_key or "").strip().casefold() in cls._SAVED_BUILD_REQUIRED_KEYS
 
