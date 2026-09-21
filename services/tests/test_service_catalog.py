@@ -697,3 +697,16 @@ def test_sustained_dps_partial_branch_upper_bound_intersects_without_double_coun
     assert "intersected with min()" in service.notes
     assert "never summed" in service.notes
     assert "cannot weaken an inherited proven parent ceiling" in service.notes
+
+
+def test_sustained_dps_structural_action_bound_requires_external_complete_proofs() -> None:
+    service = canonical_service_for("extreme_sustained_dps_structural_action_upper_bound")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.structural_action_upper_bound"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.pruning",)
+    assert "infers no ESO action rate or damage formula" in service.notes
+    assert "direct, periodic, and triggered consequences" in service.notes
