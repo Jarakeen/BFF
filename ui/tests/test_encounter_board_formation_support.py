@@ -85,17 +85,17 @@ def test_house_stacks_use_canonical_top_5_to_8_bottom_1_to_4_numbering() -> None
 
     assert [x for x, _y in bottom] == sorted(x for x, _y in bottom)
     assert [x for x, _y in top] == sorted(x for x, _y in top)
-    assert {y for _x, y in bottom} == {348.07}
-    assert {y for _x, y in top} == {221.93}
+    assert {y for _x, y in bottom} == {343.35}
+    assert {y for _x, y in top} == {226.65}
     assert [x for x, _y in bottom] == [x for x, _y in top]
 
     horizontal_gaps = [
         round(bottom[index + 1][0] - bottom[index][0], 2)
         for index in range(3)
     ]
-    assert horizontal_gaps == [146.14, 146.14, 146.14]
-    assert round(bottom[0][1] - top[0][1], 2) == 126.14
-    assert round(formations.HOUSE_STACK_EXTRA_SPACING_SCENE_UNITS, 2) == 66.14
+    assert horizontal_gaps == [136.69, 136.70, 136.69]
+    assert round(bottom[0][1] - top[0][1], 2) == 116.70
+    assert round(formations.HOUSE_STACK_EXTRA_SPACING_SCENE_UNITS, 2) == 56.69
 
 
 def test_house_stack_healers_expand_with_the_dd_formation() -> None:
@@ -105,8 +105,8 @@ def test_house_stack_healers_expand_with_the_dd_formation() -> None:
     )
     healer_1, healer_2 = house.healer_positions
 
-    assert healer_1 == (333.86, 454.0)
-    assert healer_2 == (626.14, 454.0)
+    assert healer_1 == (343.31, 440.04)
+    assert healer_2 == (616.69, 440.04)
     assert healer_1[1] > max(y for _x, y in house.dps_positions)
     assert healer_2[1] > max(y for _x, y in house.dps_positions)
 
