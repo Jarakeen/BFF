@@ -40,37 +40,29 @@ def test_canonical_autofill_can_consider_saved_and_reference_build_evidence():
     assert "Compatibility mirror only" in source
 
 
-def test_comp_maker_send_to_roster_preserves_structured_candidate_evidence():
+def test_phase14_candidate_support_does_not_restore_retired_generated_roster_writer():
     source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
 
-    assert "GeneratedRosterDraftSlot(" in source
+    assert "GeneratedRosterDraftSlot(" not in source
     assert "GeneratedRosterPlanSlot" not in source
-    assert 'kind="saved" if is_saved or known_player else "prescribed_recruit"' in source
-    assert '"Manual gear package"' in source
-    assert "_effective_candidate_gear_sets(" in source
-    assert "role=candidate.role or role" in source
-    assert "source_kind=candidate.source_kind" in source
-    assert "source_name=candidate.source_name" in source
-    assert "source_url=candidate.source_url" in source
-    assert "candidate_id=candidate.candidate_id" in source
-    assert "gear_sets=effective_gear_sets" in source
-    assert "skills=tuple(candidate.skills)" in source
-    assert "mundus=candidate.mundus" in source
-    assert "Observed/known skills:" not in source
+    assert "def _send_to_roster_with_candidates" not in source
+    assert "save_generated_plan" not in source
+    assert "_comp_plan_state" in source
+    assert "planned_gear_sets" in source
 
 
-def test_comp_maker_does_not_turn_reference_templates_into_fake_players():
+def test_reference_candidates_remain_planning_evidence_without_player_identity_writes():
     source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
 
-    save = source.split("def save_generated_plan", 1)[1].split(
-        "def _send_to_roster_with_candidates", 1
+    changes = source.split("def _candidate_state_changes", 1)[1].split(
+        "def _refresh_candidates", 1
     )[0]
-    assert 'roster_player if known_player else (' in save
-    assert 'candidate.source_name if is_saved else "Recruitment Needed"' in save
-    assert 'roster_character if known_player else (' in save
-    assert 'candidate.source_name if is_saved else ""' in save
-    assert 'is_saved = candidate.source_kind == "saved_build"' in save
-    assert "Candidate is partial evidence, not a complete prescribed build." in source
+    assert 'candidate.source_kind == "saved_build"' in changes
+    assert 'changes["selected_build_id"]' in changes
+    assert 'changes["selected_build_name"]' in changes
+    assert "player_name" not in changes
+    assert "character_name" not in changes
+    assert "planned_gear_sets" in changes
 
 
 def test_comp_maker_autofill_uses_assignments_as_provider_constraints() -> None:
@@ -124,16 +116,15 @@ def test_phase14_comp_send_quarantines_generated_draft_writer() -> None:
     assert "CompBuilderPage._send_to_roster = _send_to_roster_with_feedback" not in feedback
 
 
-def test_comp_maker_manual_five_piece_override_preserves_non_five_piece_candidate_gear():
+def test_candidate_application_writes_effective_gear_to_canonical_plan_state():
     source = Path("ui/comp_builder_build_candidate_support.py").read_text(encoding="utf-8")
 
-    assert 'getattr(page, "_comp_manual_gear_sets_by_slot", {})' in source
-    assert "def _effective_candidate_gear_sets(" in source
-    assert "candidate.five_piece_sets" in source
-    assert "preserved_non_five" in source
-    assert "effective_gear_sets = _effective_candidate_gear_sets(" in source
-    assert 'gear_summary=" + ".join(effective_gear_sets)' in source
-    assert "gear_sets=effective_gear_sets" in source
+    changes = source.split("def _candidate_state_changes", 1)[1].split(
+        "def _refresh_candidates", 1
+    )[0]
+    assert 'changes["planned_gear_sets"] = tuple(candidate.gear_sets)' in changes
+    assert "chair.is_locked(\"gear\")" in changes
+    assert "_replace_state_chair(page, chair.with_changes(**changes))" in source
 
 
 def test_candidate_helpers_use_canonical_state_before_compatibility_mirror() -> None:
