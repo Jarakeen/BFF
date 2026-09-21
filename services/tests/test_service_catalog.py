@@ -444,3 +444,18 @@ def test_sustained_dps_mundus_provisioning_dominance_consumes_dynamic_axes() -> 
     ) == ("extreme.sustained_dps.dynamic_axes",)
     assert "full joint finite grid" in service.notes
     assert "fail-open" in service.notes
+
+
+def test_sustained_dps_armor_trait_enchant_frontier_consumes_dynamic_axes() -> None:
+    service = canonical_service_for("extreme_sustained_dps_armor_trait_enchant_frontier")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.armor_trait_enchant_frontier"
+    assert service.behavior is ServiceBehavior.DETERMINISTIC
+    assert service.encounter_aware is False
+    assert set(service.roles) == {"DPS"}
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.dynamic_axes",)
+    assert "full modeled denominator lazily" in service.notes
