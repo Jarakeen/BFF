@@ -12,6 +12,9 @@ class CombatSimulationDamageSourceSummary:
     source: str
     event_count: int
     attempted_damage: float
+    applied_damage: float
+    overkill: float
+    killing_blow: bool = False
 
 
 @dataclass(frozen=True)
@@ -24,6 +27,9 @@ class CombatSimulationDamageSummary:
     target_maximum_health: int | None
     target_dead: bool
     death_time_seconds: float | None
+    killing_source: str | None
+    killing_origin_event_type: str | None
+    total_overkill: float
     damage_by_source: tuple[CombatSimulationDamageSourceSummary, ...]
     unresolved: tuple[str, ...]
 
@@ -74,9 +80,51 @@ class CombatSimulationDamageSummaryService:
         for event in outgoing:
             payload = event.payload_dict()
             source = str(event.source or "unknown").strip() or "unknown"
-            row = source_totals.setdefault(source, [0.0, 0.0])
+            row = source_totals.setdefault(source, [0.0, 0.0, 0.0, 0.0])
             row[0] += 1.0
             row[1] += float(payload.get("amount") or 0.0)
+
+        outgoing_health = tuple(
+            event
+            for event in health
+            if event.payload_dict().get("origin_event_type") == "outgoing_damage"
+        )
+        for event in outgoing_health:
+            payload = event.payload_dict()
+            source = str(event.source or "unknown").strip() or "unknown"
+            row = source_totals.setdefault(source, [0.0, 0.0, 0.0, 0.0])
+            row[2] += float(payload.get("applied_damage") or 0.0)
+            row[3] += float(payload.get("overkill") or 0.0)
+
+        outgoing_deaths = tuple(
+            event
+            for event in deaths
+            if event.payload_dict().get("origin_event_type") == "outgoing_damage"
+        )
+        killing_event = (
+            min(
+                outgoing_deaths,
+                key=lambda event: (
+                    float(event.time_seconds),
+                    int(event.priority),
+                    int(event.sequence),
+                    str(event.source or "").casefold(),
+                ),
+            )
+            if outgoing_deaths
+            else None
+        )
+        killing_source = (
+            str(killing_event.source or "").strip() or "unknown"
+            if killing_event is not None
+            else None
+        )
+        killing_origin_event_type = (
+            str(killing_event.payload_dict().get("origin_event_type") or "").strip()
+            or None
+            if killing_event is not None
+            else None
+        )
 
         combatant = (
             result.target_state.combatant(target)
@@ -106,25 +154,34 @@ class CombatSimulationDamageSummaryService:
             ),
             applied_damage=sum(
                 float(event.payload_dict().get("applied_damage") or 0.0)
-                for event in health
+                for event in outgoing_health
             ),
             ending_target_health=ending,
             target_maximum_health=maximum,
             target_dead=bool(deaths) or ending == 0,
             death_time_seconds=(
-                float(deaths[0].time_seconds)
-                if deaths
+                float(killing_event.time_seconds)
+                if killing_event is not None
                 else None
+            ),
+            killing_source=killing_source,
+            killing_origin_event_type=killing_origin_event_type,
+            total_overkill=sum(
+                float(event.payload_dict().get("overkill") or 0.0)
+                for event in outgoing_health
             ),
             damage_by_source=tuple(
                 CombatSimulationDamageSourceSummary(
                     source=source,
                     event_count=int(values[0]),
                     attempted_damage=float(values[1]),
+                    applied_damage=float(values[2]),
+                    overkill=float(values[3]),
+                    killing_blow=(source == killing_source),
                 )
                 for source, values in sorted(
                     source_totals.items(),
-                    key=lambda item: (-item[1][1], item[0].casefold()),
+                    key=lambda item: (-item[1][2], -item[1][1], item[0].casefold()),
                 )
             ),
             unresolved=tuple(result.unresolved),
