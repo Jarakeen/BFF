@@ -140,6 +140,7 @@ def test_shared_raid_plan_payload_excludes_local_ids_builds_and_notes() -> None:
     assert payload["members"] == [
         {
             "seat_id": "dd-1",
+            "house_stack_number": 1,
             "gamertag": "Rylo",
             "character_name": "Rylos Arcanist",
             "role": "Damage Dealer",
@@ -187,6 +188,6 @@ def test_publish_service_uses_versioned_snapshots(tmp_path: Path) -> None:
     assert client.team_calls[0][0] == "Performance Mode"
     assert client.team_calls[0][2] == 1
     assert client.plan_calls[0][0] == "rg-pm"
-    assert client.plan_calls[0][2] == 3
+    assert client.plan_calls[0][2] == 4
     assert team_result.kind == "team"
     assert plan_result.kind == "raid_plan"
