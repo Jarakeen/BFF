@@ -1,0 +1,197 @@
+from __future__ import annotations
+
+"""Concrete indexed axes for generated sustained-DPS rotation policy refinement.
+
+A complete assembled build first selects one finite seed/cadence RotationPlan family,
+then selects one anchored Ultimate/potion policy for that exact plan. This adapter does
+not promote the anchored family into theoretical timing closure: continuous potion
+offsets, deliberately delayed Ultimates, execute policy, Heavy Attacks, and encounter
+obligations remain explicit downstream proof scopes.
+"""
+
+from dataclasses import dataclass, replace
+import math
+
+from services.extreme_sustained_dps_generated_candidate_assembly_service import (
+    ExtremeSustainedDPSAssembledCandidate,
+)
+from services.extreme_sustained_dps_generated_frontier_wiring_service import (
+    ExtremeSustainedDPSIndexedFrontierAxis,
+)
+from services.extreme_sustained_dps_rotation_plan_frontier_service import (
+    ExtremeSustainedDPSRotationPlanCandidate,
+    ExtremeSustainedDPSRotationPlanFrontierService,
+)
+from services.extreme_sustained_dps_rotation_policy_frontier_service import (
+    ExtremeSustainedDPSRotationPolicyCandidate,
+    ExtremeSustainedDPSRotationPolicyFrontierService,
+)
+
+
+@dataclass(frozen=True)
+class ExtremeSustainedDPSGeneratedRotationAxisState:
+    assembled: ExtremeSustainedDPSAssembledCandidate
+    duration_seconds: float
+    potion_cooldown_seconds: float
+    starting_ultimate: float
+    ultimate_generation_events: tuple[object, ...] = ()
+    heroism_windows: tuple[object, ...] = ()
+    use_scheduled_combat_attacks_for_ultimate: bool = False
+    rotation_plan: ExtremeSustainedDPSRotationPlanCandidate | None = None
+    rotation_policy: ExtremeSustainedDPSRotationPolicyCandidate | None = None
+
+    @property
+    def complete(self) -> bool:
+        return self.rotation_policy is not None
+
+
+class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
+    """Adapt seed-plan and anchored Ultimate/potion frontiers into tree axes."""
+
+    def __init__(
+        self,
+        *,
+        rotation_plans: ExtremeSustainedDPSRotationPlanFrontierService | object,
+        rotation_policies: ExtremeSustainedDPSRotationPolicyFrontierService | object,
+    ) -> None:
+        self.rotation_plans = rotation_plans
+        self.rotation_policies = rotation_policies
+
+    @staticmethod
+    def _proven_count(
+        frontier: object,
+        label: str,
+        *,
+        proof_field: str,
+    ) -> int:
+        count = int(getattr(frontier, "candidate_count", 0))
+        unresolved = tuple(getattr(frontier, "unresolved", ()) or ())
+        if not bool(getattr(frontier, proof_field, False)):
+            detail = "; ".join(str(item) for item in unresolved if str(item))
+            raise ValueError(
+                f"{label} denominator is unresolved"
+                + (f": {detail}" if detail else "")
+            )
+        if count <= 0:
+            raise ValueError(f"{label} denominator is empty")
+        return count
+
+    def _plan_count(
+        self,
+        state: ExtremeSustainedDPSGeneratedRotationAxisState,
+    ) -> int:
+        return self._proven_count(
+            self.rotation_plans.frontier(state.assembled),
+            "rotation-plan frontier",
+            proof_field="denominator_proven",
+        )
+
+    def _plan_at(
+        self,
+        state: ExtremeSustainedDPSGeneratedRotationAxisState,
+        index: int,
+    ) -> ExtremeSustainedDPSGeneratedRotationAxisState:
+        candidate = self.rotation_plans.candidate_at(
+            state.assembled,
+            duration_seconds=state.duration_seconds,
+            index=int(index),
+        )
+        return replace(state, rotation_plan=candidate, rotation_policy=None)
+
+    @staticmethod
+    def _require_plan(
+        state: ExtremeSustainedDPSGeneratedRotationAxisState,
+    ) -> ExtremeSustainedDPSRotationPlanCandidate:
+        if state.rotation_plan is None:
+            raise ValueError(
+                "generated rotation policy requires a selected rotation-plan family"
+            )
+        return state.rotation_plan
+
+    def _policy_count(
+        self,
+        state: ExtremeSustainedDPSGeneratedRotationAxisState,
+    ) -> int:
+        seed = self._require_plan(state)
+        frontier = self.rotation_policies.frontier(
+            build=state.assembled.build,
+            seed=seed,
+            potion_cooldown_seconds=state.potion_cooldown_seconds,
+        )
+        return self._proven_count(
+            frontier,
+            "anchored Ultimate/potion policy frontier",
+            proof_field="anchored_policy_denominator_proven",
+        )
+
+    def _policy_at(
+        self,
+        state: ExtremeSustainedDPSGeneratedRotationAxisState,
+        index: int,
+    ) -> ExtremeSustainedDPSGeneratedRotationAxisState:
+        seed = self._require_plan(state)
+        candidate = self.rotation_policies.candidate_at(
+            build=state.assembled.build,
+            seed=seed,
+            potion_cooldown_seconds=state.potion_cooldown_seconds,
+            starting_ultimate=state.starting_ultimate,
+            index=int(index),
+            ultimate_generation_events=state.ultimate_generation_events,
+            heroism_windows=state.heroism_windows,
+            use_scheduled_combat_attacks_for_ultimate=(
+                state.use_scheduled_combat_attacks_for_ultimate
+            ),
+        )
+        return replace(state, rotation_policy=candidate)
+
+    def root(
+        self,
+        assembled: ExtremeSustainedDPSAssembledCandidate,
+        *,
+        duration_seconds: float,
+        potion_cooldown_seconds: float,
+        starting_ultimate: float,
+        ultimate_generation_events: tuple[object, ...] = (),
+        heroism_windows: tuple[object, ...] = (),
+        use_scheduled_combat_attacks_for_ultimate: bool = False,
+    ) -> ExtremeSustainedDPSGeneratedRotationAxisState:
+        duration = float(duration_seconds)
+        cooldown = float(potion_cooldown_seconds)
+        ultimate = float(starting_ultimate)
+        if not math.isfinite(duration) or duration <= 0.0:
+            raise ValueError("generated rotation duration must be finite and positive")
+        if not math.isfinite(cooldown) or cooldown <= 0.0:
+            raise ValueError("generated potion cooldown must be finite and positive")
+        if not math.isfinite(ultimate) or ultimate < 0.0:
+            raise ValueError("generated starting Ultimate must be finite and non-negative")
+        return ExtremeSustainedDPSGeneratedRotationAxisState(
+            assembled=assembled,
+            duration_seconds=duration,
+            potion_cooldown_seconds=cooldown,
+            starting_ultimate=ultimate,
+            ultimate_generation_events=tuple(ultimate_generation_events),
+            heroism_windows=tuple(heroism_windows),
+            use_scheduled_combat_attacks_for_ultimate=bool(
+                use_scheduled_combat_attacks_for_ultimate
+            ),
+        )
+
+    def axes(self) -> tuple[ExtremeSustainedDPSIndexedFrontierAxis, ...]:
+        return (
+            ExtremeSustainedDPSIndexedFrontierAxis(
+                "Rotation Plan Family",
+                candidate_count=self._plan_count,
+                candidate_at=self._plan_at,
+            ),
+            ExtremeSustainedDPSIndexedFrontierAxis(
+                "Anchored Ultimate and Potion Policy",
+                candidate_count=self._policy_count,
+                candidate_at=self._policy_at,
+            ),
+        )
+
+
+__all__ = [
+    "ExtremeSustainedDPSGeneratedRotationAxisAdapterService",
+    "ExtremeSustainedDPSGeneratedRotationAxisState",
+]
