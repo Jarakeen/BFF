@@ -306,3 +306,83 @@ def test_lethal_outgoing_damage_emits_enemy_death_transition() -> None:
     assert health["overkill"] == 4000.0
     assert death["recipient"] == "Boss"
     assert death["origin_event_type"] == "outgoing_damage"
+
+
+
+def test_same_instant_damage_and_heal_fail_closed_for_recipient() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(
+            _damage_event(time_seconds=1.0, sequence=0, amount=6000.0),
+            _heal_event(time_seconds=1.0, sequence=0, amount=4000.0),
+        ),
+        target_state=_state(current=20000, maximum=25000),
+    )
+
+    assert result.events == ()
+    assert any(
+        "Health consequence ordering is unresolved" in message
+        and "Tank 1" in message
+        for message in result.unresolved
+    )
+
+
+def test_earlier_health_history_is_preserved_before_ambiguous_boundary() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(
+            _damage_event(time_seconds=0.5, sequence=0, amount=2000.0),
+            _damage_event(time_seconds=1.0, sequence=0, amount=6000.0),
+            _heal_event(time_seconds=1.0, sequence=0, amount=4000.0),
+            _heal_event(time_seconds=2.0, sequence=0, amount=1000.0),
+        ),
+        target_state=_state(current=20000, maximum=25000),
+    )
+
+    assert len(result.events) == 1
+    payload = result.events[0].payload_dict()
+    assert payload["before"] == 20000
+    assert payload["after"] == 18000
+    assert any(
+        "1s #0 -> Tank 1" in message
+        for message in result.unresolved
+    )
+
+
+def test_same_timestamp_different_sequence_remains_deterministic() -> None:
+    result = CombatSimulationHealthService().project(
+        events=(
+            _damage_event(time_seconds=1.0, sequence=0, amount=6000.0),
+            _heal_event(time_seconds=1.0, sequence=1, amount=4000.0),
+        ),
+        target_state=_state(current=20000, maximum=25000),
+    )
+
+    assert result.unresolved == ()
+    assert [event.payload_dict()["before"] for event in result.events] == [20000, 14000]
+    assert [event.payload_dict()["after"] for event in result.events] == [14000, 18000]
+
+
+def test_two_same_instant_damage_sources_fail_closed() -> None:
+    other = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.DIRECT_RESULT),
+        sequence=0,
+        event_type="incoming_damage",
+        source="Second Hit",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("amount", 3000.0),
+        ),
+    )
+    result = CombatSimulationHealthService().project(
+        events=(
+            _damage_event(time_seconds=1.0, sequence=0, amount=6000.0),
+            other,
+        ),
+        target_state=_state(current=20000, maximum=25000),
+    )
+
+    assert result.events == ()
+    assert any(
+        "Boss Cleave" in message and "Second Hit" in message
+        for message in result.unresolved
+    )
