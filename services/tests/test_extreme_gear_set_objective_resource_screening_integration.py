@@ -59,14 +59,15 @@ def test_same_unmapped_proc_is_also_pruned_from_sheet_power_objective():
     assert row.unresolved == ()
 
 
-def test_unmapped_target_resource_reference_remains_blocker():
+def test_mapped_pet_active_max_magicka_contributes_to_extreme_resource_candidate():
     row = _candidate(
         "(5 items) While you have a pet active, your Max Magicka is increased by 3132.",
         "max_magicka",
     )
 
-    assert row.mechanic_complete is False
-    assert any("Max Magicka" in item for item in row.unresolved)
+    assert row.reviewed_delta == 3132.0
+    assert row.mechanic_complete is True
+    assert row.unresolved == ()
 
 
 def test_unmapped_resource_scaling_reference_is_proven_irrelevant_to_resource_maximum():
