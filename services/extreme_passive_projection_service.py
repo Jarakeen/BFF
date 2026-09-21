@@ -346,7 +346,13 @@ class ExtremePassiveProjectionService:
         description_key = cls._clean(passive.description).casefold()
         consumable_context = any(term in description_key for term in _CONSUMABLE_CONTEXT_TERMS)
 
-        if passive.domain is ExtremeSkillDomain.UTILITY:
+        if (
+            passive.domain is ExtremeSkillDomain.UTILITY
+            or (
+                passive.domain is ExtremeSkillDomain.CRAFT
+                and name_key.startswith("keen eye:")
+            )
+        ):
             return ExtremePassiveProjection(
                 passive=passive,
                 status=ExtremePassiveProjectionStatus.KNOWN_NONCOMBAT,
