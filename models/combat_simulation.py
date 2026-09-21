@@ -18,6 +18,7 @@ class SimulationEventPriority(IntEnum):
     ACTION = 10
     RESOURCE_COST = 20
     DIRECT_RESULT = 30
+    HEALTH_CHANGE = 35
     TRIGGER = 40
     EFFECT_APPLY = 50
     RESOURCE_RESTORE = 60
