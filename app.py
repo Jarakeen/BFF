@@ -213,6 +213,7 @@ def main() -> int:
     from ui.rylo_build_surface_theme_refresh import install as install_rylo_build_surface_theme_refresh
     from ui.theme_brand_mark_support import install as install_theme_brand_mark_support
     from ui.rylo_raid_map_support import install as install_rylo_raid_map_support
+    from ui.encounter_board_formation_support import install as install_encounter_board_formation_support
     from ui.encounter_position_gif_export_support import install as install_encounter_position_gif_export_support
     from ui.encounter_identity_correction_support import install as install_encounter_identity_correction_support
     from ui.mechanics_boss_map_support import install as install_mechanics_boss_map_support
@@ -277,6 +278,10 @@ def main() -> int:
     # Raid Map owns custom QGraphics painting, so it needs its own theme-aware
     # palette after accessibility and visual-theme support are registered.
     install_rylo_raid_map_support()
+    # Stack presets reuse the existing themed marker renderer, so House and
+    # Rainbow formations work identically in Foundry and Rylo without a third
+    # Raid Map toolbar row.
+    install_encounter_board_formation_support()
     # GIF export wraps the completed Raid Map behavior and adds one control to
     # the existing Position Timeline row without creating another toolbar row.
     install_encounter_position_gif_export_support()
