@@ -50,6 +50,7 @@ class CombatSimulationResourceService:
         events: list[CombatSimulationEvent] = []
         sequence = 0
         prior_order_key: tuple[float, int] | None = None
+        prior_after = int(timeline.starting_amount)
         for item in timeline.events:
             if item.kind is ResourceTimelineEventKind.ACTION_COST:
                 priority = SimulationEventPriority.RESOURCE_COST
@@ -69,6 +70,11 @@ class CombatSimulationResourceService:
                     "resource timeline events are not in canonical simulation order"
                 )
             prior_order_key = order_key
+            if int(item.before) != prior_after:
+                raise ValueError(
+                    "resource timeline before/after chain is inconsistent"
+                )
+            prior_after = int(item.after)
 
             events.append(
                 CombatSimulationEvent(
@@ -89,6 +95,11 @@ class CombatSimulationResourceService:
                 )
             )
             sequence += 1
+
+        if prior_after != int(timeline.ending_amount):
+            raise ValueError(
+                "resource timeline ending amount does not match final event state"
+            )
 
         return CombatSimulationResourceProjection(
             result=CombatSimulationResourceResult(
