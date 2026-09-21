@@ -71,3 +71,28 @@ def test_materializer_rejects_unknown_bar_instead_of_guessing():
         assert "unsupported active bar" in str(exc)
     else:
         raise AssertionError("expected unsupported active bar to fail closed")
+
+def test_rematerialization_preserves_later_weapon_axis_fields():
+    build = PlayerBuild(Name="Extreme")
+    build.FrontBarWeapon.Set = "Old Set"
+    build.FrontBarWeapon.WeaponType = "Restoration Staff"
+    build.FrontBarWeapon.Trait = "Precise"
+    build.FrontBarWeapon.Enchant = "Flame Damage"
+    build.FrontBarWeapon.Quality = "Gold"
+    build.FrontBarWeapon.EnchantTier = "Truly Superb"
+    build.FrontBarWeapon.Level = "CP160"
+
+    result = ExtremeNamedGearBuildMaterializerService.materialize(
+        build,
+        _witness(),
+        active_bar="front",
+    )
+
+    assert result.FrontBarWeapon.Set == "Arena Staff"
+    assert result.FrontBarWeapon.WeaponType == "Inferno Staff"
+    assert result.FrontBarWeapon.Trait == "Precise"
+    assert result.FrontBarWeapon.Enchant == "Flame Damage"
+    assert result.FrontBarWeapon.Quality == "Gold"
+    assert result.FrontBarWeapon.EnchantTier == "Truly Superb"
+    assert result.FrontBarWeapon.Level == "CP160"
+
