@@ -508,3 +508,92 @@ def test_dynamic_periodic_successive_hit_multiplier_applies_after_runtime_recalc
     assert evidence.unresolved == ()
     assert evidence.damage_value == 400.0
     assert runtime.calls == [(1.0, None), (2.0, None)]
+
+
+
+def test_occurrence_projection_preserves_direct_and_periodic_timestamps() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="mixed_skill",
+        bar="front",
+    )
+    skill_damage = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(),
+        calculator=_Calculator(
+            (
+                SimpleNamespace(coefficient_number=1, final_value=500.0),
+                SimpleNamespace(coefficient_number=2, final_value=100.0),
+            )
+        ),
+        component_repository=_Components(
+            (
+                _classification(number=1, is_dot=False),
+                _classification(number=2, is_dot=True),
+            )
+        ),
+        periodic_runtime_projection_service=_PeriodicProjection(
+            _entry(action, number=2, ticks=(1.0, 2.0))
+        ),
+        periodic_runtime_semantics=_semantics("mixed_skill", 2),
+    )
+
+    evidence = skill_damage.evaluate_action_occurrences(
+        candidate=_candidate(action),
+        action=action,
+    )
+
+    assert evidence.unresolved == ()
+    assert [
+        (
+            item.time_seconds,
+            item.damage_value,
+            item.coefficient_number,
+            item.occurrence_index,
+        )
+        for item in evidence.occurrences
+    ] == [
+        (0.0, 500.0, 1, None),
+        (1.0, 100.0, 2, 0),
+        (2.0, 100.0, 2, 1),
+    ]
+
+
+def test_occurrence_projection_preserves_successive_periodic_scaling() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="ramping_periodic_skill",
+        bar="front",
+    )
+    skill_damage = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(),
+        calculator=_Calculator(
+            (SimpleNamespace(coefficient_number=1, final_value=100.0),)
+        ),
+        component_repository=_Components(
+            (_classification(number=1, is_dot=True),)
+        ),
+        periodic_runtime_projection_service=_PeriodicProjection(
+            _entry(action, number=1, ticks=(2.0, 4.0, 6.0))
+        ),
+        periodic_runtime_semantics=_semantics(
+            "ramping_periodic_skill",
+            1,
+            successive_hit_multiplier=1.15,
+        ),
+    )
+
+    evidence = skill_damage.evaluate_action_occurrences(
+        candidate=_candidate(action),
+        action=action,
+    )
+
+    assert evidence.unresolved == ()
+    assert [item.damage_value for item in evidence.occurrences] == pytest.approx(
+        [100.0, 115.0, 132.25]
+    )
