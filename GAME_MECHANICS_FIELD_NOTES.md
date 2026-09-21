@@ -1001,3 +1001,12 @@ The simulator now carries canonical periodic damage as individual occurrences ra
 **Layman's version:** the first hit happens when you press the skill, and the DoT keeps hitting later. The boss Health bar now changes on those later hits instead of pretending the entire DoT happened up front.
 
 **For BFF:** execute thresholds, death timing, and later actions can now react to the Health produced by earlier periodic ticks. Missing runtime context or unreviewed periodic semantics remain unresolved instead of being guessed.
+
+
+## 2026-09-20 — Same-timestamp DoT ticks and actions need an explicit ordering rule
+
+A periodic tick and a scheduled skill can share the exact same clock timestamp. If either result depends on target Health, the order can change execute eligibility, overkill, or which event actually kills the target. No reviewed repository rule currently proves a universal cross-source ordering for that collision.
+
+**Layman's version:** if a DoT tick and your execute both happen at 10.0 seconds, we cannot assume which one lands first just because one happened to be earlier in a Python list.
+
+**For BFF:** Combat Simulation now fails closed at that exact collision unless a reviewed ordering authority is supplied later. Damage that occurred strictly before the ambiguous timestamp remains valid; damage at and after the unresolved boundary is not treated as proven.
