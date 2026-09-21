@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Callable, Generic, TypeVar
 
 from minmax.character_progression import CharacterProgression
-from minmax.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
+from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
 from services.extreme_dual_bar_gear_state_service import ExtremeDualBarGearState
