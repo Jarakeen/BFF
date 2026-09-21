@@ -61,3 +61,20 @@ def test_replay_verifier_requires_combat_simulation_result() -> None:
         assert "CombatSimulationResult" in str(exc)
     else:
         raise AssertionError("Expected invalid replay result to fail closed")
+
+
+
+def test_replay_verifier_reports_damage_unresolved_drift() -> None:
+    results = iter(
+        (
+            _result(),
+            _result(damage_unresolved=("damage drift",)),
+        )
+    )
+
+    verification = CombatSimulationDeterministicReplayService().verify(
+        lambda: next(results)
+    )
+
+    assert verification.deterministic is False
+    assert verification.differing_signature_fields == ("damage_unresolved",)
