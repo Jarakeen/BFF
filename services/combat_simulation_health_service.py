@@ -112,6 +112,12 @@ class CombatSimulationHealthService:
                         "current and maximum Health are required"
                     )
                     continue
+                if int(current) == 0:
+                    unresolved.append(
+                        f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: "
+                        "recipient is dead; additional damage is not applied"
+                    )
+                    continue
                 amount = payload.get("amount")
                 if amount is None:
                     unresolved.append(
