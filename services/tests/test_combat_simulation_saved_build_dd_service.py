@@ -20,7 +20,11 @@ from services.combat_simulation_saved_build_dd_service import (
 )
 from services.combat_simulation_service import CombatSimulationService
 from services.combat_simulation_skill_effect_service import CombatSimulationEffectProjection
-from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
+from services.rotation_candidate_dd_role_output_service import (
+    RotationActionDamageEvidence,
+    RotationActionDamageOccurrence,
+    RotationActionDamageOccurrenceEvidence,
+)
 
 
 class _NoopResourceService:
@@ -287,3 +291,95 @@ def test_saved_build_dd_orchestrator_feeds_simulated_health_into_later_damage() 
         event.time_seconds > 2.0
         for event in result.events
     )
+
+
+
+class _PeriodicOccurrenceProvider:
+    def evaluate_action_occurrences(self, *, candidate, action):
+        del candidate
+        return RotationActionDamageOccurrenceEvidence(
+            action_time_seconds=action.time_seconds,
+            action_sequence=action.sequence,
+            occurrences=(
+                RotationActionDamageOccurrence(
+                    time_seconds=action.time_seconds,
+                    sequence=action.sequence,
+                    damage_value=1000.0,
+                    source_name=str(action.name),
+                    coefficient_number=1,
+                ),
+                RotationActionDamageOccurrence(
+                    time_seconds=action.time_seconds + 1.0,
+                    sequence=0,
+                    damage_value=2000.0,
+                    source_name=str(action.name),
+                    coefficient_number=2,
+                    occurrence_index=0,
+                ),
+            ),
+        )
+
+
+class _PeriodicOccurrenceProviderService:
+    def resolve(self, **_kwargs):
+        return CombatSimulationSavedBuildDDProviderResolution(
+            provider=_PeriodicOccurrenceProvider(),
+            unresolved=(),
+        )
+
+
+def test_saved_build_dd_orchestrator_replays_periodic_occurrence_timestamps() -> None:
+    service = CombatSimulationSavedBuildDDService(
+        provider_service=_PeriodicOccurrenceProviderService(),
+        simulation_service=_simulation_service(),
+    )
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=4.0,
+        actions=(
+            RotationAction(
+                time_seconds=0.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Mixed Skill",
+                bar="front",
+            ),
+        ),
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = service.simulate(
+        build_snapshot=_snapshot(),
+        plan=plan,
+        target_state=state,
+        damage_target_identity="Boss",
+        target_resistance=18200.0,
+    )
+
+    outgoing = [
+        (event.time_seconds, event.source, event.payload_dict()["amount"])
+        for event in result.events
+        if event.event_type == "outgoing_damage"
+    ]
+    health = [
+        (event.time_seconds, event.payload_dict()["after"])
+        for event in result.events
+        if event.event_type == "health_change"
+        and event.payload_dict().get("recipient") == "Boss"
+    ]
+
+    assert outgoing == [
+        (0.0, "Mixed Skill", 1000.0),
+        (1.0, "Mixed Skill", 2000.0),
+    ]
+    assert health == [(0.0, 9000), (1.0, 7000)]
