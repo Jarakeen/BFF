@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -20,6 +21,7 @@ from engine.config import get_app_root
 
 
 LATEST_RELEASE_API = "https://api.github.com/repos/Jarakeen/BFF/releases/latest"
+UPDATE_ACCESS_FILE = "update_access.json"
 UPDATE_ASSET_NAMES = ("FoundryDock-update.zip", "BFF-update.zip")
 
 
@@ -55,20 +57,45 @@ class ApplicationUpdateService:
 
     def __init__(self, current_version: str = APP_VERSION) -> None:
         self.current_version = str(current_version or APP_VERSION)
+        self.update_base_url, self.update_access_key = self._load_update_access()
         local_app_data = os.environ.get("LOCALAPPDATA")
         base = Path(local_app_data) if local_app_data else Path.home() / ".foundrydock"
         self.update_root = base / "FoundryDock" / "updates"
 
     @staticmethod
-    def _headers() -> dict[str, str]:
-        return {
-            "Accept": "application/vnd.github+json",
+    def _load_update_access() -> tuple[str, str]:
+        base_url = str(os.environ.get("FOUNDRYDOCK_UPDATE_BASE_URL") or "").strip().rstrip("/")
+        access_key = str(os.environ.get("FOUNDRYDOCK_UPDATE_ACCESS_KEY") or "").strip()
+        config_path = Path(get_app_root()) / UPDATE_ACCESS_FILE
+        if config_path.is_file():
+            try:
+                payload = json.loads(config_path.read_text(encoding="utf-8"))
+            except (OSError, ValueError, TypeError):
+                payload = {}
+            base_url = str(payload.get("base_url") or base_url).strip().rstrip("/")
+            access_key = str(payload.get("access_key") or access_key).strip()
+        return base_url, access_key
+
+    def _headers(self, *, binary: bool = False) -> dict[str, str]:
+        headers = {
+            "Accept": "application/octet-stream" if binary else "application/vnd.github+json",
             "User-Agent": "FoundryDock-Updater",
-            "X-GitHub-Api-Version": "2022-11-28",
         }
+        if self.update_base_url:
+            if self.update_access_key:
+                headers["X-FoundryDock-Update-Key"] = self.update_access_key
+        else:
+            headers["X-GitHub-Api-Version"] = "2022-11-28"
+        return headers
+
+    @property
+    def release_url(self) -> str:
+        if self.update_base_url:
+            return f"{self.update_base_url}/v1/releases/latest"
+        return LATEST_RELEASE_API
 
     def check(self) -> ApplicationUpdateInfo | None:
-        response = requests.get(LATEST_RELEASE_API, headers=self._headers(), timeout=12)
+        response = requests.get(self.release_url, headers=self._headers(), timeout=12)
         if response.status_code == 404:
             return None
         response.raise_for_status()
@@ -97,7 +124,7 @@ class ApplicationUpdateService:
             name=str(payload.get("name") or tag or version),
             notes=str(payload.get("body") or ""),
             asset_name=str((selected or {}).get("name") or ""),
-            asset_url=str((selected or {}).get("browser_download_url") or ""),
+            asset_url=str((selected or {}).get("download_url") or (selected or {}).get("browser_download_url") or ""),
             published_at=str(payload.get("published_at") or ""),
         )
 
@@ -111,7 +138,7 @@ class ApplicationUpdateService:
 
         with requests.get(
             info.asset_url,
-            headers={"User-Agent": "FoundryDock-Updater"},
+            headers=self._headers(binary=True),
             stream=True,
             timeout=30,
         ) as response:
