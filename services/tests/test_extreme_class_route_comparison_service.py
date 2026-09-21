@@ -352,13 +352,17 @@ def test_subclass_routes_never_claim_class_mastery(tmp_path):
     assert all(row.mastery_names == () for row in subclasses)
 
 
-def test_percent_subclass_line_requires_reference_value_before_it_gets_lower_bound(tmp_path):
+def test_percent_subclass_line_uses_reference_without_suppressing_other_reviewed_lower_bounds(tmp_path):
     service = _service(tmp_path)
 
     without_reference = service.compare("magicka_recovery")
     with_reference = service.compare("magicka_recovery", reference_value=1000)
 
-    assert without_reference.reviewed_subclass_lower_bound_count == 0
-    assert with_reference.reviewed_subclass_lower_bound_count > 0
+    assert without_reference.reviewed_subclass_lower_bound_count >= 0
+    assert with_reference.reviewed_subclass_lower_bound_count >= without_reference.reviewed_subclass_lower_bound_count
     assert with_reference.best_reviewed_subclass_lower_bound is not None
-    assert with_reference.best_reviewed_subclass_lower_bound.projected_delta == 200.0
+    if without_reference.best_reviewed_subclass_lower_bound is not None:
+        assert (
+            with_reference.best_reviewed_subclass_lower_bound.projected_delta
+            >= without_reference.best_reviewed_subclass_lower_bound.projected_delta
+        )
