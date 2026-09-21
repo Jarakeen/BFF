@@ -9,6 +9,7 @@ damage, healing, sustain, and proc semantics.
 
 from dataclasses import dataclass
 from enum import IntEnum
+from math import isfinite
 from typing import Any
 
 from minmax.runtime_effect_window import RuntimeEffectActiveWindow
@@ -90,19 +91,22 @@ class CombatSimulationIncomingDamage:
     damage_type: str | None = None
 
     def __post_init__(self) -> None:
-        if self.time_seconds < 0:
-            raise ValueError("incoming damage time cannot be negative")
+        time_seconds = float(self.time_seconds)
+        amount = float(self.amount)
+        if not isfinite(time_seconds) or time_seconds < 0:
+            raise ValueError("incoming damage time must be finite and non-negative")
         if self.sequence < 0:
             raise ValueError("incoming damage sequence cannot be negative")
         if not str(self.source or "").strip():
             raise ValueError("incoming damage source is required")
         if not str(self.recipient or "").strip():
             raise ValueError("incoming damage recipient is required")
-        if float(self.amount) < 0:
-            raise ValueError("incoming damage amount cannot be negative")
+        if not isfinite(amount) or amount < 0:
+            raise ValueError("incoming damage amount must be finite and non-negative")
+        object.__setattr__(self, "time_seconds", time_seconds)
         object.__setattr__(self, "source", str(self.source).strip())
         object.__setattr__(self, "recipient", str(self.recipient).strip())
-        object.__setattr__(self, "amount", float(self.amount))
+        object.__setattr__(self, "amount", amount)
         if self.damage_type is not None:
             object.__setattr__(self, "damage_type", str(self.damage_type).strip() or None)
 
@@ -124,19 +128,22 @@ class CombatSimulationOutgoingDamage:
     damage_type: str | None = None
 
     def __post_init__(self) -> None:
-        if self.time_seconds < 0:
-            raise ValueError("outgoing damage time cannot be negative")
+        time_seconds = float(self.time_seconds)
+        amount = float(self.amount)
+        if not isfinite(time_seconds) or time_seconds < 0:
+            raise ValueError("outgoing damage time must be finite and non-negative")
         if self.sequence < 0:
             raise ValueError("outgoing damage sequence cannot be negative")
         if not str(self.source or "").strip():
             raise ValueError("outgoing damage source is required")
         if not str(self.recipient or "").strip():
             raise ValueError("outgoing damage recipient is required")
-        if float(self.amount) < 0:
-            raise ValueError("outgoing damage amount cannot be negative")
+        if not isfinite(amount) or amount < 0:
+            raise ValueError("outgoing damage amount must be finite and non-negative")
+        object.__setattr__(self, "time_seconds", time_seconds)
         object.__setattr__(self, "source", str(self.source).strip())
         object.__setattr__(self, "recipient", str(self.recipient).strip())
-        object.__setattr__(self, "amount", float(self.amount))
+        object.__setattr__(self, "amount", amount)
         if self.damage_type is not None:
             object.__setattr__(self, "damage_type", str(self.damage_type).strip() or None)
 
