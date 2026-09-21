@@ -44,6 +44,7 @@ def _install_canonical_sidebar_routes() -> None:
                 ("Coverage", "console:7"),
                 ("Comp Builder", "comp_builder"),
                 ("Optimizer Adviser", "console:6"),
+                ("Finch Collaboration", "finch_collaboration"),
             ],
         },
         {
@@ -436,6 +437,7 @@ def register_raid_engine_pages(window) -> None:
     from ui.city_raid_assignments_page import CityRaidAssignmentsPage
     from ui.city_raid_plan_workspace_page import CityRaidPlanWorkspacePage
     from ui.city_raid_readiness_page import CityRaidReadinessPage
+    from ui.finch_collaboration_page import FinchCollaborationPage
     from ui.city_raid_roster_workspace_page import CityRaidRosterWorkspacePage
     from ui.raid_engine_dashboard_page import RaidEngineDashboardPage
     from ui.roster_top_back_control_support import install_roster_top_back_control
@@ -455,6 +457,10 @@ def register_raid_engine_pages(window) -> None:
     readiness.pageRequested.connect(window.show_page)
     readiness.buildRequested.connect(lambda build_id: _open_exact_build(window, build_id))
     _register_page(window, "readiness", readiness)
+
+    finch_collaboration = FinchCollaborationPage()
+    finch_collaboration.pageRequested.connect(window.show_page)
+    _register_page(window, "finch_collaboration", finch_collaboration)
 
     live_raid = CityLiveRaidPage()
     live_raid.pageRequested.connect(window.show_page)
