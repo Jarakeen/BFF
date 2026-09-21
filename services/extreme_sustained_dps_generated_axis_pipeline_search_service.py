@@ -38,6 +38,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineSearchService:
         initial_bar: str = "front",
         root_key: str = "generated-root",
         root_bound_inputs=None,
+        branch_bound_inputs=None,
     ) -> ExtremeSustainedDPSGeneratedSearchResult:
         evaluate_leaf = self.leaf_evaluation.evaluator(
             runtime_snapshot=runtime_snapshot,
@@ -53,6 +54,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineSearchService:
             required_duration_seconds=float(required_duration_seconds),
             root_key=root_key,
             root_bound_inputs=root_bound_inputs,
+            branch_bound_inputs=branch_bound_inputs,
         )
 
 
