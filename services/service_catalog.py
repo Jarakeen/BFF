@@ -944,6 +944,30 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_runtime_state_axis_adapter",
+        domain="extreme",
+        purpose=(
+            "Append one caller-proven local runtime-state denominator as the terminal indexed axis of generated sustained-DPS search."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_runtime_state_axis_adapter_service",
+        inputs=("CompleteGeneratedPipelineState", "ProvenLocalRuntimeStateFrontier"),
+        outputs=("IndexedFrontierAxis", "RuntimeStateAxisCoverageProof"),
+        dependencies=(
+            "extreme.sustained_dps.runtime_state_frontier",
+            "extreme.sustained_dps.generated_frontier_wiring",
+            "extreme.sustained_dps.axis_dominance_composition",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_runtime_state_axis_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Rejects unproven or unresolved runtime families. Each selected runtime snapshot becomes exact leaf input, "
+            "while frontier omitted scope is preserved on the canonical runtime_state coverage proof."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_state_frontier",
         domain="extreme",
         purpose=(
@@ -1371,12 +1395,13 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         domain="extreme",
         purpose=(
             "Run one composed generated-axis root through lazy proof-safe search under "
-            "one exact runtime snapshot, target scenario, and comparison horizon."
+            "one target scenario and comparison horizon, optionally enumerating a proven local runtime-state family."
         ),
         implementation_path="services.extreme_sustained_dps_generated_axis_pipeline_search_service",
         inputs=(
             "ExtremeSustainedDPSGeneratedAxisPipelineState",
             "AuthoritativeRuntimeSnapshot",
+            "OptionalProvenLocalRuntimeStateFrontier",
             "ExplicitTargetScenario",
         ),
         outputs=("ExtremeSustainedDPSGeneratedSearchResult",),
@@ -1384,6 +1409,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.generated_axis_pipeline",
             "extreme.sustained_dps.generated_axis_pipeline_leaf_evaluation",
             "extreme.sustained_dps.generated_frontier_wiring",
+            "extreme.sustained_dps.generated_runtime_state_axis_adapter",
             "extreme.sustained_dps.generated_branch_and_bound",
         ),
         responsibilities=(
@@ -1394,9 +1420,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "All exact leaves share the caller's duration, runtime snapshot, target Health, "
-            "resistance, identity, and initial bar. Root and axis-local proof-safe bound "
-            "providers remain optional; missing bounds force refinement rather than guessing."
+            "All exact leaves share the caller's duration, target Health, resistance, identity, and initial bar. "
+            "Without a local runtime frontier they also share the fallback runtime snapshot; with one, the proven runtime family is a final indexed axis. "
+            "Root, node, and axis-local proof-safe bound providers remain optional; missing bounds force refinement rather than guessing."
         ),
     ),
     ServiceDescriptor(
@@ -1427,8 +1453,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Uses the final downstream runtime-policy plan, not an earlier anchored plan. "
-            "Missing build, progression, physical gear, plan, or incomplete pipeline state "
-            "becomes incomplete exact-leaf evidence without invoking simulation."
+            "When a generated local runtime-state choice is present, that choice's snapshot overrides the fallback search snapshot and its evidence is retained. "
+            "Missing build, progression, physical gear, plan, or incomplete pipeline state becomes incomplete exact-leaf evidence without invoking simulation."
         ),
     ),
     ServiceDescriptor(
