@@ -92,6 +92,7 @@ def test_cross_axis_context_binds_equipment_and_explicit_ownership_separately() 
     assert result.equipped_armor_lines == ("Light Armor", "Medium Armor")
     assert result.explicit_owned_skill_lines == ("Fighters Guild",)
     assert result.front_skill_context.weapon_skill_lines == ("Destruction Staff",)
+    assert result.front_skill_context.class_skill_lines == result.class_skill_lines
     assert result.front_skill_context.owned_skill_lines == ("Fighters Guild",)
     assert result.one_bar_only is False
 
