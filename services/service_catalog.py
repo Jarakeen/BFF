@@ -1016,6 +1016,36 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_rotation_axis_adapter",
+        domain="extreme",
+        purpose=(
+            "Adapt generated seed/cadence rotation plans and anchored Ultimate/potion "
+            "policies into ordered indexed generated-search axes."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_rotation_axis_adapter_service",
+        inputs=(
+            "ExtremeSustainedDPSAssembledCandidate",
+            "RotationPolicyRuntimeEvidence",
+        ),
+        outputs=("IndexedFrontierAxes", "ExtremeSustainedDPSGeneratedRotationAxisState"),
+        dependencies=(
+            "extreme.sustained_dps.rotation_plan_frontier",
+            "extreme.sustained_dps.rotation_policy_frontier",
+            "extreme.sustained_dps.generated_frontier_wiring",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_rotation_axis_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The adapter preserves plan-before-policy dependency and fails closed on either "
+            "unproven denominator. It forwards explicit Ultimate runtime evidence but does not "
+            "claim closure over continuous potion offsets, delayed Ultimates, execute policy, "
+            "Heavy Attacks, or encounter obligations."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_late_axis_adapter",
         domain="extreme",
         purpose=(
