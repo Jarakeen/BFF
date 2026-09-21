@@ -7,7 +7,7 @@ set identities and weapon types proven by the named realization witness. Traits,
 quality, glyphs, armor weights, and inactive-bar gear remain separate Extreme axes.
 """
 
-from models.build_model import GearSlot, PlayerBuild
+from models.build_model import PlayerBuild
 from services.extreme_named_gear_set_realization_service import ExtremeNamedGearSetRealization
 
 
@@ -39,12 +39,24 @@ class ExtremeNamedGearBuildMaterializerService:
         normalized_bar = str(active_bar or "front").strip().casefold()
         if normalized_bar not in {"front", "back"}:
             raise ValueError(f"unsupported active bar for Extreme gear materialization: {active_bar!r}")
-        if normalized_bar == "front":
-            candidate.FrontBarWeapon = GearSlot()
-            candidate.FrontBarOffHand = GearSlot()
-        else:
-            candidate.BackBarWeapon = GearSlot()
-            candidate.BackBarOffHand = GearSlot()
+        selected_main = (
+            candidate.FrontBarWeapon
+            if normalized_bar == "front"
+            else candidate.BackBarWeapon
+        )
+        selected_offhand = (
+            candidate.FrontBarOffHand
+            if normalized_bar == "front"
+            else candidate.BackBarOffHand
+        )
+        # Set identity and weapon type belong to this materializer. Preserve
+        # trait, enchant, quality, tier, level, and weight because later
+        # generated axes own those fields and runtime rematerialization must
+        # not erase their selections.
+        for weapon_slot in (selected_main, selected_offhand):
+            weapon_slot.Set = ""
+            weapon_slot.Set2 = ""
+            weapon_slot.WeaponType = ""
 
         for assignment in realization.assignments:
             set_name = str(assignment.set_name or "").strip()
@@ -67,16 +79,9 @@ class ExtremeNamedGearBuildMaterializerService:
             if slot not in {"Main Hand", "Off Hand"}:
                 raise ValueError(f"unsupported Extreme named gear witness slot: {slot!r}")
 
-            weapon = GearSlot(Set=set_name, WeaponType=str(assignment.weapon_type or "").strip())
-            if slot == "Main Hand":
-                if normalized_bar == "front":
-                    candidate.FrontBarWeapon = weapon
-                else:
-                    candidate.BackBarWeapon = weapon
-            else:
-                if normalized_bar == "front":
-                    candidate.FrontBarOffHand = weapon
-                else:
-                    candidate.BackBarOffHand = weapon
+            weapon = selected_main if slot == "Main Hand" else selected_offhand
+            weapon.Set = set_name
+            weapon.Set2 = ""
+            weapon.WeaponType = str(assignment.weapon_type or "").strip()
 
         return candidate
