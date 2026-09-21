@@ -105,3 +105,28 @@ def test_sustained_dps_uses_generic_combat_target_route() -> None:
     assert 'if route_kind == "combat_target":' in source
     assert '"Target Health:"' in source
     assert '"Target resistance:"' in source
+
+
+def test_sustained_dps_exposes_separate_saved_library_search_action() -> None:
+    source = Path(extreme_specialized_optimization_page.__file__).read_text(encoding="utf-8")
+
+    assert "ExtremeSustainedDPSSearchService" in source
+    assert 'QPushButton("Search Saved DD Builds")' in source
+    assert "self.header.add_context_widget(self.saved_dps_search_button)" in source
+    assert 'objective_key == "sustained_dps" and not scratch' in source
+    assert "def _run_saved_sustained_dps_search(self) -> None:" in source
+    assert "self.sustained_dps_search_service.search(" in source
+    assert "target_health=int(target_health)" in source
+    assert "target_resistance=float(target_resistance)" in source
+
+
+def test_saved_sustained_dps_search_renders_ranked_candidates_and_exclusions() -> None:
+    source = Path(extreme_specialized_optimization_page.__file__).read_text(encoding="utf-8")
+
+    assert '["CANDIDATE", "MODELED DPS", "HORIZON", "STATUS"]' in source
+    assert "result.comparison.ranked_candidates" in source
+    assert "result.discovery.exclusions" in source
+    assert 'getattr(row, "blocking", True)' in source
+    assert "canonical saved user-state only, not a theoretical ESO-wide optimum" in source
+    assert '"BLOCKING EXCLUSIONS\\n"' in source
+    assert '"INFORMATIONAL EXCLUSIONS\\n"' in source
