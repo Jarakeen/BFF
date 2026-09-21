@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 import sys
+import traceback
 from pathlib import Path
 
 from PySide6.QtGui import QIcon
@@ -348,5 +349,23 @@ def main() -> int:
     return app.exec()
 
 
+def _startup_crash_log_path() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent / "FoundryDock-crash.log"
+    return Path(__file__).resolve().parent / "FoundryDock-crash.log"
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except SystemExit:
+        raise
+    except BaseException:
+        try:
+            _startup_crash_log_path().write_text(
+                traceback.format_exc(),
+                encoding="utf-8",
+            )
+        except OSError:
+            pass
+        raise
