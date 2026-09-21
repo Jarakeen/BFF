@@ -185,3 +185,26 @@ def test_compare_requires_at_least_two_candidates() -> None:
             target_health=21_200_000,
             target_resistance=18200.0,
         )
+
+
+
+def test_compare_treats_float_noise_in_shared_horizon_as_equivalent() -> None:
+    service = ExtremeSustainedDPSComparisonService(
+        "data/eso.db",
+        evaluator=_Evaluator(
+            (
+                _result(120000.0, duration=60.0),
+                _result(130000.0, duration=60.0 + 5e-10),
+            )
+        ),
+    )
+
+    result = service.compare(
+        (_build("A"), _build("B")),
+        target_health=21_200_000,
+        target_resistance=18200.0,
+    )
+
+    assert result.comparison_complete is True
+    assert result.leader is not None
+    assert result.leader.label == "Damage Tester — B"
