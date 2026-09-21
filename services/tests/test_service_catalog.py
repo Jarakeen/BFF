@@ -1012,3 +1012,20 @@ def test_sustained_dps_finite_axis_canonical_action_evaluator_delegates_damage_a
     )
     assert "Owns adaptation only, not ESO damage math" in service.notes
     assert "Unresolved runtime mechanics remain fail-closed" in service.notes
+
+
+def test_sustained_dps_finite_family_dominance_search_is_composition_only() -> None:
+    service = canonical_service_for("extreme_sustained_dps_finite_family_dominance_search")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.finite_family_dominance_search"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.finite_axis_frontier_adapter",
+        "extreme.sustained_dps.finite_axis_canonical_action_evaluator",
+        "extreme.sustained_dps.finite_axis_action_dominance",
+    )
+    assert "Composition only" in service.notes
+    assert "damage remains owned by the canonical DD provider stack" in service.notes
