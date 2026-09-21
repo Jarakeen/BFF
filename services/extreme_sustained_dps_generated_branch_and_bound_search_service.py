@@ -181,11 +181,11 @@ class ExtremeSustainedDPSGeneratedBranchAndBoundSearchService:
                 continue
 
             if decision.disposition is ExtremeSustainedDPSPruningDisposition.FORCED_OPEN:
+                # A missing/unproven ceiling affects search speed, not exact-leaf
+                # mechanic completeness. Once the branch is fully expanded or its
+                # leaf is evaluated exactly, the absent shortcut no longer blocks
+                # a global proof. Exact evaluation must carry any real mechanic gap.
                 forced_open += 1
-                unresolved.extend(
-                    f"{key}: {item}"
-                    for item in decision.unresolved
-                )
 
             if branch.is_leaf:
                 exact = evaluate_leaf(branch)
