@@ -1161,3 +1161,34 @@ def test_combat_simulation_result_rejects_resource_summary_shortfall_mismatch() 
         assert "summary shortfall does not match event evidence" in str(exc)
     else:
         raise AssertionError("Expected resource summary shortfall mismatch to fail closed")
+
+
+def test_combat_simulation_result_rejects_resource_change_without_events() -> None:
+    summary = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=30000,
+        ending_amount=29000,
+    )
+
+    try:
+        _result(resources=(summary,))
+    except ValueError as exc:
+        assert "cannot change without event evidence" in str(exc)
+    else:
+        raise AssertionError("Expected unexplained resource summary change to fail closed")
+
+
+def test_combat_simulation_result_rejects_shortfall_without_resource_events() -> None:
+    summary = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=30000,
+        ending_amount=30000,
+        total_shortfall=500,
+    )
+
+    try:
+        _result(resources=(summary,))
+    except ValueError as exc:
+        assert "cannot record shortfall without event evidence" in str(exc)
+    else:
+        raise AssertionError("Expected unexplained resource shortfall to fail closed")
