@@ -1028,3 +1028,12 @@ Combat Simulation distinguishes an event that *causes* Health change from the de
 **Layman's version:** the hit has to happen before the Health bar changes, and the Health bar has to reach zero before the death transition exists. Alphabetical sorting is not a combat mechanic.
 
 **For BFF:** raw direct damage/healing now precedes derived Health changes through explicit event priority, death remains later, queue ordering never compares payload contents, and already-dead recipients do not receive synthetic 0-to-0 damage transitions. Exact-time sequence snapshots now apply the same boundary to bar, resources, Health, and active effect windows.
+
+
+## 2026-09-20 — Simultaneous components from one hit should not invent component order
+
+One skill can legitimately produce multiple direct damage components at the same timestamp and action sequence. Their combined Health effect is well-defined, but applying the components one at a time can make overkill depend on arbitrary component order.
+
+**Layman's version:** if one skill hits for 2,000 magic plus 3,000 flame at the same instant, the boss took 5,000 from that skill. We should not let whichever component happens to be listed first decide how much overkill gets reported.
+
+**For BFF:** raw component events stay separate for audit/source detail, while Health projection coalesces same-source same-kind components at one coordinate before applying Health, overkill, and death. Different sources or damage/healing collisions still require explicit ordering evidence.
