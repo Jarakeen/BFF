@@ -1193,3 +1193,11 @@ The generic scheduled DD action projector still marks Light and Heavy Attacks un
 ### 2026-09-21 — A Heavy Attack action is not proof of a fully charged Heavy Attack
 
 FoundryDock only promotes a generated Heavy Attack to full-charge evidence when the plan carries an exact reviewed **1.8-second** reservation for that action and bar. Merely changing an action kind to `HEAVY_ATTACK` is insufficient. The channel must fit the plan timeline, avoid conflicting actions, and produce the canonical completion evidence consumed by Heavy Attack damage/restoration services.
+
+### 2026-09-21 — A proven maximum does not require a unique winning build
+
+If every remaining generated branch is either evaluated exactly or pruned by a proven-safe ceiling, FoundryDock can prove the maximum sustained DPS even when two or more candidates tie at that value. “Maximum proven” and “unique leader proven” are therefore separate search facts. Equal-to-incumbent upper bounds stay open until exact evaluation so a tied candidate can never be pruned away merely because another candidate reached the same score first.
+
+### 2026-09-21 — Missing upper bounds make search slower, not permission to guess
+
+Branch-and-bound remains correct when a branch has no pruning-safe optimistic ceiling: that branch is simply **forced open** and must be refined or exactly evaluated. FoundryDock never substitutes a heuristic estimate for a proof-safe bound just to improve search speed. Better bounds are an optimization feature; correctness does not depend on pretending they already exist.
