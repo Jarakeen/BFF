@@ -1089,3 +1089,7 @@ Combat Simulation reuses the established resource-timeline rule that action cost
 ### 2026-09-21 — Sustained DPS comparisons need the same execution horizon
 
 A modeled DPS number is not automatically comparable just because both values are expressed as damage per second. Saved rotations can cover different execution horizons, and ESO damage profiles can be heavily front-loaded, execute-weighted, or DoT-weighted. FoundryDock therefore withholds a sustained-DPS leader when candidate execution horizons differ, even when every individual simulation is mechanically complete. Non-DD saved builds are also informational exclusions only; they do not invalidate the DD search denominator.
+
+### 2026-09-21 — Sixty-four attribute points create 2,145 legal splits before the build even starts
+
+ESO's 64 attribute points can be distributed across Health, Magicka, and Stamina in **2,145** non-negative integer combinations. FoundryDock now treats every one of those splits as part of the structural Extreme denominator before race, legal class route, active bar, gear, skills, CP, or rotation are considered. In plain English: brute force gets ridiculous very early, which is why later generated sustained-DPS search needs pruning instead of one heroic nested loop.
