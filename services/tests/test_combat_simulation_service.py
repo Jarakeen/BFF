@@ -396,3 +396,64 @@ def test_kernel_orders_damage_before_health_change_before_death() -> None:
         35,
         80,
     ]
+
+
+
+def test_kernel_preserves_raw_components_but_coalesces_health_transition() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = _service().simulate(
+        build_snapshot=_snapshot(),
+        plan=_healer_plan(),
+        target_state=state,
+        outgoing_damage=(
+            CombatSimulationOutgoingDamage(
+                time_seconds=3.0,
+                sequence=0,
+                source="Mixed Skill",
+                recipient="Boss",
+                amount=2000.0,
+                damage_type="magic",
+            ),
+            CombatSimulationOutgoingDamage(
+                time_seconds=3.0,
+                sequence=0,
+                source="Mixed Skill",
+                recipient="Boss",
+                amount=3000.0,
+                damage_type="flame",
+            ),
+        ),
+    )
+
+    raw = [
+        event
+        for event in result.events
+        if event.event_type == "outgoing_damage"
+        and event.source == "Mixed Skill"
+    ]
+    health = [
+        event
+        for event in result.events
+        if event.event_type == "health_change"
+        and event.source == "Mixed Skill"
+    ]
+
+    assert [event.payload_dict()["amount"] for event in raw] == [
+        2000.0,
+        3000.0,
+    ]
+    assert len(health) == 1
+    payload = health[0].payload_dict()
+    assert payload["attempted_damage"] == 5000.0
+    assert payload["before"] == 10000
+    assert payload["after"] == 5000
