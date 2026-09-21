@@ -36,3 +36,14 @@ def test_review_labels_note_presence_without_requiring_it() -> None:
 
     assert 'label += " · NOTE"' in source
     assert '"Saved note" if has_note else "No saved note"' in source
+
+
+def test_review_shows_per_encounter_attempt_summary_table() -> None:
+    source = _source("ui/raid_review_page.py")
+
+    assert 'FoundryCard("Encounter Summary", "compass")' in source
+    assert '["TRIAL", "ENCOUNTER", "PULLS", "TIMED", "AVERAGE", "BEST", "NOTES"]' in source
+    assert "summarize_encounter_attempts(attempts, notes)" in source
+    assert "summary.average_duration_seconds" in source
+    assert "summary.best_duration_seconds" in source
+    assert "summary.note_count" in source
