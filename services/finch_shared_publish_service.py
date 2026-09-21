@@ -20,11 +20,22 @@ from services.settings_service import SettingsService
 
 
 _SHARED_TEAM_SCHEMA_VERSION = 1
-_SHARED_RAID_PLAN_SCHEMA_VERSION = 3
+_SHARED_RAID_PLAN_SCHEMA_VERSION = 4
 
 
 def _clean(value: object) -> str:
     return " ".join(str(value or "").strip().split())
+
+
+def _house_stack_number(seat_id: object) -> int | None:
+    seat = _clean(seat_id).casefold().replace("_", "-").replace(" ", "-")
+    if not seat.startswith("dd-"):
+        return None
+    try:
+        number = int(seat.split("-", 1)[1])
+    except (TypeError, ValueError):
+        return None
+    return number if 1 <= number <= 8 else None
 
 
 def _shared_role(value: object) -> str:
@@ -121,6 +132,7 @@ def shared_raid_plan_payload(plan: RaidPlan) -> dict[str, object]:
         "members": [
             {
                 "seat_id": member.seat_id,
+                "house_stack_number": _house_stack_number(member.seat_id),
                 "gamertag": member.gamertag,
                 "character_name": member.character_name or "",
                 "role": _shared_role(member.role),
