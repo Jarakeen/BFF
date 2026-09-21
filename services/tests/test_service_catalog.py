@@ -661,3 +661,25 @@ def test_sustained_dps_execute_and_heavy_policy_frontiers_keep_mechanics_externa
     assert "Does not infer execute superiority" in execute.notes
     assert "1.8s windows" in heavy.notes
     assert "RotationCandidateHeavyAttackDamageEvidenceService" in heavy.notes
+
+
+def test_sustained_dps_generated_branch_and_bound_keeps_bounds_and_damage_external() -> None:
+    search = canonical_service_for("extreme_sustained_dps_generated_branch_and_bound")
+    adapter = canonical_service_for("extreme_sustained_dps_generated_search_evidence_adapter")
+
+    assert search is not None
+    assert adapter is not None
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(search.service_id)
+    ) == ("extreme.sustained_dps.pruning",)
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(adapter.service_id)
+    ) == (
+        "extreme.sustained_dps.generated_branch_and_bound",
+        "extreme.sustained_dps.generated_runtime_evaluation",
+    )
+    assert "never calculates ESO damage" in search.notes
+    assert "Equal ceilings remain open" in search.notes
+    assert "Proof-preserving adapter only" in adapter.notes
