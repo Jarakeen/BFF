@@ -170,3 +170,77 @@ def test_health_ledger_requires_explicit_target_health() -> None:
         assert "current and maximum Health" in str(exc)
     else:
         raise AssertionError("Expected missing target Health to fail closed")
+
+
+
+class _RecordingFixedProvider:
+    def __init__(self, damage):
+        self.damage = float(damage)
+        self.calls = []
+
+    def evaluate_action(self, *, candidate, action):
+        del candidate
+        self.calls.append((action.time_seconds, action.sequence, action.name))
+        return RotationActionDamageEvidence(
+            time_seconds=action.time_seconds,
+            sequence=action.sequence,
+            damage_value=self.damage,
+        )
+
+
+def test_sequential_damage_stops_evaluating_after_target_death() -> None:
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=5.0,
+        actions=(
+            RotationAction(
+                time_seconds=1.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Killing Hit",
+                bar="front",
+            ),
+            RotationAction(
+                time_seconds=2.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Post Death Hit",
+                bar="front",
+            ),
+        ),
+    )
+    candidate = GeneratedRotationCandidate(
+        candidate_id="death-stop",
+        plan=plan,
+        refresh_leads=(),
+        action_claims=(),
+    )
+    ledger = CombatSimulationTargetHealthLedger(
+        target_state=_state(),
+        target_identity="Boss",
+        player_identity="Damage Tester",
+    )
+    provider = _RecordingFixedProvider(12000.0)
+
+    result = CombatSimulationSequentialDDDamageService().project(
+        plan=plan,
+        candidate=candidate,
+        action_damage_evidence_provider=provider,
+        target_state=_state(),
+        target_identity="Boss",
+        player_identity="Damage Tester",
+        ledger=ledger,
+    )
+
+    assert provider.calls == [(1.0, 0, "Killing Hit")]
+    assert [item.source for item in result.damage] == ["Killing Hit"]
+    assert result.terminated_at_seconds == 1.0
+    assert result.terminated_at_sequence == 0
+    assert result.suppressed_action_keys == ((2.0, 0),)
+
+    replay = result.evidence_provider()
+    post = plan.actions[1]
+    evidence = replay.evaluate_action(candidate=candidate, action=post)
+    assert evidence.damage_value == 0.0
+    assert evidence.unresolved == ()
