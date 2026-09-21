@@ -420,64 +420,71 @@ class EncounterBoard(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(6)
 
-        primary_toolbar = QHBoxLayout()
-        primary_toolbar.setSpacing(5)
+        # ------------------------------------------------------------------
+        # ACTORS — things that represent bosses and raid members.
+        # ------------------------------------------------------------------
+        actor_toolbar = QHBoxLayout()
+        actor_toolbar.setSpacing(5)
 
-        caption = QLabel("TACTICAL BOARD")
-        caption.setProperty("sidebarHeading", True)
-        primary_toolbar.addWidget(caption)
+        actor_caption = QLabel("ACTORS")
+        actor_caption.setProperty("sidebarHeading", True)
+        actor_toolbar.addWidget(actor_caption)
 
         self.boss_mode = QComboBox()
         self.boss_mode.addItems(["1 Boss", "2 Bosses"])
+        self.boss_mode.setToolTip("Choose whether the board uses one or two primary boss markers")
         self.boss_mode.currentIndexChanged.connect(self._set_boss_count)
-        primary_toolbar.addWidget(self.boss_mode)
+        actor_toolbar.addWidget(self.boss_mode)
 
         self.mini_boss_button = QPushButton("+ Mini-Boss")
+        self.mini_boss_button.setToolTip("Add an additional mini-boss marker")
         self.mini_boss_button.clicked.connect(lambda: self.add_token("mini_boss"))
-        primary_toolbar.addWidget(self.mini_boss_button)
+        actor_toolbar.addWidget(self.mini_boss_button)
+
+        raid_caption = QLabel("RAID")
+        raid_caption.setProperty("sidebarHeading", True)
+        actor_toolbar.addWidget(raid_caption)
 
         for text, kind in (
             ("+ Tank", "tank"),
             ("+ Healer", "healer"),
             ("+ DD", "dps"),
+        ):
+            button = QPushButton(text)
+            button.clicked.connect(lambda _=False, k=kind: self.add_token(k))
+            actor_toolbar.addWidget(button)
+
+        actor_toolbar.addStretch(1)
+        root.addLayout(actor_toolbar)
+
+        # ------------------------------------------------------------------
+        # MECHANICS & AREAS — mechanic markers, circle zones, and formations.
+        # Formation support deliberately targets this second toolbar.
+        # ------------------------------------------------------------------
+        zone_toolbar = QHBoxLayout()
+        zone_toolbar.setSpacing(5)
+
+        zone_caption = QLabel("MECHANICS & AREAS")
+        zone_caption.setProperty("sidebarHeading", True)
+        zone_toolbar.addWidget(zone_caption)
+
+        for text, kind in (
             ("+ Portal", "portal"),
             ("+ AOE", "aoe"),
             ("+ Stack", "stack"),
         ):
             button = QPushButton(text)
             button.clicked.connect(lambda _=False, k=kind: self.add_token(k))
-            primary_toolbar.addWidget(button)
-
-        delete_button = QPushButton("Delete Selected")
-        delete_button.clicked.connect(self.delete_selected)
-        primary_toolbar.addWidget(delete_button)
-
-        primary_toolbar.addStretch(1)
-        fit_button = QPushButton("Fit Arena")
-        fit_button.clicked.connect(self.view.fit_arena)
-        primary_toolbar.addWidget(fit_button)
-        save_button = QPushButton("Save Layout")
-        save_button.clicked.connect(self.save_state)
-        primary_toolbar.addWidget(save_button)
-        capture_button = QPushButton("Capture Positioning")
-        capture_button.setProperty("primary", True)
-        capture_button.clicked.connect(self.capture_snapshot)
-        primary_toolbar.addWidget(capture_button)
-        root.addLayout(primary_toolbar)
-
-        zone_toolbar = QHBoxLayout()
-        zone_toolbar.setSpacing(5)
-
-        zone_caption = QLabel("CIRCLE ZONES")
-        zone_caption.setProperty("sidebarHeading", True)
-        zone_toolbar.addWidget(zone_caption)
+            zone_toolbar.addWidget(button)
 
         self.zone_type_combo = QComboBox()
+        self.zone_type_combo.setToolTip("Circle-zone purpose")
         for zone_type in ZONE_STYLES:
             self.zone_type_combo.addItem(zone_type)
         zone_toolbar.addWidget(self.zone_type_combo)
 
         self.zone_size_combo = QComboBox()
+        self.zone_size_combo.setToolTip("Circle-zone size preset")
         for name, radius in ZONE_PRESETS.items():
             self.zone_size_combo.addItem(name, radius)
         self.zone_size_combo.addItem("Custom", None)
@@ -500,9 +507,44 @@ class EncounterBoard(QWidget):
         zone_toolbar.addStretch(1)
         root.addLayout(zone_toolbar)
 
+        # ------------------------------------------------------------------
+        # LAYOUT & OUTPUT — destructive action, view, persistence, and capture.
+        # ------------------------------------------------------------------
+        layout_toolbar = QHBoxLayout()
+        layout_toolbar.setSpacing(5)
+
+        layout_caption = QLabel("LAYOUT & OUTPUT")
+        layout_caption.setProperty("sidebarHeading", True)
+        layout_toolbar.addWidget(layout_caption)
+
+        delete_button = QPushButton("Delete Selected")
+        delete_button.setToolTip("Delete the selected marker or zone")
+        delete_button.clicked.connect(self.delete_selected)
+        layout_toolbar.addWidget(delete_button)
+
+        layout_toolbar.addStretch(1)
+
+        fit_button = QPushButton("Fit Arena")
+        fit_button.setToolTip("Fit the full tactical arena in the current view")
+        fit_button.clicked.connect(self.view.fit_arena)
+        layout_toolbar.addWidget(fit_button)
+
+        save_button = QPushButton("Save Layout")
+        save_button.setToolTip("Save the current tactical-board layout")
+        save_button.clicked.connect(self.save_state)
+        layout_toolbar.addWidget(save_button)
+
+        capture_button = QPushButton("Capture Positioning")
+        capture_button.setProperty("primary", True)
+        capture_button.setToolTip("Capture this layout for the Assignments positioning card")
+        capture_button.clicked.connect(self.capture_snapshot)
+        layout_toolbar.addWidget(capture_button)
+
+        root.addLayout(layout_toolbar)
+
         hint = QLabel(
-            "Drag markers and circle zones to position them. Select a zone, then use a size preset or radius value to resize it. "
-            "Mouse wheel zooms. Up to six mini-boss markers may be placed. The captured image feeds the Assignments positioning card."
+            "Drag items to position them. Select a circle zone to resize it. "
+            "Mouse wheel zooms. Timeline and reference tools below preserve their own saved state."
         )
         hint.setProperty("muted", True)
         hint.setWordWrap(True)
