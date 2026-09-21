@@ -166,14 +166,6 @@ class CombatSimulationSequentialDDDamageService:
             )
         )
 
-        def terminal_sequence_for(time_seconds: float, fallback: int) -> int:
-            same_time = [
-                int(action.sequence)
-                for action in plan.actions
-                if float(action.time_seconds) == float(time_seconds)
-            ]
-            return max(same_time, default=int(fallback))
-
         def apply_occurrence(occurrence: RotationActionDamageOccurrence) -> None:
             nonlocal terminated_at_seconds, terminated_at_sequence
             if ledger.is_dead:
@@ -192,10 +184,7 @@ class CombatSimulationSequentialDDDamageService:
                 )
             if ledger.is_dead and terminated_at_seconds is None:
                 terminated_at_seconds = float(occurrence.time_seconds)
-                terminated_at_sequence = terminal_sequence_for(
-                    occurrence.time_seconds,
-                    occurrence.sequence,
-                )
+                terminated_at_sequence = int(occurrence.sequence)
 
         def flush_before(time_seconds: float) -> None:
             due = tuple(
