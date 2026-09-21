@@ -6,11 +6,14 @@ on:
     paths:
       - "services/finch_api_client.py"
       - "services/finch_shared_publish_service.py"
+      - "services/finch_shared_import_service.py"
       - "services/tests/test_finch_api_client.py"
       - "services/tests/test_finch_shared_publish_service.py"
+      - "services/tests/test_finch_shared_import_service.py"
       - "ui/themed_roster_page.py"
       - "ui/raid_plan_persistence_page.py"
       - "ui/tests/test_finch_shared_publish_actions.py"
+      - "ui/tests/test_finch_shared_import_actions.py"
       - ".github/workflows/finch-focused-tests.yml"
   workflow_dispatch:
 
@@ -31,4 +34,6 @@ jobs:
           python -m pytest \
             services/tests/test_finch_api_client.py \
             services/tests/test_finch_shared_publish_service.py \
-            ui/tests/test_finch_shared_publish_actions.py -q
+            services/tests/test_finch_shared_import_service.py \
+            ui/tests/test_finch_shared_publish_actions.py \
+            ui/tests/test_finch_shared_import_actions.py -q
