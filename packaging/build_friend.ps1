@@ -132,8 +132,47 @@ Move-Item $BuiltExe (Join-Path $PackageRoot $ExeName) -Force
 $TargetDatabase = Join-Path $DataRoot "eso.db"
 Copy-Item $ReleaseSeedDatabase $TargetDatabase -Force
 
-# Copy useful non-database reference files while deliberately excluding the
-# developer's personal/session state. New users get a clean Builds roster.
+# Runtime external data uses the same positive allowlist as the production
+# release build. This preserves reviewed nested paths such as
+# data\gameplay_policy\endgame_pve.json instead of copying only top-level files.
+$RuntimeFiles = python -c "import runpy; m=runpy.run_path(r'packaging/release_manifest.py'); print(chr(10).join(m.get('RUNTIME_EXTERNAL_DATA_FILES', ())))"
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not read runtime data file allowlist."
+}
+foreach ($Name in $RuntimeFiles) {
+    $Name = $Name.Trim()
+    if ([string]::IsNullOrWhiteSpace($Name)) { continue }
+    $Source = Join-Path $ProjectRoot ("data\" + $Name)
+    if (-not (Test-Path $Source -PathType Leaf)) {
+        throw "Allowlisted runtime data file is missing: data\$Name"
+    }
+    $Destination = Join-Path $DataRoot $Name
+    $DestinationParent = Split-Path $Destination -Parent
+    if (-not [string]::IsNullOrWhiteSpace($DestinationParent)) {
+        New-Item -ItemType Directory -Force -Path $DestinationParent | Out-Null
+    }
+    Copy-Item $Source $Destination -Force
+}
+
+$RuntimeDirectories = python -c "import runpy; m=runpy.run_path(r'packaging/release_manifest.py'); print(chr(10).join(m.get('RUNTIME_EXTERNAL_DATA_DIRECTORIES', ())))"
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not read runtime data directory allowlist."
+}
+foreach ($Name in $RuntimeDirectories) {
+    $Name = $Name.Trim()
+    if ([string]::IsNullOrWhiteSpace($Name)) { continue }
+    $Source = Join-Path $ProjectRoot ("data\" + $Name)
+    if (-not (Test-Path $Source -PathType Container)) {
+        throw "Allowlisted runtime data directory is missing: data\$Name"
+    }
+    $Destination = Join-Path $DataRoot $Name
+    $DestinationParent = Split-Path $Destination -Parent
+    if (-not [string]::IsNullOrWhiteSpace($DestinationParent)) {
+        New-Item -ItemType Directory -Force -Path $DestinationParent | Out-Null
+    }
+    Copy-Item $Source $Destination -Recurse -Force
+}
+
 $PersonalDataFiles = @(
     "builds.json",
     "characters.json",
@@ -153,14 +192,6 @@ $PersonalDataFiles = @(
     "ExpeditionCounter.txt",
     "IncidentCounter.txt"
 )
-
-$SourceDataDir = Join-Path $ProjectRoot "data"
-Get-ChildItem -Path $SourceDataDir -File |
-    Where-Object {
-        $_.Extension -notin ".py", ".db" -and
-        $_.Name -notin $PersonalDataFiles
-    } |
-    Copy-Item -Destination $DataRoot -Force
 
 # Broadcast is a real optional payload. The core friend build deliberately
 # omits modules/broadcast, so the runtime manifest gate disables all Broadcast
@@ -268,15 +299,32 @@ Compress-Archive -Path (Join-Path $PackageRoot "*") -DestinationPath $ZipPath -C
 New-Item -ItemType Directory -Force -Path $UpdateRoot | Out-Null
 Copy-Item (Join-Path $PackageRoot $ExeName) (Join-Path $UpdateRoot $ExeName) -Force
 
-$UpdateDataRoot = Join-Path $UpdateRoot "data"
-New-Item -ItemType Directory -Force -Path $UpdateDataRoot | Out-Null
-Get-ChildItem -Path $DataRoot -File |
-    Where-Object {
-        $_.Name -ne "eso.db" -and
-        $_.Name -ne "builds.json" -and
-        $_.Name -notin $PersonalDataFiles
-    } |
-    Copy-Item -Destination $UpdateDataRoot -Force
+if ($RuntimeFiles.Count -gt 0 -or $RuntimeDirectories.Count -gt 0) {
+    $UpdateDataRoot = Join-Path $UpdateRoot "data"
+    New-Item -ItemType Directory -Force -Path $UpdateDataRoot | Out-Null
+
+    foreach ($Name in $RuntimeFiles) {
+        $Name = $Name.Trim()
+        if ([string]::IsNullOrWhiteSpace($Name)) { continue }
+        $UpdateDestination = Join-Path $UpdateDataRoot $Name
+        $UpdateDestinationParent = Split-Path $UpdateDestination -Parent
+        if (-not [string]::IsNullOrWhiteSpace($UpdateDestinationParent)) {
+            New-Item -ItemType Directory -Force -Path $UpdateDestinationParent | Out-Null
+        }
+        Copy-Item (Join-Path $DataRoot $Name) $UpdateDestination -Force
+    }
+
+    foreach ($Name in $RuntimeDirectories) {
+        $Name = $Name.Trim()
+        if ([string]::IsNullOrWhiteSpace($Name)) { continue }
+        $UpdateDestination = Join-Path $UpdateDataRoot $Name
+        $UpdateDestinationParent = Split-Path $UpdateDestination -Parent
+        if (-not [string]::IsNullOrWhiteSpace($UpdateDestinationParent)) {
+            New-Item -ItemType Directory -Force -Path $UpdateDestinationParent | Out-Null
+        }
+        Copy-Item (Join-Path $DataRoot $Name) $UpdateDestination -Recurse -Force
+    }
+}
 
 if ($IncludeBroadcast -and (Test-Path (Join-Path $PackageRoot "modules"))) {
     Copy-Item (Join-Path $PackageRoot "modules") (Join-Path $UpdateRoot "modules") -Recurse -Force
