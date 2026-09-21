@@ -33,6 +33,8 @@ def test_damage_summary_totals_target_damage_and_sources() -> None:
     )
     result = CombatSimulationResult(
         duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
         events=(
             _event(1.0, 0, "outgoing_damage", "Skill A", recipient="Boss", amount=3000.0),
             _event(
@@ -99,6 +101,8 @@ def test_damage_summary_withholds_dps_when_damage_evidence_is_unresolved() -> No
     )
     result = CombatSimulationResult(
         duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
         events=(),
         unresolved=("DoT runtime anchor unavailable",),
         target_state=state,
