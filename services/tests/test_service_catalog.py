@@ -782,3 +782,23 @@ def test_sustained_dps_axis_dominance_composition_separates_coverage_from_numeri
     assert "canonical axis vocabulary" in service.notes
     assert "numeric optimistic multipliers/absolute ceilings" in service.notes
     assert "Missing required axes" in service.notes
+
+def test_sustained_dps_late_axis_adapter_preserves_frontier_authority() -> None:
+    service = canonical_service_for("extreme_sustained_dps_generated_late_axis_adapter")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.generated_late_axis_adapter"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.champion_point_frontier",
+        "extreme.sustained_dps.potion_frontier",
+        "extreme.sustained_dps.passive_rank_frontier",
+        "extreme.sustained_dps.skill_bar_frontier",
+        "extreme.sustained_dps.generated_candidate_assembly",
+        "extreme.sustained_dps.generated_frontier_wiring",
+    )
+    assert "axis-owned state" in service.notes
+    assert "fail closed" in service.notes
+
