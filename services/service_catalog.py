@@ -831,6 +831,27 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.gear_runtime_semantics",
+        domain="extreme",
+        purpose=(
+            "Classify active generated-gear bonus rows as reviewed static, conditional-static, "
+            "verified runtime, mixed, or unsupported before sustained-DPS runtime scoring."
+        ),
+        implementation_path="services.extreme_sustained_dps_gear_runtime_semantic_inventory_service",
+        inputs=("ExtremeDualBarGearState", "GearSetRepository"),
+        outputs=("ExtremeSustainedDPSGearRuntimeSemanticInventory",),
+        dependencies=("extreme.sustained_dps.dual_bar_gear_frontier",),
+        responsibilities=("extreme_sustained_dps_gear_runtime_semantics",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Static resolution reuses GearSetEffectResolver; verified runtime identities reuse "
+            "the canonical known-effect registry. Runtime identity does not prove proc occurrence, uptime, or DPS."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.dual_bar_gear_frontier",
         domain="extreme",
         purpose=(
