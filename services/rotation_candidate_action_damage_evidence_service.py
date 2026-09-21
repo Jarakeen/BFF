@@ -3,7 +3,11 @@ from __future__ import annotations
 from typing import Protocol
 
 from minmax.rotation_plan import RotationAction, RotationActionKind
-from services.rotation_candidate_dd_role_output_service import RotationActionDamageEvidence
+from services.rotation_candidate_dd_role_output_service import (
+    RotationActionDamageEvidence,
+    RotationActionDamageOccurrence,
+    RotationActionDamageOccurrenceEvidence,
+)
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 
 
@@ -61,6 +65,47 @@ class RotationCandidateActionDamageEvidenceService:
             sequence=action.sequence,
             damage_value=None,
             unresolved=(reason,),
+        )
+
+
+    def evaluate_action_occurrences(
+        self,
+        *,
+        candidate: GeneratedRotationCandidate,
+        action: RotationAction,
+    ) -> RotationActionDamageOccurrenceEvidence:
+        """Route exact-time occurrence evidence when the canonical provider exposes it."""
+
+        provider = self._providers.get(action.kind)
+        if provider is not None and hasattr(provider, "evaluate_action_occurrences"):
+            return provider.evaluate_action_occurrences(
+                candidate=candidate,
+                action=action,
+            )
+
+        aggregate = self.evaluate_action(candidate=candidate, action=action)
+        if aggregate.unresolved:
+            return RotationActionDamageOccurrenceEvidence(
+                action_time_seconds=action.time_seconds,
+                action_sequence=action.sequence,
+                unresolved=aggregate.unresolved,
+            )
+        if aggregate.damage_value is None or float(aggregate.damage_value) <= 0.0:
+            return RotationActionDamageOccurrenceEvidence(
+                action_time_seconds=action.time_seconds,
+                action_sequence=action.sequence,
+            )
+        return RotationActionDamageOccurrenceEvidence(
+            action_time_seconds=action.time_seconds,
+            action_sequence=action.sequence,
+            occurrences=(
+                RotationActionDamageOccurrence(
+                    time_seconds=action.time_seconds,
+                    sequence=action.sequence,
+                    damage_value=float(aggregate.damage_value),
+                    source_name=str(action.name or action.kind.value),
+                ),
+            ),
         )
 
 
