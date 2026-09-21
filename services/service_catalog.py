@@ -831,6 +831,27 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_effect_projection",
+        domain="extreme",
+        purpose=(
+            "Convert already-active reviewed runtime EffectVariant stat identities into "
+            "canonical Effect rows for exact rotation build-context reconstruction."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_effect_projection_service",
+        inputs=("ActiveEffectVariants",),
+        outputs=("ExtremeSustainedDPSRuntimeEffectProjection",),
+        dependencies=("extreme.sustained_dps.gear_runtime_semantics",),
+        responsibilities=("extreme_sustained_dps_runtime_effect_projection",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Owns no trigger, timing, cooldown, bar, or persistence logic. Current reviewed "
+            "projection includes timed weapon_spell_damage into Weapon Damage and Spell Damage."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_runtime_evaluation",
         domain="extreme",
         purpose=(
@@ -855,8 +876,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Generated progression is caller-owned rather than resolved through saved-build persistence. "
-            "Bar-legal named gear buffs flow through the shared runtime CombatState path. Active non-named "
-            "gear effects fail closed until a generic timed-effect to runtime build-context bridge exists."
+            "Bar-legal named gear buffs flow through the shared runtime CombatState path, while reviewed "
+            "timed stat EffectVariants are projected into canonical runtime build-context inputs."
         ),
     ),
     ServiceDescriptor(
