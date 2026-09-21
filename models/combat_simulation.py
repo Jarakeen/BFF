@@ -487,6 +487,44 @@ class CombatSimulationResult:
                         raise ValueError(
                             "combat simulation resource event arithmetic is inconsistent"
                         )
+                    attempted_change = int(payload.get("attempted_change", applied_change))
+                    shortfall = int(payload.get("shortfall", 0))
+                    wasted_restore = int(payload.get("wasted_restore", 0))
+                    if shortfall < 0 or wasted_restore < 0:
+                        raise ValueError(
+                            "combat simulation resource shortfall and wasted restore cannot be negative"
+                        )
+                    if row.event_type == "action_cost":
+                        if attempted_change > 0 or applied_change > 0:
+                            raise ValueError(
+                                "combat simulation action cost changes must be non-positive"
+                            )
+                        if wasted_restore != 0:
+                            raise ValueError(
+                                "combat simulation action cost cannot record wasted restore"
+                            )
+                        if shortfall != abs(attempted_change) - abs(applied_change):
+                            raise ValueError(
+                                "combat simulation action cost shortfall arithmetic is inconsistent"
+                            )
+                    elif row.event_type in {"recovery_tick", "restoration"}:
+                        if attempted_change < 0 or applied_change < 0:
+                            raise ValueError(
+                                "combat simulation resource restore changes must be non-negative"
+                            )
+                        if shortfall != 0:
+                            raise ValueError(
+                                "combat simulation resource restore cannot record action-cost shortfall"
+                            )
+                        if wasted_restore != attempted_change - applied_change:
+                            raise ValueError(
+                                "combat simulation wasted restore arithmetic is inconsistent"
+                            )
+                    elif row.event_type == "resource_maximum":
+                        if attempted_change != 0 or shortfall != 0 or wasted_restore != 0:
+                            raise ValueError(
+                                "combat simulation resource maximum carries invalid delta evidence"
+                            )
                 expected_before = after
             if expected_before != int(summary.ending_amount):
                 raise ValueError(
