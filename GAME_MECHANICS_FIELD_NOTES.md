@@ -1093,3 +1093,7 @@ A modeled DPS number is not automatically comparable just because both values ar
 ### 2026-09-21 — Sixty-four attribute points create 2,145 legal splits before the build even starts
 
 ESO's 64 attribute points can be distributed across Health, Magicka, and Stamina in **2,145** non-negative integer combinations. FoundryDock now treats every one of those splits as part of the structural Extreme denominator before race, legal class route, active bar, gear, skills, CP, or rotation are considered. In plain English: brute force gets ridiculous very early, which is why later generated sustained-DPS search needs pruning instead of one heroic nested loop.
+
+### 2026-09-21 — A tie-capable upper bound cannot be safely pruned
+
+For MOST Sustained DPS, a generated branch whose proof-safe optimistic ceiling exactly matches the current incumbent must stay alive. It may not be able to beat the incumbent, but it can still **tie** it, which changes whether FoundryDock may claim a unique leader. Only a ceiling that is strictly below the incumbent can be discarded. Missing or unproven ceilings stay open too. Optimization is apparently also a bureaucracy.
