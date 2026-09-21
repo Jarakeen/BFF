@@ -8,6 +8,8 @@ from services.rotation_candidate_action_damage_evidence_service import (
 )
 from services.rotation_candidate_dd_role_output_service import (
     RotationActionDamageEvidence,
+    RotationActionDamageOccurrence,
+    RotationActionDamageOccurrenceEvidence,
     RotationCandidateDDRoleOutputService,
 )
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
@@ -168,3 +170,52 @@ def test_ultimate_adapter_rejects_delegate_evidence_for_different_schedule_entry
 
     with pytest.raises(ValueError, match="different scheduled action"):
         service.evaluate_action(candidate=_candidate(ultimate), action=ultimate)
+
+
+
+class _OccurrenceSkillDelegate(_SkillDamageDelegate):
+    def evaluate_action_occurrences(self, *, candidate, action):
+        self.calls.append((candidate, action))
+        return RotationActionDamageOccurrenceEvidence(
+            action_time_seconds=action.time_seconds,
+            action_sequence=action.sequence,
+            occurrences=(
+                RotationActionDamageOccurrence(
+                    time_seconds=action.time_seconds + 1.0,
+                    sequence=0,
+                    damage_value=2500.0,
+                    source_name=str(action.name),
+                    coefficient_number=1,
+                    occurrence_index=0,
+                ),
+            ),
+        )
+
+
+def test_ultimate_adapter_preserves_exact_time_occurrence_evidence() -> None:
+    ultimate = RotationAction(
+        2.0,
+        3,
+        RotationActionKind.ULTIMATE,
+        name="periodic_ultimate",
+        bar="back",
+    )
+    candidate = _candidate(ultimate)
+    delegate = _OccurrenceSkillDelegate()
+    service = RotationCandidateUltimateDamageEvidenceService(
+        skill_damage_delegate=delegate,
+    )
+
+    evidence = service.evaluate_action_occurrences(
+        candidate=candidate,
+        action=ultimate,
+    )
+
+    assert evidence.unresolved == ()
+    assert len(evidence.occurrences) == 1
+    assert evidence.occurrences[0].time_seconds == 3.0
+    assert evidence.occurrences[0].damage_value == 2500.0
+    delegated_candidate, delegated_action = delegate.calls[0]
+    assert delegated_candidate is candidate
+    assert delegated_action.kind is RotationActionKind.SKILL
+    assert delegated_action.name == "periodic_ultimate"
