@@ -37,6 +37,7 @@ from services.rotation_candidate_light_attack_damage_evidence_service import (
     RotationCandidateLightAttackDamageEvidenceService,
 )
 from services.rotation_candidate_periodic_damage_runtime_projection_service import (
+    PeriodicDamageActivationAnchorResolver,
     RotationCandidatePeriodicDamageRuntimeProjectionService,
 )
 from services.rotation_candidate_periodic_damage_timing_evidence_service import (
@@ -180,6 +181,7 @@ class _StaticBarAwareSkillProvider:
         target_resistance_resolver: TargetResistanceResolver | None,
         target_snapshot_resolver: TargetSnapshotResolver | None,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None,
+        activation_anchor_resolver: PeriodicDamageActivationAnchorResolver | None,
         execute_target_identity: str,
         initial_bar: str,
     ) -> None:
@@ -191,12 +193,14 @@ class _StaticBarAwareSkillProvider:
         self.target_resistance_resolver = target_resistance_resolver
         self.target_snapshot_resolver = target_snapshot_resolver
         self.runtime_build_context_resolver = runtime_build_context_resolver
+        self.activation_anchor_resolver = activation_anchor_resolver
         self.execute_target_identity = str(execute_target_identity or "").strip()
         self.initial_bar = str(initial_bar or "").strip().casefold()
         self.semantics = RotationDDPeriodicRuntimeSemanticsRegistryService().load()
         self.periodic_projection = (
             RotationCandidatePeriodicDamageRuntimeProjectionService(
-                RotationCandidatePeriodicDamageTimingEvidenceService(database_path)
+                RotationCandidatePeriodicDamageTimingEvidenceService(database_path),
+                activation_anchor_resolver=activation_anchor_resolver,
             )
             if self.semantics
             else None
@@ -218,12 +222,33 @@ class _StaticBarAwareSkillProvider:
                 ),
             )
 
-        resolver = RotationActiveBarContextResolverService(
-            static_context=self.static_context,
-            plan=candidate.plan,
-            initial_bar=self.initial_bar,
-        )
-        context = resolver.context_at(action.time_seconds, action.sequence)
+        if self.runtime_build_context_resolver is not None:
+            runtime = self.runtime_build_context_resolver(
+                float(action.time_seconds),
+                int(action.sequence),
+            )
+            if not runtime.resolved or runtime.context is None:
+                unresolved = tuple(
+                    dict.fromkeys(
+                        str(message).strip()
+                        for message in runtime.unresolved
+                        if str(message).strip()
+                    )
+                ) or ("runtime skill build context is unresolved",)
+                return RotationActionDamageEvidence(
+                    time_seconds=action.time_seconds,
+                    sequence=action.sequence,
+                    damage_value=None,
+                    unresolved=unresolved,
+                )
+            context = runtime.context
+        else:
+            resolver = RotationActiveBarContextResolverService(
+                static_context=self.static_context,
+                plan=candidate.plan,
+                initial_bar=self.initial_bar,
+            )
+            context = resolver.context_at(action.time_seconds, action.sequence)
         target_resistance = (
             float(self.target_resistance_resolver(action.time_seconds, action.sequence))
             if self.target_resistance_resolver is not None
@@ -271,12 +296,32 @@ class _StaticBarAwareSkillProvider:
                 ),
             )
 
-        resolver = RotationActiveBarContextResolverService(
-            static_context=self.static_context,
-            plan=candidate.plan,
-            initial_bar=self.initial_bar,
-        )
-        context = resolver.context_at(action.time_seconds, action.sequence)
+        if self.runtime_build_context_resolver is not None:
+            runtime = self.runtime_build_context_resolver(
+                float(action.time_seconds),
+                int(action.sequence),
+            )
+            if not runtime.resolved or runtime.context is None:
+                unresolved = tuple(
+                    dict.fromkeys(
+                        str(message).strip()
+                        for message in runtime.unresolved
+                        if str(message).strip()
+                    )
+                ) or ("runtime skill build context is unresolved",)
+                return RotationActionDamageOccurrenceEvidence(
+                    action_time_seconds=action.time_seconds,
+                    action_sequence=action.sequence,
+                    unresolved=unresolved,
+                )
+            context = runtime.context
+        else:
+            resolver = RotationActiveBarContextResolverService(
+                static_context=self.static_context,
+                plan=candidate.plan,
+                initial_bar=self.initial_bar,
+            )
+            context = resolver.context_at(action.time_seconds, action.sequence)
         target_resistance = (
             float(self.target_resistance_resolver(action.time_seconds, action.sequence))
             if self.target_resistance_resolver is not None
@@ -318,6 +363,7 @@ class _StaticBarAwareLightAttackProvider:
         target_resistance: float,
         target_combat_state_resolver: TargetCombatStateResolver | None,
         target_resistance_resolver: TargetResistanceResolver | None,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None,
         initial_bar: str,
     ) -> None:
         self.weapon_resolution = weapon_resolution
@@ -325,6 +371,7 @@ class _StaticBarAwareLightAttackProvider:
         self.target_resistance = float(target_resistance)
         self.target_combat_state_resolver = target_combat_state_resolver
         self.target_resistance_resolver = target_resistance_resolver
+        self.runtime_build_context_resolver = runtime_build_context_resolver
         self.initial_bar = str(initial_bar or "").strip().casefold()
 
     def evaluate_action(
@@ -333,13 +380,30 @@ class _StaticBarAwareLightAttackProvider:
         candidate: GeneratedRotationCandidate,
         action: RotationAction,
     ) -> RotationActionDamageEvidence:
-        resolver = RotationActiveBarContextResolverService(
-            static_context=self.static_context,
-            plan=candidate.plan,
-            initial_bar=self.initial_bar,
-        )
-        context = resolver.context_at(action.time_seconds, action.sequence)
-        evaluation = self.weapon_resolution.evaluation_for(context.active_bar)
+        if self.runtime_build_context_resolver is not None:
+            runtime = self.runtime_build_context_resolver(
+                float(action.time_seconds),
+                int(action.sequence),
+            )
+            if not runtime.resolved or runtime.context is None:
+                return RotationActionDamageEvidence(
+                    time_seconds=action.time_seconds,
+                    sequence=action.sequence,
+                    damage_value=None,
+                    unresolved=tuple(runtime.unresolved)
+                    or ("runtime light-attack build context is unresolved",),
+                )
+            context = runtime.context
+            active_bar = runtime.active_bar
+        else:
+            resolver = RotationActiveBarContextResolverService(
+                static_context=self.static_context,
+                plan=candidate.plan,
+                initial_bar=self.initial_bar,
+            )
+            context = resolver.context_at(action.time_seconds, action.sequence)
+            active_bar = context.active_bar
+        evaluation = self.weapon_resolution.evaluation_for(active_bar)
         calculation = calculation_result_from_build_context(context)
         if evaluation is None or calculation is None:
             return RotationActionDamageEvidence(
@@ -383,6 +447,7 @@ class _StaticBarAwareHeavyAttackProvider:
         target_resistance: float,
         target_combat_state_resolver: TargetCombatStateResolver | None,
         target_resistance_resolver: TargetResistanceResolver | None,
+        runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None,
         initial_bar: str,
     ) -> None:
         self.weapon_resolution = weapon_resolution
@@ -390,6 +455,7 @@ class _StaticBarAwareHeavyAttackProvider:
         self.target_resistance = float(target_resistance)
         self.target_combat_state_resolver = target_combat_state_resolver
         self.target_resistance_resolver = target_resistance_resolver
+        self.runtime_build_context_resolver = runtime_build_context_resolver
         self.initial_bar = str(initial_bar or "").strip().casefold()
 
     def evaluate_action(
@@ -398,25 +464,6 @@ class _StaticBarAwareHeavyAttackProvider:
         candidate: GeneratedRotationCandidate,
         action: RotationAction,
     ) -> RotationActionDamageEvidence:
-        resolver = RotationActiveBarContextResolverService(
-            static_context=self.static_context,
-            plan=candidate.plan,
-            initial_bar=self.initial_bar,
-        )
-        context = resolver.context_at(action.time_seconds, action.sequence)
-        evaluation = self.weapon_resolution.evaluation_for(context.active_bar)
-        calculation = calculation_result_from_build_context(context)
-        if evaluation is None or calculation is None:
-            return RotationActionDamageEvidence(
-                time_seconds=action.time_seconds,
-                sequence=action.sequence,
-                damage_value=None,
-                unresolved=(
-                    f"{context.active_bar} canonical heavy-attack evaluation is unavailable",
-                ),
-            )
-        evaluation = replace(evaluation, stats=calculation)
-
         completion_evidence = (
             RotationHeavySustainProjectionService.completion_evidence_from_verified_reservations(
                 candidate.plan
@@ -431,6 +478,48 @@ class _StaticBarAwareHeavyAttackProvider:
             ),
             None,
         )
+        runtime_time = (
+            float(completion.completion_time_seconds)
+            if completion is not None
+            else float(action.time_seconds)
+        )
+        runtime_sequence = None if completion is not None else int(action.sequence)
+        if self.runtime_build_context_resolver is not None:
+            runtime = self.runtime_build_context_resolver(
+                runtime_time,
+                runtime_sequence,
+            )
+            if not runtime.resolved or runtime.context is None:
+                return RotationActionDamageEvidence(
+                    time_seconds=action.time_seconds,
+                    sequence=action.sequence,
+                    damage_value=None,
+                    unresolved=tuple(runtime.unresolved)
+                    or ("runtime heavy-attack build context is unresolved",),
+                )
+            context = runtime.context
+            active_bar = runtime.active_bar
+        else:
+            resolver = RotationActiveBarContextResolverService(
+                static_context=self.static_context,
+                plan=candidate.plan,
+                initial_bar=self.initial_bar,
+            )
+            context = resolver.context_at(action.time_seconds, action.sequence)
+            active_bar = context.active_bar
+        evaluation = self.weapon_resolution.evaluation_for(active_bar)
+        calculation = calculation_result_from_build_context(context)
+        if evaluation is None or calculation is None:
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=None,
+                unresolved=(
+                    f"{context.active_bar} canonical heavy-attack evaluation is unavailable",
+                ),
+            )
+        evaluation = replace(evaluation, stats=calculation)
+
         target_time = (
             float(completion.completion_time_seconds)
             if completion is not None
@@ -497,6 +586,7 @@ class CombatSimulationSavedBuildDDProviderService:
         target_resistance_resolver: TargetResistanceResolver | None = None,
         target_snapshot_resolver: TargetSnapshotResolver | None = None,
         runtime_build_context_resolver: RotationRuntimeBuildContextResolver | None = None,
+        activation_anchor_resolver: PeriodicDamageActivationAnchorResolver | None = None,
         execute_target_identity: str = "",
     ) -> CombatSimulationSavedBuildDDProviderResolution:
         role = " ".join(str(getattr(player_build, "Role", "") or "").strip().casefold().replace("_", " ").split())
@@ -532,6 +622,7 @@ class CombatSimulationSavedBuildDDProviderService:
             target_resistance_resolver=target_resistance_resolver,
             target_snapshot_resolver=target_snapshot_resolver,
             runtime_build_context_resolver=runtime_build_context_resolver,
+            activation_anchor_resolver=activation_anchor_resolver,
             execute_target_identity=execute_target_identity,
             initial_bar=initial_bar,
         )
@@ -557,6 +648,7 @@ class CombatSimulationSavedBuildDDProviderService:
                 target_resistance=float(target_resistance),
                 target_combat_state_resolver=target_combat_state_resolver,
                 target_resistance_resolver=target_resistance_resolver,
+                runtime_build_context_resolver=runtime_build_context_resolver,
                 initial_bar=initial_bar,
             )
             heavy: RotationActionDamageProvider | None = _StaticBarAwareHeavyAttackProvider(
@@ -565,6 +657,7 @@ class CombatSimulationSavedBuildDDProviderService:
                 target_resistance=float(target_resistance),
                 target_combat_state_resolver=target_combat_state_resolver,
                 target_resistance_resolver=target_resistance_resolver,
+                runtime_build_context_resolver=runtime_build_context_resolver,
                 initial_bar=initial_bar,
             )
         else:
