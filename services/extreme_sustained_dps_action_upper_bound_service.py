@@ -26,6 +26,7 @@ class ExtremeSustainedDPSActionDominanceProof:
     dominated_axes: tuple[str, ...]
     required_axes: tuple[str, ...]
     optimistic_multiplier: float = 1.0
+    optimistic_upper_damage: float | None = None
     source: str = ""
     unresolved: tuple[str, ...] = ()
 
@@ -36,6 +37,13 @@ class ExtremeSustainedDPSActionDominanceProof:
                 "sustained-DPS action dominance multiplier must be finite and at least 1"
             )
         object.__setattr__(self, "optimistic_multiplier", multiplier)
+        if self.optimistic_upper_damage is not None:
+            upper = float(self.optimistic_upper_damage)
+            if not isfinite(upper) or upper < 0.0:
+                raise ValueError(
+                    "sustained-DPS action absolute upper damage must be finite and non-negative"
+                )
+            object.__setattr__(self, "optimistic_upper_damage", upper)
         object.__setattr__(
             self,
             "dominated_axes",
@@ -112,11 +120,18 @@ class ExtremeSustainedDPSActionUpperBoundService:
             )
 
         complete = dominance.complete and not missing_axes
-        optimistic = (
-            exact_damage * float(dominance.optimistic_multiplier)
-            if complete
-            else None
-        )
+        optimistic = None
+        if complete:
+            if dominance.optimistic_upper_damage is not None:
+                if dominance.optimistic_upper_damage + 1e-9 < exact_damage:
+                    unresolved.append(
+                        "Absolute optimistic action ceiling is below the exact witness damage"
+                    )
+                    complete = False
+                else:
+                    optimistic = float(dominance.optimistic_upper_damage)
+            else:
+                optimistic = exact_damage * float(dominance.optimistic_multiplier)
         bound = ExtremeSustainedDPSActionUpperBound(
             time_seconds=occurrence_evidence.action_time_seconds,
             sequence=occurrence_evidence.action_sequence,
@@ -129,6 +144,14 @@ class ExtremeSustainedDPSActionUpperBoundService:
         evidence = (
             f"Exact canonical action damage: {exact_damage:g}",
             f"Dominance multiplier: {float(dominance.optimistic_multiplier):g}",
+            (
+                "Absolute optimistic damage ceiling: "
+                + (
+                    f"{float(dominance.optimistic_upper_damage):g}"
+                    if dominance.optimistic_upper_damage is not None
+                    else "not supplied"
+                )
+            ),
             f"Required mutation axes: {len(dominance.required_axes)}",
             f"Dominated mutation axes: {len(dominance.dominated_axes)}",
             (
