@@ -357,3 +357,16 @@ def test_sustained_dps_saved_state_search_consumes_discovery_and_comparison() ->
     )
     assert "saved user-state denominator" in search.notes
     assert "does not generate unsaved builds/rotations" in search.notes
+
+
+def test_sustained_dps_generated_frontier_is_structural_generation_authority() -> None:
+    frontier = canonical_service_for("extreme_sustained_dps_generated_structural_frontier")
+
+    assert frontier is not None
+    assert frontier.service_id == "extreme.sustained_dps.generated_frontier"
+    assert frontier.behavior is ServiceBehavior.DETERMINISTIC
+    assert frontier.encounter_aware is False
+    assert set(frontier.roles) == {"DPS"}
+    assert SERVICE_CATALOG.dependencies_of(frontier.service_id) == ()
+    assert "64-point attributes" in frontier.notes
+    assert "remain explicit deferred axes" in frontier.notes
