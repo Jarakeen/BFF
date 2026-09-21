@@ -16,6 +16,7 @@ from .combat_state import CombatState, IncomingAttackState
 from .combat_state_input_resolver import CombatStateInputResolver
 from .core_stat_calculator import CoreStatCalculator
 from .dragonknight_passive_input_resolver import DragonknightPassiveInputResolver
+from .effects import Effect
 from .gear_set_repository import GearSetRepository
 from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
 from .guild_passive_input_resolver import GuildPassiveInputResolver
@@ -178,6 +179,7 @@ class BuildCalculationContextFactory:
         target_resistance: float | None = None,
         fight_duration: float | None = None,
         active_bar: str = "front",
+        additional_effects: tuple[Effect, ...] = (),
     ) -> BuildCalculationContext:
         attributes = progression.attributes
         race_stats = self._race_stats(build.Race)
@@ -188,6 +190,11 @@ class BuildCalculationContextFactory:
             combat_state=combat_state,
             incoming_attack=incoming_attack,
         )
+        if additional_effects:
+            gear = GearStatInputResolver.apply_additional_effects(
+                gear,
+                tuple(additional_effects),
+            )
 
         state = self.calculator.calculate(
             attributes=attributes,
