@@ -193,7 +193,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
 
         self.get_shared_plans_button = QPushButton("Get Shared Plans")
         self.get_shared_plans_button.setToolTip(
-            "Browse Raid Plans published to Finch. Copy to Local creates a new local Raid Plan outline and never replaces an existing plan."
+            "Browse Raid Plans published to Finch. Copy to Local creates a new local Raid Plan outline with shared assignments and never replaces an existing plan."
         )
         self.get_shared_plans_button.clicked.connect(self._get_shared_raid_plans)
         row.addWidget(self.get_shared_plans_button)
@@ -320,7 +320,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 "Copy Shared Raid Plan to Local",
                 (
                     f'Copy "{preview.name}" from Finch into a new local Raid Plan?\n\n'
-                    "This creates a separate local plan outline with shared seat/player/character/class/role data only. "
+                    "This creates a separate local plan outline with shared seat/player/character/class/role and assignment data only. "
                     "It never replaces an existing plan and does not create Personnel or saved builds."
                 ),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
