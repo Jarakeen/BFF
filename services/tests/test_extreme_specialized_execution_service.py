@@ -98,9 +98,10 @@ class _SavedRotationCombat:
         )
         return SimpleNamespace(
             record=record,
-            mechanic_complete=False,
+            mechanic_complete=True,
             evidence=("saved combat simulation witness",),
-            unresolved=("global sustained-DPS search remains open",),
+            unresolved=(),
+            omitted_scope=("global sustained-DPS search remains open",),
         )
 
 
@@ -307,4 +308,6 @@ def test_sustained_dps_execution_uses_combat_simulation_lower_bound() -> None:
     assert ("Target Resistance", "18200") in result.summary_rows
     assert ("Executed horizon", "60s") in result.summary_rows
     assert result.global_maximum_proven is False
-    assert result.unresolved == ("global sustained-DPS search remains open",)
+    assert result.mechanic_complete is True
+    assert result.unresolved == ()
+    assert result.omitted_scope == ("global sustained-DPS search remains open",)
