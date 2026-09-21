@@ -40,6 +40,7 @@ def test_extreme_record_objective_keys_are_unique_and_stable():
         "magicka_recovery",
         "stamina_recovery",
         "resource_sustain",
+        "sustained_dps",
         "ultimate_generation",
         "movement_speed",
         "sprint_speed",
@@ -103,3 +104,12 @@ def test_unknown_objective_and_domain_fail_closed():
 
     with pytest.raises(ValueError, match="Unsupported Extreme Records domain"):
         list_extreme_record_objectives(domain="nonsense")
+
+
+def test_sustained_dps_is_explicit_runtime_objective() -> None:
+    objective = get_extreme_record_objective("sustained_dps")
+
+    assert objective.domain is ExtremeRecordDomain.OFFENSE
+    assert objective.measure is ExtremeRecordMeasure.SUSTAINED
+    assert objective.runtime_required is True
+    assert "combat-simulation" in objective.description
