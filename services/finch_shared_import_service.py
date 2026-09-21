@@ -12,11 +12,14 @@ It never creates Personnel, Characters, Saved Builds, or local build identity.
 from dataclasses import dataclass
 from pathlib import Path
 
+from engine.config import get_data_dir
 from models.raid_plan import RaidPlan, RaidPlanMember
 from models.team_schedule import TeamSchedule, TeamScheduleSlot
+from services.eso_database import EsoDatabase
 from services.finch_api_client import FinchApiClient, FinchSharedSnapshot
 from services.raid_plan_repository import RaidPlanRepository
 from services.roster_service import RosterService
+from services.settings_service import SettingsService
 
 
 def _clean(value: object) -> str:
@@ -206,8 +209,111 @@ class FinchSharedImportService:
         return self.raid_plans.save(plan)
 
 
+def _configured_client(
+    *,
+    settings_path: Path,
+    timeout: float,
+) -> FinchApiClient:
+    settings = SettingsService(Path(settings_path)).load()
+    return FinchApiClient(
+        base_url=str(settings.get("FinchApiUrl") or ""),
+        api_key=str(settings.get("FinchApiKey") or ""),
+        timeout=timeout,
+    )
+
+
+def list_shared_teams_from_finch(
+    *,
+    database_path: Path | None = None,
+    raid_plans_path: Path | None = None,
+    settings_path: Path = Path("settings.json"),
+    timeout: float = 10.0,
+) -> tuple[FinchSharedTeamPreview, ...]:
+    db_path = Path(database_path or (get_data_dir() / "eso.db"))
+    plans_path = Path(raid_plans_path or (get_data_dir() / "raid_plans.json"))
+    database = EsoDatabase(db_path)
+    try:
+        service = FinchSharedImportService(
+            client=_configured_client(settings_path=settings_path, timeout=timeout),
+            roster=RosterService(database),
+            raid_plans=RaidPlanRepository(plans_path),
+        )
+        return service.list_shared_teams()
+    finally:
+        database.close()
+
+
+def list_shared_raid_plans_from_finch(
+    *,
+    database_path: Path | None = None,
+    raid_plans_path: Path | None = None,
+    settings_path: Path = Path("settings.json"),
+    timeout: float = 10.0,
+) -> tuple[FinchSharedRaidPlanPreview, ...]:
+    db_path = Path(database_path or (get_data_dir() / "eso.db"))
+    plans_path = Path(raid_plans_path or (get_data_dir() / "raid_plans.json"))
+    database = EsoDatabase(db_path)
+    try:
+        service = FinchSharedImportService(
+            client=_configured_client(settings_path=settings_path, timeout=timeout),
+            roster=RosterService(database),
+            raid_plans=RaidPlanRepository(plans_path),
+        )
+        return service.list_shared_raid_plans()
+    finally:
+        database.close()
+
+
+def import_shared_team_from_finch(
+    *,
+    snapshot_key: str,
+    database_path: Path | None = None,
+    raid_plans_path: Path | None = None,
+    settings_path: Path = Path("settings.json"),
+    timeout: float = 10.0,
+) -> str:
+    db_path = Path(database_path or (get_data_dir() / "eso.db"))
+    plans_path = Path(raid_plans_path or (get_data_dir() / "raid_plans.json"))
+    database = EsoDatabase(db_path)
+    try:
+        service = FinchSharedImportService(
+            client=_configured_client(settings_path=settings_path, timeout=timeout),
+            roster=RosterService(database),
+            raid_plans=RaidPlanRepository(plans_path),
+        )
+        return service.import_team_metadata(snapshot_key)
+    finally:
+        database.close()
+
+
+def import_shared_raid_plan_from_finch(
+    *,
+    snapshot_key: str,
+    database_path: Path | None = None,
+    raid_plans_path: Path | None = None,
+    settings_path: Path = Path("settings.json"),
+    timeout: float = 10.0,
+) -> RaidPlan:
+    db_path = Path(database_path or (get_data_dir() / "eso.db"))
+    plans_path = Path(raid_plans_path or (get_data_dir() / "raid_plans.json"))
+    database = EsoDatabase(db_path)
+    try:
+        service = FinchSharedImportService(
+            client=_configured_client(settings_path=settings_path, timeout=timeout),
+            roster=RosterService(database),
+            raid_plans=RaidPlanRepository(plans_path),
+        )
+        return service.import_raid_plan(snapshot_key)
+    finally:
+        database.close()
+
+
 __all__ = [
     "FinchSharedImportService",
     "FinchSharedRaidPlanPreview",
     "FinchSharedTeamPreview",
+    "import_shared_raid_plan_from_finch",
+    "import_shared_team_from_finch",
+    "list_shared_raid_plans_from_finch",
+    "list_shared_teams_from_finch",
 ]
