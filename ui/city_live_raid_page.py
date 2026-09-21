@@ -258,25 +258,26 @@ class CityLiveRaidPage(FoundryPage):
 
         lower = QHBoxLayout()
         lower.setSpacing(10)
-        lower.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         timeline = self._style_live_card(
-            FoundryCard("Next 60 Seconds", "stopwatch"), "timeline", compact=True
+            FoundryCard("Next 60 Seconds", "stopwatch"), "timeline"
         )
-        timeline.setMinimumHeight(112)
-        timeline.setMaximumHeight(145)
+        timeline.setMinimumHeight(220)
         self.timeline_text = QLabel(
             "Select an encounter to load reviewed timing and threshold context."
         )
         self.timeline_text.setProperty("liveRaidTimelineText", True)
         self.timeline_text.setWordWrap(True)
+        self.timeline_text.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         timeline.addWidget(self.timeline_text)
+        timeline.addStretch(1)
         lower.addWidget(timeline, 3)
 
         notes = self._style_live_card(
-            FoundryCard("Quick Notes / Run Sheet", "clipboard"), "notes", compact=True
+            FoundryCard("Quick Notes / Run Sheet", "clipboard"), "notes"
         )
         notes.setProperty("foundryNoteCard", True)
+        notes.setMinimumHeight(220)
         self.encounter_checklist_label = QLabel("No encounter checklist loaded.")
         self.encounter_checklist_label.setProperty("liveRaidChecklistText", True)
         self.encounter_checklist_label.setWordWrap(True)
@@ -287,16 +288,20 @@ class CityLiveRaidPage(FoundryPage):
         self.run_notes_edit.setProperty("liveRaidNotesEditor", True)
         self.run_notes_edit.setAcceptRichText(False)
         self.run_notes_edit.setPlaceholderText("Add manual pull notes, reminders, or observations…")
-        self.run_notes_edit.setMaximumHeight(112)
-        notes.addWidget(self.run_notes_edit)
+        self.run_notes_edit.setMinimumHeight(120)
+        notes.addWidget(self.run_notes_edit, 1)
         self.save_run_notes_button = QPushButton("Save Run Notes")
         self.save_run_notes_button.setProperty("liveRaidNoteAction", True)
         self.save_run_notes_button.clicked.connect(self._save_run_notes)
         notes.addWidget(self.save_run_notes_button)
-        lower.addWidget(notes, 3)
+        lower.addWidget(notes, 4)
+
+        right_column = QVBoxLayout()
+        right_column.setContentsMargins(0, 0, 0, 0)
+        right_column.setSpacing(10)
 
         coverage = self._style_live_card(
-            FoundryCard("Coverage Snapshot", "shield"), "coverage", compact=True
+            FoundryCard("Coverage Snapshot", "shield"), "coverage"
         )
         self.coverage_label = QLabel(
             "NEEDS REVIEW\nOpen Coverage for authoritative provider evidence."
@@ -308,10 +313,10 @@ class CityLiveRaidPage(FoundryPage):
         open_coverage.setProperty("liveRaidSecondaryAction", True)
         open_coverage.clicked.connect(lambda: self.pageRequested.emit("console:7"))
         coverage.addWidget(open_coverage)
-        lower.addWidget(coverage, 2)
+        right_column.addWidget(coverage, 1)
 
         recent = self._style_live_card(
-            FoundryCard("Recent Events", "archive"), "recent", compact=True
+            FoundryCard("Recent Events", "archive"), "recent"
         )
         self.events_label = QLabel("No manual run events yet.")
         self.events_label.setProperty("liveRaidEventText", True)
@@ -319,8 +324,10 @@ class CityLiveRaidPage(FoundryPage):
         self.events_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         recent.addWidget(self.events_label)
         recent.addStretch(1)
-        lower.addWidget(recent, 2)
-        self.workspace_layout.addLayout(lower)
+        right_column.addWidget(recent, 1)
+
+        lower.addLayout(right_column, 3)
+        self.workspace_layout.addLayout(lower, 1)
 
         self.status = FoundryStatusBar()
         self.set_status(self.status)
