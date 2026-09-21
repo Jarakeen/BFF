@@ -40,7 +40,6 @@ def test_all_zero_input_specialized_routes_are_explicit() -> None:
         "damage_shield",
         "bash_damage",
         "resource_sustain",
-        "sustained_dps",
         "ultimate_generation",
         "movement_speed",
         "sprint_speed",
