@@ -594,8 +594,11 @@ class CombatSimulationResult:
             if payload.get("kind") != "bar_swap":
                 continue
             destination = str(payload.get("bar") or "").strip().casefold()
-            if destination in {"front", "back"}:
-                projected_final_bar = destination
+            if destination not in {"front", "back"}:
+                raise ValueError(
+                    "combat simulation bar swap requires front or back destination"
+                )
+            projected_final_bar = destination
         if projected_final_bar != final_bar:
             raise ValueError(
                 "combat simulation final bar does not match event state"
