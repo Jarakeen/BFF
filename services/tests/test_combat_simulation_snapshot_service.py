@@ -647,3 +647,48 @@ def test_snapshot_sequence_boundary_is_consistent_across_state_domains() -> None
     assert after.active_bar == "front"
     assert after.resources[0].current_amount == 25600
     assert after.health[0].current_health == 22000
+
+
+
+def test_snapshot_sequence_boundary_applies_to_effect_windows() -> None:
+    from dataclasses import replace
+
+    base = _result()
+    windows = (
+        RuntimeEffectActiveWindow(
+            effect_name="early_effect",
+            source="First",
+            start_time_seconds=6.0,
+            end_time_seconds=10.0,
+            target="group",
+            sequence=0,
+        ),
+        RuntimeEffectActiveWindow(
+            effect_name="late_effect",
+            source="Second",
+            start_time_seconds=6.0,
+            end_time_seconds=10.0,
+            target="group",
+            sequence=1,
+        ),
+    )
+    result = replace(base, effect_windows=windows)
+
+    sequence_zero = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=6.0,
+        sequence=0,
+    )
+    sequence_one = CombatSimulationSnapshotService().snapshot_at(
+        result,
+        time_seconds=6.0,
+        sequence=1,
+    )
+
+    assert [item.effect_name for item in sequence_zero.active_effect_windows] == [
+        "early_effect",
+    ]
+    assert [item.effect_name for item in sequence_one.active_effect_windows] == [
+        "early_effect",
+        "late_effect",
+    ]
