@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 from services.raid_group_effect_catalog import GROUP_COVERAGE_NAMES
 from ui.components.foundry_card import FoundryCard
 from ui.raid_plan_assignment_page import RaidPlanAssignmentPage
+from ui.raid_plan_header_controls import rehome_plan_header_controls
 from ui.raid_plan_page import RAID_PLAN_SEATS, _slug
 from ui.ux_icons import set_button_icon
 
@@ -151,13 +152,15 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         self.plan_setup_surface = legacy
         legacy.hide()
 
-        action_row = QHBoxLayout()
-        action_row.addStretch(1)
-        save = QPushButton("Save Assignments")
-        save.setProperty("primary", True)
-        save.clicked.connect(self.save_current_plan)
-        action_row.addWidget(save)
-        self.workspace_layout.addLayout(action_row)
+        self.save_assignments_button = QPushButton("Save Assignments")
+        self.save_assignments_button.setProperty("primary", True)
+        self.save_assignments_button.clicked.connect(self.save_current_plan)
+
+        plan_context_bar = rehome_plan_header_controls(
+            self,
+            trailing_widgets=(self.save_assignments_button,),
+        )
+        self.workspace_layout.addWidget(plan_context_bar)
 
         body = QHBoxLayout()
 
