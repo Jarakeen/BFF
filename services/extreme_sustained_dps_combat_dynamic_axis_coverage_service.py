@@ -69,6 +69,10 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
     ) -> ExtremeSustainedDPSCombatDynamicAxisCoverageResult:
         unresolved = tuple(frontier.unresolved)
         complete = bool(frontier.denominator_proven and not unresolved)
+        omitted = (
+            "starting-bar route remains part of rotation-order family identity",
+            "Ultimate timing/potion timing/execute/Heavy Attack/encounter-demand policies remain separate",
+        )
         proof = ExtremeSustainedDPSAxisCoverageProof(
             source="complete sustained-DPS semi-static seed rotation denominator",
             dominated_axes=(
@@ -77,10 +81,7 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
                 else ()
             ),
             unresolved=unresolved,
-        )
-        omitted = (
-            "starting-bar route remains part of rotation-order family identity",
-            "Ultimate timing/potion timing/execute/Heavy Attack/encounter-demand policies remain separate",
+            omitted_scope=omitted,
         )
         return ExtremeSustainedDPSCombatDynamicAxisCoverageResult(
             proof=proof,
@@ -110,16 +111,6 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
             frontier.anchored_policy_denominator_proven
             and not unresolved
         )
-        proof = ExtremeSustainedDPSAxisCoverageProof(
-            source="complete anchored Ultimate/potion policy denominator",
-            dominated_axes=(
-                ("ultimate_policy", "potion_timing_policy")
-                if complete
-                else ()
-            ),
-            unresolved=unresolved,
-        )
-
         omitted: list[str] = []
         if not frontier.continuous_potion_timing_closed:
             omitted.append(
@@ -129,6 +120,17 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
             omitted.append(
                 "deliberate post-affordability Ultimate delay is not closed by anchored policy coverage"
             )
+
+        proof = ExtremeSustainedDPSAxisCoverageProof(
+            source="complete anchored Ultimate/potion policy denominator",
+            dominated_axes=(
+                ("ultimate_policy", "potion_timing_policy")
+                if complete
+                else ()
+            ),
+            unresolved=unresolved,
+            omitted_scope=tuple(omitted),
+        )
 
         return ExtremeSustainedDPSCombatDynamicAxisCoverageResult(
             proof=proof,
@@ -179,10 +181,14 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
     ) -> ExtremeSustainedDPSCombatDynamicAxisCoverageResult:
         unresolved = tuple(frontier.unresolved)
         complete = bool(frontier.denominator_proven and not unresolved)
+        omitted = (
+            "Heavy Attack windows outside the caller-supplied reviewed safe set are not claimed closed",
+        )
         proof = ExtremeSustainedDPSAxisCoverageProof(
             source="complete reviewed Heavy Attack policy denominator",
             dominated_axes=("heavy_attack_policy",) if complete else (),
             unresolved=unresolved,
+            omitted_scope=omitted,
         )
         return ExtremeSustainedDPSCombatDynamicAxisCoverageResult(
             proof=proof,
@@ -196,9 +202,7 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
                 "Coverage applies only to caller-supplied reviewed safe Heavy Attack windows",
             ),
             unresolved=unresolved,
-            omitted_scope=(
-                "Heavy Attack windows outside the caller-supplied reviewed safe set are not claimed closed",
-            ),
+            omitted_scope=omitted,
         )
 
 
