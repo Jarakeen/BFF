@@ -35,6 +35,8 @@ class RaidRunEvent:
 @dataclass(frozen=True)
 class RaidRunAttempt:
     plan_id: str
+    trial_id: str
+    plan_name: str
     attempt: int
     encounter_id: str
     started_at: str
@@ -279,6 +281,8 @@ class RaidSectionStateService:
         encounter_id: str,
         started_at: str,
         ended_at: str,
+        trial_id: str = "",
+        plan_name: str = "",
     ) -> dict:
         plan_key = _clean(plan_id)
         attempt_number = max(0, int(attempt or 0))
@@ -300,6 +304,8 @@ class RaidSectionStateService:
             }
             rows.append(existing)
         existing["encounter_id"] = _clean(encounter_id)
+        existing["trial_id"] = _clean(trial_id) or _clean(existing.get("trial_id"))
+        existing["plan_name"] = _clean(plan_name) or _clean(existing.get("plan_name"))
         existing["started_at"] = _clean(started_at) or _clean(existing.get("started_at"))
         existing["ended_at"] = _clean(ended_at) or _clean(existing.get("ended_at"))
         cls._set_attempt_duration(existing)
@@ -326,6 +332,8 @@ class RaidSectionStateService:
             rows.append(
                 RaidRunAttempt(
                     plan_id=plan_key,
+                    trial_id=_clean(row.get("trial_id")),
+                    plan_name=_clean(row.get("plan_name")),
                     attempt=max(0, int(row.get("attempt", 0) or 0)),
                     encounter_id=_clean(row.get("encounter_id")),
                     started_at=_clean(row.get("started_at")),
@@ -338,6 +346,35 @@ class RaidSectionStateService:
                 )
             )
         rows.sort(key=lambda row: (row.attempt, row.started_at), reverse=True)
+        return tuple(rows)
+
+    def all_attempt_history(self) -> tuple[RaidRunAttempt, ...]:
+        payload = self._read()
+        rows: list[RaidRunAttempt] = []
+        for row in payload.get("attempts", []):
+            if not isinstance(row, dict):
+                continue
+            duration = row.get("duration_seconds")
+            rows.append(
+                RaidRunAttempt(
+                    plan_id=_clean(row.get("plan_id")),
+                    trial_id=_clean(row.get("trial_id")),
+                    plan_name=_clean(row.get("plan_name")),
+                    attempt=max(0, int(row.get("attempt", 0) or 0)),
+                    encounter_id=_clean(row.get("encounter_id")),
+                    started_at=_clean(row.get("started_at")),
+                    ended_at=_clean(row.get("ended_at")),
+                    duration_seconds=(
+                        max(0, int(duration))
+                        if isinstance(duration, int) and not isinstance(duration, bool)
+                        else None
+                    ),
+                )
+            )
+        rows.sort(
+            key=lambda row: (row.started_at, row.plan_id, row.attempt),
+            reverse=True,
+        )
         return tuple(rows)
 
     def review_notes(self) -> tuple[dict, ...]:
@@ -354,7 +391,14 @@ class RaidSectionStateService:
         )
         return tuple(rows)
 
-    def start_pull(self, plan_id: str, *, encounter_id: str = "") -> dict:
+    def start_pull(
+        self,
+        plan_id: str,
+        *,
+        encounter_id: str = "",
+        trial_id: str = "",
+        plan_name: str = "",
+    ) -> dict:
         payload = self._read()
         runs = payload.setdefault("runs", {})
         prior = runs.get(_clean(plan_id), {})
@@ -367,6 +411,8 @@ class RaidSectionStateService:
             "notes_paused": False,
             "notes": _clean(prior.get("notes")),
             "encounter_id": _clean(encounter_id) or _clean(prior.get("encounter_id")),
+            "trial_id": _clean(trial_id) or _clean(prior.get("trial_id")),
+            "plan_name": _clean(plan_name) or _clean(prior.get("plan_name")),
         }
         runs[_clean(plan_id)] = state
         self._upsert_attempt_payload(
@@ -376,6 +422,8 @@ class RaidSectionStateService:
             encounter_id=_clean(state.get("encounter_id")),
             started_at=_clean(state.get("started_at")),
             ended_at="",
+            trial_id=_clean(trial_id),
+            plan_name=_clean(plan_name),
         )
         self._append_event_payload(payload, plan_id, "pull_started", f"Pull #{attempt} started", "MANUAL")
         self._write(payload)
@@ -406,6 +454,8 @@ class RaidSectionStateService:
             encounter_id=_clean(state.get("encounter_id")),
             started_at=_clean(state.get("started_at")),
             ended_at=_clean(state.get("ended_at")),
+            trial_id=_clean(state.get("trial_id")),
+            plan_name=_clean(state.get("plan_name")),
         )
         self._update_review_timing_payload(
             payload,
