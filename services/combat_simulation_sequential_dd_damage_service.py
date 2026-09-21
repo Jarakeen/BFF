@@ -16,6 +16,7 @@ from services.rotation_candidate_dd_role_output_service import (
     DD_DAMAGE_ACTION_KINDS,
     RotationActionDamageEvidence,
     RotationActionDamageEvidenceProvider,
+    RotationActionDamageOccurrence,
 )
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 
@@ -142,10 +143,12 @@ class CombatSimulationSequentialDDDamageService:
             raise ValueError(
                 "sequential combat-simulation Health ledger target does not match requested target"
             )
+
         damage: list[CombatSimulationOutgoingDamage] = []
         evidence_rows: list[tuple[float, int, RotationActionDamageEvidence]] = []
         unresolved: list[str] = []
         suppressed: list[tuple[float, int]] = []
+        pending: list[RotationActionDamageOccurrence] = []
         terminated_at_seconds: float | None = None
         terminated_at_sequence: int | None = None
 
@@ -163,14 +166,75 @@ class CombatSimulationSequentialDDDamageService:
             )
         )
 
+        def terminal_sequence_for(time_seconds: float, fallback: int) -> int:
+            same_time = [
+                int(action.sequence)
+                for action in plan.actions
+                if float(action.time_seconds) == float(time_seconds)
+            ]
+            return max(same_time, default=int(fallback))
+
+        def apply_occurrence(occurrence: RotationActionDamageOccurrence) -> None:
+            nonlocal terminated_at_seconds, terminated_at_sequence
+            if ledger.is_dead:
+                return
+            amount = float(occurrence.damage_value)
+            ledger.apply_damage(amount)
+            if amount > 0.0:
+                damage.append(
+                    CombatSimulationOutgoingDamage(
+                        time_seconds=float(occurrence.time_seconds),
+                        sequence=int(occurrence.sequence),
+                        source=occurrence.source_name,
+                        recipient=ledger.target_identity,
+                        amount=amount,
+                    )
+                )
+            if ledger.is_dead and terminated_at_seconds is None:
+                terminated_at_seconds = float(occurrence.time_seconds)
+                terminated_at_sequence = terminal_sequence_for(
+                    occurrence.time_seconds,
+                    occurrence.sequence,
+                )
+
+        def flush_before(time_seconds: float) -> None:
+            due = tuple(
+                sorted(
+                    (
+                        item
+                        for item in pending
+                        if float(item.time_seconds) < float(time_seconds)
+                    ),
+                    key=lambda item: (
+                        float(item.time_seconds),
+                        int(item.sequence),
+                        int(item.coefficient_number or 0),
+                        -1 if item.occurrence_index is None else int(item.occurrence_index),
+                    ),
+                )
+            )
+            if not due:
+                return
+            due_ids = {id(item) for item in due}
+            pending[:] = [item for item in pending if id(item) not in due_ids]
+            for item in due:
+                if ledger.is_dead:
+                    break
+                apply_occurrence(item)
+
+        occurrence_aware = hasattr(
+            action_damage_evidence_provider,
+            "evaluate_action_occurrences",
+        )
+
         for action in actions:
+            flush_before(action.time_seconds)
             action_key = (float(action.time_seconds), int(action.sequence))
             if ledger.is_dead:
                 suppressed.append(action_key)
                 evidence_rows.append(
                     (
-                        float(action.time_seconds),
-                        int(action.sequence),
+                        *action_key,
                         RotationActionDamageEvidence(
                             time_seconds=action.time_seconds,
                             sequence=action.sequence,
@@ -178,6 +242,69 @@ class CombatSimulationSequentialDDDamageService:
                         ),
                     )
                 )
+                continue
+
+            identity = self._action_identity(action)
+            if occurrence_aware:
+                occurrence_evidence = (
+                    action_damage_evidence_provider.evaluate_action_occurrences(
+                        candidate=candidate,
+                        action=action,
+                    )
+                )
+                if (
+                    occurrence_evidence.action_time_seconds != action.time_seconds
+                    or occurrence_evidence.action_sequence != action.sequence
+                ):
+                    raise ValueError(
+                        "sequential combat-simulation occurrence evidence mismatch: "
+                        f"expected ({action.time_seconds:g}s, {action.sequence}), "
+                        f"got ({occurrence_evidence.action_time_seconds:g}s, "
+                        f"{occurrence_evidence.action_sequence})"
+                    )
+                if occurrence_evidence.unresolved:
+                    unresolved.extend(
+                        f"{identity}: {message}"
+                        for message in occurrence_evidence.unresolved
+                        if str(message).strip()
+                    )
+                    evidence_rows.append(
+                        (
+                            *action_key,
+                            RotationActionDamageEvidence(
+                                time_seconds=action.time_seconds,
+                                sequence=action.sequence,
+                                damage_value=None,
+                                unresolved=occurrence_evidence.unresolved,
+                            ),
+                        )
+                    )
+                    continue
+
+                evidence_rows.append(
+                    (
+                        *action_key,
+                        RotationActionDamageEvidence(
+                            time_seconds=action.time_seconds,
+                            sequence=action.sequence,
+                            damage_value=0.0,
+                        ),
+                    )
+                )
+                for occurrence in occurrence_evidence.occurrences:
+                    if float(occurrence.time_seconds) < float(action.time_seconds):
+                        unresolved.append(
+                            f"{identity}: damage occurrence precedes its parent action "
+                            f"at {float(occurrence.time_seconds):g}s"
+                        )
+                        continue
+                    if (
+                        float(occurrence.time_seconds) == float(action.time_seconds)
+                        and occurrence.occurrence_index is None
+                    ):
+                        apply_occurrence(occurrence)
+                    else:
+                        pending.append(occurrence)
                 continue
 
             evidence = action_damage_evidence_provider.evaluate_action(
@@ -194,10 +321,7 @@ class CombatSimulationSequentialDDDamageService:
                     f"got ({evidence.time_seconds:g}s, {evidence.sequence})"
                 )
 
-            evidence_rows.append(
-                (float(action.time_seconds), int(action.sequence), evidence)
-            )
-            identity = self._action_identity(action)
+            evidence_rows.append((*action_key, evidence))
             if evidence.unresolved:
                 unresolved.extend(
                     f"{identity}: {message}"
@@ -209,23 +333,39 @@ class CombatSimulationSequentialDDDamageService:
                 unresolved.append(f"{identity}: damage consequence unavailable")
                 continue
 
-            ledger.apply_damage(float(evidence.damage_value))
-            if float(evidence.damage_value) > 0.0:
-                damage.append(
-                    CombatSimulationOutgoingDamage(
-                        time_seconds=float(action.time_seconds),
-                        sequence=int(action.sequence),
-                        source=str(action.name or action.kind.value),
-                        recipient=ledger.target_identity,
-                        amount=float(evidence.damage_value),
-                    )
+            apply_occurrence(
+                RotationActionDamageOccurrence(
+                    time_seconds=float(action.time_seconds),
+                    sequence=int(action.sequence),
+                    damage_value=float(evidence.damage_value),
+                    source_name=str(action.name or action.kind.value),
                 )
-            if ledger.is_dead and terminated_at_seconds is None:
-                terminated_at_seconds = float(action.time_seconds)
-                terminated_at_sequence = int(action.sequence)
+            )
+
+        for occurrence in sorted(
+            pending,
+            key=lambda item: (
+                float(item.time_seconds),
+                int(item.sequence),
+                int(item.coefficient_number or 0),
+                -1 if item.occurrence_index is None else int(item.occurrence_index),
+            ),
+        ):
+            if ledger.is_dead:
+                break
+            apply_occurrence(occurrence)
 
         return CombatSimulationSequentialDamageProjection(
-            damage=tuple(damage),
+            damage=tuple(
+                sorted(
+                    damage,
+                    key=lambda item: (
+                        float(item.time_seconds),
+                        int(item.sequence),
+                        item.source.casefold(),
+                    ),
+                )
+            ),
             evidence=tuple(evidence_rows),
             unresolved=tuple(dict.fromkeys(unresolved)),
             terminated_at_seconds=terminated_at_seconds,
