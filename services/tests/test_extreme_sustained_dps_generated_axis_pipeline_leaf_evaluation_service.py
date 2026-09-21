@@ -8,6 +8,12 @@ from services.extreme_sustained_dps_generated_axis_pipeline_leaf_evaluation_serv
 from services.extreme_sustained_dps_generated_frontier_wiring_service import (
     ExtremeSustainedDPSGeneratedFrontierNode,
 )
+from services.extreme_sustained_dps_generated_runtime_state_axis_adapter_service import (
+    ExtremeSustainedDPSGeneratedRuntimeStateLeaf,
+)
+from services.extreme_sustained_dps_runtime_state_frontier_service import (
+    ExtremeSustainedDPSRuntimeStateChoice,
+)
 
 
 class _RuntimeEvaluation:
@@ -153,3 +159,38 @@ def test_missing_pipeline_witness_fails_closed_with_exact_field_name() -> None:
     assert exact.mechanic_complete is False
     assert "dual-bar gear state" in exact.unresolved[0]
     assert runtime.calls == []
+
+
+
+def test_selected_generated_runtime_state_overrides_fixed_search_snapshot() -> None:
+    runtime = _RuntimeEvaluation(_runtime_result())
+    service = ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService(
+        runtime_evaluation=runtime,
+    )
+    base = _node()
+    choice = ExtremeSustainedDPSRuntimeStateChoice(
+        "runtime:selected",
+        "selected-snapshot",
+        evidence=("selected runtime evidence",),
+    )
+    node = ExtremeSustainedDPSGeneratedFrontierNode(
+        candidate_key="candidate:runtime",
+        state=ExtremeSustainedDPSGeneratedRuntimeStateLeaf(
+            pipeline_state=base.state,
+            runtime_state_choice=choice,
+            omitted_scope=(),
+        ),
+        coordinates=(*base.coordinates, ("Runtime State", 0)),
+        evidence=base.evidence,
+    )
+
+    exact = service.evaluate(
+        node,
+        runtime_snapshot="fixed-search-snapshot",
+        target_health=100,
+        target_resistance=0.0,
+    )
+
+    assert exact.mechanic_complete is True
+    assert runtime.calls[0][1]["runtime_snapshot"] == "selected-snapshot"
+    assert "selected runtime evidence" in exact.evidence
