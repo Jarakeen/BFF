@@ -8,10 +8,11 @@ def test_custom_label_support_exposes_label_editor_and_key() -> None:
     source = Path(encounter_board_custom_labels_support.__file__).read_text(encoding="utf-8")
 
     for text in (
-        "LABEL",
-        "Apply",
+        "EDIT & REFERENCE",
+        "Rename",
+        "REFERENCE POINTS",
         "KEY  Boss",
-        "P portal-style",
+        "P portal",
         "IN entrance",
         "OUT exit",
         "⚑ banner",
@@ -41,7 +42,7 @@ def test_custom_label_updates_timeline_human_label_without_changing_item_id() ->
 def test_reference_points_use_existing_label_key_row_not_a_new_row() -> None:
     source = Path(encounter_board_custom_labels_support.__file__).read_text(encoding="utf-8")
 
-    assert '"REFERENCE"' in source
+    assert '"REFERENCE POINTS"' in source
     assert '"Entrance"' in source
     assert '"Exit"' in source
     assert '"Banner"' in source
