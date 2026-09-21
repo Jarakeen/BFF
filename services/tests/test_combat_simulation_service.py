@@ -505,3 +505,25 @@ def test_kernel_separates_damage_and_non_damage_unresolved_evidence() -> None:
         "unsupported non-damage" in message
         for message in resolved.damage_unresolved
     )
+
+
+def test_kernel_marks_unapplied_outgoing_damage_incomplete_without_target_state() -> None:
+    result = _service().simulate(
+        build_snapshot=_snapshot(),
+        plan=_healer_plan(),
+        outgoing_damage=(
+            CombatSimulationOutgoingDamage(
+                time_seconds=3.0,
+                sequence=0,
+                source="Resolved Damage",
+                recipient="Boss",
+                amount=2500.0,
+                damage_type="magic",
+            ),
+        ),
+    )
+
+    assert any(
+        "target Health state is required to prove applied damage" in message
+        for message in result.damage_unresolved
+    )
