@@ -1,5 +1,11 @@
 - **Private-repository application updates** — packaged FoundryDock installs can use an app-specific update access file to check and download releases through the FoundryDock Update Gateway while the source repository remains private. GitHub credentials stay server-side; testers do not need GitHub accounts or tokens, and in-place updates continue to preserve local settings, builds, roster state, and `eso.db`.\n\n- **Urban Wilderness Raid Map formation presets** — the Raid Map toolbar includes reusable **House Stacks** and **Rainbow Stacks** layouts. Applying a preset arranges eight DD markers plus two healer markers into the selected formation, creates missing role markers without deleting unrelated map objects, and leaves the result fully draggable/editable before normal Raid Map save/capture.\n
 
+- **Live Raid operational lower workspace**: Next 60 Seconds, the Run Sheet, and a stacked Coverage / Recent Events column now expand into the available raid-running space instead of leaving a large unused lower canvas.
+
+- **Finch Collaboration empty-state cleanup**: collaboration guidance and attention counts share one compact card, while an intentional empty state explains where shared Team, Raid Plan, Readiness, and Coverage snapshots will appear.
+
+- **Consistent Collectibles progress cards**: every dashboard category now uses the same artwork → horizontal progress bar → count → status anatomy, eliminating mixed ring/shield/vial layouts across neighboring cards.
+
 - **Raid Plan compact context bar**: Raid Plan and Assignments share one full-width Trial / Difficulty / Plan / Saved Plan control strip with grouped plan actions, keeping page titles uncluttered and page-specific actions such as Share Builds or Save Assignments in the same predictable place.
 - **Raid Review journal** — Live Raid notes are stored per Raid Plan attempt and indexed by date → trial on a dedicated Review page, with the full saved note shown in a large reading pane plus attempt number, pull start/end time, and duration.
 - **Top Gear naming** — the former Capabilities surface is presented as Top Gear; Raid Plan Review now opens the run-note journal instead of Top Gear.
