@@ -126,7 +126,7 @@ def apply_formation(board, preset_key: str) -> bool:
 
 
 def install() -> None:
-    """Add formation presets to the existing second Raid Map toolbar row."""
+    """Add formation presets to the Mechanics & Areas Raid Map row."""
     global _INSTALLED
     if _INSTALLED:
         return
@@ -160,10 +160,10 @@ def install() -> None:
             "does not delete extra markers."
         )
 
-        formation_label = QLabel("FORMATION")
+        formation_label = QLabel("FORMATIONS")
         formation_label.setProperty("sidebarHeading", True)
 
-        apply_button = QPushButton("Apply Formation")
+        apply_button = QPushButton("Apply")
         apply_button.setObjectName("encounterApplyFormationButton")
         apply_button.setToolTip(
             "Apply the selected stack shape without moving bosses, tanks, portals, "
