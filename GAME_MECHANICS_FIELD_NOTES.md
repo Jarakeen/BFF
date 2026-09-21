@@ -1137,3 +1137,7 @@ A legal active-snapshot set arrangement does not prove that the same character c
 ### 2026-09-21 — Knowing a set proc exists is not the same as proving it happened
 
 A verified set mapping can tell FoundryDock that a bonus grants a specific proc, buff, debuff, passive, duration, cooldown, or trigger. That proves **mechanic identity**, not that the effect fired in a particular rotation. Sustained-DPS scoring still needs the actual trigger event, cooldown history, bar state, source persistence, target state, and timing before the effect contributes damage or power.
+
+### 2026-09-21 — Named buffs fit CombatState; generic timed gear stats need another bridge
+
+Canonical named buffs such as **Major Courage** can travel through the shared runtime `CombatState` and naturally change the exact calculation context used by sustained-DPS simulation. A verified timed effect such as a temporary raw Weapon/Spell Damage window is different: it is represented as a generic `EffectVariant`, not a named buff. Until that timed effect is explicitly applied when rebuilding the runtime calculation context, FoundryDock must fail closed rather than silently drop it or pretend its uptime is static.
