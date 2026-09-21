@@ -1125,3 +1125,7 @@ A weapon enchant can be selected as a build identity without knowing its sustain
 ### 2026-09-21 — Champion Point legality and Champion Point damage are separate proofs
 
 A four-star-per-discipline Champion Bar can be structurally legal while still containing stars whose sustained-DPS contribution depends on event type, runtime conditions, target state, or rotation timing. FoundryDock now enumerates the complete canonical slottable CP legality denominator lazily, but it does not treat bar legality as proof that a dynamic star's damage is active.
+
+### 2026-09-21 — A legal set-count partition is not yet a legal equipped build
+
+A familiar count shape such as **5 + 5 + 2** proves only that twelve active-snapshot set-count units can be partitioned that way. It does not prove that the selected named sets can physically occupy the required armor, jewelry, and weapon slots, satisfy Mythic limits, or coexist across both bars. FoundryDock therefore keeps abstract gear topology, named-set physical realization, dual-bar compatibility, and runtime set behavior as separate proof layers.
