@@ -9,6 +9,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QSplitter,
+    QTableWidget,
+    QTableWidgetItem,
     QTextEdit,
     QTreeWidget,
     QTreeWidgetItem,
@@ -18,6 +20,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import DEFAULT_DATABASE
 from services.encounter_boss_guide import EncounterBossGuideService
+from services.raid_review_attempt_summary_service import summarize_encounter_attempts
 from services.raid_section_state_service import RaidSectionStateService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -91,6 +94,24 @@ class RaidReviewPage(FoundryPage):
         )
         self.set_header(self.header)
 
+        summary_card = FoundryCard("Encounter Summary", "compass")
+        self.summary_table = QTableWidget(0, 7)
+        self.summary_table.setHorizontalHeaderLabels(
+            ["TRIAL", "ENCOUNTER", "PULLS", "TIMED", "AVERAGE", "BEST", "NOTES"]
+        )
+        self.summary_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.summary_table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
+        self.summary_table.verticalHeader().setVisible(False)
+        summary_header = self.summary_table.horizontalHeader()
+        summary_header.setStretchLastSection(True)
+        for column in range(6):
+            summary_header.setSectionResizeMode(
+                column,
+                summary_header.ResizeMode.ResizeToContents,
+            )
+        summary_card.addWidget(self.summary_table)
+        self.workspace_layout.addWidget(summary_card)
+
         split = QSplitter(Qt.Orientation.Horizontal)
         split.setChildrenCollapsible(False)
 
@@ -139,6 +160,25 @@ class RaidReviewPage(FoundryPage):
     def refresh(self) -> None:
         attempts = self.state.all_attempt_history()
         notes = self.state.review_notes()
+        summaries = summarize_encounter_attempts(attempts, notes)
+        self.summary_table.setRowCount(len(summaries))
+        for row_index, summary in enumerate(summaries):
+            values = (
+                summary.trial_id or "Unknown Trial",
+                self._encounter_label(summary.encounter_id),
+                str(summary.pulls),
+                str(summary.timed_pulls),
+                _display_duration(summary.average_duration_seconds) or "—",
+                _display_duration(summary.best_duration_seconds) or "—",
+                str(summary.note_count),
+            )
+            for column, value in enumerate(values):
+                self.summary_table.setItem(
+                    row_index,
+                    column,
+                    QTableWidgetItem(value),
+                )
+        self.summary_table.resizeRowsToContents()
         notes_by_attempt = {
             (_clean(row.get("plan_id")), int(row.get("attempt", 0) or 0)): row
             for row in notes
