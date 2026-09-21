@@ -73,11 +73,11 @@ def compose_collaboration_rows(
         summary = f"{int(getattr(row, 'member_count', 0) or 0)} member(s)"
         if focus:
             summary += f" • {focus}"
-        provenance = _clean(getattr(row, "provenance", "")) or "Not copied locally"
+        copy_status = _clean(getattr(row, "provenance", "")) or "Not copied locally"
         tags = []
-        if provenance.startswith("Updated on Finch since copy"):
+        if copy_status.startswith("Updated on Finch since copy"):
             tags.append("changed")
-        if provenance == "Not copied locally":
+        if copy_status == "Not copied locally":
             tags.append("not_copied")
         rows.append(
             FinchCollaborationRow(
@@ -85,7 +85,7 @@ def compose_collaboration_rows(
                 item_name=_clean(getattr(row, "team_name", "")) or "(Unnamed Team)",
                 publisher=_clean(getattr(row, "published_by", "")) or "Unknown",
                 updated=format_shared_timestamp(getattr(row, "updated_at", "")),
-                status=provenance,
+                status=copy_status,
                 summary=summary,
                 route="roster_workspace",
                 context_key=_clean(getattr(row, "local_key", "")),
@@ -101,11 +101,11 @@ def compose_collaboration_rows(
         team_name = _clean(getattr(row, "team_name", ""))
         if team_name:
             summary += f" • {team_name}"
-        provenance = _clean(getattr(row, "provenance", "")) or "Not copied locally"
+        copy_status = _clean(getattr(row, "provenance", "")) or "Not copied locally"
         tags = []
-        if provenance.startswith("Updated on Finch since copy"):
+        if copy_status.startswith("Updated on Finch since copy"):
             tags.append("changed")
-        if provenance == "Not copied locally":
+        if copy_status == "Not copied locally":
             tags.append("not_copied")
         rows.append(
             FinchCollaborationRow(
@@ -113,7 +113,7 @@ def compose_collaboration_rows(
                 item_name=_clean(getattr(row, "name", "")) or "(Unnamed Raid Plan)",
                 publisher=_clean(getattr(row, "published_by", "")) or "Unknown",
                 updated=format_shared_timestamp(getattr(row, "updated_at", "")),
-                status=provenance,
+                status=copy_status,
                 summary=summary,
                 route="raid_plans",
                 context_key=_clean(getattr(row, "local_key", "")),
