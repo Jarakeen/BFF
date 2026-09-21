@@ -16,6 +16,12 @@ from services.accessibility_preferences import VISUAL_THEME_URBAN_WILDERNESS
 
 _INSTALLED = False
 
+# Raid Map scene units are pixel-like logical coordinates. Use the standard
+# 96-DPI CSS conversion so the requested 1.75 cm of additional breathing room
+# is explicit and maintainable instead of becoming another mystery number.
+HOUSE_STACK_EXTRA_SPACING_CM = 1.75
+HOUSE_STACK_EXTRA_SPACING_SCENE_UNITS = HOUSE_STACK_EXTRA_SPACING_CM * (96.0 / 2.54)
+
 
 @dataclass(frozen=True)
 class FormationPreset:
@@ -32,17 +38,20 @@ FORMATION_PRESETS = (
         # Canonical house-stack numbering:
         #   5   6   7   8
         #   1   2   3   4
+        # Original DD center spacing was 80 horizontal / 60 vertical.
+        # Add 1.75 cm (~66.14 scene units at 96 DPI) around the player slots
+        # while preserving the formation center and numbering.
         dps_positions=(
-            (360.0, 315.0),
-            (440.0, 315.0),
-            (520.0, 315.0),
-            (600.0, 315.0),
-            (360.0, 255.0),
-            (440.0, 255.0),
-            (520.0, 255.0),
-            (600.0, 255.0),
+            (260.79, 348.07),
+            (406.93, 348.07),
+            (553.07, 348.07),
+            (699.21, 348.07),
+            (260.79, 221.93),
+            (406.93, 221.93),
+            (553.07, 221.93),
+            (699.21, 221.93),
         ),
-        healer_positions=((392.5, 355.0), (567.5, 355.0)),
+        healer_positions=((333.86, 454.21), (626.14, 454.21)),
     ),
     FormationPreset(
         key="rainbow_stacks",
