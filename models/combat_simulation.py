@@ -232,7 +232,10 @@ class CombatSimulationRecipientBinding:
         object.__setattr__(self, "event_type", event_type)
         object.__setattr__(self, "source", source)
         if self.coefficient_number is not None:
-            object.__setattr__(self, "coefficient_number", int(self.coefficient_number))
+            coefficient_number = int(self.coefficient_number)
+            if coefficient_number <= 0:
+                raise ValueError("recipient binding coefficient_number must be positive")
+            object.__setattr__(self, "coefficient_number", coefficient_number)
         if self.effect_name is not None:
             object.__setattr__(
                 self,
