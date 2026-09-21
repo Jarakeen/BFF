@@ -328,6 +328,32 @@ class CombatSimulationResult:
             raise ValueError(
                 "combat simulation resource events require matching resource summaries"
             )
+        summaries_by_resource = {item.resource: item for item in self.resources}
+        for resource_key in event_resource_keys:
+            rows = [
+                event
+                for event in self.events
+                if event.event_type in resource_event_types
+                and str(event.payload_dict().get("resource") or "").strip().casefold()
+                == resource_key
+            ]
+            if not rows:
+                continue
+            first_payload = rows[0].payload_dict()
+            last_payload = rows[-1].payload_dict()
+            if "before" not in first_payload or "after" not in last_payload:
+                raise ValueError(
+                    "combat simulation resource events require before/after state"
+                )
+            summary = summaries_by_resource[resource_key]
+            if int(first_payload["before"]) != int(summary.starting_amount):
+                raise ValueError(
+                    "combat simulation resource summary start does not match event state"
+                )
+            if int(last_payload["after"]) != int(summary.ending_amount):
+                raise ValueError(
+                    "combat simulation resource summary end does not match event state"
+                )
         initial_bar = str(self.initial_bar or "").strip().casefold()
         final_bar = str(self.final_bar or "").strip().casefold()
         if initial_bar not in {"front", "back"} or final_bar not in {"front", "back"}:
