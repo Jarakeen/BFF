@@ -100,6 +100,7 @@ class _ReplayService:
         maximum_amount,
         trigger_fraction,
         reserve_assessment_resolver=None,
+        anticipate_future_shortfall=False,
     ):
         current = replay.final_projection.run.timeline.ending_amount
 
