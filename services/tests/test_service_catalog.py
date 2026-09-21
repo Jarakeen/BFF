@@ -871,3 +871,26 @@ def test_sustained_dps_gear_progression_axis_coverage_promotes_only_proven_struc
     assert "CP covers champion_points" in service.notes
     assert "passive search covers passive_ranks" in service.notes
     assert "numeric damage dominance remain separate proof obligations" in service.notes
+
+def test_sustained_dps_generated_runtime_policy_adapter_requires_explicit_evidence() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_generated_runtime_policy_axis_adapter"
+    )
+
+    assert service is not None
+    assert (
+        service.service_id
+        == "extreme.sustained_dps.generated_runtime_policy_axis_adapter"
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.execute_policy_frontier",
+        "extreme.sustained_dps.heavy_attack_policy_frontier",
+        "extreme.sustained_dps.generated_frontier_wiring",
+    )
+    assert service.encounter_aware is True
+    assert "explicit priorities" in service.notes
+    assert "do not establish broader theoretical" in service.notes
+
