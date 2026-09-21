@@ -164,6 +164,7 @@ class RaidSectionStateService:
         notes: str,
         started_at: str = "",
         ended_at: str = "",
+        encounter_id: str = "",
     ) -> dict | None:
         """Upsert the durable review note for one Raid Plan attempt."""
         cleaned = _clean(notes)
@@ -200,6 +201,7 @@ class RaidSectionStateService:
         existing["trial_id"] = _clean(trial_id)
         existing["plan_name"] = _clean(plan_name)
         existing["notes"] = cleaned
+        existing["encounter_id"] = _clean(encounter_id) or _clean(existing.get("encounter_id"))
         existing["started_at"] = _clean(started_at) or _clean(existing.get("started_at"))
         existing["ended_at"] = _clean(ended_at) or _clean(existing.get("ended_at"))
         existing["updated_at"] = now
