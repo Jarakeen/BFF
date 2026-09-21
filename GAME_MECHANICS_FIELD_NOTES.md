@@ -1307,3 +1307,7 @@ FoundryDock now has reusable CP, passive-rank, and dual-bar gear dominance searc
 ### 2026-09-21 — A finite policy family can be closed while the timing continuum remains open
 
 FoundryDock can completely enumerate the anchored potion policies generated from seed-plan timestamps and still **not** have proved every possible first-use offset between those timestamps. The same distinction applies to Ultimate use: canonical affordability can close the explicit bar-choice family without proving every deliberate post-affordability delay. Structural policy coverage therefore records finite-family closure separately from theoretical timing closure.
+
+### 2026-09-21 — When the action changes, compare the whole plan instead of pretending the action did not change
+
+Skill-bar, rotation-order, execute, and Heavy Attack policies can legitimately change which action occurs at a given timeline coordinate. Those variants should not be forced into an action-level dominance grid. If the finite family is closed, FoundryDock can instead compare complete modeled sustained DPS over the same exact horizon and use the largest whole-plan score as the family ceiling.
