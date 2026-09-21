@@ -39,7 +39,9 @@ def test_complete_seed_rotation_promotes_order_and_weave_only() -> None:
         "rotation_order",
         "light_attack_weave",
     )
-    assert any("Ultimate" in row for row in result.omitted_scope)
+    assert result.omitted_scope == ()
+    assert result.proof.omitted_scope == ()
+    assert any("separate canonical axes" in row for row in result.evidence)
 
 
 def test_anchored_policy_promotes_finite_family_but_preserves_continuous_omission() -> None:
