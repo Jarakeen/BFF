@@ -1061,3 +1061,11 @@ Combat Simulation can know that an outgoing hit attempted a specific amount whil
 **Layman's version:** knowing a skill tried to hit for 2,500 does not prove the boss actually lost 2,500 Health if we do not know the boss's Health state.
 
 **For BFF:** outgoing DD damage without explicit target Health now remains damage-unresolved. Modeled DPS is withheld instead of reporting zero applied DPS as if that were a proven result. Incoming/environmental damage gaps remain general simulation issues and do not incorrectly poison DD completeness.
+
+## 2026-09-20 — A DD fight simulation must start with a living target
+
+The sequential DD Health ledger is intended to model damage progression during an active fight. Starting it with the target already at zero Health leaves no valid combat progression to simulate and can otherwise make every later action look like a harmless resolved zero.
+
+**Layman's version:** if the boss is already dead before the clock starts, that is not a zero-DPS fight. It is no fight at all.
+
+**For BFF:** saved-build DD simulation now rejects a target that starts at zero Health instead of treating the full plan as a valid completed zero-damage run.
