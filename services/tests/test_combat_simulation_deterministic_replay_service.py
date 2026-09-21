@@ -176,3 +176,48 @@ def test_combat_simulation_result_rejects_duplicate_resource_summaries() -> None
         assert "resource identities must be unique" in str(exc)
     else:
         raise AssertionError("Expected duplicate resource summaries to fail closed")
+
+
+def test_combat_simulation_result_rejects_orphan_resource_event() -> None:
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.RESOURCE_COST),
+        sequence=0,
+        event_type="action_cost",
+        source="Skill",
+        payload=(
+            ("resource", "stamina"),
+            ("before", 20000),
+            ("after", 18000),
+        ),
+    )
+    summary = CombatSimulationResourceResult(
+        resource="magicka",
+        starting_amount=30000,
+        ending_amount=30000,
+    )
+
+    try:
+        _result(events=(event,), resources=(summary,))
+    except ValueError as exc:
+        assert "matching resource summaries" in str(exc)
+    else:
+        raise AssertionError("Expected orphan resource event to fail closed")
+
+
+def test_combat_simulation_result_rejects_resource_event_without_identity() -> None:
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.RESOURCE_COST),
+        sequence=0,
+        event_type="action_cost",
+        source="Skill",
+        payload=(("before", 20000), ("after", 18000)),
+    )
+
+    try:
+        _result(events=(event,))
+    except ValueError as exc:
+        assert "require resource identity" in str(exc)
+    else:
+        raise AssertionError("Expected anonymous resource event to fail closed")
