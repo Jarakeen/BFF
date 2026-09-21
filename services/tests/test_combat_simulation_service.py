@@ -457,3 +457,51 @@ def test_kernel_preserves_raw_components_but_coalesces_health_transition() -> No
     assert payload["attempted_damage"] == 5000.0
     assert payload["before"] == 10000
     assert payload["after"] == 5000
+
+
+
+def test_kernel_separates_damage_and_non_damage_unresolved_evidence() -> None:
+    unresolved = _service().simulate(
+        build_snapshot=_snapshot(),
+        plan=_healer_plan(),
+    )
+    assert any(
+        "light_attack consequence projection not yet wired" in message
+        for message in unresolved.damage_unresolved
+    )
+
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+    resolved = CombatSimulationService(
+        resource_service=_NoopResourceService(),
+        healing_service=_NoopHealingService(),
+        skill_effect_service=_NoopSkillEffectService(),
+        outgoing_damage_service=_StaticOutgoingDamageService(),
+    ).simulate(
+        build_snapshot=_snapshot(),
+        plan=_healer_plan(),
+        target_state=state,
+        damage_target_identity="Boss",
+    )
+
+    assert not any(
+        "light_attack consequence projection not yet wired" in message
+        for message in resolved.damage_unresolved
+    )
+    assert any(
+        "Illustrious Healing" in message
+        and "unsupported non-damage" in message
+        for message in resolved.unresolved
+    )
+    assert not any(
+        "unsupported non-damage" in message
+        for message in resolved.damage_unresolved
+    )
