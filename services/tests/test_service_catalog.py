@@ -428,3 +428,19 @@ def test_sustained_dps_action_upper_bound_requires_mutation_dominance() -> None:
     assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
     assert "not automatically an upper bound" in service.notes
     assert "fail-open" in service.notes
+
+
+def test_sustained_dps_mundus_provisioning_dominance_consumes_dynamic_axes() -> None:
+    service = canonical_service_for("extreme_sustained_dps_mundus_provisioning_dominance")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.mundus_provisioning_dominance"
+    assert service.behavior is ServiceBehavior.DETERMINISTIC
+    assert service.encounter_aware is False
+    assert set(service.roles) == {"DPS"}
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.dynamic_axes",)
+    assert "full joint finite grid" in service.notes
+    assert "fail-open" in service.notes
