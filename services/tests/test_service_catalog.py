@@ -768,3 +768,17 @@ def test_sustained_dps_generated_frontier_wiring_keeps_authorities_external() ->
     assert "legality" in service.notes
     assert "exact Combat Simulation remain external" in service.notes
 
+
+
+def test_sustained_dps_axis_dominance_composition_separates_coverage_from_numeric_bounds() -> None:
+    service = canonical_service_for("extreme_sustained_dps_axis_dominance_composition")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.axis_dominance_composition"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.action_upper_bound",)
+    assert "canonical axis vocabulary" in service.notes
+    assert "numeric optimistic multipliers/absolute ceilings" in service.notes
+    assert "Missing required axes" in service.notes
