@@ -122,6 +122,7 @@ class CombatSimulationSnapshotService:
         partition = partition_runtime_effect_windows(
             result.effect_windows,
             at_time_seconds=instant,
+            at_sequence=boundary_sequence,
         )
 
         return CombatSimulationSnapshot(
