@@ -23,7 +23,8 @@ class _FakeTooltipService:
         self.result = result
         self.components = _FakeComponents(rows)
 
-    def evaluate_entity_id(self, **_kwargs):
+    def evaluate_entity_id(self, **kwargs):
+        self.last_kwargs = kwargs
         return self.result
 
 
@@ -126,24 +127,25 @@ def test_above_and_beyond_can_raise_event_cap_to_155_percent_bonus():
     assert event.unresolved == ()
 
 
-def test_eye_for_exploitation_remains_explicit_until_power_rebuild_is_wired():
-    event = _service(
+def test_eye_for_exploitation_is_forwarded_into_component_power_evaluation():
+    service = _service(
         _Mastery(
             selected=("An Eye for Exploitation",),
             power_bonus=1500.0,
         )
-    ).evaluate(
+    )
+    event = service.evaluate(
         build=PlayerBuild(BuildName="Eye NB", EsoClass="Nightblade"),
         context=_context(0.20),
         entity_id="test_heal",
         target_health_fraction=0.25,
     )
 
+    assert service.tooltip_service.last_kwargs["additional_power_bonus"] == pytest.approx(1500.0)
+    assert "Nightblade Class Mastery: An Eye for Exploitation" in service.tooltip_service.last_kwargs[
+        "additional_power_sources"
+    ]
     assert event.normal_heal == pytest.approx(1000.0)
     assert event.critical_heal == pytest.approx(1700.0)
-    assert any(
-        "An Eye for Exploitation Weapon/Spell Damage contribution is not yet applied"
-        in message
-        for message in event.unresolved
-    )
-    assert not event.mechanic_complete
+    assert event.unresolved == ()
+    assert event.mechanic_complete
