@@ -307,3 +307,72 @@ def test_damage_summary_allows_dps_when_only_non_damage_unresolved_remains() -> 
     assert summary.modeled_dps == 600.0
     assert summary.damage_unresolved == ()
     assert summary.unresolved
+
+
+def test_damage_summary_counts_raw_components_but_applies_one_health_transition() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    result = CombatSimulationResult(
+        duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(
+            _event(
+                1.0,
+                0,
+                "outgoing_damage",
+                "Mixed Skill",
+                recipient="Boss",
+                amount=2000.0,
+                damage_type="magic",
+            ),
+            _event(
+                1.0,
+                0,
+                "outgoing_damage",
+                "Mixed Skill",
+                recipient="Boss",
+                amount=3000.0,
+                damage_type="flame",
+            ),
+            _event(
+                1.0,
+                0,
+                "health_change",
+                "Mixed Skill",
+                recipient="Boss",
+                attempted_damage=5000.0,
+                applied_damage=5000.0,
+                overkill=0.0,
+                after=5000,
+                origin_event_type="outgoing_damage",
+            ),
+        ),
+        unresolved=(),
+        target_state=state,
+    )
+
+    summary = CombatSimulationDamageSummaryService().summarize(
+        result,
+        target_identity="Boss",
+    )
+
+    assert summary.outgoing_event_count == 2
+    assert summary.attempted_damage == 5000.0
+    assert summary.applied_damage == 5000.0
+    assert summary.total_overkill == 0.0
+    assert len(summary.damage_by_source) == 1
+    row = summary.damage_by_source[0]
+    assert row.source == "Mixed Skill"
+    assert row.event_count == 2
+    assert row.attempted_damage == 5000.0
+    assert row.applied_damage == 5000.0
+    assert row.overkill == 0.0
