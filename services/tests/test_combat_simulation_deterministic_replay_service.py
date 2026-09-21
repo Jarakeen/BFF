@@ -643,3 +643,24 @@ def test_combat_simulation_result_rejects_invalid_bar_swap_destination() -> None
         assert "bar swap requires front or back destination" in str(exc)
     else:
         raise AssertionError("Expected invalid bar swap destination to fail closed")
+
+
+def test_combat_simulation_result_rejects_duplicate_effect_windows() -> None:
+    from minmax.runtime_effect_window import RuntimeEffectActiveWindow
+
+    window = RuntimeEffectActiveWindow(
+        effect_name="major_slayer",
+        source="Skill",
+        start_time_seconds=1.0,
+        end_time_seconds=5.0,
+        target="group",
+        sequence=0,
+        magnitude=10.0,
+    )
+
+    try:
+        _result(effect_windows=(window, window))
+    except ValueError as exc:
+        assert "effect window identities must be unique" in str(exc)
+    else:
+        raise AssertionError("Expected duplicate effect windows to fail closed")
