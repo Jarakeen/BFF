@@ -129,7 +129,7 @@ def test_shared_raid_plan_decodes_without_local_identity_or_build_state(tmp_path
     assert plan.members[0].player_id is None
     assert plan.members[0].character_id is None
     assert plan.members[0].selected_build_id is None
-    assert repository.list_plans() == []
+    assert repository.list_plans() == ()
     assert roster.list_members() == []
 
 
