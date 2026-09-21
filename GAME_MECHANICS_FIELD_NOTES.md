@@ -1113,3 +1113,7 @@ A fully resolved skill cast can have an exact canonical total for one concrete b
 ### 2026-09-21 — Mundus and food cannot be safely optimized for DPS in isolation
 
 For a sustained-DPS action, the best Mundus and the best food are not necessarily the choices with the largest independent character-sheet deltas. Their effects can interact through offensive power, resources, crit, penetration, Divines, and the skill's own scaling. FoundryDock therefore searches the finite Mundus × mapped-provisioning grid **jointly** for dominance evidence. If one combination cannot be evaluated exactly, the axis proof remains open instead of filling the gap with an independent-stat shortcut.
+
+### 2026-09-21 — Max-resource armor reductions are not automatically DPS-safe
+
+A trait/glyph reduction that is proof-safe for Max Health, Magicka, or Stamina can still be unsafe for sustained DPS. DPS depends on interactions such as crit, penetration, resource scaling, Divines amplification, sustain, and skill-specific coefficients. FoundryDock therefore preserves the full modeled armor trait/enchant denominator for sustained-DPS search and pages it lazily instead of borrowing a resource-objective reduction whose proof assumptions do not apply.
