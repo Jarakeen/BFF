@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from concurrent.futures import Future, ThreadPoolExecutor
+from pathlib import Path
+
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -20,6 +23,7 @@ from PySide6.QtWidgets import (
 from engine.config import get_data_dir
 from models.roster_model import RosterMember
 from services.eso_database import EsoDatabase
+from services.finch_roster_sync_service import sync_finch_gear_needs
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from services.roster_service import RosterService
 from services.roster_player_identity_service import RosterPlayerIdentityService
@@ -71,6 +75,7 @@ def _assignment_choice_rows() -> tuple[tuple[str, str], ...]:
 
 
 _ASSIGNMENT_CHOICES = _assignment_choice_rows()
+_FINCH_SYNC_EXECUTOR = ThreadPoolExecutor(max_workers=1, thread_name_prefix="finch-sync")
 
 
 class RosterPage(FoundryPage):
@@ -83,6 +88,10 @@ class RosterPage(FoundryPage):
         self.identity_service = RosterPlayerIdentityService(self.database)
         self.members: list[RosterMember] = []
         self._all_members: list[RosterMember] = []
+        self._finch_sync_future: Future | None = None
+        self._finch_sync_timer = QTimer(self)
+        self._finch_sync_timer.setInterval(100)
+        self._finch_sync_timer.timeout.connect(self._poll_finch_sync)
         self._build_ui()
         self._connect_editor_signals()
         self.refresh()
@@ -151,9 +160,15 @@ class RosterPage(FoundryPage):
         actions_layout.setContentsMargins(0, 0, 0, 0)
         actions_layout.setSpacing(6)
         import_button = QPushButton("Import Roster")
+        self.sync_finch_button = QPushButton("Sync Finch")
+        self.sync_finch_button.setToolTip(
+            "Apply pending Finch team requests to existing FoundryDock Personnel and assignments."
+        )
+        self.sync_finch_button.clicked.connect(self.sync_finch)
         self.remove_assignment_button = QPushButton("Remove Selected")
         self.remove_assignment_button.clicked.connect(self.remove_selected_assignment)
         actions_layout.addWidget(import_button)
+        actions_layout.addWidget(self.sync_finch_button)
         actions_layout.addWidget(self.remove_assignment_button)
         roster_card.set_header_action(actions)
 
@@ -287,6 +302,61 @@ class RosterPage(FoundryPage):
             )
         except Exception as exc:
             self.status.error(f"Failed to load roster: {exc}")
+
+    def sync_finch(self) -> None:
+        if self._finch_sync_future is not None and not self._finch_sync_future.done():
+            self.status.info("Finch sync is already running.")
+            return
+
+        self.sync_finch_button.setEnabled(False)
+        self.status.info("Syncing pending Finch requests…")
+        database_path = Path(get_data_dir()) / "eso.db"
+        self._finch_sync_future = _FINCH_SYNC_EXECUTOR.submit(
+            sync_finch_gear_needs,
+            database_path=database_path,
+            settings_path=Path("settings.json"),
+        )
+        self._finch_sync_timer.start()
+
+    def _poll_finch_sync(self) -> None:
+        future = self._finch_sync_future
+        if future is None or not future.done():
+            return
+
+        self._finch_sync_timer.stop()
+        self._finch_sync_future = None
+        self.sync_finch_button.setEnabled(True)
+        try:
+            summary = future.result()
+        except Exception as exc:
+            self.status.error(f"Finch sync failed: {exc}")
+            return
+
+        self.refresh()
+        if summary.errors:
+            first_error = next(
+                (row.message for row in summary.results if row.status == "error"),
+                "Unknown sync error.",
+            )
+            self.status.error(
+                f"Finch sync: {summary.applied} applied, {summary.rejected} rejected, "
+                f"{summary.errors} error(s). {first_error}"
+            )
+        elif summary.rejected:
+            first_rejection = next(
+                (row.message for row in summary.results if row.status == "rejected"),
+                "A Finch request needs attention.",
+            )
+            self.status.warning(
+                f"Finch sync: {summary.applied} applied, {summary.rejected} rejected. "
+                f"{first_rejection}"
+            )
+        elif summary.fetched:
+            self.status.success(
+                f"Finch sync complete: {summary.applied} gear request(s) applied."
+            )
+        else:
+            self.status.info("Finch sync complete: no pending requests.")
 
     def _filtered_members(self, members: list[RosterMember]) -> list[RosterMember]:
         mode = self.show_combo.currentText().strip() if hasattr(self, "show_combo") else "All Players"
