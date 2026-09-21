@@ -67,6 +67,22 @@ class CombatSimulationResourceResult:
     ending_amount: int
     total_shortfall: int = 0
 
+    def __post_init__(self) -> None:
+        resource = str(self.resource or "").strip().casefold()
+        if not resource:
+            raise ValueError("combat simulation resource identity is required")
+        starting_amount = int(self.starting_amount)
+        ending_amount = int(self.ending_amount)
+        total_shortfall = int(self.total_shortfall)
+        if starting_amount < 0 or ending_amount < 0:
+            raise ValueError("combat simulation resource amounts cannot be negative")
+        if total_shortfall < 0:
+            raise ValueError("combat simulation resource shortfall cannot be negative")
+        object.__setattr__(self, "resource", resource)
+        object.__setattr__(self, "starting_amount", starting_amount)
+        object.__setattr__(self, "ending_amount", ending_amount)
+        object.__setattr__(self, "total_shortfall", total_shortfall)
+
 
 @dataclass(frozen=True)
 class CombatSimulationCombatant:
