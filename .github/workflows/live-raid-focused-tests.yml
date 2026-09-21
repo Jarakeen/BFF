@@ -6,10 +6,12 @@ on:
     paths:
       - "services/live_raid_encounter_projection_service.py"
       - "services/raid_section_state_service.py"
+      - "services/raid_review_attempt_summary_service.py"
       - "services/encounter_boss_guide.py"
       - "services/encounter_guide_evidence_projection_service.py"
       - "services/tests/test_live_raid_encounter_projection_service.py"
       - "services/tests/test_raid_section_state_attempt_history.py"
+      - "services/tests/test_raid_review_attempt_summary_service.py"
       - "ui/city_live_raid_page.py"
       - "ui/raid_review_page.py"
       - "ui/tests/test_city_live_raid_encounter_context.py"
@@ -35,6 +37,7 @@ jobs:
           pytest \
             services/tests/test_live_raid_encounter_projection_service.py \
             services/tests/test_raid_section_state_attempt_history.py \
+            services/tests/test_raid_review_attempt_summary_service.py \
             ui/tests/test_city_live_raid_encounter_context.py \
             ui/tests/test_city_live_raid_attempt_history.py \
             ui/tests/test_raid_review_attempt_history.py -q
