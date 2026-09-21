@@ -831,6 +831,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.rotation_family_action_count_proof",
+        domain="extreme",
+        purpose=(
+            "Prove the maximum damage-bearing action count for a generated semi-static "
+            "rotation seed family without materializing ordinary-skill permutations."
+        ),
+        implementation_path="services.extreme_sustained_dps_rotation_family_action_count_proof_service",
+        inputs=("RotationFamilyFrontier", "ExactDuration", "OptionalAdditionalPolicyActionCountProof"),
+        outputs=("ExtremeSustainedDPSRotationFamilyActionCountResult",),
+        dependencies=("extreme.sustained_dps.rotation_plan_frontier",),
+        responsibilities=("extreme_sustained_dps_rotation_family_action_count_proof",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Reconstructs only the canonical generated step-kind cycle. Skill permutation does "
+            "not change the cycle shape. Weave-on is included when taking the seed-family maximum. "
+            "Any later policy that can add damage actions must supply its own proven count ceiling."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.structural_action_upper_bound",
         domain="extreme",
         purpose=(
