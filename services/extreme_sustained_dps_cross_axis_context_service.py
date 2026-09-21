@@ -136,17 +136,14 @@ class ExtremeSustainedDPSCrossAxisContextService:
         return (display,), ()
 
     @staticmethod
-    def _scribed_ids(build: PlayerBuild) -> tuple[int, ...]:
-        values: list[int] = []
-        for recipe in tuple(getattr(build, "ScribedSkillRecipes", ()) or ()):
-            raw = getattr(recipe, "AbilityId", None)
-            try:
-                ability_id = int(raw or 0)
-            except (TypeError, ValueError):
-                ability_id = 0
-            if ability_id > 0:
-                values.append(ability_id)
-        return tuple(sorted(set(values)))
+    def _scribed_ids(build: PlayerBuild) -> tuple[tuple[int, ...], tuple[str, ...]]:
+        recipes = tuple(getattr(build, "ScribedSkillRecipes", ()) or ())
+        if not recipes:
+            return (), ()
+        return (), (
+            "Configured scribed skill recipes have no canonical ability-ID mapping in PlayerBuild; "
+            "generated scribed-skill legality remains unresolved",
+        )
 
     @classmethod
     def compose(
@@ -190,11 +187,13 @@ class ExtremeSustainedDPSCrossAxisContextService:
                 if _clean(value)
             )
         )
-        scribed = cls._scribed_ids(candidate)
+        scribed, scribed_unresolved = cls._scribed_ids(candidate)
+        unresolved.extend(scribed_unresolved)
         transformed = _clean(candidate.TransformedForm).casefold() or None
 
         front_context = ExtremeSustainedDPSSkillBarLegalityContext(
             character_class=_clean(candidate.EsoClass),
+            class_skill_lines=class_lines,
             owned_skill_lines=owned,
             weapon_skill_lines=front_weapon,
             armor_skill_lines=armor_lines,
@@ -205,6 +204,7 @@ class ExtremeSustainedDPSCrossAxisContextService:
         )
         back_context = ExtremeSustainedDPSSkillBarLegalityContext(
             character_class=_clean(candidate.EsoClass),
+            class_skill_lines=class_lines,
             owned_skill_lines=owned,
             weapon_skill_lines=back_weapon,
             armor_skill_lines=armor_lines,
