@@ -1,0 +1,26 @@
+name: Urban Wilderness Raid Map background
+
+on:
+  push:
+    branches: [phase14]
+    paths:
+      - "ui/urban_wilderness_accessibility_polish.py"
+      - "ui/tests/test_urban_wilderness_raid_map_background.py"
+      - ".github/workflows/urban-wilderness-raid-map-background.yml"
+  workflow_dispatch:
+
+jobs:
+  focused-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pytest
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+      - name: Verify Urban Wilderness Raid Map background
+        run: |
+          pytest ui/tests/test_urban_wilderness_raid_map_background.py -q
