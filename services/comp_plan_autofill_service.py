@@ -97,7 +97,15 @@ class CompPlanAutoFillService:
                 )
             )
         )
-        if candidate.source_kind == "saved_build" and not can_bind_saved_build:
+        open_recruit = (
+            candidate.source_kind == "saved_build"
+            and not can_bind_saved_build
+            and not _clean(chair.player_id)
+            and not _clean(chair.character_id)
+            and not _clean(chair.player_name)
+            and not _clean(chair.character_name)
+        )
+        if candidate.source_kind == "saved_build" and not can_bind_saved_build and not open_recruit:
             return {}
 
         if (
