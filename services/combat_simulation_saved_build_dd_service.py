@@ -13,6 +13,9 @@ from models.combat_simulation import (
     CombatSimulationTargetState,
 )
 from models.effective_build_snapshot import EffectiveBuildSnapshot
+from services.combat_simulation_fight_termination_service import (
+    CombatSimulationFightTerminationService,
+)
 from services.combat_simulation_saved_build_dd_provider_service import (
     CombatSimulationSavedBuildDDProviderService,
     TargetCombatStateResolver,
@@ -36,6 +39,7 @@ class CombatSimulationSavedBuildDDService:
         provider_service: CombatSimulationSavedBuildDDProviderService | None = None,
         simulation_service: CombatSimulationService | None = None,
         sequential_damage_service: CombatSimulationSequentialDDDamageService | None = None,
+        fight_termination_service: CombatSimulationFightTerminationService | None = None,
     ) -> None:
         self.provider_service = (
             provider_service or CombatSimulationSavedBuildDDProviderService()
@@ -43,6 +47,9 @@ class CombatSimulationSavedBuildDDService:
         self.simulation_service = simulation_service or CombatSimulationService()
         self.sequential_damage_service = (
             sequential_damage_service or CombatSimulationSequentialDDDamageService()
+        )
+        self.fight_termination_service = (
+            fight_termination_service or CombatSimulationFightTerminationService()
         )
 
     def simulate(
@@ -96,6 +103,8 @@ class CombatSimulationSavedBuildDDService:
 
         sequential_unresolved: tuple[str, ...] = ()
         replay_provider = resolution.provider
+        execution_plan = plan
+        execution_candidate = candidate
         if resolution.provider is not None:
             sequential = self.sequential_damage_service.project(
                 plan=plan,
@@ -108,15 +117,34 @@ class CombatSimulationSavedBuildDDService:
             )
             sequential_unresolved = sequential.unresolved
             replay_provider = sequential.evidence_provider()
+            if (
+                sequential.terminated_at_seconds is not None
+                and sequential.terminated_at_sequence is not None
+            ):
+                execution_plan = self.fight_termination_service.truncate(
+                    plan,
+                    time_seconds=sequential.terminated_at_seconds,
+                    sequence=sequential.terminated_at_sequence,
+                )
+                execution_candidate = GeneratedRotationCandidate(
+                    candidate_id=candidate.candidate_id,
+                    plan=execution_plan,
+                    refresh_leads=candidate.refresh_leads,
+                    action_claims=candidate.action_claims,
+                )
 
         result = self.simulation_service.simulate(
             build_snapshot=build_snapshot,
-            plan=plan,
+            plan=execution_plan,
             initial_bar=initial_bar,
             target_state=target_state,
-            incoming_damage=incoming_damage,
+            incoming_damage=tuple(
+                item
+                for item in incoming_damage
+                if item.time_seconds <= execution_plan.duration_seconds
+            ),
             damage_target_identity=damage_target_identity,
-            damage_candidate=candidate,
+            damage_candidate=execution_candidate,
             action_damage_evidence_provider=replay_provider,
         )
 
