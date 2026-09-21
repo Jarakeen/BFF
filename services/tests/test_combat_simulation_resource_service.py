@@ -277,3 +277,100 @@ def test_final_snapshot_resource_matches_resource_summary() -> None:
     )
 
     assert snapshot.resources[0].current_amount == result.resources[0].ending_amount
+
+
+class _BrokenChainSustainService:
+    def evaluate(self, *, build, plan, resource):
+        assert build.Name == "Magrat"
+        assert plan.build_name == "DF Healer"
+        assert resource is ResourceType.MAGICKA
+        timeline = ResourceTimelineResult(
+            resource=ResourceType.MAGICKA,
+            starting_amount=30000,
+            ending_amount=25000,
+            events=(
+                AppliedResourceTimelineEvent(
+                    time_seconds=0.0,
+                    kind=ResourceTimelineEventKind.ACTION_COST,
+                    source="First Cost",
+                    before=30000,
+                    attempted_change=-3000,
+                    applied_change=-3000,
+                    after=27000,
+                ),
+                AppliedResourceTimelineEvent(
+                    time_seconds=1.0,
+                    kind=ResourceTimelineEventKind.ACTION_COST,
+                    source="Broken Cost",
+                    before=29000,
+                    attempted_change=-4000,
+                    applied_change=-4000,
+                    after=25000,
+                ),
+            ),
+            starting_maximum=30000,
+            ending_maximum=30000,
+        )
+        return SimpleNamespace(
+            run=SimpleNamespace(timeline=timeline),
+            unresolved=(),
+        )
+
+
+class _EndingMismatchSustainService:
+    def evaluate(self, *, build, plan, resource):
+        assert build.Name == "Magrat"
+        assert plan.build_name == "DF Healer"
+        assert resource is ResourceType.MAGICKA
+        timeline = ResourceTimelineResult(
+            resource=ResourceType.MAGICKA,
+            starting_amount=30000,
+            ending_amount=26000,
+            events=(
+                AppliedResourceTimelineEvent(
+                    time_seconds=0.0,
+                    kind=ResourceTimelineEventKind.ACTION_COST,
+                    source="Only Cost",
+                    before=30000,
+                    attempted_change=-3000,
+                    applied_change=-3000,
+                    after=27000,
+                ),
+            ),
+            starting_maximum=30000,
+            ending_maximum=30000,
+        )
+        return SimpleNamespace(
+            run=SimpleNamespace(timeline=timeline),
+            unresolved=(),
+        )
+
+
+def test_resource_adapter_rejects_broken_before_after_chain() -> None:
+    try:
+        CombatSimulationResourceService(
+            sustain_service=_BrokenChainSustainService()
+        ).project(
+            build=_snapshot().materialize(),
+            plan=_plan(),
+            resource=ResourceType.MAGICKA,
+        )
+    except ValueError as exc:
+        assert "before/after chain is inconsistent" in str(exc)
+    else:
+        raise AssertionError("Expected broken resource chain to fail closed")
+
+
+def test_resource_adapter_rejects_summary_ending_mismatch() -> None:
+    try:
+        CombatSimulationResourceService(
+            sustain_service=_EndingMismatchSustainService()
+        ).project(
+            build=_snapshot().materialize(),
+            plan=_plan(),
+            resource=ResourceType.MAGICKA,
+        )
+    except ValueError as exc:
+        assert "ending amount does not match final event state" in str(exc)
+    else:
+        raise AssertionError("Expected mismatched resource ending amount to fail closed")
