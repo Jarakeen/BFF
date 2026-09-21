@@ -227,6 +227,13 @@ class RosterPage(BaseRosterPage):
 
         self.publish_team_finch_button = QPushButton("Publish Team to Finch")
         self.publish_team_finch_button.setToolTip(
+            "Publish the currently saved Team snapshot to Finch. Unsaved schedule edits are not published."
+        )
+        self.publish_team_finch_button.clicked.connect(self._publish_team_to_finch)
+        preview_row.addWidget(self.publish_team_finch_button)
+
+        self.publish_team_finch_button = QPushButton("Publish Team to Finch")
+        self.publish_team_finch_button.setToolTip(
             "Publish the selected Team's saved schedule and basic active roster identity to Finch."
         )
         self.publish_team_finch_button.clicked.connect(self._publish_selected_team_to_finch)
@@ -311,6 +318,46 @@ class RosterPage(BaseRosterPage):
             )
         except Exception as exc:
             self.status.error(f"Team deletion failed: {exc}")
+
+    def _publish_team_to_finch(self) -> None:
+        team = self.schedule_team_combo.currentText().strip()
+        if not team:
+            self.status.warning("Select a Team before publishing to Finch.")
+            return
+        if (
+            self._finch_team_publish_future is not None
+            and not self._finch_team_publish_future.done()
+        ):
+            self.status.info("A Finch Team publish is already running.")
+            return
+
+        self.publish_team_finch_button.setEnabled(False)
+        self.status.info(f"Publishing saved Team {team} to Finch…")
+        self._finch_team_publish_future = _FINCH_TEAM_PUBLISH_EXECUTOR.submit(
+            publish_team_to_finch,
+            database_path=Path(get_data_dir()) / "eso.db",
+            team_name=team,
+            settings_path=Path("settings.json"),
+        )
+        self._finch_team_publish_timer.start()
+
+    def _poll_team_finch_publish(self) -> None:
+        future = self._finch_team_publish_future
+        if future is None or not future.done():
+            return
+
+        self._finch_team_publish_timer.stop()
+        self._finch_team_publish_future = None
+        self.publish_team_finch_button.setEnabled(True)
+        try:
+            result = future.result()
+        except Exception as exc:
+            self.status.error(f"Finch Team publish failed: {exc}")
+            return
+
+        self.status.success(
+            f"Published Team to Finch: {result.snapshot_key}."
+        )
 
     def _selected_days_text(self) -> str:
         return ", ".join(
