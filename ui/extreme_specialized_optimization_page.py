@@ -34,6 +34,8 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
             return "direct"
         if ExtremeSpecializedExecutionService.can_execute_with_duration_input(objective_key):
             return "duration"
+        if ExtremeSpecializedExecutionService.can_execute_with_combat_target_inputs(objective_key):
+            return "combat_target"
         return None
 
     def _objective_changed(self, _index: int = -1) -> None:
@@ -60,6 +62,11 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
                 context_line = (
                     "An explicit comparison duration is requested when the search runs; "
                     "provider windows are derived canonically."
+                )
+            elif route_kind == "combat_target":
+                context_line = (
+                    "Explicit target Health and resistance are requested when the search runs; "
+                    "the saved RotationPlan owns the comparison horizon."
                 )
             else:
                 context_line = (
@@ -120,6 +127,32 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
             if not accepted:
                 return
 
+        target_health: int | None = None
+        target_resistance: float | None = None
+        if route_kind == "combat_target":
+            target_health, accepted = QInputDialog.getInt(
+                self,
+                f"{descriptor.objective.label} Target Health",
+                "Target Health:",
+                21200000,
+                1,
+                2147483647,
+                1000,
+            )
+            if not accepted:
+                return
+            target_resistance, accepted = QInputDialog.getDouble(
+                self,
+                f"{descriptor.objective.label} Target Resistance",
+                "Target resistance:",
+                18200.0,
+                0.0,
+                1000000.0,
+                0,
+            )
+            if not accepted:
+                return
+
         active_bar = str(self.bar_combo.currentData() or "front")
         self.status.info(
             f"Searching {descriptor.objective.label} through the shared {descriptor.execution_family} engine."
@@ -130,6 +163,8 @@ class ExtremeSpecializedOptimizationPage(ExtremeOptimizationPage):
                 objective_key,
                 active_bar=active_bar,
                 duration_seconds=duration_seconds,
+                target_health=target_health,
+                target_resistance=target_resistance,
             )
         except Exception as exc:
             self.status.error(f"Extreme specialized search failed: {exc}")
