@@ -273,6 +273,20 @@ class CombatSimulationResult:
             raise ValueError(
                 "combat simulation result cannot contain events beyond its duration"
             )
+        event_keys = tuple(
+            (
+                float(event.time_seconds),
+                int(event.priority),
+                int(event.sequence),
+                str(event.event_type),
+                str(event.source).casefold(),
+            )
+            for event in self.events
+        )
+        if event_keys != tuple(sorted(event_keys)):
+            raise ValueError(
+                "combat simulation result events must be in canonical timeline order"
+            )
         initial_bar = str(self.initial_bar or "").strip()
         final_bar = str(self.final_bar or "").strip()
         if not initial_bar or not final_bar:
