@@ -534,3 +534,19 @@ def test_sustained_dps_gear_runtime_semantics_reuses_canonical_resolvers() -> No
     ) == ("extreme.sustained_dps.dual_bar_gear_frontier",)
     assert "GearSetEffectResolver" in service.notes
     assert "does not prove proc occurrence" in service.notes
+
+
+def test_generated_sustained_dps_runtime_evaluation_consumes_canonical_simulation() -> None:
+    service = canonical_service_for("extreme_sustained_dps_generated_runtime_evaluation")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.generated_runtime_evaluation"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.gear_runtime_semantics",
+        "simulation.saved_build_dd",
+    )
+    assert "caller-owned" in service.notes
+    assert "fail closed" in service.notes
