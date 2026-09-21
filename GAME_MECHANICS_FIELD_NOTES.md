@@ -1169,3 +1169,11 @@ A generated character may natively own class-route lines, explicitly own shared 
 ### 2026-09-21 — Cross-axis optimization must assemble state, not swap whole candidate snapshots
 
 Each generated frontier creates a convenient local snapshot while exploring its own axis. Combining the “best” snapshots wholesale can silently erase another axis's gear, class route, potion, CP, or skills. FoundryDock therefore assembles a final generated candidate by copying **only** the state owned by each selected axis onto one cross-axis-authoritative build.
+
+### 2026-09-21 — The same skill bar can produce different finite-horizon rotations
+
+A bar tells FoundryDock **which** skills are available, not the order in which they are cast. Over a finite fight, changing the ordinary-skill order or starting on the other weapon bar can move DoTs, buffs, executes, and proc windows earlier or later enough to change total damage before the target dies. Generated sustained-DPS search therefore preserves ordinary-skill order and legal starting-bar route as rotation coordinates rather than treating saved slot order as combat truth.
+
+### 2026-09-21 — Light-Attack weaving is a rotation choice, not a bar-legality fact
+
+A legal build can exist with or without weaving Light Attacks between skills. Endgame DPS normally weaves, but theoretical search must not erase the non-weaving state merely because it is usually worse. The generated rotation family therefore preserves both states until exact simulation or a proof-safe dominance rule removes one.
