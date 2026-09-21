@@ -1131,3 +1131,20 @@ def test_sustained_dps_finite_family_branch_bound_adapter_requires_exact_scope()
     )
     assert "exactly that family" in service.notes
     assert "omitted-scope item" in service.notes
+
+
+
+def test_sustained_dps_finite_family_node_bound_is_identity_safe() -> None:
+    service = canonical_service_for("extreme_sustained_dps_finite_family_node_bound")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.finite_family_node_bound"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.finite_family_branch_bound_adapter",
+        "extreme.sustained_dps.partial_branch_upper_bound",
+    )
+    assert "exact generated frontier node identity" in service.purpose
+    assert "never rewrites a proof onto a sibling branch" in service.notes
