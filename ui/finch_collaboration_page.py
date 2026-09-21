@@ -4,7 +4,14 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 
 from PySide6.QtCore import QTimer, Qt, Signal
-from PySide6.QtWidgets import QLabel, QPushButton, QTableWidget, QTableWidgetItem
+from PySide6.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+)
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
 from services.finch_collaboration_overview_service import (
@@ -31,6 +38,7 @@ class FinchCollaborationPage(FoundryPage):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._future: Future | None = None
+        self._all_rows = ()
         self._rows = ()
         self._timer = QTimer(self)
         self._timer.setInterval(100)
@@ -48,6 +56,15 @@ class FinchCollaborationPage(FoundryPage):
         self.refresh_button.clicked.connect(self.refresh_from_finch)
         header.add_context_widget(self.refresh_button)
 
+        self.filter_combo = QComboBox()
+        self.filter_combo.addItem("All Shared", "")
+        self.filter_combo.addItem("Changed Since Copy", "changed")
+        self.filter_combo.addItem("Not Copied", "not_copied")
+        self.filter_combo.addItem("Readiness Gaps", "readiness_gaps")
+        self.filter_combo.addItem("Coverage Gaps", "coverage_gaps")
+        self.filter_combo.currentIndexChanged.connect(self._apply_filter)
+        header.add_context_widget(self.filter_combo)
+
         self.open_button = QPushButton("Open Workspace")
         self.open_button.setEnabled(False)
         self.open_button.clicked.connect(self._open_selected_workspace)
@@ -63,6 +80,26 @@ class FinchCollaborationPage(FoundryPage):
         text.setWordWrap(True)
         note.addWidget(text)
         self.workspace_layout.addWidget(note)
+
+        attention = FoundryCard("Attention Summary", "compass")
+        attention_row = QHBoxLayout()
+        attention_row.setContentsMargins(0, 0, 0, 0)
+        attention_row.setSpacing(18)
+        self.changed_label = QLabel("Changed since copy: 0")
+        self.not_copied_label = QLabel("Not copied: 0")
+        self.readiness_gap_label = QLabel("Readiness gaps: 0")
+        self.coverage_gap_label = QLabel("Coverage gaps: 0")
+        for label in (
+            self.changed_label,
+            self.not_copied_label,
+            self.readiness_gap_label,
+            self.coverage_gap_label,
+        ):
+            label.setProperty("sidebarMeta", True)
+            attention_row.addWidget(label)
+        attention_row.addStretch()
+        attention.addLayout(attention_row)
+        self.workspace_layout.addWidget(attention)
 
         card = FoundryCard("Shared Snapshots", "team")
         self.table = QTableWidget(0, 6)
@@ -121,7 +158,41 @@ class FinchCollaborationPage(FoundryPage):
             )
             return
 
-        self._rows = overview.rows
+        self._all_rows = overview.rows
+        self.changed_label.setText(f"Changed since copy: {overview.attention.changed}")
+        self.not_copied_label.setText(f"Not copied: {overview.attention.not_copied}")
+        self.readiness_gap_label.setText(
+            f"Readiness gaps: {overview.attention.readiness_gaps}"
+        )
+        self.coverage_gap_label.setText(
+            f"Coverage gaps: {overview.attention.coverage_gaps}"
+        )
+        self._apply_filter()
+
+        if overview.errors:
+            self.status.warning(
+                f"Loaded {len(self._rows)} shared snapshot(s); "
+                f"{len(overview.errors)} source(s) failed: "
+                + " | ".join(overview.errors)
+            )
+        elif self._rows:
+            self.status.success(
+                f"Loaded {len(self._rows)} shared Finch snapshot(s)."
+            )
+        else:
+            self.status.info("Finch has no shared collaboration snapshots yet.")
+
+    def _apply_filter(self) -> None:
+        tag = str(self.filter_combo.currentData() or "").strip()
+        if tag:
+            self._rows = tuple(
+                row for row in self._all_rows if tag in row.attention_tags
+            )
+        else:
+            self._rows = tuple(self._all_rows)
+        self._render_rows()
+
+    def _render_rows(self) -> None:
         self.table.setRowCount(len(self._rows))
         for row_index, row in enumerate(self._rows):
             values = (
@@ -139,22 +210,8 @@ class FinchCollaborationPage(FoundryPage):
                         Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
                     )
                 self.table.setItem(row_index, column, item)
-
         self.table.resizeRowsToContents()
         self.open_button.setEnabled(False)
-
-        if overview.errors:
-            self.status.warning(
-                f"Loaded {len(self._rows)} shared snapshot(s); "
-                f"{len(overview.errors)} source(s) failed: "
-                + " | ".join(overview.errors)
-            )
-        elif self._rows:
-            self.status.success(
-                f"Loaded {len(self._rows)} shared Finch snapshot(s)."
-            )
-        else:
-            self.status.info("Finch has no shared collaboration snapshots yet.")
 
     def _selection_changed(self) -> None:
         row = self.table.currentRow()
