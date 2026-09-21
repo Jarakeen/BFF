@@ -17,6 +17,7 @@ from minmax.runtime_effect_window import RuntimeEffectActiveWindow
 
 class SimulationEventPriority(IntEnum):
     ACTION = 10
+    RESOURCE_MAXIMUM = 15
     RESOURCE_COST = 20
     DIRECT_RESULT = 30
     HEALTH_CHANGE = 35
