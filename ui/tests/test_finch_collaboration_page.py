@@ -56,3 +56,28 @@ def test_finch_collaboration_page_exposes_attention_filters_and_counts() -> None
     assert 'self.readiness_gap_label = QLabel("Readiness gaps: 0")' in source
     assert 'self.coverage_gap_label = QLabel("Coverage gaps: 0")' in source
     assert "tag in row.attention_tags" in source
+
+
+def test_finch_collaboration_open_workspace_emits_structured_context() -> None:
+    page = _source("ui/finch_collaboration_page.py")
+    support = _source("ui/raid_engine_dashboard_support.py")
+
+    assert "workspaceRequested = Signal(str, str)" in page
+    assert "self.workspaceRequested.emit(row.route, row.context_key)" in page
+    assert "def _open_finch_collaboration_workspace(" in support
+    assert 'route == "raid_plans" and context_key' in support
+    assert 'route == "readiness" and context_key' in support
+    assert 'route == "console:7" and context_key' in support
+    assert "finch_collaboration.workspaceRequested.connect(" in support
+
+
+def test_finch_collaboration_handoff_falls_back_without_local_context() -> None:
+    support = _source("ui/raid_engine_dashboard_support.py")
+    handoff = support[
+        support.index("def _open_finch_collaboration_workspace(")
+        : support.index("def _open_exact_build")
+    ]
+
+    assert "window.show_page(route)" in handoff
+    assert "context_key" in handoff
+    assert "plan_repository" in handoff
