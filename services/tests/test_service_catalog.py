@@ -1092,3 +1092,26 @@ def test_sustained_dps_dynamic_whole_plan_frontier_adapter_preserves_omitted_sco
     )
     assert "preserve each source denominator and omitted scope" in service.notes
     assert "materialized one at a time" in service.notes
+
+
+def test_sustained_dps_runtime_state_search_keeps_local_scope_explicit() -> None:
+    frontier = canonical_service_for("extreme_sustained_dps_runtime_state_frontier")
+    evaluator = canonical_service_for("extreme_sustained_dps_runtime_state_whole_plan_evaluator")
+    search = canonical_service_for("extreme_sustained_dps_runtime_state_dominance_search")
+
+    assert frontier is not None
+    assert evaluator is not None
+    assert search is not None
+    assert frontier.service_id == "extreme.sustained_dps.runtime_state_frontier"
+    assert evaluator.service_id == "extreme.sustained_dps.runtime_state_whole_plan_evaluator"
+    assert search.service_id == "extreme.sustained_dps.runtime_state_dominance_search"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(search.service_id)
+    ) == (
+        "extreme.sustained_dps.runtime_state_whole_plan_evaluator",
+        "extreme.sustained_dps.finite_whole_plan_dominance",
+    )
+    assert "explicitly proven local branch" in frontier.notes
+    assert "Only ExtremeRuntimeSnapshot varies" in evaluator.notes
+    assert "Omitted runtime scope remains separate" in search.notes
