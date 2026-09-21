@@ -10,6 +10,7 @@ be locked in place once the room orientation is established.
 
 import json
 
+from shiboken6 import isValid
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QBrush, QFont, QPen
 from PySide6.QtWidgets import (
@@ -47,12 +48,32 @@ def _reference_items(board):
     return [item for item in board._token_items() if _is_reference(item)]
 
 
+def _qt_alive(value) -> bool:
+    if value is None:
+        return False
+    try:
+        return bool(isValid(value))
+    except (RuntimeError, TypeError):
+        return False
+
+
 def _selected_labelable(board):
     from ui.components.encounter_board import EncounterToken, EncounterZone
 
+    if not _qt_alive(board):
+        return None
+    scene = getattr(board, "scene", None)
+    if not _qt_alive(scene):
+        return None
+
+    try:
+        selected_items = scene.selectedItems()
+    except RuntimeError:
+        return None
+
     selected = [
         item
-        for item in board.scene.selectedItems()
+        for item in selected_items
         if isinstance(item, (EncounterToken, EncounterZone))
     ]
     return selected[0] if len(selected) == 1 else None
@@ -67,24 +88,29 @@ def _item_kind(item) -> tuple[str, str]:
 
 
 def _sync_label_editor(board) -> None:
-    if not hasattr(board, "raid_map_custom_label"):
+    if not _qt_alive(board):
         return
+    editor = getattr(board, "raid_map_custom_label", None)
+    apply_button = getattr(board, "raid_map_apply_label", None)
+    if not _qt_alive(editor) or not _qt_alive(apply_button):
+        return
+
     item = _selected_labelable(board)
-    board.raid_map_custom_label.blockSignals(True)
+    editor.blockSignals(True)
     if item is None:
-        board.raid_map_custom_label.clear()
-        board.raid_map_custom_label.setPlaceholderText("Select one marker or zone to rename")
-        board.raid_map_custom_label.setEnabled(False)
-        board.raid_map_apply_label.setEnabled(False)
+        editor.clear()
+        editor.setPlaceholderText("Select one marker or zone to rename")
+        editor.setEnabled(False)
+        apply_button.setEnabled(False)
     else:
-        board.raid_map_custom_label.setEnabled(True)
-        board.raid_map_apply_label.setEnabled(True)
-        board.raid_map_custom_label.setText(str(item.label))
+        editor.setEnabled(True)
+        apply_button.setEnabled(True)
+        editor.setText(str(item.label))
         family, kind = _item_kind(item)
-        board.raid_map_custom_label.setPlaceholderText(
+        editor.setPlaceholderText(
             f"Custom label for {family} / {kind}"
         )
-    board.raid_map_custom_label.blockSignals(False)
+    editor.blockSignals(False)
 
 
 def _rename_selected(board) -> None:
@@ -265,7 +291,7 @@ def _label_and_key_panel(board) -> QWidget:
 
     board.raid_map_custom_label = QLineEdit()
     board.raid_map_custom_label.setMinimumWidth(150)
-    board.raid_map_custom_label.setPlaceholderText("Select one marker or zone to rename")
+    editor.setPlaceholderText("Select one marker or zone to rename")
     board.raid_map_custom_label.returnPressed.connect(lambda: _rename_selected(board))
     row.addWidget(board.raid_map_custom_label, 1)
 
@@ -373,7 +399,10 @@ def install() -> None:
         original_init(self, *args, **kwargs)
         _reconcile_timeline_ids_after_reload(self)
         _apply_reference_lock(self, getattr(self, "_reference_points_locked", False))
-        self.scene.selectionChanged.connect(lambda: _sync_label_editor(self))
+        scene = getattr(self, "scene", None)
+        if _qt_alive(scene):
+            self._raid_map_label_selection_changed = lambda: _sync_label_editor(self)
+            scene.selectionChanged.connect(self._raid_map_label_selection_changed)
         _sync_label_editor(self)
 
     EncounterBoard._build_ui = build_ui_with_labels
