@@ -370,3 +370,19 @@ def test_sustained_dps_generated_frontier_is_structural_generation_authority() -
     assert SERVICE_CATALOG.dependencies_of(frontier.service_id) == ()
     assert "64-point attributes" in frontier.notes
     assert "remain explicit deferred axes" in frontier.notes
+
+
+def test_sustained_dps_pruning_consumes_generated_frontier() -> None:
+    pruning = canonical_service_for("extreme_sustained_dps_proof_safe_pruning")
+
+    assert pruning is not None
+    assert pruning.service_id == "extreme.sustained_dps.pruning"
+    assert pruning.behavior is ServiceBehavior.DETERMINISTIC
+    assert pruning.encounter_aware is False
+    assert set(pruning.roles) == {"DPS"}
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(pruning.service_id)
+    ) == ("extreme.sustained_dps.generated_frontier",)
+    assert "never computes ESO damage" in pruning.notes
+    assert "Equal-to-incumbent ceilings" in pruning.notes
