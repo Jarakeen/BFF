@@ -3,13 +3,16 @@ from __future__ import annotations
 """Preset raid-stack formations for the Encounters Raid Map.
 
 The formation picker is intentionally a presentation/positioning helper only. It
-reuses the board's existing draggable DD/healer markers, so Foundry and Rylo
-continue to own their own marker styling and color-vision behavior.
+reuses the board's existing draggable DD/healer markers and is exposed only in
+the Urban Wilderness visual theme, inheriting that theme's marker styling and
+color-vision behavior.
 """
 
 from dataclasses import dataclass
 
-from PySide6.QtWidgets import QComboBox, QLabel, QPushButton
+from PySide6.QtWidgets import QApplication, QComboBox, QLabel, QPushButton
+
+from services.accessibility_preferences import VISUAL_THEME_URBAN_WILDERNESS
 
 _INSTALLED = False
 
@@ -125,6 +128,10 @@ def install() -> None:
 
     def init_with_formations(self, parent=None):
         original_init(self, parent)
+
+        app = QApplication.instance()
+        if app is None or app.property("visualTheme") != VISUAL_THEME_URBAN_WILDERNESS:
+            return
 
         root = self.layout()
         zone_toolbar = None
