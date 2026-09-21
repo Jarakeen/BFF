@@ -361,3 +361,76 @@ def test_combat_simulation_result_rejects_broken_health_change_chain() -> None:
         assert "before/after chain is inconsistent" in str(exc)
     else:
         raise AssertionError("Expected broken Health chain to fail closed")
+
+
+def test_combat_simulation_result_rejects_death_without_zero_health() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=5000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    death = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.EXPIRATION),
+        sequence=0,
+        event_type="death",
+        source="Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+
+    try:
+        _result(events=(death,), target_state=state)
+    except ValueError as exc:
+        assert "requires zero Health state" in str(exc)
+    else:
+        raise AssertionError("Expected unsupported death evidence to fail closed")
+
+
+def test_combat_simulation_result_accepts_death_after_lethal_health_change() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=5000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    health = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("before", 5000),
+            ("after", 0),
+            ("maximum_health", 10000),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+    death = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.EXPIRATION),
+        sequence=0,
+        event_type="death",
+        source="Execute",
+        payload=(
+            ("recipient", "Boss"),
+            ("origin_event_type", "outgoing_damage"),
+        ),
+    )
+
+    result = _result(events=(health, death), target_state=state)
+
+    assert result.events == (health, death)
