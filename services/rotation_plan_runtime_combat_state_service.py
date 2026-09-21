@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
 from minmax.rotation_active_bar_legality import RotationActiveBarAssessor
@@ -31,6 +32,7 @@ class RotationPlanRuntimeCombatStateResult:
     sequence: int | None
     active_bar: str
     combat_state: CombatState | None
+    active_effects: tuple[EffectVariant, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
@@ -168,6 +170,7 @@ class RotationPlanRuntimeCombatStateService:
                 sequence=boundary_sequence,
                 active_bar=active_bar,
                 combat_state=None,
+                active_effects=projected.active_effects,
                 unresolved=unresolved,
             )
 
@@ -192,6 +195,7 @@ class RotationPlanRuntimeCombatStateService:
                 sequence=boundary_sequence,
                 active_bar=active_bar,
                 combat_state=None,
+                active_effects=projected.active_effects,
                 unresolved=potion_unresolved,
             )
 
@@ -218,6 +222,7 @@ class RotationPlanRuntimeCombatStateService:
                 if toggle_unresolved or toggle_projected.combat_state is None
                 else toggle_projected.combat_state
             ),
+            active_effects=projected.active_effects,
             unresolved=toggle_unresolved,
         )
 
