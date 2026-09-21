@@ -18,6 +18,7 @@ from services.combat_simulation_health_ordering_service import (
 class CombatSimulationHealthProjection:
     events: tuple[CombatSimulationEvent, ...]
     unresolved: tuple[str, ...] = ()
+    damage_unresolved: tuple[str, ...] = ()
 
 
 class CombatSimulationHealthService:
@@ -122,7 +123,21 @@ class CombatSimulationHealthService:
         target_state: CombatSimulationTargetState | None,
     ) -> CombatSimulationHealthProjection:
         if target_state is None:
-            return CombatSimulationHealthProjection(events=(), unresolved=())
+            outgoing = tuple(
+                event for event in events if event.event_type == "outgoing_damage"
+            )
+            damage_unresolved = tuple(
+                dict.fromkeys(
+                    f"{event.source} outgoing_damage at {event.time_seconds:g}s: "
+                    "target Health state is required to prove applied damage"
+                    for event in outgoing
+                )
+            )
+            return CombatSimulationHealthProjection(
+                events=(),
+                unresolved=damage_unresolved,
+                damage_unresolved=damage_unresolved,
+            )
 
         health: dict[str, tuple[int | None, int | None]] = {
             item.identity: (item.current_health, item.maximum_health)
@@ -130,6 +145,12 @@ class CombatSimulationHealthService:
         }
         projected: list[CombatSimulationEvent] = []
         unresolved: list[str] = []
+        damage_unresolved: list[str] = []
+
+        def add_unresolved(message: str, *, damage_blocking: bool = False) -> None:
+            unresolved.append(message)
+            if damage_blocking:
+                damage_unresolved.append(message)
 
         ordered = tuple(
             sorted(
@@ -177,40 +198,46 @@ class CombatSimulationHealthService:
             if event.event_type in self._DAMAGE_EVENT_TYPES:
                 recipient = str(payload.get("recipient") or "").strip()
                 if not recipient:
-                    unresolved.append(
-                        f"{event.source} {event.event_type} at {event.time_seconds:g}s: recipient is required"
+                    add_unresolved(
+                        f"{event.source} {event.event_type} at {event.time_seconds:g}s: recipient is required",
+                        damage_blocking=(event.event_type == "outgoing_damage"),
                     )
                     continue
                 if is_blocked(recipient, event):
                     continue
                 if recipient not in health:
-                    unresolved.append(
-                        f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: unknown combatant"
+                    add_unresolved(
+                        f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: unknown combatant",
+                        damage_blocking=(event.event_type == "outgoing_damage"),
                     )
                     continue
                 current, maximum = health[recipient]
                 if current is None or maximum is None:
-                    unresolved.append(
+                    add_unresolved(
                         f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: "
-                        "current and maximum Health are required"
+                        "current and maximum Health are required",
+                        damage_blocking=(event.event_type == "outgoing_damage"),
                     )
                     continue
                 if int(current) == 0:
-                    unresolved.append(
+                    add_unresolved(
                         f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: "
-                        "recipient is dead; additional damage is not applied"
+                        "recipient is dead; additional damage is not applied",
+                        damage_blocking=(event.event_type == "outgoing_damage"),
                     )
                     continue
                 amount = payload.get("amount")
                 if amount is None:
-                    unresolved.append(
-                        f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: damage amount is unavailable"
+                    add_unresolved(
+                        f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: damage amount is unavailable",
+                        damage_blocking=(event.event_type == "outgoing_damage"),
                     )
                     continue
                 attempted_damage = float(amount)
                 if attempted_damage < 0:
-                    unresolved.append(
-                        f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: damage amount cannot be negative"
+                    add_unresolved(
+                        f"{event.source} {event.event_type} at {event.time_seconds:g}s -> {recipient}: damage amount cannot be negative",
+                        damage_blocking=(event.event_type == "outgoing_damage"),
                     )
                     continue
                 applied_damage = min(attempted_damage, float(current))
@@ -333,6 +360,7 @@ class CombatSimulationHealthService:
                 )
             ),
             unresolved=tuple(dict.fromkeys(unresolved)),
+            damage_unresolved=tuple(dict.fromkeys(damage_unresolved)),
         )
 
 
