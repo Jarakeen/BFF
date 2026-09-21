@@ -764,6 +764,29 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_frontier",
+        domain="extreme",
+        purpose=(
+            "Enumerate the finite structural candidate frontier for generated sustained-DPS "
+            "search from the canonical Extreme global universe without fabricating deferred "
+            "dynamic build axes."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_candidate_service",
+        inputs=("ExtremeGlobalSearchUniverse",),
+        outputs=("ExtremeSustainedDPSGeneratedFrontier", "ExtremeSustainedDPSStructuralCandidate"),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_generated_structural_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Expands race, legal class route, 64-point attributes, and active bar only. "
+            "Gear, traits, glyphs, Mundus, consumables, skills, CP, passives, and runtime "
+            "rotation state remain explicit deferred axes until their own generators close them."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="combat.simulation.snapshot",
         domain="combat",
         purpose=(
