@@ -81,3 +81,14 @@ def test_public_release_fallback_does_not_require_private_key(monkeypatch, tmp_p
     assert service.release_url == updater.LATEST_RELEASE_API
     assert "X-FoundryDock-Update-Key" not in calls[0][1]
     assert calls[0][1]["X-GitHub-Api-Version"] == "2022-11-28"
+
+
+def test_private_key_without_explicit_url_uses_production_gateway(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(updater, "get_app_root", lambda: tmp_path)
+    monkeypatch.delenv("FOUNDRYDOCK_UPDATE_BASE_URL", raising=False)
+    monkeypatch.setenv("FOUNDRYDOCK_UPDATE_ACCESS_KEY", "tester-key")
+
+    service = updater.ApplicationUpdateService("0.1.3")
+
+    assert service.release_url == f"{updater.DEFAULT_UPDATE_GATEWAY_BASE_URL}/v1/releases/latest"
+    assert service._headers()["X-FoundryDock-Update-Key"] == "tester-key"
