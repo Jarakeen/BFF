@@ -15,7 +15,6 @@ from pathlib import Path
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.combat_state import CombatState
 from minmax.gear_set_repository import GearSetRepository
-from minmax.named_combat_buffs import canonical_buff_name, effects_for_buff
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
 from models.combat_simulation import (
@@ -51,6 +50,9 @@ from services.extreme_runtime_snapshot_combat_state_service import (
 )
 from services.extreme_saved_rotation_combat_record_service import (
     ExtremeSustainedDPSRecord,
+)
+from services.extreme_sustained_dps_runtime_effect_projection_service import (
+    ExtremeSustainedDPSRuntimeEffectProjectionService,
 )
 from services.minmax_character_progression_adapter import (
     SavedBuildProgressionResolution,
@@ -107,24 +109,6 @@ class _GearBoundRuntimeSnapshotState:
     ) -> None:
         self.delegate = delegate
         self.activation = activation
-        self._set_names = tuple(
-            str(row.set_name or "").strip().casefold()
-            for row in activation.evidence
-            if str(row.set_name or "").strip()
-        )
-
-    @staticmethod
-    def _represented_named_buff(effect) -> bool:
-        canonical = canonical_buff_name(str(getattr(effect, "name", "") or "").replace("_", " "))
-        return bool(canonical and effects_for_buff(canonical))
-
-    def _is_active_gear_effect(self, effect) -> bool:
-        source = str(getattr(effect, "source", "") or "").strip().casefold()
-        return any(
-            source == name or source.startswith(name + " (")
-            for name in self._set_names
-        )
-
     def resolve(
         self,
         build: PlayerBuild,
@@ -144,21 +128,7 @@ class _GearBoundRuntimeSnapshotState:
             base_combat_state=base_combat_state,
             base_active_buffs=base_active_buffs,
         )
-        unresolved = list(projected.unresolved)
-        for effect in projected.active_effects:
-            if not self._is_active_gear_effect(effect):
-                continue
-            if self._represented_named_buff(effect):
-                continue
-            unresolved.append(
-                f"{effect.source} active runtime effect {effect.name!r} is verified but "
-                "has no generic timed-effect -> rotation build-context bridge yet"
-            )
-        return ExtremeRuntimeSnapshotCombatStateResult(
-            combat_state=projected.combat_state,
-            active_effects=projected.active_effects,
-            unresolved=tuple(dict.fromkeys(item for item in unresolved if item)),
-        )
+        return projected
 
 
 @dataclass(frozen=True)
@@ -290,6 +260,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
 
         runtime_build_context = RotationPlanRuntimeBuildContextService(
             static_context_service=static_context_service,
+            runtime_effect_projector=ExtremeSustainedDPSRuntimeEffectProjectionService,
         )
 
         def runtime_build_context_resolver(time_seconds: float, sequence: int | None = None):
@@ -340,7 +311,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             f"Explicit target Health: {int(target_health)}",
             f"Explicit target resistance: {float(target_resistance):g}",
             "Dual-bar named-set activation bound into shared runtime snapshot truth",
-            "Named gear buffs may alter exact runtime build contexts; active non-named gear effects fail closed until their generic context bridge exists",
+            "Named buffs and reviewed timed non-named runtime stat effects may alter exact runtime build contexts",
             "Damage evaluated through Phase 14 Combat Simulation using candidate_build provenance",
         )
         if summary.modeled_dps is None:
