@@ -30,20 +30,34 @@ class RuntimeEffectActiveWindow:
     magnitude: float | None = None
 
     def __post_init__(self) -> None:
-        if not str(self.effect_name or "").strip():
+        effect_name = str(self.effect_name or "").strip()
+        source = str(self.source or "").strip()
+        if not effect_name:
             raise ValueError("runtime effect window requires an effect identity")
-        if not str(self.source or "").strip():
+        if not source:
             raise ValueError("runtime effect window requires a source")
-        if not math.isfinite(self.start_time_seconds) or self.start_time_seconds < 0:
+        start_time_seconds = float(self.start_time_seconds)
+        end_time_seconds = float(self.end_time_seconds)
+        if not math.isfinite(start_time_seconds) or start_time_seconds < 0:
             raise ValueError("runtime effect window start must be finite and non-negative")
-        if not math.isfinite(self.end_time_seconds):
+        if not math.isfinite(end_time_seconds):
             raise ValueError("runtime effect window end must be finite")
-        if self.end_time_seconds <= self.start_time_seconds:
+        if end_time_seconds <= start_time_seconds:
             raise ValueError("runtime effect window end must be after its start")
-        if self.sequence < 0:
+        sequence = int(self.sequence)
+        if sequence < 0:
             raise ValueError("runtime effect window sequence cannot be negative")
-        if self.magnitude is not None and not math.isfinite(self.magnitude):
+        magnitude = None if self.magnitude is None else float(self.magnitude)
+        if magnitude is not None and not math.isfinite(magnitude):
             raise ValueError("runtime effect window magnitude must be finite when present")
+        target = None if self.target is None else str(self.target).strip() or None
+        object.__setattr__(self, "effect_name", effect_name)
+        object.__setattr__(self, "source", source)
+        object.__setattr__(self, "start_time_seconds", start_time_seconds)
+        object.__setattr__(self, "end_time_seconds", end_time_seconds)
+        object.__setattr__(self, "sequence", sequence)
+        object.__setattr__(self, "magnitude", magnitude)
+        object.__setattr__(self, "target", target)
 
     @property
     def duration_seconds(self) -> float:
