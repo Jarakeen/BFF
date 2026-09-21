@@ -34,8 +34,10 @@ class CombatSimulationHealthOrderingService:
     """Find per-recipient Health events whose ordering is not proven.
 
     Events are considered safely ordered when timestamp, priority, or sequence differ.
-    If two or more Health-changing consequences share all three coordinates for the
-    same recipient, the simulator has no reviewed cross-source tie-break authority.
+    Multiple same-source components of one damage event type are also safe because
+    their combined Health effect is commutative and attribution is unchanged.
+    Other Health-changing consequences sharing all three coordinates for one recipient
+    require reviewed cross-source ordering evidence and therefore fail closed.
     """
 
     def collisions(
@@ -77,6 +79,20 @@ class CombatSimulationHealthOrderingService:
         for (recipient, time_seconds, priority, sequence), rows in grouped.items():
             if len(rows) < 2:
                 continue
+
+            event_types = {row.event_type for row in rows}
+            sources = {
+                str(row.source or "").strip().casefold()
+                for row in rows
+            }
+            same_source_damage_components = (
+                event_types <= _DAMAGE_EVENT_TYPES
+                and len(event_types) == 1
+                and len(sources) == 1
+            )
+            if same_source_damage_components:
+                continue
+
             collisions.append(
                 CombatSimulationHealthOrderingCollision(
                     recipient=recipient,
