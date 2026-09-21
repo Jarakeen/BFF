@@ -491,3 +491,20 @@ def test_sustained_dps_champion_point_frontier_uses_canonical_loadout_legality()
     ) == ("mechanics.champion_point_loadout",)
     assert "four-slots-per-discipline" in service.purpose
     assert "Dynamic/runtime" in service.notes
+
+
+def test_sustained_dps_gear_topology_and_realization_are_separate_authorities() -> None:
+    topology = canonical_service_for("extreme_sustained_dps_gear_topology_frontier")
+    realization = canonical_service_for("extreme_sustained_dps_gear_topology_realization")
+
+    assert topology is not None
+    assert realization is not None
+    assert topology.service_id == "extreme.sustained_dps.gear_topology_frontier"
+    assert realization.service_id == "extreme.sustained_dps.gear_topology_realization"
+    assert SERVICE_CATALOG.dependencies_of(topology.service_id) == ()
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(realization.service_id)
+    ) == ("extreme.sustained_dps.gear_topology_frontier",)
+    assert "abstract active-snapshot count topology" in topology.notes
+    assert "proven-empty branch" in realization.notes
