@@ -62,14 +62,16 @@ class CombatSimulationHealthService:
             )
         )
         collisions = self.ordering_service.collisions(ordered)
-        blocked_from: dict[str, tuple[float, int, int]] = {
-            item.recipient: (
+        blocked_from: dict[str, tuple[float, int, int]] = {}
+        for item in collisions:
+            point = (
                 float(item.time_seconds),
                 int(item.priority),
                 int(item.sequence),
             )
-            for item in collisions
-        }
+            current = blocked_from.get(item.recipient)
+            if current is None or point < current:
+                blocked_from[item.recipient] = point
         unresolved.extend(item.message for item in collisions)
 
         def is_blocked(
@@ -129,7 +131,7 @@ class CombatSimulationHealthService:
                 projected.append(
                     CombatSimulationEvent(
                         time_seconds=event.time_seconds,
-                        priority=int(SimulationEventPriority.DIRECT_RESULT),
+                        priority=int(SimulationEventPriority.HEALTH_CHANGE),
                         sequence=event.sequence,
                         event_type="health_change",
                         source=event.source,
@@ -211,7 +213,7 @@ class CombatSimulationHealthService:
                 projected.append(
                     CombatSimulationEvent(
                         time_seconds=event.time_seconds,
-                        priority=int(SimulationEventPriority.DIRECT_RESULT),
+                        priority=int(SimulationEventPriority.HEALTH_CHANGE),
                         sequence=event.sequence,
                         event_type="health_change",
                         source=event.source,
