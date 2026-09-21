@@ -58,6 +58,14 @@ class CombatSimulationDamageSummaryService:
         if not target:
             raise ValueError("combat simulation damage summary target identity is required")
 
+        if (
+            result.target_state is not None
+            and result.target_state.combatant(target) is None
+        ):
+            raise ValueError(
+                f"combat simulation damage summary target is not present in target state: {target!r}"
+            )
+
         outgoing = tuple(
             event
             for event in result.events
