@@ -875,6 +875,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.closed_descendant_action_ceiling",
+        domain="extreme",
+        purpose=(
+            "Promote complete canonical damage consequences across one proven-closed "
+            "descendant denominator into an absolute per-action total-damage ceiling."
+        ),
+        implementation_path="services.extreme_sustained_dps_closed_descendant_action_ceiling_service",
+        inputs=("BranchKey", "ClosedDescendantKeys", "ClosedDescendantActionWitnesses"),
+        outputs=("ExtremeSustainedDPSClosedDescendantActionCeilingResult",),
+        dependencies=("extreme.sustained_dps.structural_action_upper_bound",),
+        responsibilities=("extreme_sustained_dps_closed_descendant_action_ceiling",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Requires every descendant and every damage-bearing action to be represented exactly, "
+            "with explicit direct/periodic/triggered completeness. The maximum exact action "
+            "consequence is valid only for that proven-closed branch and is never extrapolated outward."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.structural_action_upper_bound",
         domain="extreme",
         purpose=(
