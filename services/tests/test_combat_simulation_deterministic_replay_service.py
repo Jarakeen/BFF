@@ -559,3 +559,66 @@ def test_combat_simulation_result_rejects_health_change_without_known_maximum() 
         assert "requires known maximum Health" in str(exc)
     else:
         raise AssertionError("Expected Health change without maximum Health to fail closed")
+
+
+def test_combat_simulation_result_rejects_effect_window_start_beyond_duration() -> None:
+    from minmax.runtime_effect_window import RuntimeEffectActiveWindow
+
+    window = RuntimeEffectActiveWindow(
+        effect_name="future_effect",
+        source="Skill",
+        start_time_seconds=6.0,
+        end_time_seconds=10.0,
+    )
+
+    try:
+        _result(effect_windows=(window,))
+    except ValueError as exc:
+        assert "cannot start beyond result duration" in str(exc)
+    else:
+        raise AssertionError("Expected future effect window to fail closed")
+
+
+def test_combat_simulation_result_rejects_out_of_order_effect_windows() -> None:
+    from minmax.runtime_effect_window import RuntimeEffectActiveWindow
+
+    later = RuntimeEffectActiveWindow(
+        effect_name="later",
+        source="Skill",
+        start_time_seconds=2.0,
+        end_time_seconds=4.0,
+    )
+    earlier = RuntimeEffectActiveWindow(
+        effect_name="earlier",
+        source="Skill",
+        start_time_seconds=1.0,
+        end_time_seconds=3.0,
+    )
+
+    try:
+        _result(effect_windows=(later, earlier))
+    except ValueError as exc:
+        assert "effect windows must be in canonical timeline order" in str(exc)
+    else:
+        raise AssertionError("Expected out-of-order effect windows to fail closed")
+
+
+def test_combat_simulation_result_rejects_final_bar_mismatch() -> None:
+    swap = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.ACTION),
+        sequence=0,
+        event_type="action",
+        source="bar_swap",
+        payload=(
+            ("kind", "bar_swap"),
+            ("bar", "back"),
+        ),
+    )
+
+    try:
+        _result(events=(swap,), final_bar="front")
+    except ValueError as exc:
+        assert "final bar does not match event state" in str(exc)
+    else:
+        raise AssertionError("Expected final bar/event mismatch to fail closed")
