@@ -157,6 +157,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 ## Exports & Sharing
 
+- **Finch operational sync** uses the configured hosted Finch URL/API credential to explicitly pull pending team gear-needs into existing FoundryDock Personnel assignment state. Sync is user-triggered from Assignments, runs off the UI thread with a worker-owned SQLite connection, resolves only exact current gamertags or explicit aliases on an existing team, rejects archived/ambiguous/unknown identities instead of guessing, and acknowledges Finch only after the local write succeeds.
+- Finch remains an operational companion rather than local-data authority: it does not create Personnel/Teams during gear sync and it does not receive the local `eso.db`, draft builds, private Personnel notes, or unrelated local application state.
 - Neutral CSV exports for spreadsheet / structured-data interchange
 - Theme-aware human-facing PDF exports for Builds and Roster
 - Build / roster export workflows
