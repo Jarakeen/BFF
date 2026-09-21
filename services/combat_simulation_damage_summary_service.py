@@ -32,10 +32,11 @@ class CombatSimulationDamageSummary:
     total_overkill: float
     damage_by_source: tuple[CombatSimulationDamageSourceSummary, ...]
     unresolved: tuple[str, ...]
+    damage_unresolved: tuple[str, ...]
 
     @property
     def complete_damage_evidence(self) -> bool:
-        return not self.unresolved
+        return not self.damage_unresolved
 
     @property
     def modeled_dps(self) -> float | None:
@@ -185,6 +186,7 @@ class CombatSimulationDamageSummaryService:
                 )
             ),
             unresolved=tuple(result.unresolved),
+            damage_unresolved=tuple(result.damage_unresolved),
         )
 
 
