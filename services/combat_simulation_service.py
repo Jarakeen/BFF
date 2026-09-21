@@ -286,6 +286,7 @@ class CombatSimulationService:
             target_state=target_state,
         )
         unresolved.extend(health_projection.unresolved)
+        damage_unresolved.extend(health_projection.damage_unresolved)
 
         merged_events = tuple(
             sorted(
