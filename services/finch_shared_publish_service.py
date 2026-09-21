@@ -20,7 +20,7 @@ from services.settings_service import SettingsService
 
 
 _SHARED_TEAM_SCHEMA_VERSION = 1
-_SHARED_RAID_PLAN_SCHEMA_VERSION = 2
+_SHARED_RAID_PLAN_SCHEMA_VERSION = 3
 
 
 def _clean(value: object) -> str:
@@ -128,6 +128,13 @@ def shared_raid_plan_payload(plan: RaidPlan) -> dict[str, object]:
                 "primary_assignment": member.primary_assignment or "",
                 "secondary_assignment": member.secondary_assignment or "",
                 "utility_assignments": list(member.utility_assignments),
+                "build_summary": {
+                    "name": member.selected_build_name or "",
+                    "source_kind": member.build_source_kind or "",
+                    "source_name": member.build_source_name or "",
+                    "planned_gear_sets": list(member.planned_gear_sets),
+                    "planned_mundus": member.planned_mundus or "",
+                },
             }
             for member in plan.members
         ],
