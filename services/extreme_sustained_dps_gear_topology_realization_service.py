@@ -78,16 +78,6 @@ class ExtremeSustainedDPSGearTopologyRealizationService:
             unresolved.append(
                 "Named-set assignment search was truncated; this topology branch is exploratory, not denominator-proven"
             )
-        if (
-            not result.truncated
-            and not result.unresolved
-            and result.assignments_considered > 0
-            and result.assignments_realized == 0
-        ):
-            unresolved.append(
-                "Topology has no physically realizable named-set assignment under canonical slot eligibility"
-            )
-
         final_unresolved = tuple(dict.fromkeys(item for item in unresolved if item))
         proven = bool(
             result.denominator_proven
@@ -107,9 +97,13 @@ class ExtremeSustainedDPSGearTopologyRealizationService:
                 f"Physical witnesses realized: {result.assignments_realized}",
                 f"Assignments rejected by physical legality: {result.assignments_rejected}",
                 (
-                    "Topology branch fully realized"
-                    if proven
-                    else "Topology branch remains unproven or exploratory"
+                    "Topology branch exhaustively proven empty"
+                    if proven and result.assignments_realized == 0
+                    else (
+                        "Topology branch fully realized"
+                        if proven
+                        else "Topology branch remains unproven or exploratory"
+                    )
                 ),
             ),
             unresolved=final_unresolved,
