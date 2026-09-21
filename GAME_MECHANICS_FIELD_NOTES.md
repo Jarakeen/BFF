@@ -1153,3 +1153,11 @@ Different reagent combinations can produce the same exact canonical Alchemy trai
 ### 2026-09-21 — Passive rank search must not invent skill-line ownership
 
 A passive having a useful max rank in the database does not prove a generated character can own that line. Native class lines come from the candidate class, while guild, weapon, armor, Alliance War, Vampire/Werewolf, and other shared lines require separate ownership evidence. FoundryDock therefore searches ranks only inside already-legal line ownership and leaves line acquisition to the appropriate structural axis.
+
+### 2026-09-21 — A skill family is unique per bar; a bar position is not a DPS mechanic
+
+ESO lets a character put the same ability family on both weapon bars, but one bar cannot simultaneously slot the base skill and one or both of its morphs as separate abilities. FoundryDock therefore treats `base_ability_id` as the per-bar family identity while preserving the base skill and morphs as separate selectable alternatives. The five ordinary slot positions themselves do not change the build's mechanics, so generated search keeps one canonical ordering instead of multiplying equivalent bars by slot permutations. The Ultimate remains a distinct sixth slot.
+
+### 2026-09-21 — An empty skill slot is legal until dominance proves it unnecessary
+
+A theoretical build denominator cannot assume all five normal slots and the Ultimate must be filled merely because optimized players usually fill them. Generated sustained-DPS search therefore retains empty and partial bar states. Later proof-safe dominance may discard them when a filled alternative is proven no worse, but legality and optimization remain separate questions.
