@@ -123,7 +123,12 @@ def test_sustained_dps_consumes_saved_rotation_and_explicit_target_assumptions()
     assert result.record.duration_seconds == pytest.approx(10.0)
     assert result.record.target_dead is False
     assert result.record.damage_complete is True
-    assert any("Global Extreme sustained-DPS search" in row for row in result.unresolved)
+    assert result.unresolved == ()
+    assert any(
+        "Global Extreme sustained-DPS search" in row
+        for row in result.omitted_scope
+    )
+    assert result.mechanic_complete is True
 
     assert len(simulator.calls) == 1
     call = simulator.calls[0]
