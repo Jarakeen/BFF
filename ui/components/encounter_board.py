@@ -416,7 +416,11 @@ class EncounterBoard(QWidget):
         self.view.fit_arena()
 
     def _build_ui(self):
-        root = QVBoxLayout(self)
+        # Resolve locally for one-file packaging. This avoids stale/global
+        # Qt layout bindings in packaged runtimes.
+        from PySide6.QtWidgets import QVBoxLayout as _QVBoxLayout
+
+        root = _QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(6)
 
