@@ -505,3 +505,33 @@ def test_environmental_death_is_not_attributed_as_dd_killing_blow() -> None:
     assert summary.applied_damage == 2000.0
     assert summary.damage_by_source[0].source == "Player Hit"
     assert summary.damage_by_source[0].killing_blow is False
+
+
+def test_damage_summary_rejects_target_missing_from_target_state() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    result = CombatSimulationResult(
+        duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(),
+        target_state=state,
+    )
+
+    try:
+        CombatSimulationDamageSummaryService().summarize(
+            result,
+            target_identity="Not The Boss",
+        )
+    except ValueError as exc:
+        assert "not present in target state" in str(exc)
+    else:
+        raise AssertionError("Expected mismatched summary target to fail closed")
