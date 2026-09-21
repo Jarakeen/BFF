@@ -11,7 +11,7 @@ Raid run-note surface into an explicit editable/persisted control.
 from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QBrush, QFont, QPainterPath, QPen, QPixmap
+from PySide6.QtGui import QColor, QBrush, QFont, QPainterPath, QPen, QPixmap, QPolygonF
 from PySide6.QtWidgets import QLabel, QPushButton, QSizePolicy, QWidget
 
 from engine.config import get_resource_path
@@ -199,7 +199,7 @@ def install() -> None:
             zone.color = QColor(ZONE_COLORS.get(zone.zone_type, ZONE_COLORS["Neutral"]))
             zone._colorblind_friendly = True
             zone.update()
-        self.view.setBackgroundBrush(QColor("#081416"))
+        self.view.setBackgroundBrush(QColor("#081315"))
         combo = getattr(self, "color_vision_combo", None)
         if combo is not None:
             combo.setToolTip(
@@ -275,11 +275,157 @@ def install() -> None:
             self.label,
         )
 
+    def accessible_draw_arena(self) -> None:
+        self.scene.clear()
+        shell = QColor("#081315")
+        stone_dark = QColor("#0D1B1D")
+        stone_mid = QColor("#122326")
+        stone_light = QColor("#183136")
+        seam = QColor("#314247")
+        brass = QColor("#716346")
+        pale = QColor("#53636A")
+
+        self.scene.addRect(
+            8,
+            8,
+            board.SCENE_W - 16,
+            board.SCENE_H - 16,
+            QPen(brass, 2),
+            QBrush(shell),
+        ).setZValue(-120)
+        self.scene.addRect(
+            78,
+            184,
+            92,
+            172,
+            QPen(seam, 1.2),
+            QBrush(stone_mid),
+        ).setZValue(-112)
+        self.scene.addRect(
+            790,
+            184,
+            92,
+            172,
+            QPen(seam, 1.2),
+            QBrush(stone_mid),
+        ).setZValue(-112)
+
+        outer = QPolygonF(
+            [
+                QPointF(210, 62),
+                QPointF(750, 62),
+                QPointF(862, 160),
+                QPointF(862, 380),
+                QPointF(750, 478),
+                QPointF(210, 478),
+                QPointF(98, 380),
+                QPointF(98, 160),
+            ]
+        )
+        self.scene.addPolygon(
+            outer,
+            QPen(brass, 2),
+            QBrush(stone_dark),
+        ).setZValue(-110)
+
+        inner = QPolygonF(
+            [
+                QPointF(260, 110),
+                QPointF(700, 110),
+                QPointF(790, 190),
+                QPointF(790, 350),
+                QPointF(700, 430),
+                QPointF(260, 430),
+                QPointF(170, 350),
+                QPointF(170, 190),
+            ]
+        )
+        self.scene.addPolygon(
+            inner,
+            QPen(pale, 1.2),
+            QBrush(stone_mid),
+        ).setZValue(-100)
+
+        self.scene.addEllipse(
+            318,
+            170,
+            324,
+            200,
+            QPen(QColor("#655B48"), 1.5),
+            QBrush(stone_light),
+        ).setZValue(-95)
+        self.scene.addEllipse(
+            382,
+            215,
+            196,
+            110,
+            QPen(QColor("#75684B"), 1.2),
+            QBrush(QColor("#112124")),
+        ).setZValue(-90)
+
+        self.scene.addLine(480, 104, 480, 436, QPen(seam, 1.0)).setZValue(-88)
+        self.scene.addLine(178, 270, 782, 270, QPen(seam, 1.0)).setZValue(-88)
+        self.scene.addLine(
+            250,
+            145,
+            710,
+            395,
+            QPen(QColor("#26383D"), 0.8),
+        ).setZValue(-88)
+        self.scene.addLine(
+            710,
+            145,
+            250,
+            395,
+            QPen(QColor("#26383D"), 0.8),
+        ).setZValue(-88)
+
+        for x, y in (
+            (230, 140),
+            (480, 118),
+            (730, 140),
+            (198, 270),
+            (762, 270),
+            (230, 400),
+            (480, 422),
+            (730, 400),
+        ):
+            self.scene.addEllipse(
+                x - 9,
+                y - 9,
+                18,
+                18,
+                QPen(brass, 1.0),
+                QBrush(QColor("#173137")),
+            ).setZValue(-84)
+
+        for x, y in (
+            (125, 88),
+            (835, 88),
+            (125, 452),
+            (835, 452),
+        ):
+            self.scene.addEllipse(
+                x - 7,
+                y - 7,
+                14,
+                14,
+                QPen(brass, 1.0),
+                QBrush(QColor("#173137")),
+            ).setZValue(-82)
+
+        title = self.scene.addText("ENCOUNTER ARENA")
+        title.setDefaultTextColor(QColor("#A18F62"))
+        title.setFont(QFont("Cinzel", 10))
+        title.setPos(410, 24)
+        title.setZValue(-70)
+
     board.EncounterBoard._add_token = accessible_add_token
     board.EncounterBoard._add_zone = accessible_add_zone
     board.EncounterBoard._apply_color_vision_mode = accessible_apply_mode
     board.EncounterToken.paint = accessible_token_paint
     board.EncounterZone.paint = accessible_zone_paint
+    board.EncounterBoard._draw_arena = accessible_draw_arena
 
     _INSTALLED = True
 
