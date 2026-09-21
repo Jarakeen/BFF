@@ -327,3 +327,33 @@ def test_sustained_dps_comparison_consumes_single_witness_evaluator() -> None:
     } == {"extreme.sustained_dps.saved_rotation"}
     assert "explicitly supplied comparable candidate set" in comparison.notes
     assert "does not prove the global Extreme maximum" in comparison.notes
+
+
+def test_sustained_dps_discovery_is_canonical_saved_state_authority() -> None:
+    discovery = canonical_service_for("extreme_sustained_dps_candidate_discovery")
+
+    assert discovery is not None
+    assert discovery.service_id == "extreme.sustained_dps.discovery"
+    assert discovery.behavior is ServiceBehavior.DETERMINISTIC
+    assert discovery.encounter_aware is False
+    assert set(discovery.roles) == {"DPS"}
+    assert SERVICE_CATALOG.dependencies_of(discovery.service_id) == ()
+
+
+def test_sustained_dps_saved_state_search_consumes_discovery_and_comparison() -> None:
+    search = canonical_service_for("extreme_sustained_dps_saved_state_search")
+
+    assert search is not None
+    assert search.service_id == "extreme.sustained_dps.saved_state_search"
+    assert search.behavior is ServiceBehavior.DETERMINISTIC
+    assert search.encounter_aware is True
+    assert set(search.roles) == {"DPS"}
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(search.service_id)
+    ) == (
+        "extreme.sustained_dps.discovery",
+        "extreme.sustained_dps.comparison",
+    )
+    assert "saved user-state denominator" in search.notes
+    assert "does not generate unsaved builds/rotations" in search.notes
