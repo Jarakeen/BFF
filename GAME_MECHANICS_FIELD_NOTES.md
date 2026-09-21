@@ -1303,3 +1303,7 @@ A generated CP, passive-rank, or dual-bar gear candidate does not need its own d
 ### 2026-09-21 — A convenience search should not become a second mechanics authority
 
 FoundryDock now has reusable CP, passive-rank, and dual-bar gear dominance searches, but those wrappers do not own any new ESO mechanics. The original frontier services still define legal choices, the canonical DD provider still owns action damage, and the finite-axis dominance engine still owns proof promotion. The wrapper only connects those authorities so callers cannot accidentally wire them differently.
+
+### 2026-09-21 — A finite policy family can be closed while the timing continuum remains open
+
+FoundryDock can completely enumerate the anchored potion policies generated from seed-plan timestamps and still **not** have proved every possible first-use offset between those timestamps. The same distinction applies to Ultimate use: canonical affordability can close the explicit bar-choice family without proving every deliberate post-affordability delay. Structural policy coverage therefore records finite-family closure separately from theoretical timing closure.
