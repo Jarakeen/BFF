@@ -263,6 +263,24 @@ class CombatSimulationResult:
     unresolved: tuple[str, ...] = ()
     damage_unresolved: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        duration_seconds = float(self.duration_seconds)
+        if not isfinite(duration_seconds) or duration_seconds < 0:
+            raise ValueError(
+                "combat simulation result duration must be finite and non-negative"
+            )
+        if any(float(event.time_seconds) > duration_seconds for event in self.events):
+            raise ValueError(
+                "combat simulation result cannot contain events beyond its duration"
+            )
+        initial_bar = str(self.initial_bar or "").strip()
+        final_bar = str(self.final_bar or "").strip()
+        if not initial_bar or not final_bar:
+            raise ValueError("combat simulation result requires initial and final bar")
+        object.__setattr__(self, "duration_seconds", duration_seconds)
+        object.__setattr__(self, "initial_bar", initial_bar)
+        object.__setattr__(self, "final_bar", final_bar)
+
     @property
     def deterministic_signature(self) -> tuple:
         return (
