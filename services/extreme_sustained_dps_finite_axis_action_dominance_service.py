@@ -91,12 +91,12 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceService:
         count = int(frontier.choice_count)
         if count < 0:
             raise ValueError("indexed finite-axis choice_count cannot be negative")
-        choices = tuple(frontier.choice_at(index) for index in range(count))
-        return cls.evaluate(
+        return cls._evaluate_accessor(
             candidate_key=candidate_key,
             axes=tuple(frontier.axes),
-            choices=choices,
+            expected_choices=count,
             denominator_proven=bool(frontier.denominator_proven),
+            choice_at=frontier.choice_at,
             evaluator=evaluator,
             source=source,
         )
@@ -109,6 +109,29 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceService:
         axes: tuple[str, ...],
         choices: tuple[ExtremeSustainedDPSFiniteAxisChoice[T], ...],
         denominator_proven: bool,
+        evaluator: ExtremeSustainedDPSFiniteChoiceActionEvaluator[T],
+        source: str,
+    ) -> ExtremeSustainedDPSFiniteAxisActionDominanceResult:
+        ordered = tuple(sorted(choices, key=lambda row: row.choice_id.casefold()))
+        return cls._evaluate_accessor(
+            candidate_key=candidate_key,
+            axes=axes,
+            expected_choices=len(ordered),
+            denominator_proven=bool(denominator_proven),
+            choice_at=lambda index: ordered[index],
+            evaluator=evaluator,
+            source=source,
+        )
+
+    @classmethod
+    def _evaluate_accessor(
+        cls,
+        *,
+        candidate_key: str,
+        axes: tuple[str, ...],
+        expected_choices: int,
+        denominator_proven: bool,
+        choice_at,
         evaluator: ExtremeSustainedDPSFiniteChoiceActionEvaluator[T],
         source: str,
     ) -> ExtremeSustainedDPSFiniteAxisActionDominanceResult:
@@ -138,16 +161,7 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceService:
         if not denominator_proven:
             unresolved.append("Finite-axis choice denominator is not proven complete")
 
-        by_id: dict[str, ExtremeSustainedDPSFiniteAxisChoice[T]] = {}
-        for choice in choices:
-            if choice.choice_id in by_id:
-                unresolved.append(
-                    f"Duplicate finite-axis choice identity: {choice.choice_id}"
-                )
-                continue
-            by_id[choice.choice_id] = choice
-
-        expected = len(by_id)
+        expected = int(expected_choices)
         if expected <= 0:
             unresolved.append("Finite-axis choice denominator is empty")
 
@@ -156,9 +170,19 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceService:
         coordinate: tuple[float, int] | None = None
         winner_id: str | None = None
         winner_damage: float | None = None
+        seen_ids: set[str] = set()
 
-        for choice_id in sorted(by_id, key=str.casefold):
-            result = evaluator.evaluate(by_id[choice_id].payload)
+        for index in range(max(expected, 0)):
+            choice = choice_at(index)
+            choice_id = str(choice.choice_id or "").strip()
+            if choice_id in seen_ids:
+                unresolved.append(
+                    f"Duplicate finite-axis choice identity: {choice_id}"
+                )
+                continue
+            seen_ids.add(choice_id)
+
+            result = evaluator.evaluate(choice.payload)
             evaluated += 1
 
             current = (
@@ -206,6 +230,7 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceService:
             denominator_proven
             and normalized_axes
             and expected > 0
+            and len(seen_ids) == expected
             and evaluated == expected
             and resolved == expected
             and winner_damage is not None
@@ -245,6 +270,7 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceService:
                 ),
                 "Every non-target mutation axis must remain fixed by the caller",
                 "All supplied choices must resolve one identical scheduled action coordinate",
+                "Indexed frontiers are consumed one choice at a time without materializing the denominator",
             ),
             unresolved=deduped,
         )
