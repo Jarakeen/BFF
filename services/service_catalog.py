@@ -1039,6 +1039,38 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_axis_pipeline_leaf_evaluation",
+        domain="extreme",
+        purpose=(
+            "Extract complete generated pipeline witnesses and delegate exact leaf "
+            "scoring to the canonical generated-runtime Combat Simulation evaluator."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_axis_pipeline_leaf_evaluation_service",
+        inputs=(
+            "ExtremeSustainedDPSGeneratedFrontierNode",
+            "AuthoritativeRuntimeSnapshot",
+            "ExplicitTargetScenario",
+        ),
+        outputs=("ExtremeSustainedDPSExactLeafEvaluation",),
+        dependencies=(
+            "extreme.sustained_dps.generated_axis_pipeline",
+            "extreme.sustained_dps.generated_runtime_evaluation",
+            "extreme.sustained_dps.generated_search_evidence_adapter",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_generated_axis_pipeline_leaf_evaluation",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Uses the final downstream runtime-policy plan, not an earlier anchored plan. "
+            "Missing build, progression, physical gear, plan, or incomplete pipeline state "
+            "becomes incomplete exact-leaf evidence without invoking simulation."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_axis_pipeline",
         domain="extreme",
         purpose=(
