@@ -475,3 +475,87 @@ def test_combat_simulation_result_rejects_death_before_later_lethal_health_chang
         assert "requires zero Health state" in str(exc)
     else:
         raise AssertionError("Expected premature death event to fail closed")
+
+
+def test_combat_simulation_result_rejects_invalid_health_event_arithmetic() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=25000,
+            ),
+        )
+    )
+    bad_damage = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Bad Damage",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 20000),
+            ("applied_damage", 3000.0),
+            ("after", 18000),
+            ("maximum_health", 25000),
+        ),
+    )
+    bad_heal = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Bad Heal",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 20000),
+            ("applied_heal", 2000.0),
+            ("after", 23000),
+            ("maximum_health", 25000),
+        ),
+    )
+
+    for event, expected in (
+        (bad_damage, "damage Health arithmetic is inconsistent"),
+        (bad_heal, "healing Health arithmetic is inconsistent"),
+    ):
+        try:
+            _result(events=(event,), target_state=state)
+        except ValueError as exc:
+            assert expected in str(exc)
+        else:
+            raise AssertionError("Expected invalid Health arithmetic to fail closed")
+
+
+def test_combat_simulation_result_rejects_health_change_without_known_maximum() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Tank 1",
+                "ally",
+                current_health=20000,
+                maximum_health=None,
+            ),
+        )
+    )
+    event = CombatSimulationEvent(
+        time_seconds=1.0,
+        priority=int(SimulationEventPriority.HEALTH_CHANGE),
+        sequence=0,
+        event_type="health_change",
+        source="Heal",
+        payload=(
+            ("recipient", "Tank 1"),
+            ("before", 20000),
+            ("after", 22000),
+        ),
+    )
+
+    try:
+        _result(events=(event,), target_state=state)
+    except ValueError as exc:
+        assert "requires known maximum Health" in str(exc)
+    else:
+        raise AssertionError("Expected Health change without maximum Health to fail closed")
