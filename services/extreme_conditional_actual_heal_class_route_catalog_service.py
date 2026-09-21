@@ -120,10 +120,16 @@ class ExtremeConditionalActualHealClassRouteCatalogService:
                 "Minor Mending still requires canonical build/passive legality"
             )
         if self.fully_charged_restoration_heavy_attack_completed:
-            scenarios.append(
-                "Restoration Staff heavy post-completion window proven at the runtime snapshot; "
-                "Essence Drain Major Mending still requires canonical weapon/passive legality"
-            )
+            if self.runtime_snapshot is not None:
+                scenarios.append(
+                    "Restoration Staff heavy post-completion window proven at the runtime snapshot; "
+                    "Essence Drain Major Mending still requires canonical weapon/passive legality"
+                )
+            else:
+                scenarios.append(
+                    "explicit fully charged Restoration Staff heavy attack completed; "
+                    "Essence Drain Major Mending requires canonical weapon/passive legality proof"
+                )
         return replace(
             result,
             search_scope=(*scenarios, *result.search_scope),
