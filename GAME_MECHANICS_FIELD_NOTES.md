@@ -1323,3 +1323,7 @@ Turning a rotation or policy frontier into a lazy indexed search source must not
 ### 2026-09-21 — A closed runtime family is local proof, not proof that every runtime timeline has been imagined
 
 A caller may be able to prove a finite runtime-state family complete for one branch, such as a reviewed set of proc/cooldown/condition states under fixed encounter assumptions. That can safely close the canonical `runtime_state` axis **for that branch**. It does not prove that ESO has no other legal runtime histories. FoundryDock therefore keeps omitted runtime scope attached to the family instead of silently upgrading local closure into a global runtime theorem.
+
+### 2026-09-21 — A local ceiling is only a branch ceiling when the branch really is that local family
+
+A maximum over a closed finite rotation/runtime family is safe only for that exact family. Before branch-and-bound can use it to prune, FoundryDock requires an explicit proof that the search branch contains exactly that denominator and that every omitted timing/encounter/runtime state is assigned outside the branch. This prevents a locally correct ceiling from becoming globally incorrect simply because the number is convenient.
