@@ -1010,3 +1010,12 @@ A periodic tick and a scheduled skill can share the exact same clock timestamp. 
 **Layman's version:** if a DoT tick and your execute both happen at 10.0 seconds, we cannot assume which one lands first just because one happened to be earlier in a Python list.
 
 **For BFF:** Combat Simulation now fails closed at that exact collision unless a reviewed ordering authority is supplied later. Damage that occurred strictly before the ambiguous timestamp remains valid; damage at and after the unresolved boundary is not treated as proven.
+
+
+## 2026-09-20 — Same-instant Health changes need recipient-specific ordering evidence
+
+Damage and healing can target the same combatant at the same clock time. If the simulator knows a sequence, that sequence is enough to replay the Health changes deterministically. If multiple Health consequences share the same timestamp, event priority, and sequence, their order can affect death attribution, overkill, overheal, and whether later healing is legal.
+
+**Layman's version:** a hit and a heal both stamped 10.0 seconds are not safely ordered just because one event name sorts before the other in the alphabet.
+
+**For BFF:** Phase 14 now blocks Health projection for that recipient from the ambiguous boundary onward unless timestamp/priority/sequence already proves the order. Earlier Health history remains valid. Exact-time snapshots can also request a sequence boundary so state at one timestamp can be inspected between ordered actions.
