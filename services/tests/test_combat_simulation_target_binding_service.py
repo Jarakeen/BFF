@@ -352,3 +352,29 @@ def test_recipient_binding_normalizes_matching_identity_fields() -> None:
 
     assert result.unresolved == ()
     assert result.events[0].payload_dict()["recipients"] == ("Tank 1",)
+
+
+def test_target_state_canonicalizes_recipient_binding_order() -> None:
+    later = CombatSimulationRecipientBinding(
+        time_seconds=2.0,
+        sequence=0,
+        event_type="direct_heal",
+        source="Later",
+        coefficient_number=1,
+        recipients=("Tank 1",),
+    )
+    earlier = CombatSimulationRecipientBinding(
+        time_seconds=1.0,
+        sequence=0,
+        event_type="direct_heal",
+        source="Earlier",
+        coefficient_number=1,
+        recipients=("Tank 1",),
+    )
+
+    state = CombatSimulationTargetState(
+        combatants=(CombatSimulationCombatant("Tank 1", "ally"),),
+        recipient_bindings=(later, earlier),
+    )
+
+    assert state.recipient_bindings == (earlier, later)
