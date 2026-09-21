@@ -22,6 +22,22 @@ if (-not (Test-Path $SpecPath)) {
     throw "PyInstaller spec not found: $SpecPath"
 }
 
+# Fail fast if the local checkout is stale or partially merged. This exact
+# Raid Map import caused a packaged startup crash when an older source copy was
+# built even though phase14 already contained the fix.
+$EncounterAccessibilityPath = Join-Path $ProjectRoot "ui\encounter_board_accessibility.py"
+if (-not (Test-Path $EncounterAccessibilityPath)) {
+    throw "Encounter accessibility source not found: $EncounterAccessibilityPath"
+}
+$EncounterAccessibilitySource = Get-Content $EncounterAccessibilityPath -Raw
+if (
+    $EncounterAccessibilitySource -notmatch '(?s)from PySide6\.QtWidgets import \(.*QVBoxLayout.*\)' -or
+    $EncounterAccessibilitySource -notmatch 'root = QVBoxLayout\(tab\)'
+) {
+    throw "Local checkout is missing the Raid Map QVBoxLayout startup fix. Pull phase14 before packaging."
+}
+Write-Host "Raid Map startup import preflight: PASS"
+
 if (Test-Path $DistRoot) {
     Remove-Item $DistRoot -Recurse -Force
 }
@@ -240,6 +256,7 @@ Write-Host "========================================"
 Write-Host ""
 Write-Host "Folder: $PackageRoot"
 Write-Host "Executable: $(Join-Path $PackageRoot $ExeName)"
+Write-Host "Launch this exact EXE for smoke test: $(Join-Path $PackageRoot $ExeName)"
 Write-Host "Zip to send for first install: $ZipPath"
 Write-Host "Update ZIP for GitHub Release: $UpdateZipPath"
 Write-Host "Update SHA-256: $UpdateHash"
