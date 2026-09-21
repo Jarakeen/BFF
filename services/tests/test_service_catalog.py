@@ -589,3 +589,27 @@ def test_sustained_dps_skill_bar_frontier_preserves_morph_and_ownership_denomina
     assert "base/morph alternatives" in service.notes
     assert "explicit shared-line ownership" in service.notes
     assert "Normal-slot permutations are collapsed" in service.notes
+
+
+def test_sustained_dps_cross_axis_composition_keeps_context_and_assembly_separate() -> None:
+    context = canonical_service_for("extreme_sustained_dps_cross_axis_context")
+    assembly = canonical_service_for("extreme_sustained_dps_generated_candidate_assembly")
+
+    assert context is not None
+    assert assembly is not None
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(context.service_id)
+    ) == ("extreme.sustained_dps.dual_bar_gear_frontier",)
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(assembly.service_id)
+    ) == (
+        "extreme.sustained_dps.cross_axis_context",
+        "extreme.sustained_dps.champion_point_frontier",
+        "extreme.sustained_dps.potion_frontier",
+        "extreme.sustained_dps.passive_rank_frontier",
+        "extreme.sustained_dps.skill_bar_frontier",
+    )
+    assert "subclass route lines" in context.notes
+    assert "Each axis contributes only the state it owns" in assembly.notes
