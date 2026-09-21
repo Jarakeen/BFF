@@ -885,7 +885,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         outputs=("ExtremeSustainedDPSFiniteFamilyBranchBoundAdaptation",),
         dependencies=(
             "extreme.sustained_dps.finite_whole_plan_dominance",
-            "extreme.sustained_dps.generated_branch_and_bound_search",
+            "extreme.sustained_dps.generated_branch_and_bound",
         ),
         responsibilities=("extreme_sustained_dps_finite_family_branch_bound_adapter",),
         behavior=ServiceBehavior.DETERMINISTIC,
