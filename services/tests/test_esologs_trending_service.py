@@ -32,6 +32,10 @@ class _TrendingClient:
             ],
         }
 
+    def get_top_reports_for_encounter(self, encounter_id, limit=5):
+        assert encounter_id == 99
+        return [("A", 1), ("B", 2)][:limit]
+
     def get_trial_zones(self):
         return [
             {
@@ -182,12 +186,8 @@ def test_trending_aggregates_top_individual_players_by_role():
     assert [metric for metric, _ in client.query_calls] == [
         "dps",
         "hps",
-        "tankcombineddps",
     ]
     assert all("role" not in variables for _, variables in client.query_calls)
-    tank_variables = client.query_calls[2][1]
-    assert tank_variables["className"] is None
-    assert tank_variables["specName"] is None
     assert report.ranked_players_analyzed == 7
     assert report.ranked_players_skipped == 0
     assert report.players_analyzed == 7
@@ -243,9 +243,10 @@ def test_tank_ranking_combatant_info_cannot_override_report_role_bucket():
     )
 
     tank = report.role_summaries["tank"]
-    assert tank.player_count == 0
-    assert tank.gear_sets == ()
-    assert report.ranked_players_skipped == 1
+    assert tank.player_count == 2
+    assert tank.gear_sets[0].name == "Pearlescent Ward"
+    assert all(row.name != "Coral Riptide" for row in tank.gear_sets)
+    assert report.ranked_players_skipped == 0
 
 
 def test_trending_does_not_count_duplicate_equipped_pieces_as_multiple_players():
