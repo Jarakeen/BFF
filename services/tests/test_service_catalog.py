@@ -488,6 +488,6 @@ def test_sustained_dps_champion_point_frontier_uses_canonical_loadout_legality()
     assert tuple(
         row.service_id
         for row in SERVICE_CATALOG.dependencies_of(service.service_id)
-    ) == ("champion_point.loadout",)
+    ) == ("mechanics.champion_point_loadout",)
     assert "four-slots-per-discipline" in service.purpose
     assert "Dynamic/runtime" in service.notes
