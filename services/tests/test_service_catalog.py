@@ -856,3 +856,18 @@ def test_sustained_dps_generated_rotation_axis_adapter_preserves_proof_scope() -
     assert "plan-before-policy dependency" in service.notes
     assert "does not claim closure" in service.notes
 
+
+
+def test_sustained_dps_gear_progression_axis_coverage_promotes_only_proven_structural_axes() -> None:
+    service = canonical_service_for("extreme_sustained_dps_gear_progression_axis_coverage")
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.gear_progression_axis_coverage"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.axis_dominance_composition",)
+    assert "gear_topology + named_gear_realization" in service.notes
+    assert "CP covers champion_points" in service.notes
+    assert "passive search covers passive_ranks" in service.notes
+    assert "numeric damage dominance remain separate proof obligations" in service.notes
