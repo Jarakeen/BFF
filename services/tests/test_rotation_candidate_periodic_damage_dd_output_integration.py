@@ -597,3 +597,52 @@ def test_occurrence_projection_preserves_successive_periodic_scaling() -> None:
     assert [item.damage_value for item in evidence.occurrences] == pytest.approx(
         [100.0, 115.0, 132.25]
     )
+
+
+
+def test_dynamic_occurrence_projection_recomputes_each_exact_tick() -> None:
+    action = RotationAction(
+        0.0,
+        0,
+        RotationActionKind.SKILL,
+        name="periodic_skill",
+        bar="front",
+    )
+    runtime = _RuntimeContextResolver(
+        {
+            1.0: _context(tick_value=100.0),
+            2.0: _context(tick_value=200.0),
+        }
+    )
+    skill_damage = RotationCandidateSkillDamageEvidenceService(
+        database_path="unused-test.db",
+        context=_context(),
+        calculator=_DynamicCalculator(),
+        component_repository=_Components(
+            (_classification(number=1, is_dot=True),)
+        ),
+        periodic_runtime_projection_service=_PeriodicProjection(
+            _entry(action, number=1, ticks=(1.0, 2.0))
+        ),
+        periodic_runtime_semantics=_semantics(
+            "periodic_skill",
+            1,
+            magnitude_policy=PeriodicDamageMagnitudePolicy.DYNAMIC_AT_TICK,
+        ),
+        runtime_build_context_resolver=runtime,
+    )
+
+    evidence = skill_damage.evaluate_action_occurrences(
+        candidate=_candidate(action),
+        action=action,
+    )
+
+    assert evidence.unresolved == ()
+    assert [
+        (item.time_seconds, item.damage_value, item.occurrence_index)
+        for item in evidence.occurrences
+    ] == [
+        (1.0, 100.0, 0),
+        (2.0, 200.0, 1),
+    ]
+    assert runtime.calls == [(1.0, None), (2.0, None)]
