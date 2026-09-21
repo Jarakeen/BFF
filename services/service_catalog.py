@@ -987,6 +987,35 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_gear_axis_adapter",
+        domain="extreme",
+        purpose=(
+            "Adapt one proven dual-bar gear catalog plus armor, jewelry, and weapon "
+            "trait/enchant frontiers into ordered indexed generated-search axes."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_gear_axis_adapter_service",
+        inputs=("PlayerBuild", "CharacterProgression", "ProvenDualBarGearFrontier"),
+        outputs=("IndexedFrontierAxes", "ExtremeSustainedDPSGeneratedGearAxisState"),
+        dependencies=(
+            "extreme.sustained_dps.dual_bar_gear_frontier",
+            "extreme.sustained_dps.armor_trait_enchant_frontier",
+            "extreme.sustained_dps.jewelry_frontier",
+            "extreme.sustained_dps.weapon_frontier",
+            "extreme.sustained_dps.cross_axis_context",
+            "extreme.sustained_dps.generated_frontier_wiring",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_gear_axis_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Dual-bar compatibility must already be denominator-proven. Later trait/enchant "
+            "frontiers mutate the same evolving materialized build in order, preserving prior "
+            "axis choices. Unresolved denominators fail closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_late_axis_adapter",
         domain="extreme",
         purpose=(
