@@ -9,11 +9,14 @@ resolution succeeds.
 """
 
 from dataclasses import dataclass
+from pathlib import Path
 
+from services.eso_database import EsoDatabase
 from services.finch_api_client import FinchApiClient, FinchGearNeedRequest
 from services.roster_assignment_context_service import RosterAssignmentContextService
 from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.roster_service import RosterService
+from services.settings_service import SettingsService
 
 
 def _clean(value: object) -> str:
@@ -198,8 +201,36 @@ class FinchRosterSyncService:
         )
 
 
+def sync_finch_gear_needs(
+    *,
+    database_path: Path,
+    settings_path: Path = Path("settings.json"),
+    timeout: float = 10.0,
+) -> FinchGearNeedSyncSummary:
+    """Run one explicit Finch sync using a worker-owned SQLite connection."""
+    settings = SettingsService(Path(settings_path)).load()
+    client = FinchApiClient(
+        base_url=str(settings.get("FinchApiUrl") or ""),
+        api_key=str(settings.get("FinchApiKey") or ""),
+        timeout=timeout,
+    )
+    database = EsoDatabase(Path(database_path))
+    try:
+        roster = RosterService(database)
+        service = FinchRosterSyncService(
+            client=client,
+            roster=roster,
+            identity=RosterPlayerIdentityService(database),
+            assignments=RosterAssignmentContextService(database),
+        )
+        return service.sync_gear_needs()
+    finally:
+        database.close()
+
+
 __all__ = [
     "FinchGearNeedSyncResult",
     "FinchGearNeedSyncSummary",
     "FinchRosterSyncService",
+    "sync_finch_gear_needs",
 ]
