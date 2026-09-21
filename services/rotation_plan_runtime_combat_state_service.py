@@ -157,6 +157,7 @@ class RotationPlanRuntimeCombatStateService:
             snapshot=snapshot,
             base_combat_state=base_combat_state,
         )
+        active_effects = tuple(getattr(projected, "active_effects", ()) or ())
         unresolved = tuple(
             dict.fromkeys(
                 str(message).strip()
@@ -170,7 +171,7 @@ class RotationPlanRuntimeCombatStateService:
                 sequence=boundary_sequence,
                 active_bar=active_bar,
                 combat_state=None,
-                active_effects=projected.active_effects,
+                active_effects=active_effects,
                 unresolved=unresolved,
             )
 
@@ -195,7 +196,7 @@ class RotationPlanRuntimeCombatStateService:
                 sequence=boundary_sequence,
                 active_bar=active_bar,
                 combat_state=None,
-                active_effects=projected.active_effects,
+                active_effects=active_effects,
                 unresolved=potion_unresolved,
             )
 
@@ -222,7 +223,7 @@ class RotationPlanRuntimeCombatStateService:
                 if toggle_unresolved or toggle_projected.combat_state is None
                 else toggle_projected.combat_state
             ),
-            active_effects=projected.active_effects,
+            active_effects=active_effects,
             unresolved=toggle_unresolved,
         )
 
