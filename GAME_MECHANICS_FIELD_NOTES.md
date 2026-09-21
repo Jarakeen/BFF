@@ -1069,3 +1069,11 @@ The sequential DD Health ledger is intended to model damage progression during a
 **Layman's version:** if the boss is already dead before the clock starts, that is not a zero-DPS fight. It is no fight at all.
 
 **For BFF:** saved-build DD simulation now rejects a target that starts at zero Health instead of treating the full plan as a valid completed zero-damage run.
+
+## 2026-09-20 — Ambiguous outgoing damage ordering also makes DPS incomplete
+
+Two different outgoing damage sources can share the same timestamp, priority, and sequence. When that happens, Combat Simulation already refuses to invent an order for their Health consequences. That ambiguity must also count as damage-specific unresolved evidence.
+
+**Layman's version:** if two different hits are stamped at the exact same combat coordinate and we cannot prove which applies first, we cannot safely claim the resulting applied damage or DPS is complete.
+
+**For BFF:** cross-source same-instant outgoing-damage collisions now populate damage_unresolved as well as general unresolved. Modeled DPS is withheld until an authoritative ordering rule exists. Same-source components of one hit remain safely coalesced for Health.
