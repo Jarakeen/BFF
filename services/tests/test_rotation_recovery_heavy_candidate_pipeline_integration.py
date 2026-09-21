@@ -158,6 +158,7 @@ class _ControlledReplayService:
         maximum_amount,
         trigger_fraction,
         reserve_assessment_resolver=None,
+        anticipate_future_shortfall=False,
     ):
         def resolve(context):
             return SimpleNamespace(
