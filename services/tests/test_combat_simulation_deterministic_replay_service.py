@@ -733,3 +733,35 @@ def test_combat_simulation_result_rejects_resource_event_arithmetic_mismatch() -
         assert "resource event arithmetic is inconsistent" in str(exc)
     else:
         raise AssertionError("Expected impossible result resource arithmetic to fail closed")
+
+
+def test_combat_simulation_result_canonicalizes_unresolved_evidence() -> None:
+    result = _result(
+        unresolved=(" gap ", "", "gap", "other"),
+        damage_unresolved=(" damage gap ", "damage gap", ""),
+    )
+
+    assert result.unresolved == ("gap", "other")
+    assert result.damage_unresolved == ("damage gap",)
+
+
+def test_replay_treats_whitespace_and_duplicate_unresolved_evidence_as_equivalent() -> None:
+    results = iter(
+        (
+            _result(
+                unresolved=(" gap ", "gap"),
+                damage_unresolved=(" damage gap ", "damage gap"),
+            ),
+            _result(
+                unresolved=("gap",),
+                damage_unresolved=("damage gap",),
+            ),
+        )
+    )
+
+    verification = CombatSimulationDeterministicReplayService().verify(
+        lambda: next(results)
+    )
+
+    assert verification.deterministic is True
+    assert verification.differing_signature_fields == ()
