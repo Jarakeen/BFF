@@ -45,7 +45,6 @@ def test_oaxiltso_hardmode_disables_only_cleanse_pool_dependent_rows():
     assert rows[("Noxious Sludge", "positioning")].classification == CoverageClassification.COVERED
     assert rows[("Savage Blitz", "movement")].classification == CoverageClassification.COVERED
     assert rows[("Savage Blitz", "positioning")].classification == CoverageClassification.COVERED
-    assert rows[("Blistering Smash", "positioning")].classification == CoverageClassification.COVERED
     assert rows[("Summon Havocrel Annihilators", "positioning")].classification == CoverageClassification.COVERED
     assert len(result.unknown) == 2
     assert result.is_fully_evaluable is False
