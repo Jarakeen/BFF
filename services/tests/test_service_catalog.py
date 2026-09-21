@@ -386,3 +386,18 @@ def test_sustained_dps_pruning_consumes_generated_frontier() -> None:
     ) == ("extreme.sustained_dps.generated_frontier",)
     assert "never computes ESO damage" in pruning.notes
     assert "Equal-to-incumbent ceilings" in pruning.notes
+
+
+def test_sustained_dps_dynamic_axis_inventory_consumes_generated_frontier() -> None:
+    inventory = canonical_service_for("extreme_sustained_dps_dynamic_axis_inventory")
+
+    assert inventory is not None
+    assert inventory.service_id == "extreme.sustained_dps.dynamic_axes"
+    assert inventory.behavior is ServiceBehavior.DETERMINISTIC
+    assert inventory.encounter_aware is False
+    assert set(inventory.roles) == {"DPS"}
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(inventory.service_id)
+    ) == ("extreme.sustained_dps.generated_frontier",)
+    assert "pruning remains fail-open" in inventory.notes
