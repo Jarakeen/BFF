@@ -28,12 +28,26 @@ class FinchCollaborationRow:
     status: str
     summary: str
     route: str
+    attention_tags: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class FinchCollaborationAttentionSummary:
+    changed: int = 0
+    not_copied: int = 0
+    readiness_gaps: int = 0
+    coverage_gaps: int = 0
+
+    @property
+    def total_attention(self) -> int:
+        return self.changed + self.not_copied + self.readiness_gaps + self.coverage_gaps
 
 
 @dataclass(frozen=True, slots=True)
 class FinchCollaborationOverview:
     rows: tuple[FinchCollaborationRow, ...]
     errors: tuple[str, ...]
+    attention: FinchCollaborationAttentionSummary
 
 
 def _clean(value: object) -> str:
@@ -54,15 +68,22 @@ def compose_collaboration_rows(
         summary = f"{int(getattr(row, 'member_count', 0) or 0)} member(s)"
         if focus:
             summary += f" • {focus}"
+        provenance = _clean(getattr(row, "provenance", "")) or "Not copied locally"
+        tags = []
+        if provenance.startswith("Updated on Finch since copy"):
+            tags.append("changed")
+        if provenance == "Not copied locally":
+            tags.append("not_copied")
         rows.append(
             FinchCollaborationRow(
                 kind="Team",
                 item_name=_clean(getattr(row, "team_name", "")) or "(Unnamed Team)",
                 publisher=_clean(getattr(row, "published_by", "")) or "Unknown",
                 updated=format_shared_timestamp(getattr(row, "updated_at", "")),
-                status=_clean(getattr(row, "provenance", "")) or "Not copied locally",
+                status=provenance,
                 summary=summary,
                 route="roster_workspace",
+                attention_tags=tuple(tags),
             )
         )
 
@@ -74,15 +95,22 @@ def compose_collaboration_rows(
         team_name = _clean(getattr(row, "team_name", ""))
         if team_name:
             summary += f" • {team_name}"
+        provenance = _clean(getattr(row, "provenance", "")) or "Not copied locally"
+        tags = []
+        if provenance.startswith("Updated on Finch since copy"):
+            tags.append("changed")
+        if provenance == "Not copied locally":
+            tags.append("not_copied")
         rows.append(
             FinchCollaborationRow(
                 kind="Raid Plan",
                 item_name=_clean(getattr(row, "name", "")) or "(Unnamed Raid Plan)",
                 publisher=_clean(getattr(row, "published_by", "")) or "Unknown",
                 updated=format_shared_timestamp(getattr(row, "updated_at", "")),
-                status=_clean(getattr(row, "provenance", "")) or "Not copied locally",
+                status=provenance,
                 summary=summary,
                 route="raid_plans",
+                attention_tags=tuple(tags),
             )
         )
 
@@ -91,6 +119,8 @@ def compose_collaboration_rows(
         human_ready = int(getattr(row, "human_ready", 0) or 0)
         build_gaps = int(getattr(row, "build_gaps", 0) or 0)
         coverage_gaps = int(getattr(row, "coverage_gaps", 0) or 0)
+        human_pending = max(0, total - human_ready)
+        tags = ("readiness_gaps",) if (build_gaps or coverage_gaps or human_pending) else ()
         rows.append(
             FinchCollaborationRow(
                 kind="Readiness",
@@ -103,6 +133,7 @@ def compose_collaboration_rows(
                     f"{build_gaps} build gap(s) • {coverage_gaps} coverage gap(s)"
                 ),
                 route="readiness",
+                attention_tags=tags,
             )
         )
 
@@ -111,6 +142,9 @@ def compose_collaboration_rows(
         covered = int(getattr(row, "covered", 0) or 0)
         missing = int(getattr(row, "missing", 0) or 0)
         attention = int(getattr(row, "needs_attention", 0) or 0)
+        duplicates = int(getattr(row, "duplicate_primary", 0) or 0)
+        unresolved = int(getattr(row, "unresolved_chairs", 0) or 0)
+        tags = ("coverage_gaps",) if (missing or attention or duplicates or unresolved) else ()
         rows.append(
             FinchCollaborationRow(
                 kind="Coverage",
@@ -123,6 +157,7 @@ def compose_collaboration_rows(
                     f"{attention} need attention"
                 ),
                 route="console:7",
+                attention_tags=tags,
             )
         )
 
@@ -200,18 +235,27 @@ def load_finch_collaboration_overview(
             values[label] = ()
             errors.append(f"{label}: {type(exc).__name__}: {exc}")
 
+    rows = compose_collaboration_rows(
+        teams=values["Teams"],
+        raid_plans=values["Raid Plans"],
+        readiness=values["Readiness"],
+        coverage=values["Coverage"],
+    )
+    attention = FinchCollaborationAttentionSummary(
+        changed=sum("changed" in row.attention_tags for row in rows),
+        not_copied=sum("not_copied" in row.attention_tags for row in rows),
+        readiness_gaps=sum("readiness_gaps" in row.attention_tags for row in rows),
+        coverage_gaps=sum("coverage_gaps" in row.attention_tags for row in rows),
+    )
     return FinchCollaborationOverview(
-        rows=compose_collaboration_rows(
-            teams=values["Teams"],
-            raid_plans=values["Raid Plans"],
-            readiness=values["Readiness"],
-            coverage=values["Coverage"],
-        ),
+        rows=rows,
         errors=tuple(errors),
+        attention=attention,
     )
 
 
 __all__ = [
+    "FinchCollaborationAttentionSummary",
     "FinchCollaborationOverview",
     "FinchCollaborationRow",
     "compose_collaboration_rows",
