@@ -875,6 +875,30 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.finite_whole_plan_dominance",
+        domain="extreme",
+        purpose=(
+            "Exhaust one proven finite dynamic family through complete same-horizon modeled sustained-DPS "
+            "evaluation and promote the largest exact whole-plan score as the family pruning ceiling."
+        ),
+        implementation_path="services.extreme_sustained_dps_finite_whole_plan_dominance_service",
+        inputs=("FiniteDynamicFrontier", "WholePlanEvaluator", "RequiredDuration"),
+        outputs=("ExtremeSustainedDPSFiniteWholePlanDominanceResult",),
+        dependencies=(
+            "extreme.sustained_dps.axis_dominance_composition",
+            "extreme.sustained_dps.pruning",
+        ),
+        responsibilities=("extreme_sustained_dps_finite_whole_plan_dominance",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Plan shape and action identity may differ across choices. Every choice must instead resolve complete "
+            "modeled DPS over one exact horizon. Omitted scope remains separate from finite-family closure."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.combat_dynamic_axis_coverage",
         domain="extreme",
         purpose=(
