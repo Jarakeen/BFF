@@ -41,7 +41,7 @@ class FakeClient:
         self.plan = FinchSharedSnapshot(
             kind="raid_plan",
             snapshot_key="rg-pm",
-            schema_version=2,
+            schema_version=3,
             payload={
                 "plan_id": "rg-pm",
                 "name": "Performance Mode RG",
@@ -59,6 +59,13 @@ class FakeClient:
                         "primary_assignment": "Major Courage",
                         "secondary_assignment": "Minor Toughness",
                         "utility_assignments": ["Portal", "Interrupt"],
+                        "build_summary": {
+                            "name": "Corpsebuster Support",
+                            "source_kind": "comp",
+                            "source_name": "Performance Mode RG",
+                            "planned_gear_sets": ["Corpsebuster", "Null Arca"],
+                            "planned_mundus": "The Thief",
+                        },
                     }
                 ],
             },
@@ -135,6 +142,12 @@ def test_shared_raid_plan_decodes_without_local_identity_or_build_state(tmp_path
     assert plan.members[0].primary_assignment == "Major Courage"
     assert plan.members[0].secondary_assignment == "Minor Toughness"
     assert plan.members[0].utility_assignments == ("Portal", "Interrupt")
+    assert plan.members[0].selected_build_id is None
+    assert plan.members[0].selected_build_name == "Corpsebuster Support"
+    assert plan.members[0].build_source_kind == "comp"
+    assert plan.members[0].build_source_name == "Performance Mode RG"
+    assert plan.members[0].planned_gear_sets == ("Corpsebuster", "Null Arca")
+    assert plan.members[0].planned_mundus == "The Thief"
     assert repository.list_plans() == ()
     assert roster.list_members() == []
 
@@ -197,3 +210,36 @@ def test_legacy_v1_shared_raid_plan_remains_readable(tmp_path) -> None:
     assert plan.plan_id == "legacy-plan"
     assert plan.members[0].primary_assignment is None
     assert plan.members[0].utility_assignments == ()
+
+
+def test_v2_shared_raid_plan_without_build_summary_remains_readable(tmp_path) -> None:
+    _db, _roster, _repository, service = _service(tmp_path)
+    service.client.plan = FinchSharedSnapshot(
+        kind="raid_plan",
+        snapshot_key="v2-plan",
+        schema_version=2,
+        payload={
+            "plan_id": "v2-plan",
+            "name": "Assignment Only Plan",
+            "trial_id": "dreadsail-reef",
+            "members": [
+                {
+                    "seat_id": "tank-1",
+                    "gamertag": "Tank",
+                    "role": "Tank",
+                    "eso_class": "Dragonknight",
+                    "primary_assignment": "Main Tank",
+                    "utility_assignments": ["Interrupt"],
+                }
+            ],
+        },
+        published_by="BFF",
+        updated_at="2026-09-20T00:00:00+00:00",
+    )
+
+    plan = service.decoded_raid_plan("rg-pm")
+
+    assert plan.plan_id == "v2-plan"
+    assert plan.members[0].primary_assignment == "Main Tank"
+    assert plan.members[0].selected_build_name is None
+    assert plan.members[0].planned_gear_sets == ()
