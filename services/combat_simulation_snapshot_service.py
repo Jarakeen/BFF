@@ -25,17 +25,33 @@ class CombatSimulationSnapshotService:
         result: CombatSimulationResult,
         *,
         time_seconds: float,
+        sequence: int | None = None,
     ) -> CombatSimulationSnapshot:
         instant = float(time_seconds)
         if not math.isfinite(instant) or instant < 0:
             raise ValueError("simulation snapshot time must be finite and non-negative")
         if instant > float(result.duration_seconds) + 1e-12:
             raise ValueError("simulation snapshot time cannot exceed simulation duration")
+        boundary_sequence = None if sequence is None else int(sequence)
+        if boundary_sequence is not None and boundary_sequence < 0:
+            raise ValueError("simulation snapshot sequence cannot be negative")
+
+        def visible(event) -> bool:
+            if event.time_seconds < instant:
+                return True
+            if event.time_seconds > instant:
+                return False
+            return (
+                boundary_sequence is None
+                or int(event.sequence) <= boundary_sequence
+            )
 
         active_bar = result.initial_bar
         for event in result.events:
             if event.time_seconds > instant:
                 break
+            if not visible(event):
+                continue
             if event.event_type != "action":
                 continue
             payload = event.payload_dict()
