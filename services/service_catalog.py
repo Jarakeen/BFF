@@ -1039,6 +1039,39 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_axis_pipeline_search",
+        domain="extreme",
+        purpose=(
+            "Run one composed generated-axis root through lazy proof-safe search under "
+            "one exact runtime snapshot, target scenario, and comparison horizon."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_axis_pipeline_search_service",
+        inputs=(
+            "ExtremeSustainedDPSGeneratedAxisPipelineState",
+            "AuthoritativeRuntimeSnapshot",
+            "ExplicitTargetScenario",
+        ),
+        outputs=("ExtremeSustainedDPSGeneratedSearchResult",),
+        dependencies=(
+            "extreme.sustained_dps.generated_axis_pipeline",
+            "extreme.sustained_dps.generated_axis_pipeline_leaf_evaluation",
+            "extreme.sustained_dps.generated_frontier_wiring",
+            "extreme.sustained_dps.generated_branch_and_bound_search",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_generated_axis_pipeline_search",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "All exact leaves share the caller's duration, runtime snapshot, target Health, "
+            "resistance, identity, and initial bar. Root and axis-local proof-safe bound "
+            "providers remain optional; missing bounds force refinement rather than guessing."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_axis_pipeline_leaf_evaluation",
         domain="extreme",
         purpose=(
