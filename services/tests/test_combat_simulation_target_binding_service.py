@@ -378,3 +378,20 @@ def test_target_state_canonicalizes_recipient_binding_order() -> None:
     )
 
     assert state.recipient_bindings == (earlier, later)
+
+
+def test_recipient_binding_rejects_non_positive_coefficient_number() -> None:
+    for value in (0, -1):
+        try:
+            CombatSimulationRecipientBinding(
+                time_seconds=1.0,
+                sequence=0,
+                event_type="direct_heal",
+                source="Combat Prayer",
+                coefficient_number=value,
+                recipients=("Tank 1",),
+            )
+        except ValueError as exc:
+            assert "coefficient_number must be positive" in str(exc)
+        else:
+            raise AssertionError("Expected non-positive coefficient binding to fail closed")
