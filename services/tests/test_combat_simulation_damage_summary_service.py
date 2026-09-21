@@ -586,3 +586,106 @@ def test_damage_summary_withholds_dps_without_target_health_state() -> None:
         "target Health state is required to prove applied outgoing damage" in message
         for message in summary.damage_unresolved
     )
+
+
+def test_damage_summary_fails_closed_on_invalid_raw_outgoing_amount() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        )
+    )
+
+    for amount in ("banana", float("nan"), float("inf"), float("-inf")):
+        result = CombatSimulationResult(
+            duration_seconds=5.0,
+            initial_bar="front",
+            final_bar="front",
+            events=(
+                _event(
+                    1.0,
+                    0,
+                    "outgoing_damage",
+                    "Invalid Hit",
+                    recipient="Boss",
+                    amount=amount,
+                ),
+            ),
+            target_state=state,
+        )
+
+        summary = CombatSimulationDamageSummaryService().summarize(
+            result,
+            target_identity="Boss",
+        )
+
+        assert summary.outgoing_event_count == 1
+        assert summary.attempted_damage == 0.0
+        assert summary.applied_damage == 0.0
+        assert summary.complete_damage_evidence is False
+        assert summary.modeled_dps is None
+        assert any(
+            "damage amount must be finite and non-negative" in message
+            for message in summary.damage_unresolved
+        )
+
+
+def test_damage_summary_fails_closed_when_outgoing_health_evidence_is_incomplete() -> None:
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        )
+    )
+    result = CombatSimulationResult(
+        duration_seconds=5.0,
+        initial_bar="front",
+        final_bar="front",
+        events=(
+            _event(
+                1.0,
+                0,
+                "outgoing_damage",
+                "Incomplete Hit",
+                recipient="Boss",
+                amount=3000.0,
+            ),
+            _event(
+                1.0,
+                0,
+                "health_change",
+                "Incomplete Hit",
+                recipient="Boss",
+                before=10000,
+                after=7000,
+                origin_event_type="outgoing_damage",
+            ),
+        ),
+        target_state=state,
+    )
+
+    summary = CombatSimulationDamageSummaryService().summarize(
+        result,
+        target_identity="Boss",
+    )
+
+    assert summary.attempted_damage == 3000.0
+    assert summary.applied_damage == 0.0
+    assert summary.complete_damage_evidence is False
+    assert summary.modeled_dps is None
+    assert any(
+        "applied outgoing damage is unavailable or invalid" in message
+        for message in summary.damage_unresolved
+    )
+    assert any(
+        "outgoing damage overkill is unavailable or invalid" in message
+        for message in summary.damage_unresolved
+    )
