@@ -354,6 +354,64 @@ class CombatSimulationResult:
                 raise ValueError(
                     "combat simulation resource summary end does not match event state"
                 )
+        health_rows = [
+            event
+            for event in self.events
+            if event.event_type == "health_change"
+        ]
+        if health_rows and self.target_state is None:
+            raise ValueError(
+                "combat simulation health changes require target state"
+            )
+        if self.target_state is not None:
+            health_by_recipient: dict[str, int | None] = {
+                item.identity: item.current_health
+                for item in self.target_state.combatants
+            }
+            maximum_by_recipient: dict[str, int | None] = {
+                item.identity: item.maximum_health
+                for item in self.target_state.combatants
+            }
+            for event in health_rows:
+                payload = event.payload_dict()
+                recipient = str(payload.get("recipient") or "").strip()
+                if not recipient:
+                    raise ValueError(
+                        "combat simulation health change requires recipient identity"
+                    )
+                if recipient not in health_by_recipient:
+                    raise ValueError(
+                        "combat simulation health change recipient is not present in target state"
+                    )
+                if "before" not in payload or "after" not in payload:
+                    raise ValueError(
+                        "combat simulation health changes require before/after state"
+                    )
+                expected_before = health_by_recipient[recipient]
+                if expected_before is None:
+                    raise ValueError(
+                        "combat simulation health change requires known starting Health"
+                    )
+                before = int(payload["before"])
+                after = int(payload["after"])
+                if before != int(expected_before):
+                    raise ValueError(
+                        "combat simulation health change before/after chain is inconsistent"
+                    )
+                maximum = maximum_by_recipient[recipient]
+                if after < 0 or (maximum is not None and after > int(maximum)):
+                    raise ValueError(
+                        "combat simulation health change after state is outside valid Health bounds"
+                    )
+                if (
+                    "maximum_health" in payload
+                    and maximum is not None
+                    and int(payload["maximum_health"]) != int(maximum)
+                ):
+                    raise ValueError(
+                        "combat simulation health change maximum does not match target state"
+                    )
+                health_by_recipient[recipient] = after
         initial_bar = str(self.initial_bar or "").strip().casefold()
         final_bar = str(self.final_bar or "").strip().casefold()
         if initial_bar not in {"front", "back"} or final_bar not in {"front", "back"}:
