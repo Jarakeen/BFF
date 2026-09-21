@@ -440,6 +440,12 @@ class CombatSimulationResult:
             raise ValueError(
                 "combat simulation result resource identities must be unique"
             )
+        resources = tuple(
+            sorted(
+                self.resources,
+                key=lambda item: item.resource,
+            )
+        )
         resource_event_types = {
             "action_cost",
             "recovery_tick",
@@ -460,7 +466,7 @@ class CombatSimulationResult:
             raise ValueError(
                 "combat simulation resource events require matching resource summaries"
             )
-        summaries_by_resource = {item.resource: item for item in self.resources}
+        summaries_by_resource = {item.resource: item for item in resources}
         for resource_key, summary in summaries_by_resource.items():
             if resource_key in event_resource_keys:
                 continue
@@ -873,6 +879,7 @@ class CombatSimulationResult:
             )
         )
         object.__setattr__(self, "duration_seconds", duration_seconds)
+        object.__setattr__(self, "resources", resources)
         object.__setattr__(self, "initial_bar", initial_bar)
         object.__setattr__(self, "final_bar", final_bar)
         object.__setattr__(self, "unresolved", unresolved)
