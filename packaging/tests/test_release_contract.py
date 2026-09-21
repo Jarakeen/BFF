@@ -315,3 +315,19 @@ def test_private_updater_package_uses_production_gateway_without_committing_secr
     assert "GITHUB_TOKEN" not in service
     assert "GITHUB_TOKEN" not in release
     assert "GITHUB_TOKEN" not in friend
+
+
+def test_friend_build_creates_sanitized_release_seed_before_pyinstaller() -> None:
+    friend = (ROOT / "packaging" / "build_friend.ps1").read_text(encoding="utf-8")
+
+    seed_command = (
+        'python tools\\build_release_database_seed.py --source $SourceDatabase '
+        '--destination $ReleaseSeedDatabase'
+    )
+    pyinstaller_command = 'python -m PyInstaller --clean $SpecPath'
+
+    assert '$ReleaseSeedDatabase = Join-Path $ReleaseSeedRoot "eso.db"' in friend
+    assert seed_command in friend
+    assert 'Copy-Item $ReleaseSeedDatabase $TargetDatabase -Force' in friend
+    assert 'Copy-Item $SourceDatabase $TargetDatabase -Force' not in friend
+    assert friend.index(seed_command) < friend.index(pyinstaller_command)
