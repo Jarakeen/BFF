@@ -1201,3 +1201,7 @@ If every remaining generated branch is either evaluated exactly or pruned by a p
 ### 2026-09-21 — Missing upper bounds make search slower, not permission to guess
 
 Branch-and-bound remains correct when a branch has no pruning-safe optimistic ceiling: that branch is simply **forced open** and must be refined or exactly evaluated. FoundryDock never substitutes a heuristic estimate for a proof-safe bound just to improve search speed. Better bounds are an optimization feature; correctness does not depend on pretending they already exist.
+
+### 2026-09-21 — Independent upper bounds intersect; they do not add
+
+Two optimistic ceilings for the same partial build branch may overlap in what they already account for. Adding them can double-count the same future damage and produce nonsense. If each source independently proves that the branch cannot exceed its own ceiling, the safe combined ceiling is simply the **minimum** of those values. A child branch is a subset of its parent branch, so any proven parent ceiling remains valid after refinement and may be tightened by new child-specific evidence.
