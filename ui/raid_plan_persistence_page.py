@@ -17,6 +17,7 @@ from PySide6.QtWidgets import QComboBox, QHBoxLayout, QInputDialog, QLabel, QMes
 from engine.config import get_data_dir
 from models.raid_plan import RaidPlan
 from services.comp_builder_trial_scope import COMP_MAKER_TRIALS
+from services.finch_shared_provenance_service import format_shared_timestamp
 from services.finch_shared_import_service import (
     import_shared_raid_plan_from_finch,
     list_shared_raid_plans_from_finch,
@@ -297,6 +298,9 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                     f"{row.name} • {row.trial_id}"
                     + (f" • {row.team_name}" if row.team_name else "")
                     + f" • {row.member_count} seat(s)"
+                    + f" • {row.published_by or 'Unknown publisher'}"
+                    + f" • {format_shared_timestamp(row.updated_at)}"
+                    + f" • {row.provenance}"
                 )
                 for row in previews
             ]
@@ -320,6 +324,9 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 "Copy Shared Raid Plan to Local",
                 (
                     f'Copy "{preview.name}" from Finch into a new local Raid Plan?\n\n'
+                    f"Published by: {preview.published_by or 'Unknown'}\n"
+                    f"Updated: {format_shared_timestamp(preview.updated_at)}\n"
+                    f"Status: {preview.provenance}\n\n"
                     "This creates a separate local plan outline with shared seat/player/character/class/role, assignment, and lightweight build-summary data only. "
                     "It never replaces an existing plan and does not create Personnel or saved builds."
                 ),
