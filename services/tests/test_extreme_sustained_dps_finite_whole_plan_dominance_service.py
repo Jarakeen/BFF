@@ -57,6 +57,7 @@ def test_complete_same_horizon_family_promotes_axes_and_dps_ceiling() -> None:
     assert result.upper_bound_dps == 140.0
     assert result.winning_choice_id == "r1"
     assert result.omitted_scope == ("Ultimate policy remains separate",)
+    assert result.axis_coverage.omitted_scope == result.omitted_scope
 
 
 def test_plan_shape_may_differ_when_whole_plan_scores_share_horizon() -> None:
