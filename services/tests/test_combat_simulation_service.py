@@ -5,6 +5,7 @@ from models.build_model import PlayerBuild
 from models.effective_build_snapshot import EffectiveBuildSnapshot
 from models.combat_simulation import (
     CombatSimulationCombatant,
+    CombatSimulationIncomingDamage,
     CombatSimulationOutgoingDamage,
     CombatSimulationResourceResult,
     CombatSimulationTargetState,
@@ -572,3 +573,47 @@ def test_kernel_marks_same_instant_cross_source_outgoing_collision_damage_unreso
         and event.payload_dict().get("recipient") == "Boss"
         for event in result.events
     )
+
+
+def test_injected_damage_rejects_non_finite_time() -> None:
+    for cls, label, recipient in (
+        (CombatSimulationIncomingDamage, "incoming", "Magrat"),
+        (CombatSimulationOutgoingDamage, "outgoing", "Boss"),
+    ):
+        for value in (float("nan"), float("inf"), float("-inf")):
+            try:
+                cls(
+                    time_seconds=value,
+                    sequence=0,
+                    source="Invalid Fixture",
+                    recipient=recipient,
+                    amount=1000.0,
+                )
+            except ValueError as exc:
+                assert "finite and non-negative" in str(exc)
+            else:
+                raise AssertionError(
+                    f"Expected non-finite {label} damage time to fail closed"
+                )
+
+
+def test_injected_damage_rejects_non_finite_amount() -> None:
+    for cls, label, recipient in (
+        (CombatSimulationIncomingDamage, "incoming", "Magrat"),
+        (CombatSimulationOutgoingDamage, "outgoing", "Boss"),
+    ):
+        for value in (float("nan"), float("inf"), float("-inf")):
+            try:
+                cls(
+                    time_seconds=1.0,
+                    sequence=0,
+                    source="Invalid Fixture",
+                    recipient=recipient,
+                    amount=value,
+                )
+            except ValueError as exc:
+                assert "finite and non-negative" in str(exc)
+            else:
+                raise AssertionError(
+                    f"Expected non-finite {label} damage amount to fail closed"
+                )
