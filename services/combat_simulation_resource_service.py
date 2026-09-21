@@ -49,6 +49,7 @@ class CombatSimulationResourceService:
 
         events: list[CombatSimulationEvent] = []
         sequence = 0
+        prior_order_key: tuple[float, int] | None = None
         for item in timeline.events:
             if item.kind is ResourceTimelineEventKind.ACTION_COST:
                 priority = SimulationEventPriority.RESOURCE_COST
@@ -61,6 +62,13 @@ class CombatSimulationResourceService:
                 priority = SimulationEventPriority.EFFECT_APPLY
             else:
                 priority = SimulationEventPriority.SNAPSHOT
+
+            order_key = (float(item.time_seconds), int(priority))
+            if prior_order_key is not None and order_key < prior_order_key:
+                raise ValueError(
+                    "resource timeline events are not in canonical simulation order"
+                )
+            prior_order_key = order_key
 
             events.append(
                 CombatSimulationEvent(
