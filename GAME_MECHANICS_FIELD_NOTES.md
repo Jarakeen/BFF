@@ -1209,3 +1209,10 @@ Two optimistic ceilings for the same partial build branch may overlap in what th
 ### 2026-09-21 — Action count can bound DPS without pretending to know the winning build
 
 If a generated branch proves that no descendant can schedule more than **N** damage-bearing actions over a fixed horizon, and a separate authority proves that any one such action can contribute at most **D** total damage including its direct, periodic, and triggered consequences, then the whole branch cannot exceed **N × D / duration** sustained DPS. This is safe structural arithmetic. It does not require guessing the winning gear, skill, crit outcome, proc uptime, or action rate; those facts must already be covered by the two input proofs.
+
+### 2026-09-21 — Missing pruning evidence is not missing damage evidence
+
+An optimistic upper bound is a shortcut that lets the optimizer skip a branch proven unable to win. If that shortcut is unavailable, FoundryDock must open the branch—but once the candidate is fully simulated with complete damage evidence, the missing shortcut no longer makes the result uncertain.
+
+**Layman's version:** not knowing the safe answer without doing the work means “do the work,” not “the answer can never be known.”
+
