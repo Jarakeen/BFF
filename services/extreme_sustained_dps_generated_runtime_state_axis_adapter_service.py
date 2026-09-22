@@ -88,6 +88,7 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
             candidate_count=candidate_count,
             candidate_at=candidate_at,
             canonical_axes=("runtime_state",),
+            omitted_scope=tuple(frontier.omitted_scope),
         )
 
     @classmethod
