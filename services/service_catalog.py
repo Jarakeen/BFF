@@ -1080,6 +1080,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         dependencies=(
             "extreme.sustained_dps.global_generated_search",
             "extreme.sustained_dps.structural_family_adapter",
+            "extreme.sustained_dps.generated_axis_inventory",
             "extreme.sustained_dps.generated_runtime_state_axis_adapter",
             "extreme.sustained_dps.axis_dominance_composition",
             "extreme.sustained_dps.theoretical_maximum_closure",
@@ -1091,7 +1092,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Structural race/class-route/attribute coverage is supplied by the same validated family adapter that creates the first search axis. "
-            "Remaining axis proofs still require explicit denominator-scope equivalence before theoretical closure."
+            "Remaining axis proofs still require explicit denominator-scope equivalence, and the generated-axis inventory must show every canonical axis physically present before theoretical closure."
         ),
     ),
     ServiceDescriptor(
