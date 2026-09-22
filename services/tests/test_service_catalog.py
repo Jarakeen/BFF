@@ -895,6 +895,46 @@ def test_sustained_dps_generated_runtime_policy_adapter_requires_explicit_eviden
     assert "explicit priorities" in service.notes
     assert "do not establish broader theoretical" in service.notes
 
+def test_sustained_dps_encounter_policy_services_preserve_review_boundaries() -> None:
+    frontier = canonical_service_for(
+        "extreme_sustained_dps_encounter_policy_frontier"
+    )
+    bridge = canonical_service_for(
+        "extreme_sustained_dps_encounter_policy_registry_bridge"
+    )
+    axis = canonical_service_for(
+        "extreme_sustained_dps_generated_encounter_policy_axis_adapter"
+    )
+
+    assert frontier is not None
+    assert bridge is not None
+    assert axis is not None
+
+    assert frontier.service_id == "extreme.sustained_dps.encounter_policy_frontier"
+    assert bridge.service_id == "extreme.sustained_dps.encounter_policy_registry_bridge"
+    assert axis.service_id == "extreme.sustained_dps.generated_encounter_policy_axis_adapter"
+
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(bridge.service_id)
+    ) == (
+        "extreme.sustained_dps.encounter_policy_frontier",
+        "rotation.encounter_demand_policy.registry",
+        "encounter.boss_guide.read_model",
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(axis.service_id)
+    ) == (
+        "extreme.sustained_dps.encounter_policy_frontier",
+        "extreme.sustained_dps.generated_frontier_wiring",
+        "extreme.sustained_dps.axis_dominance_composition",
+    )
+    assert "Explicitly empty reviewed policy" in bridge.notes
+    assert "threshold policy" in bridge.notes
+    assert "RotationDurationRefinementService" in axis.notes
+
+
 def test_sustained_dps_generated_mundus_food_axis_is_exact_witness_search() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_generated_mundus_food_axis_adapter"
@@ -930,12 +970,14 @@ def test_sustained_dps_generated_axis_pipeline_composes_adapter_states() -> None
         "extreme.sustained_dps.generated_gear_axis_adapter",
         "extreme.sustained_dps.generated_mundus_food_axis_adapter",
         "extreme.sustained_dps.generated_late_axis_adapter",
+        "extreme.sustained_dps.generated_encounter_policy_axis_adapter",
         "extreme.sustained_dps.generated_rotation_axis_adapter",
         "extreme.sustained_dps.generated_runtime_policy_axis_adapter",
         "extreme.sustained_dps.generated_frontier_wiring",
     )
     assert service.encounter_aware is True
     assert "Mundus/food mutation after gear" in service.notes
+    assert "encounter-policy selection" in service.notes
     assert "reset downstream selections" in service.notes
     assert "axis-local bound providers" in service.notes
 
@@ -1239,6 +1281,7 @@ def test_sustained_dps_global_objective32_search_uses_searched_structural_denomi
     ) == (
         "extreme.sustained_dps.global_generated_search",
         "extreme.sustained_dps.structural_family_adapter",
+        "extreme.sustained_dps.generated_axis_inventory",
         "extreme.sustained_dps.generated_runtime_state_axis_adapter",
         "extreme.sustained_dps.axis_dominance_composition",
         "extreme.sustained_dps.theoretical_maximum_closure",
@@ -1246,6 +1289,7 @@ def test_sustained_dps_global_objective32_search_uses_searched_structural_denomi
     assert "same denominator" in service.purpose
     assert "same validated family adapter" in service.notes
     assert "denominator-scope equivalence" in service.notes
+    assert "physically present" in service.notes
 
 
 def test_sustained_dps_objective32_search_keeps_proof_levels_distinct() -> None:
