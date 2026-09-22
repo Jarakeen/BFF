@@ -171,6 +171,7 @@ class RotationHeavySustainProjectionService:
                     action_sequence=action.sequence,
                     completion_time_seconds=end,
                     fully_charged=True,
+                    landed=None,
                     verified_base_restore=None,
                     source=(
                         "duration-aware verified 1.8s heavy-attack channel reservation"
