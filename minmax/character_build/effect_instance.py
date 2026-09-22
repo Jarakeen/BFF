@@ -66,6 +66,15 @@ class EffectVariant:
     category: SupportEffectCategory | None = None
     """Whether this is a buff/debuff/status/other, if known."""
 
+    damage_amplification: float | None = None
+    """Resolved target Damage Taken contribution, expressed as a ratio when known."""
+
+    resistance_reduction: float | None = None
+    """Resolved flat target resistance reduction when known."""
+
+    penetration: float | None = None
+    """Resolved penetration contribution when known."""
+
     stacking: StackingBehavior | None = None
     """How repeated applications of this effect interact, if known."""
 
