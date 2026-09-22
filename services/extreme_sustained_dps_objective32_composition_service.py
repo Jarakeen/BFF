@@ -67,6 +67,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
         runtime_policy_adapter: object,
         runtime_evaluation: object,
         finalized_potion_evidence_resolver: object,
+        runtime_state_frontier_resolver: object,
         mundus_food_adapter: object,
         encounter_policy_adapter: object,
         finalized_potion_adapter: object | None = None,
@@ -111,6 +112,10 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires finalized potion timing evidence"
             )
+        if runtime_state_frontier_resolver is None:
+            raise ValueError(
+                "Objective #32 composition requires candidate-resolved runtime-state authority"
+            )
 
         cls._require_resource_denominator_proof(
             finalized_potion_evidence_resolver
@@ -132,6 +137,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
             finalized_potion_evidence_resolver=(
                 finalized_potion_evidence_resolver
             ),
+            runtime_state_frontier_resolver=runtime_state_frontier_resolver,
         )
         leaf_evaluation = (
             ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService(
@@ -161,7 +167,8 @@ class ExtremeSustainedDPSObjective32CompositionService:
                 "Heavy Attack timing uses scheduler-derived complete-discovery mode",
                 "Exact leaves use canonical generated runtime evaluation",
                 "Additional potion resource-event denominator is explicitly proven complete",
-                "Canonical Objective #32 search requires closure-ready runtime-state and Heavy Attack channel-block scenario evidence before traversal",
+                "Runtime state is resolved per finalized candidate inside the generated tree",
+                "Canonical Objective #32 search requires closure-ready Heavy Attack channel-block scenario evidence before traversal",
             ),
         )
 
