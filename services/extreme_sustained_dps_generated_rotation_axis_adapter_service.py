@@ -37,6 +37,8 @@ class ExtremeSustainedDPSGeneratedRotationAxisState:
     ultimate_generation_events: tuple[object, ...] = ()
     heroism_windows: tuple[object, ...] = ()
     use_scheduled_combat_attacks_for_ultimate: bool = False
+    priorities: object | None = None
+    encounter_demands: tuple[object, ...] = ()
     rotation_plan: ExtremeSustainedDPSRotationPlanCandidate | None = None
     rotation_policy: ExtremeSustainedDPSRotationPolicyCandidate | None = None
 
@@ -95,6 +97,8 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
             state.assembled,
             duration_seconds=state.duration_seconds,
             index=int(index),
+            priorities=state.priorities,
+            encounter_demands=state.encounter_demands,
         )
         return replace(state, rotation_plan=candidate, rotation_policy=None)
 
@@ -154,6 +158,8 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
         ultimate_generation_events: tuple[object, ...] = (),
         heroism_windows: tuple[object, ...] = (),
         use_scheduled_combat_attacks_for_ultimate: bool = False,
+        priorities: object | None = None,
+        encounter_demands: tuple[object, ...] = (),
     ) -> ExtremeSustainedDPSGeneratedRotationAxisState:
         duration = float(duration_seconds)
         cooldown = float(potion_cooldown_seconds)
@@ -174,6 +180,8 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
             use_scheduled_combat_attacks_for_ultimate=bool(
                 use_scheduled_combat_attacks_for_ultimate
             ),
+            priorities=priorities,
+            encounter_demands=tuple(encounter_demands),
         )
 
     def axes(self) -> tuple[ExtremeSustainedDPSIndexedFrontierAxis, ...]:
