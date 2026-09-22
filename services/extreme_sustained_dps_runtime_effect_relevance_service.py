@@ -30,6 +30,8 @@ _DPS_STAT_IDS = frozenset(
 
 _DPS_TARGET_COMPONENT_BUFFS = frozenset(
     {
+        "Minor Vulnerability",
+        "Major Vulnerability",
     }
 )
 
@@ -39,8 +41,6 @@ _DPS_COMPONENT_BUFFS = frozenset(
         "Major Berserk",
         "Minor Slayer",
         "Major Slayer",
-        "Minor Vulnerability",
-        "Major Vulnerability",
         "Magical Banner",
     }
 )
