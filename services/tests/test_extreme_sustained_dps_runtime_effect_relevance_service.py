@@ -130,3 +130,34 @@ def test_scaled_target_resistance_reduction_fails_closed() -> None:
     result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
     assert result.relevant == ()
     assert any("unresolved scaling" in row for row in result.unresolved)
+
+
+def test_explicit_fixed_target_damage_amplification_is_relevant() -> None:
+    effect = EffectVariant(
+        name="synthetic_damage_amplification",
+        layer=EffectLayer.PROC,
+        source="Synthetic Amplifier",
+        trigger="damage_dealt",
+        duration=5.0,
+        target_type=SupportTargetType.ENEMY,
+        damage_amplification=0.07,
+    )
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+    assert result.relevant == (effect,)
+    assert result.unresolved == ()
+
+
+def test_scaled_target_damage_amplification_fails_closed() -> None:
+    effect = EffectVariant(
+        name="synthetic_scaled_amplification",
+        layer=EffectLayer.PROC,
+        source="Synthetic Scaled Amplifier",
+        trigger="damage_dealt",
+        duration=5.0,
+        target_type=SupportTargetType.ENEMY,
+        damage_amplification=0.10,
+        scaling="up to 10% based on unresolved runtime state",
+    )
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+    assert result.relevant == ()
+    assert any("unresolved scaling" in row for row in result.unresolved)
