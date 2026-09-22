@@ -371,7 +371,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             f"Explicit target resistance: {float(target_resistance):g}",
             "Dual-bar named-set activation bound into shared runtime snapshot truth",
             "Named buffs and reviewed timed non-named runtime stat effects may alter exact runtime build contexts",
-            "Reviewed enemy-target Damage Taken effects are projected through canonical target_combat_state at exact damage timestamps",
+            "Reviewed enemy-target named and explicit numeric Damage Taken effects are projected through canonical target_combat_state at exact damage timestamps",
             "Reviewed enemy-target named and explicit numeric resistance reductions are applied through exact-time target resistance before mitigation",
             "Damage evaluated through Phase 14 Combat Simulation using candidate_build provenance",
         )
