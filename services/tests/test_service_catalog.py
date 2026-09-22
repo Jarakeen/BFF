@@ -1190,6 +1190,20 @@ def test_sustained_dps_dynamic_whole_plan_frontier_adapter_preserves_omitted_sco
     assert "materialized one at a time" in service.notes
 
 
+def test_sustained_dps_runtime_effect_universe_reuses_saved_build_capabilities() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_runtime_effect_universe"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.runtime_effect_universe"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "candidate-scoped runtime-triggered EffectVariant universe" in service.purpose
+    assert "SavedBuildCapabilityService" in service.notes
+    assert "potion_use variants are excluded" in service.notes
+    assert "deferred runtime-effect conversion boundaries fail" in service.notes
+
+
 def test_sustained_dps_runtime_event_skeleton_keeps_trigger_authority_explicit() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_runtime_event_skeleton"
@@ -1230,6 +1244,7 @@ def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely
         row.service_id
         for row in SERVICE_CATALOG.dependencies_of(scenario.service_id)
     ) == (
+        "extreme.sustained_dps.runtime_effect_universe",
         "extreme.sustained_dps.runtime_event_skeleton",
         "extreme.sustained_dps.runtime_attempt_evidence_frontier",
         "extreme.sustained_dps.runtime_external_history_assembly",
