@@ -2786,7 +2786,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.runtime_target_combat_state",
         domain="extreme",
         purpose=(
-            "Project reviewed enemy-target runtime EffectVariant windows into canonical target CombatState at exact damage timestamps for Damage Taken and resistance routing."
+            "Project reviewed enemy-target runtime EffectVariant windows into canonical target CombatState at exact damage timestamps for Damage Taken, resistance, and Critical Damage Taken routing."
         ),
         implementation_path="services.extreme_sustained_dps_runtime_target_combat_state_service",
         inputs=("ExtremeRuntimeSnapshot", "RuntimeEffectVariants", "TargetIdentity"),
@@ -2798,7 +2798,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
-            "Uses existing target Damage Taken and target resistance routers rather than redefining Vulnerability or Breach math. "
+            "Uses existing target Damage Taken, target resistance, and shared critical-stage routers rather than redefining Vulnerability, Breach, or Brittle math. "
             "Only active windows whose runtime target exactly matches the scored target are projected."
         ),
     ),
@@ -2833,7 +2833,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Generated progression is caller-owned rather than resolved through saved-build persistence. "
             "Bar-legal named gear buffs flow through the shared runtime CombatState path, while reviewed "
             "timed stat EffectVariants are projected into canonical runtime build-context inputs. "
-            "Reviewed ENEMY-target Damage Taken and resistance-reduction windows are projected into target state at exact damage timestamps. "
+            "Reviewed ENEMY-target Damage Taken, resistance-reduction, and Critical Damage Taken windows are projected into target state at exact damage timestamps. "
             "Unknown runtime stat identities still fail closed."
         ),
     ),
