@@ -24,6 +24,7 @@ def _key(value: object) -> str:
 class ExtremePassiveLegalityContext:
     equipped_class_lines: tuple[str, ...]
     equipped_weapon_lines: tuple[str, ...] = ()
+    equipped_armor_lines: tuple[str, ...] = ()
     selected_racial_line: str | None = None
     available_shared_lines: tuple[str, ...] = ()
     vampire: bool = False
@@ -60,6 +61,9 @@ class ExtremePassiveObjectiveService:
             return line in {_key(value) for value in context.equipped_class_lines}
         if passive.domain is ExtremeSkillDomain.WEAPON:
             return line in {_key(value) for value in context.equipped_weapon_lines}
+        if passive.domain is ExtremeSkillDomain.ARMOR:
+            allowed = {_key(value) for value in context.equipped_armor_lines}
+            return not allowed or line in allowed
         if passive.domain is ExtremeSkillDomain.RACIAL:
             return bool(context.selected_racial_line) and line == _key(context.selected_racial_line)
         if passive.domain is ExtremeSkillDomain.WORLD:
@@ -71,7 +75,6 @@ class ExtremePassiveObjectiveService:
             ExtremeSkillDomain.GUILD,
             ExtremeSkillDomain.ALLIANCE_WAR,
             ExtremeSkillDomain.WORLD,
-            ExtremeSkillDomain.ARMOR,
             ExtremeSkillDomain.CRAFT,
             ExtremeSkillDomain.UTILITY,
             ExtremeSkillDomain.OTHER,
