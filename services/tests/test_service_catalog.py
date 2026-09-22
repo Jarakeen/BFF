@@ -1287,6 +1287,22 @@ def test_sustained_dps_generated_tree_coverage_is_same_tree_only() -> None:
     assert "omissions remain attached" in service.notes
 
 
+def test_sustained_dps_delayed_ultimate_policy_frontier_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_delayed_ultimate_policy_frontier"
+    )
+
+    assert service is not None
+    assert (
+        service.service_id
+        == "extreme.sustained_dps.delayed_ultimate_policy_frontier"
+    )
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "every legal delayed Ultimate cast sequence" in service.purpose
+    assert "Same-timestamp generation" in service.notes
+    assert "integration into the global rotation-policy axis remains separate" in service.notes
+
+
 def test_sustained_dps_objective32_blockers_are_diagnostic_only() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_objective32_blocker_reporting"
