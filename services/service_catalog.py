@@ -1029,6 +1029,42 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.objective32_composition",
+        domain="extreme",
+        purpose=(
+            "Assemble the canonical generated Objective #32 production service graph from already-configured structural, build, rotation, runtime, and finalized-potion authorities."
+        ),
+        implementation_path="services.extreme_sustained_dps_objective32_composition_service",
+        inputs=(
+            "StructuralFamilyFrontier",
+            "StructuralMaterializer",
+            "GeneratedGearAxisAdapter",
+            "GeneratedLateAxisAdapter",
+            "GeneratedRotationAxisAdapter",
+            "GeneratedRuntimePolicyAxisAdapter",
+            "GeneratedRuntimeEvaluation",
+            "FinalizedPotionTimingEvidenceResolver",
+        ),
+        outputs=("ExtremeSustainedDPSObjective32Composition",),
+        dependencies=(
+            "extreme.sustained_dps.generated_axis_pipeline",
+            "extreme.sustained_dps.generated_axis_pipeline_leaf_evaluation",
+            "extreme.sustained_dps.global_generated_search",
+            "extreme.sustained_dps.global_objective32_search",
+            "extreme.sustained_dps.generated_finalized_potion_axis_adapter",
+        ),
+        responsibilities=("extreme_sustained_dps_objective32_composition",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "This is the canonical production composition root for the generated Objective #32 graph. "
+            "It refuses construction unless finalized potion timing is wired after runtime policy and the additional resource-event denominator is explicitly proven complete. "
+            "Low-level frontier repositories and mechanics remain owned by their existing services rather than being recreated here."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.global_generated_search",
         domain="extreme",
         purpose=(
