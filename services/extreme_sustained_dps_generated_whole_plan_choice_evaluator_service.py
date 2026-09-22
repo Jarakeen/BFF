@@ -79,7 +79,7 @@ class ExtremeSustainedDPSGeneratedWholePlanChoiceEvaluator(Generic[T]):
             gear_state=self.scenario.gear_state,
             plan=plan,
             runtime_snapshot=self.scenario.runtime_snapshot,
-            runtime_effects=tuple(self.scenario.runtime_effects),
+            runtime_effects=tuple(getattr(self.scenario, "runtime_effects", ())),
             target_health=self.scenario.target_health,
             target_resistance=self.scenario.target_resistance,
             target_name=self.scenario.target_name,
