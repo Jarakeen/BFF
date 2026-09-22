@@ -88,7 +88,10 @@ class RotationRuntimeBarProvenanceService:
         initial_bar: str = "front",
         player_build: PlayerBuild | None = None,
     ) -> RotationRuntimeBarProvenanceResult:
-        if not snapshot.runtime_history:
+        if (
+            not snapshot.runtime_history
+            and not snapshot.runtime_history_complete
+        ):
             return RotationRuntimeBarProvenanceResult(
                 snapshot=None,
                 unresolved=(
