@@ -1,0 +1,123 @@
+from __future__ import annotations
+
+"""Preflight proof-critical search-time evidence for Objective #32 closure."""
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class ExtremeSustainedDPSObjective32ScenarioPreflight:
+    ready: bool
+    evidence: tuple[str, ...]
+    blockers: tuple[str, ...]
+
+
+class ExtremeSustainedDPSObjective32ScenarioPreflightService:
+    """Validate the search-time evidence composition cannot own statically."""
+
+    @classmethod
+    def assess(
+        cls,
+        *,
+        runtime_state_frontier: object | None,
+        heavy_attack_channel_block_denominator_proven: bool,
+        encounter_policy_adapter: object | None,
+    ) -> ExtremeSustainedDPSObjective32ScenarioPreflight:
+        blockers: list[str] = []
+
+        if runtime_state_frontier is None:
+            blockers.append(
+                "Objective #32 theoretical closure requires an explicit runtime-state frontier"
+            )
+        else:
+            if not bool(
+                getattr(runtime_state_frontier, "denominator_proven", False)
+            ):
+                blockers.append(
+                    "Objective #32 runtime-state denominator is not proven complete"
+                )
+            unresolved = tuple(
+                str(item).strip()
+                for item in tuple(
+                    getattr(runtime_state_frontier, "unresolved", ()) or ()
+                )
+                if str(item).strip()
+            )
+            blockers.extend(
+                f"Objective #32 runtime-state evidence unresolved: {item}"
+                for item in unresolved
+            )
+            omitted = tuple(
+                str(item).strip()
+                for item in tuple(
+                    getattr(runtime_state_frontier, "omitted_scope", ()) or ()
+                )
+                if str(item).strip()
+            )
+            blockers.extend(
+                f"Objective #32 runtime-state theoretical scope omitted: {item}"
+                for item in omitted
+            )
+
+        if not bool(heavy_attack_channel_block_denominator_proven):
+            blockers.append(
+                "Objective #32 Heavy Attack encounter channel-block denominator is not proven complete"
+            )
+
+        if encounter_policy_adapter is None:
+            blockers.append(
+                "Objective #32 canonical encounter-policy adapter is missing"
+            )
+
+        deduped = tuple(dict.fromkeys(blockers))
+        return ExtremeSustainedDPSObjective32ScenarioPreflight(
+            ready=not deduped,
+            evidence=(
+                (
+                    "Runtime-state frontier is present"
+                    if runtime_state_frontier is not None
+                    else "Runtime-state frontier is absent"
+                ),
+                (
+                    "Heavy Attack encounter channel-block denominator is proven complete"
+                    if heavy_attack_channel_block_denominator_proven
+                    else "Heavy Attack encounter channel-block denominator is open"
+                ),
+                (
+                    "Encounter-policy adapter is present"
+                    if encounter_policy_adapter is not None
+                    else "Encounter-policy adapter is absent"
+                ),
+                f"Objective #32 scenario preflight blockers: {len(deduped)}",
+                "Scenario preflight is diagnostic/guard evidence only; it does not prove branch-and-bound completion or exact simulation completeness",
+            ),
+            blockers=deduped,
+        )
+
+    @classmethod
+    def require_ready(
+        cls,
+        *,
+        runtime_state_frontier: object | None,
+        heavy_attack_channel_block_denominator_proven: bool,
+        encounter_policy_adapter: object | None,
+    ) -> ExtremeSustainedDPSObjective32ScenarioPreflight:
+        result = cls.assess(
+            runtime_state_frontier=runtime_state_frontier,
+            heavy_attack_channel_block_denominator_proven=(
+                heavy_attack_channel_block_denominator_proven
+            ),
+            encounter_policy_adapter=encounter_policy_adapter,
+        )
+        if result.blockers:
+            raise ValueError(
+                "Objective #32 scenario is not closure-ready: "
+                + "; ".join(result.blockers)
+            )
+        return result
+
+
+__all__ = [
+    "ExtremeSustainedDPSObjective32ScenarioPreflight",
+    "ExtremeSustainedDPSObjective32ScenarioPreflightService",
+]
