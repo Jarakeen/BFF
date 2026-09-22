@@ -25,7 +25,9 @@ class RotationHeavyAttackCompletionEvidence:
     `fully_charged=False` is affirmative evidence that the heavy did not complete
     as a fully charged attack and therefore produces no heavy-attack restoration.
     Missing evidence is not treated as an interrupted/partial heavy; it remains
-    unresolved.
+    unresolved. ``landed`` is independent from channel completion: ``None`` means
+    hit outcome is unknown, ``False`` suppresses restoration, and only ``True`` may
+    produce a restoration event.
 
     ``verified_base_restore`` is an optional evidence override. When omitted, the
     restoration service may use the shared canonical live-verified weapon base.
