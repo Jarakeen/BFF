@@ -1048,8 +1048,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Requires an explicit runtime-state frontier with complete denominator proof and no unresolved or omitted scope, plus a proven-complete Heavy Attack encounter channel-block denominator. "
-            "The canonical Objective #32 composition enables this guard; generic finite-denominator search wrappers may leave it disabled. "
+            "Requires either a complete explicit runtime-state frontier or canonical candidate-resolved runtime-state authority, plus a proven-complete Heavy Attack encounter channel-block denominator. "
+            "The canonical Objective #32 composition enables candidate-resolved runtime state and this guard; generic finite-denominator search wrappers may leave it disabled. "
             "Preflight prevents an obviously non-closure-ready scenario from entering branch-and-bound but cannot prove search completion or exact simulation completeness."
         ),
     ),
