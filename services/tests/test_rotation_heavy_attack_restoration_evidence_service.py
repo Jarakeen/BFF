@@ -255,15 +255,15 @@ def test_fully_charged_heavy_without_hit_evidence_is_unresolved() -> None:
     assert "lacks successful-hit evidence" in projection.unresolved[0]
 
 
-def test_fully_charged_heavy_that_did_not_land_restores_nothing() -> None:
+def test_fully_charged_dodged_heavy_restores_nothing() -> None:
     evidence = RotationHeavyAttackCompletionEvidence(
         action_time_seconds=2.0,
         action_sequence=0,
         completion_time_seconds=4.0,
         fully_charged=True,
         landed=False,
-        verified_base_restore=None,
-        source="blocked or dodged heavy",
+        hit_outcome=RotationHeavyAttackHitOutcome.DODGED,
+        source="reviewed dodged heavy",
     )
     projection = RotationHeavyAttackRestorationEvidenceService().project(
         build=_build(front_weapon=WeaponType.FLAME_STAFF),
@@ -275,6 +275,48 @@ def test_fully_charged_heavy_that_did_not_land_restores_nothing() -> None:
     assert projection.is_resolved is True
     assert projection.unresolved == ()
     assert projection.restoration_events == ()
+
+
+def test_fully_charged_blocked_heavy_restoration_is_unresolved() -> None:
+    evidence = RotationHeavyAttackCompletionEvidence(
+        action_time_seconds=2.0,
+        action_sequence=0,
+        completion_time_seconds=4.0,
+        fully_charged=True,
+        hit_outcome=RotationHeavyAttackHitOutcome.BLOCKED,
+        source="reviewed blocked heavy",
+    )
+    projection = RotationHeavyAttackRestorationEvidenceService().project(
+        build=_build(front_weapon=WeaponType.FLAME_STAFF),
+        plan=_plan(_heavy(2.0)),
+        initial_bar="front",
+        completion_evidence=(evidence,),
+    )
+
+    assert projection.is_resolved is False
+    assert projection.restoration_events == ()
+    assert "blocked-hit resource-restoration semantics are unresolved" in projection.unresolved[0]
+
+
+def test_fully_charged_landed_false_without_outcome_fails_closed() -> None:
+    evidence = RotationHeavyAttackCompletionEvidence(
+        action_time_seconds=2.0,
+        action_sequence=0,
+        completion_time_seconds=4.0,
+        fully_charged=True,
+        landed=False,
+        source="legacy boolean-only hit evidence",
+    )
+    projection = RotationHeavyAttackRestorationEvidenceService().project(
+        build=_build(front_weapon=WeaponType.FLAME_STAFF),
+        plan=_plan(_heavy(2.0)),
+        initial_bar="front",
+        completion_evidence=(evidence,),
+    )
+
+    assert projection.is_resolved is False
+    assert projection.restoration_events == ()
+    assert "landed=False without a reviewed hit outcome" in projection.unresolved[0]
 
 
 def test_completion_after_plan_horizon_is_unresolved() -> None:
