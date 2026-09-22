@@ -20,15 +20,24 @@ def test_heavy_attack_weapon_resource_mapping_is_explicit() -> None:
     assert resource_for_heavy_attack_weapon(HeavyAttackWeaponType.FIRE_STAFF) is ResourceType.MAGICKA
 
 
-def test_live_verified_staff_heavy_attack_bases_are_explicit() -> None:
-    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.RESTORATION_STAFF) == 3267.0
-    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.FROST_STAFF) == 2425.0
-    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.SHOCK_STAFF) == 2970.0
+def test_update35_verified_heavy_attack_bases_are_explicit() -> None:
+    expected = {
+        HeavyAttackWeaponType.BOW: 2772.0,
+        HeavyAttackWeaponType.DUAL_WIELD: 2095.0,
+        HeavyAttackWeaponType.TWO_HANDED: 2425.0,
+        HeavyAttackWeaponType.ONE_HAND_AND_SHIELD: 2293.0,
+        HeavyAttackWeaponType.FIRE_STAFF: 2838.0,
+        HeavyAttackWeaponType.FROST_STAFF: 2838.0,
+        HeavyAttackWeaponType.SHOCK_STAFF: 2970.0,
+        HeavyAttackWeaponType.RESTORATION_STAFF: 3267.0,
+        HeavyAttackWeaponType.UNARMED: 2095.0,
+    }
+    for weapon, restore in expected.items():
+        assert verified_heavy_attack_base_restore(weapon) == restore
 
 
-def test_unreviewed_heavy_attack_base_restore_fails_closed() -> None:
-    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.FIRE_STAFF) is None
-    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.BOW) is None
+def test_unverified_werewolf_heavy_attack_base_restore_fails_closed() -> None:
+    assert verified_heavy_attack_base_restore(HeavyAttackWeaponType.WEREWOLF) is None
 
 
 def test_unverified_heavy_attack_base_restore_is_rejected() -> None:
