@@ -255,3 +255,18 @@ def test_rotation_plan_axis_forwards_priorities_and_encounter_demands() -> None:
     assert call[4] is priorities
     assert call[5] == demands
     assert state.rotation_plan.plan == "plan:1"
+
+
+
+def test_rotation_policy_axis_carries_theoretical_timing_omissions() -> None:
+    adapter = _adapter()
+    policy_axis = adapter.axes()[1]
+
+    assert policy_axis.canonical_axes == (
+        "ultimate_policy",
+        "potion_timing_policy",
+    )
+    assert policy_axis.omitted_scope == (
+        "continuous potion first-use offset is not closed by anchored policy search",
+        "deliberate post-affordability Ultimate delay is not closed by anchored policy search",
+    )
