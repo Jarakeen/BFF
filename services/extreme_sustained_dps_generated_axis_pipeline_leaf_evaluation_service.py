@@ -14,7 +14,13 @@ from services.extreme_sustained_dps_generated_search_evidence_adapter_service im
 
 
 class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
-    """Extract one completed pipeline witness and run canonical exact simulation."""
+    """Extract the final assembled witness and run canonical exact simulation.
+
+    Final build/progression come from the assembled late-stage candidate so Champion
+    Point, potion selection, passive-rank, and skill-bar mutations reach simulation.
+    When a finalized-potion stage exists its exact plan supersedes the runtime-policy
+    plan; otherwise the runtime-policy candidate remains the final plan.
+    """
 
     def __init__(self, *, runtime_evaluation: object) -> None:
         self.runtime_evaluation = runtime_evaluation
@@ -54,11 +60,18 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
         gear = getattr(state, "gear", None)
         late = getattr(state, "late", None)
         runtime = getattr(state, "runtime", None)
+        finalized_potion = getattr(state, "finalized_potion", None)
         assembled = getattr(late, "assembled", None)
-        final_policy_candidate = getattr(runtime, "current_candidate", None)
+        runtime_policy_candidate = getattr(runtime, "current_candidate", None)
+        finalized_potion_candidate = getattr(finalized_potion, "candidate", None)
+        final_policy_candidate = (
+            finalized_potion_candidate
+            if finalized_potion_candidate is not None
+            else runtime_policy_candidate
+        )
 
         build = getattr(assembled, "build", None)
-        progression = getattr(gear, "progression", None)
+        progression = getattr(assembled, "progression", None)
         gear_state = getattr(gear, "gear_state", None)
         plan = getattr(final_policy_candidate, "plan", None)
 
@@ -68,7 +81,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
                 ("assembled build", build),
                 ("generated progression", progression),
                 ("dual-bar gear state", gear_state),
-                ("final runtime-policy plan", plan),
+                ("final generated plan", plan),
             )
             if value is None
         )
