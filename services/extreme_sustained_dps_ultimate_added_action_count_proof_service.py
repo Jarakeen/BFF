@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-"""Promote canonical Ultimate affordability capacity into an added-action count proof.
+"""Promote one exact generated Ultimate policy into an added-action count proof.
 
-For one explicit generated Ultimate policy, RotationUltimateService already resolves the
-selected slot-6 identity/cost and projects the shared Ultimate resource timeline. Its
-availability_times are emitted by repeatedly reserving/spending the selected cost as soon
-as the explicit resource pool can afford another activation. The number of such times is
-therefore a safe maximum on how many Ultimate damage actions that policy can add during
-the exact horizon.
+Delayed-Ultimate integration now produces an exact scheduled RotationPlan for each
+policy. The proof therefore counts scheduled Ultimate actions on the selected bar and
+requires final canonical resource legality instead of relying on the older immediate-
+affordability reservation projection.
 
 This service owns no Ultimate generation, cost, scheduling, or damage mechanics.
 """
 
 from dataclasses import dataclass
 
+from minmax.rotation_plan import RotationActionKind
 from services.extreme_sustained_dps_rotation_family_action_count_proof_service import (
     ExtremeSustainedDPSAdditionalDamageActionCountProof,
 )
@@ -71,46 +70,31 @@ class ExtremeSustainedDPSUltimateAddedActionCountProofService:
                 f"Unsupported generated Ultimate policy option: {policy.ultimate_option!r}"
             )
 
-        projection = policy.ultimate_projection
-        if projection is None:
+        assessment = policy.resource_legality
+        if not bool(getattr(assessment, "is_legal", False)):
             unresolved.append(
-                "Selected Ultimate policy has no canonical Ultimate resource projection"
+                "Selected Ultimate policy failed final canonical resource legality"
             )
-            maximum = None
-        else:
-            projection_unresolved = tuple(
-                str(item).strip()
-                for item in projection.unresolved
-                if str(item).strip()
-                and cls._CHOICE_DIAGNOSTIC not in str(item).casefold()
-            )
-            unresolved.extend(projection_unresolved)
+        unresolved.extend(
+            str(item).strip()
+            for item in tuple(getattr(assessment, "unresolved", ()) or ())
+            if str(item).strip()
+        )
 
-            resources = tuple(projection.resource_projections)
-            if len(resources) != 1:
-                unresolved.append(
-                    "Selected Ultimate policy must expose exactly one canonical resource projection"
-                )
-                maximum = None
-            else:
-                projected_bar, resource_projection = resources[0]
-                if str(projected_bar or "").strip().casefold() != option:
-                    unresolved.append(
-                        "Ultimate resource projection bar does not match selected policy"
-                    )
-                maximum = len(tuple(resource_projection.availability_times))
-
-            if len(tuple(projection.spend_rules)) != 1:
-                unresolved.append(
-                    "Selected Ultimate policy must expose exactly one canonical spend rule"
-                )
+        scheduled = tuple(
+            action
+            for action in tuple(getattr(policy.plan, "actions", ()) or ())
+            if action.kind is RotationActionKind.ULTIMATE
+            and str(action.bar or "").strip().casefold() == option
+        )
+        maximum = len(scheduled)
 
         deduped = tuple(dict.fromkeys(item for item in unresolved if item))
         proof = ExtremeSustainedDPSAdditionalDamageActionCountProof(
             maximum_additional_damage_actions=maximum,
             proven_safe=bool(maximum is not None and not deduped),
             source=(
-                "canonical UltimateResourceTimeline affordability capacity for "
+                "exact scheduled Ultimate-action count for canonically legal "
                 f"explicit {option or 'unknown'}-bar Ultimate policy"
             ),
             unresolved=deduped,
@@ -122,13 +106,9 @@ class ExtremeSustainedDPSUltimateAddedActionCountProofService:
             proof=proof,
             evidence=(
                 f"Generated Ultimate policy: {option or '(unknown)'}",
-                (
-                    f"Canonical affordability/reservation opportunities: {maximum}"
-                    if maximum is not None
-                    else "Canonical affordability/reservation opportunities: unresolved"
-                ),
-                "Each availability reserves the selected canonical Ultimate cost from the shared pool",
-                "The availability count is used only as a maximum added-action count, not as a claim that every cast is scheduled or optimal",
+                f"Scheduled selected-bar Ultimate actions: {maximum}",
+                "Final resource legality is required before the exact scheduled count is promoted",
+                "For one fully materialized generated policy, the scheduled Ultimate count is both exact and a safe maximum additional-action count for that policy",
             ),
             unresolved=deduped,
         )
