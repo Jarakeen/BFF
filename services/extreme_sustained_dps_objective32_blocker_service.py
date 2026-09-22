@@ -49,6 +49,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
         axis_inventory: object,
         axis_coverage: object,
         closure: object,
+        closure_inventory: object | None = None,
     ) -> ExtremeSustainedDPSObjective32BlockerReport:
         blockers: list[ExtremeSustainedDPSObjective32Blocker] = []
 
@@ -159,6 +160,59 @@ class ExtremeSustainedDPSObjective32BlockerService:
                     )
                 )
 
+        if closure_inventory is not None:
+            for item in tuple(
+                getattr(closure_inventory, "source_data_blockers", ()) or ()
+            ):
+                detail = str(item).strip()
+                if detail:
+                    blockers.append(
+                        ExtremeSustainedDPSObjective32Blocker(
+                            code="runtime_source_data_unresolved",
+                            category="source_data",
+                            detail=detail,
+                            source="runtime relevance closure inventory",
+                        )
+                    )
+
+            for item in tuple(
+                getattr(closure_inventory, "math_review_blockers", ()) or ()
+            ):
+                detail = str(item).strip()
+                if detail:
+                    blockers.append(
+                        ExtremeSustainedDPSObjective32Blocker(
+                            code="runtime_math_review_unresolved",
+                            category="math_review",
+                            detail=detail,
+                            source="runtime relevance closure inventory",
+                        )
+                    )
+
+            for gap in tuple(
+                getattr(closure_inventory, "mechanics_blockers", ()) or ()
+            ):
+                blockers.append(
+                    ExtremeSustainedDPSObjective32Blocker(
+                        code="mechanics_coverage_missing_critical",
+                        category="mechanics",
+                        detail=str(getattr(gap, "needed_evidence", gap)).strip(),
+                        source=str(getattr(gap, "key", "canonical mechanics coverage")),
+                    )
+                )
+
+            for gap in tuple(
+                getattr(closure_inventory, "mechanics_advisories", ()) or ()
+            ):
+                blockers.append(
+                    ExtremeSustainedDPSObjective32Blocker(
+                        code="mechanics_coverage_partial",
+                        category="mechanics",
+                        detail=str(getattr(gap, "needed_evidence", gap)).strip(),
+                        source=str(getattr(gap, "key", "canonical mechanics coverage")),
+                    )
+                )
+
         unique: list[ExtremeSustainedDPSObjective32Blocker] = []
         seen: set[tuple[str, str | None, str]] = set()
         for blocker in blockers:
@@ -176,6 +230,9 @@ class ExtremeSustainedDPSObjective32BlockerService:
                 f"Tree blockers: {sum(row.category == 'tree' for row in unique)}",
                 f"Coverage blockers: {sum(row.category == 'coverage' for row in unique)}",
                 f"Theoretical-scope blockers: {sum(row.category == 'theory' for row in unique)}",
+                f"Runtime source-data blockers: {sum(row.category == 'source_data' for row in unique)}",
+                f"Runtime math/review blockers: {sum(row.category == 'math_review' for row in unique)}",
+                f"Mechanics-coverage blockers: {sum(row.category == 'mechanics' for row in unique)}",
                 "Blocker reporting is diagnostic only and cannot create or remove proof.",
             ),
         )
