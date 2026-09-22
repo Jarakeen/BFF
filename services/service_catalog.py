@@ -2833,7 +2833,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Generated progression is caller-owned rather than resolved through saved-build persistence. "
             "Bar-legal named gear buffs flow through the shared runtime CombatState path, while reviewed "
             "timed stat EffectVariants are projected into canonical runtime build-context inputs. "
-            "Reviewed ENEMY-target Damage Taken, resistance-reduction, and Critical Damage Taken windows are projected into target state at exact damage timestamps. "
+            "Reviewed ENEMY-target Damage Taken, named or explicit numeric resistance-reduction, and Critical Damage Taken windows are projected into target state at exact damage timestamps. "
             "Unknown runtime stat identities still fail closed."
         ),
     ),
