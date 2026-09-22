@@ -191,7 +191,7 @@ def test_missing_completion_evidence_is_unresolved_not_zero_restore() -> None:
     assert "lacks completion/full-charge evidence" in projection.unresolved[0]
 
 
-def test_fully_charged_heavy_without_any_verified_base_restore_is_unresolved() -> None:
+def test_fully_charged_flame_staff_uses_verified_update35_base_restore() -> None:
     projection = RotationHeavyAttackRestorationEvidenceService().project(
         build=_build(front_weapon=WeaponType.FLAME_STAFF),
         plan=_plan(_heavy(2.0)),
@@ -201,9 +201,11 @@ def test_fully_charged_heavy_without_any_verified_base_restore_is_unresolved() -
         ),
     )
 
-    assert projection.is_resolved is False
-    assert projection.restoration_events == ()
-    assert "lacks verified base restore evidence" in projection.unresolved[0]
+    assert projection.is_resolved is True
+    assert projection.unresolved == ()
+    assert len(projection.restoration_events) == 1
+    assert projection.restoration_events[0].resource is ResourceType.MAGICKA
+    assert projection.restoration_events[0].amount == pytest.approx(2838.0)
 
 
 def test_completion_after_plan_horizon_is_unresolved() -> None:
