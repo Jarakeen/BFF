@@ -93,29 +93,6 @@ def _evidence() -> tuple[RotationHeavyAttackCompletionEvidence, ...]:
 
 
 
-def test_unowned_heavy_restore_modifiers_fail_closed() -> None:
-    service = RotationHeavySustainProjectionService(
-        replay_service=_ReplayService(),
-        progression_adapter=_ProgressionAdapter(CharacterProgression(passive_ranks={})),
-    )
-    evidence = replace(
-        _evidence()[0],
-        modifiers=HeavyAttackRestorationModifiers(champion_point_percent=0.10),
-    )
-    result = service.project(
-        character_build=_character_build(),
-        sustain_build=_saved_build(),
-        plan=_plan(),
-        resource=ResourceType.MAGICKA,
-        initial_bar="front",
-        completion_evidence=(evidence,),
-    )
-    assert result.is_resolved is False
-    assert any(
-        "lacks canonical progression ownership" in item
-        for item in result.unresolved
-    )
-
 def test_verified_reservation_does_not_invent_successful_hit() -> None:
     plan = RotationPlan(
         character_name="Magrat",
@@ -170,6 +147,28 @@ class _ProgressionAdapter:
             resolved=True,
         )
 
+
+def test_unowned_heavy_restore_modifiers_fail_closed() -> None:
+    service = RotationHeavySustainProjectionService(
+        progression_adapter=_ProgressionAdapter(CharacterProgression(passive_ranks={})),
+    )
+    evidence = replace(
+        _evidence()[0],
+        modifiers=HeavyAttackRestorationModifiers(champion_point_percent=0.10),
+    )
+    result = service.project(
+        character_build=_character_build(),
+        sustain_build=_saved_build(),
+        plan=_plan(),
+        resource=ResourceType.MAGICKA,
+        initial_bar="front",
+        completion_evidence=(evidence,),
+    )
+    assert result.is_resolved is False
+    assert any(
+        "lacks canonical progression ownership" in item
+        for item in result.unresolved
+    )
 
 def test_plan_resolver_uses_verified_resto_base_and_saved_cycle_of_life() -> None:
     service = RotationHeavySustainProjectionService(
