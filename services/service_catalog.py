@@ -834,8 +834,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.ultimate_added_action_count_proof",
         domain="extreme",
         purpose=(
-            "Promote one explicit generated Ultimate policy's canonical affordability "
-            "capacity into a proof-safe maximum count of additional damage actions."
+            "Promote one explicit generated Ultimate policy's exact scheduled selected-bar "
+            "Ultimate count into a proof-safe maximum count of additional damage actions."
         ),
         implementation_path="services.extreme_sustained_dps_ultimate_added_action_count_proof_service",
         inputs=("ExtremeSustainedDPSRotationPolicyCandidate",),
@@ -861,10 +861,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         implementation_path="services.extreme_sustained_dps_rotation_family_action_count_proof_service",
         inputs=("RotationFamilyFrontier", "ExactDuration", "OptionalAdditionalPolicyActionCountProof"),
         outputs=("ExtremeSustainedDPSRotationFamilyActionCountResult",),
-        dependencies=(
-            "extreme.sustained_dps.rotation_plan_frontier",
-            "extreme.sustained_dps.delayed_ultimate_policy_frontier",
-        ),
+        dependencies=("extreme.sustained_dps.rotation_plan_frontier",),
         responsibilities=("extreme_sustained_dps_rotation_family_action_count_proof",),
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
@@ -2091,7 +2088,10 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "ExtremeSustainedDPSRotationPolicyFrontier",
             "ExtremeSustainedDPSRotationPolicyCandidate",
         ),
-        dependencies=("extreme.sustained_dps.rotation_plan_frontier",),
+        dependencies=(
+            "extreme.sustained_dps.rotation_plan_frontier",
+            "extreme.sustained_dps.delayed_ultimate_policy_frontier",
+        ),
         responsibilities=("extreme_sustained_dps_rotation_policy_frontier",),
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
