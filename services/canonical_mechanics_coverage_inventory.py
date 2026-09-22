@@ -65,9 +65,11 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
                 "Update 35 now supplies authoritative base restoration for standard weapon families. "
-                "Complete the exact passive/set/CP/modifier catalog that alters heavy restore, "
-                "verify Werewolf separately, complete blocked/dodged/missed outcome semantics beyond the "
-                "current positive landed observation, and preserve channel/completion timing "
+                "Complete the exact passive/set/CP/modifier catalog that alters heavy restore, including "
+                "current ownership/values for historical Tenacity, Ulfnor's Favor, Off Balance, "
+                "Rampaging Slash, Arch-Mage, and block-reduction axes; verify Werewolf separately, "
+                "complete blocked/dodged/missed outcome semantics beyond the current positive landed "
+                "observation, and preserve channel/completion timing "
                 "evidence rather than inferring it."
             ),
         ),
