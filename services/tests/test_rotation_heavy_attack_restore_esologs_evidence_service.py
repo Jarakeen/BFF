@@ -68,6 +68,8 @@ def _insert(
     resource_type=1,
     event_type="resourcechange",
     waste=0.0,
+    amount=None,
+    hit_type=None,
     report_code="REPORT",
     fight_id=7,
 ):
@@ -86,7 +88,7 @@ def _insert(
             (
                 report_code, fight_id, event_index, float(event_index), event_type,
                 source_id, 1, source_id, 1, 1, ability_id, None,
-                None, None, None, None, resource_change,
+                amount, hit_type, None, None, resource_change,
                 resource_type, 0.0, 31109.0, waste, None, None, None,
                 json.dumps({"ability": {"name": ability_name}}),
             ),
@@ -104,6 +106,48 @@ def _insert_actor(path, *, report_code="REPORT", fight_id=7, actor_id=42, name="
             """,
             (report_code, fight_id, actor_id, None, name, display_name, "Player", "Healer", 0, "{}"),
         )
+
+
+def test_discovers_landed_heavy_from_reviewed_damage_alias(tmp_path):
+    path = _database(tmp_path)
+    _insert(
+        path,
+        event_index=1,
+        ability_id=101,
+        ability_name="Frost Staff Heavy Attack",
+        resource_change=None,
+        event_type="damage",
+        amount=12345.0,
+        hit_type=1,
+    )
+
+    report = RotationHeavyAttackRestoreEsoLogsEvidenceService().discover_landed_damage(
+        path,
+        report_code="REPORT",
+        fight_id=7,
+        ability_names=("frost staff heavy attack",),
+        source_id=42,
+    )
+
+    assert report.unresolved == ()
+    assert len(report.observations) == 1
+    assert report.observations[0].amount == pytest.approx(12345.0)
+    assert report.observations[0].hit_type == 1
+
+
+def test_absent_heavy_damage_does_not_become_negative_hit_evidence(tmp_path):
+    path = _database(tmp_path)
+    _insert(path, event_index=1, ability_id=202, ability_name="Something Else", resource_change=500.0)
+
+    report = RotationHeavyAttackRestoreEsoLogsEvidenceService().discover_landed_damage(
+        path,
+        report_code="REPORT",
+        fight_id=7,
+        ability_names=("frost staff heavy attack",),
+    )
+
+    assert report.observations == ()
+    assert "landed state remains unresolved" in report.unresolved[0]
 
 
 def test_discovers_positive_restore_by_reviewed_name_alias(tmp_path):
