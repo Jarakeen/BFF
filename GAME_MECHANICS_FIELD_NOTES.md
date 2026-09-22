@@ -1531,3 +1531,8 @@ Official ESO forum patch-note history confirms that Heavy Armor Revitalize chang
 ## 2026-09-22 — Restoration Staff base versus observed 4247 return
 
 The reviewed heavy-attack reference table groups Lightning and Restoration Staff at a 2970 Magicka base. Existing ESO Logs evidence also contains an observed unclipped Restoration Staff return of 4247. That observation does **not** justify changing the canonical base to 3267: 2970 × the reviewed 30% Cycle of Life modifier is 3861, so the remaining difference proves that additional actor/runtime modifier evidence is present or still unidentified. The engine therefore keeps the canonical weapon base at 2970 and treats the 4247 observation as modifier-discovery evidence rather than a base-value oracle.
+
+
+## 2026-09-22 — Historical heavy-restoration formula exposes unresolved runtime axes
+
+The repository's older ESO math reference gives the heavy-resource formula as `(Base × (1 + restoration amplifiers) + flat bonuses) × block reduction`. It names Tenacity, Revitalize, Ulfnor's Favor, Off Balance, Rampaging Slash, and Arch-Mage as examples, and records a 50% restoration reduction when the target blocks. Its weapon bases are from an older ruleset and differ from the reviewed Update 35 table, so these modifier statements are discovery evidence rather than current executable constants. This explains why an observed 4247 Restoration Staff return can exceed the current 2970 base plus Cycle of Life without requiring a fake weapon base. The Extreme Engine must resolve current ownership/values for these axes before theoretical closure.
