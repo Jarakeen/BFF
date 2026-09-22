@@ -120,6 +120,32 @@ def test_effects_pipeline_builds_canonical_restore_factory_from_completion_evide
     assert heavy.calls[0]["completion_evidence"] == (evidence,)
 
 
+def test_effects_pipeline_promotes_completion_through_landed_evidence_resolver() -> None:
+    service, workflow, heavy = _service()
+    raw = object()
+    promoted = object()
+    calls = []
+
+    def completion_evidence_factory(_plan):
+        return (raw,)
+
+    def landed_evidence_resolver(plan, evidence):
+        calls.append((plan, evidence))
+        return (promoted,)
+
+    _run(
+        service,
+        completion_evidence_factory=completion_evidence_factory,
+        landed_evidence_resolver=landed_evidence_resolver,
+    )
+
+    generated_plan = _plan("logged")
+    workflow.calls[0]["restoration_resolver_factory"](generated_plan)
+
+    assert calls == [(generated_plan, (raw,))]
+    assert heavy.calls[0]["completion_evidence"] == (promoted,)
+
+
 def test_effects_pipeline_uses_verified_plan_reservations_when_no_restore_source_is_supplied() -> None:
     service, workflow, heavy = _service()
 
