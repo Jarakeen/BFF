@@ -2,11 +2,12 @@ from __future__ import annotations
 
 """Evidence-gated runtime-policy axes for generated sustained-DPS rotations.
 
-This adapter begins with one selected anchored Ultimate/potion plan, wraps that exact
-plan as a GeneratedRotationCandidate, then exposes canonical execute and Heavy Attack
-policy frontiers as ordered indexed axes. The caller remains responsible for explicit
-execute snapshots/target identity and reviewed Heavy Attack windows; traversal over
-those supplied families does not claim a broader runtime-policy denominator.
+The adapter begins with one selected delayed-Ultimate plan, wraps that exact plan as a
+GeneratedRotationCandidate, then exposes canonical execute and Heavy Attack policy
+frontiers. Legacy mode consumes caller-reviewed Heavy Attack windows and keeps explicit
+omitted scope. Complete-discovery mode derives every scheduler-legal 1.8s Heavy Attack
+start from each finalized execute plan and requires a proven encounter channel-block
+denominator before exposing omission-free heavy_attack_policy coverage.
 """
 
 from dataclasses import dataclass, replace
@@ -60,7 +61,7 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisState:
 
 
 class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
-    """Adapt explicit execute and reviewed Heavy Attack families into tree axes."""
+    """Adapt execute plus legacy or complete-discovery Heavy Attack families into tree axes."""
 
     def __init__(
         self,
@@ -273,7 +274,11 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
                 canonical_axes=("execute_policy",),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
-                "Reviewed Heavy Attack Policy",
+                (
+                    "Heavy Attack Policy"
+                    if self.require_complete_heavy_attack_discovery
+                    else "Reviewed Heavy Attack Policy"
+                ),
                 candidate_count=self._heavy_count,
                 candidate_at=self._heavy_at,
                 canonical_axes=("heavy_attack_policy",),
