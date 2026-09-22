@@ -99,3 +99,34 @@ def test_enemy_target_brittle_is_dps_relevant() -> None:
     assert result.relevant == (effect,)
     assert result.irrelevant == ()
     assert result.unresolved == ()
+
+
+def test_explicit_fixed_target_resistance_reduction_is_relevant() -> None:
+    effect = EffectVariant(
+        name="synthetic_resistance_debuff",
+        layer=EffectLayer.PROC,
+        source="Synthetic Debuff",
+        trigger="damage_dealt",
+        duration=5.0,
+        target_type=SupportTargetType.ENEMY,
+        resistance_reduction=1234.0,
+    )
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+    assert result.relevant == (effect,)
+    assert result.unresolved == ()
+
+
+def test_scaled_target_resistance_reduction_fails_closed() -> None:
+    effect = EffectVariant(
+        name="roar_of_alkosh",
+        layer=EffectLayer.PROC,
+        source="Roar of Alkosh (5)",
+        trigger="synergy_activation",
+        duration=10.0,
+        target_type=SupportTargetType.ENEMY,
+        resistance_reduction=6000.0,
+        scaling="Weapon Damage, up to 6000 resistance reduction",
+    )
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+    assert result.relevant == ()
+    assert any("unresolved scaling" in row for row in result.unresolved)
