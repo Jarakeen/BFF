@@ -57,16 +57,18 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             status=CanonicalMechanicsCoverageStatus.PARTIAL,
             capability=(
                 "Scheduled heavy attacks can be mapped to active weapon/bar and converted "
-                "to restoration events when completion, fully-charged state, verified base "
-                "restore, and modifiers are explicitly supplied."
+                "to restoration events when completion, fully-charged state, successful-hit state, "
+                "verified base restore, and modifiers are explicitly supplied. ESO Logs damage "
+                "observations can promote reviewed completions to landed evidence one-to-one."
             ),
             evidence_source="services/rotation_heavy_attack_restoration_evidence_service.py",
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
                 "Update 35 now supplies authoritative base restoration for standard weapon families. "
                 "Complete the exact passive/set/CP/modifier catalog that alters heavy restore, "
-                "verify Werewolf separately, and preserve hit/block/dodge plus channel/completion "
-                "timing evidence rather than inferring it."
+                "verify Werewolf separately, complete blocked/dodged/missed outcome semantics beyond the "
+                "current positive landed observation, and preserve channel/completion timing "
+                "evidence rather than inferring it."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
