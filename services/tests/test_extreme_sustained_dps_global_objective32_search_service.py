@@ -109,12 +109,6 @@ def test_global_objective32_closes_when_global_tree_and_all_axes_match() -> None
     runtime = _runtime_frontier()
 
     result = service.search(
-        coverage_proofs=(_remaining_without_runtime(),),
-        scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
-            root_candidate_key="generated-global-root",
-            coverage_matches_search_denominator=True,
-            source="test global denominator proof",
-        ),
         runtime_state_frontier=runtime,
         dual_bar_frontier="gear",
         candidate_id_prefix="objective32",
@@ -143,11 +137,6 @@ def test_global_objective32_preserves_runtime_omission() -> None:
     )
 
     result = service.search(
-        coverage_proofs=(_remaining_without_runtime(),),
-        scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
-            root_candidate_key="generated-global-root",
-            coverage_matches_search_denominator=True,
-        ),
         runtime_state_frontier=_runtime_frontier(
             omitted_scope=("encounter-triggered runtime histories remain open",)
         ),
@@ -171,7 +160,7 @@ def test_global_objective32_preserves_runtime_omission() -> None:
     )
 
 
-def test_global_objective32_rejects_mismatched_nonstructural_scope_proof() -> None:
+def test_global_objective32_ignores_mismatched_supplemental_scope_when_tree_proves_itself() -> None:
     service = ExtremeSustainedDPSGlobalObjective32SearchService(
         global_search=_GlobalSearch(_search_result()),
         structural_families=_StructuralFamilies(),
@@ -198,13 +187,38 @@ def test_global_objective32_rejects_mismatched_nonstructural_scope_proof() -> No
     )
 
     assert result.finite_denominator_maximum_proven is True
-    assert result.theoretical_maximum_proven is False
-    assert any(
-        "non-structural axis coverage is not proven to match" in item
-        for item in result.closure.omitted_scope
+    assert result.theoretical_maximum_proven is True
+    assert result.supplemental_evidence == (
+        "Supplemental Objective #32 coverage proofs were ignored because denominator equivalence is not proven",
     )
 
 
+def test_global_objective32_ignores_unscoped_supplemental_proof_when_tree_proves_itself() -> None:
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=_GlobalSearch(_search_result()),
+    )
+
+    result = service.search(
+        coverage_proofs=(_remaining_without_runtime(),),
+        runtime_state_frontier=_runtime_frontier(),
+        dual_bar_frontier="gear",
+        candidate_id_prefix="objective32",
+        required_duration_seconds=20.0,
+        potion_cooldown_seconds=45.0,
+        starting_ultimate=0.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="Boss",
+        runtime_snapshot="snapshot",
+        target_health=1_000_000,
+        target_resistance=18_200.0,
+    )
+
+    assert result.theoretical_maximum_proven is True
+    assert result.scope_proof is None
+    assert result.supplemental_evidence == (
+        "Supplemental Objective #32 coverage proofs were ignored because no denominator scope proof was supplied",
+    )
 
 def test_global_objective32_refuses_theory_when_tree_is_missing_axis() -> None:
     service = ExtremeSustainedDPSGlobalObjective32SearchService(
