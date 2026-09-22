@@ -1008,7 +1008,8 @@ def test_sustained_dps_pipeline_leaf_bridge_uses_final_runtime_plan() -> None:
         "extreme.sustained_dps.generated_runtime_evaluation",
         "extreme.sustained_dps.generated_search_evidence_adapter",
     )
-    assert "final downstream runtime-policy plan" in service.notes
+    assert "final assembled build/progression" in service.notes
+    assert "finalized potion timing" in service.notes
     assert "overrides the fallback search snapshot" in service.notes
     assert "without invoking simulation" in service.notes
 
