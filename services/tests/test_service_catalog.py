@@ -1460,6 +1460,21 @@ def test_sustained_dps_objective32_blockers_are_diagnostic_only() -> None:
     assert "Reporting is diagnostic only" in service.notes
 
 
+def test_sustained_dps_objective32_scenario_preflight_guards_theoretical_runs() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_objective32_scenario_preflight"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.objective32_scenario_preflight"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "search-time scenario evidence" in service.purpose
+    assert "runtime-state frontier" in service.notes
+    assert "Heavy Attack encounter channel-block denominator" in service.notes
+    assert "generic finite-denominator search wrappers" in service.notes
+    assert "cannot prove search completion" in service.notes
+
+
 def test_sustained_dps_objective32_composition_is_canonical_production_root() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_objective32_composition"
@@ -1502,6 +1517,7 @@ def test_sustained_dps_global_objective32_search_uses_searched_structural_denomi
         "extreme.sustained_dps.axis_dominance_composition",
         "extreme.sustained_dps.theoretical_maximum_closure",
         "extreme.sustained_dps.objective32_blockers",
+        "extreme.sustained_dps.objective32_scenario_preflight",
     )
     assert "same denominator" in service.purpose
     assert "exact completed generated tree" in service.notes
