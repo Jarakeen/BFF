@@ -2786,7 +2786,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.runtime_target_combat_state",
         domain="extreme",
         purpose=(
-            "Project reviewed enemy-target runtime EffectVariant windows into canonical target CombatState at exact damage timestamps for Damage Taken, resistance, and Critical Damage Taken routing."
+            "Project reviewed enemy-target runtime EffectVariant windows into canonical target CombatState at exact damage timestamps for named or explicit numeric Damage Taken, resistance, and Critical Damage Taken routing."
         ),
         implementation_path="services.extreme_sustained_dps_runtime_target_combat_state_service",
         inputs=("ExtremeRuntimeSnapshot", "RuntimeEffectVariants", "TargetIdentity"),
@@ -2798,7 +2798,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
-            "Uses existing target Damage Taken, target resistance, and shared critical-stage routers rather than redefining Vulnerability, Breach, or Brittle math. "
+            "Uses existing target Damage Taken, target resistance, and shared critical-stage routers rather than redefining Vulnerability, Breach, Brittle, or unique numeric amplification math. "
             "Only active windows whose runtime target exactly matches the scored target are projected."
         ),
     ),
