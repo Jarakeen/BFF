@@ -193,6 +193,8 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert armor_row.status is CanonicalMechanicsCoverageStatus.PARTIAL
     assert "armor_passive_input_resolver.py" in armor_row.evidence_source
     assert "undaunted_passive_input_resolver.py" in armor_row.evidence_source
+    assert "rotation_static_build_context_service.py" in armor_row.evidence_source
+    assert "already reuses BuildCalculationContextFactory" in armor_row.capability
 
     armor_gaps = report.dependency_gaps_for(
         "rotation_maker",
