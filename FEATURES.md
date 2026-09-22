@@ -538,3 +538,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Finch Discord persona binding** — Roster Sync binds Finch registrations to Personnel by stable Discord user ID, updates the public Discord name to the member's current display name, and records prior Discord names/gamertags in private Known Aliases history with first/last-seen provenance.
 
 - **Encounter map plan attachment** — Encounters Raid Map has an optional Raid Plan selector (None by default) persisted with the tactical layout. Attach to… captures the current board directly into the selected Mechanics & Timelines encounter; when a Raid Plan is selected, the same action also creates the Live Raid plan+encounter map link.
+
+- **Live Raid map visibility** — When the current Raid Plan + encounter has a valid linked Raid Map, Live Raid shows `Map Available` beneath the phase guide and lists `MAP  <Encounter> • <Map Label>` in Recent Activity. Link/change/clear updates both surfaces immediately.
