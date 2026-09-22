@@ -35,12 +35,20 @@ class ExtremeSustainedDPSGeneratedAxisPipelineState:
     encounter_policy: object | None = None
     rotation: object | None = None
     runtime: object | None = None
+    finalized_potion: object | None = None
 
     @property
     def complete(self) -> bool:
         return bool(
-            self.runtime is not None
-            and getattr(self.runtime, "complete", False)
+            (
+                self.finalized_potion is not None
+                and getattr(self.finalized_potion, "complete", False)
+            )
+            or (
+                self.finalized_potion is None
+                and self.runtime is not None
+                and getattr(self.runtime, "complete", False)
+            )
         )
 
 
@@ -56,6 +64,8 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         runtime_policy_adapter: object,
         mundus_food_adapter: object | None = None,
         encounter_policy_adapter: object | None = None,
+        finalized_potion_adapter: object | None = None,
+        finalized_potion_evidence_resolver: object | None = None,
     ) -> None:
         self.gear_adapter = gear_adapter
         self.mundus_food_adapter = mundus_food_adapter
@@ -63,6 +73,8 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         self.encounter_policy_adapter = encounter_policy_adapter
         self.rotation_adapter = rotation_adapter
         self.runtime_policy_adapter = runtime_policy_adapter
+        self.finalized_potion_adapter = finalized_potion_adapter
+        self.finalized_potion_evidence_resolver = finalized_potion_evidence_resolver
 
     @staticmethod
     def _require_complete(stage: object, label: str) -> None:
@@ -212,6 +224,38 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             heavy_attack_windows=state.heavy_attack_windows,
         )
 
+    def _finalized_potion_state(
+        self,
+        state: ExtremeSustainedDPSGeneratedAxisPipelineState,
+    ) -> object:
+        if self.finalized_potion_adapter is None:
+            raise ValueError("generated axis pipeline has no finalized-potion adapter")
+        if self.finalized_potion_evidence_resolver is None:
+            raise ValueError(
+                "generated axis pipeline finalized-potion adapter requires timing-evidence resolver"
+            )
+        if state.finalized_potion is not None:
+            return state.finalized_potion
+
+        runtime = self._runtime_state(state)
+        self._require_complete(runtime, "runtime-policy-axis")
+
+        late = self._late_state(state)
+        self._require_complete(late, "late-axis")
+        assembled = getattr(late, "assembled", None)
+        if assembled is None:
+            raise ValueError(
+                "complete generated late-axis state is missing assembled candidate"
+            )
+
+        return self.finalized_potion_adapter.root(
+            state,
+            build=assembled.build,
+            progression=assembled.progression,
+            potion_cooldown_seconds=state.potion_cooldown_seconds,
+            evidence_resolver=self.finalized_potion_evidence_resolver,
+        )
+
     @staticmethod
     def _replace_gear(
         state: ExtremeSustainedDPSGeneratedAxisPipelineState,
@@ -225,6 +269,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             encounter_policy=None,
             rotation=None,
             runtime=None,
+            finalized_potion=None,
         )
 
     @staticmethod
@@ -239,6 +284,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             encounter_policy=None,
             rotation=None,
             runtime=None,
+            finalized_potion=None,
         )
 
     @staticmethod
@@ -252,6 +298,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             encounter_policy=None,
             rotation=None,
             runtime=None,
+            finalized_potion=None,
         )
 
     @staticmethod
@@ -264,6 +311,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             encounter_policy=stage,
             rotation=None,
             runtime=None,
+            finalized_potion=None,
         )
 
     @staticmethod
@@ -271,14 +319,26 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         state: ExtremeSustainedDPSGeneratedAxisPipelineState,
         stage: object,
     ) -> ExtremeSustainedDPSGeneratedAxisPipelineState:
-        return replace(state, rotation=stage, runtime=None)
+        return replace(
+            state,
+            rotation=stage,
+            runtime=None,
+            finalized_potion=None,
+        )
 
     @staticmethod
     def _replace_runtime(
         state: ExtremeSustainedDPSGeneratedAxisPipelineState,
         stage: object,
     ) -> ExtremeSustainedDPSGeneratedAxisPipelineState:
-        return replace(state, runtime=stage)
+        return replace(state, runtime=stage, finalized_potion=None)
+
+    @staticmethod
+    def _replace_finalized_potion(
+        state: ExtremeSustainedDPSGeneratedAxisPipelineState,
+        stage: object,
+    ) -> ExtremeSustainedDPSGeneratedAxisPipelineState:
+        return replace(state, finalized_potion=stage)
 
     @staticmethod
     def _wrap_axis(
@@ -398,6 +458,14 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
                 ),
             )
         )
+        if self.finalized_potion_adapter is not None:
+            groups.append(
+                (
+                    (self.finalized_potion_adapter.axis(),),
+                    self._finalized_potion_state,
+                    self._replace_finalized_potion,
+                )
+            )
         return tuple(
             self._wrap_axis(
                 axis,
