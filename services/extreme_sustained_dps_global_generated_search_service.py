@@ -53,6 +53,8 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
         use_scheduled_combat_attacks_for_ultimate: bool,
         duration_rules: tuple[object, ...],
         heavy_attack_windows: tuple[object, ...],
+        heavy_attack_channel_blocks: tuple[object, ...],
+        heavy_attack_channel_block_denominator_proven: bool,
     ) -> ExtremeSustainedDPSIndexedFrontierAxis:
         validated = self.structural_families.validate_denominator()
         if not validated.denominator_proven:
@@ -94,6 +96,10 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
                 ),
                 duration_rules=tuple(duration_rules),
                 heavy_attack_windows=tuple(heavy_attack_windows),
+                heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
+                heavy_attack_channel_block_denominator_proven=bool(
+                    heavy_attack_channel_block_denominator_proven
+                ),
             )
 
         return ExtremeSustainedDPSIndexedFrontierAxis(
@@ -138,6 +144,8 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
         use_scheduled_combat_attacks_for_ultimate: bool = False,
         duration_rules: tuple[object, ...] = (),
         heavy_attack_windows: tuple[object, ...] = (),
+        heavy_attack_channel_blocks: tuple[object, ...] = (),
+        heavy_attack_channel_block_denominator_proven: bool = False,
         root_key: str = "generated-global-root",
         root_bound_inputs=None,
         branch_bound_inputs=None,
@@ -165,6 +173,10 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
             ),
             duration_rules=tuple(duration_rules),
             heavy_attack_windows=tuple(heavy_attack_windows),
+            heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
+            heavy_attack_channel_block_denominator_proven=bool(
+                heavy_attack_channel_block_denominator_proven
+            ),
         )
 
         axes = (
