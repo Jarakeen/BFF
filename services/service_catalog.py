@@ -1794,7 +1794,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.generated_axis_pipeline",
         domain="extreme",
         purpose=(
-            "Compose gear, late-build, rotation, and evidence-gated runtime-policy "
+            "Compose gear, late-build, rotation, evidence-gated runtime-policy, and optional finalized-potion "
             "adapter states into one lazy indexed generated-search pipeline."
         ),
         implementation_path="services.extreme_sustained_dps_generated_axis_pipeline_service",
@@ -2066,7 +2066,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Enumerates cast/skip branches over exact scheduled same-bar skill slots and deducts each selected cast from the shared Ultimate balance. "
-            "Generation at the exact cast timestamp is not borrowed ahead of the cast. This closes delayed timing only for one exact seed plan; integration into the global rotation-policy axis remains separate."
+            "Generation at the exact cast timestamp is not borrowed ahead of the cast. The generated Objective #32 rotation axis consumes this family directly and defers only potion timing to the finalized descendant axis."
         ),
     ),
     ServiceDescriptor(
