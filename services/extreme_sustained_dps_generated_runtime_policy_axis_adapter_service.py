@@ -211,11 +211,13 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
                 "Execute Policy",
                 candidate_count=self._execute_count,
                 candidate_at=self._execute_at,
+                canonical_axes=("execute_policy",),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
                 "Reviewed Heavy Attack Policy",
                 candidate_count=self._heavy_count,
                 candidate_at=self._heavy_at,
+                canonical_axes=("heavy_attack_policy",),
             ),
         )
 
