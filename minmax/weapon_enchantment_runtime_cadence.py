@@ -2,10 +2,8 @@ from __future__ import annotations
 
 """Canonical weapon-enchantment runtime cadence evidence.
 
-This module deliberately separates mechanics we can model from mechanics that are
-still only community-observed.  Objective #32 may consume a cadence only when the
-row is marked authoritative; provisional observations remain research evidence and
-must fail closed rather than becoming combat math by accident.
+Research observations stay explicitly provisional. Objective #32 may consume a
+cadence only after the evidence is promoted to authoritative current-version data.
 """
 
 from dataclasses import dataclass
@@ -30,6 +28,8 @@ class WeaponEnchantmentCadenceEvidence:
     activation_causes: tuple[str, ...]
     off_bar_source_persists: bool | None
     cooldown_scope: str | None
+    poison_replaces_enchantment: bool | None
+    same_effect_identity_shares_cooldown: bool | None
     evidence_note: str
 
     @property
@@ -40,6 +40,8 @@ class WeaponEnchantmentCadenceEvidence:
             and bool(self.activation_causes)
             and self.off_bar_source_persists is not None
             and self.cooldown_scope is not None
+            and self.poison_replaces_enchantment is not None
+            and self.same_effect_identity_shares_cooldown is not None
         )
 
     def require_runtime_ready(self) -> "WeaponEnchantmentCadenceEvidence":
@@ -51,12 +53,14 @@ class WeaponEnchantmentCadenceEvidence:
         return self
 
 
-# Community testing is consistent on the broad topology: eligible light/heavy attacks
+# Community testing is consistent on broad topology: eligible light/heavy attacks
 # and weapon abilities can fire enchants; ground weapon DoTs can continue firing the
-# originating weapon enchant after a bar swap; damage enchants are commonly observed
-# around a four-second base cooldown while buff/debuff enchants are commonly reported
-# around nine-to-ten seconds.  The exact buff/debuff base value is disputed even in
-# detailed tests, so neither family is promoted to authoritative runtime math here.
+# originating weapon enchant after a bar swap; damage enchants are observed with a
+# four-second base cooldown; an equipped alchemical poison suppresses the enchantment;
+# and duplicate enchantment identities share cooldown while different identities can
+# retain independent timers. Buff/debuff base cooldown evidence conflicts between
+# roughly nine and ten seconds. None of this is promoted to exact runtime math until
+# current-version authoritative evidence closes the remaining uncertainty.
 _PROVISIONAL = {
     WeaponEnchantmentEffectFamily.DIRECT_DAMAGE: WeaponEnchantmentCadenceEvidence(
         family=WeaponEnchantmentEffectFamily.DIRECT_DAMAGE,
@@ -64,10 +68,12 @@ _PROVISIONAL = {
         authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
         activation_causes=("light_attack", "heavy_attack", "weapon_ability"),
         off_bar_source_persists=True,
-        cooldown_scope="per_weapon_enchantment",
+        cooldown_scope="per_effect_identity",
+        poison_replaces_enchantment=True,
+        same_effect_identity_shares_cooldown=True,
         evidence_note=(
-            "Community-observed ESO behavior; exact current-version authoritative "
-            "source still required before Objective #32 may consume this cadence."
+            "Community-observed ESO behavior; current-version authoritative source "
+            "still required before Objective #32 may consume this cadence."
         ),
     ),
     WeaponEnchantmentEffectFamily.BUFF_OR_DEBUFF: WeaponEnchantmentCadenceEvidence(
@@ -76,7 +82,9 @@ _PROVISIONAL = {
         authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
         activation_causes=("light_attack", "heavy_attack", "weapon_ability"),
         off_bar_source_persists=True,
-        cooldown_scope="per_weapon_enchantment",
+        cooldown_scope="per_effect_identity",
+        poison_replaces_enchantment=True,
+        same_effect_identity_shares_cooldown=True,
         evidence_note=(
             "Community observations disagree between roughly nine and ten seconds; "
             "the disputed base cooldown is intentionally unresolved."
