@@ -1438,6 +1438,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         outputs=("ExtremeSustainedDPSRuntimeScenarioFrontierResult",),
         dependencies=(
             "extreme.sustained_dps.runtime_effect_universe",
+            "extreme.sustained_dps.runtime_effect_relevance",
             "extreme.sustained_dps.runtime_event_skeleton",
             "extreme.sustained_dps.runtime_attempt_evidence_frontier",
             "extreme.sustained_dps.runtime_external_history_assembly",
@@ -1449,7 +1450,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "This is the scenario-facing runtime_state builder. Its candidate-facing path first derives plan/damage-owned event skeletons and leaves only unsupported encounter trigger families to caller proof; the engine then enumerates finite chance/condition realizations, composes plan-owned bar truth, and emits ordinary canonical runtime_state choices. "
+            "This is the scenario-facing runtime_state builder. Its candidate-facing path first resolves the canonical runtime effect universe, applies the proof-backed sustained-DPS relevance gate, then derives plan/damage-owned event skeletons while leaving unsupported encounter trigger families to caller proof; the engine then enumerates finite chance/condition realizations, composes plan-owned bar truth, and emits ordinary canonical runtime_state choices. "
             "Explicit omitted scope is preserved so local runtime closure cannot be mistaken for global closure."
         ),
     ),
