@@ -242,8 +242,9 @@ class RotationHeavyAttackRestorationEvidenceService:
             if outcome is RotationHeavyAttackHitOutcome.BLOCKED:
                 unresolved.append(
                     f"fully charged {weapon_resolution.weapon.value} heavy at "
-                    f"{action.time_seconds:.3f}s was blocked; authoritative blocked-hit "
-                    "resource-restoration semantics are unresolved"
+                    f"{action.time_seconds:.3f}s was blocked; repository mechanics evidence records "
+                    "a 50% block reduction, but that evidence predates the current verified base table "
+                    "and is not promoted to executable current-patch semantics"
                 )
                 continue
             if evidence.landed is None and outcome is not RotationHeavyAttackHitOutcome.LANDED:
