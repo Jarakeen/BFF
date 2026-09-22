@@ -124,3 +124,46 @@ def test_missing_medicinal_use_rank_fails_closed() -> None:
 
     assert result.denominator_proven is False
     assert any("Medicinal Use rank is unresolved" in row for row in result.unresolved)
+
+
+
+def test_resource_observation_boundaries_close_instant_restoration_timing() -> None:
+    result = ExtremeSustainedDPSFinalizedPotionTimingDenominatorService(
+        event_resolver=_Resolver()
+    ).build(
+        player_build=PlayerBuild(Potion="Potion X"),
+        progression=_progression(3),
+        observation_frontier=_observations(1.0, 20.0, 50.0),
+        duration_seconds=60.0,
+        cooldown_seconds=45.0,
+        resource_observation_times=(2.0, 4.0, 6.0, 8.0),
+        resource_observation_denominator_proven=True,
+    )
+
+    assert result.denominator_proven is True
+    assert result.breakpoint_frontier.full_potion_timing_closed is True
+    assert result.omitted_scope == ()
+    assert any(
+        "resource observation timestamps: 4" in row
+        for row in result.evidence
+    )
+
+
+def test_unproven_resource_observation_times_fail_closed() -> None:
+    result = ExtremeSustainedDPSFinalizedPotionTimingDenominatorService(
+        event_resolver=_Resolver()
+    ).build(
+        player_build=PlayerBuild(Potion="Potion X"),
+        progression=_progression(3),
+        observation_frontier=_observations(1.0, 20.0),
+        duration_seconds=60.0,
+        cooldown_seconds=45.0,
+        resource_observation_times=(2.0, 4.0),
+        resource_observation_denominator_proven=False,
+    )
+
+    assert result.denominator_proven is False
+    assert any(
+        "without denominator proof" in row
+        for row in result.unresolved
+    )
