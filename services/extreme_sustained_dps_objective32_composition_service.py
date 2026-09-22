@@ -89,6 +89,16 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires canonical generated runtime evaluation"
             )
+        if not bool(
+            getattr(
+                runtime_policy_adapter,
+                "require_complete_heavy_attack_discovery",
+                False,
+            )
+        ):
+            raise ValueError(
+                "Objective #32 composition requires runtime-policy adapter complete Heavy Attack discovery mode"
+            )
         if finalized_potion_evidence_resolver is None:
             raise ValueError(
                 "Objective #32 composition requires finalized potion timing evidence"
@@ -138,6 +148,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
             evidence=(
                 "Objective #32 production graph composed from canonical generated frontier authorities",
                 "Finalized potion timing is appended after runtime-policy axes",
+                "Heavy Attack timing uses scheduler-derived complete-discovery mode",
                 "Exact leaves use canonical generated runtime evaluation",
                 "Additional potion resource-event denominator is explicitly proven complete",
             ),
