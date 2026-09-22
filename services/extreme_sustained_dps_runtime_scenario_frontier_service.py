@@ -54,12 +54,14 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         runtime_effect_universe: (
             ExtremeSustainedDPSRuntimeEffectUniverseService | object | None
         ) = None,
+        runtime_effect_scaling: object | None = None,
     ) -> None:
         self.external_history_frontier = (
             external_history_frontier
             or ExtremeSustainedDPSRuntimeExternalHistoryFrontierService()
         )
         self.runtime_effect_universe = runtime_effect_universe
+        self.runtime_effect_scaling = runtime_effect_scaling
 
     def build_from_candidate(
         self,
@@ -89,18 +91,32 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                 )
             universe = self.runtime_effect_universe.resolve(player_build)
             discovered_effects = tuple(universe.effects)
+            scaling_evidence: tuple[str, ...] = ()
+            scaling_unresolved: tuple[str, ...] = ()
+            if self.runtime_effect_scaling is not None:
+                scaling = self.runtime_effect_scaling.resolve(
+                    build=player_build,
+                    plan=candidate.plan,
+                    effects=discovered_effects,
+                )
+                discovered_effects = tuple(scaling.effects)
+                scaling_evidence = tuple(scaling.evidence)
+                scaling_unresolved = tuple(scaling.unresolved)
+
             relevance = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify(
                 discovered_effects
             )
             effects = tuple(relevance.relevant)
             universe_evidence = (
                 *tuple(universe.evidence),
+                *scaling_evidence,
                 *tuple(relevance.evidence),
             )
             universe_unresolved = tuple(
                 dict.fromkeys(
                     (
                         *tuple(universe.unresolved),
+                        *scaling_unresolved,
                         *tuple(relevance.unresolved),
                     )
                 )
