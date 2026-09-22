@@ -168,11 +168,13 @@ class ExtremeSustainedDPSGeneratedMundusFoodAxisAdapterService:
                 "Mundus",
                 candidate_count=self._mundus_count,
                 candidate_at=self._mundus_at,
+                canonical_axes=("mundus",),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
                 "Food",
                 candidate_count=self._food_count,
                 candidate_at=self._food_at,
+                canonical_axes=("food",),
             ),
         )
 
