@@ -185,6 +185,7 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert "gear:conditional_topology" in keys
     assert "skills:runtime_topology" in keys
     assert "consumables:runtime_resource_and_buff_policy" in keys
+    assert "weapon_enchantments:runtime_cadence" in keys
     assert "weapons:bash_interrupt_poison_topology" in keys
     assert "encounter:target_range_movement_topology" in keys
 
@@ -205,3 +206,32 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert report.gaps_for("optimizer")
     assert report.advisory_gaps
     assert any(gap.key == "niche:stealth_thief_bash_objectives" for gap in report.advisory_gaps)
+
+
+def test_weapon_enchantment_runtime_cadence_is_decision_critical_until_timing_is_proven() -> None:
+    rows = shared_canonical_mechanics_inventory()
+    report = CanonicalMechanicsCoverageAuditService().audit(rows)
+
+    row = next(
+        item for item in rows
+        if item.key == "weapon_enchantments:runtime_cadence"
+    )
+    assert row.status is CanonicalMechanicsCoverageStatus.MISSING_CRITICAL
+    assert "weapon_enchantment_effect_service.py" in row.evidence_source
+    assert "combat_cooldown_rules.py" in row.evidence_source
+    assert "activation trigger semantics" in row.missing_evidence
+    assert "base proc cooldown" in row.missing_evidence
+
+    rotation_gaps = report.dependency_gaps_for(
+        "rotation_maker",
+        ("weapon_enchantments:runtime_cadence",),
+    )
+    optimizer_gaps = report.dependency_gaps_for(
+        "optimizer",
+        ("weapon_enchantments:runtime_cadence",),
+    )
+
+    assert len(rotation_gaps) == 1
+    assert len(optimizer_gaps) == 1
+    assert rotation_gaps[0].blocking is True
+    assert optimizer_gaps[0].blocking is True
