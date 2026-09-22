@@ -25,6 +25,7 @@ from services.extreme_sustained_dps_theoretical_maximum_closure_service import (
 @dataclass(frozen=True)
 class ExtremeSustainedDPSGlobalObjective32SearchResult:
     search: object
+    axis_inventory: object
     axis_coverage: ExtremeSustainedDPSAxisDominanceComposition
     closure: ExtremeSustainedDPSTheoreticalMaximumClosure
     scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof
@@ -66,6 +67,9 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
     ) -> ExtremeSustainedDPSGlobalObjective32SearchResult:
         normalized_root = str(root_key or "").strip() or "generated-global-root"
 
+        axis_inventory = self.global_search.axis_inventory(
+            runtime_state_frontier=runtime_state_frontier,
+        )
         search = self.global_search.search(
             root_key=normalized_root,
             runtime_state_frontier=runtime_state_frontier,
@@ -100,17 +104,27 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
                 "Global Objective #32 non-structural axis coverage is not proven to match the generated search denominator",
             )
 
+        inventory_unresolved: list[str] = []
+        if axis_inventory.missing_canonical_axes:
+            inventory_unresolved.append(
+                "Generated global search tree does not physically enumerate canonical axis(es): "
+                + ", ".join(axis_inventory.missing_canonical_axes)
+            )
+        inventory_unresolved.extend(tuple(axis_inventory.unresolved))
+
         closure = ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
             search,
             axis_coverage=coverage,
             omitted_scope=(
                 *tuple(omitted_scope),
                 *scope_unresolved,
+                *tuple(inventory_unresolved),
             ),
         )
 
         return ExtremeSustainedDPSGlobalObjective32SearchResult(
             search=search,
+            axis_inventory=axis_inventory,
             axis_coverage=coverage,
             closure=closure,
             scope_proof=scope_proof,
