@@ -336,6 +336,14 @@ class RotationHeavySustainProjectionService:
         explicit = evidence.modifiers
         canonical = progression_resolution.modifiers
         unresolved = list(progression_resolution.unresolved)
+        if explicit.champion_point_percent > 0.0:
+            unresolved.append(
+                "caller Champion Point heavy-restoration modifier lacks canonical progression ownership"
+            )
+        if explicit.skill_set_buff_percent > 0.0:
+            unresolved.append(
+                "caller skill/set/buff heavy-restoration modifier lacks canonical source ownership"
+            )
 
         cycle = canonical.restoration_staff_cycle_of_life_percent
         cycle_unknown = any(
