@@ -390,3 +390,49 @@ def test_candidate_builder_fails_closed_on_unreviewed_runtime_effect_relevance()
         "no reviewed sustained-DPS relevance disposition" in row
         for row in result.unresolved
     )
+
+
+def test_candidate_builder_surfaces_typed_relevance_blocker_counts() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    effect = EffectVariant(
+        name="scaled_runtime_debuff",
+        layer=EffectLayer.PROC,
+        source="Scaled Runtime Debuff",
+        trigger="damage_dealt",
+        duration=4.0,
+        target_type=__import__(
+            "minmax.support_target_type",
+            fromlist=["SupportTargetType"],
+        ).SupportTargetType.ENEMY,
+        resistance_reduction=6000.0,
+        scaling="up to 6000 from unresolved source state",
+    )
+
+    class _Universe:
+        def resolve(self, build):
+            return SimpleNamespace(
+                effects=(effect,),
+                evidence=("candidate runtime effect universe resolved",),
+                unresolved=(),
+            )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        runtime_effect_universe=_Universe(),
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        effects=None,
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed boss scenario",
+    )
+
+    assert result.frontier.denominator_proven is False
+    assert any("source-data blockers: 1" in row for row in result.evidence)
+    assert any("math/review blockers: 0" in row for row in result.evidence)
