@@ -1071,6 +1071,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "GeneratedRuntimePolicyAxisAdapter",
             "GeneratedRuntimeEvaluation",
             "FinalizedPotionTimingEvidenceResolver",
+            "CandidateRuntimeStateFrontierResolver",
         ),
         outputs=("ExtremeSustainedDPSObjective32Composition",),
         dependencies=(
@@ -1079,6 +1080,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.global_generated_search",
             "extreme.sustained_dps.global_objective32_search",
             "extreme.sustained_dps.generated_finalized_potion_axis_adapter",
+            "extreme.sustained_dps.candidate_runtime_state_frontier_resolver",
         ),
         responsibilities=("extreme_sustained_dps_objective32_composition",),
         behavior=ServiceBehavior.DETERMINISTIC,
@@ -1087,7 +1089,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "This is the canonical production composition root for the generated Objective #32 graph. "
-            "It refuses construction unless the canonical Mundus/food and encounter-policy axes are present, finalized potion timing is wired after runtime policy, the additional resource-event denominator is explicitly proven complete, and the runtime-policy adapter is configured for complete scheduler-derived Heavy Attack discovery. "
+            "It refuses construction unless the canonical Mundus/food and encounter-policy axes are present, finalized potion timing is wired after runtime policy, candidate-resolved runtime_state is wired after the finalized witness, the additional resource-event denominator is explicitly proven complete, and the runtime-policy adapter is configured for complete scheduler-derived Heavy Attack discovery. "
             "Low-level frontier repositories and mechanics remain owned by their existing services rather than being recreated here."
         ),
     ),
@@ -1121,7 +1123,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "The first generated axis is race/class-route/attributes. Each selected family is materialized into the ordinary pipeline root before gear and later axes expand. "
-            "Unproven structural pairing fails closed; optional local runtime-state search remains terminal."
+            "Unproven structural pairing fails closed. Legacy callers may append one static runtime-state frontier globally; canonical Objective #32 composition instead carries candidate-resolved runtime_state inside the pipeline."
         ),
     ),
     ServiceDescriptor(
@@ -1246,13 +1248,44 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.candidate_runtime_state_frontier_resolver",
+        domain="extreme",
+        purpose=(
+            "Resolve the canonical runtime_state frontier separately for each finalized generated Objective #32 candidate."
+        ),
+        implementation_path="services.extreme_sustained_dps_candidate_runtime_state_frontier_resolver_service",
+        inputs=(
+            "CompleteFinalizedGeneratedPipelineState",
+            "RuntimeScenarioFrontierService",
+            "OptionalCandidateDamageOccurrenceProvider",
+            "SupplementalScenarioRuntimeEvidenceResolvers",
+        ),
+        outputs=("ExtremeSustainedDPSCandidateRuntimeStateResolution",),
+        dependencies=(
+            "extreme.sustained_dps.runtime_scenario_frontier",
+        ),
+        responsibilities=("extreme_sustained_dps_candidate_runtime_state_frontier_resolver",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Uses the finalized-potion candidate when present, plus the final assembled build and target identity. "
+            "The resolver is candidate-scoped so different gear/skills/rotations may produce different runtime effect/event denominators. "
+            "Exact damage-occurrence evidence remains injectable to avoid circularly deriving runtime_state from a damage evaluator that itself consumes runtime_state."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_runtime_state_axis_adapter",
         domain="extreme",
         purpose=(
-            "Append one caller-proven local runtime-state denominator as the terminal indexed axis of generated sustained-DPS search."
+            "Expose runtime_state as either a legacy static terminal frontier or a candidate-resolved terminal axis over each finalized generated witness."
         ),
         implementation_path="services.extreme_sustained_dps_generated_runtime_state_axis_adapter_service",
-        inputs=("CompleteGeneratedPipelineState", "ProvenLocalRuntimeStateFrontier"),
+        inputs=(
+            "CompleteGeneratedPipelineState",
+            "ProvenLocalRuntimeStateFrontierOrCandidateResolver",
+        ),
         outputs=("IndexedFrontierAxis", "RuntimeStateAxisCoverageProof"),
         dependencies=(
             "extreme.sustained_dps.runtime_state_frontier",
@@ -1265,8 +1298,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=False,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Rejects unproven or unresolved runtime families. Each selected runtime snapshot becomes exact leaf input, "
-            "while frontier omitted scope is preserved on the canonical runtime_state coverage proof."
+            "Legacy static-frontier mode preserves caller omitted scope. Candidate-resolved mode recomputes the runtime family from each finalized pipeline witness and rejects any unresolved or omitted-scope frontier before exposing runtime_state with no theoretical omission. "
+            "Each selected runtime snapshot becomes exact leaf input."
         ),
     ),
     ServiceDescriptor(
@@ -2062,6 +2095,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.generated_rotation_axis_adapter",
             "extreme.sustained_dps.generated_runtime_policy_axis_adapter",
             "extreme.sustained_dps.generated_finalized_potion_axis_adapter",
+            "extreme.sustained_dps.generated_runtime_state_axis_adapter",
             "extreme.sustained_dps.generated_frontier_wiring",
         ),
         responsibilities=("extreme_sustained_dps_generated_axis_pipeline",),
@@ -2072,7 +2106,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Explicit immutable stage transitions preserve each adapter's native state, optionally insert exact-witness Mundus/food mutation after gear, "
             "optionally insert a finite encounter-policy selection after build assembly and before rotation generation, reset downstream selections after upstream mutation, "
-            "optionally append canonical finalized potion timing after runtime policy, forward axis-local bound providers, and derive stable runtime candidate identity from selected structural rotation coordinates."
+            "optionally append canonical finalized potion timing after runtime policy, optionally append candidate-resolved runtime_state after the finalized witness, forward axis-local bound providers, and derive stable runtime candidate identity from selected structural rotation coordinates."
         ),
     ),
     ServiceDescriptor(
