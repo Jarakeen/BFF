@@ -189,21 +189,25 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
                 "Champion Points",
                 candidate_count=self._cp_count,
                 candidate_at=self._cp_at,
+                canonical_axes=("champion_points",),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
                 "Potion Family",
                 candidate_count=self._potion_count,
                 candidate_at=self._potion_at,
+                canonical_axes=("potion_selection",),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
                 "Passive Ranks",
                 candidate_count=self._passive_count,
                 candidate_at=self._passive_at,
+                canonical_axes=("passive_ranks",),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
                 "Skill Bars",
                 candidate_count=self._skill_count,
                 candidate_at=self._skill_at,
+                canonical_axes=("skill_bars",),
             ),
         )
 
