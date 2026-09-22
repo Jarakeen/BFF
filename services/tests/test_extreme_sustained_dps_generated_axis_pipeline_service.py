@@ -114,7 +114,10 @@ class _LateAdapter:
                 lambda state: replace(
                     state,
                     complete=True,
-                    assembled="assembled-candidate",
+                    assembled=SimpleNamespace(
+                        build="assembled-build",
+                        progression="assembled-progression",
+                    ),
                     result=state.result + "|late",
                 ),
                 self.calls,
@@ -191,6 +194,44 @@ class _RuntimeAdapter:
                 ),
                 self.calls,
             ),
+        )
+
+
+class _FinalizedPotionAdapter:
+    def __init__(self, calls):
+        self.calls = calls
+
+    def root(
+        self,
+        upstream_state,
+        *,
+        build,
+        progression,
+        potion_cooldown_seconds,
+        evidence_resolver,
+    ):
+        self.calls.append(
+            (
+                "finalized-potion",
+                "root",
+                build,
+                progression,
+                potion_cooldown_seconds,
+                evidence_resolver,
+                upstream_state.runtime,
+            )
+        )
+        return _Stage("finalized-potion")
+
+    def axis(self):
+        return _one_axis(
+            "FinalizedPotion",
+            lambda state: replace(
+                state,
+                complete=True,
+                result=state.result + "|finalized-potion",
+            ),
+            self.calls,
         )
 
 
@@ -368,3 +409,67 @@ def test_optional_encounter_policy_stage_forwards_demands_into_rotation_root() -
     rotation_root = next(row for row in calls if row[:2] == ("rotation", "root"))
     assert rotation_root[3]["priorities"] == "priorities"
     assert rotation_root[3]["encounter_demands"] == ("demand-a", "demand-b")
+
+
+
+def test_optional_finalized_potion_stage_runs_after_runtime_and_owns_completion() -> None:
+    calls = []
+    evidence_resolver = object()
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+        finalized_potion_adapter=_FinalizedPotionAdapter(calls),
+        finalized_potion_evidence_resolver=evidence_resolver,
+    )
+    state = _root(pipeline)
+    axes = pipeline.axes()
+
+    assert tuple(axis.name for axis in axes) == (
+        "Gear",
+        "Late",
+        "Rotation",
+        "Runtime",
+        "FinalizedPotion",
+    )
+
+    for axis in axes[:-1]:
+        assert axis.candidate_count(state) == 1
+        state = axis.candidate_at(state, 0)
+
+    assert state.runtime.complete is True
+    assert state.finalized_potion is None
+    assert state.complete is False
+
+    assert axes[-1].candidate_count(state) == 1
+    state = axes[-1].candidate_at(state, 0)
+
+    assert state.complete is True
+    finalized_root = next(
+        row for row in calls
+        if row[:2] == ("finalized-potion", "root")
+    )
+    assert finalized_root[2] == "assembled-build"
+    assert finalized_root[3] == "assembled-progression"
+    assert finalized_root[4] == 45.0
+    assert finalized_root[5] is evidence_resolver
+    assert finalized_root[6].complete is True
+
+
+def test_finalized_potion_stage_requires_explicit_evidence_resolver() -> None:
+    calls = []
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+        finalized_potion_adapter=_FinalizedPotionAdapter(calls),
+    )
+    state = _root(pipeline)
+
+    for axis in pipeline.axes()[:-1]:
+        state = axis.candidate_at(state, 0)
+
+    with pytest.raises(ValueError, match="timing-evidence resolver"):
+        pipeline.axes()[-1].candidate_count(state)
