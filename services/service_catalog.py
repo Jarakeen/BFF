@@ -1682,6 +1682,35 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.encounter_policy_registry_bridge",
+        domain="extreme",
+        purpose=(
+            "Bridge one selected encounter's reviewed Rotation encounter-demand registry entry and canonical boss-guide timing evidence into a finite sustained-DPS encounter-policy frontier."
+        ),
+        implementation_path="services.extreme_sustained_dps_encounter_policy_registry_bridge_service",
+        inputs=(
+            "EncounterId",
+            "RotationEncounterDemandPolicyRegistryEntry",
+            "EncounterBossGuide",
+            "OptionalThresholdClockProjection",
+        ),
+        outputs=("ExtremeSustainedDPSEncounterPolicyFrontier",),
+        dependencies=(
+            "extreme.sustained_dps.encounter_policy_frontier",
+            "rotation.encounter_demand_policy.registry",
+            "encounter.boss_guide.read_model",
+        ),
+        responsibilities=("extreme_sustained_dps_encounter_policy_registry_bridge",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Uses EncounterRotationDemandService for reviewed clock-window projection. Explicitly empty reviewed policy becomes a proven no-demand choice; "
+            "missing registry entries, review blockers, unresolved clock facts, or threshold policy without a proven threshold-to-clock projection keep encounter_policy open."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_encounter_policy_axis_adapter",
         domain="extreme",
         purpose=(
