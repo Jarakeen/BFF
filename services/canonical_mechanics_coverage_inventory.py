@@ -221,7 +221,9 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             capability=(
                 "Saved builds retain potion identity; scheduled POTION actions are resolved through "
                 "canonical potion evidence into ordered CombatState buff windows, and Medicinal Use "
-                "rank extends those source-backed durations through PotionCadence. Rotation requests "
+                "rank extends those source-backed durations through PotionCadence. The same scheduled "
+                "uses can now project source-backed instant Health/Magicka/Stamina restoration events. "
+                "Rotation requests "
                 "also carry potion selection/on-cooldown policy, but this is not yet exhaustive "
                 "runtime potion/poison mechanics."
             ),
@@ -233,8 +235,9 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             ),
             consumers=ALL_THREE,
             missing_evidence=(
-                "Complete potion resource-restore/runtime-effect coverage beyond the already "
-                "resolved scheduled buff windows, plus poison effects, poison "
+                "Wire the source-backed scheduled potion instant-restoration events into every "
+                "canonical sustain/combat replay consumer and complete remaining potion runtime "
+                "effects beyond scheduled buff windows, plus poison effects, poison "
                 "trigger cadence, shared cooldowns, invisibility/detection/speed/Unstoppable "
                 "effects and any suppression or replacement rules."
             ),
