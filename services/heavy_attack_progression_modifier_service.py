@@ -10,12 +10,15 @@ from minmax.heavy_attack_restoration import (
 from models.build_model import PlayerBuild
 
 
+# Patch-era provenance: official ESO material records Cycle of Life at 15/30%.
+# Keep explicit progression ownership so future balance changes cannot be inferred.
 _CYCLE_OF_LIFE_PERCENT_BY_RANK = {
     0: 0.0,
     1: 0.15,
     2: 0.30,
 }
 
+# Official ESO patch-note history changed Revitalize to 2/4% per Heavy piece.
 _REVITALIZE_PERCENT_PER_HEAVY_PIECE_BY_RANK = {
     0: 0.0,
     1: 0.02,
