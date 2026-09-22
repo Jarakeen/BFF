@@ -1270,6 +1270,87 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_attempt_evidence_frontier",
+        domain="extreme",
+        purpose=(
+            "Reduce caller-proven runtime event skeletons to a finite complete family of materially distinct chance-roll and condition-context realizations."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_attempt_evidence_frontier_service",
+        inputs=(
+            "RuntimeEventSkeletons",
+            "CanonicalEffectVariants",
+            "EventSkeletonDenominatorProof",
+        ),
+        outputs=("ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_runtime_attempt_evidence_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Continuous numeric chance rolls collapse exactly at canonical proc-chance thresholds; one representative is retained for each eligibility-equivalent region. "
+            "Condition evidence is enumerated as explicit subsets of relevant named EffectVariant conditions. Event time, trigger, source, target, and sequence remain scenario-owned facts and require their own complete denominator proof."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_external_history_assembly",
+        domain="extreme",
+        purpose=(
+            "Cross finite runtime attempt-evidence choices with a caller-proven finite supplemental condition/group-buff history family."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_external_history_assembly_service",
+        inputs=(
+            "RuntimeAttemptEvidenceFrontier",
+            "SupplementalExternalRuntimeHistories",
+            "SupplementalHistoryDenominatorProof",
+        ),
+        outputs=("ExtremeSustainedDPSRuntimeExternalHistoryAssemblyResult",),
+        dependencies=(
+            "extreme.sustained_dps.runtime_attempt_evidence_frontier",
+        ),
+        responsibilities=("extreme_sustained_dps_runtime_external_history_assembly",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "An explicitly proven no-supplemental-history scenario becomes one empty supplemental choice rather than an empty denominator. "
+            "Any open attempt or supplemental denominator keeps the combined external-history family open."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_scenario_frontier",
+        domain="extreme",
+        purpose=(
+            "Build the canonical Objective #32 runtime_state frontier from proven event skeletons, finite chance/condition evidence, supplemental external histories, and plan-owned runtime witness composition."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_scenario_frontier_service",
+        inputs=(
+            "FinalizedRotationPlan",
+            "PlayerBuild",
+            "RuntimeEventSkeletons",
+            "CanonicalEffectVariants",
+            "EventSkeletonDenominatorProof",
+            "SupplementalRuntimeHistoryDenominatorProof",
+        ),
+        outputs=("ExtremeSustainedDPSRuntimeScenarioFrontierResult",),
+        dependencies=(
+            "extreme.sustained_dps.runtime_attempt_evidence_frontier",
+            "extreme.sustained_dps.runtime_external_history_assembly",
+            "extreme.sustained_dps.runtime_external_history_frontier",
+        ),
+        responsibilities=("extreme_sustained_dps_runtime_scenario_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "This is the scenario-facing runtime_state builder. Callers prove event-skeleton and supplemental external-history completeness; the engine enumerates finite chance/condition realizations, composes plan-owned bar truth, and emits ordinary canonical runtime_state choices. "
+            "Explicit omitted scope is preserved so local runtime closure cannot be mistaken for global closure."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_witness_composition",
         domain="extreme",
         purpose=(
