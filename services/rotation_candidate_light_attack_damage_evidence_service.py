@@ -10,6 +10,9 @@ from minmax.combat_damage_modifiers import (
     damage_taken_from_target_state,
 )
 from minmax.combat_state import CombatState
+from minmax.combat_target_critical_damage import (
+    critical_damage_taken_percent_from_target_state,
+)
 from minmax.dd_damage import DDDamageEvent, calculate_dd_damage
 from minmax.dd_mitigation import calculate_dd_mitigation
 from minmax.dd_stat_evaluation import evaluate_dd_stats
@@ -200,6 +203,11 @@ class RotationCandidateLightAttackDamageEvidenceService:
             dd_stats,
             damage_taken=damage_taken,
             target_critical_resistance=self.target_critical_resistance,
+            target_critical_damage_taken_percent=(
+                critical_damage_taken_percent_from_target_state(
+                    self.target_combat_state
+                )
+            ),
         )
         mitigation = None
         if (
@@ -216,6 +224,11 @@ class RotationCandidateLightAttackDamageEvidenceService:
             mitigation=mitigation,
             damage_taken=damage_taken,
             target_critical_resistance=self.target_critical_resistance,
+            target_critical_damage_taken_percent=(
+                critical_damage_taken_percent_from_target_state(
+                    self.target_combat_state
+                )
+            ),
         )
         return RotationActionDamageEvidence(
             time_seconds=action.time_seconds,
