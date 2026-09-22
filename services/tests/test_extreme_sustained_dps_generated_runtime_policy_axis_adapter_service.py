@@ -49,8 +49,9 @@ class _HeavyFrontier:
     def expand(self, **kwargs):
         self.calls.append(kwargs)
         seed = kwargs["seed"]
-        return SimpleNamespace(
-            candidates=tuple(
+        materializer = kwargs.get("candidate_materializer")
+        if materializer is None:
+            candidates = tuple(
                 SimpleNamespace(
                     policy_id=f"heavy:{index}",
                     candidate=SimpleNamespace(
@@ -59,16 +60,57 @@ class _HeavyFrontier:
                     ),
                 )
                 for index in range(2)
-            ),
+            )
+        else:
+            windows = tuple(kwargs["windows"])
+            candidates = (
+                SimpleNamespace(
+                    policy_id="heavy:none",
+                    candidate=seed,
+                ),
+                SimpleNamespace(
+                    policy_id="heavy:discovered",
+                    candidate=materializer(windows[:1]),
+                ),
+            )
+        return SimpleNamespace(
+            candidates=candidates,
             denominator_proven=self.proven,
             unresolved=self.unresolved,
         )
 
 
-def _adapter(*, execute=None, heavy=None):
+class _HeavyDiscovery:
+    def __init__(self, *, proven=True, unresolved=()):
+        self.proven = proven
+        self.unresolved = tuple(unresolved)
+        self.discover_calls = []
+        self.materialize_calls = []
+
+    def discover(self, **kwargs):
+        self.discover_calls.append(kwargs)
+        return SimpleNamespace(
+            windows=("discovered-window-a", "discovered-window-b"),
+            denominator_proven=self.proven,
+            unresolved=self.unresolved,
+        )
+
+    def materialize(self, **kwargs):
+        self.materialize_calls.append(kwargs)
+        seed = kwargs["seed"]
+        selected = tuple(kwargs["windows"])
+        return SimpleNamespace(
+            candidate_id=f"{seed.candidate_id}|scheduler-heavy",
+            plan=f"{seed.plan}|scheduler:{','.join(selected)}",
+        )
+
+
+def _adapter(*, execute=None, heavy=None, discovery=None, complete=False):
     return ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService(
         execute_policies=execute or _ExecuteFrontier(),
         heavy_attack_policies=heavy or _HeavyFrontier(),
+        heavy_attack_window_discovery=discovery,
+        require_complete_heavy_attack_discovery=complete,
     )
 
 
@@ -81,6 +123,8 @@ def _root(adapter):
         target_identity="boss",
         duration_rules=("rule",),
         heavy_attack_windows=("reviewed-window",),
+        heavy_attack_channel_blocks=("channel-block",),
+        heavy_attack_channel_block_denominator_proven=True,
     )
 
 
@@ -207,3 +251,81 @@ def test_heavy_attack_axis_carries_reviewed_window_omission() -> None:
     assert heavy_axis.omitted_scope == (
         "Heavy Attack windows outside the caller-supplied reviewed safe set are not claimed closed",
     )
+
+
+
+def test_complete_heavy_attack_discovery_uses_discovered_windows_and_materializer() -> None:
+    discovery = _HeavyDiscovery()
+    heavy = _HeavyFrontier()
+    adapter = _adapter(
+        heavy=heavy,
+        discovery=discovery,
+        complete=True,
+    )
+    state = adapter.axes()[0].candidate_at(_root(adapter), 0)
+
+    assert adapter.axes()[1].candidate_count(state) == 2
+    state = adapter.axes()[1].candidate_at(state, 1)
+
+    assert discovery.discover_calls
+    discover_call = discovery.discover_calls[-1]
+    assert discover_call["duration_rules"] == ("rule",)
+    assert discover_call["priorities"] == "priorities"
+    assert discover_call["channel_blocks"] == ("channel-block",)
+    assert discover_call["channel_block_denominator_proven"] is True
+
+    assert heavy.calls[-1]["windows"] == (
+        "discovered-window-a",
+        "discovered-window-b",
+    )
+    assert callable(heavy.calls[-1]["candidate_materializer"])
+    assert discovery.materialize_calls
+    assert state.current_candidate.plan.endswith(
+        "|scheduler:discovered-window-a"
+    )
+
+
+def test_complete_heavy_attack_discovery_requires_channel_block_denominator_proof() -> None:
+    adapter = _adapter(
+        discovery=_HeavyDiscovery(),
+        complete=True,
+    )
+    root = adapter.root(
+        SimpleNamespace(plan="anchored-plan"),
+        candidate_id="candidate",
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="boss",
+        duration_rules=("rule",),
+    )
+    state = adapter.axes()[0].candidate_at(root, 0)
+
+    with pytest.raises(
+        ValueError,
+        match="proven encounter channel-block denominator",
+    ):
+        adapter.axes()[1].candidate_count(state)
+
+
+def test_unproven_discovered_heavy_attack_denominator_fails_closed() -> None:
+    adapter = _adapter(
+        discovery=_HeavyDiscovery(
+            proven=False,
+            unresolved=("encounter channel policy unresolved",),
+        ),
+        complete=True,
+    )
+    state = adapter.axes()[0].candidate_at(_root(adapter), 0)
+
+    with pytest.raises(ValueError, match="encounter channel policy unresolved"):
+        adapter.axes()[1].candidate_count(state)
+
+
+def test_complete_heavy_attack_axis_has_no_reviewed_window_omission() -> None:
+    adapter = _adapter(
+        discovery=_HeavyDiscovery(),
+        complete=True,
+    )
+
+    assert adapter.axes()[1].canonical_axes == ("heavy_attack_policy",)
+    assert adapter.axes()[1].omitted_scope == ()
