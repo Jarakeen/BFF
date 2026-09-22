@@ -83,6 +83,7 @@ def _evidence(
         action_sequence=sequence,
         completion_time_seconds=completion,
         fully_charged=True,
+        landed=True,
         verified_base_restore=None,
         modifiers=modifiers,
         source="reviewed test heavy",
