@@ -9,6 +9,7 @@ resulting plan is promotable to canonical full-charge completion evidence.
 
 from dataclasses import dataclass
 from itertools import combinations
+from typing import Callable
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
@@ -187,6 +188,10 @@ class ExtremeSustainedDPSHeavyAttackPolicyFrontierService:
         *,
         seed: GeneratedRotationCandidate,
         windows: tuple[ExtremeSustainedDPSHeavyAttackWindow, ...],
+        candidate_materializer: Callable[
+            [tuple[ExtremeSustainedDPSHeavyAttackWindow, ...]],
+            GeneratedRotationCandidate,
+        ] | None = None,
     ) -> ExtremeSustainedDPSHeavyAttackPolicyFrontier:
         unique: dict[tuple[float, int, str], ExtremeSustainedDPSHeavyAttackWindow] = {}
         unresolved: list[str] = []
@@ -215,9 +220,15 @@ class ExtremeSustainedDPSHeavyAttackPolicyFrontierService:
 
         for size in range(1, len(ordered) + 1):
             for subset in combinations(ordered, size):
-                if not self._compatible(seed.plan, subset):
-                    continue
-                candidate = self._mutate(seed, subset)
+                if candidate_materializer is None:
+                    if not self._compatible(seed.plan, subset):
+                        continue
+                    candidate = self._mutate(seed, subset)
+                else:
+                    try:
+                        candidate = candidate_materializer(tuple(subset))
+                    except ValueError:
+                        continue
                 completion = (
                     RotationHeavySustainProjectionService
                     .completion_evidence_from_verified_reservations(candidate.plan)
@@ -267,7 +278,11 @@ class ExtremeSustainedDPSHeavyAttackPolicyFrontierService:
             evidence=(
                 f"Explicit Heavy Attack windows supplied: {len(ordered)}",
                 f"Compatible Heavy Attack policy variants retained: {len(candidates)}",
-                "Only non-overlapping caller-proven safe 1.8s windows tied to exact ordinary skill actions are admitted",
+                (
+                    "Caller-supplied compatibility uses conservative exact-slot mutation"
+                    if candidate_materializer is None
+                    else "Canonical scheduler materialization validates every retained Heavy Attack subset"
+                ),
                 "Damage remains owned by RotationCandidateHeavyAttackDamageEvidenceService",
             ),
             unresolved=final_unresolved,
