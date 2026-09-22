@@ -170,3 +170,45 @@ def test_combat_relevant_crafting_passive_remains_context_blocker():
     assert result.projected_delta == 0.0
     assert result.fully_resolved is False
     assert result.context_required_passives == ("Alchemy: Medicinal Use",)
+
+
+def test_equipped_armor_lines_gate_armor_passives():
+    rows = (
+        _passive(
+            "Light Power",
+            "Light Armor",
+            ExtremeSkillDomain.ARMOR,
+            "Increases your Spell Damage by 40.",
+            skill_id=11,
+        ),
+        _passive(
+            "Heavy Power",
+            "Heavy Armor",
+            ExtremeSkillDomain.ARMOR,
+            "Increases your Spell Damage by 400.",
+            skill_id=12,
+        ),
+    )
+    context = ExtremePassiveLegalityContext(
+        equipped_class_lines=("Green Balance",),
+        equipped_armor_lines=("Light Armor",),
+    )
+
+    result = ExtremePassiveObjectiveService.score(rows, "spell_damage", context)
+
+    assert result.projected_delta == 40.0
+
+
+def test_empty_armor_lines_preserve_max_rank_route_behavior():
+    armor = _passive(
+        "Light Power",
+        "Light Armor",
+        ExtremeSkillDomain.ARMOR,
+        "Increases your Spell Damage by 40.",
+        skill_id=13,
+    )
+    context = ExtremePassiveLegalityContext(equipped_class_lines=("Green Balance",))
+
+    result = ExtremePassiveObjectiveService.score((armor,), "spell_damage", context)
+
+    assert result.projected_delta == 40.0
