@@ -136,6 +136,17 @@ class ExtremeSustainedDPSRuntimeEffectRelevanceService:
                         relevant.append(effect)
                     continue
 
+            if (
+                effect.name == "major_slayer"
+                and effect.trigger == "ultimate_activation_in_combat"
+                and str(effect.scaling or "").strip()
+                == "1 second per 10 Ultimate spent"
+            ):
+                source_gap(
+                    f"{effect.source} Major Slayer duration scaling requires canonical Ultimate spend resolution"
+                )
+                continue
+
             buff = canonical_buff_name(identity.replace("_", " "))
             if buff is not None:
                 if is_component_layer_buff(buff):
