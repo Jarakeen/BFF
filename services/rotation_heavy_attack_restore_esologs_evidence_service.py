@@ -29,6 +29,26 @@ class RotationHeavyAttackRestoreObservationReport:
 
 
 @dataclass(frozen=True)
+class RotationHeavyAttackLandedObservation:
+    report_code: str
+    fight_id: int
+    event_index: int
+    timestamp: float
+    source_id: int | None
+    target_id: int | None
+    ability_game_id: int | None
+    ability_name: str | None
+    amount: float | None
+    hit_type: int | None
+
+
+@dataclass(frozen=True)
+class RotationHeavyAttackLandedObservationReport:
+    observations: tuple[RotationHeavyAttackLandedObservation, ...]
+    unresolved: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class RotationHeavyAttackRestoreActorAlias:
     report_code: str
     fight_id: int
@@ -100,6 +120,61 @@ class RotationHeavyAttackRestoreEsoLogsEvidenceService:
             )
 
         return self._report(observations)
+
+    def discover_landed_damage(
+        self,
+        database_path: str | Path,
+        *,
+        report_code: str,
+        fight_id: int,
+        ability_names: tuple[str, ...] = (),
+        ability_game_ids: tuple[int, ...] = (),
+        source_id: int | None = None,
+    ) -> RotationHeavyAttackLandedObservationReport:
+        """Surface observed damage events for reviewed heavy-attack aliases.
+
+        A matching damage event is authoritative evidence that the logged attack
+        landed. Absence of a row is not evidence of a miss/block/dodge; logs can be
+        incomplete or the reviewed alias can be wrong, so absence remains unresolved.
+        """
+        names, ids = self._normalize_aliases(ability_names, ability_game_ids)
+        report = str(report_code or "").strip()
+        if not report:
+            raise ValueError("report_code is required")
+        fight = int(fight_id)
+        if fight < 0:
+            raise ValueError("fight_id cannot be negative")
+        with self._open_read_only(Path(database_path)) as db:
+            unresolved = self._schema_unresolved(db)
+            if unresolved:
+                return RotationHeavyAttackLandedObservationReport((), unresolved)
+            interpreter = EsoLogsEventInterpreter(db)
+            rows: list[RotationHeavyAttackLandedObservation] = []
+            for event in interpreter.iter_fight(report, fight, event_kinds={SemanticEventKind.DAMAGE}):
+                if source_id is not None and event.source_id != int(source_id):
+                    continue
+                name_match = event.ability_name is not None and event.ability_name.strip().casefold() in names
+                id_match = event.ability_game_id is not None and event.ability_game_id in ids
+                if not (name_match or id_match):
+                    continue
+                rows.append(RotationHeavyAttackLandedObservation(
+                    report_code=event.report_code,
+                    fight_id=event.fight_id,
+                    event_index=event.event_index,
+                    timestamp=event.timestamp,
+                    source_id=event.source_id,
+                    target_id=event.target_id,
+                    ability_game_id=event.ability_game_id,
+                    ability_name=event.ability_name,
+                    amount=event.amount,
+                    hit_type=event.hit_type,
+                ))
+        if not rows:
+            return RotationHeavyAttackLandedObservationReport(
+                (),
+                ("no damage events matched the reviewed heavy-attack aliases; landed state remains unresolved",),
+            )
+        return RotationHeavyAttackLandedObservationReport(tuple(rows), ())
 
     def discover_corpus(
         self,
@@ -375,6 +450,8 @@ class RotationHeavyAttackRestoreEsoLogsEvidenceService:
 
 
 __all__ = [
+    "RotationHeavyAttackLandedObservation",
+    "RotationHeavyAttackLandedObservationReport",
     "RotationHeavyAttackRestoreActorAlias",
     "RotationHeavyAttackRestoreEsoLogsEvidenceService",
     "RotationHeavyAttackRestoreObservation",
