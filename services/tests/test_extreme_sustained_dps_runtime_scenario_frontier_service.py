@@ -6,10 +6,14 @@ from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.runtime_event import RuntimeEvent
+from minmax.support_stacking import StackingBehavior
 from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_runtime_scenario_frontier_service import (
     ExtremeSustainedDPSRuntimeScenarioFrontierService,
+)
+from services.extreme_sustained_dps_runtime_effect_scaling_service import (
+    ExtremeSustainedDPSRuntimeEffectScalingService,
 )
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.extreme_sustained_dps_runtime_witness_composition_service import (
@@ -434,3 +438,80 @@ def test_candidate_builder_surfaces_typed_relevance_blocker_counts() -> None:
     assert result.frontier.denominator_proven is False
     assert any("source-data blockers: 1" in row for row in result.evidence)
     assert any("math/review blockers: 0" in row for row in result.evidence)
+
+
+def test_candidate_builder_resolves_master_architect_duration_before_runtime_frontier() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=RotationPlan(
+            character_name="Generated",
+            build_name="Candidate",
+            duration_seconds=30.0,
+            actions=(
+                RotationAction(
+                    1.0,
+                    0,
+                    RotationActionKind.ULTIMATE,
+                    "Aggressive Horn",
+                    "front",
+                ),
+            ),
+        ),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    effect = EffectVariant(
+        name="major_slayer",
+        layer=EffectLayer.PROC,
+        source="Master Architect (5)",
+        magnitude=10.0,
+        duration=1.0,
+        scaling="1 second per 10 Ultimate spent",
+        trigger="ultimate_activation_in_combat",
+        target_type=SupportTargetType.GROUP,
+        stacking=StackingBehavior.UNIQUE,
+    )
+
+    class _Universe:
+        def resolve(self, build):
+            return SimpleNamespace(
+                effects=(effect,),
+                evidence=("candidate runtime effect universe resolved",),
+                unresolved=(),
+            )
+
+    class _UltimateService:
+        def resolve_generation_inputs(self, **_kwargs):
+            return SimpleNamespace(
+                spend_rule=SimpleNamespace(cost=250.0),
+                unresolved=(),
+            )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        runtime_effect_universe=_Universe(),
+        runtime_effect_scaling=ExtremeSustainedDPSRuntimeEffectScalingService(
+            ultimate_service=_UltimateService(),
+        ),
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(
+            Name="Generated",
+            BuildName="Candidate",
+            Role="DD",
+        ),
+        effects=None,
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed boss scenario",
+    )
+
+    assert result.unresolved == ()
+    assert result.frontier.denominator_proven is True
+    assert len(result.frontier.choices) == 1
+    assert result.frontier.choices[0].effects[0].duration == 25.0
+    assert result.frontier.choices[0].effects[0].scaling is None
+    assert any(
+        "Master Architect duration resolved from canonical Ultimate spend" in row
+        for row in result.evidence
+    )
