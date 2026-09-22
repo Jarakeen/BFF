@@ -25,6 +25,15 @@ from minmax.ultimate_resource_timeline import (
 
 
 @dataclass(frozen=True)
+class RotationUltimateGenerationInputs:
+    bar: str
+    slotted_ultimate: str
+    spend_rule: UltimateSpendRule | None
+    generation_events: tuple[UltimateGenerationEvent, ...]
+    unresolved: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class RotationUltimateProjection:
     plan: RotationPlan
     rules: tuple[UltimateScheduleRule, ...]
@@ -120,21 +129,22 @@ class RotationUltimateService:
             spend_rules=spend_rules,
         )
 
-    def apply_generation(
+    def resolve_generation_inputs(
         self,
         *,
         build,
         plan: RotationPlan,
         ultimate_bar: str,
-        starting_ultimate: float = 0.0,
         generation_events: tuple[UltimateGenerationEvent, ...] = (),
         heroism_windows: tuple[HeroismWindow, ...] = (),
         use_scheduled_combat_attacks: bool = False,
-    ) -> RotationUltimateProjection:
-        """Derive affordability from one shared Ultimate resource pool."""
+    ) -> RotationUltimateGenerationInputs:
+        """Resolve canonical Ultimate spend + explicit generation without scheduling."""
         bar = str(ultimate_bar or "").strip().casefold()
         if bar not in {"front", "back"}:
-            raise ValueError("ultimate generation projection requires 'front' or 'back' ultimate_bar")
+            raise ValueError(
+                "ultimate generation inputs require 'front' or 'back' ultimate_bar"
+            )
 
         values = (
             getattr(build, "FrontBarSkills", [])
@@ -144,25 +154,30 @@ class RotationUltimateService:
         ultimate = self._slot_six(values)
         unresolved = list(plan.unresolved)
         if not ultimate:
-            unresolved.append(f"saved build has no {bar}-bar slot-6 ultimate to project")
-            return self._finish(
-                plan=plan,
-                rules=(),
-                unresolved=tuple(unresolved),
+            unresolved.append(
+                f"saved build has no {bar}-bar slot-6 ultimate to resolve"
+            )
+            return RotationUltimateGenerationInputs(
+                bar=bar,
+                slotted_ultimate="",
+                spend_rule=None,
+                generation_events=(),
+                unresolved=self._dedupe(tuple(unresolved)),
             )
 
         spend = self._resolve_ultimate_spend(ultimate)
         unresolved.extend(spend.unresolved)
+        spend_rule = None
         if spend.cost <= 0:
             unresolved.append(
                 f"saved {bar}-bar ultimate '{ultimate}' has no resolved canonical spend"
             )
-            return self._finish(plan=plan, rules=(), unresolved=tuple(unresolved))
+        else:
+            spend_rule = UltimateSpendRule(
+                skill_name=spend.skill_name,
+                cost=spend.cost,
+            )
 
-        spend_rule = UltimateSpendRule(
-            skill_name=spend.skill_name,
-            cost=spend.cost,
-        )
         heroism_events = self.heroism_source.events(
             windows=tuple(heroism_windows),
             duration_seconds=plan.duration_seconds,
@@ -176,6 +191,47 @@ class RotationUltimateService:
             + tuple(heroism_events)
             + tuple(combat_events)
         )
+
+        return RotationUltimateGenerationInputs(
+            bar=bar,
+            slotted_ultimate=ultimate,
+            spend_rule=spend_rule,
+            generation_events=tuple(all_events),
+            unresolved=self._dedupe(tuple(unresolved)),
+        )
+
+    def apply_generation(
+        self,
+        *,
+        build,
+        plan: RotationPlan,
+        ultimate_bar: str,
+        starting_ultimate: float = 0.0,
+        generation_events: tuple[UltimateGenerationEvent, ...] = (),
+        heroism_windows: tuple[HeroismWindow, ...] = (),
+        use_scheduled_combat_attacks: bool = False,
+    ) -> RotationUltimateProjection:
+        """Derive affordability from one shared Ultimate resource pool."""
+        inputs = self.resolve_generation_inputs(
+            build=build,
+            plan=plan,
+            ultimate_bar=ultimate_bar,
+            generation_events=tuple(generation_events),
+            heroism_windows=tuple(heroism_windows),
+            use_scheduled_combat_attacks=bool(use_scheduled_combat_attacks),
+        )
+        bar = inputs.bar
+        ultimate = inputs.slotted_ultimate
+        unresolved = list(inputs.unresolved)
+        spend_rule = inputs.spend_rule
+        all_events = tuple(inputs.generation_events)
+        if spend_rule is None:
+            return self._finish(
+                plan=plan,
+                rules=(),
+                unresolved=tuple(unresolved),
+                generation_events=all_events,
+            )
 
         projection = self.resource_timeline.project(
             starting_amount=starting_ultimate,
