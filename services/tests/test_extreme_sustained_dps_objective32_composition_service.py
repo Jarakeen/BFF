@@ -30,6 +30,7 @@ def _kwargs():
         "mundus_food_adapter": object(),
         "encounter_policy_adapter": object(),
         "finalized_potion_evidence_resolver": _PotionEvidence(proven=True),
+        "runtime_state_frontier_resolver": object(),
     }
 
 
@@ -46,6 +47,7 @@ def test_composition_wires_finalized_potion_axis_into_global_objective_graph() -
     assert result.global_search.pipeline is result.pipeline
     assert result.objective32.global_search is result.global_search
     assert result.objective32.require_closure_ready_scenario is True
+    assert result.pipeline.runtime_state_frontier_resolver is not None
     assert any(
         "Finalized potion timing is appended after runtime-policy axes" in row
         for row in result.evidence
@@ -91,6 +93,7 @@ def test_composition_refuses_unproven_additional_resource_event_denominator() ->
         ("mundus_food_adapter", "canonical Mundus/food adapter"),
         ("encounter_policy_adapter", "canonical encounter-policy adapter"),
         ("finalized_potion_evidence_resolver", "finalized potion timing evidence"),
+        ("runtime_state_frontier_resolver", "candidate-resolved runtime-state authority"),
     ),
 )
 def test_composition_refuses_missing_production_authority(field, message) -> None:
