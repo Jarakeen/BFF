@@ -39,11 +39,14 @@ def _node(*, complete=True, omit=None):
     state = SimpleNamespace(
         complete=complete,
         gear=SimpleNamespace(
-            progression=values["progression"],
+            progression="pre-late-progression",
             gear_state=values["gear_state"],
         ),
         late=SimpleNamespace(
-            assembled=SimpleNamespace(build=values["build"]),
+            assembled=SimpleNamespace(
+                build=values["build"],
+                progression=values["progression"],
+            ),
         ),
         runtime=SimpleNamespace(
             current_candidate=SimpleNamespace(plan=values["plan"]),
@@ -194,3 +197,42 @@ def test_selected_generated_runtime_state_overrides_fixed_search_snapshot() -> N
     assert exact.mechanic_complete is True
     assert runtime.calls[0][1]["runtime_snapshot"] == "selected-snapshot"
     assert "selected runtime evidence" in exact.evidence
+
+
+
+def test_finalized_potion_plan_supersedes_runtime_policy_plan() -> None:
+    runtime = _RuntimeEvaluation(_runtime_result())
+    service = ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService(
+        runtime_evaluation=runtime,
+    )
+    base = _node()
+    base.state.finalized_potion = SimpleNamespace(
+        candidate=SimpleNamespace(plan="finalized-potion-plan"),
+    )
+
+    exact = service.evaluate(
+        base,
+        runtime_snapshot="snapshot",
+        target_health=100,
+        target_resistance=0.0,
+    )
+
+    assert exact.mechanic_complete is True
+    assert runtime.calls[0][1]["plan"] == "finalized-potion-plan"
+
+
+def test_exact_leaf_uses_final_assembled_progression_not_gear_stage_progression() -> None:
+    runtime = _RuntimeEvaluation(_runtime_result())
+    service = ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService(
+        runtime_evaluation=runtime,
+    )
+
+    service.evaluate(
+        _node(),
+        runtime_snapshot="snapshot",
+        target_health=100,
+        target_resistance=0.0,
+    )
+
+    assert runtime.calls[0][1]["progression"] == "progression"
+    assert runtime.calls[0][1]["progression"] != "pre-late-progression"
