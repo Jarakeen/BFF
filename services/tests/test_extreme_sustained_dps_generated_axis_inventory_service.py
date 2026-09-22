@@ -83,3 +83,47 @@ def test_inventory_aggregates_axis_theoretical_omissions() -> None:
         "continuous timing remains open",
         "unreviewed HA windows remain open",
     )
+
+
+
+def test_heavy_attack_inventory_omission_depends_on_runtime_adapter_mode() -> None:
+    from types import SimpleNamespace
+
+    from services.extreme_sustained_dps_generated_axis_inventory_service import (
+        ExtremeSustainedDPSGeneratedAxisInventoryService,
+    )
+    from services.extreme_sustained_dps_generated_runtime_policy_axis_adapter_service import (
+        ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService,
+    )
+
+    execute = SimpleNamespace()
+    heavy = SimpleNamespace()
+
+    legacy = ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService(
+        execute_policies=execute,
+        heavy_attack_policies=heavy,
+    )
+    complete = ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService(
+        execute_policies=execute,
+        heavy_attack_policies=heavy,
+        require_complete_heavy_attack_discovery=True,
+    )
+
+    legacy_inventory = ExtremeSustainedDPSGeneratedAxisInventoryService.inventory(
+        legacy.axes()
+    )
+    complete_inventory = ExtremeSustainedDPSGeneratedAxisInventoryService.inventory(
+        complete.axes()
+    )
+
+    assert any(
+        "Heavy Attack windows outside the caller-supplied reviewed safe set"
+        in item
+        for item in legacy_inventory.omitted_scope
+    )
+    assert all(
+        "Heavy Attack windows outside the caller-supplied reviewed safe set"
+        not in item
+        for item in complete_inventory.omitted_scope
+    )
+    assert "heavy_attack_policy" in complete_inventory.searched_canonical_axes
