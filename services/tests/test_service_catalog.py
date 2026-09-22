@@ -649,6 +649,21 @@ def test_sustained_dps_rotation_policy_frontier_keeps_mechanics_authorities_exte
     assert "continuous potion offsets remain open" in service.notes
 
 
+def test_sustained_dps_heavy_attack_window_discovery_reuses_canonical_scheduler() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_heavy_attack_window_discovery"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.heavy_attack_window_discovery"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "every scheduled ordinary skill slot" in service.purpose
+    assert "canonical soft-action duration scheduler" in service.purpose
+    assert "first casts, due refreshes" in service.notes
+    assert "same-bar displacement" in service.notes
+    assert "explicit reviewed channel-block intervals" in service.notes
+
+
 def test_sustained_dps_execute_and_heavy_policy_frontiers_keep_mechanics_external() -> None:
     execute = canonical_service_for("extreme_sustained_dps_execute_policy_frontier")
     heavy = canonical_service_for("extreme_sustained_dps_heavy_attack_policy_frontier")
@@ -664,7 +679,7 @@ def test_sustained_dps_execute_and_heavy_policy_frontiers_keep_mechanics_externa
         for row in SERVICE_CATALOG.dependencies_of(heavy.service_id)
     ) == ("extreme.sustained_dps.rotation_policy_frontier",)
     assert "Does not infer execute superiority" in execute.notes
-    assert "1.8s windows" in heavy.notes
+    assert "scheduler-backed subset materializer" in heavy.notes
     assert "RotationCandidateHeavyAttackDamageEvidenceService" in heavy.notes
 
 
@@ -896,11 +911,14 @@ def test_sustained_dps_generated_runtime_policy_adapter_requires_explicit_eviden
     ) == (
         "extreme.sustained_dps.execute_policy_frontier",
         "extreme.sustained_dps.heavy_attack_policy_frontier",
+        "extreme.sustained_dps.heavy_attack_window_discovery",
         "extreme.sustained_dps.generated_frontier_wiring",
     )
     assert service.encounter_aware is True
     assert "explicit priorities" in service.notes
-    assert "do not establish broader theoretical" in service.notes
+    assert "Legacy mode" in service.notes
+    assert "Complete-discovery mode" in service.notes
+    assert "no omitted scope" in service.notes
 
 def test_sustained_dps_encounter_policy_services_preserve_review_boundaries() -> None:
     frontier = canonical_service_for(
@@ -1462,6 +1480,7 @@ def test_sustained_dps_objective32_composition_is_canonical_production_root() ->
     assert "canonical generated Objective #32 production service graph" in service.purpose
     assert "canonical production composition root" in service.notes
     assert "additional resource-event denominator" in service.notes
+    assert "complete scheduler-derived Heavy Attack discovery" in service.notes
     assert "rather than being recreated here" in service.notes
 
 
