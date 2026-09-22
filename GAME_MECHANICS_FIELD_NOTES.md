@@ -1385,3 +1385,14 @@ The DD damage calculators can include critical chance/damage in an expected-valu
 That distinction matters for runtime proc triggers. A finalized damage occurrence may prove that `damage_dealt` happened at an exact time, but it does **not** prove that `critical_damage` happened unless a separate canonical mechanic records the actual crit outcome.
 
 **For Objective #32:** runtime event skeleton generation may derive `damage_dealt` from exact occurrence evidence, but it must not manufacture critical-hit trigger events from expected-value crit math. Crit-triggered runtime effects remain scenario/event evidence until the damage model exposes deterministic crit outcomes or a separately proven finite crit-event family.
+
+
+## 2026-09-22 — Weapon bars can contribute two set pieces in two different ways
+
+While wiring Objective #32 runtime-effect discovery, BFF found that one saved-build capability path counted the main-hand weapon but ignored an explicit off-hand, and only recognized staves as two-piece weapons.
+
+**Layman's version:** a five-piece set can become active because a two-handed weapon counts as two set pieces, or because two separate one-handed weapons each contribute one piece. A bow is also a two-piece set weapon. Looking only for “staff” misses real legal loadouts.
+
+**What it means in actual play:** swapping to a dual-wield, sword-and-board, bow, or other two-handed bar can turn a set proc on or off just as decisively as swapping to a staff.
+
+**For BFF:** runtime capability discovery now reuses the same canonical active-bar set counter as the static gear pipeline, including explicit off-hands, two-slot weapon families, and legacy Set/Set2 saves. This prevents Objective #32 from searching the wrong proc universe for a legal weapon bar.
