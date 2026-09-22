@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.combat_damage_modifiers import damage_taken_from_target_state
 from minmax.combat_state import CombatState
+from minmax.combat_target_resistance import resistance_reduction_from_target_state
 from minmax.named_combat_buffs import canonical_buff_name
 from minmax.runtime_effect_stream import process_effect_variant_runtime_stream
 from minmax.runtime_effect_window import partition_runtime_effect_windows
@@ -48,10 +49,13 @@ class ExtremeSustainedDPSRuntimeTargetCombatStateService:
             if canonical is None:
                 continue
 
-            probe = damage_taken_from_target_state(
-                CombatState(active_buffs=(canonical,))
-            )
-            if abs(float(probe.generic)) <= 1e-12:
+            probe_state = CombatState(active_buffs=(canonical,))
+            damage_taken_probe = damage_taken_from_target_state(probe_state)
+            resistance_probe = resistance_reduction_from_target_state(probe_state)
+            if (
+                abs(float(damage_taken_probe.generic)) <= 1e-12
+                and abs(float(resistance_probe)) <= 1e-12
+            ):
                 continue
 
             stream = process_effect_variant_runtime_stream(attempts, effect)
