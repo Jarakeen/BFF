@@ -189,6 +189,7 @@ class RotationHeavyAttackRestoreEsoLogsEvidenceService:
         damage rows are ambiguous, and absence of a row cannot prove a miss.
         """
         from dataclasses import replace
+        from services.rotation_heavy_attack_restoration_evidence_service import RotationHeavyAttackHitOutcome
 
         tolerance = float(tolerance_seconds)
         if tolerance < 0.0:
@@ -211,6 +212,7 @@ class RotationHeavyAttackRestoreEsoLogsEvidenceService:
                 promoted.append(replace(
                     evidence,
                     landed=True,
+                    hit_outcome=RotationHeavyAttackHitOutcome.LANDED,
                     source=(
                         f"{evidence.source}; ESO Logs damage event "
                         f"{row.report_code}/{row.fight_id}/{row.event_index}"
