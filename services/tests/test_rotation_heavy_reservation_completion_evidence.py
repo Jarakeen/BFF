@@ -41,6 +41,7 @@ def test_reviewed_1_8_second_reserved_heavy_becomes_full_charge_evidence() -> No
     assert item.action_sequence == 3
     assert item.completion_time_seconds == 19.8
     assert item.fully_charged is True
+    assert item.landed is None
     assert item.verified_base_restore is None
     assert "1.8s" in item.source
 
