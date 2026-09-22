@@ -51,6 +51,9 @@ class DDDamageResult:
     mitigation_multiplier: float = 1.0
     mitigated_damage: float = 0.0
 
+    target_critical_damage_taken_percent: float = 0.0
+    capped_critical_damage_percent: float = 0.0
+
     damage_taken: DamageTakenBreakdown = DamageTakenBreakdown()
     damage_taken_multiplier: float = 1.0
     final_damage: float = 0.0
@@ -64,6 +67,8 @@ def calculate_dd_damage(
     damage_done: DamageDoneModifiers = DamageDoneModifiers(),
     damage_taken: DamageTakenModifiers = DamageTakenModifiers(),
     target_critical_resistance: float = 0.0,
+    target_critical_damage_taken_percent: float = 0.0,
+    critical_damage_cap: float = 125.0,
 ) -> DDDamageResult:
     """Calculate expected damage for a modeled DD event.
 
@@ -89,6 +94,10 @@ def calculate_dd_damage(
 
     if event.scaling_coefficient < 0:
         raise ValueError("Scaling coefficient cannot be negative.")
+    if target_critical_damage_taken_percent < 0:
+        raise ValueError("Target Critical Damage Taken cannot be negative.")
+    if critical_damage_cap <= 0:
+        raise ValueError("Critical Damage cap must be positive.")
 
     if event.damage_type is None:
         offensive_stat = "combined_offensive_power"
@@ -127,13 +136,18 @@ def calculate_dd_damage(
 
     if not event.can_crit:
         critical_chance = 0.0
+        capped_critical_damage_percent = 0.0
         critical_resistance = resolve_critical_resistance(0.0, target_critical_resistance)
         critical_damage = 0.0
         expected_damage = damage_done_damage
     else:
         critical_chance = stats.effective_critical_chance / 100.0
+        capped_critical_damage_percent = min(
+            float(critical_damage_cap),
+            float(stats.critical_damage) + float(target_critical_damage_taken_percent),
+        )
         critical_resistance = resolve_critical_resistance(
-            stats.effective_critical_damage,
+            capped_critical_damage_percent,
             target_critical_resistance,
         )
         critical_damage = critical_resistance.effective_critical_damage_fraction
@@ -166,6 +180,8 @@ def calculate_dd_damage(
         critical_resistance=critical_resistance,
         mitigation_multiplier=mitigation_multiplier,
         mitigated_damage=mitigated_damage,
+        target_critical_damage_taken_percent=float(target_critical_damage_taken_percent),
+        capped_critical_damage_percent=float(capped_critical_damage_percent),
         damage_taken=damage_taken_breakdown,
         damage_taken_multiplier=damage_taken_multiplier,
         final_damage=final_damage,
