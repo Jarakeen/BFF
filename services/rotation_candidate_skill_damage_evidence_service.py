@@ -700,6 +700,7 @@ class RotationCandidateSkillDamageEvidenceService:
                         tick_target_state,
                     ),
                     damage_taken=damage_taken_from_target_state(tick_target_state),
+                    target_combat_state=tick_target_state,
                 ) * self._occurrence_multiplier(semantic, occurrence_index)
                 occurrences.append(
                     RotationActionDamageOccurrence(
@@ -818,6 +819,7 @@ class RotationCandidateSkillDamageEvidenceService:
                     tick_target_state,
                 ),
                 damage_taken=damage_taken_from_target_state(tick_target_state),
+                target_combat_state=tick_target_state,
             ) * self._occurrence_multiplier(semantic, occurrence_index)
             occurrences.append(
                 RotationActionDamageOccurrence(
@@ -959,6 +961,7 @@ class RotationCandidateSkillDamageEvidenceService:
                 dd_stats=tick_dd_stats,
                 damage_done=tick_damage_done,
                 damage_taken=tick_damage_taken,
+                target_combat_state=tick_target_state,
             ) * self._occurrence_multiplier(semantic, occurrence_index)
 
         return total_damage, tuple(dict.fromkeys(unresolved))
