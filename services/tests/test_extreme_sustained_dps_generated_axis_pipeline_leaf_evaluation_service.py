@@ -175,6 +175,7 @@ def test_selected_generated_runtime_state_overrides_fixed_search_snapshot() -> N
         "runtime:selected",
         "selected-snapshot",
         evidence=("selected runtime evidence",),
+        effects=("runtime-effect-metadata",),
     )
     node = ExtremeSustainedDPSGeneratedFrontierNode(
         candidate_key="candidate:runtime",
@@ -196,6 +197,7 @@ def test_selected_generated_runtime_state_overrides_fixed_search_snapshot() -> N
 
     assert exact.mechanic_complete is True
     assert runtime.calls[0][1]["runtime_snapshot"] == "selected-snapshot"
+    assert runtime.calls[0][1]["runtime_effects"] == ("runtime-effect-metadata",)
     assert "selected runtime evidence" in exact.evidence
 
 
