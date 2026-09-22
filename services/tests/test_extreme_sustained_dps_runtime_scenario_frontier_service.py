@@ -265,6 +265,7 @@ def test_candidate_builder_can_resolve_runtime_effect_universe() -> None:
     )
 
     assert result.frontier.denominator_proven is True
+    assert result.frontier.choices[0].effects == (effect,)
     assert any(
         "candidate runtime effect universe resolved" in row
         for row in result.evidence
