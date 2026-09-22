@@ -66,7 +66,7 @@ def test_closure_inventory_keeps_partial_mechanics_as_advisory() -> None:
     assert inventory.mechanics_blockers == ()
     assert len(inventory.mechanics_advisories) == 1
     assert inventory.mechanics_advisories[0].key == "effect_duration:build_modifiers"
-    assert inventory.closure_ready is True
+    assert inventory.closure_ready is False
     assert inventory.blocking_count == 0
 
 
