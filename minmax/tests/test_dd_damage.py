@@ -13,7 +13,7 @@ from minmax.dd_stat_evaluation import (
 )
 
 
-def makemake_stats(
+def make_stats(
     *,
     weapon_damage: float = 0.0,
     spell_damage: float = 0.0,
@@ -45,7 +45,7 @@ def test_damage_event_can_be_calculated():
         DDDamageEvent(
             base_value=1000,
         ),
-        makemake_stats(),
+        make_stats(),
     )
 
     assert isinstance(result, DDDamageResult)
@@ -59,7 +59,7 @@ def test_scaling_uses_combined_offensive_stats_without_damage_type():
             base_value=1000,
             scaling_coefficient=0.5,
         ),
-        makemake_stats(
+        make_stats(
             weapon_damage=1000,
             spell_damage=1000,
         ),
@@ -77,7 +77,7 @@ def test_physical_damage_uses_weapon_damage():
             scaling_coefficient=0.5,
             damage_type="physical",
         ),
-        makemake_stats(
+        make_stats(
             weapon_damage=2000,
             spell_damage=5000,
         ),
@@ -96,7 +96,7 @@ def test_poison_damage_uses_weapon_damage():
             scaling_coefficient=0.5,
             damage_type="poison",
         ),
-        makemake_stats(
+        make_stats(
             weapon_damage=2000,
             spell_damage=5000,
         ),
@@ -114,7 +114,7 @@ def test_magical_damage_uses_spell_damage():
             scaling_coefficient=0.5,
             damage_type="magical",
         ),
-        makemake_stats(
+        make_stats(
             weapon_damage=5000,
             spell_damage=2000,
         ),
@@ -133,7 +133,7 @@ def test_flame_damage_uses_spell_damage():
             scaling_coefficient=0.5,
             damage_type="flame",
         ),
-        makemake_stats(
+        make_stats(
             weapon_damage=5000,
             spell_damage=2000,
         ),
@@ -150,7 +150,7 @@ def test_physical_damage_uses_physical_penetration():
             base_value=1000,
             damage_type="physical",
         ),
-        makemake_stats(
+        make_stats(
             physical_penetration=12000,
             spell_penetration=5000,
         ),
@@ -166,7 +166,7 @@ def test_magical_damage_uses_spell_penetration():
             base_value=1000,
             damage_type="flame",
         ),
-        makemake_stats(
+        make_stats(
             physical_penetration=12000,
             spell_penetration=5000,
         ),
@@ -176,13 +176,13 @@ def test_magical_damage_uses_spell_penetration():
     assert result.penetration == 5000
 
 
-def test_non_critical_event_ignores_critmake_stats():
+def test_non_critical_event_ignores_crit_stats():
     result = calculate_dd_damage(
         DDDamageEvent(
             base_value=1000,
             can_crit=False,
         ),
-        makemake_stats(
+        make_stats(
             critical_chance=100,
             critical_damage=125,
         ),
@@ -198,7 +198,7 @@ def test_critical_chance_and_damage_affect_expected_damage():
         DDDamageEvent(
             base_value=1000,
         ),
-        makemake_stats(
+        make_stats(
             critical_chance=50,
             critical_damage=100,
         ),
@@ -218,7 +218,7 @@ def test_damage_can_be_mitigated_by_target_resistance():
         DDDamageEvent(
             base_value=1000,
         ),
-        makemake_stats(),
+        make_stats(),
         mitigation=mitigation,
     )
 
@@ -237,7 +237,7 @@ def test_penetration_can_remove_target_mitigation():
         DDDamageEvent(
             base_value=1000,
         ),
-        makemake_stats(),
+        make_stats(),
         mitigation=mitigation,
     )
 
@@ -252,7 +252,7 @@ def test_negative_base_damage_is_rejected():
             DDDamageEvent(
                 base_value=-1,
             ),
-            makemake_stats(),
+            make_stats(),
         )
     except ValueError:
         pass
@@ -269,7 +269,7 @@ def test_unsupported_damage_type_is_rejected():
                 base_value=1000,
                 damage_type="not_real",
             ),
-            makemake_stats(),
+            make_stats(),
         )
     except ValueError:
         pass
