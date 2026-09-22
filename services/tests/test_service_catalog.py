@@ -1479,6 +1479,7 @@ def test_sustained_dps_objective32_composition_is_canonical_production_root() ->
     )
     assert "canonical generated Objective #32 production service graph" in service.purpose
     assert "canonical production composition root" in service.notes
+    assert "canonical Mundus/food and encounter-policy axes" in service.notes
     assert "additional resource-event denominator" in service.notes
     assert "complete scheduler-derived Heavy Attack discovery" in service.notes
     assert "rather than being recreated here" in service.notes
