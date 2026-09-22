@@ -1442,6 +1442,29 @@ def test_sustained_dps_objective32_blockers_are_diagnostic_only() -> None:
     assert "Reporting is diagnostic only" in service.notes
 
 
+def test_sustained_dps_objective32_composition_is_canonical_production_root() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_objective32_composition"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.objective32_composition"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.generated_axis_pipeline",
+        "extreme.sustained_dps.generated_axis_pipeline_leaf_evaluation",
+        "extreme.sustained_dps.global_generated_search",
+        "extreme.sustained_dps.global_objective32_search",
+        "extreme.sustained_dps.generated_finalized_potion_axis_adapter",
+    )
+    assert "canonical generated Objective #32 production service graph" in service.purpose
+    assert "canonical production composition root" in service.notes
+    assert "additional resource-event denominator" in service.notes
+    assert "rather than being recreated here" in service.notes
+
+
 def test_sustained_dps_global_objective32_search_uses_searched_structural_denominator() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_global_objective32_search"
