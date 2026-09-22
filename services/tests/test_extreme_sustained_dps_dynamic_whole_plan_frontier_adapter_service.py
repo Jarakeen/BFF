@@ -96,3 +96,19 @@ def test_indexed_whole_plan_adapter_rejects_out_of_range_index() -> None:
         pass
     else:
         raise AssertionError("expected out-of-range dynamic choice to fail")
+
+
+
+def test_heavy_attack_adapter_can_clear_omission_with_complete_window_proof() -> None:
+    rows = (object(), object())
+    adapter = ExtremeSustainedDPSDynamicWholePlanFrontierAdapterService.heavy_attack_policy(
+        SimpleNamespace(
+            candidates=rows,
+            denominator_proven=True,
+        ),
+        complete_window_denominator_proven=True,
+    )
+
+    assert adapter.axes == ("heavy_attack_policy",)
+    assert adapter.choice_count == 2
+    assert adapter.omitted_scope == ()
