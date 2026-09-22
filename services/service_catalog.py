@@ -1086,6 +1086,35 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.objective32_blockers",
+        domain="extreme",
+        purpose=(
+            "Project structured, stable closure blockers for Objective #32 from finite-search state, physical tree axes, canonical coverage, and explicit theoretical omissions."
+        ),
+        implementation_path="services.extreme_sustained_dps_objective32_blocker_service",
+        inputs=(
+            "ExtremeSustainedDPSGeneratedSearchResult",
+            "ExtremeSustainedDPSGeneratedAxisInventory",
+            "ExtremeSustainedDPSAxisDominanceComposition",
+            "ExtremeSustainedDPSTheoreticalMaximumClosure",
+        ),
+        outputs=("ExtremeSustainedDPSObjective32BlockerReport",),
+        dependencies=(
+            "extreme.sustained_dps.generated_axis_inventory",
+            "extreme.sustained_dps.axis_dominance_composition",
+            "extreme.sustained_dps.theoretical_maximum_closure",
+        ),
+        responsibilities=("extreme_sustained_dps_objective32_blocker_reporting",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Stable blocker codes distinguish finite-search debt, physically missing or duplicate axes, coverage debt, unresolved evidence, and explicit theoretical omissions. "
+            "Reporting is diagnostic only and cannot create or remove proof."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.global_objective32_search",
         domain="extreme",
         purpose=(
@@ -1099,13 +1128,17 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "OptionalSupplementalCoverageScopeProof",
             "OptionalProvenLocalRuntimeStateFrontier",
         ),
-        outputs=("ExtremeSustainedDPSGlobalObjective32SearchResult",),
+        outputs=(
+            "ExtremeSustainedDPSGlobalObjective32SearchResult",
+            "ExtremeSustainedDPSObjective32BlockerReport",
+        ),
         dependencies=(
             "extreme.sustained_dps.global_generated_search",
             "extreme.sustained_dps.generated_axis_inventory",
             "extreme.sustained_dps.generated_tree_coverage",
             "extreme.sustained_dps.axis_dominance_composition",
             "extreme.sustained_dps.theoretical_maximum_closure",
+            "extreme.sustained_dps.objective32_blockers",
         ),
         responsibilities=("extreme_sustained_dps_global_objective32_search",),
         behavior=ServiceBehavior.DETERMINISTIC,
