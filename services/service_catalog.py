@@ -1270,6 +1270,59 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_witness_composition",
+        domain="extreme",
+        purpose=(
+            "Compose one controlled Objective #32 ExtremeRuntimeSnapshot from caller-owned external runtime evidence plus RotationPlan-owned bar truth."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_witness_composition_service",
+        inputs=(
+            "FinalizedRotationPlan",
+            "PlayerBuild",
+            "ExternalRuntimeHistoryEntries",
+        ),
+        outputs=("ExtremeSustainedDPSRuntimeWitnessComposition",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_runtime_witness_composition",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Callers may supply proc/event attempts, condition windows, and external group-buff applications. "
+            "BAR_SWAP truth is projected from RotationPlan and potion timing is excluded because finalized plan POTION actions own that state downstream. "
+            "A proven-empty external history is valid and is distinguished from missing runtime evidence by runtime_history_complete."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_external_history_frontier",
+        domain="extreme",
+        purpose=(
+            "Convert a caller-proven finite family of external runtime histories into the canonical runtime_state frontier for one finalized Objective #32 plan."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_external_history_frontier_service",
+        inputs=(
+            "FinalizedRotationPlan",
+            "PlayerBuild",
+            "FiniteExternalRuntimeHistoryFamily",
+            "ExternalHistoryDenominatorProof",
+        ),
+        outputs=("ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult",),
+        dependencies=(
+            "extreme.sustained_dps.runtime_witness_composition",
+            "extreme.sustained_dps.runtime_state_frontier",
+        ),
+        responsibilities=("extreme_sustained_dps_runtime_external_history_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The caller proves only the genuinely external event-history family. Plan-owned bar transitions and finalized potion timing are removed from caller mutation scope before ordinary runtime_state search begins. "
+            "Any invalid history witness or unproven external-history denominator keeps the whole runtime_state denominator open."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_state_frontier",
         domain="extreme",
         purpose=(
