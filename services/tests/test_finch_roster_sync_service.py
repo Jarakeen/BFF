@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from models.roster_model import RosterMember
 from services.eso_database import EsoDatabase
-from services.finch_api_client import FinchGearNeedRequest
+from services.finch_api_client import (
+    FinchGearNeedRequest,
+    FinchRegistration,
+    FinchRegistrationHistory,
+)
 from services.finch_roster_sync_service import FinchRosterSyncService
 from services.roster_assignment_context_service import RosterAssignmentContextService
 from services.roster_player_identity_service import RosterPlayerIdentityService
@@ -16,6 +20,9 @@ class FakeFinchClient:
 
     def pending_gear_needs(self):
         return self.requests
+
+    def registrations_private(self):
+        return ()
 
     def acknowledge_gear_need(self, request_id, *, status, message=""):
         self.acks.append((int(request_id), str(status), str(message)))
@@ -168,3 +175,96 @@ def test_sync_does_not_ack_success_when_local_write_fails(tmp_path) -> None:
     assert summary.applied == 0
     assert client.acks == []
     assert "write failed" in summary.results[0].message
+
+
+
+class RegistrationFinchClient(FakeFinchClient):
+    def __init__(self, registrations):
+        super().__init__(())
+        self.registrations = tuple(registrations)
+
+    def registrations_private(self):
+        return self.registrations
+
+
+def test_registration_sync_binds_by_discord_id_and_preserves_private_alias_history(tmp_path) -> None:
+    database = EsoDatabase(tmp_path / "eso.db")
+    roster = RosterService(database)
+    identity = RosterPlayerIdentityService(database)
+    assignments = RosterAssignmentContextService(database)
+    member_id = roster.create_member(_member("Rylo"))
+
+    first = FinchRegistration(
+        discord_user_id=777,
+        guild_id=888,
+        team_name="Performance Mode",
+        player_name="Rylo",
+        discord_username="old.user",
+        discord_display_name="Old Nick",
+        identity_history=(
+            FinchRegistrationHistory(
+                kind="discord_username",
+                value="old.user",
+                first_seen="2026-01-01T00:00:00+00:00",
+                last_seen="2026-01-01T00:00:00+00:00",
+            ),
+            FinchRegistrationHistory(
+                kind="gamertag",
+                value="Rylo",
+                first_seen="2026-01-01T00:00:00+00:00",
+                last_seen="2026-01-01T00:00:00+00:00",
+            ),
+        ),
+    )
+    client = RegistrationFinchClient((first,))
+    sync = FinchRosterSyncService(
+        client=client,
+        roster=roster,
+        identity=identity,
+        assignments=assignments,
+    )
+
+    fetched, applied, unresolved = sync.sync_registration_identities()
+
+    assert (fetched, applied, unresolved) == (1, 1, 0)
+    assert roster.get_member(member_id).DiscordName == "Old Nick"
+
+    second = FinchRegistration(
+        discord_user_id=777,
+        guild_id=888,
+        team_name="Performance Mode",
+        player_name="Brand New Gamertag",
+        discord_username="new.user",
+        discord_display_name="New Nick",
+        identity_history=(
+            FinchRegistrationHistory(kind="discord_username", value="old.user"),
+            FinchRegistrationHistory(kind="discord_username", value="new.user"),
+            FinchRegistrationHistory(kind="discord_display_name", value="Old Nick"),
+            FinchRegistrationHistory(kind="discord_display_name", value="New Nick"),
+            FinchRegistrationHistory(kind="gamertag", value="Rylo"),
+            FinchRegistrationHistory(kind="gamertag", value="Brand New Gamertag"),
+        ),
+    )
+    client.registrations = (second,)
+
+    fetched, applied, unresolved = sync.sync_registration_identities()
+
+    assert (fetched, applied, unresolved) == (1, 1, 0)
+    updated = roster.get_member(member_id)
+    assert updated.DiscordName == "New Nick"
+    aliases = {row.alias for row in identity.aliases_for_member(member_id)}
+    assert "old.user" in aliases
+    assert "new.user" in aliases
+    assert "Old Nick" in aliases
+    assert "New Nick" in aliases
+    assert "Brand New Gamertag" in aliases
+
+    binding = database.execute(
+        """
+        SELECT roster_member_id
+        FROM finch_discord_identity_binding
+        WHERE discord_user_id = ? AND guild_id = ?
+        """,
+        (777, 888),
+    ).fetchone()
+    assert int(binding["roster_member_id"]) == member_id
