@@ -24,6 +24,7 @@ from services.rotation_candidate_heavy_attack_damage_evidence_service import (
 )
 from services.rotation_heavy_attack_restoration_evidence_service import (
     RotationHeavyAttackCompletionEvidence,
+    RotationHeavyAttackHitOutcome,
 )
 
 
@@ -100,13 +101,14 @@ def _candidate(action: RotationAction, duration: float = 10.0) -> GeneratedRotat
     )
 
 
-def _completion(action: RotationAction, *, fully_charged: bool = True, landed: bool | None = True, completion=2.0):
+def _completion(action: RotationAction, *, fully_charged: bool = True, landed: bool | None = True, hit_outcome=None, completion=2.0):
     return RotationHeavyAttackCompletionEvidence(
         action_time_seconds=action.time_seconds,
         action_sequence=action.sequence,
         completion_time_seconds=completion,
         fully_charged=fully_charged,
         landed=landed,
+        hit_outcome=hit_outcome,
         verified_base_restore=None,
         source="test completion evidence",
     )
@@ -127,19 +129,41 @@ def test_fully_charged_heavy_without_hit_evidence_has_unresolved_damage() -> Non
     assert "successful-hit evidence" in evidence.unresolved[0]
 
 
-def test_fully_charged_heavy_that_did_not_land_deals_zero_damage() -> None:
+def test_fully_charged_heavy_with_ambiguous_nonlanded_state_fails_closed() -> None:
     action = RotationAction(0.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
     service = RotationCandidateHeavyAttackDamageEvidenceService(
-        build=_build(),
-        evaluation=_evaluation(),
-        initial_bar="front",
+        build=_build(), evaluation=_evaluation(), initial_bar="front",
         completion_evidence=(_completion(action, landed=False),),
     )
-
     evidence = service.evaluate_action(candidate=_candidate(action), action=action)
+    assert evidence.damage_value is None
+    assert "cannot distinguish blocked" in evidence.unresolved[0]
 
+
+def test_dodged_fully_charged_heavy_deals_zero_damage() -> None:
+    action = RotationAction(0.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
+    service = RotationCandidateHeavyAttackDamageEvidenceService(
+        build=_build(), evaluation=_evaluation(), initial_bar="front",
+        completion_evidence=(_completion(
+            action, landed=False, hit_outcome=RotationHeavyAttackHitOutcome.DODGED
+        ),),
+    )
+    evidence = service.evaluate_action(candidate=_candidate(action), action=action)
     assert evidence.damage_value == 0.0
     assert evidence.unresolved == ()
+
+
+def test_blocked_fully_charged_heavy_damage_remains_unresolved() -> None:
+    action = RotationAction(0.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
+    service = RotationCandidateHeavyAttackDamageEvidenceService(
+        build=_build(), evaluation=_evaluation(), initial_bar="front",
+        completion_evidence=(_completion(
+            action, landed=False, hit_outcome=RotationHeavyAttackHitOutcome.BLOCKED
+        ),),
+    )
+    evidence = service.evaluate_action(candidate=_candidate(action), action=action)
+    assert evidence.damage_value is None
+    assert "block mitigation semantics" in evidence.unresolved[0]
 
 
 def _evaluate_heavy(build: CharacterBuild) -> float | None:
