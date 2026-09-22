@@ -36,6 +36,16 @@ class _SustainService:
         return self.projection
 
 
+class _PotionRuntimeService:
+    def __init__(self, events=()):
+        self.events = tuple(events)
+        self.calls = []
+
+    def restoration_events(self, build, *, plan):
+        self.calls.append((build, plan))
+        return self.events
+
+
 class _DurationService:
     def __init__(self, projection):
         self.projection = projection
@@ -104,9 +114,11 @@ def test_provider_evaluates_exact_final_candidate_plan_through_shared_services()
         bar="front",
     )
 
+    potion_runtime = _PotionRuntimeService()
     service = RotationCandidateCanonicalPlanEvidenceService(
         build=build,
         sustain_service=sustain_service,
+        potion_runtime_service=potion_runtime,
         duration_service=duration_service,
         resource=ResourceType.STAMINA,
         restoration_events=(restoration,),
@@ -129,6 +141,7 @@ def test_provider_evaluates_exact_final_candidate_plan_through_shared_services()
             "displayed_recovery_at": recovery,
         }
     ]
+    assert potion_runtime.calls == [(build, candidate.plan)]
     assert duration_service.calls == [
         (
             candidate.plan,
@@ -369,3 +382,35 @@ def test_provider_rejects_workload_evidence_for_a_different_candidate() -> None:
 
     with pytest.raises(ValueError, match="candidate mismatch"):
         service.evaluate_plan(candidate)
+
+
+def test_provider_merges_scheduled_potion_restoration_before_candidate_runtime_evidence() -> None:
+    candidate = _candidate()
+    build = object()
+    base = object()
+    potion = object()
+    candidate_event = object()
+    potion_runtime = _PotionRuntimeService((potion,))
+
+    class _RestorationProvider:
+        def evaluate_plan(self, candidate):
+            from services.rotation_candidate_canonical_plan_evidence_service import RotationCandidateRestorationEvidence
+            return RotationCandidateRestorationEvidence(
+                candidate_id=candidate.candidate_id,
+                restoration_events=(candidate_event,),
+            )
+
+    sustain = _SustainService(_sustain_projection())
+    service = RotationCandidateCanonicalPlanEvidenceService(
+        build=build,
+        sustain_service=sustain,
+        duration_service=_DurationService(object()),
+        restoration_events=(base,),
+        potion_runtime_service=potion_runtime,
+        restoration_evidence_provider=_RestorationProvider(),
+    )
+
+    service.evaluate_plan(candidate)
+
+    assert sustain.calls[0]["restoration_events"] == (base, potion, candidate_event)
+    assert potion_runtime.calls == [(build, candidate.plan)]
