@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from models.build_model import GearSlot, PlayerBuild
 from models.raid_plan import RaidPlan, RaidPlanMember
 from models.roster_model import RosterMember
 from models.team_schedule import TeamSchedule, TeamScheduleSlot
@@ -154,6 +155,12 @@ def test_shared_raid_plan_payload_excludes_local_ids_builds_and_notes() -> None:
                 "source_name": "Performance Mode RG",
                 "planned_gear_sets": ["Corpsebuster", "Null Arca"],
                 "planned_mundus": "The Thief",
+                "front_weapon": "",
+                "back_weapon": "",
+                "front_skills": ["Fatecarver"],
+                "back_skills": [],
+                "food": "",
+                "potion": "",
             },
         }
     ]
@@ -162,7 +169,6 @@ def test_shared_raid_plan_payload_excludes_local_ids_builds_and_notes() -> None:
         "player-local-id",
         "character-local-id",
         "build-local-id",
-        "Fatecarver",
         "https://private.example/build",
         "private raid lead note",
         "private chair note",
@@ -188,6 +194,59 @@ def test_publish_service_uses_versioned_snapshots(tmp_path: Path) -> None:
     assert client.team_calls[0][0] == "Performance Mode"
     assert client.team_calls[0][2] == 1
     assert client.plan_calls[0][0] == "rg-pm"
-    assert client.plan_calls[0][2] == 4
+    assert client.plan_calls[0][2] == 5
     assert team_result.kind == "team"
     assert plan_result.kind == "raid_plan"
+
+
+
+def test_shared_raid_plan_payload_includes_sub_ready_operational_build_fields() -> None:
+    plan = RaidPlan(
+        plan_id="rg-pm",
+        trial_id="rockgrove",
+        name="Rockgrove HM",
+        team_name="Performance Mode",
+        difficulty="HM",
+        members=(
+            RaidPlanMember(
+                seat_id="tank-2",
+                gamertag="Rylo",
+                character_name="Rylo DK",
+                role="Tank",
+                eso_class="Dragonknight",
+                selected_build_id="tank-build-id",
+                selected_build_name="RG Tank 2",
+                planned_gear_sets=("Pearlescent Ward", "Turning Tide", "Nazaray"),
+                planned_mundus="The Atronach",
+                primary_assignment="Main Tank · Oax",
+                secondary_assignment="Backup: Bahsei",
+            ),
+        ),
+    )
+    build = PlayerBuild(
+        Name="Rylo DK",
+        Gamertag="Rylo",
+        BuildName="RG Tank 2",
+        BuildId="tank-build-id",
+        EsoClass="Dragonknight",
+        Role="Tank",
+        Mundus="The Atronach",
+        FrontBarWeapon=GearSlot(WeaponType="Sword"),
+        FrontBarOffHand=GearSlot(WeaponType="Shield"),
+        BackBarWeapon=GearSlot(WeaponType="Ice Staff"),
+        FrontBarSkills=["Pierce Armor", "Heroic Slash", "Igneous Shield", "Balance", "Defensive Stance", "Barrier"],
+        BackBarSkills=["Elemental Blockade", "Inner Rage", "Resolving Vigor", "Green Dragon Blood", "Unrelenting Grip", "Aggressive Horn"],
+        Food="Orzorga's Smoked Bear Haunch",
+        Potion="Tri-Stat",
+    )
+
+    payload = shared_raid_plan_payload(plan, saved_builds=(build,))
+    summary = payload["members"][0]["build_summary"]
+
+    assert summary["front_weapon"] == "Sword & Board"
+    assert summary["back_weapon"] == "Ice Staff"
+    assert summary["front_skills"][0] == "Pierce Armor"
+    assert summary["back_skills"][0] == "Elemental Blockade"
+    assert summary["food"] == "Orzorga's Smoked Bear Haunch"
+    assert summary["potion"] == "Tri-Stat"
+    assert summary["planned_mundus"] == "The Atronach"
