@@ -1813,6 +1813,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.generated_encounter_policy_axis_adapter",
             "extreme.sustained_dps.generated_rotation_axis_adapter",
             "extreme.sustained_dps.generated_runtime_policy_axis_adapter",
+            "extreme.sustained_dps.generated_finalized_potion_axis_adapter",
             "extreme.sustained_dps.generated_frontier_wiring",
         ),
         responsibilities=("extreme_sustained_dps_generated_axis_pipeline",),
@@ -1823,7 +1824,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Explicit immutable stage transitions preserve each adapter's native state, optionally insert exact-witness Mundus/food mutation after gear, "
             "optionally insert a finite encounter-policy selection after build assembly and before rotation generation, reset downstream selections after upstream mutation, "
-            "forward axis-local bound providers, and derive stable runtime candidate identity from selected structural rotation coordinates."
+            "optionally append canonical finalized potion timing after runtime policy, forward axis-local bound providers, and derive stable runtime candidate identity from selected structural rotation coordinates."
         ),
     ),
     ServiceDescriptor(
@@ -1887,6 +1888,30 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.potion_resource_observation_frontier",
+        domain="extreme",
+        purpose=(
+            "Collect a proof-safe finite resource-timeline timestamp denominator for finalized potion instant-restoration timing."
+        ),
+        implementation_path="services.extreme_sustained_dps_potion_resource_observation_frontier_service",
+        inputs=(
+            "FinalizedRotationPlan",
+            "VerifiedHeavyAttackCompletionEvidence",
+            "CallerProvenAdditionalResourceEventTimes",
+        ),
+        outputs=("ExtremeSustainedDPSPotionResourceObservationFrontier",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_potion_resource_observation_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Retains every scheduled action timestamp, canonical two-second recovery tick, verified Heavy Attack completion, and caller-supplied resource maximum/restoration timestamp. "
+            "Extra breakpoints are proof-safe; omitted external resource-event families are not, so caller completeness evidence is mandatory."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.potion_timing_breakpoint_frontier",
         domain="extreme",
         purpose=(
@@ -1932,6 +1957,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.finalized_potion_timing_evidence",
+        domain="extreme",
+        purpose=(
+            "Resolve authoritative finalized periodic, Heavy Attack completion, and caller-certified additional resource-event timing evidence for the late potion axis."
+        ),
+        implementation_path="services.extreme_sustained_dps_finalized_potion_timing_evidence_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "ReviewedDDPeriodicRuntimeSemantics",
+            "OptionalActivationAnchorResolver",
+            "OptionalAdditionalResourceEventTimes",
+        ),
+        outputs=("ExtremeSustainedDPSFinalizedPotionTimingEvidence",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_finalized_potion_timing_evidence",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Reuses RotationDDPeriodicRuntimeSemanticsRegistryService, RotationCandidatePeriodicDamageRuntimeProjectionService, and RotationHeavySustainProjectionService instead of rescheduling mechanics. "
+            "Additional resource maximum/restoration events remain caller-owned; asserting their denominator complete is an explicit proof claim."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.finalized_potion_timing_denominator",
         domain="extreme",
         purpose=(
@@ -1947,6 +1997,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         outputs=("ExtremeSustainedDPSFinalizedPotionTimingDenominator",),
         dependencies=(
             "extreme.sustained_dps.potion_observation_frontier",
+            "extreme.sustained_dps.potion_resource_observation_frontier",
             "extreme.sustained_dps.potion_timing_breakpoint_frontier",
         ),
         responsibilities=("extreme_sustained_dps_finalized_potion_timing_denominator",),
@@ -1956,7 +2007,41 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Potion buff durations remain owned by PotionCadence using explicit Medicinal Use rank. "
-            "This service proves finite named-buff timing only after the descendant observation denominator is complete; full potion timing remains open until instant-restoration timing is included."
+            "Damage/runtime observation timestamps and caller-proven resource-timeline timestamps are merged into one conservative breakpoint denominator. "
+            "Full potion timing closes only when the resource-event observation denominator is also proven complete."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_finalized_potion_axis_adapter",
+        domain="extreme",
+        purpose=(
+            "Enumerate canonical potion_timing_policy only after execute and Heavy Attack descendants are finalized, replacing provisional potion actions with the complete finite breakpoint family."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_finalized_potion_axis_adapter_service",
+        inputs=(
+            "CompleteGeneratedRuntimePolicyState",
+            "ExtremeSustainedDPSFinalizedPotionTimingEvidenceResolver",
+            "PlayerBuild",
+            "CharacterProgression",
+        ),
+        outputs=(
+            "IndexedFrontierAxis",
+            "ExtremeSustainedDPSGeneratedFinalizedPotionAxisState",
+        ),
+        dependencies=(
+            "extreme.sustained_dps.finalized_potion_timing_evidence",
+            "extreme.sustained_dps.finalized_potion_timing_denominator",
+            "extreme.sustained_dps.potion_resource_observation_frontier",
+            "extreme.sustained_dps.generated_frontier_wiring",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_finalized_potion_axis_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The axis includes explicit no-use, exact boundary before/after ordering where DD state can differ, and one representative for each open continuous-time interval. "
+            "It fails closed unless periodic/Heavy Attack observations and additional resource-event timing are proven complete; only then does it expose canonical potion_timing_policy coverage with no omitted scope."
         ),
     ),
     ServiceDescriptor(
@@ -1988,8 +2073,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.generated_rotation_axis_adapter",
         domain="extreme",
         purpose=(
-            "Adapt generated seed/cadence rotation plans and anchored Ultimate/potion "
-            "policies into ordered indexed generated-search axes."
+            "Adapt generated seed/cadence rotation plans and delayed-Ultimate policies "
+            "into ordered indexed generated-search axes while deferring canonical potion timing to the finalized descendant axis."
         ),
         implementation_path="services.extreme_sustained_dps_generated_rotation_axis_adapter_service",
         inputs=(
@@ -2009,8 +2094,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "The adapter preserves plan-before-policy dependency and fails closed on either unproven denominator. "
-            "Selected encounter demand windows and ability priorities are forwarded into canonical rotation-plan refinement; encounter-policy enumeration remains owned by the preceding axis. "
-            "It does not claim closure over continuous potion offsets, delayed Ultimates, execute policy, or Heavy Attacks."
+            "Generated Objective #32 traversal selects only the combined frontier's explicit potion:none slice, so this axis owns delayed Ultimate timing only. "
+            "Selected encounter demand windows and ability priorities flow into canonical rotation-plan refinement; finalized potion timing is enumerated later after execute and Heavy Attack policy selection."
         ),
     ),
     ServiceDescriptor(
