@@ -98,17 +98,22 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             key="passives:runtime_semantics",
             status=CanonicalMechanicsCoverageStatus.PARTIAL,
             capability=(
-                "PassiveGrant evidence can participate in build effect availability and "
-                "duration evaluation when supplied explicitly."
+                "PassiveGrant evidence participates in build effect availability and duration "
+                "evaluation when supplied explicitly. Rotation static evaluation also reuses "
+                "BuildCalculationContextFactory, which currently applies reviewed Warden, "
+                "Dragonknight, Necromancer, Nightblade, Sorcerer, Templar, armor, One Hand and "
+                "Shield, Undaunted, guild, and Alliance Support passive resolvers."
             ),
             evidence_source=(
                 "minmax/character_build/passive_grant.py; "
-                "services/rotation_build_effect_duration_service.py"
+                "services/rotation_build_effect_duration_service.py; "
+                "minmax/context_factory.py; services/rotation_static_build_context_service.py"
             ),
             consumers=ALL_THREE,
             missing_evidence=(
-                "Build a comprehensive verified passive catalog covering class, weapon, "
-                "guild/world, race, vampire/werewolf and other relevant passives, including "
+                "Expand the verified passive catalog beyond the resolver families already owned "
+                "by BuildCalculationContextFactory, especially missing weapon/world/race/vampire/"
+                "werewolf and other rotation-relevant passives, including "
                 "rank, slot/bar/equipment prerequisites, trigger conditions, duration/resource/"
                 "status/target effects, and stacking semantics."
             ),
