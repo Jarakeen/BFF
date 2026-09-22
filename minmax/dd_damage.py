@@ -76,6 +76,8 @@ def calculate_dd_damage(
 
         scaled event
         -> attacker Damage Done
+        -> target Critical Damage Taken joins raw Critical Damage
+        -> Critical Damage cap
         -> target Critical Resistance / expected critical damage
         -> target resistance mitigation
         -> target Damage Taken
@@ -83,8 +85,9 @@ def calculate_dd_damage(
 
     Applicable Damage Done categories are additive inside one ESO event bucket:
     generic + damage type + Direct/DoT + Single Target/AoE. Target Critical
-    Resistance subtracts percentage points from the attacker's Critical Damage
-    bonus before expected critical damage is calculated. Target Damage Taken
+    Target Critical Damage Taken joins the attacker's raw Critical Damage before
+    the 125% cap. Critical Resistance then subtracts percentage points from that
+    capped bonus before expected critical damage is calculated. Target Damage Taken
     remains its own later bucket so Vulnerability/Protection never leak into
     attacker stats or the Damage Done calculation.
     """
