@@ -1448,3 +1448,10 @@ Minor Brittle increases the target's Critical Damage Taken by 10 percentage poin
 A runtime debuff with an explicitly resolved numeric resistance reduction can be applied directly to exact-time target resistance. A tooltip or known-effect record that says a value scales "up to" a maximum does not prove the runtime magnitude is that maximum.
 
 **For BFF:** EffectVariant now preserves explicit target mechanic metadata. Objective #32 admits fixed ENEMY resistance reductions only when the numeric value is resolved and no unresolved scaling formula remains. Scaling effects such as Roar of Alkosh stay fail-closed until their actual magnitude resolver is authoritative. This prevents maximum tooltip values from being silently treated as permanent combat truth.
+
+
+## 2026-09-22 — Unique Damage Taken can share the bucket without sharing the name
+
+A target can have named Vulnerability and a separate unique damage-amplification debuff at the same time. Those effects belong to the same additive target Damage Taken stage even though only one is a named Major/Minor effect.
+
+**For BFF:** exact-time CombatState now carries explicit numeric Damage Taken in addition to canonical named buffs. Fixed ENEMY-target amplification can therefore stack with Vulnerability through the existing Damage Taken router. A named effect that also carries matching numeric metadata is counted only once, while any amplification with unresolved scaling remains fail-closed.
