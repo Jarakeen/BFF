@@ -21,23 +21,23 @@ def _effect(name, *, trigger=None, condition=None):
 
 
 class _Capabilities:
-    def __init__(self, audit):
-        self.audit = audit
+    def __init__(self, resolution):
+        self.resolution = resolution
         self.calls = []
 
-    def audit_build(self, build):
+    def resolve_effect_variants(self, build):
         self.calls.append(build)
-        return self.audit
+        return self.resolution
 
 
 def test_collects_only_explicit_runtime_triggered_effects() -> None:
     audit = SimpleNamespace(
-        resolved_effects=(
+        effects=(
             _effect("damage-proc", trigger="damage_dealt"),
             _effect("conditional-static", condition="target_off_balance"),
             _effect("plain-static"),
         ),
-        capability_unresolved=(),
+        unresolved=(),
         boundaries=("static condition remains separate",),
     )
     service = ExtremeSustainedDPSRuntimeEffectUniverseService(
@@ -54,11 +54,11 @@ def test_collects_only_explicit_runtime_triggered_effects() -> None:
 
 def test_potion_use_effects_are_excluded_as_plan_owned_runtime_state() -> None:
     audit = SimpleNamespace(
-        resolved_effects=(
+        effects=(
             _effect("potion-buff", trigger="potion_use"),
             _effect("ultimate-proc", trigger="ultimate_activation_in_combat"),
         ),
-        capability_unresolved=(),
+        unresolved=(),
         boundaries=(),
     )
     result = ExtremeSustainedDPSRuntimeEffectUniverseService(
@@ -73,8 +73,8 @@ def test_potion_use_effects_are_excluded_as_plan_owned_runtime_state() -> None:
 
 def test_capability_gaps_fail_runtime_effect_universe_closed() -> None:
     audit = SimpleNamespace(
-        resolved_effects=(_effect("damage-proc", trigger="damage_dealt"),),
-        capability_unresolved=("front skill not found in canonical ability data: Mystery",),
+        effects=(_effect("damage-proc", trigger="damage_dealt"),),
+        unresolved=("front skill not found in canonical ability data: Mystery",),
         boundaries=(),
     )
     result = ExtremeSustainedDPSRuntimeEffectUniverseService(
@@ -90,8 +90,8 @@ def test_capability_gaps_fail_runtime_effect_universe_closed() -> None:
 def test_duplicate_runtime_effects_across_bars_are_deduplicated() -> None:
     effect = _effect("damage-proc", trigger="damage_dealt")
     audit = SimpleNamespace(
-        resolved_effects=(effect, effect),
-        capability_unresolved=(),
+        effects=(effect, effect),
+        unresolved=(),
         boundaries=(),
     )
     result = ExtremeSustainedDPSRuntimeEffectUniverseService(
@@ -104,8 +104,8 @@ def test_duplicate_runtime_effects_across_bars_are_deduplicated() -> None:
 
 def test_deferred_runtime_effect_boundary_fails_universe_closed() -> None:
     audit = SimpleNamespace(
-        resolved_effects=(),
-        capability_unresolved=(),
+        effects=(),
+        unresolved=(),
         boundaries=(
             "front configured scribed skill recipe resolved; detailed scripted effect conversion deferred: Mystery Skill",
         ),
