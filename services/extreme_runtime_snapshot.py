@@ -226,6 +226,15 @@ class ExtremeRuntimeSnapshot:
             raise ValueError("runtime snapshot lookup sequence cannot be negative")
 
         if not self.runtime_history:
+            if self.runtime_history_complete:
+                return ExtremeRuntimeSnapshot(
+                    runtime_history=(),
+                    snapshot_time_seconds=instant,
+                    recipient_actor_id=self.recipient_actor_id,
+                    group_member_ids=self.group_member_ids,
+                    runtime_history_complete=True,
+                    bar_transition_history_complete=self.bar_transition_history_complete,
+                )
             if (
                 abs(instant - self.snapshot_time_seconds) <= 1e-12
                 and boundary_sequence is None
