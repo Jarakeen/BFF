@@ -57,7 +57,7 @@ def damage_taken_from_target_state(
     if target_combat_state is None:
         return DamageTakenModifiers()
 
-    generic = sum(
+    generic = float(target_combat_state.explicit_damage_taken) + sum(
         value
         for name, value in _NAMED_GENERIC_DAMAGE_TAKEN.items()
         if target_combat_state.has_buff(name)
