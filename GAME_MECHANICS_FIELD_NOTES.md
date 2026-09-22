@@ -1434,3 +1434,10 @@ Objective #32 already had the correct static damage-stage ordering: attacker Dam
 Major Breach reduces the target's Physical and Spell Resistance by 5948; Minor Breach reduces them by 2974. These are additive resistance reductions, not generic Damage Taken modifiers.
 
 **For BFF:** Objective #32 now replays active ENEMY-target Breach windows at the exact damage timestamp and lowers the explicit target resistance before mitigation. Major and Minor Breach may both contribute; the resulting resistance is clamped at zero so over-reduction never becomes bonus damage. Vulnerability remains a later, separate Damage Taken bucket.
+
+
+## 2026-09-22 — Brittle joins Critical Damage before the cap
+
+Minor Brittle increases the target's Critical Damage Taken by 10 percentage points; Major Brittle increases it by 20. The project's U50 critical-damage references group Brittle with the other Critical Damage modifiers that contribute toward the 125% hard cap.
+
+**For BFF:** Objective #32 now adds exact-time ENEMY-target Brittle to the attacker's raw Critical Damage, caps the combined value at 125%, and only then applies target Critical Resistance. Brittle therefore has no extra value once the combined critical bonus is already capped, and it remains separate from generic Damage Taken and target resistance.
