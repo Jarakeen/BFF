@@ -7,7 +7,10 @@ from services.rotation_heavy_attack_restore_esologs_evidence_service import (
     RotationHeavyAttackLandedObservation,
     RotationHeavyAttackRestoreEsoLogsEvidenceService,
 )
-from services.rotation_heavy_attack_restoration_evidence_service import RotationHeavyAttackCompletionEvidence
+from services.rotation_heavy_attack_restoration_evidence_service import (
+    RotationHeavyAttackCompletionEvidence,
+    RotationHeavyAttackHitOutcome,
+)
 
 
 def _database(tmp_path):
@@ -144,6 +147,7 @@ def test_correlates_one_nearby_logged_hit_to_completion_evidence():
 
     assert unresolved == ()
     assert promoted[0].landed is True
+    assert promoted[0].hit_outcome is RotationHeavyAttackHitOutcome.LANDED
     assert "REPORT/7/10" in promoted[0].source
 
 
