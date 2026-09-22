@@ -87,6 +87,7 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
             "Runtime State",
             candidate_count=candidate_count,
             candidate_at=candidate_at,
+            canonical_axes=("runtime_state",),
         )
 
     @classmethod
