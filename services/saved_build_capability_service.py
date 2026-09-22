@@ -611,7 +611,10 @@ class SavedBuildCapabilityService:
         sources: list[str] = []
         effects: list[EffectVariant] = []
 
-        cp_effects = self._champion_point_variants(build, capability_unresolved)
+        cp_unresolved: list[str] = []
+        cp_effects = self._champion_point_variants(build, cp_unresolved)
+        unresolved.extend(cp_unresolved)
+        capability_unresolved.extend(cp_unresolved)
         if cp_effects:
             sources.append("champion_points:dynamic")
             effects.extend(cp_effects)
