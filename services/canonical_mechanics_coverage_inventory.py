@@ -118,21 +118,22 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             key="armor:weight_passive_semantics",
             status=CanonicalMechanicsCoverageStatus.PARTIAL,
             capability=(
-                "Verified static armor math already distinguishes exact Light/Medium/Heavy "
-                "piece counts for armor-line effects and distinct equipped armor weights for "
-                "Undaunted Mettle. Rotation dependency discovery now preserves those exact "
-                "composition inputs from canonical CharacterBuild armor."
+                "Verified static armor math distinguishes exact Light/Medium/Heavy piece counts "
+                "for armor-line effects and distinct equipped armor weights for Undaunted Mettle. "
+                "Rotation static build evaluation already reuses BuildCalculationContextFactory, "
+                "so verified armor and Undaunted passive ownership/ranks reach front/back rotation "
+                "contexts instead of being recomputed by the optimizer."
             ),
             evidence_source=(
                 "minmax/armor_passive_input_resolver.py; "
                 "minmax/undaunted_passive_input_resolver.py; "
-                "services/rotation_mechanics_dependency_service.py"
+                "minmax/context_factory.py; services/rotation_static_build_context_service.py"
             ),
             consumers=ALL_THREE,
             missing_evidence=(
-                "Bridge verified armor-passive ownership/progression into canonical "
-                "CharacterBuild rotation evaluation, preserve rank/prerequisite gates, and "
-                "verify every Light/Medium/Heavy and composition-sensitive passive that can "
+                "Expand the verified armor-passive catalog beyond the passives already owned by "
+                "BuildCalculationContextFactory, preserve rank/prerequisite gates, and verify every "
+                "Light/Medium/Heavy and composition-sensitive passive that can "
                 "change resource costs/recovery, block behavior, damage/healing, penetration, "
                 "critical stats, mitigation, movement, or other rotation-relevant state."
             ),
