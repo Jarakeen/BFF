@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from services.eso_database import EsoDatabase
-from services.finch_api_client import FinchApiClient, FinchGearNeedRequest
+from services.finch_api_client import FinchApiClient, FinchGearNeedRequest, FinchRegistration
 from services.roster_assignment_context_service import RosterAssignmentContextService
 from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.roster_service import RosterService
@@ -49,6 +49,9 @@ class FinchGearNeedSyncSummary:
     rejected: int
     errors: int
     results: tuple[FinchGearNeedSyncResult, ...]
+    registrations_fetched: int = 0
+    registrations_applied: int = 0
+    registrations_unresolved: int = 0
 
 
 class FinchRosterSyncService:
@@ -66,6 +69,128 @@ class FinchRosterSyncService:
         self.roster = roster
         self.identity = identity
         self.assignments = assignments
+        self._ensure_identity_binding_schema()
+
+    def _ensure_identity_binding_schema(self) -> None:
+        self.roster.db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS finch_discord_identity_binding (
+                discord_user_id INTEGER NOT NULL,
+                guild_id INTEGER NOT NULL,
+                roster_member_id INTEGER NOT NULL,
+                first_seen TEXT NOT NULL DEFAULT (datetime('now')),
+                last_seen TEXT NOT NULL DEFAULT (datetime('now')),
+                PRIMARY KEY (discord_user_id, guild_id)
+            )
+            """
+        )
+        self.roster.db.commit()
+
+    def _bound_member(self, registration: FinchRegistration):
+        row = self.roster.db.execute(
+            """
+            SELECT roster_member_id
+            FROM finch_discord_identity_binding
+            WHERE discord_user_id = ? AND guild_id = ?
+            """,
+            (registration.discord_user_id, registration.guild_id),
+        ).fetchone()
+        if row is None:
+            return None
+        member = self.roster.get_member(int(row["roster_member_id"]))
+        if member is None:
+            return None
+        return member
+
+    def _bind_registration(self, registration: FinchRegistration, member_id: int) -> None:
+        self.roster.db.execute(
+            """
+            INSERT INTO finch_discord_identity_binding (
+                discord_user_id, guild_id, roster_member_id
+            ) VALUES (?, ?, ?)
+            ON CONFLICT(discord_user_id, guild_id) DO UPDATE SET
+                roster_member_id=excluded.roster_member_id,
+                last_seen=datetime('now')
+            """,
+            (registration.discord_user_id, registration.guild_id, int(member_id)),
+        )
+        self.roster.db.commit()
+
+    @staticmethod
+    def _public_discord_name(registration: FinchRegistration) -> str:
+        return (
+            _clean(registration.discord_display_name)
+            or _clean(registration.discord_global_name)
+            or _clean(registration.discord_username)
+        )
+
+    def _resolve_registration_member(self, registration: FinchRegistration):
+        bound = self._bound_member(registration)
+        if bound is not None:
+            return bound
+
+        resolution, _problem = self._resolve_member(registration)
+        if resolution is not None:
+            member, _canonical_team = resolution
+            return member
+
+        seen_values = [
+            _clean(item.value)
+            for item in registration.identity_history
+            if _clean(item.value)
+        ]
+        matches = {}
+        for value in seen_values:
+            for member in self.identity.matching_members(value):
+                if member.Id is not None:
+                    matches[int(member.Id)] = member
+        if len(matches) == 1:
+            return next(iter(matches.values()))
+        return None
+
+    def sync_registration_identities(self) -> tuple[int, int, int]:
+        registrations = self.client.registrations_private()
+        applied = 0
+        unresolved = 0
+
+        for registration in registrations:
+            member = self._resolve_registration_member(registration)
+            if member is None or member.Id is None:
+                unresolved += 1
+                continue
+
+            member_id = int(member.Id)
+            self._bind_registration(registration, member_id)
+
+            current_discord = self._public_discord_name(registration)
+            if current_discord and _clean(member.DiscordName) != current_discord:
+                member.DiscordName = current_discord
+                self.roster.update_member(member)
+
+            for item in registration.identity_history:
+                value = _clean(item.value)
+                if not value:
+                    continue
+                source = (
+                    "finch_gamertag_history"
+                    if item.kind == "gamertag"
+                    else "finch_discord_history"
+                )
+                note_bits = [item.kind]
+                if item.first_seen:
+                    note_bits.append(f"first seen {item.first_seen}")
+                if item.last_seen:
+                    note_bits.append(f"last seen {item.last_seen}")
+                self.identity.add_alias(
+                    member_id,
+                    value,
+                    source=source,
+                    notes=" · ".join(note_bits),
+                )
+            applied += 1
+
+        return len(registrations), applied, unresolved
+
 
     def _reject(
         self,
@@ -142,6 +267,20 @@ class FinchRosterSyncService:
         )
 
     def sync_gear_needs(self) -> FinchGearNeedSyncSummary:
+        registrations_fetched = 0
+        registrations_applied = 0
+        registrations_unresolved = 0
+        try:
+            (
+                registrations_fetched,
+                registrations_applied,
+                registrations_unresolved,
+            ) = self.sync_registration_identities()
+        except Exception:
+            # Gear-needs synchronization remains useful even when an older Finch
+            # server does not yet expose the private registration feed.
+            pass
+
         requests = self.client.pending_gear_needs()
         results: list[FinchGearNeedSyncResult] = []
 
@@ -198,6 +337,9 @@ class FinchRosterSyncService:
             rejected=sum(1 for row in results if row.status == "rejected"),
             errors=sum(1 for row in results if row.status == "error"),
             results=tuple(results),
+            registrations_fetched=registrations_fetched,
+            registrations_applied=registrations_applied,
+            registrations_unresolved=registrations_unresolved,
         )
 
 
