@@ -28,7 +28,7 @@ def test_ready_scenario_requires_closed_runtime_and_heavy_channel_evidence() -> 
     assert result.blockers == ()
 
 
-def test_missing_runtime_state_frontier_blocks_theoretical_closure() -> None:
+def test_missing_runtime_state_authority_blocks_theoretical_closure() -> None:
     result = ExtremeSustainedDPSObjective32ScenarioPreflightService.assess(
         runtime_state_frontier=None,
         heavy_attack_channel_block_denominator_proven=True,
@@ -37,7 +37,7 @@ def test_missing_runtime_state_frontier_blocks_theoretical_closure() -> None:
 
     assert result.ready is False
     assert any(
-        "requires an explicit runtime-state frontier" in item
+        "runtime-state frontier or candidate-resolved runtime-state authority" in item
         for item in result.blockers
     )
 
@@ -77,3 +77,20 @@ def test_require_ready_raises_with_all_blockers() -> None:
             heavy_attack_channel_block_denominator_proven=False,
             encounter_policy_adapter=None,
         )
+
+
+
+def test_candidate_runtime_state_authority_satisfies_preflight() -> None:
+    result = ExtremeSustainedDPSObjective32ScenarioPreflightService.assess(
+        runtime_state_frontier=None,
+        candidate_runtime_state_resolver_present=True,
+        heavy_attack_channel_block_denominator_proven=True,
+        encounter_policy_adapter=object(),
+    )
+
+    assert result.ready is True
+    assert result.blockers == ()
+    assert any(
+        "Candidate-resolved runtime-state authority is present" in row
+        for row in result.evidence
+    )
