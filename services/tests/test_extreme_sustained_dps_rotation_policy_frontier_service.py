@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from minmax.ultimate_resource_timeline import UltimateSpendRule
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_rotation_plan_frontier_service import (
     ExtremeSustainedDPSRotationPlanCandidate,
@@ -54,6 +55,16 @@ def _build(*, potion=True, ultimate=True):
 
 
 class _UltimateService:
+    def resolve_generation_inputs(self, **kwargs):
+        bar = kwargs["ultimate_bar"]
+        return SimpleNamespace(
+            bar=bar,
+            slotted_ultimate="Ultimate X",
+            spend_rule=UltimateSpendRule("Ultimate X", 100.0),
+            generation_events=(),
+            unresolved=(),
+        )
+
     def apply_generation(self, **kwargs):
         plan = kwargs["plan"]
         projected = RotationPlan(
@@ -111,7 +122,7 @@ def test_policy_frontier_preserves_ultimate_choice_and_anchored_potion_ordering(
     assert result.candidate_count == 14
     assert result.anchored_policy_denominator_proven is True
     assert result.continuous_potion_timing_closed is False
-    assert result.delayed_ultimate_timing_closed is False
+    assert result.delayed_ultimate_timing_closed is True
 
 
 def test_before_potion_order_shifts_existing_same_timestamp_sequence() -> None:
@@ -229,3 +240,58 @@ def test_invalid_policy_index_fails_closed() -> None:
             starting_ultimate=0.0,
             index=frontier.candidate_count,
         )
+
+
+
+def test_delayed_ultimate_timing_expands_exact_seed_plan_family() -> None:
+    result = _service().frontier(
+        build=_build(potion=False),
+        seed=_seed(),
+        potion_cooldown_seconds=10.0,
+        starting_ultimate=100.0,
+    )
+
+    assert result.delayed_ultimate_timing_closed is True
+    assert tuple(
+        row.policy_id
+        for row in result.ultimate_timing_policies
+    ) == (
+        "ultimate:none",
+        "front:ultimate:none",
+        "front:ultimate:0/1",
+        "front:ultimate:1/0",
+        "front:ultimate:2/0",
+    )
+    assert result.candidate_count == 5
+
+
+def test_delayed_ultimate_candidate_materializes_selected_cast_slot() -> None:
+    service = _service()
+    frontier = service.frontier(
+        build=_build(potion=False),
+        seed=_seed(),
+        potion_cooldown_seconds=10.0,
+        starting_ultimate=100.0,
+    )
+    index = next(
+        i
+        for i, row in enumerate(frontier.ultimate_timing_policies)
+        if row.policy_id == "front:ultimate:2/0"
+    )
+
+    candidate = service.candidate_at(
+        build=_build(potion=False),
+        seed=_seed(),
+        potion_cooldown_seconds=10.0,
+        starting_ultimate=100.0,
+        index=index,
+    )
+
+    casts = tuple(
+        action
+        for action in candidate.plan.actions
+        if action.kind is RotationActionKind.ULTIMATE
+    )
+    assert len(casts) == 1
+    assert casts[0].time_seconds == 2.0
+    assert candidate.resource_legality.is_legal is True
