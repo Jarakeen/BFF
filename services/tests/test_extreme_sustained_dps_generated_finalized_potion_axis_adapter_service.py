@@ -1,0 +1,224 @@
+from __future__ import annotations
+
+from types import SimpleNamespace
+
+from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from models.build_model import PlayerBuild
+from services.extreme_sustained_dps_generated_finalized_potion_axis_adapter_service import (
+    ExtremeSustainedDPSFinalizedPotionTimingEvidence,
+    ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService,
+)
+from services.rotation_candidate_generation_service import GeneratedRotationCandidate
+
+
+class _DenominatorService:
+    def __init__(self):
+        self.calls = []
+
+    def build(self, **kwargs):
+        self.calls.append(kwargs)
+        return SimpleNamespace(
+            denominator_proven=True,
+            unresolved=(),
+            observation_frontier=SimpleNamespace(
+                observation_times=(1.0, 4.0),
+            ),
+            breakpoint_frontier=SimpleNamespace(
+                full_potion_timing_closed=True,
+                choices=(
+                    SimpleNamespace(
+                        first_use_seconds=1.0,
+                        kind="boundary",
+                    ),
+                    SimpleNamespace(
+                        first_use_seconds=2.0,
+                        kind="open_interval_representative",
+                    ),
+                ),
+            ),
+        )
+
+
+class _Legality:
+    def __init__(self):
+        self.calls = []
+
+    def assess(self, **kwargs):
+        self.calls.append(kwargs)
+        return SimpleNamespace(
+            is_legal=True,
+            unresolved=(),
+        )
+
+
+def _candidate() -> GeneratedRotationCandidate:
+    return GeneratedRotationCandidate(
+        candidate_id="runtime-candidate",
+        plan=RotationPlan(
+            character_name="Generated",
+            build_name="Candidate",
+            duration_seconds=10.0,
+            actions=(
+                RotationAction(
+                    0.0,
+                    0,
+                    RotationActionKind.POTION,
+                    "Potion X",
+                ),
+                RotationAction(
+                    1.0,
+                    0,
+                    RotationActionKind.SKILL,
+                    "Skill A",
+                    "front",
+                ),
+                RotationAction(
+                    4.0,
+                    0,
+                    RotationActionKind.LIGHT_ATTACK,
+                    "Light Attack",
+                    "front",
+                ),
+            ),
+        ),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+
+def _upstream(candidate=None):
+    return SimpleNamespace(
+        complete=True,
+        current_candidate=candidate or _candidate(),
+    )
+
+
+def _resolver(candidate):
+    assert candidate.candidate_id == "runtime-candidate"
+    return ExtremeSustainedDPSFinalizedPotionTimingEvidence()
+
+
+def _adapter():
+    denominator = _DenominatorService()
+    legality = _Legality()
+    return (
+        ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService(
+            denominator_service=denominator,
+            legality_service=legality,
+        ),
+        denominator,
+        legality,
+    )
+
+
+def test_axis_owns_finalized_potion_timing_canonical_dimension() -> None:
+    adapter, _denominator, _legality = _adapter()
+    axis = adapter.axis()
+
+    assert axis.name == "Finalized Potion Timing Policy"
+    assert axis.canonical_axes == ("potion_timing_policy",)
+    assert axis.omitted_scope == ()
+
+
+def test_selected_potion_enumerates_no_use_boundaries_and_open_intervals() -> None:
+    adapter, denominator, _legality = _adapter()
+    state = adapter.root(
+        _upstream(),
+        build=PlayerBuild(Potion="Potion X"),
+        progression="progression",
+        potion_cooldown_seconds=45.0,
+        evidence_resolver=_resolver,
+    )
+
+    axis = adapter.axis()
+    assert axis.candidate_count(state) == 4
+    call = denominator.calls[-1]
+    assert call["instant_restoration_timing_closed"] is True
+    assert call["observation_frontier"].observation_times == (1.0, 4.0)
+
+
+def test_exact_observation_boundary_preserves_before_and_after_ordering() -> None:
+    adapter, _denominator, _legality = _adapter()
+    root = adapter.root(
+        _upstream(),
+        build=PlayerBuild(Potion="Potion X"),
+        progression="progression",
+        potion_cooldown_seconds=45.0,
+        evidence_resolver=_resolver,
+    )
+    axis = adapter.axis()
+
+    before = axis.candidate_at(root, 1)
+    after = axis.candidate_at(root, 2)
+
+    before_at_one = tuple(
+        action
+        for action in before.candidate.plan.actions
+        if action.time_seconds == 1.0
+    )
+    after_at_one = tuple(
+        action
+        for action in after.candidate.plan.actions
+        if action.time_seconds == 1.0
+    )
+
+    assert tuple((row.kind, row.sequence) for row in before_at_one) == (
+        (RotationActionKind.POTION, 0),
+        (RotationActionKind.SKILL, 1),
+    )
+    assert tuple((row.kind, row.sequence) for row in after_at_one) == (
+        (RotationActionKind.SKILL, 0),
+        (RotationActionKind.POTION, 1),
+    )
+    assert sum(
+        action.kind is RotationActionKind.POTION
+        for action in before.candidate.plan.actions
+    ) == 1
+    assert before.selected_policy.policy_id.startswith("potion:1:before")
+    assert after.selected_policy.policy_id.startswith("potion:1:after")
+
+
+def test_open_interval_representative_materializes_one_deterministic_cadence() -> None:
+    adapter, _denominator, _legality = _adapter()
+    root = adapter.root(
+        _upstream(),
+        build=PlayerBuild(Potion="Potion X"),
+        progression="progression",
+        potion_cooldown_seconds=45.0,
+        evidence_resolver=_resolver,
+    )
+
+    state = adapter.axis().candidate_at(root, 3)
+
+    potion_actions = tuple(
+        action
+        for action in state.candidate.plan.actions
+        if action.kind is RotationActionKind.POTION
+    )
+    assert tuple(row.time_seconds for row in potion_actions) == (2.0,)
+    assert state.selected_policy.same_timestamp_order == "after"
+    assert state.complete is True
+
+
+def test_no_potion_selection_has_one_trivially_closed_no_use_policy() -> None:
+    adapter, denominator, _legality = _adapter()
+    root = adapter.root(
+        _upstream(),
+        build=PlayerBuild(Potion=""),
+        progression="progression",
+        potion_cooldown_seconds=45.0,
+        evidence_resolver=_resolver,
+    )
+
+    axis = adapter.axis()
+    assert axis.candidate_count(root) == 1
+    state = axis.candidate_at(root, 0)
+
+    assert state.selected_policy.policy_id == "potion:none"
+    assert all(
+        action.kind is not RotationActionKind.POTION
+        for action in state.candidate.plan.actions
+    )
+    assert state.denominator is None
+    assert denominator.calls == []
+    assert state.complete is True
