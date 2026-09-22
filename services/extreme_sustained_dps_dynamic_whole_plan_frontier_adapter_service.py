@@ -141,6 +141,8 @@ class ExtremeSustainedDPSDynamicWholePlanFrontierAdapterService:
     def heavy_attack_policy(
         cls,
         frontier: ExtremeSustainedDPSHeavyAttackPolicyFrontier,
+        *,
+        complete_window_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSIndexedWholePlanAdapter[ExtremeSustainedDPSHeavyAttackPolicyCandidate]:
         rows = tuple(frontier.candidates)
         return ExtremeSustainedDPSIndexedWholePlanAdapter(
@@ -148,7 +150,11 @@ class ExtremeSustainedDPSDynamicWholePlanFrontierAdapterService:
             choice_count=len(rows),
             denominator_proven=bool(frontier.denominator_proven),
             omitted_scope=(
-                "Heavy Attack windows outside the caller-reviewed safe set remain open",
+                ()
+                if complete_window_denominator_proven
+                else (
+                    "Heavy Attack windows outside the caller-reviewed safe set remain open",
+                )
             ),
             _resolver=lambda index: rows[index],
         )
