@@ -1150,6 +1150,30 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.closure_inventory",
+        domain="extreme",
+        purpose=(
+            "Separate Objective #32 closure debt into runtime source-data blockers, "
+            "runtime math/review blockers, and canonical mechanics coverage gaps."
+        ),
+        implementation_path="services.extreme_sustained_dps_closure_inventory_service",
+        inputs=(
+            "ExtremeSustainedDPSRuntimeEffectRelevance",
+            "CanonicalMechanicsCoverageInventory",
+        ),
+        outputs=("ExtremeSustainedDPSClosureInventory",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_closure_inventory",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Diagnostic composition only. It does not create proof, and partial mechanics "
+            "coverage remains sufficient to keep theoretical Objective #32 closure open."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.objective32_blockers",
         domain="extreme",
         purpose=(
@@ -1161,12 +1185,14 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "ExtremeSustainedDPSGeneratedAxisInventory",
             "ExtremeSustainedDPSAxisDominanceComposition",
             "ExtremeSustainedDPSTheoreticalMaximumClosure",
+            "ExtremeSustainedDPSClosureInventory",
         ),
         outputs=("ExtremeSustainedDPSObjective32BlockerReport",),
         dependencies=(
             "extreme.sustained_dps.generated_axis_inventory",
             "extreme.sustained_dps.axis_dominance_composition",
             "extreme.sustained_dps.theoretical_maximum_closure",
+            "extreme.sustained_dps.closure_inventory",
         ),
         responsibilities=("extreme_sustained_dps_objective32_blocker_reporting",),
         behavior=ServiceBehavior.DETERMINISTIC,
@@ -1174,8 +1200,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Stable blocker codes distinguish finite-search debt, physically missing or duplicate axes, coverage debt, unresolved evidence, and explicit theoretical omissions. "
-            "Reporting is diagnostic only and cannot create or remove proof."
+            "Stable blocker codes distinguish finite-search debt, physically missing or duplicate axes, coverage debt, runtime source-data debt, runtime math/review debt, and explicit theoretical omissions. "
+            "Relevant partial mechanics coverage also remains a theoretical-closure blocker. Reporting is diagnostic only and cannot create or remove proof."
         ),
     ),
     ServiceDescriptor(
