@@ -34,6 +34,8 @@ _DPS_COMPONENT_BUFFS = frozenset(
         "Major Berserk",
         "Minor Slayer",
         "Major Slayer",
+        "Minor Vulnerability",
+        "Major Vulnerability",
         "Magical Banner",
     }
 )
