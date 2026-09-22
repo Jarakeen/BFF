@@ -176,6 +176,55 @@ class RotationHeavyAttackRestoreEsoLogsEvidenceService:
             )
         return RotationHeavyAttackLandedObservationReport(tuple(rows), ())
 
+    @staticmethod
+    def correlate_landed_observations(
+        completion_evidence,
+        landed_observations: tuple[RotationHeavyAttackLandedObservation, ...],
+        *,
+        tolerance_seconds: float = 0.25,
+    ):
+        """Promote exact completion evidence only when one nearby damage row matches.
+
+        Correlation is deliberately one-to-one and fail-closed. Multiple nearby
+        damage rows are ambiguous, and absence of a row cannot prove a miss.
+        """
+        from dataclasses import replace
+
+        tolerance = float(tolerance_seconds)
+        if tolerance < 0.0:
+            raise ValueError("heavy-attack landed correlation tolerance cannot be negative")
+        promoted = []
+        unresolved: list[str] = []
+        used_events: set[tuple[str, int, int]] = set()
+        for evidence in completion_evidence:
+            if evidence.landed is not None:
+                promoted.append(evidence)
+                continue
+            matches = [
+                row for row in landed_observations
+                if abs(float(row.timestamp) - float(evidence.completion_time_seconds)) <= tolerance
+                and (row.report_code, row.fight_id, row.event_index) not in used_events
+            ]
+            if len(matches) == 1:
+                row = matches[0]
+                used_events.add((row.report_code, row.fight_id, row.event_index))
+                promoted.append(replace(
+                    evidence,
+                    landed=True,
+                    source=(
+                        f"{evidence.source}; ESO Logs damage event "
+                        f"{row.report_code}/{row.fight_id}/{row.event_index}"
+                    ),
+                ))
+                continue
+            promoted.append(evidence)
+            reason = "no" if not matches else "multiple"
+            unresolved.append(
+                f"{reason} reviewed heavy-attack damage events correlate with completion at "
+                f"{evidence.completion_time_seconds:.3f}s; landed state remains unresolved"
+            )
+        return tuple(promoted), tuple(unresolved)
+
     def discover_corpus(
         self,
         database_path: str | Path,
