@@ -77,3 +77,14 @@ def test_vulnerability_without_enemy_target_classification_fails_closed() -> Non
     assert result.relevant == ()
     assert result.irrelevant == ()
     assert any("requires canonical ENEMY target classification" in row for row in result.unresolved)
+
+
+def test_enemy_target_breach_is_dps_relevant() -> None:
+    effect = _effect(
+        "major_breach",
+        target_type=SupportTargetType.ENEMY,
+    )
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+    assert result.relevant == (effect,)
+    assert result.irrelevant == ()
+    assert result.unresolved == ()
