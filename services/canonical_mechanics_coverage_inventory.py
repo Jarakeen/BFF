@@ -111,14 +111,18 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "minmax/context_factory.py; minmax/phase5_context_factory.py; "
                 "services/rotation_static_build_context_service.py; "
                 "minmax/racial_passive_stat_repository.py; "
-                "services/extreme_resource_racial_passive_ownership_service.py"
+                "services/extreme_resource_racial_passive_ownership_service.py; "
+                "services/extreme_passive_projection_service.py"
             ),
             consumers=ALL_THREE,
             missing_evidence=(
                 "Expand the verified rotation-runtime passive catalog beyond the resolver families "
                 "already owned by the Phase 5 context path. Racial passive ownership/stat parsing "
                 "now reaches rotation static contexts; missing weapon/world/vampire/werewolf and "
-                "other passives still require runtime ownership, including "
+                "other passives still require runtime ownership. ExtremePassiveProjectionService "
+                "already classifies simple unconditional passive tooltip contributions and fails "
+                "conditional/runtime clauses closed; those reviewed projections are not yet a shared "
+                "rotation runtime source of truth. Remaining work includes "
                 "rank, slot/bar/equipment prerequisites, trigger conditions, duration/resource/"
                 "status/target effects, and stacking semantics."
             ),
