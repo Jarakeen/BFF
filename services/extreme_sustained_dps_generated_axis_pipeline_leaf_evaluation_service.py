@@ -115,6 +115,11 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
             gear_state=gear_state,
             plan=plan,
             runtime_snapshot=effective_runtime_snapshot,
+            runtime_effects=(
+                tuple(getattr(runtime_choice, "effects", ()))
+                if runtime_choice is not None
+                else ()
+            ),
             target_health=int(target_health),
             target_resistance=float(target_resistance),
             target_name=target_name,
