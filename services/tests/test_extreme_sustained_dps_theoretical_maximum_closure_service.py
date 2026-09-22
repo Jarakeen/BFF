@@ -133,3 +133,52 @@ def test_axis_proof_omission_blocks_theoretical_claim_without_manual_scope_argum
     assert result.omitted_scope == (
         "continuous potion first-use offset remains open",
     )
+
+
+def test_mechanics_closure_inventory_blocks_theoretical_claim() -> None:
+    inventory = type(
+        "Inventory",
+        (),
+        {
+            "closure_ready": False,
+            "source_data_blockers": ("scaled runtime debuff unresolved",),
+            "math_review_blockers": (),
+            "mechanics_blockers": (),
+            "mechanics_advisories": (),
+        },
+    )()
+
+    result = ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+        _search(),
+        axis_coverage=_coverage(),
+        closure_inventory=inventory,
+    )
+
+    assert result.finite_denominator_maximum_proven is True
+    assert result.canonical_axis_coverage_complete is True
+    assert result.mechanics_closure_complete is False
+    assert result.theoretical_maximum_proven is False
+    assert any("mechanics closure remains open" in row for row in result.unresolved)
+
+
+def test_closed_mechanics_inventory_allows_existing_theoretical_proof() -> None:
+    inventory = type(
+        "Inventory",
+        (),
+        {
+            "closure_ready": True,
+            "source_data_blockers": (),
+            "math_review_blockers": (),
+            "mechanics_blockers": (),
+            "mechanics_advisories": (),
+        },
+    )()
+
+    result = ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+        _search(),
+        axis_coverage=_coverage(),
+        closure_inventory=inventory,
+    )
+
+    assert result.mechanics_closure_complete is True
+    assert result.theoretical_maximum_proven is True
