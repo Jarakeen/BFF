@@ -1154,6 +1154,38 @@ def test_sustained_dps_finite_family_node_bound_is_identity_safe() -> None:
 
 
 
+def test_sustained_dps_global_structural_search_services_are_cataloged() -> None:
+    coverage = canonical_service_for("extreme_sustained_dps_structural_axis_coverage")
+    family = canonical_service_for("extreme_sustained_dps_structural_family_adapter")
+    materialization = canonical_service_for("extreme_sustained_dps_structural_materialization")
+    search = canonical_service_for("extreme_sustained_dps_global_generated_search")
+
+    assert coverage is not None
+    assert family is not None
+    assert materialization is not None
+    assert search is not None
+
+    assert coverage.service_id == "extreme.sustained_dps.structural_axis_coverage"
+    assert family.service_id == "extreme.sustained_dps.structural_family_adapter"
+    assert materialization.service_id == "extreme.sustained_dps.structural_materialization"
+    assert search.service_id == "extreme.sustained_dps.global_generated_search"
+
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(search.service_id)
+    ) == (
+        "extreme.sustained_dps.structural_family_adapter",
+        "extreme.sustained_dps.structural_materialization",
+        "extreme.sustained_dps.generated_axis_pipeline",
+        "extreme.sustained_dps.generated_frontier_wiring",
+        "extreme.sustained_dps.generated_runtime_state_axis_adapter",
+    )
+    assert "active-bar coordinate is not promoted" in coverage.notes
+    assert "differ only by active_bar" in family.notes
+    assert "rotation search owns starting-bar behavior" in materialization.notes
+    assert "first generated axis is race/class-route/attributes" in search.notes
+
+
 def test_sustained_dps_objective32_search_keeps_proof_levels_distinct() -> None:
     service = canonical_service_for("extreme_sustained_dps_objective32_search")
 
