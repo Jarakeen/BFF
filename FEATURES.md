@@ -534,3 +534,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Finch sub-ready build handoff** — shared Raid Plan publishing now exposes only the selected seat's operational build subset needed for Discord execution handoff: planned gear, front/back weapon labels, front/back skill bars, Mundus, food, potion, and Raid Plan assignments. Private notes, local IDs, source URLs, and full build payloads remain local.
+
+- **Finch Discord persona binding** — Roster Sync binds Finch registrations to Personnel by stable Discord user ID, updates the public Discord name to the member's current display name, and records prior Discord names/gamertags in private Known Aliases history with first/last-seen provenance.
