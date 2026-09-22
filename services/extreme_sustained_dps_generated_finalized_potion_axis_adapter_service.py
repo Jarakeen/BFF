@@ -277,17 +277,13 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
             observation_frontier=observations,
             duration_seconds=float(state.candidate.plan.duration_seconds),
             cooldown_seconds=float(state.potion_cooldown_seconds),
-            instant_restoration_timing_closed=True,
+            instant_restoration_timing_closed=False,
         )
         if not denominator.denominator_proven:
             detail = "; ".join(denominator.unresolved)
             raise ValueError(
                 "finalized potion timing denominator is unresolved"
                 + (f": {detail}" if detail else "")
-            )
-        if not denominator.breakpoint_frontier.full_potion_timing_closed:
-            raise ValueError(
-                "finalized potion timing denominator did not close full timing scope"
             )
         return denominator
 
@@ -397,6 +393,9 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
             candidate_count=self._count,
             candidate_at=self._at,
             canonical_axes=("potion_timing_policy",),
+            omitted_scope=(
+                "potion instant-restoration timing across resource-timeline event boundaries is not yet closed",
+            ),
         )
 
 
