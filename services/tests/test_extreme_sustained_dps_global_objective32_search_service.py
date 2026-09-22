@@ -312,7 +312,7 @@ def test_global_objective32_coverage_comes_from_completed_tree_not_supplemental_
 
 
 
-def test_strict_global_objective32_preflight_refuses_missing_runtime_state() -> None:
+def test_strict_global_objective32_preflight_refuses_missing_runtime_state_authority() -> None:
     import pytest
 
     global_search = _GlobalSearch(_search_result())
@@ -325,7 +325,7 @@ def test_strict_global_objective32_preflight_refuses_missing_runtime_state() -> 
         require_closure_ready_scenario=True,
     )
 
-    with pytest.raises(ValueError, match="explicit runtime-state frontier"):
+    with pytest.raises(ValueError, match="runtime-state frontier or candidate-resolved runtime-state authority"):
         service.search(
             heavy_attack_channel_block_denominator_proven=True,
             dual_bar_frontier="gear",
@@ -342,10 +342,11 @@ def test_strict_global_objective32_preflight_refuses_missing_runtime_state() -> 
         )
 
 
-def test_strict_global_objective32_preflight_accepts_closed_scenario() -> None:
+def test_strict_global_objective32_preflight_accepts_candidate_runtime_state_authority() -> None:
     global_search = _GlobalSearch(_search_result())
     global_search.pipeline = SimpleNamespace(
         encounter_policy_adapter=object(),
+        runtime_state_frontier_resolver=object(),
     )
     service = ExtremeSustainedDPSGlobalObjective32SearchService(
         global_search=global_search,
@@ -354,7 +355,6 @@ def test_strict_global_objective32_preflight_accepts_closed_scenario() -> None:
     )
 
     result = service.search(
-        runtime_state_frontier=_runtime_frontier(),
         heavy_attack_channel_block_denominator_proven=True,
         dual_bar_frontier="gear",
         candidate_id_prefix="objective32",
@@ -371,3 +371,36 @@ def test_strict_global_objective32_preflight_accepts_closed_scenario() -> None:
 
     assert result.theoretical_maximum_proven is True
     assert global_search.calls
+    assert global_search.calls[0]["runtime_state_frontier"] is None
+
+
+def test_strict_global_objective32_rejects_duplicate_static_and_candidate_runtime_axes() -> None:
+    import pytest
+
+    global_search = _GlobalSearch(_search_result())
+    global_search.pipeline = SimpleNamespace(
+        encounter_policy_adapter=object(),
+        runtime_state_frontier_resolver=object(),
+    )
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=global_search,
+        structural_families=_StructuralFamilies(),
+        require_closure_ready_scenario=True,
+    )
+
+    with pytest.raises(ValueError, match="cannot combine candidate-resolved"):
+        service.search(
+            runtime_state_frontier=_runtime_frontier(),
+            heavy_attack_channel_block_denominator_proven=True,
+            dual_bar_frontier="gear",
+            candidate_id_prefix="objective32",
+            required_duration_seconds=20.0,
+            potion_cooldown_seconds=45.0,
+            starting_ultimate=0.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="Boss",
+            runtime_snapshot="snapshot",
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+        )
