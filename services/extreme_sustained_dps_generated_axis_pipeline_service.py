@@ -30,6 +30,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineState:
     target_identity: str
     duration_rules: tuple[object, ...]
     heavy_attack_windows: tuple[object, ...]
+    mundus_food: object | None = None
     late: object | None = None
     rotation: object | None = None
     runtime: object | None = None
@@ -52,8 +53,10 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         late_adapter: object,
         rotation_adapter: object,
         runtime_policy_adapter: object,
+        mundus_food_adapter: object | None = None,
     ) -> None:
         self.gear_adapter = gear_adapter
+        self.mundus_food_adapter = mundus_food_adapter
         self.late_adapter = late_adapter
         self.rotation_adapter = rotation_adapter
         self.runtime_policy_adapter = runtime_policy_adapter
@@ -71,18 +74,43 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
     ) -> object:
         return state.gear
 
-    def _late_state(
+    def _mundus_food_state(
         self,
         state: ExtremeSustainedDPSGeneratedAxisPipelineState,
     ) -> object:
-        if state.late is not None:
-            return state.late
+        if self.mundus_food_adapter is None:
+            raise ValueError("generated axis pipeline has no Mundus/food adapter")
+        if state.mundus_food is not None:
+            return state.mundus_food
         self._require_complete(state.gear, "gear-axis")
         context = getattr(state.gear, "context", None)
         if context is None:
             raise ValueError(
                 "complete generated gear-axis state is missing cross-axis context"
             )
+        return self.mundus_food_adapter.root(context)
+
+    def _late_state(
+        self,
+        state: ExtremeSustainedDPSGeneratedAxisPipelineState,
+    ) -> object:
+        if state.late is not None:
+            return state.late
+        if self.mundus_food_adapter is not None:
+            mundus_food = self._mundus_food_state(state)
+            self._require_complete(mundus_food, "Mundus/food-axis")
+            context = getattr(mundus_food, "context", None)
+            if context is None:
+                raise ValueError(
+                    "complete generated Mundus/food-axis state is missing cross-axis context"
+                )
+        else:
+            self._require_complete(state.gear, "gear-axis")
+            context = getattr(state.gear, "context", None)
+            if context is None:
+                raise ValueError(
+                    "complete generated gear-axis state is missing cross-axis context"
+                )
         return self.late_adapter.root(context)
 
     def _rotation_state(
@@ -156,6 +184,20 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         return replace(
             state,
             gear=stage,
+            mundus_food=None,
+            late=None,
+            rotation=None,
+            runtime=None,
+        )
+
+    @staticmethod
+    def _replace_mundus_food(
+        state: ExtremeSustainedDPSGeneratedAxisPipelineState,
+        stage: object,
+    ) -> ExtremeSustainedDPSGeneratedAxisPipelineState:
+        return replace(
+            state,
+            mundus_food=stage,
             late=None,
             rotation=None,
             runtime=None,
@@ -254,27 +296,39 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         )
 
     def axes(self) -> tuple[ExtremeSustainedDPSIndexedFrontierAxis, ...]:
-        groups = (
+        groups = [
             (
                 self.gear_adapter.axes(),
                 self._gear_state,
                 self._replace_gear,
             ),
+        ]
+        if self.mundus_food_adapter is not None:
+            groups.append(
+                (
+                    self.mundus_food_adapter.axes(),
+                    self._mundus_food_state,
+                    self._replace_mundus_food,
+                )
+            )
+        groups.extend(
             (
-                self.late_adapter.axes(),
-                self._late_state,
-                self._replace_late,
-            ),
+                (
+                    self.late_adapter.axes(),
+                    self._late_state,
+                    self._replace_late,
+                ),
             (
                 self.rotation_adapter.axes(),
                 self._rotation_state,
                 self._replace_rotation,
             ),
-            (
-                self.runtime_policy_adapter.axes(),
-                self._runtime_state,
-                self._replace_runtime,
-            ),
+                (
+                    self.runtime_policy_adapter.axes(),
+                    self._runtime_state,
+                    self._replace_runtime,
+                ),
+            )
         )
         return tuple(
             self._wrap_axis(
