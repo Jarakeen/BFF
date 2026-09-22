@@ -1427,3 +1427,10 @@ Objective #32 already had the correct static damage-stage ordering: attacker Dam
 **Layman's version:** Berserk says “I hit harder.” Vulnerability says “that target takes more damage.” Those sound similar on a dummy parse, but they are not the same math bucket.
 
 **For BFF:** runtime-state witnesses now retain their canonical EffectVariant metadata. At each exact damage timestamp, ENEMY-target Vulnerability windows are replayed against the named target and projected into the existing target Damage Taken router. The target identity must match and the effect must still be active at that instant; a debuff on an add cannot leak onto the boss, and an expired window contributes nothing.
+
+
+## 2026-09-22 — Breach belongs in resistance, not Damage Taken
+
+Major Breach reduces the target's Physical and Spell Resistance by 5948; Minor Breach reduces them by 2974. These are additive resistance reductions, not generic Damage Taken modifiers.
+
+**For BFF:** Objective #32 now replays active ENEMY-target Breach windows at the exact damage timestamp and lowers the explicit target resistance before mitigation. Major and Minor Breach may both contribute; the resulting resistance is clamped at zero so over-reduction never becomes bonus damage. Vulnerability remains a later, separate Damage Taken bucket.
