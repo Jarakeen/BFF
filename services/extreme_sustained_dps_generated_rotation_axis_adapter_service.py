@@ -121,6 +121,12 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
             build=state.assembled.build,
             seed=seed,
             potion_cooldown_seconds=state.potion_cooldown_seconds,
+            starting_ultimate=state.starting_ultimate,
+            ultimate_generation_events=state.ultimate_generation_events,
+            heroism_windows=state.heroism_windows,
+            use_scheduled_combat_attacks_for_ultimate=(
+                state.use_scheduled_combat_attacks_for_ultimate
+            ),
         )
         return self._proven_count(
             frontier,
@@ -199,7 +205,6 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
                 canonical_axes=("ultimate_policy", "potion_timing_policy"),
                 omitted_scope=(
                     "continuous potion first-use offset is not closed by anchored policy search",
-                    "deliberate post-affordability Ultimate delay is not closed by anchored policy search",
                 ),
             ),
         )
