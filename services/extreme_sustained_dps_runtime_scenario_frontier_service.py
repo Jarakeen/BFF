@@ -7,6 +7,9 @@ from dataclasses import dataclass
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
+from services.extreme_sustained_dps_runtime_event_skeleton_service import (
+    ExtremeSustainedDPSRuntimeEventSkeletonService,
+)
 from services.extreme_sustained_dps_runtime_attempt_evidence_frontier_service import (
     ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService,
 )
@@ -46,6 +49,67 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         self.external_history_frontier = (
             external_history_frontier
             or ExtremeSustainedDPSRuntimeExternalHistoryFrontierService()
+        )
+
+    def build_from_candidate(
+        self,
+        *,
+        candidate,
+        player_build: PlayerBuild,
+        effects: tuple[EffectVariant, ...],
+        occurrence_provider: object | None = None,
+        target_identity: str | None = None,
+        supplemental_events: tuple[RuntimeEvent, ...] = (),
+        supplemental_event_denominator_proven: bool = False,
+        supplemental_histories: tuple[
+            ExtremeSustainedDPSRuntimeExternalHistoryChoice,
+            ...,
+        ] = (),
+        supplemental_denominator_proven: bool,
+        source: str,
+        initial_bar: str = "front",
+        omitted_scope: tuple[str, ...] = (),
+    ) -> ExtremeSustainedDPSRuntimeScenarioFrontierResult:
+        skeleton = ExtremeSustainedDPSRuntimeEventSkeletonService.build(
+            candidate=candidate,
+            effects=tuple(effects),
+            occurrence_provider=occurrence_provider,
+            target_identity=target_identity,
+            supplemental_events=tuple(supplemental_events),
+            supplemental_denominator_proven=bool(
+                supplemental_event_denominator_proven
+            ),
+            source=f"{source}: runtime event skeletons",
+        )
+        result = self.build(
+            plan=candidate.plan,
+            player_build=player_build,
+            events=tuple(skeleton.events),
+            effects=tuple(effects),
+            event_denominator_proven=bool(skeleton.denominator_proven),
+            supplemental_histories=tuple(supplemental_histories),
+            supplemental_denominator_proven=bool(
+                supplemental_denominator_proven
+            ),
+            source=source,
+            initial_bar=initial_bar,
+            omitted_scope=tuple(omitted_scope),
+        )
+        unresolved = tuple(
+            dict.fromkeys(
+                (
+                    *tuple(skeleton.unresolved),
+                    *tuple(result.unresolved),
+                )
+            )
+        )
+        return ExtremeSustainedDPSRuntimeScenarioFrontierResult(
+            runtime=result.runtime,
+            evidence=(
+                *tuple(skeleton.evidence),
+                *tuple(result.evidence),
+            ),
+            unresolved=unresolved,
         )
 
     def build(
