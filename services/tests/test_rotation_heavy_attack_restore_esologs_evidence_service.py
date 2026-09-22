@@ -4,8 +4,10 @@ import sqlite3
 import pytest
 
 from services.rotation_heavy_attack_restore_esologs_evidence_service import (
+    RotationHeavyAttackLandedObservation,
     RotationHeavyAttackRestoreEsoLogsEvidenceService,
 )
+from services.rotation_heavy_attack_restoration_evidence_service import RotationHeavyAttackCompletionEvidence
 
 
 def _database(tmp_path):
@@ -106,6 +108,63 @@ def _insert_actor(path, *, report_code="REPORT", fight_id=7, actor_id=42, name="
             """,
             (report_code, fight_id, actor_id, None, name, display_name, "Player", "Healer", 0, "{}"),
         )
+
+
+def _completion_for_correlation(completion=3.8):
+    return RotationHeavyAttackCompletionEvidence(
+        action_time_seconds=2.0,
+        action_sequence=0,
+        completion_time_seconds=completion,
+        fully_charged=True,
+        landed=None,
+        source="verified reservation",
+    )
+
+
+def _landed_observation(timestamp=3.8, event_index=10):
+    return RotationHeavyAttackLandedObservation(
+        report_code="REPORT",
+        fight_id=7,
+        event_index=event_index,
+        timestamp=timestamp,
+        source_id=42,
+        target_id=99,
+        ability_game_id=101,
+        ability_name="Frost Staff Heavy Attack",
+        amount=12345.0,
+        hit_type=1,
+    )
+
+
+def test_correlates_one_nearby_logged_hit_to_completion_evidence():
+    promoted, unresolved = RotationHeavyAttackRestoreEsoLogsEvidenceService.correlate_landed_observations(
+        (_completion_for_correlation(),),
+        (_landed_observation(),),
+    )
+
+    assert unresolved == ()
+    assert promoted[0].landed is True
+    assert "REPORT/7/10" in promoted[0].source
+
+
+def test_correlation_fails_closed_when_logged_hit_is_ambiguous():
+    promoted, unresolved = RotationHeavyAttackRestoreEsoLogsEvidenceService.correlate_landed_observations(
+        (_completion_for_correlation(),),
+        (_landed_observation(3.75, 10), _landed_observation(3.85, 11)),
+    )
+
+    assert promoted[0].landed is None
+    assert "multiple" in unresolved[0]
+
+
+def test_correlation_fails_closed_when_no_logged_hit_is_near_completion():
+    promoted, unresolved = RotationHeavyAttackRestoreEsoLogsEvidenceService.correlate_landed_observations(
+        (_completion_for_correlation(),),
+        (_landed_observation(5.0),),
+    )
+
+    assert promoted[0].landed is None
+    assert "no reviewed" in unresolved[0]
 
 
 def test_discovers_landed_heavy_from_reviewed_damage_alias(tmp_path):
