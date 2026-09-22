@@ -28,6 +28,11 @@ _DPS_STAT_IDS = frozenset(
     }
 )
 
+_DPS_TARGET_COMPONENT_BUFFS = frozenset(
+    {
+    }
+)
+
 _DPS_COMPONENT_BUFFS = frozenset(
     {
         "Minor Berserk",
@@ -100,13 +105,16 @@ class ExtremeSustainedDPSRuntimeEffectRelevanceService:
             buff = canonical_buff_name(identity.replace("_", " "))
             if buff is not None:
                 if is_component_layer_buff(buff):
-                    if buff in _DPS_COMPONENT_BUFFS:
+                    if buff in _DPS_TARGET_COMPONENT_BUFFS:
                         if effect.target_type is SupportTargetType.ENEMY:
-                            unresolved.append(
-                                f"{effect.source} {buff} is DPS-relevant but enemy-target runtime projection is not modeled by Objective #32"
-                            )
-                        else:
                             relevant.append(effect)
+                        else:
+                            unresolved.append(
+                                f"{effect.source} {buff} requires canonical ENEMY target classification for sustained-DPS target-state projection"
+                            )
+                        continue
+                    if buff in _DPS_COMPONENT_BUFFS:
+                        relevant.append(effect)
                         continue
                     if buff in _PROVEN_NON_DPS_COMPONENT_BUFFS:
                         irrelevant.append(effect)
