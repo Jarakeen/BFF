@@ -56,7 +56,7 @@ class ExtremeSustainedDPSClosureInventory:
 
     @property
     def closure_ready(self) -> bool:
-        return self.blocking_count == 0
+        return self.blocking_count == 0 and not self.mechanics_advisories
 
 
 class ExtremeSustainedDPSClosureInventoryService:
@@ -101,8 +101,13 @@ class ExtremeSustainedDPSClosureInventoryService:
                 f"Objective #32 blocking mechanics gaps: {len(blocking_mechanics)}",
                 f"Objective #32 advisory mechanics gaps: {len(advisory_mechanics)}",
                 (
-                    "Objective #32 closure inventory is blocker-free"
-                    if not source_data and not math_review and not blocking_mechanics
+                    "Objective #32 closure inventory is fully closed"
+                    if (
+                        not source_data
+                        and not math_review
+                        and not blocking_mechanics
+                        and not advisory_mechanics
+                    )
                     else "Objective #32 closure inventory remains open"
                 ),
             ),
