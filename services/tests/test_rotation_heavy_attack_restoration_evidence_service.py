@@ -159,7 +159,7 @@ def test_explicit_reviewed_base_override_still_wins_before_modifiers() -> None:
     assert projection.restoration_events[0].amount == pytest.approx(3900.0)
 
 
-def test_canonical_resto_base_then_cycle_of_life_matches_reviewed_log_return() -> None:
+def test_canonical_resto_base_then_cycle_of_life_keeps_log_modifier_gap_explicit() -> None:
     plan = _plan(
         RotationAction(5.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
         _heavy(6.0, 0),
@@ -179,7 +179,7 @@ def test_canonical_resto_base_then_cycle_of_life_matches_reviewed_log_return() -
         ),
     )
 
-    assert projection.restoration_events[0].amount == pytest.approx(4247.1)
+    assert projection.restoration_events[0].amount == pytest.approx(3861.0)
 
 
 def test_explicit_not_fully_charged_is_known_zero_restore() -> None:
