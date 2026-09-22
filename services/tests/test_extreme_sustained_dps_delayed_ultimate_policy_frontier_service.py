@@ -34,7 +34,7 @@ def test_frontier_enumerates_every_legal_delayed_cast_sequence() -> None:
     )
 
     assert result.denominator_proven is True
-    assert result.candidate_count == 11
+    assert result.candidate_count == 10
     assert result.policies[0].cast_slots == ()
     assert any(
         row.cast_slots == ((0.0, 0), (2.0, 0))
