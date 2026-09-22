@@ -57,12 +57,23 @@ def test_unknown_runtime_identity_fails_closed() -> None:
     assert any("no reviewed sustained-DPS relevance disposition" in row for row in result.unresolved)
 
 
-def test_enemy_target_dps_component_effect_stays_open() -> None:
+def test_enemy_target_vulnerability_is_dps_relevant() -> None:
     effect = _effect(
         "major_vulnerability",
         target_type=SupportTargetType.ENEMY,
     )
     result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+    assert result.relevant == (effect,)
+    assert result.irrelevant == ()
+    assert result.unresolved == ()
+
+
+def test_vulnerability_without_enemy_target_classification_fails_closed() -> None:
+    effect = _effect(
+        "major_vulnerability",
+        target_type=SupportTargetType.SELF,
+    )
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
     assert result.relevant == ()
     assert result.irrelevant == ()
-    assert any("enemy-target runtime projection is not modeled" in row for row in result.unresolved)
+    assert any("requires canonical ENEMY target classification" in row for row in result.unresolved)
