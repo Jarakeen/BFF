@@ -1863,6 +1863,51 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.potion_timing_breakpoint_frontier",
+        domain="extreme",
+        purpose=(
+            "Reduce continuous potion first-use offsets to a finite exact family of activation/expiry boundaries and open-interval representatives for one explicit finalized observation set."
+        ),
+        implementation_path="services.extreme_sustained_dps_potion_timing_breakpoint_frontier_service",
+        inputs=(
+            "FinalizedObservationTimes",
+            "EffectivePotionBuffDurations",
+            "PotionCooldownSeconds",
+            "ExactDurationSeconds",
+        ),
+        outputs=("ExtremeSustainedDPSPotionTimingBreakpointFrontier",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_potion_timing_breakpoint_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Closes named-buff first-use timing only for the supplied finite observation set. "
+            "Exact action-time boundaries still require before/after ordering during materialization, and potion instant-restoration timing remains explicit omitted scope until separately proven."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="rotation.candidate_potion_restoration_evidence",
+        domain="rotation",
+        purpose=(
+            "Project exact scheduled POTION actions into canonical Phase 4 resource-restoration events from sourced PotionUseEvent instant-restore evidence."
+        ),
+        implementation_path="services.rotation_candidate_potion_restoration_evidence_service",
+        inputs=("PlayerBuild", "GeneratedRotationCandidate", "PotionUseEventResolver"),
+        outputs=("RotationCandidateRestorationEvidence",),
+        dependencies=(),
+        responsibilities=("rotation_candidate_potion_restoration_evidence",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS", "HEALER", "TANK"),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Emits sourced Magicka, Stamina, and Health restoration rows at the exact scheduled potion timestamps. "
+            "Potion identity mismatch, unresolved source data, unsupported restore traits, and non-integral sourced magnitudes fail closed; Phase 4 retains resource filtering, cap/waste, and ordering authority."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.delayed_ultimate_policy_frontier",
         domain="extreme",
         purpose=(
