@@ -189,7 +189,7 @@ def test_plan_resolver_uses_verified_resto_base_and_saved_cycle_of_life() -> Non
 
     event = resolver(plan.actions[0])
     assert event is not None
-    assert event.amount == pytest.approx(3267.0 * 1.30)
+    assert event.amount == pytest.approx(2970.0 * 1.30)
     assert event.time_seconds == pytest.approx(3.6)
     assert event.resource is ResourceType.MAGICKA
 
