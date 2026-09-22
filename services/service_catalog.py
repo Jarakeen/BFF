@@ -1270,6 +1270,27 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_effect_universe",
+        domain="extreme",
+        purpose=(
+            "Resolve the candidate-scoped runtime-triggered EffectVariant universe from canonical saved-build capability evidence."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_effect_universe_service",
+        inputs=("PlayerBuild", "SavedBuildCapabilityService"),
+        outputs=("ExtremeSustainedDPSRuntimeEffectUniverse",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_runtime_effect_universe",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Reuses SavedBuildCapabilityService for canonical skill/gear effect discovery and admits only variants with explicit runtime triggers. "
+            "potion_use variants are excluded because finalized plan potion state is modeled separately. "
+            "Triggerless static/passive variants remain with static/conditional build mechanics, while deferred runtime-effect conversion boundaries fail the runtime universe closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_event_skeleton",
         domain="extreme",
         purpose=(
@@ -1363,6 +1384,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
         outputs=("ExtremeSustainedDPSRuntimeScenarioFrontierResult",),
         dependencies=(
+            "extreme.sustained_dps.runtime_effect_universe",
             "extreme.sustained_dps.runtime_event_skeleton",
             "extreme.sustained_dps.runtime_attempt_evidence_frontier",
             "extreme.sustained_dps.runtime_external_history_assembly",
