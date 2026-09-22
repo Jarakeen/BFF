@@ -112,3 +112,14 @@ def test_target_protection_reduces_final_damage_without_changing_attacker_stage(
     assert result.mitigated_damage == pytest.approx(1000.0)
     assert result.damage_taken_multiplier == pytest.approx(0.95)
     assert result.final_damage == pytest.approx(950.0)
+
+
+def test_explicit_numeric_target_damage_taken_joins_named_vulnerability():
+    state = CombatState(
+        active_buffs=("Minor Vulnerability",),
+        explicit_damage_taken=0.07,
+    )
+
+    result = damage_taken_from_target_state(state)
+
+    assert result.generic == pytest.approx(0.12)
