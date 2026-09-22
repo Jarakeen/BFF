@@ -638,11 +638,15 @@ def test_sustained_dps_rotation_policy_frontier_keeps_mechanics_authorities_exte
     assert tuple(
         row.service_id
         for row in SERVICE_CATALOG.dependencies_of(service.service_id)
-    ) == ("extreme.sustained_dps.rotation_plan_frontier",)
+    ) == (
+        "extreme.sustained_dps.rotation_plan_frontier",
+        "extreme.sustained_dps.delayed_ultimate_policy_frontier",
+    )
     assert "RotationUltimateService" in service.notes
+    assert "delayed-Ultimate frontier" in service.notes
     assert "RotationScheduledActionResourceLegalityService" in service.notes
-    assert "continuous potion offsets" in service.notes
-    assert "post-affordability Ultimate delays" in service.notes
+    assert "Delayed Ultimate timing is closed" in service.notes
+    assert "continuous potion offsets remain open" in service.notes
 
 
 def test_sustained_dps_execute_and_heavy_policy_frontiers_keep_mechanics_external() -> None:
@@ -727,7 +731,7 @@ def test_sustained_dps_rotation_family_action_count_proof_avoids_permutation_mat
     assert "must supply its own proven count ceiling" in service.notes
 
 
-def test_sustained_dps_ultimate_added_action_count_proof_uses_canonical_affordability_capacity() -> None:
+def test_sustained_dps_ultimate_added_action_count_proof_uses_exact_scheduled_policy() -> None:
     service = canonical_service_for("extreme_sustained_dps_ultimate_added_action_count_proof")
 
     assert service is not None
@@ -736,8 +740,9 @@ def test_sustained_dps_ultimate_added_action_count_proof_uses_canonical_affordab
         row.service_id
         for row in SERVICE_CATALOG.dependencies_of(service.service_id)
     ) == ("extreme.sustained_dps.rotation_policy_frontier",)
-    assert "UltimateResourceTimeline" in service.notes
-    assert "not a claim that every cast occurs" in service.notes
+    assert "exact scheduled Ultimate actions" in service.notes
+    assert "final canonical resource legality" in service.notes
+    assert "safe added-action ceiling" in service.notes
 
 
 def test_sustained_dps_closed_descendant_action_ceiling_requires_local_denominator_closure() -> None:
