@@ -3,6 +3,9 @@ from __future__ import annotations
 from minmax.rotation_ability_priority import AbilityPriorityList
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.rotation_recast import RotationRecastRule
+from services.extreme_sustained_dps_heavy_attack_policy_frontier_service import (
+    ExtremeSustainedDPSHeavyAttackPolicyFrontierService,
+)
 from services.extreme_sustained_dps_heavy_attack_window_discovery_service import (
     ExtremeSustainedDPSHeavyAttackChannelBlock,
     ExtremeSustainedDPSHeavyAttackWindowDiscoveryService,
@@ -166,4 +169,57 @@ def test_unproven_encounter_channel_block_family_keeps_discovery_open() -> None:
     assert any(
         "channel-block denominator is not proven complete" in item
         for item in result.unresolved
+    )
+
+
+
+def test_discovered_windows_expand_through_real_policy_frontier_with_scheduler_materializer() -> None:
+    seed = _seed(
+        (
+            _skill(0.0, "Long Buff"),
+            _skill(2.0, "Long Buff"),
+            _skill(3.0, "A"),
+            _skill(4.0, "B"),
+            _skill(5.0, "C"),
+        ),
+        duration=5.0,
+    )
+    discovery = ExtremeSustainedDPSHeavyAttackWindowDiscoveryService.discover(
+        seed=seed,
+        duration_rules=_rules(),
+        channel_block_denominator_proven=True,
+    )
+    target = tuple(
+        row for row in discovery.windows
+        if row.time_seconds == 2.0
+    )
+    assert len(target) == 1
+
+    frontier = ExtremeSustainedDPSHeavyAttackPolicyFrontierService().expand(
+        seed=seed,
+        windows=target,
+        candidate_materializer=lambda selected: (
+            ExtremeSustainedDPSHeavyAttackWindowDiscoveryService.materialize(
+                seed=seed,
+                windows=selected,
+                duration_rules=_rules(),
+            )
+        ),
+    )
+
+    assert frontier.denominator_proven is True
+    assert tuple(row.policy_id for row in frontier.candidates) == (
+        "heavy:none",
+        "heavy:2/0",
+    )
+    heavy = frontier.candidates[1]
+    assert heavy.completion_evidence_count == 1
+    assert any(
+        action.kind is RotationActionKind.HEAVY_ATTACK
+        and action.time_seconds == 2.0
+        for action in heavy.candidate.plan.actions
+    )
+    assert not any(
+        action.time_seconds == 3.0
+        for action in heavy.candidate.plan.actions
     )
