@@ -295,7 +295,7 @@ def test_fully_charged_blocked_heavy_restoration_is_unresolved() -> None:
 
     assert projection.is_resolved is False
     assert projection.restoration_events == ()
-    assert "blocked-hit resource-restoration semantics are unresolved" in projection.unresolved[0]
+    assert "50% block reduction" in projection.unresolved[0]
 
 
 def test_fully_charged_landed_false_without_outcome_fails_closed() -> None:
