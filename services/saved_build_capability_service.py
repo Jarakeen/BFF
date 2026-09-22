@@ -43,6 +43,17 @@ class SavedBuildCapabilityAudit:
 
 
 @dataclass(frozen=True)
+class SavedBuildEffectVariantResolution:
+    effects: tuple[EffectVariant, ...]
+    unresolved: tuple[str, ...] = ()
+    boundaries: tuple[str, ...] = ()
+
+    @property
+    def resolved(self) -> bool:
+        return not self.unresolved
+
+
+@dataclass(frozen=True)
 class RaidCoverageSnapshot:
     """Static build evidence only; no assignments or observed uptime."""
 
@@ -492,6 +503,66 @@ class SavedBuildCapabilityService:
         )
         self._gear_component_cache[cache_key] = result
         return result
+
+    def resolve_effect_variants(
+        self,
+        build: PlayerBuild,
+    ) -> SavedBuildEffectVariantResolution:
+        """Resolve canonical skill/gear/potion EffectVariants without roster progression.
+
+        This is the reusable capability-only seam for generated or unsaved builds.
+        It deliberately skips saved-character progression and standing static-context
+        evaluation; callers that need the full saved-build audit should use audit_build.
+        """
+        unresolved: list[str] = []
+        boundaries: list[str] = []
+        effects: list[EffectVariant] = []
+
+        for active_bar in ("front", "back"):
+            skill_component = self._skill_component(build, active_bar)
+            unresolved.extend(skill_component.unresolved)
+            boundaries.extend(skill_component.boundaries)
+            effects.extend(skill_component.effects)
+
+            gear_component = self._gear_component(build, active_bar)
+            unresolved.extend(gear_component.unresolved)
+            boundaries.extend(gear_component.boundaries)
+            effects.extend(gear_component.effects)
+
+        potion_name = self._clean(build.Potion)
+        if potion_name:
+            potion = self.potions.resolve(potion_name)
+            unresolved.extend(potion.unresolved)
+            if potion.effects:
+                effects.extend(potion.effects)
+                boundaries.append(
+                    f"Potion availability resolved without standing uptime: {potion_name}"
+                )
+                if getattr(potion, "capability_resolved", False) and not getattr(potion, "resolved", False):
+                    boundaries.append(
+                        "Potion effect family resolved from exact saved-label semantics and "
+                        f"canonical database effects; recipe/formula provenance unavailable: {potion_name}"
+                    )
+
+        deduped: list[EffectVariant] = []
+        seen: set[tuple[str, str, str, str]] = set()
+        for effect in effects:
+            key = (
+                effect.name,
+                str(effect.layer),
+                str(effect.source),
+                str(effect.condition or ""),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(effect)
+
+        return SavedBuildEffectVariantResolution(
+            effects=tuple(deduped),
+            unresolved=tuple(dict.fromkeys(unresolved)),
+            boundaries=tuple(dict.fromkeys(boundaries)),
+        )
 
     def audit_build(self, build: PlayerBuild) -> SavedBuildCapabilityAudit:
         cache_key = self._build_cache_key(build)
