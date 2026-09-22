@@ -55,8 +55,12 @@ def rehome_plan_header_controls(
     difficulty_combo = page.difficulty_combo
     plan_name_edit = page.plan_name_edit
     saved_plan_combo = page.saved_plan_combo
+    team_combo = getattr(page, "team_combo", None)
 
-    for widget in (trial_combo, difficulty_combo, plan_name_edit, saved_plan_combo):
+    detachable = [trial_combo, difficulty_combo, plan_name_edit, saved_plan_combo]
+    if isinstance(team_combo, QWidget):
+        detachable.append(team_combo)
+    for widget in detachable:
         _detach_header_host(page, widget)
 
     buttons: list[QPushButton] = []
@@ -86,6 +90,8 @@ def rehome_plan_header_controls(
     row.addWidget(_field("TRIAL", trial_combo, minimum_width=180), 3)
     row.addWidget(_field("DIFFICULTY", difficulty_combo, minimum_width=150), 2)
     row.addWidget(_field("PLAN", plan_name_edit, minimum_width=210), 3)
+    if isinstance(team_combo, QWidget):
+        row.addWidget(_field("TEAM", team_combo, minimum_width=180), 2)
     row.addWidget(_field("SAVED PLAN", saved_plan_combo, minimum_width=220), 3)
 
     actions_host = QWidget()
