@@ -107,13 +107,17 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             evidence_source=(
                 "minmax/character_build/passive_grant.py; "
                 "services/rotation_build_effect_duration_service.py; "
-                "minmax/context_factory.py; services/rotation_static_build_context_service.py"
+                "minmax/context_factory.py; services/rotation_static_build_context_service.py; "
+                "minmax/racial_passive_stat_repository.py; "
+                "services/extreme_resource_racial_passive_ownership_service.py"
             ),
             consumers=ALL_THREE,
             missing_evidence=(
-                "Expand the verified passive catalog beyond the resolver families already owned "
-                "by BuildCalculationContextFactory, especially missing weapon/world/race/vampire/"
-                "werewolf and other rotation-relevant passives, including "
+                "Expand the verified rotation-runtime passive catalog beyond the resolver families "
+                "already owned by BuildCalculationContextFactory. Racial passive ownership/stat "
+                "parsing exists separately for Extreme resource objectives but is not yet a general "
+                "rotation-runtime bridge; missing weapon/world/vampire/werewolf and other passives "
+                "likewise require runtime ownership, including "
                 "rank, slot/bar/equipment prerequisites, trigger conditions, duration/resource/"
                 "status/target effects, and stacking semantics."
             ),
