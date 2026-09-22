@@ -80,6 +80,7 @@ def _evidence(
         action_sequence=sequence,
         completion_time_seconds=completion,
         fully_charged=fully_charged,
+        landed=True,
         verified_base_restore=base_restore,
         modifiers=modifiers,
         source="verified test heavy",
@@ -206,6 +207,49 @@ def test_fully_charged_flame_staff_uses_verified_update35_base_restore() -> None
     assert len(projection.restoration_events) == 1
     assert projection.restoration_events[0].resource is ResourceType.MAGICKA
     assert projection.restoration_events[0].amount == pytest.approx(2838.0)
+
+
+def test_fully_charged_heavy_without_hit_evidence_is_unresolved() -> None:
+    evidence = RotationHeavyAttackCompletionEvidence(
+        action_time_seconds=2.0,
+        action_sequence=0,
+        completion_time_seconds=4.0,
+        fully_charged=True,
+        verified_base_restore=None,
+        source="completion without hit proof",
+    )
+    projection = RotationHeavyAttackRestorationEvidenceService().project(
+        build=_build(front_weapon=WeaponType.FLAME_STAFF),
+        plan=_plan(_heavy(2.0)),
+        initial_bar="front",
+        completion_evidence=(evidence,),
+    )
+
+    assert projection.is_resolved is False
+    assert projection.restoration_events == ()
+    assert "lacks successful-hit evidence" in projection.unresolved[0]
+
+
+def test_fully_charged_heavy_that_did_not_land_restores_nothing() -> None:
+    evidence = RotationHeavyAttackCompletionEvidence(
+        action_time_seconds=2.0,
+        action_sequence=0,
+        completion_time_seconds=4.0,
+        fully_charged=True,
+        landed=False,
+        verified_base_restore=None,
+        source="blocked or dodged heavy",
+    )
+    projection = RotationHeavyAttackRestorationEvidenceService().project(
+        build=_build(front_weapon=WeaponType.FLAME_STAFF),
+        plan=_plan(_heavy(2.0)),
+        initial_bar="front",
+        completion_evidence=(evidence,),
+    )
+
+    assert projection.is_resolved is True
+    assert projection.unresolved == ()
+    assert projection.restoration_events == ()
 
 
 def test_completion_after_plan_horizon_is_unresolved() -> None:
