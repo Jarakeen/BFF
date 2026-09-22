@@ -1552,6 +1552,29 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_mundus_food_axis_adapter",
+        domain="extreme",
+        purpose=(
+            "Enumerate a proven finite Mundus and food denominator as exact generated-search build mutations rather than using action-level dominance to choose the final witness."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_mundus_food_axis_adapter_service",
+        inputs=("CrossAxisContext", "ProvenMundusChoices", "ProvenFoodChoices"),
+        outputs=("IndexedFrontierAxes", "MundusFoodAxisCoverageProof"),
+        dependencies=(
+            "extreme.sustained_dps.generated_frontier_wiring",
+            "extreme.sustained_dps.axis_dominance_composition",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_mundus_food_axis_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Mundus is selected before food and both choices are written onto the evolving exact build witness. "
+            "The adapter requires an explicitly proven finite denominator; action-level joint dominance remains a pruning proof, not a final-build selector."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_axis_pipeline_search",
         domain="extreme",
         purpose=(
@@ -1636,6 +1659,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
         dependencies=(
             "extreme.sustained_dps.generated_gear_axis_adapter",
+            "extreme.sustained_dps.generated_mundus_food_axis_adapter",
             "extreme.sustained_dps.generated_late_axis_adapter",
             "extreme.sustained_dps.generated_rotation_axis_adapter",
             "extreme.sustained_dps.generated_runtime_policy_axis_adapter",
@@ -1648,9 +1672,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Explicit immutable stage transitions preserve each adapter's native state, "
-            "reset downstream selections after upstream mutation, forward axis-local bound "
-            "providers, and derive stable runtime candidate identity from selected structural "
-            "rotation coordinates."
+            "optionally insert exact-witness Mundus/food mutation after gear, reset downstream selections after upstream mutation, "
+            "forward axis-local bound providers, and derive stable runtime candidate identity from selected structural rotation coordinates."
         ),
     ),
     ServiceDescriptor(
