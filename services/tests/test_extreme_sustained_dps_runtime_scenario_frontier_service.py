@@ -8,6 +8,7 @@ from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_runtime_scenario_frontier_service import (
     ExtremeSustainedDPSRuntimeScenarioFrontierService,
 )
+from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.extreme_sustained_dps_runtime_witness_composition_service import (
     ExtremeSustainedDPSRuntimeExternalHistoryChoice,
 )
@@ -125,3 +126,84 @@ def test_scenario_builder_preserves_explicit_omitted_scope() -> None:
         "external debuff timing family omitted",
     )
     assert any("remains open" in row for row in result.evidence)
+
+
+
+def test_candidate_builder_derives_plan_owned_runtime_triggers() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=RotationPlan(
+            character_name="Generated",
+            build_name="Candidate",
+            duration_seconds=6.0,
+            actions=(
+                RotationAction(
+                    1.0,
+                    0,
+                    RotationActionKind.ULTIMATE,
+                    "Ultimate A",
+                    "front",
+                ),
+            ),
+        ),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    effect = EffectVariant(
+        name="ultimate-proc",
+        layer=EffectLayer.PROC,
+        source="Ultimate Proc",
+        trigger="ultimate_activation_in_combat",
+        duration=4.0,
+    )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService().build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        effects=(effect,),
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed boss scenario",
+    )
+
+    assert result.unresolved == ()
+    assert result.frontier.denominator_proven is True
+    assert result.frontier.candidate_count == 1
+    assert any(
+        entry.trigger == "ultimate_activation_in_combat"
+        for entry in result.frontier.choices[0].snapshot.effect_attempts
+    )
+
+
+def test_candidate_builder_preserves_open_scenario_trigger_family() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    effect = EffectVariant(
+        name="truth-proc",
+        layer=EffectLayer.PROC,
+        source="Armor of Truth",
+        trigger="damage_off_balance_target",
+        duration=10.0,
+    )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService().build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        effects=(effect,),
+        supplemental_event_denominator_proven=False,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="partial boss scenario",
+    )
+
+    assert result.frontier.denominator_proven is False
+    assert any(
+        "Scenario-owned runtime event skeleton denominator is not proven complete"
+        in row
+        for row in result.unresolved
+    )
