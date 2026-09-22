@@ -926,7 +926,12 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Distinguish proof of the searched finite generated denominator from proof of the full theoretical MOST Sustained DPS objective."
         ),
         implementation_path="services.extreme_sustained_dps_theoretical_maximum_closure_service",
-        inputs=("GeneratedSearchResult", "CanonicalAxisDominanceComposition", "OmittedTheoreticalScope"),
+        inputs=(
+            "GeneratedSearchResult",
+            "CanonicalAxisDominanceComposition",
+            "OmittedTheoreticalScope",
+            "ExtremeSustainedDPSClosureInventory",
+        ),
         outputs=("ExtremeSustainedDPSTheoreticalMaximumClosure",),
         dependencies=(
             "extreme.sustained_dps.axis_dominance_composition",
@@ -939,7 +944,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "A finite-tree maximum is not promoted to theoretical Objective #32 closure unless every canonical mutation axis is required and covered, "
-            "the finite search itself is proven, and no explicit theoretical scope remains omitted."
+            "the finite search itself is proven, no explicit theoretical scope remains omitted, and supplied mechanics closure inventory is fully closed."
         ),
     ),
     ServiceDescriptor(
