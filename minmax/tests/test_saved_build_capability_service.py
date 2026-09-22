@@ -6,7 +6,7 @@ from minmax.character_progression import CharacterProgression
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.support_effect_category import SupportEffectCategory
 from minmax.support_target_type import SupportTargetType
-from models.build_model import PlayerBuild
+from models.build_model import ChampionPointEntry, PlayerBuild
 from services.build_service import BuildService
 from services.saved_build_capability_service import SavedBuildCapabilityService
 
@@ -135,6 +135,75 @@ def test_audit_keeps_consumable_conditional_and_not_standing_unresolved(tmp_path
     assert result.resolved_effects == (potion_effect,)
     assert result.conditional_sources == ("Potion: spell power",)
     assert "Potion availability resolved without standing uptime: spell power" in result.boundaries
+
+
+def test_effect_variant_resolution_includes_verified_dynamic_champion_point_effects(tmp_path):
+    cp_effect = EffectVariant(
+        name="damage_shield",
+        layer=EffectLayer.PROC,
+        source="Champion Point: From the Brink",
+        trigger="on_heal_target_below_25_percent_health",
+    )
+
+    class _ChampionPoints:
+        def resolve(self, name, points):
+            assert name == "From the Brink"
+            assert points == 50
+            return (cp_effect,), ()
+
+    service = SavedBuildCapabilityService(
+        BuildService(tmp_path / "builds.json"),
+        tmp_path / "eso.db",
+        skills=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        gear=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        potions=SimpleNamespace(resolve=lambda *_args, **_kwargs: SimpleNamespace(effects=(), unresolved=())),
+        champion_point_effect_resolver=_ChampionPoints(),
+    )
+    service._skill_component = lambda _build, _bar: SimpleNamespace(
+        effects=(), unresolved=(), boundaries=()
+    )
+    service._gear_component = lambda _build, _bar: SimpleNamespace(
+        effects=(), unresolved=(), boundaries=()
+    )
+
+    result = service.resolve_effect_variants(
+        PlayerBuild(
+            Name="Generated",
+            BuildName="Candidate",
+            ChampionPoints=[ChampionPointEntry(Name="From the Brink", Points="50")],
+        )
+    )
+
+    assert result.resolved is True
+    assert result.effects == (cp_effect,)
+
+
+def test_effect_variant_resolution_fails_closed_on_invalid_champion_point_allocation(tmp_path):
+    service = SavedBuildCapabilityService(
+        BuildService(tmp_path / "builds.json"),
+        tmp_path / "eso.db",
+        skills=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        gear=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        potions=SimpleNamespace(resolve=lambda *_args, **_kwargs: SimpleNamespace(effects=(), unresolved=())),
+        champion_point_effect_resolver=SimpleNamespace(resolve=lambda *_args: ((), ())),
+    )
+    service._skill_component = lambda _build, _bar: SimpleNamespace(
+        effects=(), unresolved=(), boundaries=()
+    )
+    service._gear_component = lambda _build, _bar: SimpleNamespace(
+        effects=(), unresolved=(), boundaries=()
+    )
+
+    result = service.resolve_effect_variants(
+        PlayerBuild(
+            ChampionPoints=[ChampionPointEntry(Name="From the Brink", Points="banana")]
+        )
+    )
+
+    assert result.resolved is False
+    assert result.unresolved == (
+        "Champion Point entry has invalid allocation: From the Brink: banana",
+    )
 
 
 def test_effect_variant_resolution_does_not_require_saved_character_progression(tmp_path):
