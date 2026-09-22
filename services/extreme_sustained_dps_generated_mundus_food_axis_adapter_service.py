@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from models.build_model import PlayerBuild
+from services.extreme_sustained_dps_axis_dominance_composition_service import (
+    ExtremeSustainedDPSAxisCoverageProof,
+)
 from services.extreme_sustained_dps_cross_axis_context_service import (
     ExtremeSustainedDPSCrossAxisContext,
 )
@@ -141,6 +144,22 @@ class ExtremeSustainedDPSGeneratedMundusFoodAxisAdapterService:
     ) -> ExtremeSustainedDPSGeneratedMundusFoodAxisState:
         return ExtremeSustainedDPSGeneratedMundusFoodAxisState(
             context=context
+        )
+
+    def coverage(self) -> ExtremeSustainedDPSAxisCoverageProof:
+        unresolved = self.unresolved
+        if not self.denominator_proven and not unresolved:
+            unresolved = (
+                "Generated Mundus/food denominator is not proven complete",
+            )
+        return ExtremeSustainedDPSAxisCoverageProof(
+            source="generated exact-witness Mundus + food denominator",
+            dominated_axes=(
+                ("mundus", "food")
+                if self.denominator_proven
+                else ()
+            ),
+            unresolved=tuple(unresolved),
         )
 
     def axes(self) -> tuple[ExtremeSustainedDPSIndexedFrontierAxis, ...]:
