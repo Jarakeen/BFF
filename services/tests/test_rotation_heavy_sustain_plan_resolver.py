@@ -85,32 +85,36 @@ def _evidence() -> tuple[RotationHeavyAttackCompletionEvidence, ...]:
             action_sequence=0,
             completion_time_seconds=3.6,
             fully_charged=True,
-            landedef test_unowned_heavy_restore_modifiers_fail_closed() -> None:
-    service = RotationHeavySustainProjectionService(
-        replay_service=_ReplayService(),
-        progression_adapter=_ProgressionAdapter(CharacterProgression(passive_ranks={})),
-    )
-    heavy = RotationAction(4.0, 0, RotationActionKind.HEAVY_ATTACK)
-    evidence = _evidence(start=4.0, completion=5.2)
-    evidence = replace(
-        evidence,
-        modifiers=HeavyAttackRestorationModifiers(champion_point_percent=0.10),
-    )
-    result = service.project(
-        character_build=_character_build(), sustain_build=_saved_build(),
-        plan=_plan(heavy), resource=ResourceType.MAGICKA, initial_bar="front",
-        completion_evidence=(evidence,),
-    )
-    assert result.is_resolved is False
-    assert any("lacks canonical progression ownership" in item for item in result.unresolved)
-
-
-d=True,
+            landed=True,
             verified_base_restore=None,
             source="reviewed test heavy",
         ),
     )
 
+
+
+def test_unowned_heavy_restore_modifiers_fail_closed() -> None:
+    service = RotationHeavySustainProjectionService(
+        replay_service=_ReplayService(),
+        progression_adapter=_ProgressionAdapter(CharacterProgression(passive_ranks={})),
+    )
+    evidence = replace(
+        _evidence()[0],
+        modifiers=HeavyAttackRestorationModifiers(champion_point_percent=0.10),
+    )
+    result = service.project(
+        character_build=_character_build(),
+        sustain_build=_saved_build(),
+        plan=_plan(),
+        resource=ResourceType.MAGICKA,
+        initial_bar="front",
+        completion_evidence=(evidence,),
+    )
+    assert result.is_resolved is False
+    assert any(
+        "lacks canonical progression ownership" in item
+        for item in result.unresolved
+    )
 
 def test_verified_reservation_does_not_invent_successful_hit() -> None:
     plan = RotationPlan(
