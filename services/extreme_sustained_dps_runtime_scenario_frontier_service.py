@@ -162,7 +162,6 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             source=source,
             initial_bar=initial_bar,
             omitted_scope=tuple(omitted_scope),
-            effects=tuple(effects),
         )
         unresolved = tuple(
             dict.fromkeys(
