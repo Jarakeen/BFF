@@ -119,14 +119,12 @@ class RotationHeavySustainProjectionService:
     def completion_evidence_from_verified_reservations(
         cls,
         plan: RotationPlan,
-        *,
-        landed: bool | None = None,
     ) -> tuple[RotationHeavyAttackCompletionEvidence, ...]:
         """Promote reviewed 1.8s scheduler reservations to full-charge evidence.
 
         The duration-aware scheduler records reservation provenance only after the
         caller-proven decision passed channel-boundary validation. This adapter is
-        deliberately narrow: the reservation must name ``heavy_attack``, match one
+        deliberately narrow and never proves hit outcome: the reservation must name ``heavy_attack``, match one
         scheduled heavy on the same bar and start timestamp, and reserve exactly the
         reviewed 1.8-second full-charge gameplay window. Any other duration remains
         unpromoted so older/reference animation timings cannot silently redefine the
@@ -173,7 +171,7 @@ class RotationHeavySustainProjectionService:
                     action_sequence=action.sequence,
                     completion_time_seconds=end,
                     fully_charged=True,
-                    landed=landed,
+                    landed=None,
                     verified_base_restore=None,
                     source=(
                         "duration-aware verified 1.8s heavy-attack channel reservation"
