@@ -233,21 +233,25 @@ class ExtremeSustainedDPSGeneratedGearAxisAdapterService:
                 "Dual Bar Gear",
                 candidate_count=self._dual_count,
                 candidate_at=self._dual_at,
+                canonical_axes=("gear_topology", "named_gear_realization"),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
                 "Armor Traits and Enchants",
                 candidate_count=self._armor_count,
                 candidate_at=self._armor_at,
+                canonical_axes=("armor_traits", "armor_enchants"),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
                 "Jewelry Traits and Enchants",
                 candidate_count=self._jewelry_count,
                 candidate_at=self._jewelry_at,
+                canonical_axes=("jewelry_traits", "jewelry_enchants"),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
                 "Weapon Traits and Enchants",
                 candidate_count=self._weapon_count,
                 candidate_at=self._weapon_at,
+                canonical_axes=("weapon_types", "weapon_traits", "weapon_enchants"),
             ),
         )
 
