@@ -33,6 +33,28 @@ class FinchGearNeedRequest:
 
 
 @dataclass(frozen=True, slots=True)
+class FinchRegistrationHistory:
+    kind: str
+    value: str
+    first_seen: str = ""
+    last_seen: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class FinchRegistration:
+    discord_user_id: int
+    guild_id: int
+    team_name: str
+    player_name: str
+    discord_username: str = ""
+    discord_display_name: str = ""
+    discord_global_name: str = ""
+    discord_avatar_url: str = ""
+    registered_at: str = ""
+    identity_history: tuple[FinchRegistrationHistory, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class FinchSharedSnapshot:
     kind: str
     snapshot_key: str
@@ -124,6 +146,60 @@ class FinchApiClient:
             client=str(payload.get("client") or ""),
             client_scopes=scopes,
         )
+
+    def registrations_private(
+        self,
+        *,
+        guild_id: int | None = None,
+    ) -> tuple[FinchRegistration, ...]:
+        path = "/api/v1/registrations/private"
+        if guild_id is not None:
+            path += "?guild_id=" + quote(str(int(guild_id)), safe="")
+        payload = self._request_json(path)
+        rows = payload.get("registrations")
+        if not isinstance(rows, list):
+            raise FinchApiError("Finch returned an invalid registrations response.")
+        result: list[FinchRegistration] = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            try:
+                discord_user_id = int(row.get("discord_user_id"))
+                row_guild_id = int(row.get("guild_id"))
+            except (TypeError, ValueError) as exc:
+                raise FinchApiError(
+                    "Finch returned a registration with invalid identity fields."
+                ) from exc
+            raw_history = row.get("identity_history")
+            history: list[FinchRegistrationHistory] = []
+            if isinstance(raw_history, list):
+                for item in raw_history:
+                    if not isinstance(item, dict):
+                        continue
+                    history.append(
+                        FinchRegistrationHistory(
+                            kind=str(item.get("kind") or "").strip(),
+                            value=str(item.get("value") or "").strip(),
+                            first_seen=str(item.get("first_seen") or "").strip(),
+                            last_seen=str(item.get("last_seen") or "").strip(),
+                        )
+                    )
+            result.append(
+                FinchRegistration(
+                    discord_user_id=discord_user_id,
+                    guild_id=row_guild_id,
+                    team_name=str(row.get("team_name") or "").strip(),
+                    player_name=str(row.get("player_name") or "").strip(),
+                    discord_username=str(row.get("discord_username") or "").strip(),
+                    discord_display_name=str(row.get("discord_display_name") or "").strip(),
+                    discord_global_name=str(row.get("discord_global_name") or "").strip(),
+                    discord_avatar_url=str(row.get("discord_avatar_url") or "").strip(),
+                    registered_at=str(row.get("registered_at") or "").strip(),
+                    identity_history=tuple(history),
+                )
+            )
+        return tuple(result)
+
 
     def pending_gear_needs(self) -> tuple[FinchGearNeedRequest, ...]:
         payload = self._request_json("/api/v1/gear-needs/pending")
@@ -344,5 +420,7 @@ __all__ = [
     "FinchApiError",
     "FinchConnectionStatus",
     "FinchGearNeedRequest",
+    "FinchRegistration",
+    "FinchRegistrationHistory",
     "FinchSharedSnapshot",
 ]
