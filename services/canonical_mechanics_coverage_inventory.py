@@ -249,21 +249,27 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             capability=(
                 "Saved weapon enchantments can be resolved to canonical CombatEffects and "
                 "target-debuff EffectVariants with active-bar ownership, duration, and "
-                "trait-adjusted magnitude. Cooldown-modifier rules also exist independently."
+                "trait-adjusted magnitude. Cooldown-modifier rules also exist independently. "
+                "A fail-closed cadence evidence catalog now records community-observed "
+                "activation causes, per-enchantment cooldown scope, off-bar source persistence, "
+                "and provisional effect-family cooldown observations without promoting them "
+                "to authoritative combat math."
             ),
             evidence_source=(
                 "minmax/weapon_enchantment_repository.py; "
                 "minmax/weapon_enchantment_effect_service.py; "
                 "minmax/combat_cooldown_rules.py; "
+                "minmax/weapon_enchantment_runtime_cadence.py; "
                 "services/saved_build_capability_service.py"
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
-                "Provide authoritative weapon-enchantment activation trigger semantics, base "
-                "proc cooldown by enchantment/effect family, off-bar persistence/source ownership, "
-                "shared cooldown or target lockout behavior, and any interaction with direct, "
-                "periodic, light, heavy, or proc damage. Only then may trait-adjusted cooldown "
-                "rules be composed into exact runtime cadence."
+                "Promote the provisional cadence topology only after current-version authoritative "
+                "evidence resolves exact base cooldowns (especially the disputed buff/debuff "
+                "family), eligible periodic/direct weapon-skill trigger rules, off-bar source "
+                "ownership, independent/shared cooldown and target-lockout behavior, and proc-"
+                "damage exclusions. Only then may trait-adjusted cooldown rules be composed "
+                "into exact runtime cadence."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
