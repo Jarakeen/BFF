@@ -92,3 +92,17 @@ def test_globally_proven_flag_with_unresolved_search_evidence_promotes_no_covera
         "mechanically unresolved" in row
         for row in result.proof.unresolved
     )
+
+
+
+def test_complete_heavy_attack_axis_reaches_tree_coverage_without_omission() -> None:
+    result = ExtremeSustainedDPSGeneratedTreeCoverageService.from_search(
+        search_result=SimpleNamespace(global_maximum_proven=True),
+        axis_inventory=_inventory(
+            searched_canonical_axes=("heavy_attack_policy",),
+            omitted_scope=(),
+        ),
+    )
+
+    assert result.proof.dominated_axes == ("heavy_attack_policy",)
+    assert result.proof.omitted_scope == ()
