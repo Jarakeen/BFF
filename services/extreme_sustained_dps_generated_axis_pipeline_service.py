@@ -305,6 +305,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             candidate_at=candidate_at,
             bound_inputs=bound_inputs,
             canonical_axes=axis.canonical_axes,
+            omitted_scope=axis.omitted_scope,
         )
 
     def root(
