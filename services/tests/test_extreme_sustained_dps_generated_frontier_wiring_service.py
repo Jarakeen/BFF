@@ -201,3 +201,16 @@ def test_indexed_axis_rejects_unknown_canonical_axis_metadata() -> None:
             candidate_at=lambda state, _index: state,
             canonical_axes=("telepathy",),
         )
+
+
+
+def test_indexed_axis_normalizes_omitted_scope_metadata() -> None:
+    axis = ExtremeSustainedDPSIndexedFrontierAxis(
+        "Tagged",
+        candidate_count=lambda _state: 1,
+        candidate_at=lambda state, _index: state,
+        canonical_axes=("ultimate_policy",),
+        omitted_scope=(" delayed timing open ", "delayed timing open", ""),
+    )
+
+    assert axis.omitted_scope == ("delayed timing open",)
