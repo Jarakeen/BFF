@@ -199,6 +199,7 @@ class RotationRuntimeBarProvenanceService:
                 snapshot_time_seconds=snapshot.snapshot_time_seconds,
                 recipient_actor_id=snapshot.recipient_actor_id,
                 group_member_ids=snapshot.group_member_ids,
+                runtime_history_complete=snapshot.runtime_history_complete,
                 bar_transition_history_complete=True,
             ),
             attempts_tagged=tagged,
