@@ -119,7 +119,10 @@ class RotationPlanRuntimeCombatStateService:
             initial_bar=initial_bar,
         )
 
-        if not runtime_snapshot_source.runtime_history:
+        if (
+            not runtime_snapshot_source.runtime_history
+            and not runtime_snapshot_source.runtime_history_complete
+        ):
             return RotationPlanRuntimeCombatStateResult(
                 time_seconds=instant,
                 sequence=boundary_sequence,
