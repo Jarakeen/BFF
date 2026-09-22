@@ -196,3 +196,14 @@ def test_root_requires_explicit_runtime_policy_identity_and_evidence(
 
     with pytest.raises(ValueError, match=message):
         adapter.root(SimpleNamespace(plan="plan"), **values)
+
+
+
+def test_heavy_attack_axis_carries_reviewed_window_omission() -> None:
+    adapter = _adapter()
+    heavy_axis = adapter.axes()[1]
+
+    assert heavy_axis.canonical_axes == ("heavy_attack_policy",)
+    assert heavy_axis.omitted_scope == (
+        "Heavy Attack windows outside the caller-supplied reviewed safe set are not claimed closed",
+    )
