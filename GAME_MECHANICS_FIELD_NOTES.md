@@ -1476,3 +1476,10 @@ The repo has canonical rules that can modify a weapon enchantment cooldown once 
 A runtime effect can fail sustained-DPS closure because the game evidence is incomplete (for example target classification or scaling) or because the identity is known but BFF lacks a reviewed objective-specific math disposition. Those are different engineering jobs.
 
 **For BFF:** Objective #32 runtime relevance now reports source-data blockers separately from math/review blockers while retaining the same fail-closed unresolved output. This makes closure audits actionable without weakening correctness.
+
+
+## 2026-09-22 — A complete search tree is not a complete combat model
+
+Proving the maximum over every branch in a generated finite tree proves only that tree. If a relevant combat mechanic is missing, partially modeled, or lacks source/math review, the theoretical ESO-wide objective is still open even when every represented mutation axis is covered.
+
+**For BFF:** Objective #32 now carries a closure inventory that separates runtime source-data debt, runtime math/review debt, critical mechanics gaps, and partial mechanics coverage. The theoretical maximum gate can consume that inventory, and the canonical blocker report explains the same debt rather than allowing finite-search completion to masquerade as a fully closed combat model.
