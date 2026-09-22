@@ -11,6 +11,9 @@ from minmax.combat_damage_modifiers import (
     damage_taken_from_target_state,
 )
 from minmax.combat_state import CombatState
+from minmax.combat_target_critical_damage import (
+    critical_damage_taken_percent_from_target_state,
+)
 from minmax.combat_state_snapshot import CombatStateSnapshot
 from minmax.damage_done import DamageDoneModifiers
 from minmax.dd_damage import DDDamageEvent, calculate_dd_damage
@@ -443,6 +446,7 @@ class RotationCandidateSkillDamageEvidenceService:
                             tick_target_state,
                         ),
                         damage_taken=damage_taken_from_target_state(tick_target_state),
+                        target_combat_state=tick_target_state,
                     ) * self._occurrence_multiplier(semantic, occurrence_index)
                 continue
 
@@ -453,6 +457,7 @@ class RotationCandidateSkillDamageEvidenceService:
                 dd_stats=dd_stats,
                 damage_done=damage_done,
                 damage_taken=damage_taken,
+                target_combat_state=action_target_state,
             )
             component_damage *= float(execute_eligibility.damage_multiplier)
             total_damage += component_damage
@@ -605,6 +610,7 @@ class RotationCandidateSkillDamageEvidenceService:
                     dd_stats=dd_stats,
                     damage_done=damage_done,
                     damage_taken=damage_taken,
+                    target_combat_state=action_target_state,
                 )
                 component_damage *= float(execute_eligibility.damage_multiplier)
                 occurrences.append(
@@ -991,6 +997,7 @@ class RotationCandidateSkillDamageEvidenceService:
         dd_stats,
         damage_done,
         damage_taken,
+        target_combat_state: CombatState | None,
     ) -> float:
         event = DDDamageEvent(
             base_value=float(base_value),
@@ -1006,6 +1013,11 @@ class RotationCandidateSkillDamageEvidenceService:
             damage_done=damage_done,
             damage_taken=damage_taken,
             target_critical_resistance=self.target_critical_resistance,
+            target_critical_damage_taken_percent=(
+                critical_damage_taken_percent_from_target_state(
+                    target_combat_state
+                )
+            ),
         )
         mitigation = None
         if context.target_resistance is not None and raw.penetration_stat is not None:
@@ -1020,6 +1032,11 @@ class RotationCandidateSkillDamageEvidenceService:
             damage_done=damage_done,
             damage_taken=damage_taken,
             target_critical_resistance=self.target_critical_resistance,
+            target_critical_damage_taken_percent=(
+                critical_damage_taken_percent_from_target_state(
+                    target_combat_state
+                )
+            ),
         )
         return float(resolved.final_damage)
 
