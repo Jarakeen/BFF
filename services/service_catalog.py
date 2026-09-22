@@ -1663,6 +1663,49 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.encounter_policy_frontier",
+        domain="extreme",
+        purpose=(
+            "Validate one explicit finite sustained-DPS encounter-policy family whose choices carry canonical RotationDemandWindow inputs without inventing encounter timing."
+        ),
+        implementation_path="services.extreme_sustained_dps_encounter_policy_frontier_service",
+        inputs=("EncounterPolicyChoices", "ExternalDenominatorProof", "OmittedScope"),
+        outputs=("ExtremeSustainedDPSEncounterPolicyFrontier",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_encounter_policy_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.POLICY,
+        notes=(
+            "The frontier validates caller-supplied canonical demand windows only. Missing review, threshold-to-clock projection, and wider encounter families remain explicit instead of becoming empty policy."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_encounter_policy_axis_adapter",
+        domain="extreme",
+        purpose=(
+            "Enumerate a proven finite encounter-policy family immediately before generated rotation-plan search and expose canonical encounter_policy axis coverage."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_encounter_policy_axis_adapter_service",
+        inputs=("AssembledCandidate", "ProvenEncounterPolicyFrontier"),
+        outputs=("IndexedFrontierAxis", "EncounterPolicyAxisCoverageProof"),
+        dependencies=(
+            "extreme.sustained_dps.encounter_policy_frontier",
+            "extreme.sustained_dps.generated_frontier_wiring",
+            "extreme.sustained_dps.axis_dominance_composition",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_encounter_policy_axis_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Selected demand windows flow into the canonical rotation duration-refinement path through explicit ability priorities. "
+            "The adapter owns policy enumeration only; RotationDurationRefinementService remains scheduling authority."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_axis_pipeline",
         domain="extreme",
         purpose=(
@@ -1682,6 +1725,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.generated_gear_axis_adapter",
             "extreme.sustained_dps.generated_mundus_food_axis_adapter",
             "extreme.sustained_dps.generated_late_axis_adapter",
+            "extreme.sustained_dps.generated_encounter_policy_axis_adapter",
             "extreme.sustained_dps.generated_rotation_axis_adapter",
             "extreme.sustained_dps.generated_runtime_policy_axis_adapter",
             "extreme.sustained_dps.generated_frontier_wiring",
@@ -1692,8 +1736,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Explicit immutable stage transitions preserve each adapter's native state, "
-            "optionally insert exact-witness Mundus/food mutation after gear, reset downstream selections after upstream mutation, "
+            "Explicit immutable stage transitions preserve each adapter's native state, optionally insert exact-witness Mundus/food mutation after gear, "
+            "optionally insert a finite encounter-policy selection after build assembly and before rotation generation, reset downstream selections after upstream mutation, "
             "forward axis-local bound providers, and derive stable runtime candidate identity from selected structural rotation coordinates."
         ),
     ),
@@ -1754,13 +1798,12 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         responsibilities=("extreme_sustained_dps_generated_rotation_axis_adapter",),
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
-        encounter_aware=False,
+        encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "The adapter preserves plan-before-policy dependency and fails closed on either "
-            "unproven denominator. It forwards explicit Ultimate runtime evidence but does not "
-            "claim closure over continuous potion offsets, delayed Ultimates, execute policy, "
-            "Heavy Attacks, or encounter obligations."
+            "The adapter preserves plan-before-policy dependency and fails closed on either unproven denominator. "
+            "Selected encounter demand windows and ability priorities are forwarded into canonical rotation-plan refinement; encounter-policy enumeration remains owned by the preceding axis. "
+            "It does not claim closure over continuous potion offsets, delayed Ultimates, execute policy, or Heavy Attacks."
         ),
     ),
     ServiceDescriptor(
