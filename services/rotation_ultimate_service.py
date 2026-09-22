@@ -248,9 +248,9 @@ class RotationUltimateService:
         else:
             rules = (
                 UltimateScheduleRule(
-                    skill_name=spend.skill_name,
+                    skill_name=spend_rule.skill_name,
                     bar=bar,
-                    cost=spend.cost,
+                    cost=spend_rule.cost,
                     available_at_seconds=projection.availability_times,
                 ),
             )
