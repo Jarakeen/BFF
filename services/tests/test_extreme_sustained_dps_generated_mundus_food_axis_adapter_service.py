@@ -38,6 +38,7 @@ def test_generated_mundus_food_axes_mutate_exact_build_state_in_order() -> None:
     assert state.context.build.Mundus == "The Thief"
     assert state.context.build.Food == "Food A"
     assert state.complete is True
+    assert service.coverage().dominated_axes == ("mundus", "food")
 
 
 def test_food_axis_requires_mundus_selection() -> None:
@@ -61,3 +62,5 @@ def test_unproven_mundus_food_denominator_fails_closed() -> None:
 
     with pytest.raises(ValueError, match="proven finite denominator"):
         service.axes()[0].candidate_count(service.root(_context()))
+
+    assert service.coverage().dominated_axes == ()
