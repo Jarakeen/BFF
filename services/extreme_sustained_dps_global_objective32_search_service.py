@@ -87,8 +87,24 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
                 "encounter_policy_adapter",
                 None,
             )
+            candidate_runtime_state_resolver = getattr(
+                pipeline,
+                "runtime_state_frontier_resolver",
+                None,
+            )
+            if (
+                candidate_runtime_state_resolver is not None
+                and runtime_state_frontier is not None
+            ):
+                raise ValueError(
+                    "Canonical Objective #32 search cannot combine candidate-resolved "
+                    "runtime_state with a separate global runtime-state frontier"
+                )
             ExtremeSustainedDPSObjective32ScenarioPreflightService.require_ready(
                 runtime_state_frontier=runtime_state_frontier,
+                candidate_runtime_state_resolver_present=bool(
+                    candidate_runtime_state_resolver is not None
+                ),
                 heavy_attack_channel_block_denominator_proven=bool(
                     search_kwargs.get(
                         "heavy_attack_channel_block_denominator_proven",
