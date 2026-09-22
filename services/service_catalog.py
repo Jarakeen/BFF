@@ -1864,6 +1864,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.delayed_ultimate_policy_frontier",
+        domain="extreme",
+        purpose=(
+            "Enumerate every legal delayed Ultimate cast sequence over the exact same-bar SKILL slots of one seed RotationPlan using explicit shared Ultimate generation."
+        ),
+        implementation_path="services.extreme_sustained_dps_delayed_ultimate_policy_frontier_service",
+        inputs=(
+            "RotationPlan",
+            "UltimateSpendRule",
+            "ExplicitUltimateGenerationEvents",
+            "StartingUltimate",
+        ),
+        outputs=("ExtremeSustainedDPSDelayedUltimatePolicyFrontier",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_delayed_ultimate_policy_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Enumerates cast/skip branches over exact scheduled same-bar skill slots and deducts each selected cast from the shared Ultimate balance. "
+            "Generation at the exact cast timestamp is not borrowed ahead of the cast. This closes delayed timing only for one exact seed plan; integration into the global rotation-policy axis remains separate."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_rotation_axis_adapter",
         domain="extreme",
         purpose=(
