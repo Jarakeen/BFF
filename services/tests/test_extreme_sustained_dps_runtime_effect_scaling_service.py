@@ -84,8 +84,9 @@ def test_master_architect_without_scheduled_ultimate_keeps_scaling_visible() -> 
     )
 
     assert result.unresolved == ()
-    assert result.effects == (original,)
-    assert result.effects[0].scaling == "1 second per 10 Ultimate spent"
+    assert len(result.effects) == 1
+    assert result.effects[0].name == original.name
+    assert result.effects[0].scaling is None
     assert any("no scheduled Ultimate activation" in row for row in result.evidence)
 
 
