@@ -42,6 +42,7 @@ from services.rotation_candidate_dd_role_output_service import RotationActionDam
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.rotation_heavy_attack_restoration_evidence_service import (
     RotationHeavyAttackCompletionEvidence,
+    RotationHeavyAttackHitOutcome,
 )
 from services.rotation_heavy_attack_weapon_projection_service import (
     RotationHeavyAttackWeaponProjectionService,
@@ -139,16 +140,30 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
                 action,
                 "partial/interrupted heavy-attack damage is unresolved; canonical full-charge formula cannot be reused",
             )
-        if evidence.landed is None:
+        if evidence.hit_outcome is RotationHeavyAttackHitOutcome.BLOCKED:
+            return self._unresolved(
+                action,
+                "blocked fully charged heavy-attack damage requires authoritative block mitigation semantics",
+            )
+        if evidence.hit_outcome in {
+            RotationHeavyAttackHitOutcome.DODGED,
+            RotationHeavyAttackHitOutcome.MISSED,
+            RotationHeavyAttackHitOutcome.IMMUNE,
+        }:
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=0.0,
+            )
+        if evidence.landed is None and evidence.hit_outcome is not RotationHeavyAttackHitOutcome.LANDED:
             return self._unresolved(
                 action,
                 "fully charged heavy-attack damage requires authoritative successful-hit evidence",
             )
         if evidence.landed is False:
-            return RotationActionDamageEvidence(
-                time_seconds=action.time_seconds,
-                sequence=action.sequence,
-                damage_value=0.0,
+            return self._unresolved(
+                action,
+                "landed=False without a reviewed hit outcome cannot distinguish blocked from zero-damage outcomes",
             )
 
         projection = self.weapon_projection_service.project(
