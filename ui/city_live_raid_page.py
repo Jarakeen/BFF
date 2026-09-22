@@ -471,6 +471,23 @@ class CityLiveRaidPage(FoundryPage):
             return ""
         return self.user_state.linked_raid_map_id(self._plan.plan_id, encounter_id)
 
+    def _current_linked_raid_map(self):
+        encounter_id = _clean(self.encounter_combo.currentData())
+        map_id = self._current_linked_raid_map_id()
+        if not encounter_id or not map_id:
+            return None
+        try:
+            return next(
+                (
+                    row
+                    for row in self.raid_map_store.list_maps(encounter_id)
+                    if row.map_id == map_id
+                ),
+                None,
+            )
+        except (OSError, RuntimeError, ValueError):
+            return None
+
     def _show_raid_map_menu(self) -> None:
         menu = QMenu(self)
         encounter_id = _clean(self.encounter_combo.currentData())
@@ -535,6 +552,8 @@ class CityLiveRaidPage(FoundryPage):
             record.map_id,
         )
         self.raid_map_button.setText(f"Raid Map: {record.label} ▾")
+        self._render_encounter_context()
+        self._refresh_events()
         self.status.success(
             f"Linked {record.label} to {self._plan.name} • {self.encounter_combo.currentText()}."
         )
@@ -551,6 +570,8 @@ class CityLiveRaidPage(FoundryPage):
             "",
         )
         self.raid_map_button.setText("Raid Map ▾")
+        self._render_encounter_context()
+        self._refresh_events()
         self.status.info("Raid Map link cleared for this Live Plan encounter.")
 
     def _open_linked_raid_map(self) -> None:
@@ -570,10 +591,7 @@ class CityLiveRaidPage(FoundryPage):
             self.raid_map_button.setEnabled(bool(self._plan is not None))
             return
         map_id = self._current_linked_raid_map_id()
-        record = next(
-            (row for row in self.raid_map_store.list_maps(encounter_id) if row.map_id == map_id),
-            None,
-        ) if map_id else None
+        record = self._current_linked_raid_map()
         self.raid_map_button.setText(
             f"Raid Map: {record.label} ▾" if record is not None else "Raid Map ▾"
         )
@@ -664,10 +682,13 @@ class CityLiveRaidPage(FoundryPage):
             f"{context.encounter_name}\n"
             f"{context.content_name or plan.trial_id} · {plan.difficulty or 'Difficulty not set'}"
         )
-        self.phase_label.setText(
-            "Phase Guide\n"
-            + (context.phase_lines[0] if context.phase_lines else "No reviewed phase markers")
-        )
+        phase_lines = [
+            "Phase Guide",
+            context.phase_lines[0] if context.phase_lines else "No reviewed phase markers",
+        ]
+        if self._current_linked_raid_map() is not None:
+            phase_lines.append("Map Available")
+        self.phase_label.setText("\n".join(phase_lines))
 
         elapsed = self._elapsed_pull_seconds()
         window_start = 0 if elapsed is None else elapsed
@@ -856,7 +877,16 @@ class CityLiveRaidPage(FoundryPage):
         ]
         rows = self.user_state.events(self._plan.plan_id, limit=5)
         event_lines = [f"{event.evidence}  {event.text}" for event in rows]
-        lines = attempt_lines + event_lines
+
+        map_lines = []
+        linked_map = self._current_linked_raid_map()
+        if linked_map is not None:
+            encounter_id = _clean(self.encounter_combo.currentData())
+            map_lines.append(
+                f"MAP  {self._encounter_label(encounter_id)} • {linked_map.label}"
+            )
+
+        lines = map_lines + attempt_lines + event_lines
         self.events_label.setText("\n".join(lines) or "No manual run events yet.")
 
     def _save_run_notes(self) -> None:
