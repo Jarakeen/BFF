@@ -119,6 +119,8 @@ class RotationHeavySustainProjectionService:
     def completion_evidence_from_verified_reservations(
         cls,
         plan: RotationPlan,
+        *,
+        landed: bool | None = None,
     ) -> tuple[RotationHeavyAttackCompletionEvidence, ...]:
         """Promote reviewed 1.8s scheduler reservations to full-charge evidence.
 
@@ -171,7 +173,7 @@ class RotationHeavySustainProjectionService:
                     action_sequence=action.sequence,
                     completion_time_seconds=end,
                     fully_charged=True,
-                    landed=None,
+                    landed=landed,
                     verified_base_restore=None,
                     source=(
                         "duration-aware verified 1.8s heavy-attack channel reservation"
