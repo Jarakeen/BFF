@@ -23,6 +23,9 @@ from services.extreme_sustained_dps_generated_frontier_wiring_service import (
 from services.extreme_sustained_dps_potion_observation_frontier_service import (
     ExtremeSustainedDPSPotionObservationFrontierService,
 )
+from services.extreme_sustained_dps_potion_resource_observation_frontier_service import (
+    ExtremeSustainedDPSPotionResourceObservationFrontierService,
+)
 from services.extreme_sustained_dps_potion_timing_breakpoint_frontier_service import (
     ExtremeSustainedDPSPotionTimingBreakpointChoice,
 )
@@ -36,6 +39,8 @@ from services.rotation_scheduled_action_resource_legality_service import (
 class ExtremeSustainedDPSFinalizedPotionTimingEvidence:
     periodic_projections: tuple[object, ...] = ()
     heavy_attack_completion_evidence: tuple[object, ...] = ()
+    additional_resource_event_times: tuple[float, ...] = ()
+    additional_resource_event_denominator_proven: bool = False
     unresolved: tuple[str, ...] = ()
 
 
@@ -271,6 +276,31 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
                 getattr(evidence, "heavy_attack_completion_evidence", ()) or ()
             ),
         )
+        resource_observations = (
+            ExtremeSustainedDPSPotionResourceObservationFrontierService.collect(
+                plan=self._strip_potions(state.candidate.plan),
+                heavy_attack_completion_evidence=tuple(
+                    getattr(evidence, "heavy_attack_completion_evidence", ()) or ()
+                ),
+                additional_resource_event_times=tuple(
+                    getattr(evidence, "additional_resource_event_times", ()) or ()
+                ),
+                additional_resource_event_denominator_proven=bool(
+                    getattr(
+                        evidence,
+                        "additional_resource_event_denominator_proven",
+                        False,
+                    )
+                ),
+            )
+        )
+        if not resource_observations.denominator_proven:
+            detail = "; ".join(resource_observations.unresolved)
+            raise ValueError(
+                "finalized potion resource observation denominator is unresolved"
+                + (f": {detail}" if detail else "")
+            )
+
         denominator = self.denominator_service.build(
             player_build=state.build,
             progression=state.progression,
@@ -278,12 +308,20 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
             duration_seconds=float(state.candidate.plan.duration_seconds),
             cooldown_seconds=float(state.potion_cooldown_seconds),
             instant_restoration_timing_closed=False,
+            resource_observation_times=tuple(
+                resource_observations.observation_times
+            ),
+            resource_observation_denominator_proven=True,
         )
         if not denominator.denominator_proven:
             detail = "; ".join(denominator.unresolved)
             raise ValueError(
                 "finalized potion timing denominator is unresolved"
                 + (f": {detail}" if detail else "")
+            )
+        if not denominator.breakpoint_frontier.full_potion_timing_closed:
+            raise ValueError(
+                "finalized potion timing denominator did not close named-buff and restoration timing"
             )
         return denominator
 
@@ -393,9 +431,6 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
             candidate_count=self._count,
             candidate_at=self._at,
             canonical_axes=("potion_timing_policy",),
-            omitted_scope=(
-                "potion instant-restoration timing across resource-timeline event boundaries is not yet closed",
-            ),
         )
 
 
