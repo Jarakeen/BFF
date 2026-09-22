@@ -84,6 +84,7 @@ def _completion() -> RotationHeavyAttackCompletionEvidence:
         action_sequence=0,
         completion_time_seconds=8.0,
         fully_charged=True,
+        landed=True,
         verified_base_restore=None,
         source="reviewed candidate heavy",
     )
