@@ -10,6 +10,9 @@ from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_runtime_effect_universe_service import (
     ExtremeSustainedDPSRuntimeEffectUniverseService,
 )
+from services.extreme_sustained_dps_runtime_effect_relevance_service import (
+    ExtremeSustainedDPSRuntimeEffectRelevanceService,
+)
 from services.extreme_sustained_dps_runtime_event_skeleton_service import (
     ExtremeSustainedDPSRuntimeEventSkeletonService,
 )
@@ -85,9 +88,23 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                     "candidate-facing runtime scenario builder requires explicit effects or canonical runtime effect universe"
                 )
             universe = self.runtime_effect_universe.resolve(player_build)
-            effects = tuple(universe.effects)
-            universe_evidence = tuple(universe.evidence)
-            universe_unresolved = tuple(universe.unresolved)
+            discovered_effects = tuple(universe.effects)
+            relevance = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify(
+                discovered_effects
+            )
+            effects = tuple(relevance.relevant)
+            universe_evidence = (
+                *tuple(universe.evidence),
+                *tuple(relevance.evidence),
+            )
+            universe_unresolved = tuple(
+                dict.fromkeys(
+                    (
+                        *tuple(universe.unresolved),
+                        *tuple(relevance.unresolved),
+                    )
+                )
+            )
             if universe_unresolved:
                 # Preserve a normal fail-closed frontier shape rather than
                 # continuing with a partial effect universe.
