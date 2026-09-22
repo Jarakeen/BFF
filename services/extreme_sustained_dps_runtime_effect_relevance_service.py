@@ -34,6 +34,8 @@ _DPS_TARGET_COMPONENT_BUFFS = frozenset(
         "Major Vulnerability",
         "Minor Breach",
         "Major Breach",
+        "Minor Brittle",
+        "Major Brittle",
     }
 )
 
