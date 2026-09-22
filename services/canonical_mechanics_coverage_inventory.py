@@ -63,9 +63,10 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             evidence_source="services/rotation_heavy_attack_restoration_evidence_service.py",
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
-                "Provide verified base restoration by supported weapon/resource context and "
-                "the exact passive/set/CP/modifier rules that alter completed heavy restore; "
-                "also preserve channel/completion timing evidence rather than inferring it."
+                "Update 35 now supplies authoritative base restoration for standard weapon families. "
+                "Complete the exact passive/set/CP/modifier catalog that alters heavy restore, "
+                "verify Werewolf separately, and preserve hit/block/dodge plus channel/completion "
+                "timing evidence rather than inferring it."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
