@@ -178,6 +178,7 @@ def test_same_heavy_attack_contributes_damage_and_restoration_to_recommendation(
         action_sequence=0,
         completion_time_seconds=2.0,
         fully_charged=True,
+        landed=True,
         verified_base_restore=3000.0,
         source="integration verified HA completion",
     )
