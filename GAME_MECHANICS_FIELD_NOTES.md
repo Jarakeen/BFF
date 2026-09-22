@@ -1441,3 +1441,10 @@ Major Breach reduces the target's Physical and Spell Resistance by 5948; Minor B
 Minor Brittle increases the target's Critical Damage Taken by 10 percentage points; Major Brittle increases it by 20. The project's U50 critical-damage references group Brittle with the other Critical Damage modifiers that contribute toward the 125% hard cap.
 
 **For BFF:** Objective #32 now adds exact-time ENEMY-target Brittle to the attacker's raw Critical Damage, caps the combined value at 125%, and only then applies target Critical Resistance. Brittle therefore has no extra value once the combined critical bonus is already capped, and it remains separate from generic Damage Taken and target resistance.
+
+
+## 2026-09-22 — Fixed target reductions and scaling target reductions are different evidence classes
+
+A runtime debuff with an explicitly resolved numeric resistance reduction can be applied directly to exact-time target resistance. A tooltip or known-effect record that says a value scales "up to" a maximum does not prove the runtime magnitude is that maximum.
+
+**For BFF:** EffectVariant now preserves explicit target mechanic metadata. Objective #32 admits fixed ENEMY resistance reductions only when the numeric value is resolved and no unresolved scaling formula remains. Scaling effects such as Roar of Alkosh stay fail-closed until their actual magnitude resolver is authoritative. This prevents maximum tooltip values from being silently treated as permanent combat truth.
