@@ -127,6 +127,7 @@ class ExtremeSustainedDPSRuntimeWitnessCompositionService:
         seed = ExtremeRuntimeSnapshot(
             runtime_history=entries,
             snapshot_time_seconds=snapshot_time,
+            runtime_history_complete=True,
         )
         bound = self.bar_provenance.bind(
             plan,
