@@ -181,19 +181,27 @@ class RotationHeavyAttackRestoreEsoLogsEvidenceService:
         completion_evidence,
         landed_observations: tuple[RotationHeavyAttackLandedObservation, ...],
         *,
+        replay_origin_timestamp_ms: float,
         tolerance_seconds: float = 0.25,
     ):
-        """Promote exact completion evidence only when one nearby damage row matches.
+        """Promote completion evidence after explicit ESO Logs clock alignment.
 
-        Correlation is deliberately one-to-one and fail-closed. Multiple nearby
-        damage rows are ambiguous, and absence of a row cannot prove a miss.
+        Raw ESO Logs event timestamps are milliseconds on the report/fight timeline,
+        while RotationPlan completion times are seconds on the replay timeline. The
+        caller must therefore provide the replay origin, matching the existing
+        periodic-damage replay-anchor contract. Correlation remains one-to-one and
+        fail-closed; absence of a row cannot prove a miss.
         """
         from dataclasses import replace
+        import math
         from services.rotation_heavy_attack_restoration_evidence_service import RotationHeavyAttackHitOutcome
 
+        origin = float(replay_origin_timestamp_ms)
+        if not math.isfinite(origin) or origin < 0.0:
+            raise ValueError("replay origin timestamp must be finite and non-negative")
         tolerance = float(tolerance_seconds)
-        if tolerance < 0.0:
-            raise ValueError("heavy-attack landed correlation tolerance cannot be negative")
+        if not math.isfinite(tolerance) or tolerance < 0.0:
+            raise ValueError("heavy-attack landed correlation tolerance must be finite and non-negative")
         promoted = []
         unresolved: list[str] = []
         used_events: set[tuple[str, int, int]] = set()
@@ -201,11 +209,15 @@ class RotationHeavyAttackRestoreEsoLogsEvidenceService:
             if evidence.landed is not None:
                 promoted.append(evidence)
                 continue
-            matches = [
-                row for row in landed_observations
-                if abs(float(row.timestamp) - float(evidence.completion_time_seconds)) <= tolerance
-                and (row.report_code, row.fight_id, row.event_index) not in used_events
-            ]
+            matches = []
+            for row in landed_observations:
+                if (row.report_code, row.fight_id, row.event_index) in used_events:
+                    continue
+                relative_seconds = (float(row.timestamp) - origin) / 1000.0
+                if relative_seconds < -tolerance:
+                    continue
+                if abs(relative_seconds - float(evidence.completion_time_seconds)) <= tolerance:
+                    matches.append(row)
             if len(matches) == 1:
                 row = matches[0]
                 used_events.add((row.report_code, row.fight_id, row.event_index))
@@ -223,7 +235,8 @@ class RotationHeavyAttackRestoreEsoLogsEvidenceService:
             reason = "no" if not matches else "multiple"
             unresolved.append(
                 f"{reason} reviewed heavy-attack damage events correlate with completion at "
-                f"{evidence.completion_time_seconds:.3f}s; landed state remains unresolved"
+                f"{evidence.completion_time_seconds:.3f}s after replay-clock alignment; "
+                "landed state remains unresolved"
             )
         return tuple(promoted), tuple(unresolved)
 
