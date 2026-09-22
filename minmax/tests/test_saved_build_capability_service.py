@@ -27,6 +27,33 @@ def test_active_set_counts_use_only_active_weapon_bar_and_two_piece_staff():
     }
 
 
+
+def test_active_set_counts_include_explicit_offhand_weapon_piece():
+    build = PlayerBuild()
+    build.Armor["Head"]["Set"] = "Set A"
+    build.FrontBarWeapon.Set = "Set A"
+    build.FrontBarWeapon.WeaponType = "Dagger"
+    build.FrontBarOffHand.Set = "Set A"
+    build.FrontBarOffHand.WeaponType = "Axe"
+
+    assert SavedBuildCapabilityService._active_set_counts(build, "front") == {
+        "Set A": 3,
+    }
+
+
+def test_active_set_counts_treat_bow_as_two_set_pieces():
+    build = PlayerBuild()
+    build.Armor["Head"]["Set"] = "Set A"
+    build.Armor["Chest"]["Set"] = "Set A"
+    build.Armor["Legs"]["Set"] = "Set A"
+    build.FrontBarWeapon.Set = "Set A"
+    build.FrontBarWeapon.WeaponType = "Bow"
+
+    assert SavedBuildCapabilityService._active_set_counts(build, "front") == {
+        "Set A": 5,
+    }
+
+
 def test_intentional_potion_static_warning_is_not_a_genuine_gap():
     unresolved, boundaries = SavedBuildCapabilityService._partition_context_messages(
         (
