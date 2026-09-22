@@ -53,6 +53,9 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
                 None if effect.chance is None else float(effect.chance),
                 None if effect.duration is None else float(effect.duration),
                 None if effect.cooldown is None else float(effect.cooldown),
+                None if effect.damage_amplification is None else float(effect.damage_amplification),
+                None if effect.resistance_reduction is None else float(effect.resistance_reduction),
+                None if effect.penetration is None else float(effect.penetration),
                 str(getattr(effect.active_bar, "value", effect.active_bar) or ""),
             )
             if key in seen:
