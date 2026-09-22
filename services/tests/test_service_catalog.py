@@ -999,6 +999,7 @@ def test_sustained_dps_generated_axis_pipeline_composes_adapter_states() -> None
         "extreme.sustained_dps.generated_rotation_axis_adapter",
         "extreme.sustained_dps.generated_runtime_policy_axis_adapter",
         "extreme.sustained_dps.generated_finalized_potion_axis_adapter",
+        "extreme.sustained_dps.generated_runtime_state_axis_adapter",
         "extreme.sustained_dps.generated_frontier_wiring",
     )
     assert service.encounter_aware is True
@@ -1007,6 +1008,7 @@ def test_sustained_dps_generated_axis_pipeline_composes_adapter_states() -> None
     assert "reset downstream selections" in service.notes
     assert "axis-local bound providers" in service.notes
     assert "finalized potion timing after runtime policy" in service.notes
+    assert "candidate-resolved runtime_state" in service.notes
 
 def test_sustained_dps_pipeline_leaf_bridge_uses_final_runtime_plan() -> None:
     service = canonical_service_for(
@@ -1584,12 +1586,14 @@ def test_sustained_dps_objective32_composition_is_canonical_production_root() ->
         "extreme.sustained_dps.global_generated_search",
         "extreme.sustained_dps.global_objective32_search",
         "extreme.sustained_dps.generated_finalized_potion_axis_adapter",
+        "extreme.sustained_dps.candidate_runtime_state_frontier_resolver",
     )
     assert "canonical generated Objective #32 production service graph" in service.purpose
     assert "canonical production composition root" in service.notes
     assert "canonical Mundus/food and encounter-policy axes" in service.notes
     assert "additional resource-event denominator" in service.notes
     assert "complete scheduler-derived Heavy Attack discovery" in service.notes
+    assert "candidate-resolved runtime_state" in service.notes
     assert "rather than being recreated here" in service.notes
 
 
@@ -1639,6 +1643,25 @@ def test_sustained_dps_objective32_search_keeps_proof_levels_distinct() -> None:
     assert "distinct facts" in service.notes
 
 
+def test_sustained_dps_candidate_runtime_state_resolver_is_candidate_scoped() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_candidate_runtime_state_frontier_resolver"
+    )
+
+    assert service is not None
+    assert (
+        service.service_id
+        == "extreme.sustained_dps.candidate_runtime_state_frontier_resolver"
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.runtime_scenario_frontier",)
+    assert "separately for each finalized generated" in service.purpose
+    assert "different runtime effect/event denominators" in service.notes
+    assert "avoid circularly deriving runtime_state" in service.notes
+
+
 def test_sustained_dps_generated_runtime_state_axis_requires_local_proof() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_generated_runtime_state_axis_adapter"
@@ -1657,8 +1680,9 @@ def test_sustained_dps_generated_runtime_state_axis_requires_local_proof() -> No
         "extreme.sustained_dps.generated_frontier_wiring",
         "extreme.sustained_dps.axis_dominance_composition",
     )
-    assert "caller-proven local runtime-state denominator" in service.purpose
-    assert "Rejects unproven or unresolved runtime families" in service.notes
+    assert "candidate-resolved terminal axis" in service.purpose
+    assert "Candidate-resolved mode" in service.notes
+    assert "no theoretical omission" in service.notes
 
 
 def test_sustained_dps_theoretical_maximum_closure_is_explicit() -> None:
