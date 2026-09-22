@@ -1039,7 +1039,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "StructuralFamilyFrontier",
             "StructuralMaterializer",
             "GeneratedGearAxisAdapter",
+            "GeneratedMundusFoodAxisAdapter",
             "GeneratedLateAxisAdapter",
+            "GeneratedEncounterPolicyAxisAdapter",
             "GeneratedRotationAxisAdapter",
             "GeneratedRuntimePolicyAxisAdapter",
             "GeneratedRuntimeEvaluation",
@@ -1060,7 +1062,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "This is the canonical production composition root for the generated Objective #32 graph. "
-            "It refuses construction unless finalized potion timing is wired after runtime policy, the additional resource-event denominator is explicitly proven complete, and the runtime-policy adapter is configured for complete scheduler-derived Heavy Attack discovery. "
+            "It refuses construction unless the canonical Mundus/food and encounter-policy axes are present, finalized potion timing is wired after runtime policy, the additional resource-event denominator is explicitly proven complete, and the runtime-policy adapter is configured for complete scheduler-derived Heavy Attack discovery. "
             "Low-level frontier repositories and mechanics remain owned by their existing services rather than being recreated here."
         ),
     ),
