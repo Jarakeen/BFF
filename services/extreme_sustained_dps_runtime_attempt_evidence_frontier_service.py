@@ -70,7 +70,7 @@ class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService:
         # 0.0 represents [0, first_threshold); each exact threshold represents
         # [threshold, next_threshold). Roll 1.0 is unnecessary and would also
         # incorrectly fail a nominal 100% effect if shared across variants.
-        return (0.0, *thresholds)
+        return tuple(dict.fromkeys((0.0, *thresholds)))
 
     @classmethod
     def _condition_contexts(
