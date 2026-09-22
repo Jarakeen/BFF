@@ -21,6 +21,10 @@ from services.extreme_sustained_dps_runtime_state_frontier_service import (
 class _State:
     selected: int | None = None
 
+    @property
+    def complete(self) -> bool:
+        return self.selected is not None
+
 
 class _Pipeline:
     @staticmethod
