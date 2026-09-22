@@ -23,6 +23,10 @@ from services.extreme_sustained_dps_heavy_attack_policy_frontier_service import 
     ExtremeSustainedDPSHeavyAttackPolicyFrontierService,
     ExtremeSustainedDPSHeavyAttackWindow,
 )
+from services.extreme_sustained_dps_heavy_attack_window_discovery_service import (
+    ExtremeSustainedDPSHeavyAttackChannelBlock,
+    ExtremeSustainedDPSHeavyAttackWindowDiscoveryService,
+)
 from services.extreme_sustained_dps_rotation_policy_frontier_service import (
     ExtremeSustainedDPSRotationPolicyCandidate,
 )
@@ -37,6 +41,8 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisState:
     target_identity: str
     duration_rules: tuple[object, ...] = ()
     heavy_attack_windows: tuple[ExtremeSustainedDPSHeavyAttackWindow, ...] = ()
+    heavy_attack_channel_blocks: tuple[ExtremeSustainedDPSHeavyAttackChannelBlock, ...] = ()
+    heavy_attack_channel_block_denominator_proven: bool = False
     execute_policy: ExtremeSustainedDPSExecutePolicyCandidate | None = None
     heavy_attack_policy: ExtremeSustainedDPSHeavyAttackPolicyCandidate | None = None
 
@@ -63,9 +69,14 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
         heavy_attack_policies: (
             ExtremeSustainedDPSHeavyAttackPolicyFrontierService | object
         ),
+        heavy_attack_window_discovery: object | None = None,
     ) -> None:
         self.execute_policies = execute_policies
         self.heavy_attack_policies = heavy_attack_policies
+        self.heavy_attack_window_discovery = (
+            heavy_attack_window_discovery
+            or ExtremeSustainedDPSHeavyAttackWindowDiscoveryService
+        )
 
     @staticmethod
     def _proven_candidates(frontier: object, label: str) -> tuple[object, ...]:
@@ -137,6 +148,37 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
         state: ExtremeSustainedDPSGeneratedRuntimePolicyAxisState,
     ) -> object:
         execute = self._require_execute(state)
+
+        if state.heavy_attack_channel_block_denominator_proven:
+            discovery = self.heavy_attack_window_discovery.discover(
+                seed=execute.candidate,
+                duration_rules=state.duration_rules,
+                priorities=state.priorities,
+                channel_blocks=state.heavy_attack_channel_blocks,
+                channel_block_denominator_proven=True,
+            )
+            if not discovery.denominator_proven:
+                detail = "; ".join(discovery.unresolved)
+                raise ValueError(
+                    "Heavy Attack window discovery denominator is unresolved"
+                    + (f": {detail}" if detail else "")
+                )
+
+            def materialize(selected):
+                return self.heavy_attack_window_discovery.materialize(
+                    seed=execute.candidate,
+                    windows=tuple(selected),
+                    duration_rules=state.duration_rules,
+                    priorities=state.priorities,
+                    channel_blocks=state.heavy_attack_channel_blocks,
+                )
+
+            return self.heavy_attack_policies.expand(
+                seed=execute.candidate,
+                windows=discovery.windows,
+                candidate_materializer=materialize,
+            )
+
         return self.heavy_attack_policies.expand(
             seed=execute.candidate,
             windows=state.heavy_attack_windows,
@@ -180,6 +222,11 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
             ExtremeSustainedDPSHeavyAttackWindow,
             ...,
         ] = (),
+        heavy_attack_channel_blocks: tuple[
+            ExtremeSustainedDPSHeavyAttackChannelBlock,
+            ...,
+        ] = (),
+        heavy_attack_channel_block_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSGeneratedRuntimePolicyAxisState:
         identity = str(candidate_id or "").strip()
         if not identity:
@@ -203,6 +250,10 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
             target_identity=target,
             duration_rules=tuple(duration_rules),
             heavy_attack_windows=tuple(heavy_attack_windows),
+            heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
+            heavy_attack_channel_block_denominator_proven=bool(
+                heavy_attack_channel_block_denominator_proven
+            ),
         )
 
     def axes(self) -> tuple[ExtremeSustainedDPSIndexedFrontierAxis, ...]:
@@ -218,9 +269,7 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
                 candidate_count=self._heavy_count,
                 candidate_at=self._heavy_at,
                 canonical_axes=("heavy_attack_policy",),
-                omitted_scope=(
-                    "Heavy Attack windows outside the caller-supplied reviewed safe set are not claimed closed",
-                ),
+                omitted_scope=(),
             ),
         )
 
