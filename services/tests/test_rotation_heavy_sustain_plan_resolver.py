@@ -82,10 +82,53 @@ def _evidence() -> tuple[RotationHeavyAttackCompletionEvidence, ...]:
             action_sequence=0,
             completion_time_seconds=3.6,
             fully_charged=True,
+            landed=True,
             verified_base_restore=None,
             source="reviewed test heavy",
         ),
     )
+
+
+def test_verified_reservation_does_not_invent_successful_hit() -> None:
+    plan = RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=20.0,
+        actions=(
+            RotationAction(2.0, 0, RotationActionKind.HEAVY_ATTACK, "Heavy Attack", "front"),
+        ),
+        unresolved=(
+            "caller-proven heavy_attack at 2.000s reserved the front-bar timeline through 3.800s",
+        ),
+    )
+
+    evidence = RotationHeavySustainProjectionService.completion_evidence_from_verified_reservations(plan)
+
+    assert len(evidence) == 1
+    assert evidence[0].fully_charged is True
+    assert evidence[0].landed is None
+
+
+def test_verified_reservation_accepts_authoritative_successful_hit() -> None:
+    plan = RotationPlan(
+        character_name="Magrat",
+        build_name="DF Healer",
+        duration_seconds=20.0,
+        actions=(
+            RotationAction(2.0, 0, RotationActionKind.HEAVY_ATTACK, "Heavy Attack", "front"),
+        ),
+        unresolved=(
+            "caller-proven heavy_attack at 2.000s reserved the front-bar timeline through 3.800s",
+        ),
+    )
+
+    evidence = RotationHeavySustainProjectionService.completion_evidence_from_verified_reservations(
+        plan,
+        landed=True,
+    )
+
+    assert len(evidence) == 1
+    assert evidence[0].landed is True
 
 
 class _ProgressionAdapter:
