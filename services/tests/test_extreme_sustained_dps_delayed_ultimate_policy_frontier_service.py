@@ -93,3 +93,26 @@ def test_repeated_casts_consume_shared_ultimate_balance() -> None:
         len(row.cast_slots) > 1
         for row in result.policies
     )
+
+
+
+def test_scheduler_slot_identity_mismatch_fails_closed() -> None:
+    class _BrokenScheduler:
+        @staticmethod
+        def apply(plan, rules):
+            return plan
+
+    result = ExtremeSustainedDPSDelayedUltimatePolicyFrontierService(
+        scheduler=_BrokenScheduler()
+    ).build(
+        plan=_plan(),
+        bar="front",
+        spend_rule=UltimateSpendRule("Ultimate X", 100.0),
+        starting_ultimate=100.0,
+    )
+
+    assert result.denominator_proven is False
+    assert any(
+        "did not preserve selected cast-slot identity" in row
+        for row in result.unresolved
+    )
