@@ -1462,3 +1462,10 @@ A target can have named Vulnerability and a separate unique damage-amplification
 The weapon-enchantment repository and rule engine can resolve Crusher's target resistance reduction, duration, and trait-adjusted magnitude. That does not by itself prove the trigger/cooldown timeline needed to model exact combat uptime.
 
 **For BFF:** saved-build capability resolution now exposes Crusher as a bar-owned ENEMY resistance-reduction EffectVariant using canonical enchantment data. Objective #32 still treats its runtime effect timing as deferred, so the effect is visible in capability audits but cannot silently enter sustained-DPS runtime search until application cadence is authoritative.
+
+
+## 2026-09-22 — Cooldown modifiers do not prove a base cooldown
+
+The repo has canonical rules that can modify a weapon enchantment cooldown once a base cooldown is supplied. That is not evidence for what the base cooldown is, what event triggers the enchantment, or how source/bar persistence behaves.
+
+**For BFF:** weapon-enchantment runtime cadence is now a dedicated decision-critical mechanics gap for Rotation Maker and Optimizer. Crusher magnitude/duration may be audited from canonical enchantment data, but Objective #32 must not schedule it until trigger semantics, base proc cooldown, source persistence, and relevant lockout/shared-cooldown behavior are authoritative.
