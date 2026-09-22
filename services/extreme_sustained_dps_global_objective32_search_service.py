@@ -1,0 +1,123 @@
+from __future__ import annotations
+
+"""End-to-end Objective #32 proof wrapper over the global generated search tree."""
+
+from dataclasses import dataclass
+
+from services.extreme_sustained_dps_axis_dominance_composition_service import (
+    CANONICAL_SUSTAINED_DPS_MUTATION_AXES,
+    ExtremeSustainedDPSAxisCoverageProof,
+    ExtremeSustainedDPSAxisDominanceComposition,
+    ExtremeSustainedDPSAxisDominanceCompositionService,
+)
+from services.extreme_sustained_dps_generated_runtime_state_axis_adapter_service import (
+    ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService,
+)
+from services.extreme_sustained_dps_objective32_search_service import (
+    ExtremeSustainedDPSObjective32SearchScopeProof,
+)
+from services.extreme_sustained_dps_theoretical_maximum_closure_service import (
+    ExtremeSustainedDPSTheoreticalMaximumClosure,
+    ExtremeSustainedDPSTheoreticalMaximumClosureService,
+)
+
+
+@dataclass(frozen=True)
+class ExtremeSustainedDPSGlobalObjective32SearchResult:
+    search: object
+    axis_coverage: ExtremeSustainedDPSAxisDominanceComposition
+    closure: ExtremeSustainedDPSTheoreticalMaximumClosure
+    scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof
+
+    @property
+    def best_modeled_dps(self) -> float | None:
+        return getattr(self.search, "best_modeled_dps", None)
+
+    @property
+    def finite_denominator_maximum_proven(self) -> bool:
+        return self.closure.finite_denominator_maximum_proven
+
+    @property
+    def theoretical_maximum_proven(self) -> bool:
+        return self.closure.theoretical_maximum_proven
+
+
+class ExtremeSustainedDPSGlobalObjective32SearchService:
+    """Run the structural global tree and apply Objective #32 closure proof."""
+
+    def __init__(
+        self,
+        *,
+        global_search: object,
+        structural_families: object,
+    ) -> None:
+        self.global_search = global_search
+        self.structural_families = structural_families
+
+    def search(
+        self,
+        *,
+        coverage_proofs: tuple[ExtremeSustainedDPSAxisCoverageProof, ...],
+        scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof,
+        runtime_state_frontier=None,
+        omitted_scope: tuple[str, ...] = (),
+        root_key: str = "generated-global-root",
+        **search_kwargs,
+    ) -> ExtremeSustainedDPSGlobalObjective32SearchResult:
+        normalized_root = str(root_key or "").strip() or "generated-global-root"
+
+        search = self.global_search.search(
+            root_key=normalized_root,
+            runtime_state_frontier=runtime_state_frontier,
+            **search_kwargs,
+        )
+
+        proofs = (
+            self.structural_families.coverage(),
+            *tuple(coverage_proofs),
+        )
+        if runtime_state_frontier is not None:
+            proofs = (
+                *proofs,
+                ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.coverage(
+                    runtime_state_frontier
+                ),
+            )
+
+        coverage = ExtremeSustainedDPSAxisDominanceCompositionService.compose(
+            normalized_root,
+            required_axes=tuple(CANONICAL_SUSTAINED_DPS_MUTATION_AXES),
+            proofs=proofs,
+        )
+
+        scope_unresolved: tuple[str, ...] = ()
+        if scope_proof.root_candidate_key != normalized_root:
+            scope_unresolved = (
+                "Global Objective #32 coverage proof scope names a different generated search root",
+            )
+        elif not scope_proof.coverage_matches_search_denominator:
+            scope_unresolved = (
+                "Global Objective #32 non-structural axis coverage is not proven to match the generated search denominator",
+            )
+
+        closure = ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+            search,
+            axis_coverage=coverage,
+            omitted_scope=(
+                *tuple(omitted_scope),
+                *scope_unresolved,
+            ),
+        )
+
+        return ExtremeSustainedDPSGlobalObjective32SearchResult(
+            search=search,
+            axis_coverage=coverage,
+            closure=closure,
+            scope_proof=scope_proof,
+        )
+
+
+__all__ = [
+    "ExtremeSustainedDPSGlobalObjective32SearchResult",
+    "ExtremeSustainedDPSGlobalObjective32SearchService",
+]
