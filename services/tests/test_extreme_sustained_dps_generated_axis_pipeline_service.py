@@ -75,6 +75,29 @@ class _GearAdapter:
         )
 
 
+class _MundusFoodAdapter:
+    def __init__(self, calls):
+        self.calls = calls
+
+    def root(self, context):
+        self.calls.append(("mundus-food", "root", context))
+        return _Stage("mundus-food", context=context)
+
+    def axes(self):
+        return (
+            _one_axis(
+                "MundusFood",
+                lambda state: replace(
+                    state,
+                    complete=True,
+                    context="mundus-food-context",
+                    result=state.result + "|mundus-food",
+                ),
+                self.calls,
+            ),
+        )
+
+
 class _LateAdapter:
     def __init__(self, calls):
         self.calls = calls
@@ -260,3 +283,33 @@ def test_pipeline_requires_stable_candidate_identity_prefix() -> None:
             snapshot_resolver=object(),
             target_identity="boss",
         )
+
+
+
+def test_optional_mundus_food_stage_sits_between_gear_and_late() -> None:
+    calls = []
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        mundus_food_adapter=_MundusFoodAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+    )
+    state = _root(pipeline)
+
+    axes = pipeline.axes()
+    assert tuple(axis.name for axis in axes) == (
+        "Gear",
+        "MundusFood",
+        "Late",
+        "Rotation",
+        "Runtime",
+    )
+
+    for axis in axes:
+        assert axis.candidate_count(state) == 1
+        state = axis.candidate_at(state, 0)
+
+    assert state.complete is True
+    late_root = next(row for row in calls if row[:2] == ("late", "root"))
+    assert late_root[2] == "mundus-food-context"
