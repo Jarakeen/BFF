@@ -75,3 +75,20 @@ def test_inventory_duplicate_axis_fails_closed() -> None:
 
     assert result.proof.dominated_axes == ()
     assert any("duplicate canonical-axis" in row for row in result.unresolved)
+
+
+
+def test_globally_proven_flag_with_unresolved_search_evidence_promotes_no_coverage() -> None:
+    result = ExtremeSustainedDPSGeneratedTreeCoverageService.from_search(
+        search_result=SimpleNamespace(
+            global_maximum_proven=True,
+            unresolved=("one descendant remains mechanically unresolved",),
+        ),
+        axis_inventory=_inventory(),
+    )
+
+    assert result.proof.dominated_axes == ()
+    assert any(
+        "mechanically unresolved" in row
+        for row in result.proof.unresolved
+    )
