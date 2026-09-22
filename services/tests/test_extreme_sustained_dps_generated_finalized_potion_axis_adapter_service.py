@@ -117,7 +117,9 @@ def test_axis_owns_finalized_potion_timing_canonical_dimension() -> None:
 
     assert axis.name == "Finalized Potion Timing Policy"
     assert axis.canonical_axes == ("potion_timing_policy",)
-    assert axis.omitted_scope == ()
+    assert axis.omitted_scope == (
+        "potion instant-restoration timing across resource-timeline event boundaries is not yet closed",
+    )
 
 
 def test_selected_potion_enumerates_no_use_boundaries_and_open_intervals() -> None:
@@ -133,7 +135,7 @@ def test_selected_potion_enumerates_no_use_boundaries_and_open_intervals() -> No
     axis = adapter.axis()
     assert axis.candidate_count(state) == 4
     call = denominator.calls[-1]
-    assert call["instant_restoration_timing_closed"] is True
+    assert call["instant_restoration_timing_closed"] is False
     assert call["observation_frontier"].observation_times == (1.0, 4.0)
 
 
