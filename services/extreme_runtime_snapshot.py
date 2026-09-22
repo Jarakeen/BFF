@@ -65,6 +65,7 @@ class ExtremeRuntimeSnapshot:
     runtime_history: tuple[ExtremeRuntimeHistoryEntry, ...] = ()
     recipient_actor_id: str | None = None
     group_member_ids: tuple[str, ...] = ()
+    runtime_history_complete: bool = False
     bar_transition_history_complete: bool = False
 
     def __post_init__(self) -> None:
@@ -84,11 +85,17 @@ class ExtremeRuntimeSnapshot:
                 if str(value or "").strip()
             )
         )
+        complete_runtime_history = bool(self.runtime_history_complete)
         complete_bar_history = bool(self.bar_transition_history_complete)
         object.__setattr__(self, "runtime_history", history)
         object.__setattr__(self, "attempts", attempts)
         object.__setattr__(self, "recipient_actor_id", recipient)
         object.__setattr__(self, "group_member_ids", members)
+        object.__setattr__(
+            self,
+            "runtime_history_complete",
+            complete_runtime_history,
+        )
         object.__setattr__(
             self,
             "bar_transition_history_complete",
@@ -247,6 +254,7 @@ class ExtremeRuntimeSnapshot:
             snapshot_time_seconds=instant,
             recipient_actor_id=self.recipient_actor_id,
             group_member_ids=self.group_member_ids,
+            runtime_history_complete=self.runtime_history_complete,
             bar_transition_history_complete=self.bar_transition_history_complete,
         )
 
@@ -340,7 +348,7 @@ class ExtremeRuntimeSnapshot:
     @property
     def has_runtime_history_at_snapshot(self) -> bool:
         if not self.runtime_history:
-            return bool(self.attempts)
+            return bool(self.runtime_history_complete or self.attempts)
         return any(
             self._entry_order(entry)[0] <= self.snapshot_time_seconds + 1e-12
             for entry in self.ordered_runtime_history
