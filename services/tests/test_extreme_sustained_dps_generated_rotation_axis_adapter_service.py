@@ -61,13 +61,34 @@ class _PolicyFrontier:
         self.unresolved = tuple(unresolved)
         self.calls = []
 
-    def frontier(self, *, build, seed, potion_cooldown_seconds):
-        self.calls.append(("frontier", build, seed, potion_cooldown_seconds))
+    def frontier(
+        self,
+        *,
+        build,
+        seed,
+        potion_cooldown_seconds,
+        starting_ultimate=0.0,
+        ultimate_generation_events=(),
+        heroism_windows=(),
+        use_scheduled_combat_attacks_for_ultimate=False,
+    ):
+        self.calls.append(
+            (
+                "frontier",
+                build,
+                seed,
+                potion_cooldown_seconds,
+                starting_ultimate,
+                tuple(ultimate_generation_events),
+                tuple(heroism_windows),
+                use_scheduled_combat_attacks_for_ultimate,
+            )
+        )
         return SimpleNamespace(
             candidate_count=2,
             anchored_policy_denominator_proven=self.proven,
             continuous_potion_timing_closed=False,
-            delayed_ultimate_timing_closed=False,
+            delayed_ultimate_timing_closed=True,
             unresolved=self.unresolved,
         )
 
@@ -268,5 +289,23 @@ def test_rotation_policy_axis_carries_theoretical_timing_omissions() -> None:
     )
     assert policy_axis.omitted_scope == (
         "continuous potion first-use offset is not closed by anchored policy search",
-        "deliberate post-affordability Ultimate delay is not closed by anchored policy search",
+    )
+
+
+
+def test_policy_frontier_count_receives_ultimate_runtime_inputs() -> None:
+    policies = _PolicyFrontier()
+    adapter = _adapter(policies=policies)
+    state = _root(adapter)
+    state = adapter.axes()[0].candidate_at(state, 0)
+
+    assert adapter.axes()[1].candidate_count(state) == 2
+    call = policies.calls[-1]
+    assert call[0] == "frontier"
+    assert call[3:] == (
+        45.0,
+        70.0,
+        ("generation",),
+        ("heroism",),
+        True,
     )
