@@ -182,11 +182,13 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
                 "Rotation Plan Family",
                 candidate_count=self._plan_count,
                 candidate_at=self._plan_at,
+                canonical_axes=("rotation_order", "light_attack_weave"),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
                 "Anchored Ultimate and Potion Policy",
                 candidate_count=self._policy_count,
                 candidate_at=self._policy_at,
+                canonical_axes=("ultimate_policy", "potion_timing_policy"),
             ),
         )
 
