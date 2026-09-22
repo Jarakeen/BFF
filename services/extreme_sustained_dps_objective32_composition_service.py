@@ -147,6 +147,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
         objective32 = ExtremeSustainedDPSGlobalObjective32SearchService(
             global_search=global_search,
             structural_families=structural_families,
+            require_closure_ready_scenario=True,
         )
 
         return ExtremeSustainedDPSObjective32Composition(
@@ -160,6 +161,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
                 "Heavy Attack timing uses scheduler-derived complete-discovery mode",
                 "Exact leaves use canonical generated runtime evaluation",
                 "Additional potion resource-event denominator is explicitly proven complete",
+                "Canonical Objective #32 search requires closure-ready runtime-state and Heavy Attack channel-block scenario evidence before traversal",
             ),
         )
 
