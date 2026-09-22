@@ -20,7 +20,7 @@ def _demand(name="Burst"):
         start_seconds=5.0,
         end_seconds=8.0,
         kind=RotationDemandKind.DAMAGE,
-        pattern=RotationDemandPattern.WINDOW,
+        pattern=RotationDemandPattern.BURST,
         target_count=1,
     )
 
