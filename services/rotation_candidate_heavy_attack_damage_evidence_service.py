@@ -139,6 +139,17 @@ class RotationCandidateHeavyAttackDamageEvidenceService:
                 action,
                 "partial/interrupted heavy-attack damage is unresolved; canonical full-charge formula cannot be reused",
             )
+        if evidence.landed is None:
+            return self._unresolved(
+                action,
+                "fully charged heavy-attack damage requires authoritative successful-hit evidence",
+            )
+        if evidence.landed is False:
+            return RotationActionDamageEvidence(
+                time_seconds=action.time_seconds,
+                sequence=action.sequence,
+                damage_value=0.0,
+            )
 
         projection = self.weapon_projection_service.project(
             build=self.build,
