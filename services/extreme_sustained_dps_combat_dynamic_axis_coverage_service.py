@@ -173,14 +173,24 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
     def heavy_attack_policy(
         cls,
         frontier: ExtremeSustainedDPSHeavyAttackPolicyFrontier,
+        *,
+        complete_window_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSCombatDynamicAxisCoverageResult:
         unresolved = tuple(frontier.unresolved)
         complete = bool(frontier.denominator_proven and not unresolved)
         omitted = (
-            "Heavy Attack windows outside the caller-supplied reviewed safe set are not claimed closed",
+            ()
+            if complete_window_denominator_proven
+            else (
+                "Heavy Attack windows outside the caller-supplied reviewed safe set are not claimed closed",
+            )
         )
         proof = ExtremeSustainedDPSAxisCoverageProof(
-            source="complete reviewed Heavy Attack policy denominator",
+            source=(
+                "complete scheduler-derived Heavy Attack policy denominator"
+                if complete_window_denominator_proven
+                else "complete reviewed Heavy Attack policy denominator"
+            ),
             dominated_axes=("heavy_attack_policy",) if complete else (),
             unresolved=unresolved,
             omitted_scope=omitted,
@@ -194,7 +204,11 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
                     if complete
                     else "Canonical Heavy Attack policy coverage withheld"
                 ),
-                "Coverage applies only to caller-supplied reviewed safe Heavy Attack windows",
+                (
+                    "Coverage includes the proven-complete scheduler-derived Heavy Attack start family"
+                    if complete_window_denominator_proven
+                    else "Coverage applies only to caller-supplied reviewed safe Heavy Attack windows"
+                ),
             ),
             unresolved=unresolved,
             omitted_scope=omitted,
