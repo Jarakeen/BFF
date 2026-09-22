@@ -124,6 +124,7 @@ class BuildCatalogService:
         player["notes"] = str(player.get("notes") or "").strip()
         player["status"] = str(player.get("status") or "Active").strip() or "Active"
         player["avatar_path"] = str(player.get("avatar_path") or "").strip()
+        player["discord_avatar_url"] = str(player.get("discord_avatar_url") or "").strip()
         return player
 
     @classmethod
@@ -476,6 +477,29 @@ class BuildCatalogService:
                 continue
             updated = copy.deepcopy(player)
             updated["avatar_path"] = normalized_path
+            catalog["players"][index] = updated
+            self.save(catalog)
+            return copy.deepcopy(updated)
+        return None
+
+    def set_player_discord_avatar(
+        self,
+        *,
+        player_id: str,
+        avatar_url: str,
+        avatar_path: str,
+    ) -> dict[str, Any] | None:
+        """Persist the current Discord avatar source and its local cached portrait."""
+        normalized_url = str(avatar_url or "").strip()
+        normalized_path = str(avatar_path or "").strip()
+        catalog = self.load()
+        for index, player in enumerate(catalog["players"]):
+            if player.get("player_id") != player_id:
+                continue
+            updated = copy.deepcopy(player)
+            updated["discord_avatar_url"] = normalized_url
+            if normalized_path:
+                updated["avatar_path"] = normalized_path
             catalog["players"][index] = updated
             self.save(catalog)
             return copy.deepcopy(updated)
