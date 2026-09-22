@@ -1483,3 +1483,10 @@ A runtime effect can fail sustained-DPS closure because the game evidence is inc
 Proving the maximum over every branch in a generated finite tree proves only that tree. If a relevant combat mechanic is missing, partially modeled, or lacks source/math review, the theoretical ESO-wide objective is still open even when every represented mutation axis is covered.
 
 **For BFF:** Objective #32 now carries a closure inventory that separates runtime source-data debt, runtime math/review debt, critical mechanics gaps, and partial mechanics coverage. The theoretical maximum gate can consume that inventory, and the canonical blocker report explains the same debt rather than allowing finite-search completion to masquerade as a fully closed combat model.
+
+
+## 2026-09-22 — Master Architect duration belongs to the Ultimate spend
+
+Master Architect's Major Slayer duration is not a fixed one-second proc. The reviewed set semantics are one second of Major Slayer per 10 Ultimate spent, so the runtime duration is candidate-specific.
+
+**For BFF:** Objective #32 now resolves that duration from canonical Ultimate spend before runtime relevance and event enumeration. A 250-cost Ultimate produces 25 seconds. A branch with no scheduled Ultimate has no operative duration requirement, while mixed or unresolved Ultimate-cost evidence fails closed rather than silently using the registry's one-second base unit.
