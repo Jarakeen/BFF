@@ -29,6 +29,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
     axis_coverage: ExtremeSustainedDPSAxisDominanceComposition
     closure: ExtremeSustainedDPSTheoreticalMaximumClosure
     scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof | None
+    supplemental_evidence: tuple[str, ...] = ()
 
     @property
     def best_modeled_dps(self) -> float | None:
@@ -108,8 +109,6 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             required_axes=tuple(CANONICAL_SUSTAINED_DPS_MUTATION_AXES),
             proofs=proofs,
         )
-        _ = supplemental_scope_note
-
         inventory_unresolved: list[str] = []
         if axis_inventory.missing_canonical_axes:
             inventory_unresolved.append(
@@ -133,6 +132,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             axis_coverage=coverage,
             closure=closure,
             scope_proof=scope_proof,
+            supplemental_evidence=tuple(supplemental_scope_note),
         )
 
 
