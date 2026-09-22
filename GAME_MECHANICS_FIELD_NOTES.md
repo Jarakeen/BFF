@@ -1407,3 +1407,14 @@ Objective #32’s effect-universe audit found that **From the Brink** is represe
 **What it means in actual play:** two otherwise identical rotations can have different runtime state because a CP trigger occurred in one scenario and not the other.
 
 **For BFF:** generated CP choices must participate in runtime-effect discovery whenever their canonical CP resolver produces a triggered effect. Treating all CP as static would let the theoretical search silently omit legal runtime mechanics.
+
+
+## 2026-09-22 — A real proc does not automatically belong in a DPS search
+
+While closing Objective #32 runtime state, BFF hit an important distinction: **From the Brink** is a real triggered Champion Point proc, but its canonical result is a damage shield. The proc matters mechanically, yet the shield does not change the current sustained-DPS calculation.
+
+**Layman's version:** “this thing can proc” and “this thing can change my damage” are two different questions. If the optimizer treats every combat proc as a DPS branch, defensive mechanics can multiply the search tree without changing the score at all.
+
+**What it means in actual play:** a defensive shield proc can be very important for surviving a fight while still being irrelevant to the narrow question “what is the maximum sustained damage this build can produce?”
+
+**For BFF:** Objective #32 now removes a runtime effect only when canonical semantics prove it cannot affect the DPS objective. Unknown effects are not discarded. Enemy-side damage modifiers such as Vulnerability also remain open until the target-side runtime projection is modeled, because being obviously damage-related is not the same as being correctly wired into the evaluator.
