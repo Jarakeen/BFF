@@ -1338,3 +1338,17 @@ Roaring Opportunist behaves differently when paired with Jorvuld's Guidance: one
 **Layman's version:** Major Slayer is not simply “covered” because one Slayer set exists. The raid either needs two partial-group providers, or one Roaring Opportunist + Jorvuld's provider doing the required Heavy Attacks.
 
 **For BFF / Finch:** signup and comp tools should treat these as mutually exclusive coverage routes. Once RO + Jorvuld's is assigned, War Machine / Master Architect should no longer be offered for Slayer coverage; once the direct-set route is chosen, RO + Jorvuld's should no longer be offered as the alternate route.
+
+
+## Potion restore timing and Phase 4 event priority
+
+For canonical Phase 4 resource timelines, same-timestamp event ordering is:
+
+1. resource maximum change
+2. action cost
+3. ordinary recovery tick
+4. restoration event
+
+This matters for Objective #32 potion timing. A potion's instant resource restore is a restoration event, so moving potion use across any resource-event timestamp can change shortfall, cap clipping, or wasted restoration even when the potion's named-buff state at damage events is unchanged. Continuous potion first-use timing therefore cannot be closed from DD observation times alone. The finite timing denominator must also include all modeled resource-timeline event timestamps, including ordinary 2-second recovery ticks, action coordinates, verified Heavy Attack completion restores, resource-maximum changes, and any other caller-proven restoration events.
+
+**For BFF:** named-buff timing and resource-restoration timing share one continuous potion-use clock but have different state-change boundaries. A proof that closes only buff uptime is not a proof of the full potion timing axis.
