@@ -69,6 +69,7 @@ class ExtremeSustainedDPSGeneratedEncounterPolicyAxisAdapterService:
                 candidate_count=self._count,
                 candidate_at=self._at,
                 canonical_axes=("encounter_policy",),
+                omitted_scope=tuple(self.frontier.omitted_scope),
             ),
         )
 
