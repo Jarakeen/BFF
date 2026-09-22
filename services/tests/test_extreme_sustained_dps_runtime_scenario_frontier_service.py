@@ -6,6 +6,7 @@ from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.runtime_event import RuntimeEvent
+from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_runtime_scenario_frontier_service import (
     ExtremeSustainedDPSRuntimeScenarioFrontierService,
@@ -405,10 +406,7 @@ def test_candidate_builder_surfaces_typed_relevance_blocker_counts() -> None:
         source="Scaled Runtime Debuff",
         trigger="damage_dealt",
         duration=4.0,
-        target_type=__import__(
-            "minmax.support_target_type",
-            fromlist=["SupportTargetType"],
-        ).SupportTargetType.ENEMY,
+        target_type=SupportTargetType.ENEMY,
         resistance_reduction=6000.0,
         scaling="up to 6000 from unresolved source state",
     )
