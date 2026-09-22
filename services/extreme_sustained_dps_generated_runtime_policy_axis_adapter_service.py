@@ -218,6 +218,9 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
                 candidate_count=self._heavy_count,
                 candidate_at=self._heavy_at,
                 canonical_axes=("heavy_attack_policy",),
+                omitted_scope=(
+                    "Heavy Attack windows outside the caller-supplied reviewed safe set are not claimed closed",
+                ),
             ),
         )
 
