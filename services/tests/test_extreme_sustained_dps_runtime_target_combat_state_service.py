@@ -195,3 +195,56 @@ def test_explicit_numeric_resistance_reduction_does_not_leak_targets() -> None:
     )
 
     assert result.explicit_resistance_reduction == 0.0
+
+
+def test_projects_explicit_numeric_damage_amplification_to_matching_target() -> None:
+    effect = EffectVariant(
+        name="synthetic_damage_amplification",
+        layer=EffectLayer.PROC,
+        source="Synthetic Amplifier",
+        trigger="damage_dealt",
+        duration=4.0,
+        target_type=SupportTargetType.ENEMY,
+        damage_amplification=0.07,
+        stacking=StackingBehavior.UNIQUE,
+    )
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(_attempt(1.0, target="Boss"),),
+        snapshot_time_seconds=2.0,
+        runtime_history_complete=True,
+    )
+
+    result = ExtremeSustainedDPSRuntimeTargetCombatStateService.resolve(
+        snapshot=snapshot,
+        effects=(effect,),
+        target_identity="Boss",
+    )
+
+    assert result.unresolved == ()
+    assert result.combat_state.explicit_damage_taken == 0.07
+
+
+def test_explicit_numeric_damage_amplification_does_not_leak_targets() -> None:
+    effect = EffectVariant(
+        name="synthetic_damage_amplification",
+        layer=EffectLayer.PROC,
+        source="Synthetic Amplifier",
+        trigger="damage_dealt",
+        duration=4.0,
+        target_type=SupportTargetType.ENEMY,
+        damage_amplification=0.07,
+        stacking=StackingBehavior.UNIQUE,
+    )
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(_attempt(1.0, target="Add"),),
+        snapshot_time_seconds=2.0,
+        runtime_history_complete=True,
+    )
+
+    result = ExtremeSustainedDPSRuntimeTargetCombatStateService.resolve(
+        snapshot=snapshot,
+        effects=(effect,),
+        target_identity="Boss",
+    )
+
+    assert result.combat_state.explicit_damage_taken == 0.0
