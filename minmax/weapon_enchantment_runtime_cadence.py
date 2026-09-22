@@ -78,7 +78,7 @@ _PROVISIONAL = {
     ),
     WeaponEnchantmentEffectFamily.BUFF_OR_DEBUFF: WeaponEnchantmentCadenceEvidence(
         family=WeaponEnchantmentEffectFamily.BUFF_OR_DEBUFF,
-        base_cooldown_seconds=None,
+        base_cooldown_seconds=10.0,
         authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
         activation_causes=("light_attack", "heavy_attack", "weapon_ability"),
         off_bar_source_persists=True,
