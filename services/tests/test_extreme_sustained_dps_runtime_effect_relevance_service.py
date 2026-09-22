@@ -88,3 +88,14 @@ def test_enemy_target_breach_is_dps_relevant() -> None:
     assert result.relevant == (effect,)
     assert result.irrelevant == ()
     assert result.unresolved == ()
+
+
+def test_enemy_target_brittle_is_dps_relevant() -> None:
+    effect = _effect(
+        "minor_brittle",
+        target_type=SupportTargetType.ENEMY,
+    )
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+    assert result.relevant == (effect,)
+    assert result.irrelevant == ()
+    assert result.unresolved == ()
