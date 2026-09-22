@@ -1222,6 +1222,19 @@ def test_sustained_dps_runtime_event_skeleton_keeps_trigger_authority_explicit()
     assert "remain caller-proven scenario event families" in service.notes
 
 
+def test_sustained_dps_runtime_effect_scaling_is_candidate_specific() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_runtime_effect_scaling"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.runtime_effect_scaling"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "candidate-specific runtime EffectVariant scaling" in service.purpose
+    assert "Master Architect" in service.notes
+    assert "Ultimate spend" in service.notes
+
+
 def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely() -> None:
     attempts = canonical_service_for(
         "extreme_sustained_dps_runtime_attempt_evidence_frontier"
@@ -1248,6 +1261,7 @@ def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely
         for row in SERVICE_CATALOG.dependencies_of(scenario.service_id)
     ) == (
         "extreme.sustained_dps.runtime_effect_universe",
+        "extreme.sustained_dps.runtime_effect_scaling",
         "extreme.sustained_dps.runtime_effect_relevance",
         "extreme.sustained_dps.runtime_event_skeleton",
         "extreme.sustained_dps.runtime_attempt_evidence_frontier",
