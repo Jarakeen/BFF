@@ -104,6 +104,8 @@ def test_global_search_prepends_structural_family_to_pipeline_axes() -> None:
         runtime_snapshot="snapshot",
         target_health=1_000_000,
         target_resistance=18_200.0,
+        heavy_attack_channel_blocks=("channel-block",),
+        heavy_attack_channel_block_denominator_proven=True,
     )
 
     assert result.evaluated_leaf_count == 4
@@ -113,6 +115,15 @@ def test_global_search_prepends_structural_family_to_pipeline_axes() -> None:
     assert pipeline.root_calls[0][0] == "build-0"
     assert pipeline.root_calls[1][0] == "build-1"
     assert pipeline.root_calls[0][2]["dual_bar_frontier"] == "gear-frontier"
+    assert pipeline.root_calls[0][2]["heavy_attack_channel_blocks"] == (
+        "channel-block",
+    )
+    assert (
+        pipeline.root_calls[0][2][
+            "heavy_attack_channel_block_denominator_proven"
+        ]
+        is True
+    )
 
 
 def test_global_search_refuses_unproven_structural_denominator() -> None:
