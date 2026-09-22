@@ -19,6 +19,7 @@ class ExtremeSustainedDPSGeneratedAxisInventory:
     missing_canonical_axes: tuple[str, ...]
     untagged_axis_names: tuple[str, ...]
     duplicate_canonical_axes: tuple[str, ...]
+    omitted_scope: tuple[str, ...]
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
@@ -46,6 +47,7 @@ class ExtremeSustainedDPSGeneratedAxisInventoryService:
         occurrences: dict[str, int] = {}
         searched: list[str] = []
         unresolved: list[str] = []
+        omitted_scope: list[str] = []
 
         for raw in additional_canonical_axes:
             token = str(raw or "").strip()
@@ -59,6 +61,7 @@ class ExtremeSustainedDPSGeneratedAxisInventoryService:
                 searched.append(token)
 
         for axis in axes:
+            omitted_scope.extend(axis.omitted_scope)
             for token in axis.canonical_axes:
                 occurrences[token] = occurrences.get(token, 0) + 1
                 if token not in searched:
@@ -89,11 +92,13 @@ class ExtremeSustainedDPSGeneratedAxisInventoryService:
             missing_canonical_axes=missing,
             untagged_axis_names=untagged,
             duplicate_canonical_axes=duplicates,
+            omitted_scope=tuple(dict.fromkeys(omitted_scope)),
             evidence=(
                 f"Generated indexed axes inspected: {len(axes)}",
                 f"Canonical mutation axes physically enumerated: {len(set(searched))}",
                 f"Canonical mutation axes not physically enumerated: {len(missing)}",
                 f"Untagged generated axes: {len(untagged)}",
+                f"Explicit theoretical omitted-scope items carried by axes: {len(tuple(dict.fromkeys(omitted_scope)))}",
                 "Tree-axis inventory is structural evidence only; it does not prove any frontier denominator complete",
             ),
             unresolved=tuple(dict.fromkeys(unresolved)),
