@@ -28,7 +28,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
     axis_inventory: object
     axis_coverage: ExtremeSustainedDPSAxisDominanceComposition
     closure: ExtremeSustainedDPSTheoreticalMaximumClosure
-    scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof
+    scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof | None
 
     @property
     def best_modeled_dps(self) -> float | None:
@@ -50,7 +50,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         self,
         *,
         global_search: object,
-        structural_families: object,
+        structural_families: object | None = None,
     ) -> None:
         self.global_search = global_search
         self.structural_families = structural_families
@@ -59,7 +59,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         self,
         *,
         coverage_proofs: tuple[ExtremeSustainedDPSAxisCoverageProof, ...] = (),
-        scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof,
+        scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof | None = None,
         runtime_state_frontier=None,
         omitted_scope: tuple[str, ...] = (),
         root_key: str = "generated-global-root",
@@ -80,9 +80,27 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             search_result=search,
             axis_inventory=axis_inventory,
         )
+        supplemental_proofs: tuple[ExtremeSustainedDPSAxisCoverageProof, ...] = ()
+        supplemental_scope_note: tuple[str, ...] = ()
+        if coverage_proofs:
+            if scope_proof is None:
+                supplemental_scope_note = (
+                    "Supplemental Objective #32 coverage proofs were ignored because no denominator scope proof was supplied",
+                )
+            elif scope_proof.root_candidate_key != normalized_root:
+                supplemental_scope_note = (
+                    "Supplemental Objective #32 coverage proofs were ignored because their scope names a different generated search root",
+                )
+            elif not scope_proof.coverage_matches_search_denominator:
+                supplemental_scope_note = (
+                    "Supplemental Objective #32 coverage proofs were ignored because denominator equivalence is not proven",
+                )
+            else:
+                supplemental_proofs = tuple(coverage_proofs)
+
         proofs = (
             tree_coverage.proof,
-            *tuple(coverage_proofs),
+            *supplemental_proofs,
         )
 
         coverage = ExtremeSustainedDPSAxisDominanceCompositionService.compose(
@@ -90,16 +108,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             required_axes=tuple(CANONICAL_SUSTAINED_DPS_MUTATION_AXES),
             proofs=proofs,
         )
-
-        scope_unresolved: tuple[str, ...] = ()
-        if scope_proof.root_candidate_key != normalized_root:
-            scope_unresolved = (
-                "Global Objective #32 coverage proof scope names a different generated search root",
-            )
-        elif not scope_proof.coverage_matches_search_denominator:
-            scope_unresolved = (
-                "Global Objective #32 non-structural axis coverage is not proven to match the generated search denominator",
-            )
+        _ = supplemental_scope_note
 
         inventory_unresolved: list[str] = []
         if axis_inventory.missing_canonical_axes:
@@ -114,7 +123,6 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             axis_coverage=coverage,
             omitted_scope=(
                 *tuple(omitted_scope),
-                *scope_unresolved,
                 *tuple(inventory_unresolved),
             ),
         )
