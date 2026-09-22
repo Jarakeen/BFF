@@ -13,6 +13,9 @@ from dataclasses import dataclass, replace
 from services.extreme_sustained_dps_generated_frontier_wiring_service import (
     ExtremeSustainedDPSIndexedFrontierAxis,
 )
+from services.extreme_sustained_dps_generated_runtime_state_axis_adapter_service import (
+    ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService,
+)
 
 
 @dataclass(frozen=True)
@@ -70,6 +73,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         encounter_policy_adapter: object | None = None,
         finalized_potion_adapter: object | None = None,
         finalized_potion_evidence_resolver: object | None = None,
+        runtime_state_frontier_resolver: object | None = None,
     ) -> None:
         self.gear_adapter = gear_adapter
         self.mundus_food_adapter = mundus_food_adapter
@@ -79,6 +83,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         self.runtime_policy_adapter = runtime_policy_adapter
         self.finalized_potion_adapter = finalized_potion_adapter
         self.finalized_potion_evidence_resolver = finalized_potion_evidence_resolver
+        self.runtime_state_frontier_resolver = runtime_state_frontier_resolver
 
     @staticmethod
     def _require_complete(stage: object, label: str) -> None:
@@ -481,7 +486,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
                     self._replace_finalized_potion,
                 )
             )
-        return tuple(
+        axes = tuple(
             self._wrap_axis(
                 axis,
                 stage_getter=getter,
@@ -490,6 +495,14 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             for axes, getter, replacer in groups
             for axis in axes
         )
+        if self.runtime_state_frontier_resolver is not None:
+            axes = (
+                *axes,
+                ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.candidate_axis(
+                    self.runtime_state_frontier_resolver
+                ),
+            )
+        return axes
 
 
 __all__ = [
