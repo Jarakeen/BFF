@@ -28,10 +28,21 @@ class ExtremeSustainedDPSGeneratedTreeCoverageService:
     ) -> ExtremeSustainedDPSGeneratedTreeCoverageResult:
         unresolved: list[str] = []
 
+        search_unresolved = tuple(
+            str(item).strip()
+            for item in tuple(getattr(search_result, "unresolved", ()) or ())
+            if str(item).strip()
+        )
+        unresolved.extend(
+            f"Generated search: {item}"
+            for item in search_unresolved
+        )
+
         finite_closed = bool(
             getattr(search_result, "global_maximum_proven", False)
+            and not search_unresolved
         )
-        if not finite_closed:
+        if not getattr(search_result, "global_maximum_proven", False):
             unresolved.append(
                 "Generated finite search denominator maximum is not proven"
             )
@@ -68,7 +79,7 @@ class ExtremeSustainedDPSGeneratedTreeCoverageService:
         return ExtremeSustainedDPSGeneratedTreeCoverageResult(
             proof=proof,
             evidence=(
-                f"Finite generated denominator maximum proven: {finite_closed}",
+                f"Finite generated denominator maximum proven without unresolved search evidence: {finite_closed}",
                 f"Canonical axes physically searched: {len(searched_axes)}",
                 f"Canonical axes promoted from this exact tree: {len(proof.dominated_axes)}",
                 f"Explicit theoretical omissions preserved from tree axes: {len(omitted_scope)}",
