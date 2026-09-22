@@ -160,6 +160,18 @@ class ExtremeSustainedDPSObjective32BlockerService:
                     )
                 )
 
+        for item in tuple(getattr(closure, "unresolved", ()) or ()):
+            detail = str(item).strip()
+            if detail and "scope remains explicitly omitted" not in detail:
+                blockers.append(
+                    ExtremeSustainedDPSObjective32Blocker(
+                        code="theoretical_closure_unresolved",
+                        category="theory",
+                        detail=detail,
+                        source="theoretical closure gate",
+                    )
+                )
+
         if closure_inventory is not None:
             for item in tuple(
                 getattr(closure_inventory, "source_data_blockers", ()) or ()
