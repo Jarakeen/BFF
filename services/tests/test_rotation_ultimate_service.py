@@ -400,3 +400,50 @@ def test_generation_bridge_uses_scheduled_damaging_attacks_when_enabled() -> Non
         and action.name == "Aggressive Horn"
     )
     assert horn.time_seconds == 10.0
+
+
+
+def test_generation_inputs_resolve_without_scheduling_or_reserving() -> None:
+    repository = _FakeCostRepository(_resolution())
+    service = RotationUltimateService(ability_cost_repository=repository)
+
+    result = service.resolve_generation_inputs(
+        build=_build(),
+        plan=_long_plan(),
+        ultimate_bar="front",
+        generation_events=(
+            UltimateGenerationEvent(5.0, 75.0, "explicit gain"),
+        ),
+    )
+
+    assert result.bar == "front"
+    assert result.slotted_ultimate == "Aggressive Horn"
+    assert result.spend_rule is not None
+    assert result.spend_rule.cost == 250.0
+    assert result.generation_events == (
+        UltimateGenerationEvent(5.0, 75.0, "explicit gain"),
+    )
+    assert result.unresolved == ()
+    assert repository.calls == ["Aggressive Horn"]
+
+
+def test_generation_inputs_include_heroism_and_opt_in_attack_sources_without_scheduling() -> None:
+    repository = _FakeCostRepository(_resolution())
+    service = RotationUltimateService(ability_cost_repository=repository)
+
+    result = service.resolve_generation_inputs(
+        build=_build(),
+        plan=_woven_plan(),
+        ultimate_bar="front",
+        heroism_windows=(
+            HeroismWindow(HeroismTier.MINOR, 0.0, 3.0, source="Minor Heroism"),
+        ),
+        use_scheduled_combat_attacks=True,
+    )
+
+    assert result.spend_rule is not None
+    assert result.generation_events
+    assert all(
+        isinstance(row, UltimateGenerationEvent)
+        for row in result.generation_events
+    )
