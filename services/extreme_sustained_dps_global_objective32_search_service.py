@@ -13,6 +13,10 @@ from services.extreme_sustained_dps_axis_dominance_composition_service import (
 from services.extreme_sustained_dps_generated_tree_coverage_service import (
     ExtremeSustainedDPSGeneratedTreeCoverageService,
 )
+from services.extreme_sustained_dps_objective32_blocker_service import (
+    ExtremeSustainedDPSObjective32BlockerReport,
+    ExtremeSustainedDPSObjective32BlockerService,
+)
 from services.extreme_sustained_dps_objective32_search_service import (
     ExtremeSustainedDPSObjective32SearchScopeProof,
 )
@@ -29,6 +33,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
     axis_coverage: ExtremeSustainedDPSAxisDominanceComposition
     closure: ExtremeSustainedDPSTheoreticalMaximumClosure
     scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof | None
+    blockers: ExtremeSustainedDPSObjective32BlockerReport
     supplemental_evidence: tuple[str, ...] = ()
 
     @property
@@ -125,6 +130,12 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
                 *tuple(inventory_unresolved),
             ),
         )
+        blockers = ExtremeSustainedDPSObjective32BlockerService.assess(
+            search_result=search,
+            axis_inventory=axis_inventory,
+            axis_coverage=coverage,
+            closure=closure,
+        )
 
         return ExtremeSustainedDPSGlobalObjective32SearchResult(
             search=search,
@@ -132,6 +143,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             axis_coverage=coverage,
             closure=closure,
             scope_proof=scope_proof,
+            blockers=blockers,
             supplemental_evidence=tuple(supplemental_scope_note),
         )
 
