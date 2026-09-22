@@ -41,6 +41,9 @@ class GearSetKnownEffect:
     trigger: str | None = None
     target_type: SupportTargetType | None = None
     category: SupportEffectCategory | None = None
+    damage_amplification: float | None = None
+    resistance_reduction: float | None = None
+    penetration: float | None = None
     stacking: StackingBehavior | None = None
     exclusivity_group: str | None = None
     source_persistence: EffectSourcePersistence | None = None
