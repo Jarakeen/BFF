@@ -120,7 +120,15 @@ class ExtremeSustainedDPSDelayedUltimatePolicyFrontierService:
                 )
 
         visit(0, 0.0, ())
-        return tuple(result)
+        return tuple(
+            sorted(
+                result,
+                key=lambda rows: (
+                    len(rows),
+                    rows,
+                ),
+            )
+        )
 
     def build(
         self,
