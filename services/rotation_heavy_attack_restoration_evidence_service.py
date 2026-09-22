@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Callable
 
 from minmax.character_build.character_build import CharacterBuild
@@ -18,6 +19,16 @@ from services.rotation_heavy_attack_weapon_projection_service import (
 )
 
 
+class RotationHeavyAttackHitOutcome(str, Enum):
+    """Reviewed hit-state vocabulary shared by Heavy Attack consumers."""
+
+    LANDED = "landed"
+    BLOCKED = "blocked"
+    DODGED = "dodged"
+    MISSED = "missed"
+    IMMUNE = "immune"
+
+
 @dataclass(frozen=True)
 class RotationHeavyAttackCompletionEvidence:
     """Explicit runtime evidence for one scheduled heavy attack completion.
@@ -25,7 +36,8 @@ class RotationHeavyAttackCompletionEvidence:
     `fully_charged=False` is affirmative evidence that the heavy did not complete
     as a fully charged attack and therefore produces no heavy-attack restoration.
     Missing evidence is not treated as an interrupted/partial heavy; it remains
-    unresolved. ``landed`` is independent from channel completion: ``None`` means
+    unresolved. ``hit_outcome`` preserves richer reviewed target outcomes without
+    forcing damage consumers to equate blocked with dodged or missed. ``landed`` is independent from channel completion: ``None`` means
     hit outcome is unknown, ``False`` suppresses restoration, and only ``True`` may
     produce a restoration event.
 
@@ -39,6 +51,7 @@ class RotationHeavyAttackCompletionEvidence:
     completion_time_seconds: float
     fully_charged: bool
     landed: bool | None = None
+    hit_outcome: RotationHeavyAttackHitOutcome | None = None
     verified_base_restore: float | None = None
     modifiers: HeavyAttackRestorationModifiers = HeavyAttackRestorationModifiers()
     source: str = "explicit heavy-attack completion evidence"
@@ -54,6 +67,21 @@ class RotationHeavyAttackCompletionEvidence:
             raise ValueError("heavy-attack evidence sequence cannot be negative")
         if self.landed is not None and not isinstance(self.landed, bool):
             raise ValueError("heavy-attack landed evidence must be boolean or None")
+        outcome = self.hit_outcome
+        if outcome is not None and not isinstance(outcome, RotationHeavyAttackHitOutcome):
+            try:
+                outcome = RotationHeavyAttackHitOutcome(str(outcome).strip().casefold())
+            except ValueError as exc:
+                raise ValueError("unknown heavy-attack hit outcome") from exc
+            object.__setattr__(self, "hit_outcome", outcome)
+        if outcome is RotationHeavyAttackHitOutcome.LANDED and self.landed is False:
+            raise ValueError("landed heavy-attack outcome contradicts landed=False")
+        if outcome in {
+            RotationHeavyAttackHitOutcome.DODGED,
+            RotationHeavyAttackHitOutcome.MISSED,
+            RotationHeavyAttackHitOutcome.IMMUNE,
+        } and self.landed is True:
+            raise ValueError("non-landed heavy-attack outcome contradicts landed=True")
         source = str(self.source or "").strip()
         if not source:
             raise ValueError("heavy-attack completion evidence requires a source")
