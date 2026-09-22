@@ -12,6 +12,7 @@ bridge exists.
 from dataclasses import dataclass, replace
 from pathlib import Path
 
+from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.combat_state import CombatState
 from minmax.gear_set_repository import GearSetRepository
@@ -53,6 +54,9 @@ from services.extreme_saved_rotation_combat_record_service import (
 )
 from services.extreme_sustained_dps_runtime_effect_projection_service import (
     ExtremeSustainedDPSRuntimeEffectProjectionService,
+)
+from services.extreme_sustained_dps_runtime_target_combat_state_service import (
+    ExtremeSustainedDPSRuntimeTargetCombatStateService,
 )
 from services.minmax_character_progression_adapter import (
     SavedBuildProgressionResolution,
@@ -196,6 +200,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
         gear_state: ExtremeDualBarGearState,
         plan: RotationPlan,
         runtime_snapshot: ExtremeRuntimeSnapshot,
+        runtime_effects: tuple[EffectVariant, ...] = (),
         target_health: int,
         target_resistance: float,
         target_name: str = "Boss",
@@ -274,6 +279,24 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 sequence=sequence,
             )
 
+        target_runtime_unresolved: list[str] = []
+
+        def target_combat_state_resolver(
+            time_seconds: float,
+            sequence: int | None = None,
+        ) -> CombatState:
+            projected_snapshot = runtime_snapshot.snapshot_at(
+                time_seconds,
+                sequence=sequence,
+            )
+            projection = ExtremeSustainedDPSRuntimeTargetCombatStateService.resolve(
+                snapshot=projected_snapshot,
+                effects=tuple(runtime_effects),
+                target_identity=target,
+            )
+            target_runtime_unresolved.extend(projection.unresolved)
+            return projection.combat_state
+
         simulator = CombatSimulationSavedBuildDDService(
             provider_service=CombatSimulationSavedBuildDDProviderService(
                 database_path=self.database_path,
@@ -306,15 +329,25 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             target_resistance=float(target_resistance),
             initial_bar=initial_bar,
             runtime_build_context_resolver=runtime_build_context_resolver,
+            target_combat_state_resolver=(
+                target_combat_state_resolver if runtime_effects else None
+            ),
         )
         summary = self.summary_service.summarize(result, target_identity=target)
-        unresolved = self._dedupe((*summary.unresolved, *summary.damage_unresolved))
+        unresolved = self._dedupe(
+            (
+                *summary.unresolved,
+                *summary.damage_unresolved,
+                *tuple(target_runtime_unresolved),
+            )
+        )
         evidence = (
             f"Generated candidate rotation horizon: {plan.duration_seconds:g}s",
             f"Explicit target Health: {int(target_health)}",
             f"Explicit target resistance: {float(target_resistance):g}",
             "Dual-bar named-set activation bound into shared runtime snapshot truth",
             "Named buffs and reviewed timed non-named runtime stat effects may alter exact runtime build contexts",
+            "Reviewed enemy-target Damage Taken effects are projected through canonical target_combat_state at exact damage timestamps",
             "Damage evaluated through Phase 14 Combat Simulation using candidate_build provenance",
         )
         if summary.modeled_dps is None:
