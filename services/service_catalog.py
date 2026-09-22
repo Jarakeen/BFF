@@ -1010,6 +1010,26 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_axis_inventory",
+        domain="extreme",
+        purpose=(
+            "Inventory which canonical sustained-DPS mutation axes are physically represented by one generated lazy search tree without promoting tree presence into denominator proof."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_axis_inventory_service",
+        inputs=("IndexedFrontierAxes", "AdditionalCanonicalAxes"),
+        outputs=("ExtremeSustainedDPSGeneratedAxisInventory",),
+        dependencies=("extreme.sustained_dps.generated_frontier_wiring",),
+        responsibilities=("extreme_sustained_dps_generated_axis_inventory",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Axis metadata is structural evidence only. Missing axes remain visible, untagged axes are reported, "
+            "and duplicate canonical-axis enumeration is surfaced instead of silently accepted."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.global_generated_search",
         domain="extreme",
         purpose=(
@@ -1029,6 +1049,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.structural_materialization",
             "extreme.sustained_dps.generated_axis_pipeline",
             "extreme.sustained_dps.generated_frontier_wiring",
+            "extreme.sustained_dps.generated_axis_inventory",
             "extreme.sustained_dps.generated_runtime_state_axis_adapter",
         ),
         responsibilities=("extreme_sustained_dps_global_generated_search",),
