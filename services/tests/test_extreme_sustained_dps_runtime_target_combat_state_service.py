@@ -4,6 +4,7 @@ from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
+from minmax.support_stacking import StackingBehavior
 from minmax.support_target_type import SupportTargetType
 from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from services.extreme_sustained_dps_runtime_target_combat_state_service import (
@@ -30,6 +31,7 @@ def _vulnerability() -> EffectVariant:
         trigger="damage_dealt",
         duration=4.0,
         target_type=SupportTargetType.ENEMY,
+        stacking=StackingBehavior.UNIQUE,
     )
 
 
