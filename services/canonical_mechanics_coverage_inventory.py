@@ -243,6 +243,30 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
+            domain=CanonicalKnowledgeDomain.COOLDOWN,
+            key="weapon_enchantments:runtime_cadence",
+            status=CanonicalMechanicsCoverageStatus.MISSING_CRITICAL,
+            capability=(
+                "Saved weapon enchantments can be resolved to canonical CombatEffects and "
+                "target-debuff EffectVariants with active-bar ownership, duration, and "
+                "trait-adjusted magnitude. Cooldown-modifier rules also exist independently."
+            ),
+            evidence_source=(
+                "minmax/weapon_enchantment_repository.py; "
+                "minmax/weapon_enchantment_effect_service.py; "
+                "minmax/combat_cooldown_rules.py; "
+                "services/saved_build_capability_service.py"
+            ),
+            consumers=ROTATION_OPTIMIZER,
+            missing_evidence=(
+                "Provide authoritative weapon-enchantment activation trigger semantics, base "
+                "proc cooldown by enchantment/effect family, off-bar persistence/source ownership, "
+                "shared cooldown or target lockout behavior, and any interaction with direct, "
+                "periodic, light, heavy, or proc damage. Only then may trait-adjusted cooldown "
+                "rules be composed into exact runtime cadence."
+            ),
+        ),
+        CanonicalMechanicsCoverageEvidence(
             domain=CanonicalKnowledgeDomain.SKILL_MECHANIC,
             key="weapons:bash_interrupt_poison_topology",
             status=CanonicalMechanicsCoverageStatus.PARTIAL,
