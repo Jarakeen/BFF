@@ -9,6 +9,10 @@ from services.extreme_sustained_dps_objective32_composition_service import (
 )
 
 
+class _RuntimePolicyAdapter:
+    require_complete_heavy_attack_discovery = True
+
+
 class _PotionEvidence:
     def __init__(self, *, proven=True):
         self.additional_resource_event_denominator_proven = proven
@@ -21,7 +25,7 @@ def _kwargs():
         "gear_adapter": object(),
         "late_adapter": object(),
         "rotation_adapter": object(),
-        "runtime_policy_adapter": object(),
+        "runtime_policy_adapter": _RuntimePolicyAdapter(),
         "runtime_evaluation": object(),
         "finalized_potion_evidence_resolver": _PotionEvidence(proven=True),
     }
@@ -89,4 +93,16 @@ def test_composition_refuses_missing_production_authority(field, message) -> Non
     kwargs[field] = None
 
     with pytest.raises(ValueError, match=message):
+        ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
+
+
+
+def test_composition_refuses_legacy_heavy_attack_window_mode() -> None:
+    kwargs = _kwargs()
+    kwargs["runtime_policy_adapter"] = object()
+
+    with pytest.raises(
+        ValueError,
+        match="complete Heavy Attack discovery mode",
+    ):
         ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
