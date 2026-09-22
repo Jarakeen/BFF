@@ -194,6 +194,8 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert "context_factory.py" in passive_row.evidence_source
     assert "Warden" in passive_row.capability
     assert "Alliance Support" in passive_row.capability
+    assert "racial_passive_stat_repository.py" in passive_row.evidence_source
+    assert "not yet a general rotation-runtime bridge" in passive_row.missing_evidence
 
     armor_row = next(row for row in rows if row.key == "armor:weight_passive_semantics")
     assert armor_row.status is CanonicalMechanicsCoverageStatus.PARTIAL
