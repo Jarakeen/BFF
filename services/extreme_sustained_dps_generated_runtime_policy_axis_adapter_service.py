@@ -70,12 +70,16 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
             ExtremeSustainedDPSHeavyAttackPolicyFrontierService | object
         ),
         heavy_attack_window_discovery: object | None = None,
+        require_complete_heavy_attack_discovery: bool = False,
     ) -> None:
         self.execute_policies = execute_policies
         self.heavy_attack_policies = heavy_attack_policies
         self.heavy_attack_window_discovery = (
             heavy_attack_window_discovery
             or ExtremeSustainedDPSHeavyAttackWindowDiscoveryService
+        )
+        self.require_complete_heavy_attack_discovery = bool(
+            require_complete_heavy_attack_discovery
         )
 
     @staticmethod
@@ -149,7 +153,11 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
     ) -> object:
         execute = self._require_execute(state)
 
-        if state.heavy_attack_channel_block_denominator_proven:
+        if self.require_complete_heavy_attack_discovery:
+            if not state.heavy_attack_channel_block_denominator_proven:
+                raise ValueError(
+                    "complete Heavy Attack discovery mode requires a proven encounter channel-block denominator"
+                )
             discovery = self.heavy_attack_window_discovery.discover(
                 seed=execute.candidate,
                 duration_rules=state.duration_rules,
@@ -269,7 +277,13 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
                 candidate_count=self._heavy_count,
                 candidate_at=self._heavy_at,
                 canonical_axes=("heavy_attack_policy",),
-                omitted_scope=(),
+                omitted_scope=(
+                    ()
+                    if self.require_complete_heavy_attack_discovery
+                    else (
+                        "Heavy Attack windows outside the caller-supplied reviewed safe set are not claimed closed",
+                    )
+                ),
             ),
         )
 
