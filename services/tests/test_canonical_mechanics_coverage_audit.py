@@ -189,6 +189,12 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert "weapons:bash_interrupt_poison_topology" in keys
     assert "encounter:target_range_movement_topology" in keys
 
+    passive_row = next(row for row in rows if row.key == "passives:runtime_semantics")
+    assert passive_row.status is CanonicalMechanicsCoverageStatus.PARTIAL
+    assert "context_factory.py" in passive_row.evidence_source
+    assert "Warden" in passive_row.capability
+    assert "Alliance Support" in passive_row.capability
+
     armor_row = next(row for row in rows if row.key == "armor:weight_passive_semantics")
     assert armor_row.status is CanonicalMechanicsCoverageStatus.PARTIAL
     assert "armor_passive_input_resolver.py" in armor_row.evidence_source
