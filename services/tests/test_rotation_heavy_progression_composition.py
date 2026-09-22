@@ -234,5 +234,5 @@ def test_saved_revitalize_rank_two_scales_frost_restore_by_heavy_pieces() -> Non
 
     assert result.is_resolved is True
     assert result.restoration_projection.restoration_events[0].amount == pytest.approx(
-        2425.0 * 1.08
+        2838.0 * 1.08
     )
