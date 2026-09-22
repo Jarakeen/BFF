@@ -74,6 +74,8 @@ class ExtremeSustainedDPSRuntimeEffectRelevance:
     relevant: tuple[EffectVariant, ...]
     irrelevant: tuple[EffectVariant, ...]
     unresolved: tuple[str, ...]
+    source_data_unresolved: tuple[str, ...]
+    math_unresolved: tuple[str, ...]
     evidence: tuple[str, ...]
 
 
@@ -93,6 +95,16 @@ class ExtremeSustainedDPSRuntimeEffectRelevanceService:
         relevant: list[EffectVariant] = []
         irrelevant: list[EffectVariant] = []
         unresolved: list[str] = []
+        source_data_unresolved: list[str] = []
+        math_unresolved: list[str] = []
+
+        def source_gap(message: str) -> None:
+            unresolved.append(message)
+            source_data_unresolved.append(message)
+
+        def math_gap(message: str) -> None:
+            unresolved.append(message)
+            math_unresolved.append(message)
 
         for effect in effects:
             identity = str(effect.name or "").strip()
@@ -109,7 +121,7 @@ class ExtremeSustainedDPSRuntimeEffectRelevanceService:
             if effect.target_type is SupportTargetType.ENEMY:
                 if effect.resistance_reduction is not None:
                     if effect.scaling:
-                        unresolved.append(
+                        source_gap(
                             f"{effect.source} {effect.name} has target resistance reduction with unresolved scaling: {effect.scaling}"
                         )
                     else:
@@ -117,7 +129,7 @@ class ExtremeSustainedDPSRuntimeEffectRelevanceService:
                     continue
                 if effect.damage_amplification is not None:
                     if effect.scaling:
-                        unresolved.append(
+                        source_gap(
                             f"{effect.source} {effect.name} has target damage amplification with unresolved scaling: {effect.scaling}"
                         )
                     else:
@@ -131,7 +143,7 @@ class ExtremeSustainedDPSRuntimeEffectRelevanceService:
                         if effect.target_type is SupportTargetType.ENEMY:
                             relevant.append(effect)
                         else:
-                            unresolved.append(
+                            source_gap(
                                 f"{effect.source} {buff} requires canonical ENEMY target classification for sustained-DPS target-state projection"
                             )
                         continue
@@ -141,14 +153,14 @@ class ExtremeSustainedDPSRuntimeEffectRelevanceService:
                     if buff in _PROVEN_NON_DPS_COMPONENT_BUFFS:
                         irrelevant.append(effect)
                         continue
-                    unresolved.append(
+                    math_gap(
                         f"{effect.source} {buff} has no reviewed sustained-DPS relevance disposition"
                     )
                     continue
 
                 stat_effects = effects_for_buff(buff)
                 if not stat_effects:
-                    unresolved.append(
+                    source_gap(
                         f"{effect.source} {buff} has no reviewed named-buff stat semantics for sustained-DPS relevance"
                     )
                     continue
@@ -158,7 +170,7 @@ class ExtremeSustainedDPSRuntimeEffectRelevanceService:
                     irrelevant.append(effect)
                 continue
 
-            unresolved.append(
+            math_gap(
                 f"{effect.source} runtime effect {effect.name!r} has no reviewed sustained-DPS relevance disposition"
             )
 
@@ -166,10 +178,14 @@ class ExtremeSustainedDPSRuntimeEffectRelevanceService:
             relevant=tuple(relevant),
             irrelevant=tuple(irrelevant),
             unresolved=tuple(dict.fromkeys(unresolved)),
+            source_data_unresolved=tuple(dict.fromkeys(source_data_unresolved)),
+            math_unresolved=tuple(dict.fromkeys(math_unresolved)),
             evidence=(
                 f"Runtime effects relevance-reviewed: {len(effects)}",
                 f"Runtime effects admitted to sustained-DPS state: {len(relevant)}",
                 f"Runtime effects proven irrelevant to sustained DPS: {len(irrelevant)}",
+                f"Runtime relevance source-data blockers: {len(tuple(dict.fromkeys(source_data_unresolved)))}",
+                f"Runtime relevance math/review blockers: {len(tuple(dict.fromkeys(math_unresolved)))}",
             ),
         )
 
