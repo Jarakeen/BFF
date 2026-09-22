@@ -1270,6 +1270,33 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_event_skeleton",
+        domain="extreme",
+        purpose=(
+            "Derive the runtime-event skeleton subset already proven by a finalized DD plan and exact-time damage occurrence evidence while leaving encounter-specific trigger families explicit."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_event_skeleton_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "CanonicalRuntimeEffectVariants",
+            "OptionalDamageOccurrenceProvider",
+            "SupplementalScenarioRuntimeEvents",
+            "SupplementalEventDenominatorProof",
+        ),
+        outputs=("ExtremeSustainedDPSRuntimeEventSkeletonResult",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_runtime_event_skeleton",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Scheduled skills, Ultimates, Light Attacks, verified Heavy Attack completions, and exact damage occurrences may own specific trigger skeletons. "
+            "Potion-use triggers are excluded because finalized plan POTION actions own potion runtime state. "
+            "Expected-value damage/crit math never manufactures critical-hit trigger events; unsupported encounter triggers such as synergies, corpse consumption, off-balance target hits, or heals remain caller-proven scenario event families."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_attempt_evidence_frontier",
         domain="extreme",
         purpose=(
@@ -1336,6 +1363,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
         outputs=("ExtremeSustainedDPSRuntimeScenarioFrontierResult",),
         dependencies=(
+            "extreme.sustained_dps.runtime_event_skeleton",
             "extreme.sustained_dps.runtime_attempt_evidence_frontier",
             "extreme.sustained_dps.runtime_external_history_assembly",
             "extreme.sustained_dps.runtime_external_history_frontier",
@@ -1346,7 +1374,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "This is the scenario-facing runtime_state builder. Callers prove event-skeleton and supplemental external-history completeness; the engine enumerates finite chance/condition realizations, composes plan-owned bar truth, and emits ordinary canonical runtime_state choices. "
+            "This is the scenario-facing runtime_state builder. Its candidate-facing path first derives plan/damage-owned event skeletons and leaves only unsupported encounter trigger families to caller proof; the engine then enumerates finite chance/condition realizations, composes plan-owned bar truth, and emits ordinary canonical runtime_state choices. "
             "Explicit omitted scope is preserved so local runtime closure cannot be mistaken for global closure."
         ),
     ),
