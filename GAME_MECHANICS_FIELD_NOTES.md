@@ -1503,3 +1503,14 @@ The same evidence converges on a roughly **4-second base cooldown for direct-dam
 **Layman's version:** swapping weapons does not erase where an existing ground weapon effect came from, and putting the same glyph on both bars does not give you two independent copies of its timer.
 
 **For BFF:** weapon-enchantment cadence needs source-weapon ownership and enchantment identity, not merely the currently active bar. The optimizer must also keep provisional cadence evidence out of exact simulation until the evidence authority gate is satisfied.
+
+
+## 2026-09-22 — Update 35 standardized heavy-attack resource returns
+
+**Evidence:** Official ESO Update 35 / Lost Depths patch notes standardized fully charged heavy-attack restoration by weapon family. Canonical bases now include Bow 2772 Stamina, Dual Wield 2095 Stamina, Two Handed 2425 Stamina, One Hand and Shield 2293 Stamina, Inferno/Frost Staff 2838 Magicka, Lightning Staff 2970 Magicka, Restoration Staff 3267 Magicka, and Unarmed 2095 Stamina. Werewolf remains fail-closed pending separate current evidence.
+
+**Mechanical boundary:** A scheduled heavy is not automatically a resource event. ESO's official combat history explicitly ties restoration to a fully charged heavy that successfully lands; blocked or dodged fully charged heavies do not restore resources. BFF therefore keeps completion and hit-state evidence separate from the weapon's base restore value.
+
+**Layman summary:** Knowing the weapon tells us how much a successful full heavy can restore. It does not prove the heavy actually earned the restore. ESO has, naturally, supplied both a number and paperwork.
+
+**BFF implication:** The optimizer can now use authoritative base restoration for every standard weapon family instead of failing closed on most weapons, while still refusing to invent Werewolf values or successful-completion state.
