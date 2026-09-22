@@ -50,7 +50,7 @@ def test_light_attack_profile_reaches_real_generation_request() -> None:
 
     assert "replace(request, weave_light_attacks=weave)" in source
     assert "generation.generate_with_evidence = MethodType" in source
-    assert '"Do not rely on it"' in source
+    assert "Do not rely on it" in source
 
 
 def test_normal_builder_uses_canonical_recovery_heavy_fixed_point() -> None:
