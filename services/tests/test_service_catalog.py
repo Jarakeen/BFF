@@ -1186,6 +1186,28 @@ def test_sustained_dps_global_structural_search_services_are_cataloged() -> None
     assert "first generated axis is race/class-route/attributes" in search.notes
 
 
+def test_sustained_dps_global_objective32_search_uses_searched_structural_denominator() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_global_objective32_search"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.global_objective32_search"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.global_generated_search",
+        "extreme.sustained_dps.structural_family_adapter",
+        "extreme.sustained_dps.generated_runtime_state_axis_adapter",
+        "extreme.sustained_dps.axis_dominance_composition",
+        "extreme.sustained_dps.theoretical_maximum_closure",
+    )
+    assert "same denominator" in service.purpose
+    assert "same validated family adapter" in service.notes
+    assert "denominator-scope equivalence" in service.notes
+
+
 def test_sustained_dps_objective32_search_keeps_proof_levels_distinct() -> None:
     service = canonical_service_for("extreme_sustained_dps_objective32_search")
 
