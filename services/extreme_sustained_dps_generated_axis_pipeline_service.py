@@ -30,6 +30,8 @@ class ExtremeSustainedDPSGeneratedAxisPipelineState:
     target_identity: str
     duration_rules: tuple[object, ...]
     heavy_attack_windows: tuple[object, ...]
+    heavy_attack_channel_blocks: tuple[object, ...]
+    heavy_attack_channel_block_denominator_proven: bool
     mundus_food: object | None = None
     late: object | None = None
     encounter_policy: object | None = None
@@ -224,6 +226,10 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             target_identity=state.target_identity,
             duration_rules=state.duration_rules,
             heavy_attack_windows=state.heavy_attack_windows,
+            heavy_attack_channel_blocks=state.heavy_attack_channel_blocks,
+            heavy_attack_channel_block_denominator_proven=(
+                state.heavy_attack_channel_block_denominator_proven
+            ),
         )
 
     def _finalized_potion_state(
@@ -388,6 +394,8 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         use_scheduled_combat_attacks_for_ultimate: bool = False,
         duration_rules: tuple[object, ...] = (),
         heavy_attack_windows: tuple[object, ...] = (),
+        heavy_attack_channel_blocks: tuple[object, ...] = (),
+        heavy_attack_channel_block_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSGeneratedAxisPipelineState:
         prefix = str(candidate_id_prefix or "").strip()
         if not prefix:
@@ -413,6 +421,10 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             target_identity=str(target_identity or "").strip(),
             duration_rules=tuple(duration_rules),
             heavy_attack_windows=tuple(heavy_attack_windows),
+            heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
+            heavy_attack_channel_block_denominator_proven=bool(
+                heavy_attack_channel_block_denominator_proven
+            ),
             requires_finalized_potion=bool(self.finalized_potion_adapter is not None),
         )
 
