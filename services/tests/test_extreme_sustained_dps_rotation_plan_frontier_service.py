@@ -16,7 +16,11 @@ from services.extreme_sustained_dps_rotation_plan_frontier_service import (
 
 
 class _IdentityRefinement:
-    def refine(self, plan):
+    def __init__(self):
+        self.calls = []
+
+    def refine(self, plan, **kwargs):
+        self.calls.append((plan, kwargs))
         return SimpleNamespace(plan=plan)
 
 
@@ -37,9 +41,9 @@ def _candidate(front=("A", "B"), back=("C", "D")):
     )
 
 
-def _service():
+def _service(refinement=None):
     return ExtremeSustainedDPSRotationPlanFrontierService(
-        refinement_service=_IdentityRefinement(),
+        refinement_service=refinement or _IdentityRefinement(),
     )
 
 
@@ -114,3 +118,26 @@ def test_invalid_rotation_family_index_fails_closed() -> None:
 
     with pytest.raises(IndexError):
         service.candidate_at(candidate, duration_seconds=10.0, index=count)
+
+
+
+def test_rotation_family_forwards_explicit_encounter_demands_to_canonical_refiner() -> None:
+    refinement = _IdentityRefinement()
+    service = _service(refinement)
+    priorities = object()
+    demands = (object(), object())
+
+    result = service.candidate_at(
+        _candidate(),
+        duration_seconds=10.0,
+        index=0,
+        priorities=priorities,
+        encounter_demands=demands,
+    )
+
+    assert result.mechanic_complete is True
+    assert refinement.calls
+    _, kwargs = refinement.calls[0]
+    assert kwargs["priorities"] is priorities
+    assert kwargs["demands"] == demands
+    assert any("Encounter demand windows supplied: 2" in row for row in result.evidence)
