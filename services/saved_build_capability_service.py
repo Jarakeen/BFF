@@ -767,17 +767,15 @@ class SavedBuildCapabilityService:
                 sources.append(f"{active_bar}:gear")
                 effects.extend(gear_component.effects)
 
+            weapon_enchantment_unresolved: list[str] = []
             weapon_enchantment_effects = self._weapon_enchantment_variants(
                 build,
                 active_bar,
-                capability_unresolved,
+                weapon_enchantment_unresolved,
                 boundaries,
             )
-            unresolved.extend(
-                message
-                for message in capability_unresolved
-                if message not in unresolved
-            )
+            unresolved.extend(weapon_enchantment_unresolved)
+            capability_unresolved.extend(weapon_enchantment_unresolved)
             if weapon_enchantment_effects:
                 sources.append(f"{active_bar}:weapon_enchantments")
                 effects.extend(weapon_enchantment_effects)
