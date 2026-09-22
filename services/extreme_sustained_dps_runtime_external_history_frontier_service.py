@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from minmax.character_build.effect_instance import EffectVariant
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_runtime_state_frontier_service import (
     ExtremeSustainedDPSRuntimeStateFrontier,
@@ -49,6 +50,7 @@ class ExtremeSustainedDPSRuntimeExternalHistoryFrontierService:
         source: str,
         initial_bar: str = "front",
         omitted_scope: tuple[str, ...] = (),
+        effects: tuple[EffectVariant, ...] = (),
     ) -> ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult:
         unresolved: list[str] = []
         runtime_choices: list[ExtremeSustainedDPSRuntimeStateChoice] = []
@@ -85,6 +87,7 @@ class ExtremeSustainedDPSRuntimeExternalHistoryFrontierService:
                         *tuple(history.evidence),
                         *tuple(witness.evidence),
                     ),
+                    effects=tuple(effects),
                     unresolved=tuple(
                         dict.fromkeys(
                             str(item).strip()
