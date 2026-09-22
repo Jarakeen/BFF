@@ -6,9 +6,6 @@ from dataclasses import dataclass
 
 from minmax.character_build.effect_instance import EffectVariant
 from models.build_model import PlayerBuild
-from services.extreme_sustained_dps_runtime_effect_relevance_service import (
-    ExtremeSustainedDPSRuntimeEffectRelevanceService,
-)
 
 
 @dataclass(frozen=True)
@@ -115,27 +112,15 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
             triggered.append(effect)
 
         runtime_effects = self._dedupe(tuple(triggered))
-        relevance = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify(
-            runtime_effects
-        )
-        unresolved = tuple(
-            dict.fromkeys(
-                (
-                    *unresolved,
-                    *tuple(relevance.unresolved),
-                )
-            )
-        )
         excluded_plan_owned = self._dedupe(tuple(excluded))
 
         return ExtremeSustainedDPSRuntimeEffectUniverse(
-            effects=tuple(relevance.relevant),
+            effects=runtime_effects,
             excluded_plan_owned=excluded_plan_owned,
             boundaries=boundaries,
             evidence=(
                 f"Canonical capability effects inspected: {len(tuple(getattr(resolution, 'effects', ()) or ())) }",
-                f"Runtime-triggered effects discovered: {len(runtime_effects)}",
-                *tuple(relevance.evidence),
+                f"Runtime-triggered effects admitted: {len(runtime_effects)}",
                 f"Plan-owned potion-triggered effects excluded: {len(excluded_plan_owned)}",
                 "Triggerless variants remain owned by static/conditional build mechanics rather than runtime event enumeration",
             ),
