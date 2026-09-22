@@ -203,3 +203,26 @@ def test_missing_enemy_target_classification_is_source_data_gap() -> None:
 
     assert result.source_data_unresolved == result.unresolved
     assert result.math_unresolved == ()
+
+
+def test_unresolved_master_architect_duration_scaling_is_source_gap() -> None:
+    effect = EffectVariant(
+        name="major_slayer",
+        layer=EffectLayer.PROC,
+        source="Master Architect (5)",
+        magnitude=10.0,
+        duration=1.0,
+        scaling="1 second per 10 Ultimate spent",
+        trigger="ultimate_activation_in_combat",
+        target_type=SupportTargetType.GROUP,
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+
+    assert result.relevant == ()
+    assert result.math_unresolved == ()
+    assert result.source_data_unresolved == result.unresolved
+    assert any(
+        "requires canonical Ultimate spend resolution" in row
+        for row in result.unresolved
+    )
