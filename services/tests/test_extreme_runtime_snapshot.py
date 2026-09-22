@@ -229,3 +229,18 @@ def test_runtime_potion_use_rejects_invalid_time_and_sequence():
         ExtremeRuntimePotionUse(time_seconds=-1.0)
     with pytest.raises(ValueError, match="runtime potion-use sequence"):
         ExtremeRuntimePotionUse(time_seconds=1.0, sequence=-1)
+
+
+
+def test_proven_empty_runtime_history_survives_snapshot_projection() -> None:
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(),
+        snapshot_time_seconds=5.0,
+        runtime_history_complete=True,
+    )
+
+    assert snapshot.has_runtime_history_at_snapshot is True
+    projected = snapshot.snapshot_at(5.0)
+
+    assert projected.runtime_history == ()
+    assert projected.runtime_history_complete is True
