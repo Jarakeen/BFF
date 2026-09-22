@@ -77,3 +77,26 @@ def test_external_potion_use_is_rejected_as_competing_truth() -> None:
 
     assert result.resolved is False
     assert any("must not supply potion uses" in row for row in result.unresolved)
+
+
+
+def test_empty_external_history_is_authoritative_when_plan_has_no_runtime_events() -> None:
+    plan = RotationPlan(
+        character_name="Generated",
+        build_name="Candidate",
+        duration_seconds=5.0,
+        actions=(
+            RotationAction(1.0, 0, RotationActionKind.SKILL, "A", "front"),
+        ),
+    )
+    result = ExtremeSustainedDPSRuntimeWitnessCompositionService().compose(
+        plan=plan,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        external_entries=(),
+    )
+
+    assert result.resolved is True
+    assert result.snapshot is not None
+    assert result.snapshot.runtime_history == ()
+    assert result.snapshot.runtime_history_complete is True
+    assert result.snapshot.bar_transition_history_complete is True
