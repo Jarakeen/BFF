@@ -1361,3 +1361,18 @@ For the reviewed fully charged Heavy Attack model, the canonical channel reserva
 The soft-action duration scheduler may reserve a 1.8s channel over ordinary same-bar skill decisions. Those covered skills are displaced and cascade into later same-bar slots. First casts and due refresh obligations remain protected, and the channel may not cross the plan horizon or the next hard timeline boundary such as a bar swap or an action on another bar.
 
 **For Objective #32:** complete Heavy Attack timing discovery must probe each scheduled ordinary skill slot through the canonical soft-action scheduler. A simplistic gap scan would incorrectly reject legal channels that displace same-bar skills. Encounter demand windows do not automatically mean “channel forbidden”; channel prohibitions require explicit reviewed channel-block evidence with a complete denominator proof.
+
+
+## Runtime proc chance equivalence classes
+
+For canonical runtime effect eligibility, a deterministic chance roll only matters when it crosses an EffectVariant's proc-chance threshold. For one fixed runtime event, every roll inside the same threshold interval produces the same chance eligibility decisions for all matching effects.
+
+Example: if matching effects have proc chances 25% and 50%, the complete roll-state family does **not** require 101 samples from 0.00 to 1.00. The materially distinct representatives are:
+
+- 0.00 for the region below 25%
+- 0.25 for the region from 25% through just below 50%
+- 0.50 for the region from 50% through just below 1.00
+
+The eligibility rule treats `roll >= chance` as failure, so the exact threshold itself belongs to the failure side of that effect. A 100% effect does not introduce a breakpoint, and roll 1.0 is unnecessary.
+
+**For Objective #32:** continuous numeric proc-roll evidence is therefore finite once the relevant canonical EffectVariant chance thresholds are known. This does not invent event timestamps, triggers, targets, or encounter conditions; those remain scenario evidence and need their own denominator proof.
