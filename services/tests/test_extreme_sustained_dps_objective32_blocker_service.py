@@ -90,3 +90,85 @@ def test_reports_search_and_inventory_unresolved_evidence() -> None:
         "tree_inventory_unresolved",
         "axis_coverage_unresolved",
     )
+
+
+def test_integrates_typed_runtime_and_mechanics_closure_inventory() -> None:
+    gap = SimpleNamespace(
+        key="weapon_enchantments:runtime_cadence",
+        needed_evidence="prove enchantment trigger and base cooldown",
+    )
+    advisory = SimpleNamespace(
+        key="skills:runtime_topology",
+        needed_evidence="complete per-skill runtime topology",
+    )
+    inventory = SimpleNamespace(
+        source_data_blockers=("scaled debuff magnitude unresolved",),
+        math_review_blockers=("unique proc has no reviewed DPS router",),
+        mechanics_blockers=(gap,),
+        mechanics_advisories=(advisory,),
+    )
+
+    result = ExtremeSustainedDPSObjective32BlockerService.assess(
+        search_result=SimpleNamespace(
+            global_maximum_proven=True,
+            unresolved=(),
+        ),
+        axis_inventory=SimpleNamespace(
+            missing_canonical_axes=(),
+            duplicate_canonical_axes=(),
+            unresolved=(),
+        ),
+        axis_coverage=SimpleNamespace(
+            missing_axes=(),
+            unresolved=(),
+        ),
+        closure=SimpleNamespace(
+            omitted_scope=(),
+        ),
+        closure_inventory=inventory,
+    )
+
+    assert result.closed is False
+    assert tuple(row.code for row in result.blockers) == (
+        "runtime_source_data_unresolved",
+        "runtime_math_review_unresolved",
+        "mechanics_coverage_missing_critical",
+        "mechanics_coverage_partial",
+    )
+    assert any(
+        "Runtime source-data blockers: 1" in row
+        for row in result.evidence
+    )
+    assert any(
+        "Runtime math/review blockers: 1" in row
+        for row in result.evidence
+    )
+    assert any(
+        "Mechanics-coverage blockers: 2" in row
+        for row in result.evidence
+    )
+
+
+def test_legacy_blocker_assessment_remains_closed_without_inventory() -> None:
+    result = ExtremeSustainedDPSObjective32BlockerService.assess(
+        search_result=SimpleNamespace(
+            global_maximum_proven=True,
+            unresolved=(),
+        ),
+        axis_inventory=SimpleNamespace(
+            missing_canonical_axes=(),
+            duplicate_canonical_axes=(),
+            unresolved=(),
+        ),
+        axis_coverage=SimpleNamespace(
+            missing_axes=(),
+            unresolved=(),
+        ),
+        closure=SimpleNamespace(
+            omitted_scope=(),
+        ),
+    )
+
+    assert result.closed is True
+    assert result.blockers == ()
+    assert any("Runtime source-data blockers: 0" in row for row in result.evidence)
