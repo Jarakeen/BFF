@@ -480,3 +480,62 @@ def test_finalized_potion_stage_requires_explicit_evidence_resolver() -> None:
 
     with pytest.raises(ValueError, match="timing-evidence resolver"):
         pipeline.axes()[-1].candidate_count(state)
+
+
+
+def test_candidate_runtime_state_stage_runs_after_finalized_potion() -> None:
+    from services.extreme_sustained_dps_runtime_state_frontier_service import (
+        ExtremeSustainedDPSRuntimeStateChoice,
+        ExtremeSustainedDPSRuntimeStateFrontierService,
+    )
+
+    calls = []
+
+    class _RuntimeStateResolver:
+        def resolve(self, state):
+            calls.append(("candidate-runtime-state", state.finalized_potion.complete))
+            return ExtremeSustainedDPSRuntimeStateFrontierService.build(
+                (
+                    ExtremeSustainedDPSRuntimeStateChoice(
+                        "runtime:final",
+                        "snapshot:final",
+                    ),
+                ),
+                denominator_proven=True,
+                source="candidate final runtime family",
+            )
+
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+        finalized_potion_adapter=_FinalizedPotionAdapter(calls),
+        finalized_potion_evidence_resolver=object(),
+        runtime_state_frontier_resolver=_RuntimeStateResolver(),
+    )
+    state = _root(pipeline)
+    axes = pipeline.axes()
+
+    assert tuple(axis.name for axis in axes) == (
+        "Gear",
+        "Late",
+        "Rotation",
+        "Runtime",
+        "FinalizedPotion",
+        "Runtime State",
+    )
+
+    for axis in axes[:-1]:
+        state = axis.candidate_at(state, 0)
+
+    assert state.finalized_potion.complete is True
+    assert state.complete is True
+
+    assert axes[-1].candidate_count(state) == 1
+    leaf = axes[-1].candidate_at(state, 0)
+
+    assert leaf.complete is True
+    assert leaf.runtime_state_choice.runtime_state_id == "runtime:final"
+    assert leaf.runtime_state_choice.snapshot == "snapshot:final"
+    assert ("candidate-runtime-state", True) in calls
