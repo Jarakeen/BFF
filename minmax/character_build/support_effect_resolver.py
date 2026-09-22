@@ -79,6 +79,9 @@ def effect_variant_to_support_effect(
         exclusivity_group=effect.exclusivity_group,
         conditions=conditions,
         trigger=trigger,
+        damage_amplification=effect.damage_amplification,
+        resistance_reduction=effect.resistance_reduction,
+        penetration=effect.penetration,
         role_relevance=role_relevance,
     )
 
