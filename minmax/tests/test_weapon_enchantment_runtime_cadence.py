@@ -22,7 +22,9 @@ def test_damage_cadence_is_research_evidence_not_runtime_authority() -> None:
         "weapon_ability",
     )
     assert evidence.off_bar_source_persists is True
-    assert evidence.cooldown_scope == "per_effect_identity"\n    assert evidence.poison_replaces_enchantment is True\n    assert evidence.same_effect_identity_shares_cooldown is True
+    assert evidence.cooldown_scope == "per_effect_identity"
+    assert evidence.poison_replaces_enchantment is True
+    assert evidence.same_effect_identity_shares_cooldown is True
     assert evidence.runtime_ready is False
 
     with pytest.raises(ValueError, match="not authoritative"):
