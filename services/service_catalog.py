@@ -944,6 +944,104 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.structural_axis_coverage",
+        domain="extreme",
+        purpose=(
+            "Promote proven sustained-DPS structural enumeration into canonical race, class-route, and attribute axis coverage without treating inherited active-bar coordinates as Objective #32 coverage."
+        ),
+        implementation_path="services.extreme_sustained_dps_structural_axis_coverage_service",
+        inputs=("ExtremeSustainedDPSGeneratedFrontier",),
+        outputs=("ExtremeSustainedDPSStructuralAxisCoverageResult",),
+        dependencies=(
+            "extreme.sustained_dps.generated_frontier",
+            "extreme.sustained_dps.axis_dominance_composition",
+        ),
+        responsibilities=("extreme_sustained_dps_structural_axis_coverage",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Structural enumeration coverage is distinct from generated-tree integration. "
+            "The inherited active-bar coordinate is not promoted because sustained-DPS starting-bar semantics are owned by rotation search."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.structural_family_adapter",
+        domain="extreme",
+        purpose=(
+            "Collapse validated front/back structural coordinate pairs into one race/class-route/attribute family for sustained-DPS generated search."
+        ),
+        implementation_path="services.extreme_sustained_dps_structural_family_adapter_service",
+        inputs=("ExtremeSustainedDPSGeneratedCandidateService",),
+        outputs=("ExtremeSustainedDPSStructuralFamilyFrontier", "ExtremeSustainedDPSStructuralFamilyChoice"),
+        dependencies=(
+            "extreme.sustained_dps.generated_frontier",
+            "extreme.sustained_dps.axis_dominance_composition",
+        ),
+        responsibilities=("extreme_sustained_dps_structural_family_adapter",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Every collapsed family is accepted only when adjacent front/back coordinates have identical race, class route, and attributes and differ only by active_bar. "
+            "Starting-bar semantics remain a later rotation-family responsibility."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.structural_materialization",
+        domain="extreme",
+        purpose=(
+            "Materialize one validated sustained-DPS structural family into ordinary PlayerBuild and CharacterProgression state for the existing generated gear pipeline."
+        ),
+        implementation_path="services.extreme_sustained_dps_structural_materialization_service",
+        inputs=("ExtremeSustainedDPSStructuralFamilyChoice",),
+        outputs=("ExtremeSustainedDPSStructuralMaterialization",),
+        dependencies=("extreme.sustained_dps.structural_family_adapter",),
+        responsibilities=("extreme_sustained_dps_structural_materialization",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Copies race, legal class route, and 64-point attributes only. "
+            "The structural active-bar duplicate is intentionally not copied into build state because rotation search owns starting-bar behavior."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.global_generated_search",
+        domain="extreme",
+        purpose=(
+            "Prepend the validated structural family denominator to the existing generated sustained-DPS axis pipeline and run the resulting global lazy branch-and-bound tree."
+        ),
+        implementation_path="services.extreme_sustained_dps_global_generated_search_service",
+        inputs=(
+            "StructuralFamilyFrontier",
+            "StructuralMaterializer",
+            "GeneratedAxisPipeline",
+            "DualBarGearFrontier",
+            "ExplicitTargetScenario",
+        ),
+        outputs=("ExtremeSustainedDPSGeneratedSearchResult",),
+        dependencies=(
+            "extreme.sustained_dps.structural_family_adapter",
+            "extreme.sustained_dps.structural_materialization",
+            "extreme.sustained_dps.generated_axis_pipeline",
+            "extreme.sustained_dps.generated_frontier_wiring",
+            "extreme.sustained_dps.generated_runtime_state_axis_adapter",
+        ),
+        responsibilities=("extreme_sustained_dps_global_generated_search",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The first generated axis is race/class-route/attributes. Each selected family is materialized into the ordinary pipeline root before gear and later axes expand. "
+            "Unproven structural pairing fails closed; optional local runtime-state search remains terminal."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.objective32_search",
         domain="extreme",
         purpose=(
