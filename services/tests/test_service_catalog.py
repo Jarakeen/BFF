@@ -1552,6 +1552,7 @@ def test_sustained_dps_objective32_blockers_are_diagnostic_only() -> None:
         "extreme.sustained_dps.generated_axis_inventory",
         "extreme.sustained_dps.axis_dominance_composition",
         "extreme.sustained_dps.theoretical_maximum_closure",
+        "extreme.sustained_dps.closure_inventory",
     )
     assert "stable closure blockers" in service.purpose
     assert "Reporting is diagnostic only" in service.notes
