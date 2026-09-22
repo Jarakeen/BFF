@@ -108,3 +108,61 @@ def test_audit_keeps_consumable_conditional_and_not_standing_unresolved(tmp_path
     assert result.resolved_effects == (potion_effect,)
     assert result.conditional_sources == ("Potion: spell power",)
     assert "Potion availability resolved without standing uptime: spell power" in result.boundaries
+
+
+def test_effect_variant_resolution_does_not_require_saved_character_progression(tmp_path):
+    skill_effect = EffectVariant(
+        name="skill_proc",
+        layer=EffectLayer.PROC,
+        source="Skill A",
+        trigger="damage_dealt",
+    )
+    gear_effect = EffectVariant(
+        name="gear_proc",
+        layer=EffectLayer.PROC,
+        source="Set A",
+        trigger="light_attack",
+    )
+    potion_effect = EffectVariant(
+        name="potion_buff",
+        layer=EffectLayer.CONSUMABLE,
+        source="Potion: spell power",
+        trigger="potion_use",
+    )
+
+    class _ForbiddenProgression:
+        def resolve(self, _build):
+            raise AssertionError("capability-only effect resolution must not load saved progression")
+
+    class _ForbiddenContext:
+        def build(self, **_kwargs):
+            raise AssertionError("capability-only effect resolution must not build static context")
+
+    service = SavedBuildCapabilityService(
+        BuildService(tmp_path / "builds.json"),
+        tmp_path / "eso.db",
+        context_factory=_ForbiddenContext(),
+        progression=_ForbiddenProgression(),
+        skills=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        gear=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        potions=_PotionRepository(potion_effect),
+    )
+    service._skill_component = lambda _build, bar: SimpleNamespace(
+        effects=(skill_effect,) if bar == "front" else (),
+        unresolved=(),
+        boundaries=(),
+    )
+    service._gear_component = lambda _build, bar: SimpleNamespace(
+        effects=(gear_effect,) if bar == "front" else (),
+        unresolved=(),
+        boundaries=(),
+    )
+
+    result = service.resolve_effect_variants(
+        PlayerBuild(Name="Generated", BuildName="Candidate", Potion="spell power")
+    )
+
+    assert result.resolved is True
+    assert result.effects == (skill_effect, gear_effect, potion_effect)
+    assert result.unresolved == ()
+    assert "Potion availability resolved without standing uptime: spell power" in result.boundaries
