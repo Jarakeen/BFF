@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
+    QComboBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -87,6 +88,14 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+        self.team_combo = QComboBox()
+        self.team_combo.setMinimumWidth(180)
+        self.team_combo.setToolTip(
+            "Optional Team assigned to this Raid Plan. Blank keeps the plan ad-hoc."
+        )
+        self._refresh_team_choices(
+            str(getattr(getattr(self, "_loaded_plan_snapshot", None), "team_name", "") or "")
+        )
         self._compose_city_shell()
         self._replace_legacy_role_language(self)
         self._refresh_overview()
@@ -420,19 +429,54 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         except Exception as exc:
             self.status.error(f"Discord build copy failed: {exc}")
 
+    def _refresh_team_choices(self, preferred: str = "") -> None:
+        if not hasattr(self, "team_combo"):
+            return
+        wanted = str(preferred or "").strip()
+        current = str(self.team_combo.currentData() or "").strip()
+        if not wanted:
+            wanted = current
+
+        self.team_combo.blockSignals(True)
+        self.team_combo.clear()
+        self.team_combo.addItem("No Team", "")
+        try:
+            names = self.roster_service.list_team_names()
+        except Exception:
+            names = []
+        for name in names:
+            self.team_combo.addItem(name, name)
+        index = self.team_combo.findData(wanted) if wanted else 0
+        self.team_combo.setCurrentIndex(index if index >= 0 else 0)
+        self.team_combo.blockSignals(False)
+
     def current_plan(self):
         plan = super().current_plan()
         note = self.plan_notes.toPlainText().strip() if hasattr(self, "plan_notes") else ""
-        return replace(plan, plan_note=note or None)
+        team_name = (
+            str(self.team_combo.currentData() or "").strip()
+            if hasattr(self, "team_combo")
+            else str(getattr(plan, "team_name", "") or "").strip()
+        )
+        return replace(
+            plan,
+            team_name=team_name or None,
+            plan_note=note or None,
+        )
 
     def apply_plan(self, plan) -> None:
         super().apply_plan(plan)
+        if hasattr(self, "team_combo"):
+            self._refresh_team_choices(str(getattr(plan, "team_name", "") or ""))
         if hasattr(self, "plan_notes"):
             self.plan_notes.setPlainText(str(getattr(plan, "plan_note", "") or ""))
         self._navigation_baseline_plan = self.current_plan()
 
     def clear_plan(self) -> None:
         super().clear_plan()
+        if hasattr(self, "team_combo"):
+            self._refresh_team_choices("")
+            self.team_combo.setCurrentIndex(0)
         if hasattr(self, "plan_notes"):
             self.plan_notes.clear()
 
