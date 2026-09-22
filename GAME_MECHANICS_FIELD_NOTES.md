@@ -1469,3 +1469,10 @@ The weapon-enchantment repository and rule engine can resolve Crusher's target r
 The repo has canonical rules that can modify a weapon enchantment cooldown once a base cooldown is supplied. That is not evidence for what the base cooldown is, what event triggers the enchantment, or how source/bar persistence behaves.
 
 **For BFF:** weapon-enchantment runtime cadence is now a dedicated decision-critical mechanics gap for Rotation Maker and Optimizer. Crusher magnitude/duration may be audited from canonical enchantment data, but Objective #32 must not schedule it until trigger semantics, base proc cooldown, source persistence, and relevant lockout/shared-cooldown behavior are authoritative.
+
+
+## 2026-09-22 — Missing evidence and missing math are different blockers
+
+A runtime effect can fail sustained-DPS closure because the game evidence is incomplete (for example target classification or scaling) or because the identity is known but BFF lacks a reviewed objective-specific math disposition. Those are different engineering jobs.
+
+**For BFF:** Objective #32 runtime relevance now reports source-data blockers separately from math/review blockers while retaining the same fail-closed unresolved output. This makes closure audits actionable without weakening correctness.
