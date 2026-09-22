@@ -248,3 +248,30 @@ def test_explicit_numeric_damage_amplification_does_not_leak_targets() -> None:
     )
 
     assert result.combat_state.explicit_damage_taken == 0.0
+
+
+def test_named_vulnerability_with_matching_explicit_metadata_is_not_double_counted() -> None:
+    effect = EffectVariant(
+        name="major_vulnerability",
+        layer=EffectLayer.PROC,
+        source="Explicit Major Vulnerability",
+        trigger="damage_dealt",
+        duration=4.0,
+        target_type=SupportTargetType.ENEMY,
+        damage_amplification=0.10,
+        stacking=StackingBehavior.UNIQUE,
+    )
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(_attempt(1.0, target="Boss"),),
+        snapshot_time_seconds=2.0,
+        runtime_history_complete=True,
+    )
+
+    result = ExtremeSustainedDPSRuntimeTargetCombatStateService.resolve(
+        snapshot=snapshot,
+        effects=(effect,),
+        target_identity="Boss",
+    )
+
+    assert result.combat_state.active_buffs == ("Major Vulnerability",)
+    assert result.combat_state.explicit_damage_taken == 0.0
