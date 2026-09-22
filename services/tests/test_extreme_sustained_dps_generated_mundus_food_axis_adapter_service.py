@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import replace
-from types import SimpleNamespace
+from dataclasses import dataclass
 
 import pytest
 
@@ -11,8 +10,13 @@ from services.extreme_sustained_dps_generated_mundus_food_axis_adapter_service i
 )
 
 
+@dataclass(frozen=True)
+class _Context:
+    build: PlayerBuild
+
+
 def _context():
-    return SimpleNamespace(build=PlayerBuild())
+    return _Context(build=PlayerBuild())
 
 
 def test_generated_mundus_food_axes_mutate_exact_build_state_in_order() -> None:
