@@ -18,8 +18,12 @@ import math
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.ultimate_generation_sources import HeroismWindow
-from minmax.ultimate_resource_timeline import UltimateGenerationEvent
+from minmax.ultimate_resource_timeline import UltimateGenerationEvent, UltimateSpendRule
 from models.build_model import PlayerBuild
+from services.extreme_sustained_dps_delayed_ultimate_policy_frontier_service import (
+    ExtremeSustainedDPSDelayedUltimatePolicy,
+    ExtremeSustainedDPSDelayedUltimatePolicyFrontierService,
+)
 from services.extreme_sustained_dps_rotation_plan_frontier_service import (
     ExtremeSustainedDPSRotationPlanCandidate,
 )
@@ -38,8 +42,19 @@ class ExtremeSustainedDPSPotionTimingPolicy:
 
 
 @dataclass(frozen=True)
+class ExtremeSustainedDPSUltimateTimingPolicy:
+    policy_id: str
+    ultimate_option: str
+    delayed_policy: ExtremeSustainedDPSDelayedUltimatePolicy | None
+    spend_rule: UltimateSpendRule | None
+    generation_events: tuple[UltimateGenerationEvent, ...]
+    unresolved: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class ExtremeSustainedDPSRotationPolicyFrontier:
     ultimate_options: tuple[str, ...]
+    ultimate_timing_policies: tuple[ExtremeSustainedDPSUltimateTimingPolicy, ...]
     potion_policies: tuple[ExtremeSustainedDPSPotionTimingPolicy, ...]
     candidate_count: int
     anchored_policy_denominator_proven: bool
@@ -79,8 +94,13 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
         *,
         ultimate_service: RotationUltimateService | object,
         legality_service: RotationScheduledActionResourceLegalityService | object | None = None,
+        delayed_ultimate_policies: ExtremeSustainedDPSDelayedUltimatePolicyFrontierService | object | None = None,
     ) -> None:
         self.ultimate_service = ultimate_service
+        self.delayed_ultimate_policies = (
+            delayed_ultimate_policies
+            or ExtremeSustainedDPSDelayedUltimatePolicyFrontierService()
+        )
         self.legality_service = (
             legality_service or RotationScheduledActionResourceLegalityService()
         )
@@ -160,41 +180,126 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
                 )
         return tuple(result)
 
+    def _ultimate_timing_policies(
+        self,
+        *,
+        build: PlayerBuild,
+        seed: ExtremeSustainedDPSRotationPlanCandidate,
+        starting_ultimate: float,
+        ultimate_generation_events: tuple[UltimateGenerationEvent, ...],
+        heroism_windows: tuple[HeroismWindow, ...],
+        use_scheduled_combat_attacks_for_ultimate: bool,
+    ) -> tuple[tuple[ExtremeSustainedDPSUltimateTimingPolicy, ...], tuple[str, ...]]:
+        policies: list[ExtremeSustainedDPSUltimateTimingPolicy] = [
+            ExtremeSustainedDPSUltimateTimingPolicy(
+                policy_id="ultimate:none",
+                ultimate_option="none",
+                delayed_policy=None,
+                spend_rule=None,
+                generation_events=(),
+            )
+        ]
+        unresolved: list[str] = []
+
+        for option in self._ultimate_options(build):
+            if option == "none":
+                continue
+            inputs = self.ultimate_service.resolve_generation_inputs(
+                build=build,
+                plan=seed.plan,
+                ultimate_bar=option,
+                generation_events=tuple(ultimate_generation_events),
+                heroism_windows=tuple(heroism_windows),
+                use_scheduled_combat_attacks=bool(
+                    use_scheduled_combat_attacks_for_ultimate
+                ),
+            )
+            unresolved.extend(tuple(inputs.unresolved))
+            if inputs.spend_rule is None:
+                continue
+
+            delayed = self.delayed_ultimate_policies.build(
+                plan=seed.plan,
+                bar=option,
+                spend_rule=inputs.spend_rule,
+                starting_ultimate=float(starting_ultimate),
+                generation_events=tuple(inputs.generation_events),
+            )
+            unresolved.extend(tuple(delayed.unresolved))
+            if not delayed.denominator_proven:
+                continue
+
+            for policy in delayed.policies:
+                policies.append(
+                    ExtremeSustainedDPSUltimateTimingPolicy(
+                        policy_id=f"{option}:{policy.policy_id}",
+                        ultimate_option=option,
+                        delayed_policy=policy,
+                        spend_rule=inputs.spend_rule,
+                        generation_events=tuple(inputs.generation_events),
+                        unresolved=tuple(policy.unresolved),
+                    )
+                )
+
+        return (
+            tuple(policies),
+            tuple(dict.fromkeys(item for item in unresolved if str(item).strip())),
+        )
+
     def frontier(
         self,
         *,
         build: PlayerBuild,
         seed: ExtremeSustainedDPSRotationPlanCandidate,
         potion_cooldown_seconds: float,
+        starting_ultimate: float = 0.0,
+        ultimate_generation_events: tuple[UltimateGenerationEvent, ...] = (),
+        heroism_windows: tuple[HeroismWindow, ...] = (),
+        use_scheduled_combat_attacks_for_ultimate: bool = False,
     ) -> ExtremeSustainedDPSRotationPolicyFrontier:
         cooldown = float(potion_cooldown_seconds)
         if not math.isfinite(cooldown) or cooldown <= 0.0:
             raise ValueError("generated potion cooldown must be finite and positive")
 
         ultimate_options = self._ultimate_options(build)
+        ultimate_timing_policies, ultimate_unresolved = self._ultimate_timing_policies(
+            build=build,
+            seed=seed,
+            starting_ultimate=float(starting_ultimate),
+            ultimate_generation_events=tuple(ultimate_generation_events),
+            heroism_windows=tuple(heroism_windows),
+            use_scheduled_combat_attacks_for_ultimate=bool(
+                use_scheduled_combat_attacks_for_ultimate
+            ),
+        )
         potion_policies = self._potion_policies(
             build,
             seed.plan,
             potion_cooldown_seconds=cooldown,
         )
-        unresolved = list(seed.unresolved)
-        count = len(ultimate_options) * len(potion_policies)
+        unresolved = [*seed.unresolved, *ultimate_unresolved]
+        count = len(ultimate_timing_policies) * len(potion_policies)
 
         return ExtremeSustainedDPSRotationPolicyFrontier(
             ultimate_options=ultimate_options,
+            ultimate_timing_policies=ultimate_timing_policies,
             potion_policies=potion_policies,
             candidate_count=count,
             anchored_policy_denominator_proven=bool(count > 0 and not unresolved),
             continuous_potion_timing_closed=False,
-            delayed_ultimate_timing_closed=False,
+            delayed_ultimate_timing_closed=bool(
+                ultimate_timing_policies and not ultimate_unresolved
+            ),
             evidence=(
-                f"Ultimate policy choices: {len(ultimate_options)}",
+                f"Ultimate bar choices: {len(ultimate_options)}",
+                f"Legal delayed Ultimate timing policies: {len(ultimate_timing_policies)}",
                 f"Anchored potion timing policies: {len(potion_policies)}",
                 f"Combined Ultimate/potion policy candidates: {count}",
-                "Ultimate bar choice is explicit; canonical affordability scheduling remains owned by RotationUltimateService",
+                "Ultimate spend and generation evidence resolve canonically through RotationUltimateService without pre-scheduling casts",
+                "Delayed Ultimate cast/skip sequences enumerate exact same-bar skill slots through ExtremeSustainedDPSDelayedUltimatePolicyFrontierService",
                 "Potion first-use anchors come only from seed-plan timestamps before the effective cooldown boundary, plus explicit no-use",
                 "Before/after same-timestamp potion ordering is preserved",
-                "Continuous potion timing and deliberate post-affordability Ultimate delay are not claimed closed by this frontier",
+                "Delayed Ultimate timing is closed over the exact seed-plan skill slots; continuous potion timing remains intentionally open",
             ),
             unresolved=tuple(dict.fromkeys(item for item in unresolved if item)),
         )
@@ -320,6 +425,12 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
             build=build,
             seed=seed,
             potion_cooldown_seconds=potion_cooldown_seconds,
+            starting_ultimate=float(starting_ultimate),
+            ultimate_generation_events=tuple(ultimate_generation_events),
+            heroism_windows=tuple(heroism_windows),
+            use_scheduled_combat_attacks_for_ultimate=bool(
+                use_scheduled_combat_attacks_for_ultimate
+            ),
         )
         if not frontier.anchored_policy_denominator_proven:
             raise ValueError(
@@ -332,31 +443,25 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
             raise IndexError("rotation policy candidate index out of range")
 
         potion_count = len(frontier.potion_policies)
-        ultimate_index = target // potion_count
+        ultimate_policy_index = target // potion_count
         potion_index = target % potion_count
-        ultimate_option = frontier.ultimate_options[ultimate_index]
+        ultimate_timing = frontier.ultimate_timing_policies[ultimate_policy_index]
+        ultimate_option = ultimate_timing.ultimate_option
         potion_policy = frontier.potion_policies[potion_index]
 
-        plan = seed.plan
+        plan = (
+            seed.plan
+            if ultimate_timing.delayed_policy is None
+            else ultimate_timing.delayed_policy.plan
+        )
+        plan = self._without_choice_diagnostic(plan)
         projection: RotationUltimateProjection | None = None
-        generation_events = tuple(ultimate_generation_events)
-        spend_rules = ()
-
-        if ultimate_option != "none":
-            projection = self.ultimate_service.apply_generation(
-                build=build,
-                plan=plan,
-                ultimate_bar=ultimate_option,
-                starting_ultimate=float(starting_ultimate),
-                generation_events=generation_events,
-                heroism_windows=tuple(heroism_windows),
-                use_scheduled_combat_attacks=bool(
-                    use_scheduled_combat_attacks_for_ultimate
-                ),
-            )
-            plan = self._without_choice_diagnostic(projection.plan)
-            generation_events = tuple(projection.generation_events)
-            spend_rules = tuple(projection.spend_rules)
+        generation_events = tuple(ultimate_timing.generation_events)
+        spend_rules = (
+            ()
+            if ultimate_timing.spend_rule is None
+            else (ultimate_timing.spend_rule,)
+        )
 
         plan = self._apply_potion_policy(
             plan,
@@ -376,7 +481,7 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
             dict.fromkeys(
                 (
                     *seed.unresolved,
-                    *(projection.unresolved if projection is not None else ()),
+                    *ultimate_timing.unresolved,
                     *assessment.unresolved,
                 )
             )
@@ -395,7 +500,7 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
             ultimate_projection=projection,
             resource_legality=assessment,
             evidence=(
-                f"Ultimate policy: {ultimate_option}",
+                f"Ultimate policy: {ultimate_timing.policy_id}",
                 f"Potion policy: {potion_policy.policy_id}",
                 f"Effective potion cooldown: {float(potion_cooldown_seconds):g}s",
                 f"Starting Ultimate: {float(starting_ultimate):g}",
@@ -408,6 +513,7 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
 
 __all__ = [
     "ExtremeSustainedDPSPotionTimingPolicy",
+    "ExtremeSustainedDPSUltimateTimingPolicy",
     "ExtremeSustainedDPSRotationPolicyCandidate",
     "ExtremeSustainedDPSRotationPolicyFrontier",
     "ExtremeSustainedDPSRotationPolicyFrontierService",
