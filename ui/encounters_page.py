@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QPushButton,
+    QInputDialog,
     QTabWidget,
     QTableWidget,
     QVBoxLayout,
@@ -29,7 +30,10 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.encounter_boss_guide import EncounterBossGuideService
+from services.encounter_raid_map_store import EncounterRaidMapStore
 from services.expedition_service import ExpeditionService
+from services.raid_plan_repository import RaidPlanRepository
+from services.raid_section_state_service import RaidSectionStateService
 from ui.components.encounter_board import EncounterBoard
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
@@ -52,6 +56,9 @@ class EncountersPage(FoundryPage):
             get_data_dir() / "eso.db"
         )
         self._guide_summaries = ()
+        self.raid_plan_repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
+        self.raid_map_store = EncounterRaidMapStore(get_data_dir())
+        self.raid_section_state = RaidSectionStateService()
         self._build_ui()
         self._connect_boss_selector()
         self.refresh_context()
@@ -93,6 +100,13 @@ class EncountersPage(FoundryPage):
         directive.setProperty("parchment", True)
 
         self.header.add_context_widget(self._context_box("ACTIVE TRIAL", self.active_trial))
+        self.raid_plan_combo = QComboBox()
+        self.raid_plan_combo.setMinimumWidth(230)
+        self.raid_plan_combo.setToolTip(
+            "Optional Raid Plan context for this encounter map. Leave None for a general map."
+        )
+        self.raid_plan_combo.currentIndexChanged.connect(self._raid_plan_context_changed)
+        self.header.add_context_widget(self._context_box("RAID PLAN", self.raid_plan_combo))
         self.header.add_context_widget(self._context_box("GROUP SIZE", self.group_size))
         self.header.add_context_widget(directive)
 
@@ -330,11 +344,171 @@ class EncountersPage(FoundryPage):
         board_card = FoundryCard("Interactive Positioning Board", "treasure-map")
         self.encounter_board = EncounterBoard()
         self.encounter_board.snapshotSaved.connect(self._positioning_snapshot_saved)
+        self._install_attach_to_control()
         board_card.addWidget(self.encounter_board)
         root.addWidget(board_card, 1)
 
         self._load_positioning_preview(self.encounter_board.snapshot_path)
         return tab
+
+    def _populate_raid_plan_context(self) -> None:
+        if not hasattr(self, "raid_plan_combo"):
+            return
+        remembered = str(
+            getattr(getattr(self, "encounter_board", None), "raid_plan_id", "") or ""
+        ).strip()
+        current = str(self.raid_plan_combo.currentData() or "").strip()
+        wanted = current or remembered
+
+        self.raid_plan_combo.blockSignals(True)
+        self.raid_plan_combo.clear()
+        self.raid_plan_combo.addItem("None", "")
+        try:
+            plans = self.raid_plan_repository.list_plans()
+        except Exception as exc:
+            plans = ()
+            if hasattr(self, "status"):
+                self.status.warning(f"Raid Plans could not be loaded: {exc}")
+        for plan in plans:
+            label = plan.name
+            if plan.trial_id:
+                label += f" • {plan.trial_id}"
+            self.raid_plan_combo.addItem(label, plan.plan_id)
+        index = self.raid_plan_combo.findData(wanted) if wanted else 0
+        self.raid_plan_combo.setCurrentIndex(index if index >= 0 else 0)
+        self.raid_plan_combo.blockSignals(False)
+
+        if hasattr(self, "encounter_board"):
+            self.encounter_board.raid_plan_id = str(
+                self.raid_plan_combo.currentData() or ""
+            ).strip()
+
+    def _raid_plan_context_changed(self, *_args) -> None:
+        if not hasattr(self, "encounter_board"):
+            return
+        self.encounter_board.raid_plan_id = str(
+            self.raid_plan_combo.currentData() or ""
+        ).strip()
+        self.encounter_board.save_state()
+
+    @staticmethod
+    def _layout_containing_widget(layout, target):
+        if layout is None:
+            return None
+        for index in range(layout.count()):
+            item = layout.itemAt(index)
+            if item.widget() is target:
+                return layout, index
+            child = item.layout()
+            if child is not None:
+                found = EncountersPage._layout_containing_widget(child, target)
+                if found is not None:
+                    return found
+            widget = item.widget()
+            if widget is not None and widget.layout() is not None:
+                found = EncountersPage._layout_containing_widget(widget.layout(), target)
+                if found is not None:
+                    return found
+        return None
+
+    def _install_attach_to_control(self) -> None:
+        if not hasattr(self, "encounter_board"):
+            return
+        upload_button = next(
+            (
+                button
+                for button in self.encounter_board.findChildren(QPushButton)
+                if button.text().strip() == "Upload Map"
+            ),
+            None,
+        )
+        self.attach_raid_map_button = QPushButton("Attach to…")
+        self.attach_raid_map_button.setToolTip(
+            "Capture this Raid Map and attach it directly to a Mechanics & Timelines encounter."
+        )
+        self.attach_raid_map_button.clicked.connect(self._attach_current_map_to_encounter)
+
+        if upload_button is not None:
+            found = self._layout_containing_widget(self.encounter_board.layout(), upload_button)
+            if found is not None:
+                layout, index = found
+                layout.insertWidget(index + 1, self.attach_raid_map_button)
+                return
+
+        root = self.encounter_board.layout()
+        if root is not None:
+            root.insertWidget(max(0, root.count() - 2), self.attach_raid_map_button)
+
+    def _attach_current_map_to_encounter(self) -> None:
+        summaries = tuple(self.guide_service.encounter_summaries())
+        if not summaries:
+            self.status.warning("No Mechanics & Timelines encounters are available.")
+            return
+
+        active_trial = str(self.expedition.expedition.Expedition or "").strip().casefold()
+        matching = tuple(
+            row
+            for row in summaries
+            if active_trial
+            and str(row.content_name or "").strip().casefold() == active_trial
+        )
+        choices = matching or summaries
+
+        selected_encounter_id = str(self.boss_combo.currentData() or "").strip()
+        labels = [
+            row.name if matching else f"{row.content_name} • {row.name}"
+            for row in choices
+        ]
+        default_index = next(
+            (
+                index
+                for index, row in enumerate(choices)
+                if row.encounter_id == selected_encounter_id
+            ),
+            0,
+        )
+        selected, accepted = QInputDialog.getItem(
+            self,
+            "Attach Raid Map",
+            "Mechanics & Timelines encounter:",
+            labels,
+            default_index,
+            False,
+        )
+        if not accepted:
+            return
+
+        index = labels.index(selected)
+        encounter = choices[index]
+
+        try:
+            self.encounter_board.capture_snapshot()
+            record = self.raid_map_store.import_map(
+                encounter.encounter_id,
+                self.encounter_board.snapshot_path,
+                label=f"{encounter.name} Positioning",
+            )
+            plan_id = str(self.raid_plan_combo.currentData() or "").strip()
+            if plan_id:
+                self.raid_section_state.set_linked_raid_map_id(
+                    plan_id,
+                    encounter.encounter_id,
+                    record.map_id,
+                )
+        except Exception as exc:
+            self.status.error(f"Raid Map attachment failed: {exc}")
+            return
+
+        if plan_id:
+            plan = self.raid_plan_repository.get(plan_id)
+            plan_name = plan.name if plan is not None else plan_id
+            self.status.success(
+                f"Attached Raid Map to {encounter.name} and linked it to Raid Plan {plan_name}."
+            )
+        else:
+            self.status.success(
+                f"Attached Raid Map to Mechanics & Timelines • {encounter.name}."
+            )
 
     def _positioning_snapshot_saved(self, path: str):
         self._load_positioning_preview(Path(path))
@@ -374,4 +548,5 @@ class EncountersPage(FoundryPage):
 
         self.active_trial.setText(f"{trial}{f' ({difficulty})' if difficulty else ''}")
         self.group_size.setText("— / —")
+        self._populate_raid_plan_context()
         self._load_boss_index()
