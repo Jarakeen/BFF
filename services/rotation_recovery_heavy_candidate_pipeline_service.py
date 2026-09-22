@@ -58,6 +58,10 @@ RecoveryHeavyCompletionEvidenceFactory = Callable[
     [RotationPlan],
     tuple[RotationHeavyAttackCompletionEvidence, ...],
 ]
+RecoveryHeavyLandedEvidenceResolver = Callable[
+    [RotationPlan, tuple[RotationHeavyAttackCompletionEvidence, ...]],
+    tuple[RotationHeavyAttackCompletionEvidence, ...],
+]
 
 
 class RotationRecoveryHeavyCandidatePipelineService:
@@ -226,6 +230,7 @@ class RotationRecoveryHeavyCandidatePipelineService:
         restoration_resolver: VerifiedRecoveryHeavyRestorationResolver | None = None,
         restoration_resolver_factory: RecoveryRestorationResolverFactory | None = None,
         completion_evidence_factory: RecoveryHeavyCompletionEvidenceFactory | None = None,
+        landed_evidence_resolver: RecoveryHeavyLandedEvidenceResolver | None = None,
         initial_bar: str = "front",
         demands: Iterable[RotationDemandWindow] = (),
         options: Iterable[RotationRefreshLeadCandidateOption] = (),
@@ -291,6 +296,10 @@ class RotationRecoveryHeavyCandidatePipelineService:
                 plan: RotationPlan,
             ) -> VerifiedRecoveryHeavyRestorationResolver:
                 completion_evidence = tuple(active_completion_factory(plan))
+                if landed_evidence_resolver is not None:
+                    completion_evidence = tuple(
+                        landed_evidence_resolver(plan, completion_evidence)
+                    )
                 return self.heavy_sustain_service.restoration_resolver_for_plan(
                     character_build=character_build,
                     sustain_build=player_build,
@@ -343,5 +352,6 @@ class RotationRecoveryHeavyCandidatePipelineService:
 
 __all__ = [
     "RecoveryHeavyCompletionEvidenceFactory",
+    "RecoveryHeavyLandedEvidenceResolver",
     "RotationRecoveryHeavyCandidatePipelineService",
 ]
