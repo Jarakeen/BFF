@@ -17,6 +17,7 @@ from services.rotation_candidate_recommendation_evidence_service import (
 )
 from services.rotation_duration_analysis_service import RotationDurationAnalysisService
 from services.rotation_sustain_service import RotationSustainService
+from services.rotation_plan_potion_combat_state_service import RotationPlanPotionCombatStateService
 from services.team_provider_rotation_workload_service import TeamProviderRotationWorkload
 
 
@@ -162,6 +163,7 @@ class RotationCandidateCanonicalPlanEvidenceService:
             RotationCandidateRoleHardObligationEvidenceProvider | None
         ) = None,
         restoration_evidence_provider: RotationCandidateRestorationEvidenceProvider | None = None,
+        potion_runtime_service: RotationPlanPotionCombatStateService | None = None,
         provider_workload_evidence_provider: (
             RotationCandidateProviderWorkloadEvidenceProvider | None
         ) = None,
@@ -178,6 +180,7 @@ class RotationCandidateCanonicalPlanEvidenceService:
         self.role_output_evidence_provider = role_output_evidence_provider
         self.role_hard_obligation_evidence_provider = role_hard_obligation_evidence_provider
         self.restoration_evidence_provider = restoration_evidence_provider
+        self.potion_runtime_service = potion_runtime_service or RotationPlanPotionCombatStateService()
         self.provider_workload_evidence_provider = provider_workload_evidence_provider
         self.resource = resource
         self.restoration_events = tuple(restoration_events)
@@ -204,11 +207,20 @@ class RotationCandidateCanonicalPlanEvidenceService:
             candidate_restoration_events = tuple(restoration.restoration_events)
             restoration_unresolved = tuple(restoration.unresolved)
 
+        potion_restoration_events = self.potion_runtime_service.restoration_events(
+            self.build,
+            plan=candidate.plan,
+        )
+
         sustain = self.sustain_service.evaluate(
             build=self.build,
             plan=candidate.plan,
             resource=self.resource,
-            restoration_events=self.restoration_events + candidate_restoration_events,
+            restoration_events=(
+                self.restoration_events
+                + potion_restoration_events
+                + candidate_restoration_events
+            ),
             maximum_events=self.maximum_events,
             calculation_context=self.calculation_context,
             displayed_recovery_at=self.displayed_recovery_at,
