@@ -17,6 +17,9 @@ from services.extreme_sustained_dps_objective32_blocker_service import (
     ExtremeSustainedDPSObjective32BlockerReport,
     ExtremeSustainedDPSObjective32BlockerService,
 )
+from services.extreme_sustained_dps_objective32_scenario_preflight_service import (
+    ExtremeSustainedDPSObjective32ScenarioPreflightService,
+)
 from services.extreme_sustained_dps_objective32_search_service import (
     ExtremeSustainedDPSObjective32SearchScopeProof,
 )
@@ -57,9 +60,13 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         *,
         global_search: object,
         structural_families: object | None = None,
+        require_closure_ready_scenario: bool = False,
     ) -> None:
         self.global_search = global_search
         self.structural_families = structural_families
+        self.require_closure_ready_scenario = bool(
+            require_closure_ready_scenario
+        )
 
     def search(
         self,
@@ -72,6 +79,24 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         **search_kwargs,
     ) -> ExtremeSustainedDPSGlobalObjective32SearchResult:
         normalized_root = str(root_key or "").strip() or "generated-global-root"
+
+        if self.require_closure_ready_scenario:
+            pipeline = getattr(self.global_search, "pipeline", None)
+            encounter_policy_adapter = getattr(
+                pipeline,
+                "encounter_policy_adapter",
+                None,
+            )
+            ExtremeSustainedDPSObjective32ScenarioPreflightService.require_ready(
+                runtime_state_frontier=runtime_state_frontier,
+                heavy_attack_channel_block_denominator_proven=bool(
+                    search_kwargs.get(
+                        "heavy_attack_channel_block_denominator_proven",
+                        False,
+                    )
+                ),
+                encounter_policy_adapter=encounter_policy_adapter,
+            )
 
         axis_inventory = self.global_search.axis_inventory(
             runtime_state_frontier=runtime_state_frontier,
