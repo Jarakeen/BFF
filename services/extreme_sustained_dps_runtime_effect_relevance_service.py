@@ -106,6 +106,21 @@ class ExtremeSustainedDPSRuntimeEffectRelevanceService:
                 relevant.append(effect)
                 continue
 
+            if effect.target_type is SupportTargetType.ENEMY:
+                if effect.resistance_reduction is not None:
+                    if effect.scaling:
+                        unresolved.append(
+                            f"{effect.source} {effect.name} has target resistance reduction with unresolved scaling: {effect.scaling}"
+                        )
+                    else:
+                        relevant.append(effect)
+                    continue
+                if effect.damage_amplification is not None:
+                    unresolved.append(
+                        f"{effect.source} {effect.name} has resolved target damage amplification but Objective #32 has no generic numeric Damage Taken runtime router yet"
+                    )
+                    continue
+
             buff = canonical_buff_name(identity.replace("_", " "))
             if buff is not None:
                 if is_component_layer_buff(buff):
