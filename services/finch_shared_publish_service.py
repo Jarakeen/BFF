@@ -5,22 +5,28 @@ from __future__ import annotations
 This module owns the outbound privacy boundary. Shared snapshots contain only the
 small operational fields intentionally approved for collaboration. Local database
 identity, private Personnel notes, draft state, URLs, and full build payloads do
-not cross this boundary.
+not cross this boundary. Raid build handoff exposes only the small operational
+subset needed to execute the selected seat: sets, weapons, skill bars, Mundus,
+food, and potion.
 """
 
 from dataclasses import dataclass
 from pathlib import Path
 
 from models.raid_plan import RaidPlan
+from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.finch_api_client import FinchApiClient, FinchSharedSnapshot
 from services.raid_plan_repository import RaidPlanRepository
+from services.raid_plan_saved_build_resolution_service import (
+    RaidPlanSavedBuildResolutionService,
+)
 from services.roster_service import RosterService
 from services.settings_service import SettingsService
 
 
 _SHARED_TEAM_SCHEMA_VERSION = 1
-_SHARED_RAID_PLAN_SCHEMA_VERSION = 4
+_SHARED_RAID_PLAN_SCHEMA_VERSION = 5
 
 
 def _clean(value: object) -> str:
@@ -119,9 +125,70 @@ def shared_team_payload(roster: RosterService, team_name: str) -> dict[str, obje
     }
 
 
-def shared_raid_plan_payload(plan: RaidPlan) -> dict[str, object]:
+def _weapon_label(primary, offhand) -> str:
+    main_type = _clean(getattr(primary, "WeaponType", ""))
+    off_type = _clean(getattr(offhand, "WeaponType", ""))
+    if off_type.casefold() == "shield" and main_type:
+        return "Sword & Board" if main_type.casefold() == "sword" else f"{main_type} & Shield"
+    if main_type and off_type:
+        return f"{main_type} + {off_type}"
+    return main_type or off_type
+
+
+def _operational_build_summary(plan: RaidPlan, member, saved_builds) -> dict[str, object]:
+    summary: dict[str, object] = {
+        "name": member.selected_build_name or "",
+        "source_kind": member.build_source_kind or "",
+        "source_name": member.build_source_name or "",
+        "planned_gear_sets": list(member.planned_gear_sets),
+        "planned_mundus": member.planned_mundus or "",
+        "front_weapon": "",
+        "back_weapon": "",
+        "front_skills": [],
+        "back_skills": [],
+        "food": "",
+        "potion": "",
+    }
+    resolution = RaidPlanSavedBuildResolutionService().resolve(
+        raid_plan=plan,
+        seat_id=member.seat_id,
+        saved_builds=saved_builds,
+    )
+    if not resolution.resolved or resolution.build is None:
+        if member.planned_skills:
+            summary["front_skills"] = list(member.planned_skills)
+        return summary
+
+    build = resolution.build
+    summary["front_weapon"] = _weapon_label(
+        build.FrontBarWeapon,
+        build.FrontBarOffHand,
+    )
+    summary["back_weapon"] = _weapon_label(
+        build.BackBarWeapon,
+        build.BackBarOffHand,
+    )
+    summary["front_skills"] = [
+        _clean(value) for value in build.FrontBarSkills if _clean(value)
+    ]
+    summary["back_skills"] = [
+        _clean(value) for value in build.BackBarSkills if _clean(value)
+    ]
+    summary["food"] = _clean(build.Food)
+    summary["potion"] = _clean(build.Potion)
+    if not summary["planned_mundus"]:
+        summary["planned_mundus"] = _clean(build.Mundus)
+    return summary
+
+
+def shared_raid_plan_payload(
+    plan: RaidPlan,
+    *,
+    saved_builds=(),
+) -> dict[str, object]:
     if not isinstance(plan, RaidPlan):
         raise TypeError("plan must be a RaidPlan")
+    saved = tuple(saved_builds or ())
     return {
         "plan_id": plan.plan_id,
         "name": plan.name,
@@ -140,13 +207,7 @@ def shared_raid_plan_payload(plan: RaidPlan) -> dict[str, object]:
                 "primary_assignment": member.primary_assignment or "",
                 "secondary_assignment": member.secondary_assignment or "",
                 "utility_assignments": list(member.utility_assignments),
-                "build_summary": {
-                    "name": member.selected_build_name or "",
-                    "source_kind": member.build_source_kind or "",
-                    "source_name": member.build_source_name or "",
-                    "planned_gear_sets": list(member.planned_gear_sets),
-                    "planned_mundus": member.planned_mundus or "",
-                },
+                "build_summary": _operational_build_summary(plan, member, saved),
             }
             for member in plan.members
         ],
@@ -162,9 +223,16 @@ class FinchPublishResult:
 
 
 class FinchSharedPublishService:
-    def __init__(self, *, client: FinchApiClient, roster: RosterService) -> None:
+    def __init__(
+        self,
+        *,
+        client: FinchApiClient,
+        roster: RosterService,
+        build_service: BuildService | None = None,
+    ) -> None:
         self.client = client
         self.roster = roster
+        self.build_service = build_service
 
     @staticmethod
     def _result(snapshot: FinchSharedSnapshot) -> FinchPublishResult:
@@ -185,7 +253,10 @@ class FinchSharedPublishService:
         return self._result(snapshot)
 
     def publish_raid_plan(self, plan: RaidPlan) -> FinchPublishResult:
-        payload = shared_raid_plan_payload(plan)
+        saved_builds = ()
+        if self.build_service is not None:
+            saved_builds = tuple(self.build_service.load().Members)
+        payload = shared_raid_plan_payload(plan, saved_builds=saved_builds)
         snapshot = self.client.publish_shared_raid_plan(
             snapshot_key=plan.plan_id,
             payload=payload,
@@ -244,6 +315,7 @@ def publish_raid_plan_to_finch(
         return FinchSharedPublishService(
             client=_configured_client(settings_path=settings_path, timeout=timeout),
             roster=roster,
+            build_service=BuildService(Path(database_path).with_name("builds.json")),
         ).publish_raid_plan(plan)
     finally:
         database.close()
