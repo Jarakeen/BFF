@@ -265,7 +265,7 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
                 "Promote the provisional cadence topology only after current-version authoritative "
-                "evidence resolves exact base cooldowns (especially the disputed buff/debuff "
+                "evidence resolves exact base cooldowns and activation trigger semantics, including "
                 "family), eligible periodic/direct weapon-skill trigger rules, off-bar source "
                 "ownership, independent/shared cooldown and target-lockout behavior, and proc-"
                 "damage exclusions. Only then may trait-adjusted cooldown rules be composed "
