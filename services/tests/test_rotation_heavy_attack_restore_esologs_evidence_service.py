@@ -124,7 +124,7 @@ def _completion_for_correlation(completion=3.8):
     )
 
 
-def _landed_observation(timestamp=3.8, event_index=10):
+def _landed_observation(timestamp=103800.0, event_index=10):
     return RotationHeavyAttackLandedObservation(
         report_code="REPORT",
         fight_id=7,
@@ -143,6 +143,7 @@ def test_correlates_one_nearby_logged_hit_to_completion_evidence():
     promoted, unresolved = RotationHeavyAttackRestoreEsoLogsEvidenceService.correlate_landed_observations(
         (_completion_for_correlation(),),
         (_landed_observation(),),
+        replay_origin_timestamp_ms=100000.0,
     )
 
     assert unresolved == ()
@@ -154,7 +155,8 @@ def test_correlates_one_nearby_logged_hit_to_completion_evidence():
 def test_correlation_fails_closed_when_logged_hit_is_ambiguous():
     promoted, unresolved = RotationHeavyAttackRestoreEsoLogsEvidenceService.correlate_landed_observations(
         (_completion_for_correlation(),),
-        (_landed_observation(3.75, 10), _landed_observation(3.85, 11)),
+        (_landed_observation(103750.0, 10), _landed_observation(103850.0, 11)),
+        replay_origin_timestamp_ms=100000.0,
     )
 
     assert promoted[0].landed is None
@@ -164,12 +166,22 @@ def test_correlation_fails_closed_when_logged_hit_is_ambiguous():
 def test_correlation_fails_closed_when_no_logged_hit_is_near_completion():
     promoted, unresolved = RotationHeavyAttackRestoreEsoLogsEvidenceService.correlate_landed_observations(
         (_completion_for_correlation(),),
-        (_landed_observation(5.0),),
+        (_landed_observation(105000.0),),
+        replay_origin_timestamp_ms=100000.0,
     )
 
     assert promoted[0].landed is None
     assert "no reviewed" in unresolved[0]
 
+
+
+def test_correlation_requires_valid_replay_origin():
+    with pytest.raises(ValueError, match="replay origin timestamp"):
+        RotationHeavyAttackRestoreEsoLogsEvidenceService.correlate_landed_observations(
+            (_completion_for_correlation(),),
+            (_landed_observation(),),
+            replay_origin_timestamp_ms=-1.0,
+        )
 
 def test_discovers_landed_heavy_from_reviewed_damage_alias(tmp_path):
     path = _database(tmp_path)
