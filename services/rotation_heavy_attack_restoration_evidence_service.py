@@ -36,7 +36,8 @@ class RotationHeavyAttackCompletionEvidence:
     action_sequence: int
     completion_time_seconds: float
     fully_charged: bool
-    verified_base_restore: float | None
+    landed: bool | None = None
+    verified_base_restore: float | None = None
     modifiers: HeavyAttackRestorationModifiers = HeavyAttackRestorationModifiers()
     source: str = "explicit heavy-attack completion evidence"
 
@@ -49,6 +50,8 @@ class RotationHeavyAttackCompletionEvidence:
             raise ValueError("heavy-attack completion cannot precede its scheduled start")
         if int(self.action_sequence) < 0:
             raise ValueError("heavy-attack evidence sequence cannot be negative")
+        if self.landed is not None and not isinstance(self.landed, bool):
+            raise ValueError("heavy-attack landed evidence must be boolean or None")
         source = str(self.source or "").strip()
         if not source:
             raise ValueError("heavy-attack completion evidence requires a source")
@@ -181,6 +184,23 @@ class RotationHeavyAttackRestorationEvidenceService:
                 continue
 
             if not evidence.fully_charged:
+                resolutions.append(
+                    RotationHeavyAttackRestorationResolution(
+                        action=action,
+                        weapon=weapon_resolution.weapon,
+                        evidence=evidence,
+                        restoration_event=None,
+                    )
+                )
+                continue
+
+            if evidence.landed is None:
+                unresolved.append(
+                    f"fully charged {weapon_resolution.weapon.value} heavy at "
+                    f"{action.time_seconds:.3f}s lacks successful-hit evidence required for resource restoration"
+                )
+                continue
+            if evidence.landed is False:
                 resolutions.append(
                     RotationHeavyAttackRestorationResolution(
                         action=action,
