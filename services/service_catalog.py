@@ -1303,6 +1303,26 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_effect_relevance",
+        domain="extreme",
+        purpose=(
+            "Classify triggered EffectVariants by proof-backed relevance to modeled sustained DPS before runtime-state enumeration."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_effect_relevance_service",
+        inputs=("RuntimeEffectVariants",),
+        outputs=("ExtremeSustainedDPSRuntimeEffectRelevance",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_runtime_effect_relevance",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Only canonically proven non-DPS identities are discarded. Known offensive/sustain effects remain in runtime_state, "
+            "while unknown identities and DPS-relevant target-side effects without an Objective #32 projection stay explicit blockers."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_effect_universe",
         domain="extreme",
         purpose=(
