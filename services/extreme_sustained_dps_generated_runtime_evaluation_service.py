@@ -208,7 +208,10 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 evidence=(),
                 unresolved=("Generated sustained-DPS runtime evaluation requires a DD/DPS build",),
             )
-        if not runtime_snapshot.runtime_history:
+        if (
+            not runtime_snapshot.runtime_history
+            and not runtime_snapshot.runtime_history_complete
+        ):
             return ExtremeGeneratedSustainedDPSRuntimeResult(
                 record=None,
                 summary=None,
