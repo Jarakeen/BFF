@@ -81,7 +81,7 @@ def test_cycle_of_life_is_restoration_staff_only() -> None:
         )
 
 
-def test_verified_resto_base_with_cycle_of_life_matches_reviewed_log_return() -> None:
+def test_verified_resto_base_with_cycle_of_life_keeps_log_modifier_gap_explicit() -> None:
     value = calculate_heavy_attack_restoration(
         weapon=HeavyAttackWeaponType.RESTORATION_STAFF,
         verified_base_restore=verified_heavy_attack_base_restore(
@@ -92,9 +92,9 @@ def test_verified_resto_base_with_cycle_of_life_matches_reviewed_log_return() ->
         ),
     )
 
-    # ESO Logs records the accepted integer return as 4247; canonical math keeps
-    # the pre-log-quantization value explicit rather than silently flooring it.
-    assert value == pytest.approx(4247.1)
+    # A reviewed log return of 4247 includes additional actor/runtime modifier
+    # evidence; it must not be back-solved into the canonical weapon base.
+    assert value == pytest.approx(3861.0)
 
 
 def test_heavy_attack_restore_emits_generic_restoration_event() -> None:
