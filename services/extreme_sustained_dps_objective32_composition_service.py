@@ -116,6 +116,23 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires candidate-resolved runtime-state authority"
             )
+        scenario_frontier = getattr(
+            runtime_state_frontier_resolver,
+            "scenario_frontier",
+            None,
+        )
+        if scenario_frontier is None:
+            raise ValueError(
+                "Objective #32 composition requires runtime-state authority backed by the canonical scenario frontier"
+            )
+        if getattr(scenario_frontier, "runtime_effect_universe", None) is None:
+            raise ValueError(
+                "Objective #32 composition requires canonical candidate runtime EffectVariant discovery"
+            )
+        if getattr(scenario_frontier, "runtime_effect_scaling", None) is None:
+            raise ValueError(
+                "Objective #32 composition requires canonical candidate runtime effect scaling"
+            )
 
         cls._require_resource_denominator_proof(
             finalized_potion_evidence_resolver
@@ -168,6 +185,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
                 "Exact leaves use canonical generated runtime evaluation",
                 "Additional potion resource-event denominator is explicitly proven complete",
                 "Runtime state is resolved per finalized candidate inside the generated tree",
+                "Candidate runtime state is backed by canonical EffectVariant discovery and candidate-specific scaling",
                 "Canonical Objective #32 search requires closure-ready Heavy Attack channel-block scenario evidence before traversal",
             ),
         )
