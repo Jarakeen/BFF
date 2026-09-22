@@ -1096,7 +1096,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "GlobalGeneratedSearch",
             "GeneratedAxisInventory",
             "OptionalSupplementalAxisCoverageProofs",
-            "Objective32SearchScopeProof",
+            "OptionalSupplementalCoverageScopeProof",
             "OptionalProvenLocalRuntimeStateFrontier",
         ),
         outputs=("ExtremeSustainedDPSGlobalObjective32SearchResult",),
@@ -1113,7 +1113,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Canonical axis coverage is derived from the exact completed generated tree rather than caller claims. Supplemental proofs may add evidence but cannot satisfy physical-tree presence. "
+            "Canonical axis coverage is derived from the exact completed generated tree rather than caller claims, so no scope certificate is required for same-tree closure. "
+            "Supplemental proofs are accepted only when an explicit scope proof ties them to the same denominator; otherwise they are ignored and reported. "
             "The generated-axis inventory must show every canonical axis physically present, and axis-carried omitted scope must be empty, before theoretical closure."
         ),
     ),
