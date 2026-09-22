@@ -7,13 +7,24 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from minmax.character_build.effect_instance import EffectVariant
+from minmax.character_build.effect_layer import BarId, EffectLayer
+from minmax.combat_effect_classifier import (
+    CombatEffectCategory,
+    classify_combat_effect,
+)
 from minmax.champion_point_effect_variant_resolver import ChampionPointEffectVariantResolver
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_repository import GearSetRepository
 from minmax.gear_stat_inputs import GearStatInputResolver
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.potion_availability_repository import PotionAvailabilityRepository
+from minmax.rule_repository import RuleRepository
 from minmax.skill_effect_repository import SkillEffectRepository
+from minmax.support_effect_category import SupportEffectCategory
+from minmax.support_stacking import StackingBehavior
+from minmax.support_target_type import SupportTargetType
+from minmax.weapon_enchantment_effect_service import WeaponEnchantmentEffectService
+from minmax.weapon_enchantment_repository import WeaponEnchantmentRepository
 from models.build_model import PlayerBuild
 from models.scribing_recipe import ScribedSkillRecipe
 from services.build_service import BuildService
@@ -142,6 +153,8 @@ class SavedBuildCapabilityService:
         gear=None,
         potions=None,
         champion_point_effect_resolver=None,
+        weapon_enchantment_repository=None,
+        weapon_enchantment_effect_service=None,
     ) -> None:
         self.builds = builds
         self.database_path = Path(database_path)
@@ -156,6 +169,17 @@ class SavedBuildCapabilityService:
         self.champion_point_effect_resolver = (
             champion_point_effect_resolver
             or ChampionPointEffectVariantResolver(self.database_path)
+        )
+        self.weapon_enchantment_repository = (
+            weapon_enchantment_repository
+            or WeaponEnchantmentRepository(self.database_path)
+        )
+        self.weapon_enchantment_effect_service = (
+            weapon_enchantment_effect_service
+            or WeaponEnchantmentEffectService(
+                self.weapon_enchantment_repository,
+                RuleRepository(self.database_path),
+            )
         )
         self._ability_id_cache: dict[tuple[str, str], int | None] = {}
         self._ability_is_crafted_cache: dict[int, bool] = {}
@@ -507,6 +531,82 @@ class SavedBuildCapabilityService:
         self._gear_component_cache[cache_key] = result
         return result
 
+    def _weapon_enchantment_variants(
+        self,
+        build: PlayerBuild,
+        active_bar: str,
+        unresolved: list[str],
+        boundaries: list[str],
+    ) -> list[EffectVariant]:
+        """Resolve active-bar weapon target debuffs without inventing runtime cadence."""
+
+        bar = str(active_bar or "").strip().casefold()
+        if bar not in {"front", "back"}:
+            raise ValueError("weapon enchantment capability active_bar must be front or back")
+        bar_id = BarId.FRONT if bar == "front" else BarId.BACK
+        entries = build.active_weapon_slots(bar)
+
+        variants: list[EffectVariant] = []
+        for slot_index, entry in enumerate(entries, start=1):
+            enchantment_label = self._clean(getattr(entry, "Enchant", ""))
+            if not enchantment_label:
+                continue
+
+            matches = self.weapon_enchantment_repository.find_item_ids_by_label(
+                enchantment_label
+            )
+            slot_name = "main hand" if slot_index == 1 else "off hand"
+            if not matches:
+                unresolved.append(
+                    f"{bar} {slot_name} weapon enchantment label not found in canonical data: {enchantment_label}"
+                )
+                continue
+            if len(matches) != 1:
+                unresolved.append(
+                    f"{bar} {slot_name} weapon enchantment label is ambiguous ({len(matches)} matches): {enchantment_label}"
+                )
+                continue
+
+            effects = self.weapon_enchantment_effect_service.resolve_effects(
+                matches[0],
+                weapon_trait=self._clean(getattr(entry, "Trait", "")) or None,
+                weapon_quality=self._clean(getattr(entry, "Quality", "")) or None,
+            )
+            for effect in effects:
+                if classify_combat_effect(effect) is not CombatEffectCategory.TARGET_DEBUFF:
+                    continue
+                duration = None
+                if effect.duration_value is not None:
+                    unit = self._clean(effect.duration_unit).casefold()
+                    if unit not in {"second", "seconds"}:
+                        boundaries.append(
+                            f"{bar} {slot_name} weapon enchantment duration unit requires runtime conversion: "
+                            f"{effect.source}: {effect.duration_value} {effect.duration_unit}"
+                        )
+                    else:
+                        duration = float(effect.duration_value)
+
+                variants.append(
+                    EffectVariant(
+                        name=str(effect.effect_type),
+                        layer=EffectLayer.PROC,
+                        source=str(effect.source),
+                        magnitude=float(effect.value),
+                        duration=duration,
+                        active_bar=bar_id,
+                        target_type=SupportTargetType.ENEMY,
+                        category=SupportEffectCategory.DEBUFF,
+                        resistance_reduction=float(effect.value),
+                        stacking=StackingBehavior.UNIQUE,
+                    )
+                )
+                boundaries.append(
+                    f"{bar} {slot_name} weapon enchantment runtime effect timing deferred: "
+                    f"{effect.source}"
+                )
+
+        return variants
+
     def _champion_point_variants(
         self,
         build: PlayerBuild,
@@ -564,6 +664,15 @@ class SavedBuildCapabilityService:
             boundaries.extend(gear_component.boundaries)
             effects.extend(gear_component.effects)
 
+            effects.extend(
+                self._weapon_enchantment_variants(
+                    build,
+                    active_bar,
+                    unresolved,
+                    boundaries,
+                )
+            )
+
         potion_name = self._clean(build.Potion)
         if potion_name:
             potion = self.potions.resolve(potion_name)
@@ -580,13 +689,16 @@ class SavedBuildCapabilityService:
                     )
 
         deduped: list[EffectVariant] = []
-        seen: set[tuple[str, str, str, str]] = set()
+        seen: set[tuple[object, ...]] = set()
         for effect in effects:
             key = (
                 effect.name,
                 str(effect.layer),
                 str(effect.source),
                 str(effect.condition or ""),
+                str(getattr(effect.active_bar, "value", effect.active_bar) or ""),
+                None if effect.magnitude is None else float(effect.magnitude),
+                None if effect.resistance_reduction is None else float(effect.resistance_reduction),
             )
             if key in seen:
                 continue
@@ -655,6 +767,21 @@ class SavedBuildCapabilityService:
                 sources.append(f"{active_bar}:gear")
                 effects.extend(gear_component.effects)
 
+            weapon_enchantment_effects = self._weapon_enchantment_variants(
+                build,
+                active_bar,
+                capability_unresolved,
+                boundaries,
+            )
+            unresolved.extend(
+                message
+                for message in capability_unresolved
+                if message not in unresolved
+            )
+            if weapon_enchantment_effects:
+                sources.append(f"{active_bar}:weapon_enchantments")
+                effects.extend(weapon_enchantment_effects)
+
         potion_name = self._clean(build.Potion)
         if potion_name:
             potion = self.potions.resolve(potion_name)
@@ -673,13 +800,16 @@ class SavedBuildCapabilityService:
                     )
 
         deduped: list[EffectVariant] = []
-        seen: set[tuple[str, str, str, str]] = set()
+        seen: set[tuple[object, ...]] = set()
         for effect in effects:
             key = (
                 effect.name,
                 str(effect.layer),
                 str(effect.source),
                 str(effect.condition or ""),
+                str(getattr(effect.active_bar, "value", effect.active_bar) or ""),
+                None if effect.magnitude is None else float(effect.magnitude),
+                None if effect.resistance_reduction is None else float(effect.resistance_reduction),
             )
             if key in seen:
                 continue
