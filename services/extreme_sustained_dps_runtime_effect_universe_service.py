@@ -80,6 +80,24 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
                 if str(item).strip()
             )
         )
+        runtime_boundary_gaps = tuple(
+            item
+            for item in boundaries
+            if (
+                "detailed scripted effect conversion deferred" in item.casefold()
+                or "effect semantics unavailable" in item.casefold()
+                or "runtime effect" in item.casefold()
+                and "deferred" in item.casefold()
+            )
+        )
+        unresolved = tuple(
+            dict.fromkeys(
+                (
+                    *unresolved,
+                    *runtime_boundary_gaps,
+                )
+            )
+        )
 
         triggered: list[EffectVariant] = []
         excluded: list[EffectVariant] = []
