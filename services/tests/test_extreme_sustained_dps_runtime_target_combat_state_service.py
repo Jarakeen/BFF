@@ -141,3 +141,57 @@ def test_projects_active_enemy_brittle_to_matching_target_state() -> None:
 
     assert result.unresolved == ()
     assert result.combat_state.active_buffs == ("Minor Brittle",)
+
+
+def test_projects_explicit_numeric_resistance_reduction_to_matching_target() -> None:
+    effect = EffectVariant(
+        name="synthetic_resistance_debuff",
+        layer=EffectLayer.PROC,
+        source="Synthetic Debuff",
+        trigger="damage_dealt",
+        duration=4.0,
+        target_type=SupportTargetType.ENEMY,
+        resistance_reduction=1234.0,
+        stacking=StackingBehavior.UNIQUE,
+    )
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(_attempt(1.0, target="Boss"),),
+        snapshot_time_seconds=2.0,
+        runtime_history_complete=True,
+    )
+
+    result = ExtremeSustainedDPSRuntimeTargetCombatStateService.resolve(
+        snapshot=snapshot,
+        effects=(effect,),
+        target_identity="Boss",
+    )
+
+    assert result.unresolved == ()
+    assert result.combat_state.active_buffs == ()
+    assert result.explicit_resistance_reduction == 1234.0
+
+
+def test_explicit_numeric_resistance_reduction_does_not_leak_targets() -> None:
+    effect = EffectVariant(
+        name="synthetic_resistance_debuff",
+        layer=EffectLayer.PROC,
+        source="Synthetic Debuff",
+        trigger="damage_dealt",
+        duration=4.0,
+        target_type=SupportTargetType.ENEMY,
+        resistance_reduction=1234.0,
+        stacking=StackingBehavior.UNIQUE,
+    )
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(_attempt(1.0, target="Add"),),
+        snapshot_time_seconds=2.0,
+        runtime_history_complete=True,
+    )
+
+    result = ExtremeSustainedDPSRuntimeTargetCombatStateService.resolve(
+        snapshot=snapshot,
+        effects=(effect,),
+        target_identity="Boss",
+    )
+
+    assert result.explicit_resistance_reduction == 0.0
