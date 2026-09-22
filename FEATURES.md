@@ -522,3 +522,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - A Live Plan can use a different saved map for the same encounter than another plan.
 - Live Raid can link/change/clear the chosen map and open the exact linked encounter/map in Mechanics.
 
+
+
+- **Finch sub-ready build handoff** — shared Raid Plan publishing now exposes only the selected seat's operational build subset needed for Discord execution handoff: planned gear, front/back weapon labels, front/back skill bars, Mundus, food, potion, and Raid Plan assignments. Private notes, local IDs, source URLs, and full build payloads remain local.
