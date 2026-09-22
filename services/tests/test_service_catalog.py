@@ -1190,6 +1190,32 @@ def test_sustained_dps_dynamic_whole_plan_frontier_adapter_preserves_omitted_sco
     assert "materialized one at a time" in service.notes
 
 
+def test_sustained_dps_runtime_external_history_frontier_narrows_runtime_scope() -> None:
+    witness = canonical_service_for(
+        "extreme_sustained_dps_runtime_witness_composition"
+    )
+    frontier = canonical_service_for(
+        "extreme_sustained_dps_runtime_external_history_frontier"
+    )
+
+    assert witness is not None
+    assert frontier is not None
+    assert witness.service_id == "extreme.sustained_dps.runtime_witness_composition"
+    assert frontier.service_id == "extreme.sustained_dps.runtime_external_history_frontier"
+    assert SERVICE_CATALOG.dependencies_of(witness.service_id) == ()
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(frontier.service_id)
+    ) == (
+        "extreme.sustained_dps.runtime_witness_composition",
+        "extreme.sustained_dps.runtime_state_frontier",
+    )
+    assert "RotationPlan-owned bar truth" in witness.purpose
+    assert "runtime_history_complete" in witness.notes
+    assert "genuinely external event-history family" in frontier.notes
+    assert "whole runtime_state denominator open" in frontier.notes
+
+
 def test_sustained_dps_runtime_state_search_keeps_local_scope_explicit() -> None:
     frontier = canonical_service_for("extreme_sustained_dps_runtime_state_frontier")
     evaluator = canonical_service_for("extreme_sustained_dps_runtime_state_whole_plan_evaluator")
