@@ -119,3 +119,33 @@ def test_deferred_runtime_effect_boundary_fails_universe_closed() -> None:
         "detailed scripted effect conversion deferred" in row
         for row in result.unresolved
     )
+
+
+def test_triggerless_crusher_capability_remains_runtime_timing_blocker() -> None:
+    crusher = EffectVariant(
+        name="physical_spell_resistance_reduction",
+        layer=EffectLayer.PROC,
+        source="Crusher Enchantment",
+        magnitude=1622.0,
+        duration=5.0,
+        resistance_reduction=1622.0,
+    )
+    audit = SimpleNamespace(
+        effects=(crusher,),
+        unresolved=(),
+        boundaries=(
+            "front main hand weapon enchantment runtime effect timing deferred: "
+            "Crusher Enchantment",
+        ),
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectUniverseService(
+        capability_service=_Capabilities(audit)
+    ).resolve(object())
+
+    assert result.effects == ()
+    assert result.resolved is False
+    assert result.unresolved == (
+        "front main hand weapon enchantment runtime effect timing deferred: "
+        "Crusher Enchantment",
+    )
