@@ -3,10 +3,12 @@ from types import SimpleNamespace
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.character_progression import CharacterProgression
+from minmax.combat_effects import CombatEffect
+from minmax.effects import EffectUnit
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.support_effect_category import SupportEffectCategory
 from minmax.support_target_type import SupportTargetType
-from models.build_model import ChampionPointEntry, PlayerBuild
+from models.build_model import ChampionPointEntry, GearSlot, PlayerBuild
 from services.build_service import BuildService
 from services.saved_build_capability_service import SavedBuildCapabilityService
 
@@ -262,3 +264,85 @@ def test_effect_variant_resolution_does_not_require_saved_character_progression(
     assert result.effects == (skill_effect, gear_effect, potion_effect)
     assert result.unresolved == ()
     assert "Potion availability resolved without standing uptime: spell power" in result.boundaries
+
+
+class _CrusherRepository:
+    def find_item_ids_by_label(self, label):
+        assert label == "Crushing"
+        return (26845,)
+
+
+class _CrusherEffects:
+    def resolve_effects(
+        self,
+        item_id,
+        *,
+        weapon_trait=None,
+        weapon_quality=None,
+    ):
+        assert item_id == 26845
+        assert weapon_trait == "Infused"
+        assert weapon_quality == "Legendary"
+        return [
+            CombatEffect(
+                effect_type="physical_spell_resistance_reduction",
+                value=2108.6,
+                source="Crusher Enchantment",
+                unit=EffectUnit.FLAT,
+                target="target",
+                duration_value=5.0,
+                duration_unit="seconds",
+            )
+        ]
+
+
+def test_effect_variant_resolution_includes_canonical_crusher_capability(tmp_path):
+    service = SavedBuildCapabilityService(
+        BuildService(tmp_path / "builds.json"),
+        tmp_path / "eso.db",
+        skills=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        gear=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        potions=SimpleNamespace(
+            resolve=lambda *_args, **_kwargs: SimpleNamespace(
+                effects=(),
+                unresolved=(),
+            )
+        ),
+        weapon_enchantment_repository=_CrusherRepository(),
+        weapon_enchantment_effect_service=_CrusherEffects(),
+    )
+    service._skill_component = lambda _build, _bar: SimpleNamespace(
+        effects=(), unresolved=(), boundaries=()
+    )
+    service._gear_component = lambda _build, _bar: SimpleNamespace(
+        effects=(), unresolved=(), boundaries=()
+    )
+
+    build = PlayerBuild(
+        Name="Generated",
+        BuildName="Crusher Candidate",
+        FrontBarWeapon=GearSlot(
+            WeaponType="Ice Staff",
+            Enchant="Crushing",
+            Trait="Infused",
+            Quality="Legendary",
+        ),
+    )
+
+    result = service.resolve_effect_variants(build)
+
+    assert result.resolved is True
+    assert len(result.effects) == 1
+    crusher = result.effects[0]
+    assert crusher.name == "physical_spell_resistance_reduction"
+    assert crusher.source == "Crusher Enchantment"
+    assert crusher.magnitude == 2108.6
+    assert crusher.resistance_reduction == 2108.6
+    assert crusher.duration == 5.0
+    assert crusher.target_type == SupportTargetType.ENEMY
+    assert crusher.active_bar.value == "front"
+    assert crusher.trigger is None
+    assert (
+        "front main hand weapon enchantment runtime effect timing deferred: "
+        "Crusher Enchantment"
+    ) in result.boundaries
