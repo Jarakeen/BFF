@@ -1327,3 +1327,14 @@ A caller may be able to prove a finite runtime-state family complete for one bra
 ### 2026-09-21 — A local ceiling is only a branch ceiling when the branch really is that local family
 
 A maximum over a closed finite rotation/runtime family is safe only for that exact family. Before branch-and-bound can use it to prune, FoundryDock requires an explicit proof that the search branch contains exactly that denominator and that every omitted timing/encounter/runtime state is assigned outside the branch. This prevents a locally correct ceiling from becoming globally incorrect simply because the number is convenient.
+
+
+### 2026-09-21 — Major Slayer support has two different raid-coverage patterns
+
+War Machine and Master Architect provide Major Slayer to only part of a 12-player trial group at a time, so raid planning commonly uses **two providers total** in any combination of those two sets to cover the full group.
+
+Roaring Opportunist behaves differently when paired with Jorvuld's Guidance: one player can maintain full-group Major Slayer coverage by performing the required Heavy Attacks on the set's cadence, so that pair replaces the two-provider War Machine / Master Architect route rather than supplementing it.
+
+**Layman's version:** Major Slayer is not simply “covered” because one Slayer set exists. The raid either needs two partial-group providers, or one Roaring Opportunist + Jorvuld's provider doing the required Heavy Attacks.
+
+**For BFF / Finch:** signup and comp tools should treat these as mutually exclusive coverage routes. Once RO + Jorvuld's is assigned, War Machine / Master Architect should no longer be offered for Slayer coverage; once the direct-set route is chosen, RO + Jorvuld's should no longer be offered as the alternate route.
