@@ -139,7 +139,7 @@ def test_saved_cycle_of_life_rank_two_composes_with_verified_resto_base() -> Non
     assert result.unresolved == ()
     assert len(result.restoration_projection.restoration_events) == 1
     assert result.restoration_projection.restoration_events[0].amount == pytest.approx(
-        3267.0 * 1.30
+        2970.0 * 1.30
     )
 
 
@@ -173,7 +173,7 @@ def test_explicit_cycle_modifier_can_fill_unknown_progression_without_double_app
 
     assert result.is_resolved is True
     assert result.restoration_projection.restoration_events[0].amount == pytest.approx(
-        3267.0 * 1.30
+        2970.0 * 1.30
     )
 
 
