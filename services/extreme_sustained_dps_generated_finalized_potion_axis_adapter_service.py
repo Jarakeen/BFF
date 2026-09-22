@@ -217,7 +217,12 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
         potion_cooldown_seconds: float,
         evidence_resolver: ExtremeSustainedDPSFinalizedPotionTimingEvidenceResolver,
     ) -> ExtremeSustainedDPSGeneratedFinalizedPotionAxisState:
-        if not bool(getattr(upstream_state, "complete", False)):
+        runtime_stage = getattr(upstream_state, "runtime", None)
+        runtime_complete = bool(
+            runtime_stage is not None
+            and getattr(runtime_stage, "complete", False)
+        )
+        if not runtime_complete and not bool(getattr(upstream_state, "complete", False)):
             raise ValueError(
                 "finalized potion timing axis requires complete upstream runtime policy state"
             )
