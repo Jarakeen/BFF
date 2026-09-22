@@ -847,9 +847,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=False,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Uses only the selected policy's canonical UltimateResourceTimeline availability "
-            "capacity. No generation, cost, scheduling, or damage arithmetic is reimplemented. "
-            "The count is an upper bound on added Ultimate actions, not a claim that every cast occurs."
+            "Uses the selected generated policy's exact scheduled Ultimate actions and requires final canonical resource legality. "
+            "No generation, cost, scheduling, or damage arithmetic is reimplemented. For one exact policy the scheduled count is both exact and a safe added-action ceiling."
         ),
     ),
     ServiceDescriptor(
@@ -862,7 +861,10 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         implementation_path="services.extreme_sustained_dps_rotation_family_action_count_proof_service",
         inputs=("RotationFamilyFrontier", "ExactDuration", "OptionalAdditionalPolicyActionCountProof"),
         outputs=("ExtremeSustainedDPSRotationFamilyActionCountResult",),
-        dependencies=("extreme.sustained_dps.rotation_plan_frontier",),
+        dependencies=(
+            "extreme.sustained_dps.rotation_plan_frontier",
+            "extreme.sustained_dps.delayed_ultimate_policy_frontier",
+        ),
         responsibilities=("extreme_sustained_dps_rotation_family_action_count_proof",),
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
@@ -2074,8 +2076,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.rotation_policy_frontier",
         domain="extreme",
         purpose=(
-            "Enumerate explicit Ultimate-bar choice/as-soon-as-affordable policies and "
-            "anchored potion first-use/reuse timing over one generated seed RotationPlan."
+            "Enumerate explicit Ultimate-bar choice plus every legal delayed cast/skip sequence "
+            "and anchored potion first-use/reuse timing over one generated seed RotationPlan."
         ),
         implementation_path="services.extreme_sustained_dps_rotation_policy_frontier_service",
         inputs=(
@@ -2096,10 +2098,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=False,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Ultimate affordability/spend remains owned by RotationUltimateService and final "
-            "Ultimate/potion legality remains owned by RotationScheduledActionResourceLegalityService. "
-            "This frontier proves only its anchored potion family and explicit Ultimate-choice family; "
-            "continuous potion offsets and deliberate post-affordability Ultimate delays remain open."
+            "Ultimate spend and generation evidence remain owned by RotationUltimateService, delayed cast enumeration is owned by the delayed-Ultimate frontier, "
+            "and final Ultimate/potion legality remains owned by RotationScheduledActionResourceLegalityService. "
+            "Delayed Ultimate timing is closed over the exact seed-plan skill slots; continuous potion offsets remain open."
         ),
     ),
     ServiceDescriptor(
