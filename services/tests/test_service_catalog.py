@@ -547,6 +547,7 @@ def test_generated_sustained_dps_runtime_evaluation_consumes_canonical_simulatio
         for row in SERVICE_CATALOG.dependencies_of(service.service_id)
     ) == (
         "extreme.sustained_dps.gear_runtime_semantics",
+        "extreme.sustained_dps.runtime_target_combat_state",
         "simulation.saved_build_dd",
     )
     assert "caller-owned" in service.notes
@@ -1247,6 +1248,7 @@ def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely
         for row in SERVICE_CATALOG.dependencies_of(scenario.service_id)
     ) == (
         "extreme.sustained_dps.runtime_effect_universe",
+        "extreme.sustained_dps.runtime_effect_relevance",
         "extreme.sustained_dps.runtime_event_skeleton",
         "extreme.sustained_dps.runtime_attempt_evidence_frontier",
         "extreme.sustained_dps.runtime_external_history_assembly",
