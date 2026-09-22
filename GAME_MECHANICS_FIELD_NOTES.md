@@ -1490,3 +1490,16 @@ Proving the maximum over every branch in a generated finite tree proves only tha
 Master Architect's Major Slayer duration is not a fixed one-second proc. The reviewed set semantics are one second of Major Slayer per 10 Ultimate spent, so the runtime duration is candidate-specific.
 
 **For BFF:** Objective #32 now resolves that duration from canonical Ultimate spend before runtime relevance and event enumeration. A 250-cost Ultimate produces 25 seconds. A branch with no scheduled Ultimate has no operative duration requirement, while mixed or unresolved Ultimate-cost evidence fails closed rather than silently using the registry's one-second base unit.
+
+
+---
+
+## 2026-09-22 — Weapon enchantments remember identity across bars
+
+Weapon-enchantment cooldown research exposes a topology that is easy to model incorrectly. Community tests consistently report that two copies of the **same enchantment identity** share a cooldown even when they are on different bars, while different enchantment identities can keep independent timers. Ground weapon DoTs such as Wall of Elements or Volley can continue triggering the enchantment belonging to the weapon that created the ground effect after the player swaps bars.
+
+The same evidence converges on a roughly **4-second base cooldown for direct-damage enchantments** and **10 seconds for buff/debuff enchantments** before modifiers such as Infused. Those values remain provisional in BFF until current-version authoritative evidence is available.
+
+**Layman's version:** swapping weapons does not erase where an existing ground weapon effect came from, and putting the same glyph on both bars does not give you two independent copies of its timer.
+
+**For BFF:** weapon-enchantment cadence needs source-weapon ownership and enchantment identity, not merely the currently active bar. The optimizer must also keep provisional cadence evidence out of exact simulation until the evidence authority gate is satisfied.
