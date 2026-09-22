@@ -57,8 +57,34 @@ class ExtremeSustainedDPSFinalizedPotionTimingDenominatorService:
         duration_seconds: float,
         cooldown_seconds: float,
         instant_restoration_timing_closed: bool = False,
+        resource_observation_times: tuple[float, ...] = (),
+        resource_observation_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSFinalizedPotionTimingDenominator:
         unresolved = list(observation_frontier.unresolved)
+        resource_times = tuple(
+            sorted(
+                {
+                    float(value)
+                    for value in tuple(resource_observation_times)
+                }
+            )
+        )
+        if resource_times and not resource_observation_denominator_proven:
+            unresolved.append(
+                "Potion resource observation times were supplied without denominator proof"
+            )
+        restoration_closed = bool(
+            instant_restoration_timing_closed
+            or resource_observation_denominator_proven
+        )
+        combined_observation_times = tuple(
+            sorted(
+                {
+                    *tuple(observation_frontier.observation_times),
+                    *resource_times,
+                }
+            )
+        )
         potion_name = " ".join(
             str(getattr(player_build, "Potion", "") or "").strip().split()
         )
@@ -69,9 +95,9 @@ class ExtremeSustainedDPSFinalizedPotionTimingDenominatorService:
             empty = ExtremeSustainedDPSPotionTimingBreakpointFrontierService.build(
                 duration_seconds=duration_seconds,
                 cooldown_seconds=cooldown_seconds,
-                observation_times=tuple(observation_frontier.observation_times),
+                observation_times=combined_observation_times,
                 effective_buff_durations=(),
-                instant_restoration_timing_closed=instant_restoration_timing_closed,
+                instant_restoration_timing_closed=restoration_closed,
             )
             return ExtremeSustainedDPSFinalizedPotionTimingDenominator(
                 observation_frontier=observation_frontier,
@@ -119,9 +145,9 @@ class ExtremeSustainedDPSFinalizedPotionTimingDenominatorService:
         breakpoint = ExtremeSustainedDPSPotionTimingBreakpointFrontierService.build(
             duration_seconds=duration_seconds,
             cooldown_seconds=cooldown_seconds,
-            observation_times=tuple(observation_frontier.observation_times),
+            observation_times=combined_observation_times,
             effective_buff_durations=durations,
-            instant_restoration_timing_closed=instant_restoration_timing_closed,
+            instant_restoration_timing_closed=restoration_closed,
         )
         unresolved.extend(tuple(breakpoint.unresolved))
         deduped = tuple(
@@ -147,6 +173,12 @@ class ExtremeSustainedDPSFinalizedPotionTimingDenominatorService:
             evidence=(
                 *tuple(observation_frontier.evidence),
                 f"Canonical effective potion buff durations: {len(durations)}",
+                f"Caller-proven resource observation timestamps: {len(resource_times)}",
+                (
+                    "Potion instant-restoration timing denominator proven"
+                    if restoration_closed
+                    else "Potion instant-restoration timing denominator remains open"
+                ),
                 *tuple(breakpoint.evidence),
                 (
                     "Finalized named-buff potion timing denominator proven"
