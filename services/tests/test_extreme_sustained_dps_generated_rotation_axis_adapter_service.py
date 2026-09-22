@@ -85,7 +85,9 @@ class _PolicyFrontier:
             )
         )
         return SimpleNamespace(
-            candidate_count=2,
+            candidate_count=6,
+            ultimate_timing_policies=("ult-0", "ult-1"),
+            potion_policies=("potion:none", "potion:a", "potion:b"),
             anchored_policy_denominator_proven=self.proven,
             continuous_potion_timing_closed=False,
             delayed_ultimate_timing_closed=True,
@@ -156,7 +158,7 @@ def test_rotation_axes_preserve_plan_dependency_and_policy_inputs() -> None:
 
     assert tuple(axis.name for axis in axes) == (
         "Rotation Plan Family",
-        "Anchored Ultimate and Potion Policy",
+        "Delayed Ultimate Policy",
     )
 
     state = _root(adapter)
@@ -166,9 +168,9 @@ def test_rotation_axes_preserve_plan_dependency_and_policy_inputs() -> None:
     state = axes[1].candidate_at(state, 1)
 
     assert state.complete is True
-    assert state.rotation_policy.plan == "plan:1|policy:1"
+    assert state.rotation_policy.plan == "plan:1|policy:3"
     policy_call = policies.calls[-1]
-    assert policy_call[3:6] == (45.0, 70.0, 1)
+    assert policy_call[3:6] == (45.0, 70.0, 3)
     assert policy_call[6:] == (("generation",), ("heroism",), True)
 
 
@@ -197,7 +199,7 @@ def test_runs_plan_and_anchored_policy_product_through_lazy_search() -> None:
     )
 
     assert result.evaluated_leaf_count == 4
-    assert result.best_modeled_dps == 11.0
+    assert result.best_modeled_dps == 13.0
     assert result.global_maximum_proven is True
 
 
@@ -279,17 +281,12 @@ def test_rotation_plan_axis_forwards_priorities_and_encounter_demands() -> None:
 
 
 
-def test_rotation_policy_axis_carries_theoretical_timing_omissions() -> None:
+def test_rotation_policy_axis_owns_only_delayed_ultimate_timing() -> None:
     adapter = _adapter()
     policy_axis = adapter.axes()[1]
 
-    assert policy_axis.canonical_axes == (
-        "ultimate_policy",
-        "potion_timing_policy",
-    )
-    assert policy_axis.omitted_scope == (
-        "continuous potion first-use offset is not closed by anchored policy search",
-    )
+    assert policy_axis.canonical_axes == ("ultimate_policy",)
+    assert policy_axis.omitted_scope == ()
 
 
 
@@ -309,3 +306,19 @@ def test_policy_frontier_count_receives_ultimate_runtime_inputs() -> None:
         ("heroism",),
         True,
     )
+
+
+
+def test_generated_policy_axis_always_selects_explicit_no_potion_slice() -> None:
+    policies = _PolicyFrontier()
+    adapter = _adapter(policies=policies)
+    state = adapter.axes()[0].candidate_at(_root(adapter), 0)
+
+    state = adapter.axes()[1].candidate_at(state, 1)
+
+    candidate_call = next(
+        row for row in reversed(policies.calls)
+        if row[0] == "candidate_at"
+    )
+    assert candidate_call[5] == 3
+    assert state.rotation_policy.structural_index == 3
