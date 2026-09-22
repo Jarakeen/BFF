@@ -15,6 +15,7 @@ from pathlib import Path
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_progression import AttributeAllocation, CharacterProgression
 from minmax.combat_state import CombatState
+from minmax.combat_target_resistance import target_resistance_from_combat_state
 from minmax.gear_set_repository import GearSetRepository
 from minmax.rotation_plan import RotationPlan
 from models.build_model import PlayerBuild
@@ -297,6 +298,16 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             target_runtime_unresolved.extend(projection.unresolved)
             return projection.combat_state
 
+        def target_resistance_resolver(
+            time_seconds: float,
+            sequence: int | None = None,
+        ) -> float:
+            state = target_combat_state_resolver(time_seconds, sequence)
+            return target_resistance_from_combat_state(
+                float(target_resistance),
+                state,
+            )
+
         simulator = CombatSimulationSavedBuildDDService(
             provider_service=CombatSimulationSavedBuildDDProviderService(
                 database_path=self.database_path,
@@ -332,6 +343,9 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             target_combat_state_resolver=(
                 target_combat_state_resolver if runtime_effects else None
             ),
+            target_resistance_resolver=(
+                target_resistance_resolver if runtime_effects else None
+            ),
         )
         summary = self.summary_service.summarize(result, target_identity=target)
         unresolved = self._dedupe(
@@ -348,6 +362,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             "Dual-bar named-set activation bound into shared runtime snapshot truth",
             "Named buffs and reviewed timed non-named runtime stat effects may alter exact runtime build contexts",
             "Reviewed enemy-target Damage Taken effects are projected through canonical target_combat_state at exact damage timestamps",
+            "Reviewed enemy-target resistance reductions are applied through exact-time target resistance before mitigation",
             "Damage evaluated through Phase 14 Combat Simulation using candidate_build provenance",
         )
         if summary.modeled_dps is None:
