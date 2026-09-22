@@ -170,9 +170,12 @@ def test_candidate_builder_derives_plan_owned_runtime_triggers() -> None:
     assert result.unresolved == ()
     assert result.frontier.denominator_proven is True
     assert result.frontier.candidate_count == 1
+    attempts = result.frontier.choices[0].snapshot.effect_attempts
     assert any(
-        entry.trigger == "ultimate_activation_in_combat"
-        for entry in result.frontier.choices[0].snapshot.effect_attempts
+        entry.event.trigger == "ultimate_activation_in_combat"
+        and entry.event.time_seconds == 1.0
+        and entry.event.source == "Ultimate A"
+        for entry in attempts
     )
 
 
