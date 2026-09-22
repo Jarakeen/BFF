@@ -1190,6 +1190,42 @@ def test_sustained_dps_dynamic_whole_plan_frontier_adapter_preserves_omitted_sco
     assert "materialized one at a time" in service.notes
 
 
+def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely() -> None:
+    attempts = canonical_service_for(
+        "extreme_sustained_dps_runtime_attempt_evidence_frontier"
+    )
+    assembly = canonical_service_for(
+        "extreme_sustained_dps_runtime_external_history_assembly"
+    )
+    scenario = canonical_service_for(
+        "extreme_sustained_dps_runtime_scenario_frontier"
+    )
+
+    assert attempts is not None
+    assert assembly is not None
+    assert scenario is not None
+    assert SERVICE_CATALOG.dependencies_of(attempts.service_id) == ()
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(assembly.service_id)
+    ) == (
+        "extreme.sustained_dps.runtime_attempt_evidence_frontier",
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(scenario.service_id)
+    ) == (
+        "extreme.sustained_dps.runtime_attempt_evidence_frontier",
+        "extreme.sustained_dps.runtime_external_history_assembly",
+        "extreme.sustained_dps.runtime_external_history_frontier",
+    )
+    assert "chance-roll and condition-context" in attempts.purpose
+    assert "proc-chance thresholds" in attempts.notes
+    assert "empty supplemental choice" in assembly.notes
+    assert "scenario-facing runtime_state builder" in scenario.notes
+    assert "Explicit omitted scope is preserved" in scenario.notes
+
+
 def test_sustained_dps_runtime_external_history_frontier_narrows_runtime_scope() -> None:
     witness = canonical_service_for(
         "extreme_sustained_dps_runtime_witness_composition"
