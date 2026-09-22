@@ -92,3 +92,23 @@ def test_complete_heavy_policy_promotes_only_reviewed_window_family() -> None:
     assert result.proof.dominated_axes == ("heavy_attack_policy",)
     assert result.proof.omitted_scope == result.omitted_scope
     assert any("caller-supplied reviewed safe set" in row for row in result.omitted_scope)
+
+
+
+def test_complete_discovered_heavy_policy_clears_reviewed_window_omission() -> None:
+    result = ExtremeSustainedDPSCombatDynamicAxisCoverageService.heavy_attack_policy(
+        SimpleNamespace(
+            candidates=(object(), object()),
+            denominator_proven=True,
+            unresolved=(),
+        ),
+        complete_window_denominator_proven=True,
+    )
+
+    assert result.proof.dominated_axes == ("heavy_attack_policy",)
+    assert result.omitted_scope == ()
+    assert result.proof.omitted_scope == ()
+    assert any(
+        "proven-complete scheduler-derived Heavy Attack start family" in row
+        for row in result.evidence
+    )
