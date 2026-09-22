@@ -1292,6 +1292,38 @@ def test_sustained_dps_generated_tree_coverage_is_same_tree_only() -> None:
     assert "omissions remain attached" in service.notes
 
 
+def test_sustained_dps_potion_observation_frontier_uses_finalized_evidence() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_potion_observation_frontier"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.potion_observation_frontier"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "finalized descendant plan" in service.purpose
+    assert "verified completion time" in service.notes
+    assert "periodic runtime evidence" in service.notes
+
+
+def test_sustained_dps_finalized_potion_timing_denominator_reuses_canonical_duration() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_finalized_potion_timing_denominator"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.finalized_potion_timing_denominator"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.potion_observation_frontier",
+        "extreme.sustained_dps.potion_timing_breakpoint_frontier",
+    )
+    assert "PotionUseEvent and Medicinal Use" in service.purpose
+    assert "PotionCadence" in service.notes
+    assert "instant-restoration timing" in service.notes
+
+
 def test_sustained_dps_potion_timing_breakpoint_frontier_is_scoped() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_potion_timing_breakpoint_frontier"
