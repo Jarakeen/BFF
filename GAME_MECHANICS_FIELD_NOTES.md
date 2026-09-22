@@ -1418,3 +1418,12 @@ While closing Objective #32 runtime state, BFF hit an important distinction: **F
 **What it means in actual play:** a defensive shield proc can be very important for surviving a fight while still being irrelevant to the narrow question “what is the maximum sustained damage this build can produce?”
 
 **For BFF:** Objective #32 now removes a runtime effect only when canonical semantics prove it cannot affect the DPS objective. Unknown effects are not discarded. Enemy-side damage modifiers such as Vulnerability also remain open until the target-side runtime projection is modeled, because being obviously damage-related is not the same as being correctly wired into the evaluator.
+
+
+## 2026-09-22 — Vulnerability belongs to the target, not the attacker
+
+Objective #32 already had the correct static damage-stage ordering: attacker Damage Done is resolved first, then mitigation, then target Damage Taken. Major and Minor Vulnerability therefore must enter through the enemy's runtime combat state rather than being flattened into the DD's own buffs or sheet stats.
+
+**Layman's version:** Berserk says “I hit harder.” Vulnerability says “that target takes more damage.” Those sound similar on a dummy parse, but they are not the same math bucket.
+
+**For BFF:** runtime-state witnesses now retain their canonical EffectVariant metadata. At each exact damage timestamp, ENEMY-target Vulnerability windows are replayed against the named target and projected into the existing target Damage Taken router. The target identity must match and the effect must still be active at that instant; a debuff on an add cannot leak onto the boss, and an expired window contributes nothing.
