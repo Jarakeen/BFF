@@ -1063,6 +1063,29 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_tree_coverage",
+        domain="extreme",
+        purpose=(
+            "Promote canonical mutation-axis coverage directly from one completed generated search tree and its exact axis inventory while preserving every axis-carried theoretical omission."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_tree_coverage_service",
+        inputs=("ExtremeSustainedDPSGeneratedSearchResult", "ExtremeSustainedDPSGeneratedAxisInventory"),
+        outputs=("ExtremeSustainedDPSGeneratedTreeCoverageResult",),
+        dependencies=(
+            "extreme.sustained_dps.generated_axis_inventory",
+            "extreme.sustained_dps.axis_dominance_composition",
+        ),
+        responsibilities=("extreme_sustained_dps_generated_tree_coverage",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Coverage is withheld unless the finite generated denominator maximum is proven and the inventory itself is unambiguous. "
+            "Only physically searched canonical axes are promoted, and local/anchored-family omissions remain attached to the proof."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.global_objective32_search",
         domain="extreme",
         purpose=(
@@ -1071,17 +1094,16 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         implementation_path="services.extreme_sustained_dps_global_objective32_search_service",
         inputs=(
             "GlobalGeneratedSearch",
-            "ValidatedStructuralFamilyCoverage",
-            "RemainingCanonicalAxisCoverageProofs",
+            "GeneratedAxisInventory",
+            "OptionalSupplementalAxisCoverageProofs",
             "Objective32SearchScopeProof",
             "OptionalProvenLocalRuntimeStateFrontier",
         ),
         outputs=("ExtremeSustainedDPSGlobalObjective32SearchResult",),
         dependencies=(
             "extreme.sustained_dps.global_generated_search",
-            "extreme.sustained_dps.structural_family_adapter",
             "extreme.sustained_dps.generated_axis_inventory",
-            "extreme.sustained_dps.generated_runtime_state_axis_adapter",
+            "extreme.sustained_dps.generated_tree_coverage",
             "extreme.sustained_dps.axis_dominance_composition",
             "extreme.sustained_dps.theoretical_maximum_closure",
         ),
@@ -1091,8 +1113,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Structural race/class-route/attribute coverage is supplied by the same validated family adapter that creates the first search axis. "
-            "Remaining axis proofs still require explicit denominator-scope equivalence, and the generated-axis inventory must show every canonical axis physically present before theoretical closure."
+            "Canonical axis coverage is derived from the exact completed generated tree rather than caller claims. Supplemental proofs may add evidence but cannot satisfy physical-tree presence. "
+            "The generated-axis inventory must show every canonical axis physically present, and axis-carried omitted scope must be empty, before theoretical closure."
         ),
     ),
     ServiceDescriptor(
