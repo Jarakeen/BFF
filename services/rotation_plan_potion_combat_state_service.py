@@ -8,6 +8,8 @@ from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
 from minmax.potion_cadence import PotionCadence
 from minmax.potion_use_event import PotionUseEventResolver
+from minmax.resource_costs import ResourceType
+from minmax.restoration_events import ResourceRestorationEvent
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 
@@ -46,6 +48,43 @@ class RotationPlanPotionCombatStateService:
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.event_resolver = event_resolver or PotionUseEventResolver(database_path=database)
+
+    _RESTORE_RESOURCE_BY_TRAIT = {
+        "Restore Health": ResourceType.HEALTH,
+        "Restore Magicka": ResourceType.MAGICKA,
+        "Restore Stamina": ResourceType.STAMINA,
+    }
+
+    def restoration_events(self, build: PlayerBuild, *, plan: RotationPlan) -> tuple[ResourceRestorationEvent, ...]:
+        """Project source-backed instant restores for explicitly scheduled potion uses."""
+        potion_name = " ".join(str(getattr(build, "Potion", "") or "").strip().split())
+        if not potion_name:
+            return ()
+        event = self.event_resolver.resolve(potion_name)
+        if not event.resolved:
+            return ()
+        restores = tuple(
+            trait for trait in event.instant_restores
+            if trait.trait in self._RESTORE_RESOURCE_BY_TRAIT and trait.magnitude is not None
+        )
+        rows: list[ResourceRestorationEvent] = []
+        for action in plan.actions:
+            if action.kind is not RotationActionKind.POTION:
+                continue
+            action_name = " ".join(str(action.name or "").strip().split())
+            if action_name and action_name.casefold() != potion_name.casefold():
+                continue
+            for trait in restores:
+                amount = float(trait.magnitude or 0.0)
+                if amount < 0.0 or not amount.is_integer():
+                    continue
+                rows.append(ResourceRestorationEvent(
+                    time_seconds=float(action.time_seconds),
+                    resource=self._RESTORE_RESOURCE_BY_TRAIT[trait.trait],
+                    amount=int(amount),
+                    source=f"{potion_name}: {trait.trait}",
+                ))
+        return tuple(rows)
 
     @staticmethod
     def _ordered_before_or_at(
