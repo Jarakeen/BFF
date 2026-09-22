@@ -1376,3 +1376,12 @@ Example: if matching effects have proc chances 25% and 50%, the complete roll-st
 The eligibility rule treats `roll >= chance` as failure, so the exact threshold itself belongs to the failure side of that effect. A 100% effect does not introduce a breakpoint, and roll 1.0 is unnecessary.
 
 **For Objective #32:** continuous numeric proc-roll evidence is therefore finite once the relevant canonical EffectVariant chance thresholds are known. This does not invent event timestamps, triggers, targets, or encounter conditions; those remain scenario evidence and need their own denominator proof.
+
+
+## Expected-value critical damage is not a critical-hit event stream
+
+The DD damage calculators can include critical chance/damage in an expected-value damage result without producing a concrete sampled combat history of which individual attacks critically hit.
+
+That distinction matters for runtime proc triggers. A finalized damage occurrence may prove that `damage_dealt` happened at an exact time, but it does **not** prove that `critical_damage` happened unless a separate canonical mechanic records the actual crit outcome.
+
+**For Objective #32:** runtime event skeleton generation may derive `damage_dealt` from exact occurrence evidence, but it must not manufacture critical-hit trigger events from expected-value crit math. Crit-triggered runtime effects remain scenario/event evidence until the damage model exposes deterministic crit outcomes or a separately proven finite crit-event family.
