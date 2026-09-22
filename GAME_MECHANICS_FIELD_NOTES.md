@@ -1396,3 +1396,14 @@ While wiring Objective #32 runtime-effect discovery, BFF found that one saved-bu
 **What it means in actual play:** swapping to a dual-wield, sword-and-board, bow, or other two-handed bar can turn a set proc on or off just as decisively as swapping to a staff.
 
 **For BFF:** runtime capability discovery now reuses the same canonical active-bar set counter as the static gear pipeline, including explicit off-hands, two-slot weapon families, and legacy Set/Set2 saves. This prevents Objective #32 from searching the wrong proc universe for a legal weapon bar.
+
+
+## 2026-09-22 — Champion Points can be runtime procs, not just passive numbers
+
+Objective #32’s effect-universe audit found that **From the Brink** is represented by a canonical triggered `EffectVariant`: healing a self or ally below 25% Health can create its damage shield, with its own duration and per-target cooldown.
+
+**Layman's version:** not every Champion Point is a number that can be baked into the character sheet before combat starts. Some CP choices behave like proc mechanics and only exist when their trigger actually happens.
+
+**What it means in actual play:** two otherwise identical rotations can have different runtime state because a CP trigger occurred in one scenario and not the other.
+
+**For BFF:** generated CP choices must participate in runtime-effect discovery whenever their canonical CP resolver produces a triggered effect. Treating all CP as static would let the theoretical search silently omit legal runtime mechanics.
