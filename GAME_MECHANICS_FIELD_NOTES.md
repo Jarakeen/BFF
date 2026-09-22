@@ -1352,3 +1352,12 @@ For canonical Phase 4 resource timelines, same-timestamp event ordering is:
 This matters for Objective #32 potion timing. A potion's instant resource restore is a restoration event, so moving potion use across any resource-event timestamp can change shortfall, cap clipping, or wasted restoration even when the potion's named-buff state at damage events is unchanged. Continuous potion first-use timing therefore cannot be closed from DD observation times alone. The finite timing denominator must also include all modeled resource-timeline event timestamps, including ordinary 2-second recovery ticks, action coordinates, verified Heavy Attack completion restores, resource-maximum changes, and any other caller-proven restoration events.
 
 **For BFF:** named-buff timing and resource-restoration timing share one continuous potion-use clock but have different state-change boundaries. A proof that closes only buff uptime is not a proof of the full potion timing axis.
+
+
+## Heavy Attack channel reservation discovery
+
+For the reviewed fully charged Heavy Attack model, the canonical channel reservation is **1.8 seconds**. A legal Heavy Attack start is not equivalent to finding an empty 1.8-second gap in the visible plan.
+
+The soft-action duration scheduler may reserve a 1.8s channel over ordinary same-bar skill decisions. Those covered skills are displaced and cascade into later same-bar slots. First casts and due refresh obligations remain protected, and the channel may not cross the plan horizon or the next hard timeline boundary such as a bar swap or an action on another bar.
+
+**For Objective #32:** complete Heavy Attack timing discovery must probe each scheduled ordinary skill slot through the canonical soft-action scheduler. A simplistic gap scan would incorrectly reject legal channels that displace same-bar skills. Encounter demand windows do not automatically mean “channel forbidden”; channel prohibitions require explicit reviewed channel-block evidence with a complete denominator proof.
