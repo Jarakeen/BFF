@@ -16,6 +16,8 @@ from math import factorial
 from pathlib import Path
 
 from minmax.rotation_definition import RotationDefinition, RotationMode, RotationStep
+from minmax.rotation_ability_priority import AbilityPriorityList
+from minmax.rotation_demand_window import RotationDemandWindow
 from minmax.rotation_plan import RotationActionKind, RotationPlan
 from minmax.semi_static_rotation_planner import SemiStaticRotationPlanner
 from models.build_model import PlayerBuild
@@ -202,6 +204,8 @@ class ExtremeSustainedDPSRotationPlanFrontierService:
         *,
         duration_seconds: float,
         index: int,
+        priorities: AbilityPriorityList | None = None,
+        encounter_demands: tuple[RotationDemandWindow, ...] = (),
     ) -> ExtremeSustainedDPSRotationPlanCandidate:
         frontier = self.frontier(candidate)
         if not frontier.denominator_proven:
@@ -260,7 +264,11 @@ class ExtremeSustainedDPSRotationPlanFrontierService:
         plan = self.planner.build_plan(definition, build)
 
         if self.refinement_service is not None:
-            refined = self.refinement_service.refine(plan)
+            refined = self.refinement_service.refine(
+                plan,
+                priorities=priorities,
+                demands=tuple(encounter_demands),
+            )
             plan = refined.plan
 
         unresolved = tuple(
@@ -288,6 +296,7 @@ class ExtremeSustainedDPSRotationPlanFrontierService:
                     if self.refinement_service is not None
                     else "Duration refinement not supplied to this frontier instance"
                 ),
+                f"Encounter demand windows supplied: {len(tuple(encounter_demands))}",
             ),
             unresolved=unresolved,
         )
