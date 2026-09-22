@@ -8,6 +8,7 @@ from engine.config import get_data_dir
 from minmax.build_calculation_context import BuildCalculationContext
 from minmax.combat_state import CombatState
 from minmax.context_factory import BuildCalculationContextFactory
+from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.effects import Effect
 from minmax.gear_set_repository import GearSetRepository
 from minmax.race_repository import RaceRepository
@@ -212,7 +213,7 @@ class RotationStaticBuildContextService:
     """Resolve front/back static build state for canonical rotation evaluation.
 
     This service owns no ESO formulas. It deliberately reuses
-    ``BuildCalculationContextFactory`` so armor-weight passives, Undaunted Mettle,
+    ``Phase5BuildCalculationContextFactory`` so rank-aware racial passives, armor-weight passives, Undaunted Mettle,
     class/guild/weapon passives, static gear, race, CP, food and other already-
     verified inputs keep one source of truth. Reviewed unconditional DD Damage Done,
     conditional Exploiter magnitude, reviewed Charged status-chance magnitude, and
@@ -246,7 +247,7 @@ class RotationStaticBuildContextService:
                 build_service.canonical.catalog_service
             )
         if context_factory is None:
-            context_factory = BuildCalculationContextFactory(
+            context_factory = Phase5BuildCalculationContextFactory(
                 race_repository=RaceRepository(database),
                 gear_set_repository=GearSetRepository(database),
             )
