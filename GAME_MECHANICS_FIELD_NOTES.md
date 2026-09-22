@@ -1507,7 +1507,7 @@ The same evidence converges on a roughly **4-second base cooldown for direct-dam
 
 ## 2026-09-22 — Update 35 standardized heavy-attack resource returns
 
-**Evidence:** Official ESO Update 35 / Lost Depths patch notes standardized fully charged heavy-attack restoration by weapon family. Canonical bases now include Bow 2772 Stamina, Dual Wield 2095 Stamina, Two Handed 2425 Stamina, One Hand and Shield 2293 Stamina, Inferno/Frost Staff 2838 Magicka, Lightning Staff 2970 Magicka, Restoration Staff 3267 Magicka, and Unarmed 2095 Stamina. Werewolf remains fail-closed pending separate current evidence.
+**Evidence:** Official ESO Update 35 / Lost Depths patch notes standardized fully charged heavy-attack restoration by weapon family. Canonical bases now include Bow 2772 Stamina, Dual Wield 2095 Stamina, Two Handed 2425 Stamina, One Hand and Shield 2293 Stamina, Inferno/Frost Staff 2838 Magicka, Lightning Staff 2970 Magicka, Restoration Staff 2970 Magicka, and Unarmed 2095 Stamina. Werewolf remains fail-closed pending separate current evidence.
 
 **Mechanical boundary:** A scheduled heavy is not automatically a resource event. ESO's official combat history explicitly ties restoration to a fully charged heavy that successfully lands; blocked or dodged fully charged heavies do not restore resources. BFF therefore keeps completion and hit-state evidence separate from the weapon's base restore value.
 
@@ -1526,3 +1526,8 @@ ESO Logs can provide a positive damage observation for a reviewed Heavy Attack a
 Official ESO forum patch-note history confirms that Heavy Armor Revitalize changed from a flat 12/25% model to 2/4% per equipped Heavy Armor piece. Historical official discussion also records Restoration Staff Cycle of Life at 15/30% additional Magicka from completed heavy attacks. These values are already represented by the current progression modifier service, but the evidence spans different patch eras and therefore must not be treated as proof that every current modifier is unchanged.
 
 **BFF implication:** keep Revitalize and Cycle of Life behind explicit saved progression ranks and retain the remaining closure gap for current modifier completeness. Historical evidence can validate provenance, not silently certify the entire 2026 modifier catalog.
+
+
+## 2026-09-22 — Restoration Staff base versus observed 4247 return
+
+The reviewed heavy-attack reference table groups Lightning and Restoration Staff at a 2970 Magicka base. Existing ESO Logs evidence also contains an observed unclipped Restoration Staff return of 4247. That observation does **not** justify changing the canonical base to 3267: 2970 × the reviewed 30% Cycle of Life modifier is 3861, so the remaining difference proves that additional actor/runtime modifier evidence is present or still unidentified. The engine therefore keeps the canonical weapon base at 2970 and treats the 4247 observation as modifier-discovery evidence rather than a base-value oracle.
