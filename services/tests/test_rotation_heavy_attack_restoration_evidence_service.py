@@ -15,6 +15,7 @@ from minmax.role import Role
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.rotation_heavy_attack_restoration_evidence_service import (
     RotationHeavyAttackCompletionEvidence,
+    RotationHeavyAttackHitOutcome,
     RotationHeavyAttackRestorationEvidenceService,
 )
 
@@ -85,6 +86,30 @@ def _evidence(
         modifiers=modifiers,
         source="verified test heavy",
     )
+
+
+def test_hit_outcome_rejects_contradictory_landed_state() -> None:
+    with pytest.raises(ValueError, match="contradicts"):
+        RotationHeavyAttackCompletionEvidence(
+            action_time_seconds=1.0,
+            action_sequence=0,
+            completion_time_seconds=2.0,
+            fully_charged=True,
+            landed=True,
+            hit_outcome=RotationHeavyAttackHitOutcome.DODGED,
+        )
+
+
+def test_hit_outcome_accepts_string_enum_value() -> None:
+    evidence = RotationHeavyAttackCompletionEvidence(
+        action_time_seconds=1.0,
+        action_sequence=0,
+        completion_time_seconds=2.0,
+        fully_charged=True,
+        landed=False,
+        hit_outcome="missed",
+    )
+    assert evidence.hit_outcome is RotationHeavyAttackHitOutcome.MISSED
 
 
 def test_fully_charged_resto_heavy_uses_canonical_base_at_completion() -> None:
