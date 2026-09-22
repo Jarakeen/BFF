@@ -7,6 +7,9 @@ from .combat_damage_modifiers import (
     damage_taken_from_target_state,
 )
 from .combat_state import CombatState
+from .combat_target_critical_damage import (
+    critical_damage_taken_percent_from_target_state,
+)
 from .damage_done import DamageDoneModifiers
 from .damage_taken import DamageTakenModifiers
 from .dd_damage import (
@@ -123,6 +126,11 @@ def calculate_skill_combat_damage(
         damage_done=resolved_damage_done,
         damage_taken=resolved_damage_taken,
         target_critical_resistance=target_critical_resistance,
+        target_critical_damage_taken_percent=(
+            critical_damage_taken_percent_from_target_state(
+                target_combat_state
+            )
+        ),
     )
 
     return SkillCombatDamageResult(
