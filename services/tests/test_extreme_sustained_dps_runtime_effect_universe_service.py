@@ -99,3 +99,23 @@ def test_duplicate_runtime_effects_across_bars_are_deduplicated() -> None:
     ).resolve(object())
 
     assert result.effects == (effect,)
+
+
+
+def test_deferred_runtime_effect_boundary_fails_universe_closed() -> None:
+    audit = SimpleNamespace(
+        resolved_effects=(),
+        capability_unresolved=(),
+        boundaries=(
+            "front configured scribed skill recipe resolved; detailed scripted effect conversion deferred: Mystery Skill",
+        ),
+    )
+    result = ExtremeSustainedDPSRuntimeEffectUniverseService(
+        capability_service=_Capabilities(audit)
+    ).resolve(object())
+
+    assert result.resolved is False
+    assert any(
+        "detailed scripted effect conversion deferred" in row
+        for row in result.unresolved
+    )
