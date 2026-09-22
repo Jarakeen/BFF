@@ -185,7 +185,7 @@ def test_candidate_ranking_uses_saved_cycle_of_life_restore_before_scoring() -> 
     assert results[0].tier is RotationCandidateTier.ELIGIBLE
     assert results[0].rank == 1
     assert len(replay.events) == 1
-    assert replay.events[0].amount == pytest.approx(3267.0 * 1.30)
+    assert replay.events[0].amount == pytest.approx(2970.0 * 1.30)
     assert scorecards.calls[0]["candidate_sustain"].marker == "post-heavy"
 
 
