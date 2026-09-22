@@ -1042,6 +1042,38 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.global_objective32_search",
+        domain="extreme",
+        purpose=(
+            "Run the structural global generated sustained-DPS tree and produce the end-to-end Objective #32 proof result over that same denominator."
+        ),
+        implementation_path="services.extreme_sustained_dps_global_objective32_search_service",
+        inputs=(
+            "GlobalGeneratedSearch",
+            "ValidatedStructuralFamilyCoverage",
+            "RemainingCanonicalAxisCoverageProofs",
+            "Objective32SearchScopeProof",
+            "OptionalProvenLocalRuntimeStateFrontier",
+        ),
+        outputs=("ExtremeSustainedDPSGlobalObjective32SearchResult",),
+        dependencies=(
+            "extreme.sustained_dps.global_generated_search",
+            "extreme.sustained_dps.structural_family_adapter",
+            "extreme.sustained_dps.generated_runtime_state_axis_adapter",
+            "extreme.sustained_dps.axis_dominance_composition",
+            "extreme.sustained_dps.theoretical_maximum_closure",
+        ),
+        responsibilities=("extreme_sustained_dps_global_objective32_search",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Structural race/class-route/attribute coverage is supplied by the same validated family adapter that creates the first search axis. "
+            "Remaining axis proofs still require explicit denominator-scope equivalence before theoretical closure."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.objective32_search",
         domain="extreme",
         purpose=(
