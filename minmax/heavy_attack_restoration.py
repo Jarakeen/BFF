@@ -36,20 +36,24 @@ _MAGICKA_WEAPONS = {
     HeavyAttackWeaponType.RESTORATION_STAFF,
 }
 
-# Official Update 35 fully-charged staff-heavy base restores, independently
-# corroborated by the current reviewed ESO Logs corpus for these three weapon
-# families. Fire Staff remains fail-closed here because the current corpus has
-# no reviewed live observation for its restore value yet.
+# Official Update 35 (Lost Depths) standardized fully-charged heavy-attack
+# resource restoration by weapon family. These are base values before verified
+# restoration modifiers. The live Update 35 notes also state that a fully
+# charged heavy must land: blocked or dodged attacks do not restore resources.
 #
-# Official source: ESO Update 35 patch notes (2022 Lost Depths update)
-# - Restoration Staff: 3267 Magicka
-# - Ice Staff: 2425 Magicka
-# - Lightning Staff: 2970 Magicka
+# Official source: ESO PC/Mac Update 35 / Lost Depths patch notes.
 _VERIFIED_BASE_RESTORE_BY_WEAPON: dict[HeavyAttackWeaponType, float] = {
-    HeavyAttackWeaponType.FROST_STAFF: 2425.0,
+    HeavyAttackWeaponType.BOW: 2772.0,
+    HeavyAttackWeaponType.DUAL_WIELD: 2095.0,
+    HeavyAttackWeaponType.TWO_HANDED: 2425.0,
+    HeavyAttackWeaponType.ONE_HAND_AND_SHIELD: 2293.0,
+    HeavyAttackWeaponType.FIRE_STAFF: 2838.0,
+    HeavyAttackWeaponType.FROST_STAFF: 2838.0,
     HeavyAttackWeaponType.SHOCK_STAFF: 2970.0,
     HeavyAttackWeaponType.RESTORATION_STAFF: 3267.0,
+    HeavyAttackWeaponType.UNARMED: 2095.0,
 }
+
 
 
 @dataclass(frozen=True)
