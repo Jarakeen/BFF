@@ -282,10 +282,10 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
 
         target_runtime_unresolved: list[str] = []
 
-        def target_combat_state_resolver(
+        def target_projection(
             time_seconds: float,
             sequence: int | None = None,
-        ) -> CombatState:
+        ):
             projected_snapshot = runtime_snapshot.snapshot_at(
                 time_seconds,
                 sequence=sequence,
@@ -296,16 +296,26 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 target_identity=target,
             )
             target_runtime_unresolved.extend(projection.unresolved)
-            return projection.combat_state
+            return projection
+
+        def target_combat_state_resolver(
+            time_seconds: float,
+            sequence: int | None = None,
+        ) -> CombatState:
+            return target_projection(time_seconds, sequence).combat_state
 
         def target_resistance_resolver(
             time_seconds: float,
             sequence: int | None = None,
         ) -> float:
-            state = target_combat_state_resolver(time_seconds, sequence)
-            return target_resistance_from_combat_state(
+            projection = target_projection(time_seconds, sequence)
+            named_resistance = target_resistance_from_combat_state(
                 float(target_resistance),
-                state,
+                projection.combat_state,
+            )
+            return max(
+                0.0,
+                named_resistance - float(projection.explicit_resistance_reduction),
             )
 
         simulator = CombatSimulationSavedBuildDDService(
@@ -362,7 +372,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             "Dual-bar named-set activation bound into shared runtime snapshot truth",
             "Named buffs and reviewed timed non-named runtime stat effects may alter exact runtime build contexts",
             "Reviewed enemy-target Damage Taken effects are projected through canonical target_combat_state at exact damage timestamps",
-            "Reviewed enemy-target resistance reductions are applied through exact-time target resistance before mitigation",
+            "Reviewed enemy-target named and explicit numeric resistance reductions are applied through exact-time target resistance before mitigation",
             "Damage evaluated through Phase 14 Combat Simulation using candidate_build provenance",
         )
         if summary.modeled_dps is None:
