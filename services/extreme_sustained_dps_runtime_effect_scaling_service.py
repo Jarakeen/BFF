@@ -94,10 +94,10 @@ class ExtremeSustainedDPSRuntimeEffectScalingService:
             if action.kind is RotationActionKind.ULTIMATE
         )
         if not ultimate_actions:
-            # No activation can occur, so the unresolved duration cannot alter
-            # this candidate's runtime state.
+            # No activation can occur, so candidate-specific duration scaling is
+            # non-operative and must not block this branch.
             return (
-                effect,
+                replace(effect, scaling=None),
                 ("Master Architect has no scheduled Ultimate activation in this candidate",),
                 (),
             )
