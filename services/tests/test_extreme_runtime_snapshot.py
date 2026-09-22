@@ -244,3 +244,18 @@ def test_proven_empty_runtime_history_survives_snapshot_projection() -> None:
 
     assert projected.runtime_history == ()
     assert projected.runtime_history_complete is True
+
+
+
+def test_proven_empty_runtime_history_projects_to_arbitrary_instant() -> None:
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(),
+        snapshot_time_seconds=5.0,
+        runtime_history_complete=True,
+    )
+
+    projected = snapshot.snapshot_at(2.5, sequence=3)
+
+    assert projected.runtime_history == ()
+    assert projected.snapshot_time_seconds == 2.5
+    assert projected.runtime_history_complete is True
