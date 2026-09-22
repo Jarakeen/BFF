@@ -248,6 +248,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             candidate_count=candidate_count,
             candidate_at=candidate_at,
             bound_inputs=bound_inputs,
+            canonical_axes=axis.canonical_axes,
         )
 
     def root(
