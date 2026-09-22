@@ -10,8 +10,8 @@ from services.extreme_sustained_dps_axis_dominance_composition_service import (
     ExtremeSustainedDPSAxisDominanceComposition,
     ExtremeSustainedDPSAxisDominanceCompositionService,
 )
-from services.extreme_sustained_dps_generated_runtime_state_axis_adapter_service import (
-    ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService,
+from services.extreme_sustained_dps_generated_tree_coverage_service import (
+    ExtremeSustainedDPSGeneratedTreeCoverageService,
 )
 from services.extreme_sustained_dps_objective32_search_service import (
     ExtremeSustainedDPSObjective32SearchScopeProof,
@@ -58,7 +58,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
     def search(
         self,
         *,
-        coverage_proofs: tuple[ExtremeSustainedDPSAxisCoverageProof, ...],
+        coverage_proofs: tuple[ExtremeSustainedDPSAxisCoverageProof, ...] = (),
         scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof,
         runtime_state_frontier=None,
         omitted_scope: tuple[str, ...] = (),
@@ -76,17 +76,14 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             **search_kwargs,
         )
 
+        tree_coverage = ExtremeSustainedDPSGeneratedTreeCoverageService.from_search(
+            search_result=search,
+            axis_inventory=axis_inventory,
+        )
         proofs = (
-            self.structural_families.coverage(),
+            tree_coverage.proof,
             *tuple(coverage_proofs),
         )
-        if runtime_state_frontier is not None:
-            proofs = (
-                *proofs,
-                ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.coverage(
-                    runtime_state_frontier
-                ),
-            )
 
         coverage = ExtremeSustainedDPSAxisDominanceCompositionService.compose(
             normalized_root,
