@@ -71,6 +71,7 @@ class ExtremeSustainedDPSRuntimeStateWholePlanEvaluator:
             gear_state=self.scenario.gear_state,
             plan=self.scenario.plan,
             runtime_snapshot=choice.snapshot,
+            runtime_effects=tuple(choice.effects),
             target_health=self.scenario.target_health,
             target_resistance=self.scenario.target_resistance,
             target_name=self.scenario.target_name,
