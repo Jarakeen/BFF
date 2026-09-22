@@ -97,6 +97,7 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
             "Structural Family",
             candidate_count=candidate_count,
             candidate_at=candidate_at,
+            canonical_axes=("race", "class_route", "attributes"),
         )
 
     def search(
