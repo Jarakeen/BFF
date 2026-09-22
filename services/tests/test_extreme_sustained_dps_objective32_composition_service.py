@@ -45,6 +45,7 @@ def test_composition_wires_finalized_potion_axis_into_global_objective_graph() -
     )
     assert result.global_search.pipeline is result.pipeline
     assert result.objective32.global_search is result.global_search
+    assert result.objective32.require_closure_ready_scenario is True
     assert any(
         "Finalized potion timing is appended after runtime-policy axes" in row
         for row in result.evidence
