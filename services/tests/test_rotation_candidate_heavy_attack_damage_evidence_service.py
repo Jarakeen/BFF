@@ -100,15 +100,46 @@ def _candidate(action: RotationAction, duration: float = 10.0) -> GeneratedRotat
     )
 
 
-def _completion(action: RotationAction, *, fully_charged: bool = True, completion=2.0):
+def _completion(action: RotationAction, *, fully_charged: bool = True, landed: bool | None = True, completion=2.0):
     return RotationHeavyAttackCompletionEvidence(
         action_time_seconds=action.time_seconds,
         action_sequence=action.sequence,
         completion_time_seconds=completion,
         fully_charged=fully_charged,
+        landed=landed,
         verified_base_restore=None,
         source="test completion evidence",
     )
+
+
+def test_fully_charged_heavy_without_hit_evidence_has_unresolved_damage() -> None:
+    action = RotationAction(0.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
+    service = RotationCandidateHeavyAttackDamageEvidenceService(
+        build=_build(),
+        evaluation=_evaluation(),
+        initial_bar="front",
+        completion_evidence=(_completion(action, landed=None),),
+    )
+
+    evidence = service.evaluate_action(candidate=_candidate(action), action=action)
+
+    assert evidence.damage_value is None
+    assert "successful-hit evidence" in evidence.unresolved[0]
+
+
+def test_fully_charged_heavy_that_did_not_land_deals_zero_damage() -> None:
+    action = RotationAction(0.0, 0, RotationActionKind.HEAVY_ATTACK, bar="front")
+    service = RotationCandidateHeavyAttackDamageEvidenceService(
+        build=_build(),
+        evaluation=_evaluation(),
+        initial_bar="front",
+        completion_evidence=(_completion(action, landed=False),),
+    )
+
+    evidence = service.evaluate_action(candidate=_candidate(action), action=action)
+
+    assert evidence.damage_value == 0.0
+    assert evidence.unresolved == ()
 
 
 def _evaluate_heavy(build: CharacterBuild) -> float | None:
