@@ -1287,6 +1287,25 @@ def test_sustained_dps_generated_tree_coverage_is_same_tree_only() -> None:
     assert "omissions remain attached" in service.notes
 
 
+def test_sustained_dps_objective32_blockers_are_diagnostic_only() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_objective32_blocker_reporting"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.objective32_blockers"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.generated_axis_inventory",
+        "extreme.sustained_dps.axis_dominance_composition",
+        "extreme.sustained_dps.theoretical_maximum_closure",
+    )
+    assert "stable closure blockers" in service.purpose
+    assert "Reporting is diagnostic only" in service.notes
+
+
 def test_sustained_dps_global_objective32_search_uses_searched_structural_denominator() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_global_objective32_search"
@@ -1303,10 +1322,12 @@ def test_sustained_dps_global_objective32_search_uses_searched_structural_denomi
         "extreme.sustained_dps.generated_tree_coverage",
         "extreme.sustained_dps.axis_dominance_composition",
         "extreme.sustained_dps.theoretical_maximum_closure",
+        "extreme.sustained_dps.objective32_blockers",
     )
     assert "same denominator" in service.purpose
     assert "exact completed generated tree" in service.notes
-    assert "physical-tree presence" in service.notes
+    assert "no scope certificate is required" in service.notes
+    assert "ignored and reported" in service.notes
     assert "physically present" in service.notes
 
 
