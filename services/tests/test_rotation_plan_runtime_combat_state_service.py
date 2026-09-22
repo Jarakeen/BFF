@@ -206,3 +206,33 @@ def test_unresolved_shared_runtime_projection_blocks_combat_state() -> None:
     assert not result.resolved
     assert result.combat_state is None
     assert result.unresolved == ("gear proc target is unresolved",)
+
+
+
+def test_time_resolved_combat_state_accepts_proven_empty_runtime_history() -> None:
+    plan = RotationPlan(
+        character_name="Generated",
+        build_name="Candidate",
+        duration_seconds=5.0,
+        actions=(
+            RotationAction(1.0, 0, RotationActionKind.SKILL, "A", "front"),
+        ),
+    )
+    source = ExtremeRuntimeSnapshot(
+        runtime_history=(),
+        snapshot_time_seconds=5.0,
+        runtime_history_complete=True,
+    )
+
+    result = RotationPlanRuntimeCombatStateService().resolve(
+        PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        progression=CharacterProgression(passive_ranks={}),
+        plan=plan,
+        runtime_snapshot_source=source,
+        time_seconds=1.0,
+        sequence=0,
+    )
+
+    assert result.resolved is True
+    assert result.combat_state is not None
+    assert result.unresolved == ()
