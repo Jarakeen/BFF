@@ -64,3 +64,59 @@ def test_runtime_axis_requires_complete_upstream_pipeline_state() -> None:
 
     with pytest.raises(ValueError, match="complete upstream"):
         axis.candidate_count(SimpleNamespace(complete=False))
+
+
+
+def test_candidate_runtime_axis_resolves_frontier_per_upstream_candidate() -> None:
+    calls = []
+
+    class _Resolver:
+        def resolve(self, state):
+            calls.append(state.marker)
+            suffix = state.marker[-1]
+            return ExtremeSustainedDPSRuntimeStateFrontierService.build(
+                (
+                    ExtremeSustainedDPSRuntimeStateChoice(
+                        f"runtime:{suffix}",
+                        f"snapshot:{suffix}",
+                    ),
+                ),
+                denominator_proven=True,
+                source=f"candidate {state.marker}",
+            )
+
+    axis = ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.candidate_axis(
+        _Resolver()
+    )
+    state_a = SimpleNamespace(complete=True, marker="candidate-a")
+    state_b = SimpleNamespace(complete=True, marker="candidate-b")
+
+    assert axis.candidate_count(state_a) == 1
+    assert axis.candidate_count(state_b) == 1
+
+    leaf_a = axis.candidate_at(state_a, 0)
+    leaf_b = axis.candidate_at(state_b, 0)
+
+    assert leaf_a.runtime_state_choice.snapshot == "snapshot:a"
+    assert leaf_b.runtime_state_choice.snapshot == "snapshot:b"
+    assert calls == [
+        "candidate-a",
+        "candidate-b",
+        "candidate-a",
+        "candidate-b",
+    ]
+
+
+def test_candidate_runtime_axis_rejects_omitted_runtime_scope() -> None:
+    class _Resolver:
+        def resolve(self, _state):
+            return _frontier(
+                omitted_scope=("scenario trigger family omitted",)
+            )
+
+    axis = ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.candidate_axis(
+        _Resolver()
+    )
+
+    with pytest.raises(ValueError, match="theoretical omitted scope"):
+        axis.candidate_count(SimpleNamespace(complete=True))
