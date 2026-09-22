@@ -112,3 +112,32 @@ def test_projects_active_enemy_breach_to_matching_target_state() -> None:
 
     assert result.unresolved == ()
     assert result.combat_state.active_buffs == ("Major Breach",)
+
+
+def _brittle() -> EffectVariant:
+    return EffectVariant(
+        name="minor_brittle",
+        layer=EffectLayer.PROC,
+        source="Test Brittle",
+        trigger="damage_dealt",
+        duration=4.0,
+        target_type=SupportTargetType.ENEMY,
+        stacking=StackingBehavior.UNIQUE,
+    )
+
+
+def test_projects_active_enemy_brittle_to_matching_target_state() -> None:
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(_attempt(1.0, target="Boss"),),
+        snapshot_time_seconds=2.0,
+        runtime_history_complete=True,
+    )
+
+    result = ExtremeSustainedDPSRuntimeTargetCombatStateService.resolve(
+        snapshot=snapshot,
+        effects=(_brittle(),),
+        target_identity="Boss",
+    )
+
+    assert result.unresolved == ()
+    assert result.combat_state.active_buffs == ("Minor Brittle",)
