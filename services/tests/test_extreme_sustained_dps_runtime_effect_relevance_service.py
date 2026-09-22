@@ -161,3 +161,45 @@ def test_scaled_target_damage_amplification_fails_closed() -> None:
     result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
     assert result.relevant == ()
     assert any("unresolved scaling" in row for row in result.unresolved)
+
+
+def test_unresolved_scaling_is_classified_as_source_data_gap() -> None:
+    effect = EffectVariant(
+        name="scaled_resistance_debuff",
+        layer=EffectLayer.PROC,
+        source="Scaled Debuff",
+        trigger="damage_dealt",
+        duration=5.0,
+        target_type=SupportTargetType.ENEMY,
+        resistance_reduction=6000.0,
+        scaling="up to 6000 from unresolved source state",
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+
+    assert result.source_data_unresolved == result.unresolved
+    assert result.math_unresolved == ()
+    assert any("source-data blockers: 1" in row for row in result.evidence)
+
+
+def test_unknown_runtime_identity_is_classified_as_math_review_gap() -> None:
+    effect = _effect("mystery_runtime_power", source="Mystery Proc")
+
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+
+    assert result.math_unresolved == result.unresolved
+    assert result.source_data_unresolved == ()
+    assert any("math/review blockers: 1" in row for row in result.evidence)
+
+
+def test_missing_enemy_target_classification_is_source_data_gap() -> None:
+    effect = _effect(
+        "major_vulnerability",
+        source="Targeting Mystery",
+        target_type=SupportTargetType.SELF,
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify((effect,))
+
+    assert result.source_data_unresolved == result.unresolved
+    assert result.math_unresolved == ()
