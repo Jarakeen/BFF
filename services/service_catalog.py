@@ -1060,7 +1060,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "This is the canonical production composition root for the generated Objective #32 graph. "
-            "It refuses construction unless finalized potion timing is wired after runtime policy and the additional resource-event denominator is explicitly proven complete. "
+            "It refuses construction unless finalized potion timing is wired after runtime policy, the additional resource-event denominator is explicitly proven complete, and the runtime-policy adapter is configured for complete scheduler-derived Heavy Attack discovery. "
             "Low-level frontier repositories and mechanics remain owned by their existing services rather than being recreated here."
         ),
     ),
@@ -1867,14 +1867,13 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.generated_runtime_policy_axis_adapter",
         domain="extreme",
         purpose=(
-            "Adapt explicit canonical execute variants and caller-reviewed Heavy Attack "
-            "window families into ordered indexed generated-search axes."
+            "Adapt explicit canonical execute variants plus either legacy reviewed Heavy Attack windows or scheduler-derived complete Heavy Attack timing into ordered indexed generated-search axes."
         ),
         implementation_path="services.extreme_sustained_dps_generated_runtime_policy_axis_adapter_service",
         inputs=(
             "ExtremeSustainedDPSRotationPolicyCandidate",
             "ExecuteRuntimeEvidence",
-            "ReviewedHeavyAttackWindows",
+            "ReviewedHeavyAttackWindowsOrEncounterChannelBlockProof",
         ),
         outputs=(
             "IndexedFrontierAxes",
@@ -1883,6 +1882,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         dependencies=(
             "extreme.sustained_dps.execute_policy_frontier",
             "extreme.sustained_dps.heavy_attack_policy_frontier",
+            "extreme.sustained_dps.heavy_attack_window_discovery",
             "extreme.sustained_dps.generated_frontier_wiring",
         ),
         responsibilities=(
@@ -1893,10 +1893,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Execute policy receives explicit priorities, snapshot resolver, target identity, "
-            "and duration rules. Heavy Attack expansion is recomputed for each selected execute "
-            "candidate from caller-reviewed 1.8-second windows. The supplied finite policy "
-            "families do not establish broader theoretical runtime-policy closure."
+            "Execute policy receives explicit priorities, snapshot resolver, target identity, and duration rules. "
+            "Legacy mode recomputes Heavy Attack expansion from caller-reviewed windows and retains omitted scope. "
+            "Complete-discovery mode probes every finalized execute-plan skill slot through the canonical scheduler and refuses traversal without a proven encounter channel-block denominator; only that mode exposes heavy_attack_policy with no omitted scope."
         ),
     ),
     ServiceDescriptor(
@@ -2265,14 +2264,43 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.heavy_attack_window_discovery",
+        domain="extreme",
+        purpose=(
+            "Probe every scheduled ordinary skill slot through the canonical soft-action duration scheduler to discover the complete finite family of legal 1.8-second fully charged Heavy Attack starts."
+        ),
+        implementation_path="services.extreme_sustained_dps_heavy_attack_window_discovery_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationDurationRules",
+            "AbilityPriorities",
+            "ReviewedEncounterChannelBlocks",
+            "EncounterChannelBlockDenominatorProof",
+        ),
+        outputs=("ExtremeSustainedDPSHeavyAttackWindowDiscovery",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_heavy_attack_window_discovery",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Every scheduled skill slot is tested by the same soft-action scheduler used by Rotation Builder, so first casts, due refreshes, same-bar displacement, hard boundaries, and plan horizon are inherited rather than reimplemented. "
+            "Encounter demand windows are not guessed to forbid channeling; explicit reviewed channel-block intervals require their own complete denominator proof."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.heavy_attack_policy_frontier",
         domain="extreme",
         purpose=(
-            "Enumerate all compatible subsets of explicit caller-proven safe fully charged "
-            "1.8-second Heavy Attack windows over one generated rotation candidate."
+            "Enumerate all compatible subsets of fully charged 1.8-second Heavy Attack windows over one generated rotation candidate, using either legacy exact-slot mutation or a canonical scheduler materializer."
         ),
         implementation_path="services.extreme_sustained_dps_heavy_attack_policy_frontier_service",
-        inputs=("GeneratedRotationCandidate", "ExplicitHeavyAttackWindows"),
+        inputs=(
+            "GeneratedRotationCandidate",
+            "ExplicitOrDiscoveredHeavyAttackWindows",
+            "OptionalCanonicalSubsetMaterializer",
+        ),
         outputs=("ExtremeSustainedDPSHeavyAttackPolicyFrontier",),
         dependencies=("extreme.sustained_dps.rotation_policy_frontier",),
         responsibilities=("extreme_sustained_dps_heavy_attack_policy_frontier",),
@@ -2281,10 +2309,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=False,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Only exact ordinary skill slots in non-overlapping caller-proven safe 1.8s windows "
-            "are mutated. Same-timestamp Light Attacks are removed, canonical reservation provenance "
-            "is recorded, and shared full-charge completion evidence must promote every selected heavy. "
-            "Damage remains owned by RotationCandidateHeavyAttackDamageEvidenceService."
+            "Legacy callers retain conservative exact-slot mutation. Complete Objective #32 traversal supplies the scheduler-backed subset materializer from Heavy Attack window discovery, allowing canonical same-bar displacement/cascade semantics. "
+            "Shared full-charge completion evidence must promote every selected heavy; damage remains owned by RotationCandidateHeavyAttackDamageEvidenceService."
         ),
     ),
     ServiceDescriptor(
