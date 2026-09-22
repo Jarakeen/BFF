@@ -29,10 +29,10 @@ def test_damage_cadence_is_research_evidence_not_runtime_authority() -> None:
         evidence.require_runtime_ready()
 
 
-def test_disputed_buff_debuff_cooldown_remains_unresolved() -> None:
+def test_buff_debuff_cooldown_observation_remains_provisional() -> None:
     evidence = provisional_weapon_enchantment_cadence(
         WeaponEnchantmentEffectFamily.BUFF_OR_DEBUFF
     )
 
-    assert evidence.base_cooldown_seconds is None
+    assert evidence.base_cooldown_seconds == 10.0
     assert evidence.runtime_ready is False
