@@ -32,6 +32,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineState:
     heavy_attack_windows: tuple[object, ...]
     mundus_food: object | None = None
     late: object | None = None
+    encounter_policy: object | None = None
     rotation: object | None = None
     runtime: object | None = None
 
@@ -54,10 +55,12 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         rotation_adapter: object,
         runtime_policy_adapter: object,
         mundus_food_adapter: object | None = None,
+        encounter_policy_adapter: object | None = None,
     ) -> None:
         self.gear_adapter = gear_adapter
         self.mundus_food_adapter = mundus_food_adapter
         self.late_adapter = late_adapter
+        self.encounter_policy_adapter = encounter_policy_adapter
         self.rotation_adapter = rotation_adapter
         self.runtime_policy_adapter = runtime_policy_adapter
 
@@ -113,12 +116,14 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
                 )
         return self.late_adapter.root(context)
 
-    def _rotation_state(
+    def _encounter_policy_state(
         self,
         state: ExtremeSustainedDPSGeneratedAxisPipelineState,
     ) -> object:
-        if state.rotation is not None:
-            return state.rotation
+        if self.encounter_policy_adapter is None:
+            raise ValueError("generated axis pipeline has no encounter-policy adapter")
+        if state.encounter_policy is not None:
+            return state.encounter_policy
         late = self._late_state(state)
         self._require_complete(late, "late-axis")
         assembled = getattr(late, "assembled", None)
@@ -126,6 +131,35 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             raise ValueError(
                 "complete generated late-axis state is missing assembled candidate"
             )
+        return self.encounter_policy_adapter.root(assembled)
+
+    def _rotation_state(
+        self,
+        state: ExtremeSustainedDPSGeneratedAxisPipelineState,
+    ) -> object:
+        if state.rotation is not None:
+            return state.rotation
+
+        encounter_demands: tuple[object, ...] = ()
+        if self.encounter_policy_adapter is not None:
+            encounter = self._encounter_policy_state(state)
+            self._require_complete(encounter, "encounter-policy-axis")
+            assembled = getattr(encounter, "assembled", None)
+            choice = getattr(encounter, "choice", None)
+            if assembled is None or choice is None:
+                raise ValueError(
+                    "complete generated encounter-policy state is missing assembled candidate or selected policy"
+                )
+            encounter_demands = tuple(getattr(choice, "demands", ()) or ())
+        else:
+            late = self._late_state(state)
+            self._require_complete(late, "late-axis")
+            assembled = getattr(late, "assembled", None)
+            if assembled is None:
+                raise ValueError(
+                    "complete generated late-axis state is missing assembled candidate"
+                )
+
         return self.rotation_adapter.root(
             assembled,
             duration_seconds=state.duration_seconds,
@@ -136,6 +170,8 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             use_scheduled_combat_attacks_for_ultimate=(
                 state.use_scheduled_combat_attacks_for_ultimate
             ),
+            priorities=state.priorities,
+            encounter_demands=encounter_demands,
         )
 
     @staticmethod
@@ -186,6 +222,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             gear=stage,
             mundus_food=None,
             late=None,
+            encounter_policy=None,
             rotation=None,
             runtime=None,
         )
@@ -199,6 +236,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             state,
             mundus_food=stage,
             late=None,
+            encounter_policy=None,
             rotation=None,
             runtime=None,
         )
@@ -208,7 +246,25 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         state: ExtremeSustainedDPSGeneratedAxisPipelineState,
         stage: object,
     ) -> ExtremeSustainedDPSGeneratedAxisPipelineState:
-        return replace(state, late=stage, rotation=None, runtime=None)
+        return replace(
+            state,
+            late=stage,
+            encounter_policy=None,
+            rotation=None,
+            runtime=None,
+        )
+
+    @staticmethod
+    def _replace_encounter_policy(
+        state: ExtremeSustainedDPSGeneratedAxisPipelineState,
+        stage: object,
+    ) -> ExtremeSustainedDPSGeneratedAxisPipelineState:
+        return replace(
+            state,
+            encounter_policy=stage,
+            rotation=None,
+            runtime=None,
+        )
 
     @staticmethod
     def _replace_rotation(
@@ -312,18 +368,28 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
                     self._replace_mundus_food,
                 )
             )
+        groups.append(
+            (
+                self.late_adapter.axes(),
+                self._late_state,
+                self._replace_late,
+            )
+        )
+        if self.encounter_policy_adapter is not None:
+            groups.append(
+                (
+                    self.encounter_policy_adapter.axes(),
+                    self._encounter_policy_state,
+                    self._replace_encounter_policy,
+                )
+            )
         groups.extend(
             (
                 (
-                    self.late_adapter.axes(),
-                    self._late_state,
-                    self._replace_late,
+                    self.rotation_adapter.axes(),
+                    self._rotation_state,
+                    self._replace_rotation,
                 ),
-            (
-                self.rotation_adapter.axes(),
-                self._rotation_state,
-                self._replace_rotation,
-            ),
                 (
                     self.runtime_policy_adapter.axes(),
                     self._runtime_state,
