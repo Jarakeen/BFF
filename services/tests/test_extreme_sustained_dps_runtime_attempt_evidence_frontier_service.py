@@ -108,3 +108,31 @@ def test_unproven_event_skeleton_denominator_fails_closed() -> None:
         "event skeleton denominator is not proven complete" in row
         for row in result.unresolved
     )
+
+
+
+def test_zero_chance_effect_gets_concrete_failure_representative() -> None:
+    result = ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService.build(
+        events=(_event(),),
+        effects=(_effect("never", chance=0.0),),
+        event_denominator_proven=True,
+        source="reviewed event family",
+    )
+
+    assert result.denominator_proven is True
+    assert result.candidate_count == 1
+    assert result.choices[0].attempts[0].chance_roll == 0.0
+
+
+def test_proven_empty_event_family_has_one_empty_evidence_choice() -> None:
+    result = ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService.build(
+        events=(),
+        effects=(),
+        event_denominator_proven=True,
+        source="reviewed no-event scenario",
+    )
+
+    assert result.denominator_proven is True
+    assert result.candidate_count == 1
+    assert result.choices[0].attempts == ()
+    assert result.unresolved == ()
