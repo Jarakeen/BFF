@@ -1863,6 +1863,30 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.potion_observation_frontier",
+        domain="extreme",
+        purpose=(
+            "Collect the finite exact DD runtime observation coordinates that can distinguish potion timing on one finalized descendant plan."
+        ),
+        implementation_path="services.extreme_sustained_dps_potion_observation_frontier_service",
+        inputs=(
+            "FinalizedRotationPlan",
+            "ReviewedPeriodicRuntimeProjections",
+            "VerifiedHeavyAttackCompletionEvidence",
+        ),
+        outputs=("ExtremeSustainedDPSPotionObservationFrontier",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_potion_observation_frontier",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Scheduled skills, Ultimates, and Light Attacks contribute their exact action coordinates; Heavy Attacks contribute verified completion time; reviewed periodic projections contribute every concrete tick. "
+            "Missing Heavy Attack completion evidence or unresolved periodic runtime evidence keeps the observation denominator open."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.potion_timing_breakpoint_frontier",
         domain="extreme",
         purpose=(
@@ -1905,6 +1929,34 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Emits sourced Magicka, Stamina, and Health restoration rows at the exact scheduled potion timestamps. "
             "Potion identity mismatch, unresolved source data, unsupported restore traits, and non-integral sourced magnitudes fail closed; Phase 4 retains resource filtering, cap/waste, and ordering authority."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.finalized_potion_timing_denominator",
+        domain="extreme",
+        purpose=(
+            "Compose a finalized DD observation frontier with canonical PotionUseEvent and Medicinal Use duration evidence into a finite potion named-buff timing denominator."
+        ),
+        implementation_path="services.extreme_sustained_dps_finalized_potion_timing_denominator_service",
+        inputs=(
+            "PlayerBuild",
+            "CharacterProgression",
+            "ExtremeSustainedDPSPotionObservationFrontier",
+            "PotionCooldownSeconds",
+        ),
+        outputs=("ExtremeSustainedDPSFinalizedPotionTimingDenominator",),
+        dependencies=(
+            "extreme.sustained_dps.potion_observation_frontier",
+            "extreme.sustained_dps.potion_timing_breakpoint_frontier",
+        ),
+        responsibilities=("extreme_sustained_dps_finalized_potion_timing_denominator",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Potion buff durations remain owned by PotionCadence using explicit Medicinal Use rank. "
+            "This service proves finite named-buff timing only after the descendant observation denominator is complete; full potion timing remains open until instant-restoration timing is included."
         ),
     ),
     ServiceDescriptor(
