@@ -210,3 +210,94 @@ def test_candidate_builder_preserves_open_scenario_trigger_family() -> None:
         in row
         for row in result.unresolved
     )
+
+
+
+def test_candidate_builder_can_resolve_runtime_effect_universe() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=RotationPlan(
+            character_name="Generated",
+            build_name="Candidate",
+            duration_seconds=6.0,
+            actions=(
+                RotationAction(
+                    1.0,
+                    0,
+                    RotationActionKind.ULTIMATE,
+                    "Ultimate A",
+                    "front",
+                ),
+            ),
+        ),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    effect = EffectVariant(
+        name="ultimate-proc",
+        layer=EffectLayer.PROC,
+        source="Ultimate Proc",
+        trigger="ultimate_activation_in_combat",
+        duration=4.0,
+    )
+
+    class _Universe:
+        def resolve(self, build):
+            return SimpleNamespace(
+                effects=(effect,),
+                evidence=("candidate runtime effect universe resolved",),
+                unresolved=(),
+            )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        runtime_effect_universe=_Universe(),
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        effects=None,
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed boss scenario",
+    )
+
+    assert result.frontier.denominator_proven is True
+    assert any(
+        "candidate runtime effect universe resolved" in row
+        for row in result.evidence
+    )
+
+
+def test_candidate_builder_fails_closed_on_unresolved_runtime_effect_universe() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    class _Universe:
+        def resolve(self, build):
+            return SimpleNamespace(
+                effects=(),
+                evidence=("candidate runtime effect universe unresolved",),
+                unresolved=("runtime skill effect identity unresolved",),
+            )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        runtime_effect_universe=_Universe(),
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        effects=None,
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed boss scenario",
+    )
+
+    assert result.frontier.denominator_proven is False
+    assert any(
+        "runtime skill effect identity unresolved" in row
+        for row in result.unresolved
+    )
