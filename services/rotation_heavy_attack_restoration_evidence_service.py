@@ -224,13 +224,12 @@ class RotationHeavyAttackRestorationEvidenceService:
                 )
                 continue
 
-            if evidence.landed is None:
-                unresolved.append(
-                    f"fully charged {weapon_resolution.weapon.value} heavy at "
-                    f"{action.time_seconds:.3f}s lacks successful-hit evidence required for resource restoration"
-                )
-                continue
-            if evidence.landed is False:
+            outcome = evidence.hit_outcome
+            if outcome in {
+                RotationHeavyAttackHitOutcome.DODGED,
+                RotationHeavyAttackHitOutcome.MISSED,
+                RotationHeavyAttackHitOutcome.IMMUNE,
+            }:
                 resolutions.append(
                     RotationHeavyAttackRestorationResolution(
                         action=action,
@@ -238,6 +237,26 @@ class RotationHeavyAttackRestorationEvidenceService:
                         evidence=evidence,
                         restoration_event=None,
                     )
+                )
+                continue
+            if outcome is RotationHeavyAttackHitOutcome.BLOCKED:
+                unresolved.append(
+                    f"fully charged {weapon_resolution.weapon.value} heavy at "
+                    f"{action.time_seconds:.3f}s was blocked; authoritative blocked-hit "
+                    "resource-restoration semantics are unresolved"
+                )
+                continue
+            if evidence.landed is None and outcome is not RotationHeavyAttackHitOutcome.LANDED:
+                unresolved.append(
+                    f"fully charged {weapon_resolution.weapon.value} heavy at "
+                    f"{action.time_seconds:.3f}s lacks successful-hit evidence required for resource restoration"
+                )
+                continue
+            if evidence.landed is False:
+                unresolved.append(
+                    f"fully charged {weapon_resolution.weapon.value} heavy at "
+                    f"{action.time_seconds:.3f}s has landed=False without a reviewed hit outcome; "
+                    "blocked versus zero-restoration outcome is unresolved"
                 )
                 continue
 
