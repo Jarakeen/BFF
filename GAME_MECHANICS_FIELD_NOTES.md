@@ -1455,3 +1455,10 @@ A runtime debuff with an explicitly resolved numeric resistance reduction can be
 A target can have named Vulnerability and a separate unique damage-amplification debuff at the same time. Those effects belong to the same additive target Damage Taken stage even though only one is a named Major/Minor effect.
 
 **For BFF:** exact-time CombatState now carries explicit numeric Damage Taken in addition to canonical named buffs. Fixed ENEMY-target amplification can therefore stack with Vulnerability through the existing Damage Taken router. A named effect that also carries matching numeric metadata is counted only once, while any amplification with unresolved scaling remains fail-closed.
+
+
+## 2026-09-22 — Crusher magnitude and Crusher uptime are separate proofs
+
+The weapon-enchantment repository and rule engine can resolve Crusher's target resistance reduction, duration, and trait-adjusted magnitude. That does not by itself prove the trigger/cooldown timeline needed to model exact combat uptime.
+
+**For BFF:** saved-build capability resolution now exposes Crusher as a bar-owned ENEMY resistance-reduction EffectVariant using canonical enchantment data. Objective #32 still treats its runtime effect timing as deferred, so the effect is visible in capability audits but cannot silently enter sustained-DPS runtime search until application cadence is authoritative.
