@@ -29,8 +29,25 @@ class _PlanFrontier:
             unresolved=self.unresolved,
         )
 
-    def candidate_at(self, assembled, *, duration_seconds, index):
-        self.calls.append(("candidate_at", assembled, duration_seconds, index))
+    def candidate_at(
+        self,
+        assembled,
+        *,
+        duration_seconds,
+        index,
+        priorities=None,
+        encounter_demands=(),
+    ):
+        self.calls.append(
+            (
+                "candidate_at",
+                assembled,
+                duration_seconds,
+                index,
+                priorities,
+                tuple(encounter_demands),
+            )
+        )
         return SimpleNamespace(
             structural_index=index,
             plan=f"plan:{index}",
@@ -214,3 +231,27 @@ def test_root_rejects_invalid_runtime_policy_inputs(kwargs, message) -> None:
 
     with pytest.raises(ValueError, match=message):
         adapter.root(_assembled(), **values)
+
+
+
+def test_rotation_plan_axis_forwards_priorities_and_encounter_demands() -> None:
+    plans = _PlanFrontier()
+    adapter = _adapter(plans=plans)
+    priorities = object()
+    demands = ("demand-a", "demand-b")
+    state = adapter.root(
+        _assembled(),
+        duration_seconds=10.0,
+        potion_cooldown_seconds=45.0,
+        starting_ultimate=70.0,
+        priorities=priorities,
+        encounter_demands=demands,
+    )
+
+    state = adapter.axes()[0].candidate_at(state, 1)
+
+    call = plans.calls[-1]
+    assert call[0] == "candidate_at"
+    assert call[4] is priorities
+    assert call[5] == demands
+    assert state.rotation_plan.plan == "plan:1"
