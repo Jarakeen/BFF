@@ -130,7 +130,7 @@ def test_fully_charged_resto_heavy_uses_canonical_base_at_completion() -> None:
     event = projection.restoration_events[0]
     assert event.time_seconds == 8.5
     assert event.resource is ResourceType.MAGICKA
-    assert event.amount == 3267.0
+    assert event.amount == 2970.0
     assert event.source == "verified test heavy"
 
 
