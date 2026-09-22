@@ -1517,7 +1517,7 @@ The same evidence converges on a roughly **4-second base cooldown for direct-dam
 
 ## 2026-09-22 — Heavy completion and landed-hit evidence are separate facts
 
-ESO Logs can provide a positive damage observation for a reviewed Heavy Attack alias. BFF now treats that row as evidence that the attack landed only when it correlates one-to-one with the reviewed completion timestamp. A completed channel alone does not prove a hit, and absence of a matching damage row does not prove a miss because log/alias evidence can be incomplete. Ambiguous multiple matches remain unresolved.
+ESO Logs can provide a positive damage observation for a reviewed Heavy Attack alias. BFF now treats that row as evidence that the attack landed only when it correlates one-to-one with the reviewed completion timestamp after explicit replay-clock alignment. ESO Logs event timestamps are millisecond report/fight timestamps while RotationPlan completion timestamps are replay-relative seconds. A completed channel alone does not prove a hit, and absence of a matching damage row does not prove a miss because log/alias evidence can be incomplete. Ambiguous multiple matches remain unresolved.
 
 **BFF implication:** Heavy Attack damage and resource restoration share the same explicit landed-state evidence. Scheduler reservations establish completion; encounter/log evidence establishes a successful hit. The optimizer fails closed when those facts cannot be joined unambiguously.
 
