@@ -275,3 +275,56 @@ def test_unsupported_damage_type_is_rejected():
         raise AssertionError(
             "Unsupported damage type should be rejected."
         )
+
+def test_target_critical_damage_taken_joins_before_cap():
+    stats = _stats(
+        effective_critical_chance=100.0,
+        critical_damage=100.0,
+        effective_critical_damage=100.0,
+    )
+    result = calculate_dd_damage(
+        DDDamageEvent(base_value=1000.0, damage_type="physical"),
+        stats,
+        target_critical_damage_taken_percent=10.0,
+    )
+
+    assert result.target_critical_damage_taken_percent == 10.0
+    assert result.capped_critical_damage_percent == 110.0
+    assert result.critical_damage == pytest.approx(1.10)
+    assert result.final_damage == pytest.approx(2100.0)
+
+
+def test_target_critical_damage_taken_respects_125_percent_cap():
+    stats = _stats(
+        effective_critical_chance=100.0,
+        critical_damage=120.0,
+        effective_critical_damage=120.0,
+    )
+    result = calculate_dd_damage(
+        DDDamageEvent(base_value=1000.0, damage_type="physical"),
+        stats,
+        target_critical_damage_taken_percent=20.0,
+    )
+
+    assert result.capped_critical_damage_percent == 125.0
+    assert result.critical_damage == pytest.approx(1.25)
+    assert result.final_damage == pytest.approx(2250.0)
+
+
+def test_critical_resistance_applies_after_target_critical_damage_taken_and_cap():
+    stats = _stats(
+        effective_critical_chance=100.0,
+        critical_damage=120.0,
+        effective_critical_damage=120.0,
+    )
+    result = calculate_dd_damage(
+        DDDamageEvent(base_value=1000.0, damage_type="physical"),
+        stats,
+        target_critical_damage_taken_percent=20.0,
+        target_critical_resistance=660.0,
+    )
+
+    assert result.capped_critical_damage_percent == 125.0
+    assert result.critical_resistance.reduction_percent == pytest.approx(10.0)
+    assert result.critical_damage == pytest.approx(1.15)
+    assert result.final_damage == pytest.approx(2150.0)
