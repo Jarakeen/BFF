@@ -25,6 +25,7 @@ class _Stage:
     assembled: object | None = None
     rotation_plan: object | None = None
     rotation_policy: object | None = None
+    choice: object | None = None
     result: str = ""
 
 
@@ -115,6 +116,29 @@ class _LateAdapter:
                     complete=True,
                     assembled="assembled-candidate",
                     result=state.result + "|late",
+                ),
+                self.calls,
+            ),
+        )
+
+
+class _EncounterAdapter:
+    def __init__(self, calls):
+        self.calls = calls
+
+    def root(self, assembled):
+        self.calls.append(("encounter", "root", assembled))
+        return _Stage("encounter", assembled=assembled)
+
+    def axes(self):
+        return (
+            _one_axis(
+                "Encounter",
+                lambda state: replace(
+                    state,
+                    complete=True,
+                    choice=SimpleNamespace(demands=("demand-a", "demand-b")),
+                    result=state.result + "|encounter",
                 ),
                 self.calls,
             ),
@@ -313,3 +337,34 @@ def test_optional_mundus_food_stage_sits_between_gear_and_late() -> None:
     assert state.complete is True
     late_root = next(row for row in calls if row[:2] == ("late", "root"))
     assert late_root[2] == "mundus-food-context"
+
+
+
+def test_optional_encounter_policy_stage_forwards_demands_into_rotation_root() -> None:
+    calls = []
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        encounter_policy_adapter=_EncounterAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+    )
+    state = _root(pipeline)
+
+    axes = pipeline.axes()
+    assert tuple(axis.name for axis in axes) == (
+        "Gear",
+        "Late",
+        "Encounter",
+        "Rotation",
+        "Runtime",
+    )
+
+    for axis in axes:
+        assert axis.candidate_count(state) == 1
+        state = axis.candidate_at(state, 0)
+
+    assert state.complete is True
+    rotation_root = next(row for row in calls if row[:2] == ("rotation", "root"))
+    assert rotation_root[3]["priorities"] == "priorities"
+    assert rotation_root[3]["encounter_demands"] == ("demand-a", "demand-b")
