@@ -1029,6 +1029,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.objective32_scenario_preflight",
+        domain="extreme",
+        purpose=(
+            "Validate proof-critical Objective #32 search-time scenario evidence before theoretical-closure traversal begins."
+        ),
+        implementation_path="services.extreme_sustained_dps_objective32_scenario_preflight_service",
+        inputs=(
+            "RuntimeStateFrontier",
+            "HeavyAttackChannelBlockDenominatorProof",
+            "EncounterPolicyAdapter",
+        ),
+        outputs=("ExtremeSustainedDPSObjective32ScenarioPreflight",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_objective32_scenario_preflight",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Requires an explicit runtime-state frontier with complete denominator proof and no unresolved or omitted scope, plus a proven-complete Heavy Attack encounter channel-block denominator. "
+            "The canonical Objective #32 composition enables this guard; generic finite-denominator search wrappers may leave it disabled. "
+            "Preflight prevents an obviously non-closure-ready scenario from entering branch-and-bound but cannot prove search completion or exact simulation completeness."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.objective32_composition",
         domain="extreme",
         purpose=(
@@ -1176,6 +1201,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.axis_dominance_composition",
             "extreme.sustained_dps.theoretical_maximum_closure",
             "extreme.sustained_dps.objective32_blockers",
+            "extreme.sustained_dps.objective32_scenario_preflight",
         ),
         responsibilities=("extreme_sustained_dps_global_objective32_search",),
         behavior=ServiceBehavior.DETERMINISTIC,
