@@ -1,6 +1,7 @@
 from minmax.character_progression import CharacterProgression
 from minmax.combat_state import CombatState
 from minmax.potion_use_event import PotionBuffGrant, PotionTraitUse, PotionUseEvent
+from minmax.resource_costs import ResourceType
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 from services.rotation_plan_potion_combat_state_service import (
@@ -182,3 +183,44 @@ def test_scheduled_potion_requires_recorded_medicinal_use_rank() -> None:
     assert result.unresolved == (
         "Medicinal Use rank is unresolved for scheduled potion runtime",
     )
+
+
+class _RestoreResolver:
+    def resolve(self, selected_label: str) -> PotionUseEvent:
+        return PotionUseEvent(
+            selected_label=selected_label,
+            traits=(
+                PotionTraitUse(
+                    trait="Restore Magicka", kind="instant_restore", magnitude=7582.0,
+                    duration=None, triple_duration=None, tier_name="Essence",
+                    solvent="Lorkhan's Tears", level=50,
+                ),
+                PotionTraitUse(
+                    trait="Restore Stamina", kind="instant_restore", magnitude=7582.0,
+                    duration=None, triple_duration=None, tier_name="Essence",
+                    solvent="Lorkhan's Tears", level=50,
+                ),
+            ),
+        )
+
+
+def test_scheduled_potion_projects_source_backed_instant_restoration_events() -> None:
+    service = RotationPlanPotionCombatStateService(event_resolver=_RestoreResolver())
+    events = service.restoration_events(_build(), plan=_plan())
+
+    assert [(row.time_seconds, row.resource, row.amount) for row in events] == [
+        (5.0, ResourceType.MAGICKA, 7582),
+        (5.0, ResourceType.STAMINA, 7582),
+        (50.0, ResourceType.MAGICKA, 7582),
+        (50.0, ResourceType.STAMINA, 7582),
+    ]
+
+
+def test_potion_restoration_events_do_not_promote_mismatched_scheduled_identity() -> None:
+    service = RotationPlanPotionCombatStateService(event_resolver=_RestoreResolver())
+    plan = RotationPlan(
+        character_name="Rylonia", build_name="Corpsebuster DD", duration_seconds=10.0,
+        actions=(RotationAction(1.0, 0, RotationActionKind.POTION, name="Different Potion"),),
+    )
+
+    assert service.restoration_events(_build(), plan=plan) == ()
