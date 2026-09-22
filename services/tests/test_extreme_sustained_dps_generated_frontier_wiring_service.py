@@ -179,3 +179,25 @@ def test_duplicate_normalized_axis_names_are_rejected() -> None:
             evaluate_leaf=_evaluate,
             required_duration_seconds=10.0,
         )
+
+
+
+def test_indexed_axis_normalizes_canonical_axis_metadata() -> None:
+    axis = ExtremeSustainedDPSIndexedFrontierAxis(
+        "Tagged",
+        candidate_count=lambda _state: 1,
+        candidate_at=lambda state, _index: state,
+        canonical_axes=("MUNDUS", "food", "mundus"),
+    )
+
+    assert axis.canonical_axes == ("mundus", "food")
+
+
+def test_indexed_axis_rejects_unknown_canonical_axis_metadata() -> None:
+    with pytest.raises(ValueError, match="unknown canonical mutation axis"):
+        ExtremeSustainedDPSIndexedFrontierAxis(
+            "Bad",
+            candidate_count=lambda _state: 1,
+            candidate_at=lambda state, _index: state,
+            canonical_axes=("telepathy",),
+        )
