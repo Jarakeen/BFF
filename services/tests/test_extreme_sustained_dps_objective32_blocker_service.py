@@ -172,3 +172,30 @@ def test_legacy_blocker_assessment_remains_closed_without_inventory() -> None:
     assert result.closed is True
     assert result.blockers == ()
     assert any("Runtime source-data blockers: 0" in row for row in result.evidence)
+
+
+def test_theoretical_gate_unresolved_is_visible_without_inventory() -> None:
+    result = ExtremeSustainedDPSObjective32BlockerService.assess(
+        search_result=SimpleNamespace(
+            global_maximum_proven=True,
+            unresolved=(),
+        ),
+        axis_inventory=SimpleNamespace(
+            missing_canonical_axes=(),
+            duplicate_canonical_axes=(),
+            unresolved=(),
+        ),
+        axis_coverage=SimpleNamespace(
+            missing_axes=(),
+            unresolved=(),
+        ),
+        closure=SimpleNamespace(
+            omitted_scope=(),
+            unresolved=("Objective #32 mechanics closure remains open",),
+        ),
+    )
+
+    assert result.closed is False
+    assert tuple(row.code for row in result.blockers) == (
+        "theoretical_closure_unresolved",
+    )
