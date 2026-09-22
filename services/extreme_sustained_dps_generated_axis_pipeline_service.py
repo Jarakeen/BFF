@@ -36,16 +36,18 @@ class ExtremeSustainedDPSGeneratedAxisPipelineState:
     rotation: object | None = None
     runtime: object | None = None
     finalized_potion: object | None = None
+    requires_finalized_potion: bool = False
 
     @property
     def complete(self) -> bool:
         return bool(
             (
-                self.finalized_potion is not None
+                self.requires_finalized_potion
+                and self.finalized_potion is not None
                 and getattr(self.finalized_potion, "complete", False)
             )
             or (
-                self.finalized_potion is None
+                not self.requires_finalized_potion
                 and self.runtime is not None
                 and getattr(self.runtime, "complete", False)
             )
@@ -411,6 +413,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             target_identity=str(target_identity or "").strip(),
             duration_rules=tuple(duration_rules),
             heavy_attack_windows=tuple(heavy_attack_windows),
+            requires_finalized_potion=bool(self.finalized_potion_adapter is not None),
         )
 
     def axes(self) -> tuple[ExtremeSustainedDPSIndexedFrontierAxis, ...]:
