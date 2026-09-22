@@ -3,10 +3,11 @@ from __future__ import annotations
 """Concrete indexed axes for generated sustained-DPS rotation policy refinement.
 
 A complete assembled build first selects one finite seed/cadence RotationPlan family,
-then selects one anchored Ultimate/potion policy for that exact plan. This adapter does
-not promote the anchored family into theoretical timing closure: continuous potion
-offsets, deliberately delayed Ultimates, execute policy, Heavy Attacks, and encounter
-obligations remain explicit downstream proof scopes.
+then selects one delayed-Ultimate policy for that exact plan. The underlying combined
+rotation-policy frontier still exposes anchored potion policies for legacy/reference
+callers, but generated Objective #32 traversal deliberately selects only its explicit
+potion:none slice. Canonical potion timing is owned later by the finalized descendant
+potion-timing axis after execute and Heavy Attack policy selection.
 """
 
 from dataclasses import dataclass, replace
@@ -48,7 +49,7 @@ class ExtremeSustainedDPSGeneratedRotationAxisState:
 
 
 class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
-    """Adapt seed-plan and anchored Ultimate/potion frontiers into tree axes."""
+    """Adapt seed-plan and delayed-Ultimate frontiers into Objective #32 tree axes."""
 
     def __init__(
         self,
@@ -128,11 +129,15 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
                 state.use_scheduled_combat_attacks_for_ultimate
             ),
         )
-        return self._proven_count(
+        self._proven_count(
             frontier,
-            "anchored Ultimate/potion policy frontier",
+            "rotation policy frontier",
             proof_field="anchored_policy_denominator_proven",
         )
+        count = len(tuple(getattr(frontier, "ultimate_timing_policies", ()) or ()))
+        if count <= 0:
+            raise ValueError("generated delayed-Ultimate policy denominator is empty")
+        return count
 
     def _policy_at(
         self,
@@ -140,12 +145,30 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
         index: int,
     ) -> ExtremeSustainedDPSGeneratedRotationAxisState:
         seed = self._require_plan(state)
+        frontier = self.rotation_policies.frontier(
+            build=state.assembled.build,
+            seed=seed,
+            potion_cooldown_seconds=state.potion_cooldown_seconds,
+            starting_ultimate=state.starting_ultimate,
+            ultimate_generation_events=state.ultimate_generation_events,
+            heroism_windows=state.heroism_windows,
+            use_scheduled_combat_attacks_for_ultimate=(
+                state.use_scheduled_combat_attacks_for_ultimate
+            ),
+        )
+        ultimate_count = len(tuple(frontier.ultimate_timing_policies))
+        target = int(index)
+        if target < 0 or target >= ultimate_count:
+            raise IndexError("generated delayed-Ultimate policy index out of range")
+        potion_count = len(tuple(frontier.potion_policies))
+        if potion_count <= 0:
+            raise ValueError("rotation policy frontier has no explicit potion:none slice")
         candidate = self.rotation_policies.candidate_at(
             build=state.assembled.build,
             seed=seed,
             potion_cooldown_seconds=state.potion_cooldown_seconds,
             starting_ultimate=state.starting_ultimate,
-            index=int(index),
+            index=target * potion_count,
             ultimate_generation_events=state.ultimate_generation_events,
             heroism_windows=state.heroism_windows,
             use_scheduled_combat_attacks_for_ultimate=(
@@ -199,13 +222,10 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
                 canonical_axes=("rotation_order", "light_attack_weave"),
             ),
             ExtremeSustainedDPSIndexedFrontierAxis(
-                "Anchored Ultimate and Potion Policy",
+                "Delayed Ultimate Policy",
                 candidate_count=self._policy_count,
                 candidate_at=self._policy_at,
-                canonical_axes=("ultimate_policy", "potion_timing_policy"),
-                omitted_scope=(
-                    "continuous potion first-use offset is not closed by anchored policy search",
-                ),
+                canonical_axes=("ultimate_policy",),
             ),
         )
 
