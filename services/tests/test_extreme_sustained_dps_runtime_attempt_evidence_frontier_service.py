@@ -136,3 +136,21 @@ def test_proven_empty_event_family_has_one_empty_evidence_choice() -> None:
     assert result.candidate_count == 1
     assert result.choices[0].attempts == ()
     assert result.unresolved == ()
+
+
+
+def test_zero_threshold_does_not_duplicate_mixed_chance_regions() -> None:
+    result = ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService.build(
+        events=(_event(),),
+        effects=(
+            _effect("never", chance=0.0),
+            _effect("quarter", chance=0.25),
+            _effect("half", chance=0.5),
+        ),
+        event_denominator_proven=True,
+        source="reviewed event family",
+    )
+
+    rolls = tuple(choice.attempts[0].chance_roll for choice in result.choices)
+    assert rolls == (0.0, 0.25, 0.5)
+    assert result.candidate_count == 3
