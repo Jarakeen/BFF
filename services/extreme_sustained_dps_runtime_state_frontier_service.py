@@ -10,6 +10,7 @@ mistaken for global runtime closure.
 
 from dataclasses import dataclass
 
+from minmax.character_build.effect_instance import EffectVariant
 from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 
 
@@ -19,12 +20,14 @@ class ExtremeSustainedDPSRuntimeStateChoice:
     snapshot: ExtremeRuntimeSnapshot
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
+    effects: tuple[EffectVariant, ...] = ()
 
     def __post_init__(self) -> None:
         value = str(self.runtime_state_id or "").strip()
         if not value:
             raise ValueError("runtime-state choice requires runtime_state_id")
         object.__setattr__(self, "runtime_state_id", value)
+        object.__setattr__(self, "effects", tuple(self.effects))
         object.__setattr__(
             self,
             "unresolved",
