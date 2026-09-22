@@ -641,7 +641,7 @@ class SavedBuildCapabilityService:
         self,
         build: PlayerBuild,
     ) -> SavedBuildEffectVariantResolution:
-        """Resolve canonical skill/gear/potion EffectVariants without roster progression.
+        """Resolve canonical skill/gear/weapon-enchantment/potion EffectVariants without roster progression.
 
         This is the reusable capability-only seam for generated or unsaved builds.
         It deliberately skips saved-character progression and standing static-context
