@@ -1190,6 +1190,21 @@ def test_sustained_dps_dynamic_whole_plan_frontier_adapter_preserves_omitted_sco
     assert "materialized one at a time" in service.notes
 
 
+def test_sustained_dps_runtime_event_skeleton_keeps_trigger_authority_explicit() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_runtime_event_skeleton"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.runtime_event_skeleton"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "finalized DD plan" in service.purpose
+    assert "exact-time damage occurrence evidence" in service.purpose
+    assert "Potion-use triggers are excluded" in service.notes
+    assert "never manufactures critical-hit trigger events" in service.notes
+    assert "remain caller-proven scenario event families" in service.notes
+
+
 def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely() -> None:
     attempts = canonical_service_for(
         "extreme_sustained_dps_runtime_attempt_evidence_frontier"
@@ -1215,6 +1230,7 @@ def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely
         row.service_id
         for row in SERVICE_CATALOG.dependencies_of(scenario.service_id)
     ) == (
+        "extreme.sustained_dps.runtime_event_skeleton",
         "extreme.sustained_dps.runtime_attempt_evidence_frontier",
         "extreme.sustained_dps.runtime_external_history_assembly",
         "extreme.sustained_dps.runtime_external_history_frontier",
