@@ -67,8 +67,8 @@ class ExtremeSustainedDPSObjective32CompositionService:
         runtime_policy_adapter: object,
         runtime_evaluation: object,
         finalized_potion_evidence_resolver: object,
-        mundus_food_adapter: object | None = None,
-        encounter_policy_adapter: object | None = None,
+        mundus_food_adapter: object,
+        encounter_policy_adapter: object,
         finalized_potion_adapter: object | None = None,
     ) -> ExtremeSustainedDPSObjective32Composition:
         if structural_families is None:
@@ -80,6 +80,14 @@ class ExtremeSustainedDPSObjective32CompositionService:
         if gear_adapter is None or late_adapter is None:
             raise ValueError(
                 "Objective #32 composition requires generated gear and late adapters"
+            )
+        if mundus_food_adapter is None:
+            raise ValueError(
+                "Objective #32 composition requires canonical Mundus/food adapter"
+            )
+        if encounter_policy_adapter is None:
+            raise ValueError(
+                "Objective #32 composition requires canonical encounter-policy adapter"
             )
         if rotation_adapter is None or runtime_policy_adapter is None:
             raise ValueError(
@@ -147,6 +155,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
             objective32=objective32,
             evidence=(
                 "Objective #32 production graph composed from canonical generated frontier authorities",
+                "Mundus/food and encounter-policy canonical axes are required by composition",
                 "Finalized potion timing is appended after runtime-policy axes",
                 "Heavy Attack timing uses scheduler-derived complete-discovery mode",
                 "Exact leaves use canonical generated runtime evaluation",
