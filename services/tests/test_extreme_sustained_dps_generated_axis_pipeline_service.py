@@ -261,6 +261,8 @@ def _root(pipeline):
         use_scheduled_combat_attacks_for_ultimate=True,
         duration_rules=("rule",),
         heavy_attack_windows=("window",),
+        heavy_attack_channel_blocks=("channel-block",),
+        heavy_attack_channel_block_denominator_proven=True,
     )
 
 
@@ -287,6 +289,11 @@ def test_composes_adapter_states_and_runtime_identity_in_order() -> None:
         "structural:9|rotation-plan:3|anchored-policy:5"
     )
     assert runtime_root[3]["heavy_attack_windows"] == ("window",)
+    assert runtime_root[3]["heavy_attack_channel_blocks"] == ("channel-block",)
+    assert (
+        runtime_root[3]["heavy_attack_channel_block_denominator_proven"]
+        is True
+    )
 
     rotation_root = next(row for row in calls if row[:2] == ("rotation", "root"))
     assert rotation_root[3]["ultimate_generation_events"] == ("generation",)
