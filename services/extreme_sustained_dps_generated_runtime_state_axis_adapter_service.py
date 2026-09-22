@@ -34,7 +34,7 @@ class ExtremeSustainedDPSGeneratedRuntimeStateLeaf:
 
 
 class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
-    """Expose a locally closed runtime family as one final indexed search axis."""
+    """Expose static or candidate-resolved runtime families as the final search axis."""
 
     @staticmethod
     def _validate(frontier: ExtremeSustainedDPSRuntimeStateFrontier) -> None:
@@ -89,6 +89,71 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
             candidate_at=candidate_at,
             canonical_axes=("runtime_state",),
             omitted_scope=tuple(frontier.omitted_scope),
+        )
+
+    @classmethod
+    def candidate_axis(
+        cls,
+        frontier_resolver: object,
+    ) -> ExtremeSustainedDPSIndexedFrontierAxis:
+        """Resolve runtime_state from each complete finalized candidate.
+
+        The resolver may be callable or expose resolve(state). It may return either
+        ExtremeSustainedDPSRuntimeStateFrontier directly or a wrapper with .frontier.
+        Candidate-resolved mode is theory-closing only when every resolved frontier
+        is proven, unresolved-free, and carries no omitted scope.
+        """
+        if frontier_resolver is None:
+            raise ValueError(
+                "candidate runtime-state axis requires explicit frontier resolver"
+            )
+
+        def resolve_frontier(state: object) -> ExtremeSustainedDPSRuntimeStateFrontier:
+            if hasattr(frontier_resolver, "resolve"):
+                result = frontier_resolver.resolve(state)
+            elif callable(frontier_resolver):
+                result = frontier_resolver(state)
+            else:
+                raise ValueError(
+                    "candidate runtime-state frontier resolver is not callable"
+                )
+            frontier = getattr(result, "frontier", result)
+            cls._validate(frontier)
+            if frontier.omitted_scope:
+                raise ValueError(
+                    "candidate runtime-state frontier retains theoretical omitted scope: "
+                    + "; ".join(frontier.omitted_scope)
+                )
+            return frontier
+
+        def candidate_count(state: object) -> int:
+            if not bool(getattr(state, "complete", False)):
+                raise ValueError(
+                    "candidate runtime-state axis requires a complete upstream generated pipeline state"
+                )
+            return int(resolve_frontier(state).candidate_count)
+
+        def candidate_at(state: object, index: int):
+            if not bool(getattr(state, "complete", False)):
+                raise ValueError(
+                    "candidate runtime-state axis requires a complete upstream generated pipeline state"
+                )
+            frontier = resolve_frontier(state)
+            target = int(index)
+            if target < 0 or target >= frontier.candidate_count:
+                raise IndexError("candidate runtime-state choice index out of range")
+            return ExtremeSustainedDPSGeneratedRuntimeStateLeaf(
+                pipeline_state=state,
+                runtime_state_choice=frontier.choices[target],
+                omitted_scope=(),
+            )
+
+        return ExtremeSustainedDPSIndexedFrontierAxis(
+            "Runtime State",
+            candidate_count=candidate_count,
+            candidate_at=candidate_at,
+            canonical_axes=("runtime_state",),
+            omitted_scope=(),
         )
 
     @classmethod
