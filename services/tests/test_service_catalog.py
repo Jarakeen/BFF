@@ -860,7 +860,9 @@ def test_sustained_dps_generated_rotation_axis_adapter_preserves_proof_scope() -
         "extreme.sustained_dps.generated_frontier_wiring",
     )
     assert "plan-before-policy dependency" in service.notes
-    assert "does not claim closure" in service.notes
+    assert "potion:none slice" in service.notes
+    assert "delayed Ultimate timing only" in service.notes
+    assert "finalized potion timing" in service.notes
 
 
 
@@ -978,6 +980,7 @@ def test_sustained_dps_generated_axis_pipeline_composes_adapter_states() -> None
         "extreme.sustained_dps.generated_encounter_policy_axis_adapter",
         "extreme.sustained_dps.generated_rotation_axis_adapter",
         "extreme.sustained_dps.generated_runtime_policy_axis_adapter",
+        "extreme.sustained_dps.generated_finalized_potion_axis_adapter",
         "extreme.sustained_dps.generated_frontier_wiring",
     )
     assert service.encounter_aware is True
@@ -985,6 +988,7 @@ def test_sustained_dps_generated_axis_pipeline_composes_adapter_states() -> None
     assert "encounter-policy selection" in service.notes
     assert "reset downstream selections" in service.notes
     assert "axis-local bound providers" in service.notes
+    assert "finalized potion timing after runtime policy" in service.notes
 
 def test_sustained_dps_pipeline_leaf_bridge_uses_final_runtime_plan() -> None:
     service = canonical_service_for(
@@ -1305,6 +1309,54 @@ def test_sustained_dps_potion_observation_frontier_uses_finalized_evidence() -> 
     assert "periodic runtime evidence" in service.notes
 
 
+def test_sustained_dps_potion_resource_observation_frontier_requires_complete_external_family() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_potion_resource_observation_frontier"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.potion_resource_observation_frontier"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "resource-timeline timestamp denominator" in service.purpose
+    assert "two-second recovery tick" in service.notes
+    assert "caller completeness evidence is mandatory" in service.notes
+
+
+def test_sustained_dps_finalized_potion_timing_evidence_reuses_canonical_runtime_sources() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_finalized_potion_timing_evidence"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.finalized_potion_timing_evidence"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "authoritative finalized periodic" in service.purpose
+    assert "RotationDDPeriodicRuntimeSemanticsRegistryService" in service.notes
+    assert "RotationHeavySustainProjectionService" in service.notes
+    assert "explicit proof claim" in service.notes
+
+
+def test_sustained_dps_generated_finalized_potion_axis_owns_canonical_timing_late() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_generated_finalized_potion_axis_adapter"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.generated_finalized_potion_axis_adapter"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.finalized_potion_timing_evidence",
+        "extreme.sustained_dps.finalized_potion_timing_denominator",
+        "extreme.sustained_dps.potion_resource_observation_frontier",
+        "extreme.sustained_dps.generated_frontier_wiring",
+    )
+    assert "after execute and Heavy Attack descendants are finalized" in service.purpose
+    assert "explicit no-use" in service.notes
+    assert "no omitted scope" in service.notes
+
+
 def test_sustained_dps_finalized_potion_timing_denominator_reuses_canonical_duration() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_finalized_potion_timing_denominator"
@@ -1317,11 +1369,13 @@ def test_sustained_dps_finalized_potion_timing_denominator_reuses_canonical_dura
         for row in SERVICE_CATALOG.dependencies_of(service.service_id)
     ) == (
         "extreme.sustained_dps.potion_observation_frontier",
+        "extreme.sustained_dps.potion_resource_observation_frontier",
         "extreme.sustained_dps.potion_timing_breakpoint_frontier",
     )
     assert "PotionUseEvent and Medicinal Use" in service.purpose
     assert "PotionCadence" in service.notes
-    assert "instant-restoration timing" in service.notes
+    assert "resource-timeline timestamps" in service.notes
+    assert "Full potion timing closes only" in service.notes
 
 
 def test_sustained_dps_potion_timing_breakpoint_frontier_is_scoped() -> None:
@@ -1364,7 +1418,8 @@ def test_sustained_dps_delayed_ultimate_policy_frontier_is_cataloged() -> None:
     assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
     assert "every legal delayed Ultimate cast sequence" in service.purpose
     assert "Generation at the exact cast timestamp" in service.notes
-    assert "integration into the global rotation-policy axis remains separate" in service.notes
+    assert "Objective #32 rotation axis consumes this family directly" in service.notes
+    assert "defers only potion timing" in service.notes
 
 
 def test_sustained_dps_objective32_blockers_are_diagnostic_only() -> None:
