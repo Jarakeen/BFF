@@ -200,6 +200,14 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert "extreme_passive_projection_service.py" in passive_row.evidence_source
     assert "fails conditional/runtime clauses closed" in passive_row.missing_evidence
 
+    potion_row = next(
+        row for row in rows if row.key == "consumables:runtime_resource_and_buff_policy"
+    )
+    assert potion_row.status is CanonicalMechanicsCoverageStatus.PARTIAL
+    assert "rotation_plan_potion_combat_state_service.py" in potion_row.evidence_source
+    assert "scheduled POTION actions" in potion_row.capability
+    assert "already resolved scheduled buff windows" in potion_row.missing_evidence
+
     armor_row = next(row for row in rows if row.key == "armor:weight_passive_semantics")
     assert armor_row.status is CanonicalMechanicsCoverageStatus.PARTIAL
     assert "armor_passive_input_resolver.py" in armor_row.evidence_source
