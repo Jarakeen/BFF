@@ -25,7 +25,8 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
     """Filter canonical saved-build capability evidence to runtime-triggered effects.
 
     The supplied capability service remains authoritative for gear/skill/potion
-    EffectVariant discovery. This adapter owns only Objective #32 relevance:
+    EffectVariant discovery through its capability-only resolve_effect_variants seam.
+    This adapter owns only Objective #32 relevance:
     triggered variants are runtime-state candidates; potion_use is excluded because
     finalized plan potion state is evaluated by the dedicated potion bridge.
     """
@@ -64,19 +65,19 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
         self,
         build: PlayerBuild,
     ) -> ExtremeSustainedDPSRuntimeEffectUniverse:
-        audit = self.capability_service.audit_build(build)
+        resolution = self.capability_service.resolve_effect_variants(build)
 
         unresolved = tuple(
             dict.fromkeys(
                 str(item).strip()
-                for item in tuple(getattr(audit, "capability_unresolved", ()) or ())
+                for item in tuple(getattr(resolution, "unresolved", ()) or ())
                 if str(item).strip()
             )
         )
         boundaries = tuple(
             dict.fromkeys(
                 str(item).strip()
-                for item in tuple(getattr(audit, "boundaries", ()) or ())
+                for item in tuple(getattr(resolution, "boundaries", ()) or ())
                 if str(item).strip()
             )
         )
@@ -101,7 +102,7 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
 
         triggered: list[EffectVariant] = []
         excluded: list[EffectVariant] = []
-        for effect in tuple(getattr(audit, "resolved_effects", ()) or ()):
+        for effect in tuple(getattr(resolution, "effects", ()) or ()):
             trigger = str(effect.trigger or "").strip()
             if not trigger:
                 continue
@@ -118,7 +119,7 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
             excluded_plan_owned=excluded_plan_owned,
             boundaries=boundaries,
             evidence=(
-                f"Canonical capability effects inspected: {len(tuple(getattr(audit, 'resolved_effects', ()) or ())) }",
+                f"Canonical capability effects inspected: {len(tuple(getattr(resolution, 'effects', ()) or ())) }",
                 f"Runtime-triggered effects admitted: {len(runtime_effects)}",
                 f"Plan-owned potion-triggered effects excluded: {len(excluded_plan_owned)}",
                 "Triggerless variants remain owned by static/conditional build mechanics rather than runtime event enumeration",
