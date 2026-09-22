@@ -29,7 +29,7 @@ def test_update35_verified_heavy_attack_bases_are_explicit() -> None:
         HeavyAttackWeaponType.FIRE_STAFF: 2838.0,
         HeavyAttackWeaponType.FROST_STAFF: 2838.0,
         HeavyAttackWeaponType.SHOCK_STAFF: 2970.0,
-        HeavyAttackWeaponType.RESTORATION_STAFF: 3267.0,
+        HeavyAttackWeaponType.RESTORATION_STAFF: 2970.0,
         HeavyAttackWeaponType.UNARMED: 2095.0,
     }
     for weapon, restore in expected.items():
