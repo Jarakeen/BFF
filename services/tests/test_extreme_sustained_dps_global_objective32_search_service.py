@@ -127,6 +127,7 @@ def test_global_objective32_closes_when_global_tree_and_all_axes_match() -> None
     assert result.finite_denominator_maximum_proven is True
     assert result.theoretical_maximum_proven is True
     assert result.axis_coverage.missing_axes == ()
+    assert result.blockers.closed is True
     assert global_search.calls[0]["runtime_state_frontier"] is runtime
 
 
@@ -157,6 +158,11 @@ def test_global_objective32_preserves_runtime_omission() -> None:
     assert result.theoretical_maximum_proven is False
     assert result.closure.omitted_scope == (
         "encounter-triggered runtime histories remain open",
+    )
+    assert any(
+        row.code == "theoretical_scope_omitted"
+        and "encounter-triggered runtime histories" in row.detail
+        for row in result.blockers.blockers
     )
 
 
@@ -255,6 +261,11 @@ def test_global_objective32_refuses_theory_when_tree_is_missing_axis() -> None:
     assert any(
         "does not physically enumerate" in item
         for item in result.closure.omitted_scope
+    )
+    assert any(
+        row.code == "physical_axis_missing"
+        and row.axis == "encounter_policy"
+        for row in result.blockers.blockers
     )
 
 
