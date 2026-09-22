@@ -149,3 +149,38 @@ def test_global_search_refuses_unproven_structural_denominator() -> None:
         assert "proven structural family denominator" in str(exc)
     else:
         raise AssertionError("unproven structural denominator should fail closed")
+
+
+
+def test_global_search_reports_structural_and_pipeline_axis_inventory() -> None:
+    class _TaggedPipeline(_Pipeline):
+        @staticmethod
+        def axes():
+            return (
+                ExtremeSustainedDPSIndexedFrontierAxis(
+                    "Choice",
+                    candidate_count=lambda _state: 1,
+                    candidate_at=lambda state, _index: replace(
+                        state,
+                        selected=0,
+                    ),
+                    canonical_axes=("champion_points",),
+                ),
+            )
+
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_Materialization(),
+        pipeline=_TaggedPipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+
+    inventory = service.axis_inventory()
+
+    assert {
+        "race",
+        "class_route",
+        "attributes",
+        "champion_points",
+    }.issubset(set(inventory.searched_canonical_axes))
+    assert "encounter_policy" in inventory.missing_canonical_axes
