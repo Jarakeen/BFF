@@ -44,6 +44,7 @@ class ExtremeSustainedDPSRuntimeTargetCombatStateService:
             )
 
         active_buffs: list[str] = []
+        explicit_damage_taken = 0.0
         explicit_resistance_reduction = 0.0
         unresolved: list[str] = []
         attempts = tuple(snapshot.effect_attempts)
@@ -65,6 +66,11 @@ class ExtremeSustainedDPSRuntimeTargetCombatStateService:
                     critical_damage_taken_percent_from_target_state(probe_state)
                 )
 
+            explicit_damage_amplification = (
+                None
+                if effect.damage_amplification is None
+                else float(effect.damage_amplification)
+            )
             explicit_resistance = (
                 None
                 if effect.resistance_reduction is None
@@ -74,6 +80,7 @@ class ExtremeSustainedDPSRuntimeTargetCombatStateService:
                 abs(float(damage_taken_probe)) <= 1e-12
                 and abs(float(resistance_probe)) <= 1e-12
                 and abs(float(critical_damage_probe)) <= 1e-12
+                and explicit_damage_amplification is None
                 and explicit_resistance is None
             ):
                 continue
@@ -106,6 +113,11 @@ class ExtremeSustainedDPSRuntimeTargetCombatStateService:
                 ):
                     active_buffs.append(canonical)
                 if (
+                    explicit_damage_amplification is not None
+                    and abs(float(damage_taken_probe)) <= 1e-12
+                ):
+                    explicit_damage_taken += explicit_damage_amplification
+                if (
                     explicit_resistance is not None
                     and abs(float(resistance_probe)) <= 1e-12
                 ):
@@ -115,6 +127,7 @@ class ExtremeSustainedDPSRuntimeTargetCombatStateService:
             combat_state=CombatState(
                 in_combat=bool(active_buffs or attempts),
                 active_buffs=tuple(dict.fromkeys(active_buffs)),
+                explicit_damage_taken=float(explicit_damage_taken),
             ),
             explicit_resistance_reduction=float(explicit_resistance_reduction),
             unresolved=tuple(dict.fromkeys(row for row in unresolved if row)),
