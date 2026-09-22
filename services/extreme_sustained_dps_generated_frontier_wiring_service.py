@@ -12,6 +12,9 @@ caller-supplied canonical authorities.
 from dataclasses import dataclass
 from typing import Callable, Protocol
 
+from services.extreme_sustained_dps_axis_dominance_composition_service import (
+    CANONICAL_SUSTAINED_DPS_MUTATION_AXES,
+)
 from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
     ExtremeSustainedDPSExactLeafEvaluation,
     ExtremeSustainedDPSGeneratedBranchAndBoundSearchService,
@@ -39,6 +42,7 @@ class ExtremeSustainedDPSIndexedFrontierAxis:
     candidate_count: Callable[[object], int]
     candidate_at: Callable[[object, int], object]
     bound_inputs: BoundInputProvider | None = None
+    canonical_axes: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         name = " ".join(str(self.name or "").strip().split())
@@ -50,7 +54,28 @@ class ExtremeSustainedDPSIndexedFrontierAxis:
             raise TypeError("generated frontier axis candidate_at must be callable")
         if self.bound_inputs is not None and not callable(self.bound_inputs):
             raise TypeError("generated frontier axis bound_inputs must be callable")
+        canonical = {
+            axis.casefold(): axis
+            for axis in CANONICAL_SUSTAINED_DPS_MUTATION_AXES
+        }
+        normalized_axes: list[str] = []
+        unknown: list[str] = []
+        for raw in self.canonical_axes:
+            token = str(raw or "").strip().casefold()
+            if not token:
+                continue
+            axis = canonical.get(token)
+            if axis is None:
+                unknown.append(str(raw).strip())
+            elif axis not in normalized_axes:
+                normalized_axes.append(axis)
+        if unknown:
+            raise ValueError(
+                "generated frontier axis declares unknown canonical mutation axis: "
+                + ", ".join(sorted(set(unknown), key=str.casefold))
+            )
         object.__setattr__(self, "name", name)
+        object.__setattr__(self, "canonical_axes", tuple(normalized_axes))
 
 
 @dataclass(frozen=True)
