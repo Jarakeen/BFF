@@ -2783,6 +2783,26 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_target_combat_state",
+        domain="extreme",
+        purpose=(
+            "Project reviewed enemy-target runtime EffectVariant windows into canonical target CombatState at exact damage timestamps."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_target_combat_state_service",
+        inputs=("ExtremeRuntimeSnapshot", "RuntimeEffectVariants", "TargetIdentity"),
+        outputs=("ExtremeSustainedDPSRuntimeTargetCombatStateResult",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_runtime_target_combat_state",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Uses the existing target Damage Taken router rather than redefining Vulnerability math. "
+            "Only active windows whose runtime target exactly matches the scored target are projected."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_runtime_evaluation",
         domain="extreme",
         purpose=(
@@ -2799,7 +2819,11 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "ExplicitTargetAssumptions",
         ),
         outputs=("ExtremeGeneratedSustainedDPSRuntimeResult",),
-        dependencies=("extreme.sustained_dps.gear_runtime_semantics", "simulation.saved_build_dd"),
+        dependencies=(
+            "extreme.sustained_dps.gear_runtime_semantics",
+            "extreme.sustained_dps.runtime_target_combat_state",
+            "simulation.saved_build_dd",
+        ),
         responsibilities=("extreme_sustained_dps_generated_runtime_evaluation",),
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
@@ -2809,6 +2833,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Generated progression is caller-owned rather than resolved through saved-build persistence. "
             "Bar-legal named gear buffs flow through the shared runtime CombatState path, while reviewed "
             "timed stat EffectVariants are projected into canonical runtime build-context inputs. "
+            "Reviewed ENEMY-target Damage Taken windows are projected into target_combat_state at exact damage timestamps. "
             "Unknown runtime stat identities still fail closed."
         ),
     ),
