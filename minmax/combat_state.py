@@ -40,9 +40,17 @@ class CombatState:
     is_emperor: bool = False
     in_home_campaign: bool = False
     emperor_home_keeps: int = 0
+    explicit_damage_taken: float = 0.0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "game_update", normalize_game_update(self.game_update))
+        if float(self.explicit_damage_taken) < -1.0:
+            raise ValueError("explicit_damage_taken cannot be below -100%")
+        object.__setattr__(
+            self,
+            "explicit_damage_taken",
+            float(self.explicit_damage_taken),
+        )
 
         marker_keeps: int | None = None
         filtered_buffs: list[str] = []
