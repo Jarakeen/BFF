@@ -43,6 +43,7 @@ class ExtremeSustainedDPSIndexedFrontierAxis:
     candidate_at: Callable[[object, int], object]
     bound_inputs: BoundInputProvider | None = None
     canonical_axes: tuple[str, ...] = ()
+    omitted_scope: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         name = " ".join(str(self.name or "").strip().split())
@@ -76,6 +77,17 @@ class ExtremeSustainedDPSIndexedFrontierAxis:
             )
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "canonical_axes", tuple(normalized_axes))
+        object.__setattr__(
+            self,
+            "omitted_scope",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.omitted_scope
+                    if str(item).strip()
+                )
+            ),
+        )
 
 
 @dataclass(frozen=True)
