@@ -219,6 +219,7 @@ class ExtremeSustainedDPSPotionTimingBreakpointFrontierService:
                     else "Named-buff first-use timing denominator remains open"
                 ),
                 "Representatives include every exact activation/expiry boundary plus one point from each open interval between boundaries",
+                "When a boundary coincides with an observed action timestamp, downstream policy materialization must still enumerate before/after same-timestamp ordering",
                 "Offsets at or beyond the finite domain limit are equivalent to explicit no-use within the modeled horizon",
             ),
             unresolved=tuple(dict.fromkeys(unresolved)),
