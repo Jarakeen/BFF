@@ -22,6 +22,7 @@ _ICON_ROOTS = (
 # The icon library is intentionally semantic: pages/cards/buttons ask for meaning,
 # not a hard-coded filename. That keeps the visual language consistent.
 _EXACT = {
+    "raid": "trial",
     "raid engine": "gears",
     "raid engine overview": "dashboard",
     "overview": "dashboard",
@@ -40,6 +41,8 @@ _EXACT = {
     "builds": "builds",
     "rotations": "rotations",
     "performance": "capabilities",
+    "review": "review",
+    "achievement": "achievement",
     "achievements": "achievement",
     "collections": "collections",
     "collectibles": "collections",
