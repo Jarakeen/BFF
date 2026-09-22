@@ -27,6 +27,8 @@ def _kwargs():
         "rotation_adapter": object(),
         "runtime_policy_adapter": _RuntimePolicyAdapter(),
         "runtime_evaluation": object(),
+        "mundus_food_adapter": object(),
+        "encounter_policy_adapter": object(),
         "finalized_potion_evidence_resolver": _PotionEvidence(proven=True),
     }
 
@@ -49,7 +51,7 @@ def test_composition_wires_finalized_potion_axis_into_global_objective_graph() -
     )
 
 
-def test_composition_preserves_optional_pipeline_adapters() -> None:
+def test_composition_preserves_required_canonical_pipeline_adapters() -> None:
     kwargs = _kwargs()
     kwargs["mundus_food_adapter"] = "mundus-food"
     kwargs["encounter_policy_adapter"] = "encounter"
@@ -85,6 +87,8 @@ def test_composition_refuses_unproven_additional_resource_event_denominator() ->
         ("rotation_adapter", "generated rotation and runtime-policy adapters"),
         ("runtime_policy_adapter", "generated rotation and runtime-policy adapters"),
         ("runtime_evaluation", "canonical generated runtime evaluation"),
+        ("mundus_food_adapter", "canonical Mundus/food adapter"),
+        ("encounter_policy_adapter", "canonical encounter-policy adapter"),
         ("finalized_potion_evidence_resolver", "finalized potion timing evidence"),
     ),
 )
