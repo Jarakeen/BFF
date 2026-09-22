@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from minmax.character_build.effect_instance import EffectVariant
+from minmax.champion_point_effect_variant_resolver import ChampionPointEffectVariantResolver
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_repository import GearSetRepository
 from minmax.gear_stat_inputs import GearStatInputResolver
@@ -140,6 +141,7 @@ class SavedBuildCapabilityService:
         skills=None,
         gear=None,
         potions=None,
+        champion_point_effect_resolver=None,
     ) -> None:
         self.builds = builds
         self.database_path = Path(database_path)
@@ -151,6 +153,10 @@ class SavedBuildCapabilityService:
         self.gear_repository = None if gear is not None else GearSetRepository(self.database_path)
         self.gear = gear or GearSetEffectVariantResolver(self.gear_repository)
         self.potions = potions or PotionAvailabilityRepository(self.database_path)
+        self.champion_point_effect_resolver = (
+            champion_point_effect_resolver
+            or ChampionPointEffectVariantResolver(self.database_path)
+        )
         self._ability_id_cache: dict[tuple[str, str], int | None] = {}
         self._ability_is_crafted_cache: dict[int, bool] = {}
         # All caches are deliberately instance-scoped. A new service/process sees
@@ -501,6 +507,36 @@ class SavedBuildCapabilityService:
         self._gear_component_cache[cache_key] = result
         return result
 
+    def _champion_point_variants(
+        self,
+        build: PlayerBuild,
+        unresolved: list[str],
+    ) -> list[EffectVariant]:
+        variants: list[EffectVariant] = []
+        for entry in getattr(build, "ChampionPoints", ()) or ():
+            name = self._clean(getattr(entry, "Name", ""))
+            if not name:
+                continue
+            try:
+                points = int(self._clean(getattr(entry, "Points", "")) or "0")
+            except (TypeError, ValueError):
+                unresolved.append(
+                    f"Champion Point entry has invalid allocation: {name}: {getattr(entry, 'Points', '')}"
+                )
+                continue
+            if points < 0:
+                unresolved.append(
+                    f"Champion Point entry has negative allocation: {name}: {points}"
+                )
+                continue
+            effects, cp_unresolved = self.champion_point_effect_resolver.resolve(
+                name,
+                points,
+            )
+            unresolved.extend(cp_unresolved)
+            variants.extend(effects)
+        return variants
+
     def resolve_effect_variants(
         self,
         build: PlayerBuild,
@@ -514,6 +550,8 @@ class SavedBuildCapabilityService:
         unresolved: list[str] = []
         boundaries: list[str] = []
         effects: list[EffectVariant] = []
+
+        effects.extend(self._champion_point_variants(build, unresolved))
 
         for active_bar in ("front", "back"):
             skill_component = self._skill_component(build, active_bar)
@@ -572,6 +610,11 @@ class SavedBuildCapabilityService:
         boundaries: list[str] = []
         sources: list[str] = []
         effects: list[EffectVariant] = []
+
+        cp_effects = self._champion_point_variants(build, capability_unresolved)
+        if cp_effects:
+            sources.append("champion_points:dynamic")
+            effects.extend(cp_effects)
 
         progression = self._progression_resolution(build)
         unresolved.extend(progression.unresolved)
