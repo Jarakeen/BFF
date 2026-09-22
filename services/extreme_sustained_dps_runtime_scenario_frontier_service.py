@@ -7,6 +7,9 @@ from dataclasses import dataclass
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
+from services.extreme_sustained_dps_runtime_effect_universe_service import (
+    ExtremeSustainedDPSRuntimeEffectUniverseService,
+)
 from services.extreme_sustained_dps_runtime_event_skeleton_service import (
     ExtremeSustainedDPSRuntimeEventSkeletonService,
 )
@@ -45,18 +48,22 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         external_history_frontier: (
             ExtremeSustainedDPSRuntimeExternalHistoryFrontierService | None
         ) = None,
+        runtime_effect_universe: (
+            ExtremeSustainedDPSRuntimeEffectUniverseService | object | None
+        ) = None,
     ) -> None:
         self.external_history_frontier = (
             external_history_frontier
             or ExtremeSustainedDPSRuntimeExternalHistoryFrontierService()
         )
+        self.runtime_effect_universe = runtime_effect_universe
 
     def build_from_candidate(
         self,
         *,
         candidate,
         player_build: PlayerBuild,
-        effects: tuple[EffectVariant, ...],
+        effects: tuple[EffectVariant, ...] | None = None,
         occurrence_provider: object | None = None,
         target_identity: str | None = None,
         supplemental_events: tuple[RuntimeEvent, ...] = (),
@@ -70,6 +77,50 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         initial_bar: str = "front",
         omitted_scope: tuple[str, ...] = (),
     ) -> ExtremeSustainedDPSRuntimeScenarioFrontierResult:
+        universe_evidence: tuple[str, ...] = ()
+        universe_unresolved: tuple[str, ...] = ()
+        if effects is None:
+            if self.runtime_effect_universe is None:
+                raise ValueError(
+                    "candidate-facing runtime scenario builder requires explicit effects or canonical runtime effect universe"
+                )
+            universe = self.runtime_effect_universe.resolve(player_build)
+            effects = tuple(universe.effects)
+            universe_evidence = tuple(universe.evidence)
+            universe_unresolved = tuple(universe.unresolved)
+            if universe_unresolved:
+                # Preserve a normal fail-closed frontier shape rather than
+                # continuing with a partial effect universe.
+                result = self.build(
+                    plan=candidate.plan,
+                    player_build=player_build,
+                    events=(),
+                    effects=(),
+                    event_denominator_proven=False,
+                    supplemental_histories=tuple(supplemental_histories),
+                    supplemental_denominator_proven=bool(
+                        supplemental_denominator_proven
+                    ),
+                    source=source,
+                    initial_bar=initial_bar,
+                    omitted_scope=tuple(omitted_scope),
+                )
+                return ExtremeSustainedDPSRuntimeScenarioFrontierResult(
+                    runtime=result.runtime,
+                    evidence=(
+                        *universe_evidence,
+                        *tuple(result.evidence),
+                    ),
+                    unresolved=tuple(
+                        dict.fromkeys(
+                            (
+                                *universe_unresolved,
+                                *tuple(result.unresolved),
+                            )
+                        )
+                    ),
+                )
+
         skeleton = ExtremeSustainedDPSRuntimeEventSkeletonService.build(
             candidate=candidate,
             effects=tuple(effects),
@@ -106,6 +157,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         return ExtremeSustainedDPSRuntimeScenarioFrontierResult(
             runtime=result.runtime,
             evidence=(
+                *universe_evidence,
                 *tuple(skeleton.evidence),
                 *tuple(result.evidence),
             ),
