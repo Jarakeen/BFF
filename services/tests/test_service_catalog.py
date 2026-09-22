@@ -1299,7 +1299,7 @@ def test_sustained_dps_delayed_ultimate_policy_frontier_is_cataloged() -> None:
     )
     assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
     assert "every legal delayed Ultimate cast sequence" in service.purpose
-    assert "Same-timestamp generation" in service.notes
+    assert "Same-timestamp Generation" in service.notes
     assert "integration into the global rotation-policy axis remains separate" in service.notes
 
 
