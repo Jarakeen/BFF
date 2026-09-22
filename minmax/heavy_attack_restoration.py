@@ -39,7 +39,7 @@ _MAGICKA_WEAPONS = {
 # Official Update 35 (Lost Depths) standardized fully-charged heavy-attack
 # resource restoration by weapon family. These are base values before verified
 # restoration modifiers. The live Update 35 notes also state that a fully
-# charged heavy must land: blocked or dodged attacks do not restore resources.
+# charged heavy must land: blocked or dodged attacks do not restore resources. The reviewed weapon table groups Lightning and Restoration Staff at the same 2970 Magicka base.
 #
 # Official source: ESO PC/Mac Update 35 / Lost Depths patch notes.
 _VERIFIED_BASE_RESTORE_BY_WEAPON: dict[HeavyAttackWeaponType, float] = {
@@ -50,7 +50,7 @@ _VERIFIED_BASE_RESTORE_BY_WEAPON: dict[HeavyAttackWeaponType, float] = {
     HeavyAttackWeaponType.FIRE_STAFF: 2838.0,
     HeavyAttackWeaponType.FROST_STAFF: 2838.0,
     HeavyAttackWeaponType.SHOCK_STAFF: 2970.0,
-    HeavyAttackWeaponType.RESTORATION_STAFF: 3267.0,
+    HeavyAttackWeaponType.RESTORATION_STAFF: 2970.0,
     HeavyAttackWeaponType.UNARMED: 2095.0,
 }
 
