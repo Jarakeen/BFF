@@ -1177,6 +1177,22 @@ def test_sustained_dps_finite_family_node_bound_is_identity_safe() -> None:
 
 
 
+def test_sustained_dps_generated_axis_inventory_is_structural_only() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_generated_axis_inventory"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.generated_axis_inventory"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == ("extreme.sustained_dps.generated_frontier_wiring",)
+    assert "physically represented" in service.purpose
+    assert "structural evidence only" in service.notes
+    assert "duplicate canonical-axis enumeration" in service.notes
+
+
 def test_sustained_dps_global_structural_search_services_are_cataloged() -> None:
     coverage = canonical_service_for("extreme_sustained_dps_structural_axis_coverage")
     family = canonical_service_for("extreme_sustained_dps_structural_family_adapter")
@@ -1201,6 +1217,7 @@ def test_sustained_dps_global_structural_search_services_are_cataloged() -> None
         "extreme.sustained_dps.structural_materialization",
         "extreme.sustained_dps.generated_axis_pipeline",
         "extreme.sustained_dps.generated_frontier_wiring",
+        "extreme.sustained_dps.generated_axis_inventory",
         "extreme.sustained_dps.generated_runtime_state_axis_adapter",
     )
     assert "active-bar coordinate is not promoted" in coverage.notes
