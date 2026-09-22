@@ -31,6 +31,7 @@ from minmax.character_build.support_effect_resolver import (
 )
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_known_effects import (
+    GearSetKnownEffect,
     MASTER_ARCHITECT_FIVE_PIECE_BONUS_ID,
     MASTER_ARCHITECT_SET_ID,
     known_effects_for_bonus_row,
@@ -318,3 +319,31 @@ def test_spell_power_cure_explicitly_targets_self_or_ally():
     effects = known_effects_for_bonus_row(0, 0, "Spell Power Cure", 5)
     assert len(effects) == 1
     assert effects[0].target_type == SupportTargetType.SELF_OR_ALLY
+
+
+def test_target_mechanic_metadata_is_preserved_by_variant_bridge() -> None:
+    known = GearSetKnownEffect(
+        bonus_id=None,
+        set_id=None,
+        set_name="Synthetic",
+        piece_count=5,
+        name="synthetic_resistance_debuff",
+        trigger="damage_dealt",
+        duration=5.0,
+        target_type=SupportTargetType.ENEMY,
+        category=SupportEffectCategory.DEBUFF,
+        resistance_reduction=1234.0,
+        damage_amplification=0.07,
+        penetration=456.0,
+        stacking=StackingBehavior.UNIQUE,
+    )
+
+    variant = GearSetEffectVariantResolver._to_effect_variant(
+        known,
+        "Synthetic",
+        5,
+    )
+
+    assert variant.resistance_reduction == 1234.0
+    assert variant.damage_amplification == 0.07
+    assert variant.penetration == 456.0
