@@ -197,6 +197,10 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
                 candidate_count=self._policy_count,
                 candidate_at=self._policy_at,
                 canonical_axes=("ultimate_policy", "potion_timing_policy"),
+                omitted_scope=(
+                    "continuous potion first-use offset is not closed by anchored policy search",
+                    "deliberate post-affordability Ultimate delay is not closed by anchored policy search",
+                ),
             ),
         )
 
