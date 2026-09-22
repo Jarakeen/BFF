@@ -1334,6 +1334,26 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_effect_scaling",
+        domain="extreme",
+        purpose=(
+            "Resolve reviewed candidate-specific runtime EffectVariant scaling before sustained-DPS relevance and runtime-state enumeration."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_effect_scaling_service",
+        inputs=("PlayerBuild", "FinalizedRotationPlan", "RuntimeEffectVariants"),
+        outputs=("ExtremeSustainedDPSRuntimeEffectScalingResult",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_runtime_effect_scaling",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Currently resolves Master Architect Major Slayer duration from canonical Ultimate spend. "
+            "Inactive no-Ultimate branches clear the non-operative scaling obligation; incompatible per-activation costs fail closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_effect_relevance",
         domain="extreme",
         purpose=(
@@ -1469,6 +1489,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         outputs=("ExtremeSustainedDPSRuntimeScenarioFrontierResult",),
         dependencies=(
             "extreme.sustained_dps.runtime_effect_universe",
+            "extreme.sustained_dps.runtime_effect_scaling",
             "extreme.sustained_dps.runtime_effect_relevance",
             "extreme.sustained_dps.runtime_event_skeleton",
             "extreme.sustained_dps.runtime_attempt_evidence_frontier",
@@ -1481,7 +1502,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "This is the scenario-facing runtime_state builder. Its candidate-facing path first resolves the canonical runtime effect universe, applies the proof-backed sustained-DPS relevance gate, then derives plan/damage-owned event skeletons while leaving unsupported encounter trigger families to caller proof; the engine then enumerates finite chance/condition realizations, composes plan-owned bar truth, and emits ordinary canonical runtime_state choices. "
+            "This is the scenario-facing runtime_state builder. Its candidate-facing path first resolves the canonical runtime effect universe, resolves reviewed candidate-specific scaling such as Master Architect Ultimate-spend duration, applies the proof-backed sustained-DPS relevance gate, then derives plan/damage-owned event skeletons while leaving unsupported encounter trigger families to caller proof; the engine then enumerates finite chance/condition realizations, composes plan-owned bar truth, and emits ordinary canonical runtime_state choices. "
             "Explicit omitted scope is preserved so local runtime closure cannot be mistaken for global closure."
         ),
     ),
