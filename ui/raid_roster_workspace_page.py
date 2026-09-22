@@ -44,6 +44,7 @@ from services.accessibility_preferences import VISUAL_THEME_RYLO
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
+from services.team_deletion_service import delete_team_everywhere
 from services.roster_workspace_state_service import (
     MemberAvailability,
     RecruitmentCandidate,
@@ -374,11 +375,18 @@ class RaidRosterWorkspacePage(FoundryPage):
         create = QPushButton("Create Team")
         create.setProperty("primary", True)
         create.clicked.connect(self._create_team)
+        delete = QPushButton("Delete Team")
+        delete.setToolTip(
+            "Delete the selected Team and its memberships/schedule. "
+            "Players, characters, builds, and saved Raid Plans are kept."
+        )
+        delete.clicked.connect(self._delete_selected_team)
         top.addWidget(QLabel("TEAM"))
         top.addWidget(self.team_combo, 2)
         top.addStretch(1)
         top.addWidget(self.new_team_name, 2)
         top.addWidget(create)
+        top.addWidget(delete)
         root.addLayout(top)
 
         self.optimizer_plan_card = FoundryCard("Incoming Team Plan", "compass")
@@ -457,6 +465,42 @@ class RaidRosterWorkspacePage(FoundryPage):
         lower.addWidget(self.team_stats, 1)
         root.addLayout(lower, 1)
         return page
+
+    def _delete_selected_team(self) -> None:
+        team = _clean(self.team_combo.currentText())
+        if not team:
+            self.status.warning("Select a Team to delete.")
+            return
+
+        answer = QMessageBox.question(
+            self,
+            "Delete Team",
+            (
+                f'Delete Team "{team}"?\n\n'
+                "This removes the Team, its schedule, roster memberships, and Team build "
+                "assignments. Players, characters, saved builds, and saved Raid Plans are kept."
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            result = delete_team_everywhere(
+                self.roster_service,
+                self.build_library,
+                team,
+            )
+            self.refresh()
+            self.status.success(
+                f"Deleted Team {result.team_name}. "
+                f"{result.removed_memberships} roster membership(s) and "
+                f"{result.removed_build_assignments} build assignment(s) removed. "
+                "Saved Raid Plans were kept."
+            )
+        except Exception as exc:
+            self.status.error(f"Team deletion failed: {exc}")
 
     def _build_availability_tab(self) -> QWidget:
         page = QWidget()
