@@ -8,12 +8,13 @@ from services.extreme_sustained_dps_generated_frontier_wiring_service import (
 )
 
 
-def _axis(name, canonical_axes=()):
+def _axis(name, canonical_axes=(), omitted_scope=()):
     return ExtremeSustainedDPSIndexedFrontierAxis(
         name,
         candidate_count=lambda _state: 1,
         candidate_at=lambda state, _index: state,
         canonical_axes=tuple(canonical_axes),
+        omitted_scope=tuple(omitted_scope),
     )
 
 
@@ -59,3 +60,26 @@ def test_inventory_flags_duplicate_canonical_axis_enumeration() -> None:
 
     assert result.duplicate_canonical_axes == ("mundus",)
     assert any("more than once" in row for row in result.unresolved)
+
+
+
+def test_inventory_aggregates_axis_theoretical_omissions() -> None:
+    result = ExtremeSustainedDPSGeneratedAxisInventoryService.inventory(
+        (
+            _axis(
+                "Anchored",
+                ("ultimate_policy", "potion_timing_policy"),
+                ("continuous timing remains open",),
+            ),
+            _axis(
+                "Heavy",
+                ("heavy_attack_policy",),
+                ("unreviewed HA windows remain open",),
+            ),
+        )
+    )
+
+    assert result.omitted_scope == (
+        "continuous timing remains open",
+        "unreviewed HA windows remain open",
+    )
