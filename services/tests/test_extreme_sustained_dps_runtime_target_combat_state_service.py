@@ -83,3 +83,32 @@ def test_exact_expiration_boundary_is_not_active() -> None:
     )
 
     assert result.combat_state.active_buffs == ()
+
+
+def _breach() -> EffectVariant:
+    return EffectVariant(
+        name="major_breach",
+        layer=EffectLayer.PROC,
+        source="Test Breach",
+        trigger="damage_dealt",
+        duration=4.0,
+        target_type=SupportTargetType.ENEMY,
+        stacking=StackingBehavior.UNIQUE,
+    )
+
+
+def test_projects_active_enemy_breach_to_matching_target_state() -> None:
+    snapshot = ExtremeRuntimeSnapshot(
+        runtime_history=(_attempt(1.0, target="Boss"),),
+        snapshot_time_seconds=2.0,
+        runtime_history_complete=True,
+    )
+
+    result = ExtremeSustainedDPSRuntimeTargetCombatStateService.resolve(
+        snapshot=snapshot,
+        effects=(_breach(),),
+        target_identity="Boss",
+    )
+
+    assert result.unresolved == ()
+    assert result.combat_state.active_buffs == ("Major Breach",)
