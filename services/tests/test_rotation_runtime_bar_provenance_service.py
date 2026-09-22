@@ -144,3 +144,39 @@ def test_illegal_plan_and_legacy_snapshot_fail_closed():
     assert any("bar legality violation" in row for row in illegal_result.unresolved)
     assert not legacy_result.resolved
     assert any("requires authoritative runtime_history" in row for row in legacy_result.unresolved)
+
+
+
+def test_proven_empty_runtime_history_projects_plan_bar_truth() -> None:
+    plan = RotationPlan(
+        character_name="Generated",
+        build_name="Candidate",
+        duration_seconds=8.0,
+        actions=(
+            RotationAction(4.0, 0, RotationActionKind.BAR_SWAP, bar="back"),
+        ),
+    )
+    source = ExtremeRuntimeSnapshot(
+        runtime_history=(),
+        snapshot_time_seconds=8.0,
+        runtime_history_complete=True,
+    )
+
+    result = RotationRuntimeBarProvenanceService().bind(
+        plan,
+        source,
+        initial_bar="front",
+    )
+
+    assert result.resolved is True
+    assert result.snapshot is not None
+    assert result.snapshot.runtime_history_complete is True
+    assert result.snapshot.bar_transition_history_complete is True
+    assert result.snapshot.bar_transitions == (
+        ExtremeRuntimeBarTransition(
+            time_seconds=4.0,
+            sequence=0,
+            from_bar="front",
+            to_bar="back",
+        ),
+    )
