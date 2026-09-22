@@ -393,6 +393,7 @@ class EncounterBoard(QWidget):
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.state_path = self.data_dir / "encounter_positioning.json"
         self.snapshot_path = self.data_dir / "encounter_positioning.png"
+        self.raid_plan_id = ""
         self._counts = {
             "tank": 0,
             "healer": 0,
@@ -844,6 +845,7 @@ class EncounterBoard(QWidget):
             "items": [item.to_dict() for item in tokens if item.kind != "mini_boss"],
             "mini_bosses": [item.to_dict() for item in tokens if item.kind == "mini_boss"],
             "zones": [zone.to_dict() for zone in self._zone_items()],
+            "raid_plan_id": str(getattr(self, "raid_plan_id", "") or "").strip(),
         }
         self.state_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
@@ -855,6 +857,7 @@ class EncounterBoard(QWidget):
             items = payload.get("items", [])
             mini_bosses = payload.get("mini_bosses", [])
             zones = payload.get("zones", [])
+            self.raid_plan_id = str(payload.get("raid_plan_id") or "").strip()
             if not isinstance(items, list):
                 items = []
             if not isinstance(mini_bosses, list):
