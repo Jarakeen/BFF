@@ -60,7 +60,7 @@ class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService:
                     float(effect.chance)
                     for effect in matching
                     if effect.chance is not None
-                    and 0.0 < float(effect.chance) < 1.0
+                    and 0.0 <= float(effect.chance) < 1.0
                 }
             )
         )
@@ -116,9 +116,6 @@ class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService:
             unresolved.append(
                 "Runtime event skeleton denominator is not proven complete"
             )
-        if not events:
-            unresolved.append("Runtime event skeleton family is empty")
-
         per_event: list[tuple[RuntimeEffectEventAttempt, ...]] = []
         per_event_counts: list[int] = []
         for event in events:
@@ -137,18 +134,18 @@ class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService:
             per_event_counts.append(len(attempts))
 
         choices: list[ExtremeSustainedDPSRuntimeAttemptEvidenceChoice] = []
-        if per_event:
-            for index, combination in enumerate(product(*per_event)):
-                choices.append(
-                    ExtremeSustainedDPSRuntimeAttemptEvidenceChoice(
-                        choice_id=f"runtime-attempt-evidence:{index}",
-                        attempts=tuple(combination),
-                        evidence=(
-                            "Chance rolls are finite representatives of canonical proc-chance threshold regions",
-                            "Condition contexts are explicit subsets of relevant named conditions",
-                        ),
-                    )
+        combinations = product(*per_event) if per_event else ((),)
+        for index, combination in enumerate(combinations):
+            choices.append(
+                ExtremeSustainedDPSRuntimeAttemptEvidenceChoice(
+                    choice_id=f"runtime-attempt-evidence:{index}",
+                    attempts=tuple(combination),
+                    evidence=(
+                        "Chance rolls are finite representatives of canonical proc-chance threshold regions",
+                        "Condition contexts are explicit subsets of relevant named conditions",
+                    ),
                 )
+            )
 
         deduped = tuple(dict.fromkeys(unresolved))
         complete = bool(choices and event_denominator_proven and not deduped)
