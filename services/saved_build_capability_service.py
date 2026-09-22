@@ -9,6 +9,7 @@ from pathlib import Path
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_repository import GearSetRepository
+from minmax.gear_stat_inputs import GearStatInputResolver
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.potion_availability_repository import PotionAvailabilityRepository
 from minmax.skill_effect_repository import SkillEffectRepository
@@ -205,23 +206,19 @@ class SavedBuildCapabilityService:
 
     @staticmethod
     def _active_set_counts(build: PlayerBuild, active_bar: str) -> dict[str, int]:
-        counts: dict[str, int] = {}
+        """Reuse the canonical PlayerBuild equipment counter for active-bar set state.
 
-        def add(name: str, pieces: int = 1) -> None:
-            name = SavedBuildCapabilityService._clean(name)
-            if name:
-                counts[name] = counts.get(name, 0) + pieces
-
-        for slot in ("Head", "Shoulders", "Chest", "Hands", "Waist", "Legs", "Feet"):
-            add(build.Armor.get(slot, {}).get("Set", ""))
-        add(build.Necklace.Set)
-        add(build.Ring1.Set)
-        add(build.Ring2.Set)
-
-        weapon = build.FrontBarWeapon if active_bar == "front" else build.BackBarWeapon
-        pieces = 2 if "staff" in SavedBuildCapabilityService._clean(weapon.WeaponType).casefold() else 1
-        add(weapon.Set, pieces)
-        return counts
+        GearStatInputResolver already owns explicit off-hand handling, canonical
+        two-slot weapon families, and legacy Set/Set2 weapon saves. Capability
+        discovery must use that same authority or runtime proc availability can
+        disagree with the static gear pipeline.
+        """
+        return dict(
+            GearStatInputResolver.equipped_set_counts(
+                build,
+                active_bar=active_bar,
+            )
+        )
 
     @classmethod
     def _gear_component_cache_key(
