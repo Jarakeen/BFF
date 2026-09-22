@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from services.extreme_sustained_dps_generated_axis_inventory_service import (
+    ExtremeSustainedDPSGeneratedAxisInventoryService,
+)
 from services.extreme_sustained_dps_generated_frontier_wiring_service import (
     ExtremeSustainedDPSGeneratedFrontierWiringService,
     ExtremeSustainedDPSIndexedFrontierAxis,
@@ -98,6 +101,20 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
             candidate_count=candidate_count,
             candidate_at=candidate_at,
             canonical_axes=("race", "class_route", "attributes"),
+        )
+
+    def axis_inventory(self, *, runtime_state_frontier=None):
+        axes = tuple(self.pipeline.axes())
+        if runtime_state_frontier is not None:
+            axes = (
+                *axes,
+                ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.axis(
+                    runtime_state_frontier
+                ),
+            )
+        return ExtremeSustainedDPSGeneratedAxisInventoryService.inventory(
+            axes,
+            additional_canonical_axes=("race", "class_route", "attributes"),
         )
 
     def search(
