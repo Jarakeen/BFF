@@ -40,9 +40,22 @@ def _search_result(*, proven=True):
 
 
 class _GlobalSearch:
-    def __init__(self, result):
+    def __init__(self, result, *, missing_axes=(), inventory_unresolved=()):
         self.result = result
         self.calls = []
+        self.missing_axes = tuple(missing_axes)
+        self.inventory_unresolved = tuple(inventory_unresolved)
+
+    def axis_inventory(self, *, runtime_state_frontier=None):
+        return SimpleNamespace(
+            missing_canonical_axes=self.missing_axes,
+            unresolved=self.inventory_unresolved,
+            searched_canonical_axes=tuple(
+                axis
+                for axis in CANONICAL_SUSTAINED_DPS_MUTATION_AXES
+                if axis not in set(self.missing_axes)
+            ),
+        )
 
     def search(self, **kwargs):
         self.calls.append(kwargs)
@@ -182,5 +195,44 @@ def test_global_objective32_rejects_mismatched_nonstructural_scope_proof() -> No
     assert result.theoretical_maximum_proven is False
     assert any(
         "non-structural axis coverage is not proven to match" in item
+        for item in result.closure.omitted_scope
+    )
+
+
+
+def test_global_objective32_refuses_theory_when_tree_is_missing_axis() -> None:
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=_GlobalSearch(
+            _search_result(),
+            missing_axes=("encounter_policy",),
+        ),
+        structural_families=_StructuralFamilies(),
+    )
+
+    result = service.search(
+        coverage_proofs=(_remaining_without_runtime(),),
+        scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
+            root_candidate_key="generated-global-root",
+            coverage_matches_search_denominator=True,
+        ),
+        runtime_state_frontier=_runtime_frontier(),
+        dual_bar_frontier="gear",
+        candidate_id_prefix="objective32",
+        required_duration_seconds=20.0,
+        potion_cooldown_seconds=45.0,
+        starting_ultimate=0.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="Boss",
+        runtime_snapshot="snapshot",
+        target_health=1_000_000,
+        target_resistance=18_200.0,
+    )
+
+    assert result.finite_denominator_maximum_proven is True
+    assert result.theoretical_maximum_proven is False
+    assert result.axis_inventory.missing_canonical_axes == ("encounter_policy",)
+    assert any(
+        "does not physically enumerate" in item
         for item in result.closure.omitted_scope
     )
