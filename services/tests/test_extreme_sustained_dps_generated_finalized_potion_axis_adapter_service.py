@@ -95,7 +95,9 @@ def _upstream(candidate=None):
 
 def _resolver(candidate):
     assert candidate.candidate_id == "runtime-candidate"
-    return ExtremeSustainedDPSFinalizedPotionTimingEvidence()
+    return ExtremeSustainedDPSFinalizedPotionTimingEvidence(
+        additional_resource_event_denominator_proven=True,
+    )
 
 
 def _adapter():
@@ -117,9 +119,7 @@ def test_axis_owns_finalized_potion_timing_canonical_dimension() -> None:
 
     assert axis.name == "Finalized Potion Timing Policy"
     assert axis.canonical_axes == ("potion_timing_policy",)
-    assert axis.omitted_scope == (
-        "potion instant-restoration timing across resource-timeline event boundaries is not yet closed",
-    )
+    assert axis.omitted_scope == ()
 
 
 def test_selected_potion_enumerates_no_use_boundaries_and_open_intervals() -> None:
@@ -136,6 +136,8 @@ def test_selected_potion_enumerates_no_use_boundaries_and_open_intervals() -> No
     assert axis.candidate_count(state) == 4
     call = denominator.calls[-1]
     assert call["instant_restoration_timing_closed"] is False
+    assert call["resource_observation_denominator_proven"] is True
+    assert call["resource_observation_times"]
     assert call["observation_frontier"].observation_times == (1.0, 4.0)
 
 
@@ -224,3 +226,25 @@ def test_no_potion_selection_has_one_trivially_closed_no_use_policy() -> None:
     assert state.denominator is None
     assert denominator.calls == []
     assert state.complete is True
+
+
+
+def test_missing_resource_event_denominator_proof_fails_closed() -> None:
+    adapter, _denominator, _legality = _adapter()
+
+    def unresolved_resource_evidence(candidate):
+        assert candidate.candidate_id == "runtime-candidate"
+        return ExtremeSustainedDPSFinalizedPotionTimingEvidence()
+
+    root = adapter.root(
+        _upstream(),
+        build=PlayerBuild(Potion="Potion X"),
+        progression="progression",
+        potion_cooldown_seconds=45.0,
+        evidence_resolver=unresolved_resource_evidence,
+    )
+
+    import pytest
+
+    with pytest.raises(ValueError, match="resource observation denominator"):
+        adapter.axis().candidate_count(root)
