@@ -1713,7 +1713,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Uses the final downstream runtime-policy plan, not an earlier anchored plan. "
+            "Uses the final assembled build/progression and the final generated plan, including finalized potion timing when that late axis is configured. "
             "When a generated local runtime-state choice is present, that choice's snapshot overrides the fallback search snapshot and its evidence is retained. "
             "Missing build, progression, physical gear, plan, or incomplete pipeline state becomes incomplete exact-leaf evidence without invoking simulation."
         ),
