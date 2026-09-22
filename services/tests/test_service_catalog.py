@@ -1292,6 +1292,33 @@ def test_sustained_dps_generated_tree_coverage_is_same_tree_only() -> None:
     assert "omissions remain attached" in service.notes
 
 
+def test_sustained_dps_potion_timing_breakpoint_frontier_is_scoped() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_potion_timing_breakpoint_frontier"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.potion_timing_breakpoint_frontier"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "continuous potion first-use offsets" in service.purpose
+    assert "named-buff first-use timing only" in service.notes
+    assert "before/after ordering" in service.notes
+    assert "instant-restoration timing remains explicit omitted scope" in service.notes
+
+
+def test_rotation_candidate_potion_restoration_evidence_is_cataloged() -> None:
+    service = canonical_service_for(
+        "rotation_candidate_potion_restoration_evidence"
+    )
+
+    assert service is not None
+    assert service.service_id == "rotation.candidate_potion_restoration_evidence"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "scheduled POTION actions" in service.purpose
+    assert "Magicka, Stamina, and Health" in service.notes
+    assert "Phase 4 retains resource filtering" in service.notes
+
+
 def test_sustained_dps_delayed_ultimate_policy_frontier_is_cataloged() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_delayed_ultimate_policy_frontier"
