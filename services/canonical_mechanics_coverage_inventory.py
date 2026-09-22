@@ -219,18 +219,22 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             key="consumables:runtime_resource_and_buff_policy",
             status=CanonicalMechanicsCoverageStatus.PARTIAL,
             capability=(
-                "Saved builds retain potion identity and the rotation request carries potion "
-                "selection/on-cooldown policy, but identity is not equivalent to exhaustive "
+                "Saved builds retain potion identity; scheduled POTION actions are resolved through "
+                "canonical potion evidence into ordered CombatState buff windows, and Medicinal Use "
+                "rank extends those source-backed durations through PotionCadence. Rotation requests "
+                "also carry potion selection/on-cooldown policy, but this is not yet exhaustive "
                 "runtime potion/poison mechanics."
             ),
             evidence_source=(
                 "minmax/character_build/saved_build_adapter.py; "
+                "minmax/potion_cadence.py; minmax/potion_use_event.py; "
+                "services/rotation_plan_potion_combat_state_service.py; "
                 "ui/rotation_generation_support.py"
             ),
             consumers=ALL_THREE,
             missing_evidence=(
-                "Verify potion and poison effects, resource restore amounts, buff/debuff "
-                "durations, cooldown, potion-duration/cooldown jewelry modifiers, poison "
+                "Complete potion resource-restore/runtime-effect coverage beyond the already "
+                "resolved scheduled buff windows, plus poison effects, poison "
                 "trigger cadence, shared cooldowns, invisibility/detection/speed/Unstoppable "
                 "effects and any suppression or replacement rules."
             ),
