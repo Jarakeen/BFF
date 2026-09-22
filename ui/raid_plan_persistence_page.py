@@ -474,6 +474,9 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         return next((name for name in COMP_MAKER_TRIALS if _slug(name) == wanted), plan.trial_id)
 
     def _active_team_name(self) -> str:
+        team_combo = getattr(self, "team_combo", None)
+        if isinstance(team_combo, QComboBox):
+            return _clean(team_combo.currentData())
         loaded = getattr(self, "_loaded_plan_snapshot", None)
         return _clean(getattr(loaded, "team_name", "")) if loaded is not None else ""
 
