@@ -123,6 +123,23 @@ def _open_saved_plan_assignments(window, plan_id: str) -> None:
     window.show_page("assignments")
 
 
+def _open_raid_plan_map(window, plan_id: str) -> None:
+    encounters = window.pages.get("console:1")
+    if encounters is None:
+        return
+    combo = getattr(encounters, "raid_plan_combo", None)
+    if combo is not None:
+        index = combo.findData(str(plan_id or "").strip())
+        if index >= 0:
+            combo.setCurrentIndex(index)
+    tabs = getattr(encounters, "section_tabs", None)
+    if tabs is not None:
+        for index in range(tabs.count()):
+            if str(tabs.tabText(index) or "").strip().casefold() in {"raid map", "mechanics"}:
+                tabs.setCurrentIndex(index)
+                break
+    window.show_page("console:1")
+
 def _open_raid_plan_coverage(window, plan) -> None:
     coverage = window.pages.get("console:7")
     if coverage is None or not hasattr(coverage, "set_raid_plan_scope"):
@@ -546,6 +563,7 @@ def register_raid_engine_pages(window) -> None:
     raid_plans.assignmentsRequested.connect(
         lambda plan_id: _open_saved_plan_assignments(window, plan_id)
     )
+    raid_plans.raidMapRequested.connect(lambda plan_id: _open_raid_plan_map(window, plan_id))
     raid_plans.coverageRequested.connect(lambda plan: _open_raid_plan_coverage(window, plan))
     raid_plans.rotationRequested.connect(
         lambda plan, seat_id: _open_raid_plan_rotation(window, plan, seat_id)
