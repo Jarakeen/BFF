@@ -85,6 +85,8 @@ def test_shared_team_payload_is_small_and_excludes_private_personnel_fields(tmp_
     assert payload["team_name"] == "Performance Mode"
     assert payload["schedule"]["timezone"] == "America/New_York"
     assert payload["schedule"]["current_focus"] == "Swashbuckler Supreme"
+    assert payload["group_type"] == "trial"
+    assert payload["group_capacity"] == 12
     assert payload["roster"] == {
         "seat_capacity": 12,
         "filled_seats": 1,
@@ -148,6 +150,8 @@ def test_shared_raid_plan_payload_excludes_local_ids_builds_and_notes() -> None:
     payload = shared_raid_plan_payload(plan)
 
     assert payload["plan_id"] == "ss-performance-mode"
+    assert payload["group_type"] == "trial"
+    assert payload["group_capacity"] == 12
     assert payload["members"] == [
         {
             "seat_id": "dd-1",
