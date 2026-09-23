@@ -1,5 +1,6 @@
 param(
-    [switch]$IncludeBroadcast
+    [switch]$IncludeBroadcast,
+    [string]$UserDatabaseSeed = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -110,6 +111,22 @@ if (-not (Test-Path $ReleaseSeedDatabase)) {
     throw "Sanitized release database seed was not created: $ReleaseSeedDatabase"
 }
 
+# Optional prepared FoundryDock user database. PyInstaller embeds this under
+# _seed_user_data and runtime copies it only when the recipient has no existing
+# foundrydock.db. Existing user data is therefore never replaced by an EXE update.
+if (-not [string]::IsNullOrWhiteSpace($UserDatabaseSeed)) {
+    $ResolvedUserDatabaseSeed = (Resolve-Path $UserDatabaseSeed).Path
+    if (-not (Test-Path $ResolvedUserDatabaseSeed -PathType Leaf)) {
+        throw "User database seed not found: $UserDatabaseSeed"
+    }
+    $PreparedUserDatabaseSeed = Join-Path $ReleaseSeedRoot "foundrydock.db"
+    Copy-Item $ResolvedUserDatabaseSeed $PreparedUserDatabaseSeed -Force
+    Write-Host "Prepared user database seed: $ResolvedUserDatabaseSeed"
+}
+else {
+    Write-Host "Prepared user database seed: none (fresh user database on first run)"
+}
+
 Write-Host "Building $ExeName..."
 python -m PyInstaller --clean $SpecPath
 if ($LASTEXITCODE -ne 0) {
@@ -178,7 +195,7 @@ $PersonalDataFiles = @(
     "characters.json",
     "capabilities.json",
     "team_prescription_observed_templates.json",
-    "achievement_progress.json",
+    "achievement_progress.json", # legacy migration input only
     "antiquity_progress.json",
     "current_achievement_run.json",
     "CurrentAchievementRun.json",
