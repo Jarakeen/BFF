@@ -114,6 +114,8 @@ def test_incomplete_scenario_inventory_does_not_emit_effective_cooldown() -> Non
 
     assert not result.complete
     assert result.cooldown_seconds is None
+    assert result.resolution is None
+    assert cooldown.calls == []
     assert any("not proven complete" in item for item in result.unresolved)
 
 
