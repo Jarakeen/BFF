@@ -604,3 +604,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **FoundryDock crash log** — Uncaught main-thread and worker-thread exceptions append to `FoundryDock-crash.log`. Frozen builds write the log beside `FoundryDock.exe`; source runs write it at the project root. Each entry includes a UTC timestamp and full traceback so packaged crashes can be diagnosed without relying on the Windows exception dialog.
+
+
+- **Build and character database migration** — Canonical player, character, progression, saved-build, Comp Build, and build-to-team assignment state now persists in `foundrydock.db`. Legacy `data/characters.json` and `data/builds.json` are migration inputs only and are no longer created in new first-install packages. Application-facing build catalog paths redirect to the user database so downstream build/rotation/optimizer consumers share the same authority.
