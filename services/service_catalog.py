@@ -1452,6 +1452,28 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_runtime_variant",
+        domain="extreme",
+        purpose=(
+            "Project each canonical equipped weapon-enchantment source into exactly one runtime source-selection EffectVariant while leaving proc consequences separately owned."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_runtime_variant_service",
+        inputs=("CanonicalWeaponEnchantmentRuntimeSources",),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentRuntimeVariantResolution",),
+        dependencies=("extreme.sustained_dps.weapon_enchantment_runtime_source",),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_runtime_source_variant_projection",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "One runtime variant represents one glyph source for selection, cooldown, and attempt binding even when that proc has multiple combat-effect consequences. "
+            "Damage, restoration, buffs, and debuffs remain attached to the canonical runtime source and are projected after source selection."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_runtime_source",
         domain="extreme",
         purpose=(
