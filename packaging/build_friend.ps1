@@ -1,5 +1,6 @@
 param(
     [switch]$IncludeBroadcast,
+    [switch]$UseCurrentRaidSetup,
     [string]$UserDatabaseSeed = ""
 )
 
@@ -114,7 +115,30 @@ if (-not (Test-Path $ReleaseSeedDatabase)) {
 # Optional prepared FoundryDock user database. PyInstaller embeds this under
 # _seed_user_data and runtime copies it only when the recipient has no existing
 # foundrydock.db. Existing user data is therefore never replaced by an EXE update.
-if (-not [string]::IsNullOrWhiteSpace($UserDatabaseSeed)) {
+if ($UseCurrentRaidSetup -and -not [string]::IsNullOrWhiteSpace($UserDatabaseSeed)) {
+    throw "UseCurrentRaidSetup and UserDatabaseSeed are mutually exclusive."
+}
+
+if ($UseCurrentRaidSetup) {
+    Write-Host "Preparing current raid setup without collection/achievement progress..."
+    python -c "from services.user_data_migration_service import migrate_legacy_user_data; print(migrate_legacy_user_data())"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not migrate current user-owned raid setup before packaging."
+    }
+
+    $CurrentUserDatabase = Join-Path $ProjectRoot "user_data\foundrydock.db"
+    if (-not (Test-Path $CurrentUserDatabase -PathType Leaf)) {
+        throw "Current FoundryDock user database not found: $CurrentUserDatabase"
+    }
+
+    $PreparedUserDatabaseSeed = Join-Path $ReleaseSeedRoot "foundrydock.db"
+    python tools\build_custom_user_database_seed.py --source $CurrentUserDatabase --destination $PreparedUserDatabaseSeed
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not create privacy-limited current raid setup seed."
+    }
+    Write-Host "Prepared user database seed: CURRENT RAID SETUP ONLY"
+}
+elseif (-not [string]::IsNullOrWhiteSpace($UserDatabaseSeed)) {
     $ResolvedUserDatabaseSeed = (Resolve-Path $UserDatabaseSeed).Path
     if (-not (Test-Path $ResolvedUserDatabaseSeed -PathType Leaf)) {
         throw "User database seed not found: $UserDatabaseSeed"
