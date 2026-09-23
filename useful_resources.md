@@ -310,6 +310,15 @@ https://eso-hub.com/en/sets/
 **Notes:** Useful for spotting runtime-scaling obligations before hardcoding them. Example: the current Roar of Alkosh tooltip states that its resistance reduction equals the user's Weapon Damage at activation, capped at 6000. Treat ESO-Hub as corroboration rather than the sole authority for formulas; confirm critical math against primary data, official patch notes, or in-game/runtime evidence before promoting it to canonical engine math.
 
 
+### ZOS Horns of the Reach v3.1.5 weapon-enchantment trait and Oblivion notes
+https://forums.elderscrollsonline.com/en/discussion/365904
+
+**Use for:** Primary historical ZOS evidence that Infused reduces weapon-enchantment cooldown, Torug's Pact modifies weapon-enchantment cooldown multiplicatively with Infused, and Damage Health (Oblivion) weapon-enchantment damage cannot critically strike. Also useful for the documented Oblivion/Prismatic Infused cooldown bug fixes in that patch.
+
+**Confidence:** Primary / reference-grade for the explicitly documented mechanics in v3.1.5. Treat it as historical evidence; current exact numeric trait values or broader ordinary-enchantment critical rules still require current corroboration before hardcoding.
+
+**Notes:** The developer comment specifically identifies Oblivion damage as non-critical. It does not establish that every other weapon-enchantment damage family can critically strike, nor which critical-stat family an ordinary glyph would use.
+
 ### ZOS Update 20 weapon-enchantment activation rules
 https://forums.elderscrollsonline.com/en/discussion/435633/pts-patch-notes-v4-2-0
 
