@@ -64,6 +64,9 @@ def _authoritative_cadence(
         poison_replacement_evidence_note="reviewed poison evidence",
         same_effect_identity_shares_cooldown=True,
         same_identity_cooldown_authority=authority,
+        distinct_effect_identities_have_independent_cooldowns=True,
+        distinct_identity_cooldown_authority=authority,
+        distinct_identity_cooldown_evidence_note="reviewed distinct-identity independence evidence",
         evidence_note="reviewed complete cadence fixture",
     )
 
@@ -78,6 +81,7 @@ def test_current_crusher_cadence_fails_closed():
     assert any("base cooldown is not authoritative" in row for row in result.unresolved)
     assert any("cooldown scope is not authoritative" in row for row in result.unresolved)
     assert any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
+    assert any("distinct-identity cooldown independence is not authoritative" in row for row in result.unresolved)
 
 
 def test_unclassified_direct_damage_variant_is_not_guessed_from_source_or_name():
@@ -113,6 +117,7 @@ def test_authoritative_four_second_value_alone_does_not_bypass_topology_gate():
     assert result.policies == ()
     assert any("cooldown scope is not authoritative" in row for row in result.unresolved)
     assert any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
+    assert any("distinct-identity cooldown independence is not authoritative" in row for row in result.unresolved)
     assert not any("base cooldown is not authoritative" in row for row in result.unresolved)
 
 
@@ -217,6 +222,7 @@ def test_canonical_direct_damage_source_reaches_four_second_evidence_but_stops_a
     assert not any("base cooldown is not authoritative" in row for row in result.unresolved)
     assert any("cooldown scope is not authoritative" in row for row in result.unresolved)
     assert any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
+    assert any("distinct-identity cooldown independence is not authoritative" in row for row in result.unresolved)
 
 
 def test_canonical_crusher_source_reaches_buff_debuff_family_and_keeps_base_cooldown_open():
@@ -245,6 +251,7 @@ def test_canonical_crusher_source_reaches_buff_debuff_family_and_keeps_base_cool
     assert any("base cooldown is not authoritative" in row for row in result.unresolved)
     assert any("cooldown scope is not authoritative" in row for row in result.unresolved)
     assert any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
+    assert any("distinct-identity cooldown independence is not authoritative" in row for row in result.unresolved)
 
 
 def test_canonical_policy_resolution_requires_build_context():
