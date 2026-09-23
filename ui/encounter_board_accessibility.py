@@ -436,6 +436,7 @@ def install() -> None:
             "treasure-map",
         ).set_watermark("compass", 0.025)
         self.encounter_board = board.EncounterBoard()
+        self.encounter_board.raid_plan_member_labels_resolver = self._raid_plan_member_labels
         self.encounter_board.snapshotSaved.connect(self._positioning_snapshot_saved)
         board_card.addWidget(self.encounter_board)
         root.addWidget(board_card, 1)
