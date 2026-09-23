@@ -231,12 +231,14 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "minmax/character_build/saved_build_adapter.py; "
                 "minmax/potion_cadence.py; minmax/potion_use_event.py; "
                 "services/rotation_plan_potion_combat_state_service.py; "
+                "services/rotation_candidate_canonical_plan_evidence_service.py; "
                 "ui/rotation_generation_support.py"
             ),
             consumers=ALL_THREE,
             missing_evidence=(
-                "Wire the source-backed scheduled potion instant-restoration events into every "
-                "canonical sustain/combat replay consumer and complete remaining potion runtime "
+                "Scheduled potion instant-restoration events now feed canonical generated-candidate "
+                "sustain evaluation; wire them into any remaining sustain/resource replay consumers "
+                "that bypass that composition path and complete remaining potion runtime "
                 "effects beyond scheduled buff windows, plus poison effects, poison "
                 "trigger cadence, shared cooldowns, invisibility/detection/speed/Unstoppable "
                 "effects and any suppression or replacement rules."
