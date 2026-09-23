@@ -663,3 +663,40 @@ QPlainTextEdit[parchmentEditor="true"] {
 QPlainTextEdit[parchmentEditor="true"]:focus {
     border: 2px solid #6F8290;
 }
+
+
+/* --------------------------------------------------
+   Shared UI safety state
+   -------------------------------------------------- */
+
+QLabel[uiSafetyState="saved"] {
+    color: #6FA76D;
+    border: 1px solid #355A3D;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 8pt;
+}
+
+QLabel[uiSafetyState="dirty"] {
+    color: #D5B46A;
+    border: 1px solid #6F5B37;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 8pt;
+}
+
+QLabel[uiSafetyState="saving"] {
+    color: #59AEB3;
+    border: 1px solid #2F7A80;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 8pt;
+}
+
+QLabel[uiSafetyState="failed"] {
+    color: #C96A6A;
+    border: 1px solid #6D3434;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 8pt;
+}
