@@ -23,6 +23,8 @@
 - **Top Gear naming** — the former Capabilities surface is presented as Top Gear; Raid Plan Review now opens the run-note journal instead of Top Gear.
 # BFF / FoundryDock Feature Index
 
+- **Objective #32 effective potion cooldown evidence** — generated sustained-DPS search can resolve potion cadence from the finalized canonical build instead of relying only on a caller-supplied cooldown number. Jewelry cooldown items, canonical static cooldown EffectVariants, passive-grant inventory, and external scenario effects are composed through the shared potion-cooldown authorities; incomplete passive/scenario inventories and unresolved canonical build adaptation fail closed before potion timing can be treated as proven.
+
 - **Comp Build round-trip identity** — Comp Maker can promote a real Personnel row into canonical player/character identity when no prior Build exists, save the resulting Comp Build under a stable BuildId, preserve that BuildId and Comp metadata through later Builds-page edits, and Readiness can open the exact selected build by stable ID.
 
 - **Readiness canonical evidence** — Raid Readiness now resolves selected canonical/Comp Builds, distinguishes partial Comp plans as PLANNED instead of falsely missing, and reuses the same saved-build + planned-gear + planned-skill + assignment Coverage evidence as the Coverage page. Rotation and Sustain remain explicitly NEEDS REVIEW until their owning engines provide evidence.
