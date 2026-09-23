@@ -1553,12 +1553,12 @@ Several weapon-line passives are standing effects, but their math still depends 
 
 **Layman's version:** owning the passive does not mean “add weapon damage.” A sword, dagger, axe, mace, greatsword, battle axe, and maul can send the same passive down different math paths. ESO has once again chosen a dropdown menu where a number would have been less theatrical.
 
-**For BFF:** Phase 5 now applies only the reviewed sword/greatsword standing branches when exact passive ownership and weapon subtype are known. Ambidextrous and unreviewed subtype branches remain unresolved and therefore block Objective #32 closure rather than borrowing the sword value.
+**For BFF:** Phase 5 now applies only the reviewed sword/greatsword standing branches when exact passive ownership and weapon subtype are known. Ambidextrous is now resolved at max rank as 6% of verified off-hand weapon damage; dagger/mace standing branches are also modeled from current-live rank-2 values, while axe Critical Damage branches remain unresolved pending refreshed proof.
 
 
 ## 2026-09-23 — Ambidextrous uses the off-hand weapon's own damage
 
-The reviewed U50 Dual Wield tooltip states that max-rank **Ambidextrous** increases Weapon and Spell Damage by 3% of the off-hand weapon's damage. The existing weapon-passive audit already treats that as a derived flat sheet-power contribution, separate from Twin Blade and Blunt and separate from Nirnhoned's own item-power contribution.
+The corrected max-rank **Ambidextrous** evidence is 6% of the off-hand weapon's damage. The earlier 3% value is Rank 1, not Rank 2. The existing weapon-passive audit already treats that as a derived flat sheet-power contribution, separate from Twin Blade and Blunt and separate from Nirnhoned's own item-power contribution.
 
 **Layman's version:** Ambidextrous is not “+3% Weapon Damage.” It asks what the off-hand weapon itself is worth, then takes 3% of that number. Naturally, the wording contains just enough similarity to a global percentage bonus to make careless code look plausible.
 
@@ -1571,3 +1571,12 @@ Current ESO-Hub and UESP build-data records agree that max-rank **Accuracy** gra
 **Layman's version:** owning Accuracy does not give permanent crit just because a Bow exists somewhere on the character. The Bow must be the weapon currently in use.
 
 **For BFF:** Accuracy is routed through the same critical-rating conversion used by other canonical rating sources and is applied only when the active bar is a Bow. This keeps front/back static snapshots mechanically distinct.
+
+
+## 2026-09-23 — Max rank can be mislabeled when rank evidence is stale
+
+During Objective #32 weapon-passive closure, the existing audit selected the highest skill_rank row but still surfaced **Rank 1 magnitudes** for several passives: Twin Blade and Blunt sword 64, Heavy Weapons sword 129, and Ambidextrous 3%. Official Update 39 rank pairs and UESP rank-specific build records show those are the lower-rank values; the corresponding Rank 2 values are 129, 258, and 6%.
+
+**Layman's version:** “highest row” and “highest-rank tooltip” are not automatically the same fact if imported rank text is stale or misjoined. Databases, in their eternal quest for drama, can be structurally tidy and semantically wrong at the same time.
+
+**For BFF:** weapon-passive audits now reject those Rank 1 values when claiming max-rank proof. More broadly, passive mechanics that depend on skill_rank.raw_description need rank-integrity checks before Objective #32 treats them as authoritative.
