@@ -621,3 +621,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Build and character database migration** — Canonical player, character, progression, saved-build, Comp Build, and build-to-team assignment state now persists in `foundrydock.db`. Legacy `data/characters.json` and `data/builds.json` are migration inputs only and are no longer created in new first-install packages. Application-facing build catalog paths redirect to the user database so downstream build/rotation/optimizer consumers share the same authority.
+
+
+- **Split weapon-enchantment cooldown-topology authority** — Objective #32 now tracks duplicate-identity shared cooldowns and distinct-identity independent cooldowns as separate proof requirements. Exact finite enchant sequencing remains fail-closed until both topology claims are authoritative, preventing a generic `per_effect_identity` label from silently proving more than the evidence actually supports.
