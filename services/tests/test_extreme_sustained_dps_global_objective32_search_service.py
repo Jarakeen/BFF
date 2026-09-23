@@ -103,6 +103,16 @@ def _remaining_without_runtime():
     )
 
 
+
+def _closed_closure_inventory():
+    return SimpleNamespace(
+        closure_ready=True,
+        source_data_blockers=(),
+        math_review_blockers=(),
+        mechanics_blockers=(),
+        mechanics_advisories=(),
+    )
+
 def _runtime_frontier(*, omitted_scope=()):
     return ExtremeSustainedDPSRuntimeStateFrontierService.build(
         (
@@ -124,6 +134,7 @@ def test_global_objective32_closes_when_global_tree_and_all_axes_match() -> None
     runtime = _runtime_frontier()
 
     result = service.search(
+        closure_inventory=_closed_closure_inventory(),
         runtime_state_frontier=runtime,
         dual_bar_frontier="gear",
         candidate_id_prefix="objective32",
@@ -153,6 +164,7 @@ def test_global_objective32_preserves_runtime_omission() -> None:
     )
 
     result = service.search(
+        closure_inventory=_closed_closure_inventory(),
         runtime_state_frontier=_runtime_frontier(
             omitted_scope=("encounter-triggered runtime histories remain open",)
         ),
@@ -188,6 +200,7 @@ def test_global_objective32_ignores_mismatched_supplemental_scope_when_tree_prov
     )
 
     result = service.search(
+        closure_inventory=_closed_closure_inventory(),
         coverage_proofs=(_remaining_without_runtime(),),
         scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
             root_candidate_key="generated-global-root",
@@ -220,6 +233,7 @@ def test_global_objective32_ignores_unscoped_supplemental_proof_when_tree_proves
     )
 
     result = service.search(
+        closure_inventory=_closed_closure_inventory(),
         coverage_proofs=(_remaining_without_runtime(),),
         runtime_state_frontier=_runtime_frontier(),
         dual_bar_frontier="gear",
@@ -251,6 +265,7 @@ def test_global_objective32_refuses_theory_when_tree_is_missing_axis() -> None:
     )
 
     result = service.search(
+        closure_inventory=_closed_closure_inventory(),
         coverage_proofs=(_remaining_without_runtime(),),
         scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
             root_candidate_key="generated-global-root",
@@ -299,6 +314,7 @@ def test_global_objective32_coverage_comes_from_completed_tree_not_supplemental_
         dominated_axes=("food",),
     )
     result = service.search(
+        closure_inventory=_closed_closure_inventory(),
         coverage_proofs=(supplemental,),
         scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
             root_candidate_key="generated-global-root",
@@ -343,6 +359,7 @@ def test_strict_global_objective32_preflight_refuses_missing_runtime_state_autho
 
     with pytest.raises(ValueError, match="runtime-state frontier or candidate-resolved runtime-state authority"):
         service.search(
+        closure_inventory=_closed_closure_inventory(),
             heavy_attack_channel_block_denominator_proven=True,
             dual_bar_frontier="gear",
             candidate_id_prefix="objective32",
@@ -372,6 +389,7 @@ def test_strict_global_objective32_preflight_accepts_candidate_runtime_state_aut
     )
 
     result = service.search(
+        closure_inventory=_closed_closure_inventory(),
         heavy_attack_channel_block_denominator_proven=True,
         dual_bar_frontier="gear",
         candidate_id_prefix="objective32",
@@ -408,6 +426,7 @@ def test_strict_global_objective32_rejects_duplicate_static_and_candidate_runtim
 
     with pytest.raises(ValueError, match="cannot combine candidate-resolved"):
         service.search(
+        closure_inventory=_closed_closure_inventory(),
             runtime_state_frontier=_runtime_frontier(),
             heavy_attack_channel_block_denominator_proven=True,
             dual_bar_frontier="gear",
@@ -434,6 +453,7 @@ def test_canonical_objective32_owns_potion_cooldown_resolver() -> None:
     )
 
     service.search(
+        closure_inventory=_closed_closure_inventory(),
         runtime_state_frontier=_runtime_frontier(),
         dual_bar_frontier="gear",
         candidate_id_prefix="objective32",
@@ -462,6 +482,7 @@ def test_canonical_objective32_rejects_competing_potion_cooldown_resolver() -> N
 
     with pytest.raises(ValueError, match="owns the potion cooldown resolver"):
         service.search(
+        closure_inventory=_closed_closure_inventory(),
             runtime_state_frontier=_runtime_frontier(),
             dual_bar_frontier="gear",
             candidate_id_prefix="objective32",
@@ -489,6 +510,7 @@ def test_closure_ready_search_refuses_missing_potion_cooldown_authority() -> Non
 
     with pytest.raises(ValueError, match="requires a canonical potion cooldown resolver"):
         service.search(
+        closure_inventory=_closed_closure_inventory(),
             runtime_state_frontier=_runtime_frontier(),
             dual_bar_frontier="gear",
             candidate_id_prefix="objective32",
@@ -523,6 +545,7 @@ def test_strict_global_objective32_preflight_rejects_open_candidate_runtime_deno
 
     with pytest.raises(ValueError, match="runtime-event denominator"):
         service.search(
+        closure_inventory=_closed_closure_inventory(),
             heavy_attack_channel_block_denominator_proven=True,
             dual_bar_frontier="gear",
             candidate_id_prefix="objective32",
