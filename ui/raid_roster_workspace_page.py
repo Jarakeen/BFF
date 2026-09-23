@@ -45,6 +45,8 @@ from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
 from services.team_deletion_service import delete_team_everywhere
+from services.user_safety_snapshot_service import UserSafetySnapshotService
+from ui.ui_safety import confirm_destructive_action
 from services.roster_workspace_state_service import (
     MemberAvailability,
     RecruitmentCandidate,
@@ -472,20 +474,20 @@ class RaidRosterWorkspacePage(FoundryPage):
             self.status.warning("Select a Team to delete.")
             return
 
-        answer = QMessageBox.question(
+        if not confirm_destructive_action(
             self,
-            "Delete Team",
-            (
-                f'Delete Team "{team}"?\n\n'
+            title="Delete Team",
+            object_label=f'Delete Team "{team}"?',
+            impact=(
                 "This removes the Team, its schedule, roster memberships, and Team build "
-                "assignments. Players, characters, saved builds, and saved Raid Plans are kept."
+                "assignments. Players, characters, saved builds, and saved Raid Plans are kept. "
+                "A recoverable database snapshot is created first."
             ),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
-            QMessageBox.StandardButton.Cancel,
-        )
-        if answer != QMessageBox.StandardButton.Yes:
+            confirm_text="Delete Team",
+        ):
             return
 
+        UserSafetySnapshotService().create(f"delete-team-{team}")
         try:
             result = delete_team_everywhere(
                 self.roster_service,
