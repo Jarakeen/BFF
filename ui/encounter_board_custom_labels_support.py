@@ -280,6 +280,33 @@ def _paint_reference(item, painter, option, widget=None) -> None:
 
 def _seat_id_for_token(item, ordinal: int) -> str:
     kind = str(getattr(item, "kind", "") or "").casefold()
+    label = str(
+        getattr(item, "_raid_map_seat_label", "")
+        or getattr(item, "label", "")
+        or ""
+    ).strip().casefold()
+    compact = "".join(ch for ch in label if ch.isalnum())
+
+    aliases = {
+        "maintank": "tank-1",
+        "offtank": "tank-2",
+        "ddstack": "dd-1",
+    }
+    if compact in aliases:
+        return aliases[compact]
+
+    prefixes = (
+        ("tank", "tank"),
+        ("healer", "healer"),
+        ("dd", "dd"),
+        ("dps", "dd"),
+    )
+    for prefix, seat_prefix in prefixes:
+        if compact.startswith(prefix):
+            suffix = compact[len(prefix):]
+            if suffix.isdigit():
+                return f"{seat_prefix}-{int(suffix)}"
+
     if kind == "tank":
         return f"tank-{ordinal}"
     if kind == "healer":
