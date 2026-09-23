@@ -21,7 +21,9 @@ def test_explicit_empty_rank_inventory_is_complete_empty_grant_inventory() -> No
         CharacterProgression(passive_ranks={}),
     )
 
-    assert result == ()
+    assert result.complete
+    assert result.passives == ()
+    assert result.unresolved == ()
 
 
 def test_missing_passive_rank_inventory_fails_closed() -> None:
