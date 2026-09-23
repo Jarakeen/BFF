@@ -224,3 +224,38 @@ def test_potion_restoration_events_do_not_promote_mismatched_scheduled_identity(
     )
 
     assert service.restoration_events(_build(), plan=plan) == ()
+
+
+def test_restoration_result_fails_closed_on_mismatched_scheduled_identity() -> None:
+    service = RotationPlanPotionCombatStateService(event_resolver=_RestoreResolver())
+    plan = RotationPlan(
+        character_name="Rylonia", build_name="Corpsebuster DD", duration_seconds=10.0,
+        actions=(RotationAction(1.0, 0, RotationActionKind.POTION, name="Different Potion"),),
+    )
+
+    result = service.resolve_restoration_events(_build(), plan=plan)
+
+    assert result.resolved is False
+    assert result.events == ()
+    assert "does not match saved potion" in result.unresolved[0]
+
+
+def test_restoration_result_is_resolved_empty_for_buff_only_potion() -> None:
+    service = RotationPlanPotionCombatStateService(event_resolver=_Resolver())
+
+    result = service.resolve_restoration_events(_build(), plan=_plan())
+
+    assert result.resolved is True
+    assert result.events == ()
+    assert result.unresolved == ()
+
+
+def test_restoration_result_fails_closed_when_plan_uses_potion_without_saved_selection() -> None:
+    service = RotationPlanPotionCombatStateService(event_resolver=_RestoreResolver())
+    build = PlayerBuild(Name="Rylonia", BuildName="Corpsebuster DD", Role="DD", Potion="")
+
+    result = service.resolve_restoration_events(build, plan=_plan())
+
+    assert result.resolved is False
+    assert result.events == ()
+    assert "no potion selection" in result.unresolved[0]
