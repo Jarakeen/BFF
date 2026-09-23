@@ -14,7 +14,7 @@ from copy import deepcopy
 
 from PySide6.QtWidgets import QComboBox
 
-from engine.config import get_data_dir
+from engine.config import get_user_database_path
 from models.build_model import PlayerBuild
 from services.build_context_variant_service import resolve_build_context
 from services.eso_database import EsoDatabase
@@ -249,7 +249,7 @@ def run_team_health_check(
 
     roster_service = getattr(page, "health_check_roster_service", None)
     if roster_service is None:
-        roster_service = RosterService(EsoDatabase(get_data_dir() / "eso.db"))
+        roster_service = RosterService(EsoDatabase(get_user_database_path()))
         page.health_check_roster_service = roster_service
 
     members = tuple(
