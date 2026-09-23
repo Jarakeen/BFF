@@ -402,6 +402,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
     ) -> ExtremeSustainedDPSRuntimeScenarioFrontierResult:
         universe_evidence: tuple[str, ...] = ()
         universe_unresolved: tuple[str, ...] = ()
+        weapon_enchantment_control_effects: tuple[EffectVariant, ...] = ()
         if effects is None:
             if self.runtime_effect_universe is None:
                 raise ValueError(
@@ -484,17 +485,20 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                     ),
                 )
 
-        weapon_enchantment_control_effects = tuple(
-            effect
-            for effect in tuple(effects)
-            if str(effect.trigger or "").strip()
-            == WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER
-        ) if effects is not None and 'weapon_enchantment_control_effects' not in locals() else weapon_enchantment_control_effects
-        consequence_effects = tuple(
-            effect
-            for effect in tuple(effects)
-            if effect not in weapon_enchantment_control_effects
-        )
+        else:
+            weapon_enchantment_control_effects = tuple(
+                effect
+                for effect in tuple(effects)
+                if str(effect.trigger or "").strip()
+                == WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER
+            )
+            effects = tuple(
+                effect
+                for effect in tuple(effects)
+                if effect not in weapon_enchantment_control_effects
+            )
+
+        consequence_effects = tuple(effects)
         event_effects = (
             *consequence_effects,
             *weapon_enchantment_control_effects,
