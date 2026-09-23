@@ -18,12 +18,18 @@ class _PotionEvidence:
         self.additional_resource_event_denominator_proven = proven
 
 
-def _runtime_state_frontier_resolver():
+def _runtime_state_frontier_resolver(
+    *,
+    supplemental_event_denominator_proven=True,
+    supplemental_history_denominator_proven=True,
+):
     return SimpleNamespace(
         scenario_frontier=SimpleNamespace(
             runtime_effect_universe=object(),
             runtime_effect_scaling=object(),
-        )
+        ),
+        supplemental_event_denominator_proven=supplemental_event_denominator_proven,
+        supplemental_history_denominator_proven=supplemental_history_denominator_proven,
     )
 
 
@@ -78,6 +84,34 @@ def test_composition_preserves_required_canonical_pipeline_adapters() -> None:
     assert result.pipeline.mundus_food_adapter == "mundus-food"
     assert result.pipeline.encounter_policy_adapter == "encounter"
 
+
+
+
+
+def test_composition_refuses_unproven_supplemental_runtime_event_denominator() -> None:
+    kwargs = _kwargs()
+    kwargs["runtime_state_frontier_resolver"] = _runtime_state_frontier_resolver(
+        supplemental_event_denominator_proven=False,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="proven-complete supplemental runtime-event denominator",
+    ):
+        ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
+
+
+def test_composition_refuses_unproven_supplemental_runtime_history_denominator() -> None:
+    kwargs = _kwargs()
+    kwargs["runtime_state_frontier_resolver"] = _runtime_state_frontier_resolver(
+        supplemental_history_denominator_proven=False,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="proven-complete supplemental runtime-history denominator",
+    ):
+        ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
 
 def test_composition_refuses_unproven_additional_resource_event_denominator() -> None:
     kwargs = _kwargs()
