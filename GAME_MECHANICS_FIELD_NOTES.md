@@ -1838,3 +1838,12 @@ An exact weapon-glyph damage number is not enough if it is added only after rota
 **Layman's version:** damage that happens at 1.5 seconds has to hurt the boss before a 2-second execute checks how hurt the boss is. Adding it to the total at the end is mathematically neat and mechanically wrong.
 
 **For BFF:** exact supplemental damage now runs through the same sequential target-Health ledger as action and periodic damage. Cross-source events sharing an exact timestamp remain fail-closed until ESO ordering for that instant is proven.
+
+
+## 2026-09-23 — Poisons suppress a weapon set, not a whole character
+
+Current ESO Support says poisons are equipped alongside wielded weapon sets and suppress the enchantments on the weapon set carrying the poison. That makes poison ownership a front/back-bar fact, not one global character toggle.
+
+**Layman's version:** poison on the back bar turns off the back-bar glyph. It does not reach across the character sheet and mug the front-bar glyph too.
+
+**For BFF:** saved builds and canonical bars now preserve front/back poison ownership separately, and weapon-enchantment source projection suppresses only the poisoned bar. Poison proc cadence, effect strength, and shared timing rules remain their own unresolved mechanics.
