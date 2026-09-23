@@ -212,3 +212,17 @@ def test_shared_unresolved_potion_evidence_is_a_hard_ranking_failure() -> None:
     )
     assert ranked[0].tier is RotationCandidateTier.INELIGIBLE
     assert any("hard inherited unresolved" in reason for reason in ranked[0].reasons)
+
+
+
+def test_shared_potion_text_unrelated_to_timeline_stays_advisory() -> None:
+    message = "potion display label metadata is unresolved"
+    scorecard = RotationCandidateScorecardService().compare(
+        baseline_plan=_plan(),
+        candidate_plan=_plan(),
+        baseline_sustain=_sustain(ending=20000, unresolved=(message,)),
+        candidate_sustain=_sustain(ending=20000, unresolved=(message,)),
+    )
+
+    assert scorecard.inherited_unresolved == (message,)
+    assert scorecard.hard_inherited_unresolved == ()
