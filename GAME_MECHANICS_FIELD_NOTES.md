@@ -1776,3 +1776,12 @@ Weapon **Infused** changes two separate things: enchantment **magnitude** and en
 **Layman's version:** making the glyph hit harder and making it fire sooner are two different switches. We had the first switch wired to both labels, which looked tidy and did absolutely nothing for the timer.
 
 **For BFF:** weapon-enchantment runtime now uses the quality-aware Infused magnitude rule plus the separate canonical `enchantment_cooldown_reduction` rule. Gold/Legendary quality aliases are normalized before the magnitude lookup, and cooldown policy remains fail-closed if the canonical cooldown rule is missing or ambiguous.
+
+
+## 2026-09-23 — A glyph firing is not the same as its consequence being scored
+
+The runtime sequence can prove exactly which weapon enchantment fired and when, but that only resolves the **proc source**. The selected glyph may still deal damage, restore a resource or Health, apply a shield, or apply a buff/debuff, and each of those consequences needs its own runtime consumer.
+
+**Layman's version:** proving the glyph fired does not prove its damage, restore, or debuff reached the score. A perfectly scheduled proc can still be missing from DPS, sustain, or uptime if its consequence never reaches the relevant engine.
+
+**For BFF:** exact sustained-DPS leaves now audit every consequence row attached to selected glyph procs. Any selected consequence without an explicit consumer remains unresolved and blocks mechanic completeness rather than being treated as zero.
