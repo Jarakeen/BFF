@@ -25,8 +25,8 @@ class CanonicalCharacterBinding:
 
 class RosterCanonicalCharacterBindingService:
     def __init__(self, database: EsoDatabase, build_service: BuildService):
-        self.database = database
         self.roster = RosterService(database)
+        self.database = self.roster.db
         self.build_service = build_service
 
     def _canonical_character(self, character_id: str) -> dict:
