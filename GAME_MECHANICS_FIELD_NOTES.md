@@ -1702,3 +1702,13 @@ A weapon-enchantment damage event can have one unambiguous source weapon while t
 **Layman's version:** knowing which door to knock on does not prove anyone is home. A single owned enchantment is not automatically an active proc if its timer is unknown.
 
 **For BFF:** Objective #32 now keeps source ownership, cooldown-state proof, and proc occurrence distinct. The shared runtime attempt model also supports binding one activation attempt to one exact EffectVariant source so a resolved one-hit enchant selection cannot leak into every matching enchantment.
+---
+
+## 2026-09-23 — Knowing an enchant cooldown number is not enough to simulate its timer
+
+The cooldown-policy resolver exposed a useful distinction: a trustworthy **4-second** direct-damage enchant cooldown still does not tell BFF whether two copies share one timer, whether different enchant identities use independent timers, or what exact identity owns that cooldown state.
+
+**Layman's version:** knowing that a timer lasts four seconds is not the same thing as knowing which things are sharing that timer.
+
+**For BFF:** cooldown duration and cooldown topology stay separate proof requirements. `EffectVariant.name` can become the timer identity only after the game rule saying same identities share that timer is authoritative.
+
