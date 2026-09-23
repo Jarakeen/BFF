@@ -32,6 +32,7 @@ class WeaponEnchantmentCadenceEvidence:
     activation_evidence_note: str
     off_bar_source_persists: bool | None
     off_bar_authority: WeaponEnchantmentCadenceAuthority
+    off_bar_evidence_note: str
     cooldown_scope: str | None
     cooldown_scope_authority: WeaponEnchantmentCadenceAuthority
     poison_replaces_enchantment: bool | None
@@ -99,8 +100,8 @@ class WeaponEnchantmentCadenceEvidence:
 # Attack, or weapon ability that deals damage procs a weapon enchantment 100% of the
 # time when that enchantment is not on cooldown. Dual Wield weapon abilities may proc
 # either weapon, favoring one whose enchantment is not on cooldown. Remaining cadence
-# topology below is still provisional: ground weapon DoTs can continue firing the
-# originating weapon enchant after a bar swap; damage enchants are observed with a
+# topology below is only partly provisional: Update 19 establishes that enchantments
+# remember the source weapon across a bar swap; damage enchants are observed with a
 # four-second base cooldown; an equipped alchemical poison suppresses the enchantment;
 # and duplicate enchantment identities share cooldown while different identities can
 # retain independent timers. Buff/debuff base cooldown evidence conflicts between
@@ -128,7 +129,12 @@ _PROVISIONAL = {
             "Dual Wield weapon abilities favor an enchantment that is not on cooldown."
         ),
         off_bar_source_persists=True,
-        off_bar_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
+        off_bar_authority=WeaponEnchantmentCadenceAuthority.AUTHORITATIVE,
+        off_bar_evidence_note=(
+            "ZOS Update 19 patch notes: enchantments remember the weapon from which "
+            "the activating ability was fired, so later damage after a weapon swap "
+            "uses that source weapon's enchantment."
+        ),
         cooldown_scope="per_effect_identity",
         cooldown_scope_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
         poison_replaces_enchantment=True,
@@ -165,7 +171,12 @@ _PROVISIONAL = {
             "Dual Wield weapon abilities favor an enchantment that is not on cooldown."
         ),
         off_bar_source_persists=True,
-        off_bar_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
+        off_bar_authority=WeaponEnchantmentCadenceAuthority.AUTHORITATIVE,
+        off_bar_evidence_note=(
+            "ZOS Update 19 patch notes: enchantments remember the weapon from which "
+            "the activating ability was fired, so later damage after a weapon swap "
+            "uses that source weapon's enchantment."
+        ),
         cooldown_scope="per_effect_identity",
         cooldown_scope_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
         poison_replaces_enchantment=True,
