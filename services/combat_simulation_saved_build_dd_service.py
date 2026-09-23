@@ -9,6 +9,7 @@ from minmax.combat_state_snapshot import CombatStateSnapshot
 from minmax.rotation_plan import RotationPlan
 from models.combat_simulation import (
     CombatSimulationIncomingDamage,
+    CombatSimulationOutgoingDamage,
     CombatSimulationResult,
     CombatSimulationTargetState,
 )
@@ -68,6 +69,7 @@ class CombatSimulationSavedBuildDDService:
         target_resistance: float,
         initial_bar: str = "front",
         incoming_damage: tuple[CombatSimulationIncomingDamage, ...] = (),
+        supplemental_outgoing_damage: tuple[CombatSimulationOutgoingDamage, ...] = (),
         damage_candidate: GeneratedRotationCandidate | None = None,
         target_combat_state_resolver: TargetCombatStateResolver | None = None,
         target_resistance_resolver: TargetResistanceResolver | None = None,
@@ -126,6 +128,7 @@ class CombatSimulationSavedBuildDDService:
                 target_identity=damage_target_identity,
                 player_identity=str(build.Name or plan.character_name or "simulation_player"),
                 ledger=ledger,
+                supplemental_outgoing_damage=tuple(supplemental_outgoing_damage),
             )
             sequential_unresolved = sequential.unresolved
             sequential_damage = sequential.damage
