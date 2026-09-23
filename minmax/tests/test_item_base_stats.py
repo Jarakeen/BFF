@@ -236,12 +236,14 @@ def test_non_gold_or_non_cp160_armor_is_not_guessed():
 
 
 def test_weapon_type_round_trips_and_old_builds_default_blank():
-    slot = GearSlot(WeaponType="Restoration Staff", Quality="Gold", Level="CP160")
+    slot = GearSlot(WeaponType="Restoration Staff", Quality="Gold", EnchantQuality="Gold", Level="CP160")
     restored = GearSlot.from_dict(slot.to_dict())
     old = GearSlot.from_dict({"Set": "Old Set", "Quality": "Gold", "Level": "CP160"})
 
     assert restored.WeaponType == "Restoration Staff"
+    assert restored.EnchantQuality == "Gold"
     assert old.WeaponType == ""
+    assert old.EnchantQuality == ""
 
 
 def test_reinforced_heavy_chest_uses_floored_item_armor_value():
