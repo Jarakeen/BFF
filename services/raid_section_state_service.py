@@ -112,6 +112,18 @@ class RaidSectionStateService:
             return ""
         return _clean(plan_links.get(_clean(encounter_id)))
 
+    def raid_map_links(self, plan_id: str) -> dict[str, str]:
+        payload = self._read()
+        links = payload.get("raid_map_links", {})
+        plan_links = links.get(_clean(plan_id), {}) if isinstance(links, dict) else {}
+        if not isinstance(plan_links, dict):
+            return {}
+        return {
+            _clean(encounter_id): _clean(map_id)
+            for encounter_id, map_id in plan_links.items()
+            if _clean(encounter_id) and _clean(map_id)
+        }
+
     def set_linked_raid_map_id(
         self,
         plan_id: str,
