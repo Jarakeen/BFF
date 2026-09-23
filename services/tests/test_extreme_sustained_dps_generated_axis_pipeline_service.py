@@ -539,3 +539,91 @@ def test_candidate_runtime_state_stage_runs_after_finalized_potion() -> None:
     assert leaf.runtime_state_choice.runtime_state_id == "runtime:final"
     assert leaf.runtime_state_choice.snapshot == "snapshot:final"
     assert ("candidate-runtime-state", True) in calls
+
+
+
+class _PotionCooldownResolver:
+    def __init__(self, *, cooldown=37.0, unresolved=()):
+        self.cooldown = cooldown
+        self.unresolved = tuple(unresolved)
+        self.calls = []
+
+    def resolve(self, **kwargs):
+        self.calls.append(kwargs)
+        return SimpleNamespace(
+            complete=self.cooldown is not None and not self.unresolved,
+            cooldown_seconds=self.cooldown,
+            unresolved=self.unresolved,
+        )
+
+
+def test_pipeline_resolves_effective_potion_cooldown_from_finalized_build() -> None:
+    calls = []
+    resolver = _PotionCooldownResolver(cooldown=37.0)
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+    )
+    state = pipeline.root(
+        "build",
+        "progression",
+        dual_bar_frontier="dual-frontier",
+        candidate_id_prefix="structural:9",
+        duration_seconds=10.0,
+        potion_cooldown_seconds=None,
+        potion_cooldown_resolver=resolver,
+        potion_cooldown_scenario="scenario-proof",
+        starting_ultimate=70.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="boss",
+    )
+
+    for axis in pipeline.axes()[:2]:
+        state = axis.candidate_at(state, 0)
+
+    assert pipeline.axes()[2].candidate_count(state) == 1
+    rotation_root = next(row for row in calls if row[:2] == ("rotation", "root"))
+    assert rotation_root[3]["potion_cooldown_seconds"] == 37.0
+    assert resolver.calls == [
+        {
+            "player_build": "assembled-build",
+            "progression": "assembled-progression",
+            "scenario": "scenario-proof",
+        }
+    ]
+
+
+def test_pipeline_refuses_unresolved_effective_potion_cooldown() -> None:
+    calls = []
+    resolver = _PotionCooldownResolver(
+        cooldown=None,
+        unresolved=("scenario potion cooldown inventory incomplete",),
+    )
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+    )
+    state = pipeline.root(
+        "build",
+        "progression",
+        dual_bar_frontier="dual-frontier",
+        candidate_id_prefix="structural:9",
+        duration_seconds=10.0,
+        potion_cooldown_seconds=None,
+        potion_cooldown_resolver=resolver,
+        starting_ultimate=70.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="boss",
+    )
+
+    for axis in pipeline.axes()[:2]:
+        state = axis.candidate_at(state, 0)
+
+    with pytest.raises(ValueError, match="potion cooldown is unresolved"):
+        pipeline.axes()[2].candidate_count(state)
