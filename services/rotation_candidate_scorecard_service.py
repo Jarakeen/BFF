@@ -222,7 +222,9 @@ class RotationCandidateScorecard:
         Inherited/shared unresolved evidence remains diagnostic because every
         candidate carries the same limitation. Candidate-specific unresolved
         evidence is hard-failing because it means this candidate itself depends on
-        mechanics that are not sufficiently resolved to recommend it safely.
+        mechanics that are not sufficiently resolved to recommend it safely. Shared
+        potion uncertainty is also hard-failing because it changes the resource
+        timeline rather than merely limiting comparative interpretation.
         """
         return (
             not self.missing_demand_requirements
