@@ -255,21 +255,26 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "with CP160/Truly Superb and Infused provenance, canonical non-item "
                 "potion_cooldown_reduction EffectVariants can be evaluated conservatively, "
                 "and a dedicated aggregator emits a final effective cooldown only when the "
-                "non-item effect inventory is explicitly complete."
+                "non-item effect inventory is explicitly complete. Objective #32 can now resolve "
+                "that effective cooldown from each finalized canonical build and fails closed "
+                "when canonical build adaptation, passive-grant inventory, dynamic cooldown "
+                "topology, or external scenario inventory is unresolved."
             ),
             evidence_source=(
                 "minmax/jewelry_potion_cooldown_repository.py; "
                 "services/rotation_saved_build_potion_cooldown_item_service.py; "
                 "services/rotation_potion_cooldown_effect_variant_service.py; "
                 "services/rotation_effective_potion_cooldown_service.py; "
+                "services/extreme_sustained_dps_potion_cooldown_resolution_service.py; "
+                "services/extreme_sustained_dps_generated_axis_pipeline_service.py; "
                 "minmax/rotation_potion_cadence.py"
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
-                "Provide a complete build/context-wide canonical effect inventory that can "
-                "prove all applicable non-item potion-cooldown channels are present or absent, "
-                "including conditional skill/passive/set and scenario-specific modifiers, "
-                "before automatically promoting the aggregated value into final candidate cadence."
+                "Complete the canonical PassiveGrant derivation for generated progression "
+                "and prove the external scenario potion-cooldown effect denominator; dynamic "
+                "skill/passive/set cooldown modifiers with runtime availability topology must "
+                "remain candidate-resolved rather than being flattened into a permanent reduction."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
