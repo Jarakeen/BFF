@@ -71,6 +71,9 @@ from services.extreme_sustained_dps_weapon_enchantment_runtime_source_service im
 from services.extreme_sustained_dps_weapon_enchantment_resistance_reduction_service import (
     ExtremeSustainedDPSWeaponEnchantmentResistanceReductionService,
 )
+from services.extreme_sustained_dps_weapon_enchantment_weapon_spell_damage_service import (
+    ExtremeSustainedDPSWeaponEnchantmentWeaponSpellDamageService,
+)
 from services.extreme_sustained_dps_runtime_target_combat_state_service import (
     ExtremeSustainedDPSRuntimeTargetCombatStateService,
 )
@@ -277,14 +280,22 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 enchantment_consequences
             )
         )
+        enchantment_weapon_spell_damage = (
+            ExtremeSustainedDPSWeaponEnchantmentWeaponSpellDamageService.resolve(
+                enchantment_consequences
+            )
+        )
+        consumed_enchantment_effect_types: list[str] = []
+        if enchantment_resistance.resolved:
+            consumed_enchantment_effect_types.append(
+                "physical_spell_resistance_reduction"
+            )
+        if enchantment_weapon_spell_damage.resolved:
+            consumed_enchantment_effect_types.append("weapon_spell_damage")
         enchantment_coverage = (
             ExtremeSustainedDPSWeaponEnchantmentConsequenceCoverageService.assess(
                 enchantment_consequences,
-                consumed_effect_types=(
-                    ("physical_spell_resistance_reduction",)
-                    if enchantment_resistance.resolved
-                    else ()
-                ),
+                consumed_effect_types=tuple(consumed_enchantment_effect_types),
             )
         )
         activation = self.activation_service.build(gear_state, build=build)
@@ -325,7 +336,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             )
 
         def runtime_combat_state_resolver(time_seconds: float, sequence: int | None = None):
-            return runtime_combat_state.resolve(
+            resolved = runtime_combat_state.resolve(
                 candidate_build,
                 progression=effective_progression,
                 plan=plan,
@@ -333,6 +344,22 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 time_seconds=time_seconds,
                 sequence=sequence,
                 initial_bar=initial_bar,
+            )
+            if not resolved.resolved:
+                return resolved
+            enchantment_active_effects = (
+                enchantment_weapon_spell_damage.active_effects_at(time_seconds)
+            )
+            if not enchantment_active_effects:
+                return resolved
+            return replace(
+                resolved,
+                active_effects=tuple(
+                    (
+                        *tuple(resolved.active_effects),
+                        *tuple(enchantment_active_effects),
+                    )
+                ),
             )
 
         runtime_build_context = RotationPlanRuntimeBuildContextService(
@@ -439,6 +466,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 *tuple(target_runtime_unresolved),
                 *tuple(getattr(enchantment_sources, "unresolved", ()) or ()),
                 *tuple(enchantment_resistance.unresolved),
+                *tuple(enchantment_weapon_spell_damage.unresolved),
                 *tuple(enchantment_coverage.unresolved),
             )
         )
@@ -453,6 +481,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             "Damage evaluated through Phase 14 Combat Simulation using candidate_build provenance",
             *tuple(getattr(enchantment_sources, "evidence", ()) or ()),
             *tuple(enchantment_resistance.evidence),
+            *tuple(enchantment_weapon_spell_damage.evidence),
             *tuple(enchantment_coverage.evidence),
         )
         if summary.modeled_dps is None:
