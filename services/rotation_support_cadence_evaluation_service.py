@@ -172,10 +172,11 @@ class RotationSupportCadenceEvaluationService:
 
         evaluated: list[RotationSupportCadenceEvaluatedCandidate] = []
         for candidate in candidates:
-            potion_restoration_events = self.potion_runtime_service.restoration_events(
+            potion_restoration = self.potion_runtime_service.resolve_restoration_events(
                 build,
                 plan=candidate.plan,
             )
+            potion_restoration_events = potion_restoration.events
             sustain = self.sustain_service.evaluate(
                 build=build,
                 plan=candidate.plan,
@@ -185,6 +186,13 @@ class RotationSupportCadenceEvaluationService:
                 calculation_context=evidence.calculation_context,
                 displayed_recovery_at=evidence.displayed_recovery_at,
             )
+            if potion_restoration.unresolved:
+                sustain = replace(
+                    sustain,
+                    unresolved=self._dedupe(
+                        tuple(sustain.unresolved) + tuple(potion_restoration.unresolved)
+                    ),
+                )
             scorecard = self.scorecard_service.compare(
                 baseline_plan=baseline_plan,
                 candidate_plan=candidate.plan,
