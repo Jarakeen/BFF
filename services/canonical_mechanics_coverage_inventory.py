@@ -311,11 +311,12 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
-                "Activation causes are now primary-source proven by ZOS Update 20. Promote exact cadence "
-                "only after current-version authoritative evidence resolves base proc cooldown values, eligible "
-                "periodic/off-bar weapon-skill source ownership, independent/shared cooldown and target-lockout "
-                "behavior, poison replacement, and any proc-damage exclusions. Only then may trait-adjusted "
-                "cooldown rules be composed into exact runtime cadence."
+                "Activation causes are primary-source proven by ZOS Update 20, poison suppression is "
+                "primary-source proven from Dark Brotherhood, direct-damage 4-second cooldown has Update 21 "
+                "primary evidence, and v4.2.6 proves one isolated damage instance can proc at most one enchantment. "
+                "Exact cadence still needs authoritative buff/debuff cooldown values, periodic/off-bar weapon-skill "
+                "source ownership, per-opportunity source selection, independent/shared cooldown identity behavior, "
+                "and any remaining proc-damage exclusions before trait-adjusted cooldown rules can drive simulation."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
