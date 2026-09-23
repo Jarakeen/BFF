@@ -16,6 +16,7 @@ import json
 from models.roster_model import RosterMember, normalize_roster_role
 from models.team_schedule import TeamSchedule, TeamScheduleSlot
 from services.eso_database import EsoDatabase
+from services.user_database import user_database_for
 from services.roster_placeholder_identity import is_personnel_placeholder
 
 
@@ -30,7 +31,7 @@ class RosterService:
     }
 
     def __init__(self, database: EsoDatabase):
-        self.db = database
+        self.db = user_database_for(database)
         self._ensure_schema()
         self.remove_placeholder_members()
 
