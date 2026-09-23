@@ -151,6 +151,21 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
                 )
             )
 
+        if dedicated_weapon_runtime and not weapon_sources:
+            runtime_boundary_gaps = tuple(
+                dict.fromkeys(
+                    (
+                        *runtime_boundary_gaps,
+                        *(
+                            item
+                            for item in boundaries
+                            if "weapon enchantment runtime effect timing deferred"
+                            in item.casefold()
+                        ),
+                    )
+                )
+            )
+
         unresolved = tuple(
             dict.fromkeys(
                 (
