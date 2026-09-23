@@ -4,7 +4,7 @@ from minmax.character_progression import CharacterProgression
 from services.extreme_bash_deadly_bash_service import ExtremeDeadlyBashService
 
 
-def _database(tmp_path, description="WITH ONE HAND WEAPON AND SHIELD EQUIPPED Improves your standard Bash attacks, causing them to deal 500 more damage and cost 50% less Stamina."):
+def _database(tmp_path, description="WITH ONE HAND WEAPON AND SHIELD EQUIPPED Improves your standard Bash attacks, causing them to deal 500 more damage and cost 50% less Stamina.", raw_description=""):
     path = tmp_path / "eso.db"
     with sqlite3.connect(path) as db:
         db.executescript(
@@ -36,7 +36,8 @@ def _database(tmp_path, description="WITH ONE HAND WEAPON AND SHIELD EQUIPPED Im
             (description,),
         )
         db.execute(
-            "INSERT INTO skill_rank(id, skill_id, ability_id, rank, raw_description) VALUES (10, 1, 100, 2, '')"
+            "INSERT INTO skill_rank(id, skill_id, ability_id, rank, raw_description) VALUES (10, 1, 100, 2, ?)",
+            (raw_description,),
         )
     return path
 
@@ -78,7 +79,7 @@ def test_missing_recorded_rank_fails_closed(tmp_path):
     )
 
     assert not result.mechanic_complete
-    assert result.unresolved == ("Canonical Deadly Bash rank not found: 1",)
+    assert result.unresolved == ("Canonical passive rank not found: Deadly Bash rank 1",)
 
 
 def test_unrecognized_tooltip_fails_closed(tmp_path):
@@ -90,3 +91,23 @@ def test_unrecognized_tooltip_fails_closed(tmp_path):
     assert result.skill2_bash_damage is None
     assert result.skill_bash_cost is None
     assert result.unresolved[0].startswith("Unrecognized Deadly Bash tooltip:")
+
+
+def test_conflicting_rank_tooltips_fail_closed(tmp_path):
+    result = ExtremeDeadlyBashService(
+        _database(
+            tmp_path,
+            description=(
+                "WITH ONE HAND WEAPON AND SHIELD EQUIPPED Improves your standard "
+                "Bash attacks, causing them to deal 500 more damage and cost 50% less Stamina."
+            ),
+            raw_description=(
+                "WITH ONE HAND WEAPON AND SHIELD EQUIPPED Improves your standard "
+                "Bash attacks, causing them to deal 250 more damage and cost 25% less Stamina."
+            ),
+        )
+    ).resolve(CharacterProgression(passive_ranks={"Deadly Bash": 2}))
+
+    assert not result.mechanic_complete
+    assert result.skill2_bash_damage is None
+    assert "tooltip disagreement" in result.unresolved[0]
