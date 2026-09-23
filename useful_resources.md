@@ -411,3 +411,11 @@ https://eso-hub.com/en/traits/weapon/infused
 **Use for:** Current-live corroboration of the weapon Infused trait split: enchantment effect strength scales by item quality while enchantment cooldown reduction remains 50%. Useful for checking the imported trait semantics and the Gold/Legendary quality path used by saved builds.
 
 **Confidence:** Current community/reference-grade, not primary ZOS mechanics proof. Use to corroborate the canonical imported trait description and detect data-routing mistakes; prefer primary/client-derived evidence before introducing new hardcoded combat constants.
+
+
+### ZOS Update 23 PC/Mac Patch Notes v5.1.5 — Oblivion Damage / Decrease Health
+https://forums.elderscrollsonline.com/en/discussion/491043/pc-mac-patch-notes-v5-1-5-scalebreaker-update-23
+
+**Use for:** Primary ZOS evidence for the Update 23 player-sourced Oblivion Damage model and Decrease Health weapon enchantment: target-Max-Health scaling, quality-scaled percentage with the documented Legendary CP160 ceiling, maximum damage cap, and the special bypass/non-critical behavior described for player-sourced Oblivion Damage.
+
+**Confidence:** Primary / reference-grade for the documented Update 23 mechanic. Current imported enchant descriptions should still be checked for present-version scaling metadata before exact U50 damage is applied; do not infer glyph quality from weapon quality.
