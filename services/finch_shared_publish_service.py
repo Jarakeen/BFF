@@ -18,6 +18,7 @@ from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.finch_api_client import FinchApiClient, FinchSharedSnapshot
 from services.raid_plan_repository import RaidPlanRepository
+from services.raid_section_state_service import RaidSectionStateService
 from services.raid_plan_saved_build_resolution_service import (
     RaidPlanSavedBuildResolutionService,
 )
@@ -219,6 +220,7 @@ def shared_raid_plan_payload(
     plan: RaidPlan,
     *,
     saved_builds=(),
+    raid_maps: dict[str, str] | None = None,
 ) -> dict[str, object]:
     if not isinstance(plan, RaidPlan):
         raise TypeError("plan must be a RaidPlan")
@@ -230,6 +232,7 @@ def shared_raid_plan_payload(
         "team_name": plan.team_name or "",
         "difficulty": plan.difficulty or "",
         "status": plan.status,
+        "raid_maps": dict(raid_maps or {}),
         "members": [
             {
                 "seat_id": member.seat_id,
@@ -286,11 +289,11 @@ class FinchSharedPublishService:
         )
         return self._result(snapshot)
 
-    def publish_raid_plan(self, plan: RaidPlan) -> FinchPublishResult:
+    def publish_raid_plan(self, plan: RaidPlan, *, raid_maps: dict[str, str] | None = None) -> FinchPublishResult:
         saved_builds = ()
         if self.build_service is not None:
             saved_builds = tuple(self.build_service.load().Members)
-        payload = shared_raid_plan_payload(plan, saved_builds=saved_builds)
+        payload = shared_raid_plan_payload(plan, saved_builds=saved_builds, raid_maps=raid_maps)
         snapshot = self.client.publish_shared_raid_plan(
             snapshot_key=plan.plan_id,
             payload=payload,
@@ -350,7 +353,10 @@ def publish_raid_plan_to_finch(
             client=_configured_client(settings_path=settings_path, timeout=timeout),
             roster=roster,
             build_service=BuildService(Path(database_path).with_name("builds.json")),
-        ).publish_raid_plan(plan)
+        ).publish_raid_plan(
+            plan,
+            raid_maps=RaidSectionStateService().raid_map_links(plan.plan_id),
+        )
     finally:
         database.close()
 
