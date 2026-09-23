@@ -244,15 +244,15 @@ class RosterPage(BaseRosterPage):
         self.new_team_name.returnPressed.connect(self._create_team)
         manage_row.addWidget(self.new_team_name, 1)
 
-        create_team = QPushButton("Create Team")
-        create_team.setProperty("primary", True)
-        create_team.clicked.connect(self._create_team)
-        manage_row.addWidget(create_team)
+        self.create_team_button = QPushButton("Create Team")
+        self.create_team_button.setProperty("primary", True)
+        self.create_team_button.clicked.connect(self._create_team)
+        manage_row.addWidget(self.create_team_button)
 
-        delete_team = QPushButton("Delete Selected Team")
-        delete_team.setToolTip("Remove the selected team, its schedule, and its roster memberships.")
-        delete_team.clicked.connect(self._delete_selected_team)
-        manage_row.addWidget(delete_team)
+        self.delete_team_button = QPushButton("Delete Selected Team")
+        self.delete_team_button.setToolTip("Remove the selected team, its schedule, and its roster memberships.")
+        self.delete_team_button.clicked.connect(self._delete_selected_team)
+        manage_row.addWidget(self.delete_team_button)
         manage_card.addLayout(manage_row)
         root.addWidget(manage_card)
 
@@ -311,10 +311,10 @@ class RosterPage(BaseRosterPage):
         self.schedule_preview = QLabel("Schedule not set")
         self.schedule_preview.setProperty("cardBadge", True)
         preview_row.addWidget(self.schedule_preview, 1)
-        save = QPushButton("Save Team Schedule")
-        save.setProperty("primary", True)
-        save.clicked.connect(self._save_team_schedule)
-        preview_row.addWidget(save)
+        self.save_team_schedule_button = QPushButton("Save Team Schedule")
+        self.save_team_schedule_button.setProperty("primary", True)
+        self.save_team_schedule_button.clicked.connect(self._save_team_schedule)
+        preview_row.addWidget(self.save_team_schedule_button)
 
         self.publish_team_finch_button = QPushButton("Publish Team to Finch")
         self.publish_team_finch_button.setToolTip(
@@ -340,6 +340,34 @@ class RosterPage(BaseRosterPage):
         root.addStretch(1)
         return page
 
+    def _refresh_team_action_availability(self) -> None:
+        team = (
+            self.schedule_team_combo.currentText().strip()
+            if hasattr(self, "schedule_team_combo")
+            else ""
+        )
+        if hasattr(self, "delete_team_button"):
+            self.delete_team_button.setEnabled(bool(team))
+            self.delete_team_button.setToolTip(
+                "Remove the selected team, its schedule, and its roster memberships."
+                if team
+                else "Unavailable: Create or select a Team first."
+            )
+        if hasattr(self, "save_team_schedule_button"):
+            self.save_team_schedule_button.setEnabled(bool(team))
+            self.save_team_schedule_button.setToolTip(
+                "Save this Team's raid days, time, and time zone."
+                if team
+                else "Unavailable: Create or select a Team first."
+            )
+        if hasattr(self, "publish_team_finch_button"):
+            self.publish_team_finch_button.setEnabled(bool(team))
+            self.publish_team_finch_button.setToolTip(
+                "Publish the selected Team's saved schedule and basic active roster identity to Finch."
+                if team
+                else "Unavailable: Create or select a Team first."
+            )
+
     def refresh(self):
         super().refresh()
         if hasattr(self, "schedule_team_combo"):
@@ -361,6 +389,7 @@ class RosterPage(BaseRosterPage):
         finally:
             self.schedule_team_combo.blockSignals(False)
         self._load_team_schedule(self.schedule_team_combo.currentText())
+        self._refresh_team_action_availability()
 
     def _create_team(self) -> None:
         name = self.new_team_name.text().strip()
@@ -454,27 +483,30 @@ class RosterPage(BaseRosterPage):
                 return
 
         self._ui_safety_loading_schedule = True
-        schedule = self.roster_service.get_team_schedule(target_team)
-        for check in self.schedule_day_checks.values():
-            check.blockSignals(True)
-        self.schedule_time_edit.blockSignals(True)
-        self.schedule_timezone_combo.blockSignals(True)
         try:
-            self._set_selected_days(schedule.RaidDays if schedule else "")
-            if schedule and schedule.RaidTime:
-                parsed = QTime.fromString(schedule.RaidTime, "h:mm AP")
-                if parsed.isValid():
-                    self.schedule_time_edit.setTime(parsed)
-            timezone = schedule.TimeZone if schedule and schedule.TimeZone else "America/New_York"
-            self.schedule_timezone_combo.setCurrentText(timezone)
-        finally:
+            schedule = self.roster_service.get_team_schedule(target_team)
             for check in self.schedule_day_checks.values():
-                check.blockSignals(False)
-            self.schedule_time_edit.blockSignals(False)
-            self.schedule_timezone_combo.blockSignals(False)
-        self._update_schedule_preview()
-        self._capture_schedule_baseline()
-        self._ui_safety_loading_schedule = False
+                check.blockSignals(True)
+            self.schedule_time_edit.blockSignals(True)
+            self.schedule_timezone_combo.blockSignals(True)
+            try:
+                self._set_selected_days(schedule.RaidDays if schedule else "")
+                if schedule and schedule.RaidTime:
+                    parsed = QTime.fromString(schedule.RaidTime, "h:mm AP")
+                    if parsed.isValid():
+                        self.schedule_time_edit.setTime(parsed)
+                timezone = schedule.TimeZone if schedule and schedule.TimeZone else "America/New_York"
+                self.schedule_timezone_combo.setCurrentText(timezone)
+            finally:
+                for check in self.schedule_day_checks.values():
+                    check.blockSignals(False)
+                self.schedule_time_edit.blockSignals(False)
+                self.schedule_timezone_combo.blockSignals(False)
+            self._update_schedule_preview()
+            self._capture_schedule_baseline()
+            self._refresh_team_action_availability()
+        finally:
+            self._ui_safety_loading_schedule = False
 
     def _current_team_schedule(self) -> TeamSchedule | None:
         team = self.schedule_team_combo.currentText().strip()
