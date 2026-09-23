@@ -18,8 +18,10 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.build_reuse_service import BuildReuseService, BuildTemplateRecord
+from services.user_safety_snapshot_service import UserSafetySnapshotService
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
+from ui.ui_safety import confirm_replacement
 
 
 _INSTALLED = False
@@ -138,6 +140,26 @@ class _TemplateNameDialog(QDialog):
         layout.addWidget(buttons)
 
 
+def _build_identity_key(build) -> tuple[str, str, str]:
+    return (
+        str(getattr(build, "Gamertag", "") or "").strip().casefold(),
+        str(getattr(build, "Name", "") or "").strip().casefold(),
+        str(getattr(build, "BuildName", "") or "").strip().casefold(),
+    )
+
+
+def _existing_build_for(page, build):
+    wanted = _build_identity_key(build)
+    return next(
+        (
+            existing
+            for existing in getattr(getattr(page, "roster", None), "Members", ())
+            if _build_identity_key(existing) == wanted
+        ),
+        None,
+    )
+
+
 def _selected_build(page):
     if not page.roster.Members:
         return None
@@ -173,6 +195,38 @@ def _copy_selected_build(page):
     except ValueError as exc:
         QMessageBox.warning(page, "Copy Build", str(exc))
         return
+    existing = _existing_build_for(page, result.build)
+    if existing is not None and not confirm_replacement(
+        page,
+        title="Replace Existing Build",
+        object_label=f'Replace "{existing.BuildName or "build"}" for {existing.Name or existing.Gamertag}?',
+        impact=(
+            "The existing saved Build with the same player, character, and Build name "
+            "will be replaced. Character progression and unrelated Builds are kept."
+        ),
+        confirm_text="Replace Build",
+    ):
+        return
+    if existing is not None:
+        UserSafetySnapshotService().create(
+            f"replace-build-{existing.BuildId or existing.BuildName}"
+        )
+    existing = _existing_build_for(page, result.build)
+    if existing is not None and not confirm_replacement(
+        page,
+        title="Replace Existing Build",
+        object_label=f'Replace "{existing.BuildName or "build"}" for {existing.Name or existing.Gamertag}?',
+        impact=(
+            "Applying this template will replace the saved Build with the same player, "
+            "character, and Build name. Other Builds and character progression are kept."
+        ),
+        confirm_text="Apply and Replace",
+    ):
+        return
+    if existing is not None:
+        UserSafetySnapshotService().create(
+            f"apply-template-replace-build-{existing.BuildId or existing.BuildName}"
+        )
     page.roster = _reuse_service().replace_or_append(page.roster, result.build)
     page.build_service.save(page.roster)
     page._load()
@@ -186,10 +240,30 @@ def _save_selected_as_template(page):
     dialog = _TemplateNameDialog(page, source)
     if dialog.exec() != QDialog.DialogCode.Accepted:
         return
+    template_name = dialog.name.text().strip()
+    existing_template = next(
+        (
+            row
+            for row in _reuse_service().load_templates()
+            if row.template_id == _reuse_service()._stable_id(template_name)
+        ),
+        None,
+    )
+    if existing_template is not None and not confirm_replacement(
+        page,
+        title="Update Build Template",
+        object_label=f'Update template "{existing_template.name}"?',
+        impact=(
+            "The role-level template is kept, but the matching class overlay may be "
+            "replaced by the selected Build. Other class overlays remain intact."
+        ),
+        confirm_text="Update Template",
+    ):
+        return
     try:
         template = _reuse_service().save_template_from_build(
             source,
-            template_name=dialog.name.text().strip(),
+            template_name=template_name,
             include_variants=dialog.include_variants.isChecked(),
             include_notes=dialog.include_notes.isChecked(),
         )
