@@ -339,7 +339,6 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                 self.weapon_enchantment_activation_service
             ),
             source=f"{source}: runtime event skeletons",
-            fixed_attempts=tuple(fixed_attempts),
         )
         (
             runtime_events,
@@ -412,6 +411,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             effects=tuple(effects),
             event_denominator_proven=bool(event_denominator_proven),
             source=f"{source}: runtime event skeletons",
+            fixed_attempts=tuple(fixed_attempts),
         )
         assembled = ExtremeSustainedDPSRuntimeExternalHistoryAssemblyService.build(
             attempt_frontier=attempts,
