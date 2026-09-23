@@ -115,7 +115,18 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
 
     def axis_inventory(self, *, runtime_state_frontier=None):
         axes = tuple(self.pipeline.axes())
-        if runtime_state_frontier is not None:
+        if runtime_state_frontier is not None and runtime_state_frontier_resolver is not None:
+            raise ValueError(
+                "global generated search accepts either static or candidate-resolved runtime_state, not both"
+            )
+        if runtime_state_frontier_resolver is not None:
+            axes = (
+                *axes,
+                ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.candidate_axis(
+                    runtime_state_frontier_resolver
+                ),
+            )
+        elif runtime_state_frontier is not None:
             axes = (
                 *axes,
                 ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.axis(
@@ -154,6 +165,7 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
         root_bound_inputs=None,
         branch_bound_inputs=None,
         runtime_state_frontier=None,
+        runtime_state_frontier_resolver=None,
         potion_cooldown_resolver=None,
         potion_cooldown_scenario=None,
     ):
