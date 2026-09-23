@@ -3,6 +3,7 @@ from pathlib import Path
 
 from .effects import EffectUnit
 from .rule_effects import RuleEffect
+from .jewelry_trait_repository import QUALITY_TO_DATABASE
 
 
 class RuleRepository:
@@ -44,7 +45,11 @@ class RuleRepository:
         gear_type: str,
         quality: str,
     ) -> RuleEffect:
-        cache_key = (str(gear_type), str(quality))
+        normalized_quality = QUALITY_TO_DATABASE.get(
+            str(quality or "").strip().casefold(),
+            str(quality or "").strip(),
+        )
+        cache_key = (str(gear_type), normalized_quality)
         cached = self._infused_effect_cache.get(cache_key)
         if cached is not None:
             return cached
@@ -63,7 +68,7 @@ class RuleRepository:
                   AND item_type = ?
                   AND quality = ?
                 """,
-                (gear_type, quality),
+                (gear_type, normalized_quality),
             ).fetchone()
 
         if row is None:
@@ -81,7 +86,7 @@ class RuleRepository:
             unit=EffectUnit(unit),
             target_system="enchantment",
             gear_type=gear_type,
-            quality=quality,
+            quality=normalized_quality,
         )
         self._infused_effect_cache[cache_key] = effect
         return effect
@@ -105,6 +110,27 @@ class RuleRepository:
                 )
             )
         return effects
+
+    def get_infused_weapon_cooldown_effect(self) -> RuleEffect:
+        """Return the unique canonical Infused weapon-enchantment cooldown rule.
+
+        Weapon enchantment magnitude is quality-dependent and comes from the
+        quality-aware Infused effect lookup. The cooldown reduction is a separate
+        weapon-trait semantic rule and must not be inferred from magnitude.
+        """
+        rows = tuple(
+            rule
+            for rule in self.get_weapon_trait_rules_by_effect_type(
+                "enchantment_cooldown_reduction"
+            )
+            if rule.unit is EffectUnit.PERCENT
+        )
+        if len(rows) != 1:
+            raise ValueError(
+                "Expected exactly one canonical weapon enchantment cooldown-reduction rule, "
+                f"found {len(rows)}"
+            )
+        return rows[0]
 
     def get_weapon_trait_rules(
         self,
