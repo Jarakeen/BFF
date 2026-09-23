@@ -426,12 +426,13 @@ def migrate_legacy_user_data(
 
     source_path = Path(legacy_database or (get_data_dir() / "eso.db"))
     target_path = Path(user_database or ensure_user_database())
+    legacy_data_dir = source_path.parent if legacy_database is not None else get_data_dir()
     achievement_path = Path(
-        achievement_progress or (get_data_dir() / "achievement_progress.json")
+        achievement_progress or (legacy_data_dir / "achievement_progress.json")
     )
-    raid_plan_path = Path(raid_plans or (get_data_dir() / "raid_plans.json"))
-    characters_path = Path(characters or (get_data_dir() / "characters.json"))
-    builds_path = Path(builds or (get_data_dir() / "builds.json"))
+    raid_plan_path = Path(raid_plans or (legacy_data_dir / "raid_plans.json"))
+    characters_path = Path(characters or (legacy_data_dir / "characters.json"))
+    builds_path = Path(builds or (legacy_data_dir / "builds.json"))
     target_path.parent.mkdir(parents=True, exist_ok=True)
 
     counts: dict[str, int] = {}
