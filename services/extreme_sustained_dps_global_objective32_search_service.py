@@ -13,6 +13,9 @@ from services.extreme_sustained_dps_axis_dominance_composition_service import (
 from services.extreme_sustained_dps_generated_tree_coverage_service import (
     ExtremeSustainedDPSGeneratedTreeCoverageService,
 )
+from services.extreme_sustained_dps_closure_inventory_service import (
+    ExtremeSustainedDPSClosureInventoryService,
+)
 from services.extreme_sustained_dps_objective32_blocker_service import (
     ExtremeSustainedDPSObjective32BlockerReport,
     ExtremeSustainedDPSObjective32BlockerService,
@@ -37,6 +40,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
     closure: ExtremeSustainedDPSTheoreticalMaximumClosure
     scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof | None
     blockers: ExtremeSustainedDPSObjective32BlockerReport
+    closure_inventory: object | None = None
     supplemental_evidence: tuple[str, ...] = ()
 
     @property
@@ -76,6 +80,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         coverage_proofs: tuple[ExtremeSustainedDPSAxisCoverageProof, ...] = (),
         scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof | None = None,
         runtime_state_frontier=None,
+        closure_inventory: object | None = None,
         omitted_scope: tuple[str, ...] = (),
         root_key: str = "generated-global-root",
         **search_kwargs,
@@ -178,6 +183,11 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             )
         inventory_unresolved.extend(tuple(axis_inventory.unresolved))
 
+        effective_closure_inventory = (
+            closure_inventory
+            if closure_inventory is not None
+            else ExtremeSustainedDPSClosureInventoryService.build()
+        )
         closure = ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
             search,
             axis_coverage=coverage,
@@ -185,12 +195,14 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
                 *tuple(omitted_scope),
                 *tuple(inventory_unresolved),
             ),
+            closure_inventory=effective_closure_inventory,
         )
         blockers = ExtremeSustainedDPSObjective32BlockerService.assess(
             search_result=search,
             axis_inventory=axis_inventory,
             axis_coverage=coverage,
             closure=closure,
+            closure_inventory=effective_closure_inventory,
         )
 
         return ExtremeSustainedDPSGlobalObjective32SearchResult(
@@ -200,6 +212,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             closure=closure,
             scope_proof=scope_proof,
             blockers=blockers,
+            closure_inventory=effective_closure_inventory,
             supplemental_evidence=tuple(supplemental_scope_note),
         )
 
