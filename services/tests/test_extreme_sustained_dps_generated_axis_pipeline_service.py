@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from models.build_model import PlayerBuild
+
 from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
     ExtremeSustainedDPSExactLeafEvaluation,
 )
@@ -627,3 +629,52 @@ def test_pipeline_refuses_unresolved_effective_potion_cooldown() -> None:
 
     with pytest.raises(ValueError, match="potion cooldown is unresolved"):
         pipeline.axes()[2].candidate_count(state)
+
+
+
+class _PotionlessLateAdapter(_LateAdapter):
+    def axes(self):
+        return (
+            _one_axis(
+                "Late",
+                lambda state: replace(
+                    state,
+                    complete=True,
+                    assembled=SimpleNamespace(
+                        build=PlayerBuild(Potion=""),
+                        progression="assembled-progression",
+                    ),
+                    result=state.result + "|late",
+                ),
+                self.calls,
+            ),
+        )
+
+
+def test_potionless_candidate_does_not_require_irrelevant_cooldown_proof() -> None:
+    calls = []
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_PotionlessLateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+    )
+    state = pipeline.root(
+        "build",
+        "progression",
+        dual_bar_frontier="dual-frontier",
+        candidate_id_prefix="structural:9",
+        duration_seconds=10.0,
+        potion_cooldown_seconds=None,
+        starting_ultimate=0.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="boss",
+    )
+
+    for axis in pipeline.axes()[:2]:
+        state = axis.candidate_at(state, 0)
+
+    assert pipeline.axes()[2].candidate_count(state) == 1
+    rotation_root = next(row for row in calls if row[:2] == ("rotation", "root"))
+    assert rotation_root[3]["potion_cooldown_seconds"] == 45.0
