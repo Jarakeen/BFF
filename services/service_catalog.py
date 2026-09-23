@@ -1452,6 +1452,34 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_proc_consequences",
+        domain="extreme",
+        purpose=(
+            "Bind exact source-selected weapon-enchantment proc attempts back to the canonical equipped source and recover every combat-effect consequence produced by that proc."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_proc_consequence_service",
+        inputs=(
+            "SourceBoundWeaponEnchantmentRuntimeAttempts",
+            "CanonicalWeaponEnchantmentRuntimeSources",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentProcConsequenceResolution",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_enchantment_runtime_source",
+            "extreme.sustained_dps.weapon_enchantment_sequence_frontier",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_selected_proc_consequence_binding",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "One selected glyph proc may recover multiple canonical consequences such as damage plus restoration. "
+            "This service establishes occurrence identity only; final damage, mitigation, critical behavior, status-effect application, and resource/Health application remain separately owned."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_cadence_family",
         domain="extreme",
         purpose=(
