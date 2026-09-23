@@ -1165,7 +1165,15 @@ class RaidRosterWorkspacePage(FoundryPage):
 
     def _refresh_archive(self) -> None:
         records = self.workspace_state.list_archive()
+        archived_members = [
+            member
+            for member in self.roster_service.list_members(include_archived=True)
+            if _clean(member.Status).casefold() == "archived"
+        ]
+
         self.archive_table.setRowCount(0)
+        shown_personnel_ids: set[str] = set()
+
         for record in records:
             row = self.archive_table.rowCount()
             self.archive_table.insertRow(row)
@@ -1177,8 +1185,35 @@ class RaidRosterWorkspacePage(FoundryPage):
                 record.archived_at,
                 record.entity_key,
             )
+            if _clean(record.entity_type).casefold() == "player":
+                shown_personnel_ids.add(_clean(record.entity_key))
             for column, value in enumerate(values):
-                self.archive_table.setItem(row, column, _set_readonly(QTableWidgetItem(_clean(value))))
+                self.archive_table.setItem(
+                    row,
+                    column,
+                    _set_readonly(QTableWidgetItem(_clean(value))),
+                )
+
+        for member in archived_members:
+            member_id = _clean(member.Id)
+            if member_id and member_id in shown_personnel_ids:
+                continue
+            row = self.archive_table.rowCount()
+            self.archive_table.insertRow(row)
+            values = (
+                member.PlayerName,
+                "Player",
+                "Archived Personnel record",
+                member.Team,
+                "",
+                member_id,
+            )
+            for column, value in enumerate(values):
+                self.archive_table.setItem(
+                    row,
+                    column,
+                    _set_readonly(QTableWidgetItem(_clean(value))),
+                )
 
 
 __all__ = ["RaidRosterWorkspacePage"]
