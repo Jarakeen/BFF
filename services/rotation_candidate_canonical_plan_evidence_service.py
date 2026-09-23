@@ -207,10 +207,11 @@ class RotationCandidateCanonicalPlanEvidenceService:
             candidate_restoration_events = tuple(restoration.restoration_events)
             restoration_unresolved = tuple(restoration.unresolved)
 
-        potion_restoration_events = self.potion_runtime_service.restoration_events(
+        potion_restoration = self.potion_runtime_service.resolve_restoration_events(
             self.build,
             plan=candidate.plan,
         )
+        potion_restoration_events = potion_restoration.events
 
         sustain = self.sustain_service.evaluate(
             build=self.build,
@@ -225,10 +226,15 @@ class RotationCandidateCanonicalPlanEvidenceService:
             calculation_context=self.calculation_context,
             displayed_recovery_at=self.displayed_recovery_at,
         )
-        if restoration_unresolved:
+        combined_restoration_unresolved = self._dedupe(
+            restoration_unresolved + tuple(potion_restoration.unresolved)
+        )
+        if combined_restoration_unresolved:
             sustain = replace(
                 sustain,
-                unresolved=self._dedupe(tuple(sustain.unresolved) + restoration_unresolved),
+                unresolved=self._dedupe(
+                    tuple(sustain.unresolved) + combined_restoration_unresolved
+                ),
             )
 
         duration = self.duration_service.analyze(
