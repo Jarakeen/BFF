@@ -81,9 +81,9 @@ if (-not (Test-Path $CustomLabelsPath)) {
 $CustomLabelsSource = Get-Content $CustomLabelsPath -Raw
 if (
     $CustomLabelsSource -notmatch '(?s)from PySide6\.QtWidgets import \(.*QVBoxLayout.*\)' -or
-    $CustomLabelsSource -notmatch 'stack = QVBoxLayout\(panel\)'
+    $CustomLabelsSource -notmatch 'def _install_inline_controls\(board\) -> None:'
 ) {
-    throw "Local checkout is missing the Raid Map custom-label QVBoxLayout import fix."
+    throw "Local checkout is missing the current Raid Map custom-label layout support."
 }
 Write-Host "Raid Map custom-label import preflight: PASS"
 
