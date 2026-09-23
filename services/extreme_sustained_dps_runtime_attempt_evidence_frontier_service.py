@@ -110,6 +110,7 @@ class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService:
         effects: tuple[EffectVariant, ...],
         event_denominator_proven: bool,
         source: str,
+        fixed_attempts: tuple[RuntimeEffectEventAttempt, ...] = (),
     ) -> ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier:
         unresolved: list[str] = []
         if not event_denominator_proven:
@@ -139,7 +140,10 @@ class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService:
             choices.append(
                 ExtremeSustainedDPSRuntimeAttemptEvidenceChoice(
                     choice_id=f"runtime-attempt-evidence:{index}",
-                    attempts=tuple(combination),
+                    attempts=(
+                        *tuple(fixed_attempts),
+                        *tuple(combination),
+                    ),
                     evidence=(
                         "Chance rolls are finite representatives of canonical proc-chance threshold regions",
                         "Condition contexts are explicit subsets of relevant named conditions",
@@ -155,6 +159,7 @@ class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService:
             denominator_proven=complete,
             evidence=(
                 f"Runtime event skeletons supplied: {len(events)}",
+                f"Fixed source-bound runtime attempts supplied: {len(fixed_attempts)}",
                 f"Canonical runtime effects considered: {len(effects)}",
                 f"Per-event evidence realization counts: {tuple(per_event_counts)}",
                 f"Finite runtime attempt evidence choices: {len(choices)}",
