@@ -90,14 +90,23 @@ class RotationRecoveryHeavyReplayService:
             calculation_context=calculation_context,
             displayed_recovery_at=displayed_recovery_at,
         )
-        potion_restoration_events = self.potion_runtime_service.restoration_events(
+        potion_restoration = self.potion_runtime_service.resolve_restoration_events(
             build,
             plan=plan,
         )
+        potion_restoration_events = tuple(potion_restoration.events)
+        potion_unresolved = tuple(potion_restoration.unresolved)
         initial = self.sustain_service.evaluate(
             **evaluate_kwargs,
             restoration_events=potion_restoration_events,
         )
+        if potion_unresolved:
+            initial = replace(
+                initial,
+                unresolved=tuple(
+                    dict.fromkeys((*tuple(initial.unresolved), *potion_unresolved))
+                ),
+            )
         current = initial
         restoration_events: list[ResourceRestorationEvent] = []
         steps: list[RotationRecoveryHeavyReplayStep] = []
@@ -126,6 +135,13 @@ class RotationRecoveryHeavyReplayService:
                 **evaluate_kwargs,
                 restoration_events=potion_restoration_events + tuple(restoration_events),
             )
+            if potion_unresolved:
+                current = replace(
+                    current,
+                    unresolved=tuple(
+                        dict.fromkeys((*tuple(current.unresolved), *potion_unresolved))
+                    ),
+                )
             steps.append(
                 RotationRecoveryHeavyReplayStep(
                     heavy_action=heavy,
