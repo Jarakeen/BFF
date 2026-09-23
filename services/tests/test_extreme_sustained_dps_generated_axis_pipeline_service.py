@@ -678,3 +678,32 @@ def test_potionless_candidate_does_not_require_irrelevant_cooldown_proof() -> No
     assert pipeline.axes()[2].candidate_count(state) == 1
     rotation_root = next(row for row in calls if row[:2] == ("rotation", "root"))
     assert rotation_root[3]["potion_cooldown_seconds"] == 45.0
+
+
+
+@pytest.mark.parametrize("cooldown", [0.0, -1.0])
+def test_raw_potion_cooldown_must_be_positive(cooldown: float) -> None:
+    calls = []
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+    )
+    state = pipeline.root(
+        "build",
+        "progression",
+        dual_bar_frontier="dual-frontier",
+        candidate_id_prefix="structural:10",
+        duration_seconds=10.0,
+        potion_cooldown_seconds=cooldown,
+        starting_ultimate=0.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="boss",
+    )
+    for axis in pipeline.axes()[:2]:
+        state = axis.candidate_at(state, 0)
+
+    with pytest.raises(ValueError, match="potion cooldown must be positive"):
+        pipeline.axes()[2].candidate_count(state)
