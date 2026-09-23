@@ -58,6 +58,7 @@ def test_runtime_source_preserves_one_enchant_with_multiple_consequences():
             Trait="Infused",
             Quality="Gold",
             EnchantTier="Truly Superb",
+            EnchantQuality="Gold",
             Level="CP160",
         )
     )
@@ -74,6 +75,7 @@ def test_runtime_source_preserves_one_enchant_with_multiple_consequences():
     assert source.weapon_trait == "Infused"
     assert source.weapon_quality == "Gold"
     assert source.enchantment_tier == "Truly Superb"
+    assert source.enchantment_quality == "Gold"
     assert source.item_level == "CP160"
     assert len(source.effects) == 2
     assert effects.calls == [
