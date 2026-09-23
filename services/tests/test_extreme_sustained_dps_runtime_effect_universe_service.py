@@ -7,6 +7,9 @@ from minmax.character_build.effect_layer import EffectLayer
 from services.extreme_sustained_dps_runtime_effect_universe_service import (
     ExtremeSustainedDPSRuntimeEffectUniverseService,
 )
+from services.extreme_sustained_dps_weapon_enchantment_activation_event_service import (
+    WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+)
 
 
 def _effect(name, *, trigger=None, condition=None):
@@ -148,4 +151,52 @@ def test_triggerless_crusher_capability_remains_runtime_timing_blocker() -> None
     assert result.unresolved == (
         "front main hand weapon enchantment runtime effect timing deferred: "
         "Crusher Enchantment",
+    )
+
+
+def test_single_weapon_enchantment_runtime_variant_can_enter_universe() -> None:
+    enchantment = _effect(
+        "crusher",
+        trigger=WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+    )
+    audit = SimpleNamespace(
+        effects=(enchantment,),
+        unresolved=(),
+        boundaries=(),
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectUniverseService(
+        capability_service=_Capabilities(audit)
+    ).resolve(object())
+
+    assert result.effects == (enchantment,)
+    assert result.unresolved == ()
+    assert result.resolved is True
+
+
+def test_multiple_weapon_enchantment_variants_require_source_selection_frontier() -> None:
+    crusher = _effect(
+        "crusher",
+        trigger=WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+    )
+    flame = _effect(
+        "flame_damage",
+        trigger=WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+    )
+    audit = SimpleNamespace(
+        effects=(crusher, flame),
+        unresolved=(),
+        boundaries=(),
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectUniverseService(
+        capability_service=_Capabilities(audit)
+    ).resolve(object())
+
+    assert result.effects == (crusher, flame)
+    assert result.resolved is False
+    assert result.unresolved == (
+        "Multiple weapon-enchantment runtime variants require an explicit "
+        "per-opportunity source-selection frontier; one isolated damage "
+        "instance may proc only one weapon enchantment",
     )
