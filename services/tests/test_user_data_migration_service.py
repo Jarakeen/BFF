@@ -58,6 +58,8 @@ def test_legacy_user_state_is_copied_without_mutating_source(tmp_path: Path) -> 
     target = tmp_path / "foundrydock.db"
     achievements = tmp_path / "achievement_progress.json"
     raid_plans = tmp_path / "raid_plans.json"
+    characters = tmp_path / "characters.json"
+    builds = tmp_path / "builds.json"
     _legacy_database(legacy)
     raid_plans.write_text(
         json.dumps(
@@ -76,6 +78,34 @@ def test_legacy_user_state_is_copied_without_mutating_source(tmp_path: Path) -> 
         ),
         encoding="utf-8",
     )
+    characters.write_text(
+        json.dumps(
+            {
+                "schema_version": 4,
+                "players": [{"player_id": "p1", "gamertag": "Rikbacon"}],
+                "characters": [
+                    {
+                        "character_id": "c1",
+                        "player_id": "p1",
+                        "name": "Tanky",
+                        "gamertag": "Rikbacon",
+                        "eso_class": "Dragonknight",
+                    }
+                ],
+                "builds": [
+                    {
+                        "build_id": "b1",
+                        "character_id": "c1",
+                        "name": "Main Tank",
+                        "payload": {"Name": "Tanky", "Gamertag": "Rikbacon", "BuildName": "Main Tank", "Armor": {"Chest": {"Set": "Pearlescent Ward"}}},
+                    }
+                ],
+                "team_assignments": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    builds.write_text('{"Members": []}', encoding="utf-8")
     achievements.write_text(
         json.dumps(
             {
@@ -93,6 +123,8 @@ def test_legacy_user_state_is_copied_without_mutating_source(tmp_path: Path) -> 
         user_database=target,
         achievement_progress=achievements,
         raid_plans=raid_plans,
+        characters=characters,
+        builds=builds,
     )
 
     assert legacy.read_bytes() == before
@@ -102,6 +134,7 @@ def test_legacy_user_state_is_copied_without_mutating_source(tmp_path: Path) -> 
     assert counts["collectible_progress"] == 1
     assert counts["achievement_progress"] == 2
     assert counts["raid_plan"] == 1
+    assert counts["build_catalog"] == 1
 
     db = sqlite3.connect(target)
     try:
@@ -113,6 +146,12 @@ def test_legacy_user_state_is_copied_without_mutating_source(tmp_path: Path) -> 
         assert db.execute(
             "SELECT plan_id FROM raid_plan"
         ).fetchone()[0] == "pm-rg"
+        catalog_payload = json.loads(
+            db.execute(
+                "SELECT payload_json FROM build_catalog WHERE singleton_id=1"
+            ).fetchone()[0]
+        )
+        assert [row["build_id"] for row in catalog_payload["builds"]] == ["b1"]
     finally:
         db.close()
 
