@@ -78,6 +78,19 @@ class ExtremeSustainedDPSWeaponEnchantmentRuntimeSourceService:
         unresolved: list[str] = []
 
         for bar_name, bar_id in (("front", BarId.FRONT), ("back", BarId.BACK)):
+            poison = str(
+                getattr(
+                    build,
+                    "BackBarPoison" if bar_name == "back" else "FrontBarPoison",
+                    "",
+                )
+                or ""
+            ).strip()
+            if poison:
+                evidence.append(
+                    f"{bar_name} weapon set enchantments suppressed by equipped poison: {poison}"
+                )
+                continue
             for slot_index, entry in enumerate(build.active_weapon_slots(bar_name), start=1):
                 source_slot = "main_hand" if slot_index == 1 else "off_hand"
                 slot_label = f"{bar_name} {source_slot.replace('_', ' ')}"
