@@ -48,7 +48,32 @@ def test_twin_blade_non_sword_branch_fails_closed():
     assert any("Twin Blade and Blunt standing effect" in item for item in result.unresolved)
 
 
-def test_ambidextrous_remains_explicitly_unresolved():
+def test_ambidextrous_applies_reviewed_three_percent_of_offhand_weapon_damage():
+    build = PlayerBuild(
+        FrontBarWeapon=GearSlot(
+            WeaponType="Sword",
+            Quality="Gold",
+            Level="CP160",
+        ),
+        FrontBarOffHand=GearSlot(
+            WeaponType="Sword",
+            Quality="Gold",
+            Level="CP160",
+        ),
+    )
+    result = WeaponStandingPassiveInputResolver().apply(
+        GearCalculationInputs(),
+        build,
+        ambidextrous_owned=True,
+    )
+
+    state = _state(result)
+    assert state.derived[StatId.WEAPON_DAMAGE].final_value == 1040.05
+    assert state.derived[StatId.SPELL_DAMAGE].final_value == 1040.05
+    assert not result.unresolved
+
+
+def test_ambidextrous_fails_closed_without_verified_offhand_item_power():
     build = PlayerBuild(
         FrontBarWeapon=GearSlot(WeaponType="Sword"),
         FrontBarOffHand=GearSlot(WeaponType="Sword"),
@@ -59,7 +84,7 @@ def test_ambidextrous_remains_explicitly_unresolved():
         ambidextrous_owned=True,
     )
 
-    assert any("Ambidextrous" in item for item in result.unresolved)
+    assert any("requires verified CP160 Gold off-hand" in item for item in result.unresolved)
 
 
 def test_greatsword_applies_reviewed_heavy_weapons_flat_damage():
@@ -147,7 +172,7 @@ def test_phase5_context_applies_owned_dual_sword_twin_blade_without_ambidextrous
     assert not any("Twin Blade and Blunt" in item for item in context.unresolved_gear_effects)
 
 
-def test_phase5_context_carries_owned_ambidextrous_as_unresolved():
+def test_phase5_context_applies_owned_ambidextrous_from_verified_offhand_power():
     from minmax.context_factory import BuildCalculationContextFactory
 
     build = PlayerBuild(
@@ -177,7 +202,9 @@ def test_phase5_context_carries_owned_ambidextrous_as_unresolved():
         ),
     )
 
-    assert any("Ambidextrous" in item for item in context.unresolved_gear_effects)
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1739.05
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1739.05
+    assert not any("Ambidextrous" in item for item in context.unresolved_gear_effects)
 
 
 def test_phase5_context_applies_owned_greatsword_heavy_weapons():
