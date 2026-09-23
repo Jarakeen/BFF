@@ -281,6 +281,13 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.get_shared_plans_button.clicked.connect(self._get_shared_raid_plans)
         row.addWidget(self.get_shared_plans_button)
 
+        self.archive_plan_button = QPushButton("Archive")
+        self.archive_plan_button.setToolTip(
+            "Archive this Raid Plan without deleting Personnel, Builds, maps, or the plan itself."
+        )
+        self.archive_plan_button.clicked.connect(self.toggle_archive_selected_plan)
+        row.addWidget(self.archive_plan_button)
+
         self.delete_plan_button = QPushButton("Delete")
         self.delete_plan_button.clicked.connect(self.delete_selected_plan)
         row.addWidget(self.delete_plan_button)
@@ -582,7 +589,8 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         selected_index = 1
         for plan in plans:
             trial = self._trial_display_for(plan)
-            label = f"{plan.name} • {trial}"
+            archived = " • Archived" if _clean(plan.status).casefold() == "archived" else ""
+            label = f"{plan.name} • {trial}{archived}"
             self.saved_plan_combo.addItem(label, plan.plan_id)
             if wanted and plan.plan_id.casefold() == wanted:
                 selected_index = self.saved_plan_combo.count() - 1
@@ -605,6 +613,21 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             saved,
             "Choose a saved Raid Plan first.",
         )
+        set_enabled_reason(
+            self.archive_plan_button,
+            saved,
+            "Choose a saved Raid Plan first.",
+        )
+        selected_plan = (
+            self.plan_repository.get(str(plan_id))
+            if saved
+            else None
+        )
+        archived = bool(
+            selected_plan is not None
+            and _clean(selected_plan.status).casefold() == "archived"
+        )
+        self.archive_plan_button.setText("Restore" if archived else "Archive")
         set_enabled_reason(
             self.open_raid_map_button,
             saved,
@@ -817,6 +840,47 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         if saved_plan is not None and plan != saved_plan:
             self._navigation_baseline_plan = saved_plan
         self.status.success(f"Loaded Raid Plan: {plan.name}")
+
+    def toggle_archive_selected_plan(self) -> None:
+        plan_id = self.saved_plan_combo.currentData()
+        if not isinstance(plan_id, str) or not plan_id.strip():
+            self.status.warning("Choose a saved Raid Plan to archive or restore.")
+            return
+        if self.has_pending_changes() and not confirm_unsaved_changes(
+            self,
+            self,
+            action_text="archive or restore this Raid Plan",
+        ):
+            return
+
+        plan = self.plan_repository.get(plan_id)
+        if plan is None:
+            self.status.warning("That saved Raid Plan no longer exists.")
+            self.refresh_saved_plan_picker()
+            return
+
+        restoring = _clean(plan.status).casefold() == "archived"
+        updated = replace(
+            plan,
+            status="Active" if restoring else "Archived",
+        )
+        try:
+            self.plan_repository.save(updated)
+        except RaidPlanRepositoryError as exc:
+            self.status.error(f"Could not update Raid Plan archive state: {exc}")
+            return
+
+        self._loaded_plan_snapshot = updated
+        self._navigation_baseline_plan = updated
+        self.refresh_saved_plan_picker(select_plan_id=updated.plan_id)
+        self.apply_plan(updated)
+        mark_saved(self)
+        if restoring:
+            self.status.success(f"Restored Raid Plan: {updated.name}")
+        else:
+            self.status.info(
+                f"Archived Raid Plan: {updated.name}. It was not deleted and can be restored."
+            )
 
     def delete_selected_plan(self) -> None:
         plan_id = self.saved_plan_combo.currentData()
