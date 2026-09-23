@@ -36,8 +36,16 @@ from services.finch_shared_publish_service import publish_team_to_finch
 from services.roster_share_formats import discord_roster_text, export_roster_csv
 from services.team_schedule_share_export import TeamScheduleShareDocumentExporter
 from services.team_deletion_service import delete_team_everywhere
+from services.user_safety_snapshot_service import UserSafetySnapshotService
 from ui.components.foundry_card import FoundryCard
 from ui.roster_page import RosterPage as BaseRosterPage
+from ui.ui_safety import (
+    confirm_destructive_action,
+    confirm_unsaved_changes,
+    mark_save_failed,
+    mark_saved,
+    mark_saving,
+)
 
 
 _DAY_ORDER = (
@@ -78,6 +86,74 @@ _COMMON_TIMEZONES = (
 
 class RosterPage(BaseRosterPage):
     """Roster page with team management, schedules, and theme-aware sharing."""
+
+    def _schedule_signature(self) -> tuple[str, str, str, str]:
+        if not hasattr(self, "schedule_team_combo"):
+            return ("", "", "", "")
+        schedule = self._current_team_schedule()
+        if schedule is None:
+            return ("", "", "", "")
+        return (
+            str(schedule.TeamName or "").strip(),
+            str(schedule.RaidDays or "").strip(),
+            str(schedule.RaidTime or "").strip(),
+            str(schedule.TimeZone or "").strip(),
+        )
+
+    def _capture_schedule_baseline(self) -> None:
+        self._ui_safety_schedule_baseline = self._schedule_signature()
+
+    def _schedule_has_pending_changes(self) -> bool:
+        baseline = getattr(self, "_ui_safety_schedule_baseline", None)
+        if baseline is None:
+            return False
+        return self._schedule_signature() != baseline
+
+    def has_pending_changes(self) -> bool:
+        base = getattr(super(), "has_pending_changes", None)
+        base_dirty = bool(base()) if callable(base) else False
+        return base_dirty or self._schedule_has_pending_changes()
+
+    def save_pending_changes(self) -> bool:
+        base = getattr(super(), "save_pending_changes", None)
+        if callable(base):
+            try:
+                if not bool(base()):
+                    return False
+            except Exception as exc:
+                mark_save_failed(self, str(exc))
+                return False
+        if self._schedule_has_pending_changes():
+            self._save_team_schedule()
+            if self._schedule_has_pending_changes():
+                mark_save_failed(self, "The Team Schedule is still unsaved.")
+                return False
+        mark_saved(self)
+        return True
+
+    def discard_pending_changes(self) -> bool:
+        base = getattr(super(), "discard_pending_changes", None)
+        if callable(base):
+            try:
+                base()
+            except Exception as exc:
+                mark_save_failed(self, str(exc))
+                return False
+        baseline = getattr(self, "_ui_safety_schedule_baseline", None)
+        if baseline is not None and hasattr(self, "schedule_team_combo"):
+            previous_team = baseline[0]
+            self._ui_safety_loading_schedule = True
+            try:
+                index = self.schedule_team_combo.findText(previous_team)
+                if index >= 0:
+                    self.schedule_team_combo.blockSignals(True)
+                    self.schedule_team_combo.setCurrentIndex(index)
+                    self.schedule_team_combo.blockSignals(False)
+                self._load_team_schedule(previous_team)
+            finally:
+                self._ui_safety_loading_schedule = False
+        mark_saved(self, "Discarded")
+        return True
 
     def _build_ui(self):
         super()._build_ui()
@@ -305,16 +381,20 @@ class RosterPage(BaseRosterPage):
             self.status.warning("Select a team to delete.")
             return
 
-        answer = QMessageBox.question(
+        if not confirm_destructive_action(
             self,
-            "Delete Team",
-            f'Delete "{team}"?',
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
-            QMessageBox.StandardButton.Cancel,
-        )
-        if answer != QMessageBox.StandardButton.Yes:
+            title="Delete Team",
+            object_label=f'Delete Team "{team}"?',
+            impact=(
+                "This removes the Team, its schedule, Team membership links, and "
+                "Team-specific build assignments. Personnel, characters, saved builds, "
+                "and existing Raid Plans are kept."
+            ),
+            confirm_text="Delete Team",
+        ):
             return
 
+        UserSafetySnapshotService().create(f"delete-team-{team}")
         try:
             build_service = BuildService(get_data_dir() / "builds.json")
             build_service.load()
@@ -350,7 +430,31 @@ class RosterPage(BaseRosterPage):
     def _load_team_schedule(self, team_name: str) -> None:
         if not hasattr(self, "schedule_day_checks"):
             return
-        schedule = self.roster_service.get_team_schedule(team_name)
+        target_team = str(team_name or "").strip()
+        baseline = getattr(self, "_ui_safety_schedule_baseline", None)
+        previous_team = str(baseline[0] if baseline else "").strip()
+        if (
+            not bool(getattr(self, "_ui_safety_loading_schedule", False))
+            and baseline is not None
+            and target_team.casefold() != previous_team.casefold()
+            and self._schedule_has_pending_changes()
+        ):
+            if not confirm_unsaved_changes(
+                self,
+                self,
+                action_text="switch Teams",
+            ):
+                self.schedule_team_combo.blockSignals(True)
+                try:
+                    index = self.schedule_team_combo.findText(previous_team)
+                    if index >= 0:
+                        self.schedule_team_combo.setCurrentIndex(index)
+                finally:
+                    self.schedule_team_combo.blockSignals(False)
+                return
+
+        self._ui_safety_loading_schedule = True
+        schedule = self.roster_service.get_team_schedule(target_team)
         for check in self.schedule_day_checks.values():
             check.blockSignals(True)
         self.schedule_time_edit.blockSignals(True)
@@ -369,6 +473,8 @@ class RosterPage(BaseRosterPage):
             self.schedule_time_edit.blockSignals(False)
             self.schedule_timezone_combo.blockSignals(False)
         self._update_schedule_preview()
+        self._capture_schedule_baseline()
+        self._ui_safety_loading_schedule = False
 
     def _current_team_schedule(self) -> TeamSchedule | None:
         team = self.schedule_team_combo.currentText().strip()
@@ -399,10 +505,14 @@ class RosterPage(BaseRosterPage):
             self.status.warning("Choose a time zone so the schedule is unambiguous.")
             return
         try:
+            mark_saving(self)
             self.roster_service.set_team_schedule(schedule)
             self._update_schedule_preview()
+            self._capture_schedule_baseline()
+            mark_saved(self)
             self.status.success(f"Saved {schedule.TeamName}: {schedule.display_text}")
         except Exception as exc:
+            mark_save_failed(self, str(exc))
             self.status.error(f"Team schedule save failed: {exc}")
 
     def _publish_selected_team_to_finch(self) -> None:
