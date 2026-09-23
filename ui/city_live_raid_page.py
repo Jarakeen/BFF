@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -217,9 +218,15 @@ class CityLiveRaidPage(FoundryPage):
         middle.setSpacing(10)
 
         spots = self._style_live_card(FoundryCard("Raid Spots", "group"), "spots")
-        spots_split = QHBoxLayout()
-        spots_split.setContentsMargins(0, 0, 0, 0)
-        spots_split.setSpacing(8)
+
+        self.raid_spots_tabs = QTabWidget()
+        self.raid_spots_tabs.setProperty("liveRaidSpotsTabs", True)
+
+        # Page 1: the full roster/assignment view stays readable at raid speed.
+        roster_tab = QWidget()
+        roster_layout = QVBoxLayout(roster_tab)
+        roster_layout.setContentsMargins(0, 0, 0, 0)
+        roster_layout.setSpacing(6)
 
         self.spots_table = QTableWidget(0, 8)
         self.spots_table.setProperty("liveRaidRosterTable", True)
@@ -232,7 +239,27 @@ class CityLiveRaidPage(FoundryPage):
         self.spots_table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.spots_table.setAlternatingRowColors(False)
         self.spots_table.setShowGrid(False)
-        spots_split.addWidget(self.spots_table, 3)
+        roster_layout.addWidget(self.spots_table)
+
+        roster_actions = QHBoxLayout()
+        roster_actions.setContentsMargins(0, 0, 0, 0)
+        roster_actions.setSpacing(6)
+
+        view_assignments = QPushButton("Assignments")
+        view_assignments.setProperty("liveRaidSecondaryAction", True)
+        view_assignments.clicked.connect(lambda: self.pageRequested.emit("assignments"))
+        roster_actions.addWidget(view_assignments, 1)
+        roster_actions.addStretch(1)
+        roster_layout.addLayout(roster_actions)
+
+        self.raid_spots_tabs.addTab(roster_tab, "Names & Assignments")
+
+        # Page 2: give the Raid Plan map the full card width instead of squeezing
+        # raid-critical positioning into a side panel.
+        map_tab = QWidget()
+        map_layout = QVBoxLayout(map_tab)
+        map_layout.setContentsMargins(0, 0, 0, 0)
+        map_layout.setSpacing(6)
 
         self.inline_raid_map = QLabel(
             "No Raid Plan map linked for this encounter."
@@ -240,29 +267,26 @@ class CityLiveRaidPage(FoundryPage):
         self.inline_raid_map.setProperty("positioningMap", True)
         self.inline_raid_map.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.inline_raid_map.setWordWrap(True)
-        self.inline_raid_map.setMinimumWidth(340)
-        self.inline_raid_map.setMinimumHeight(300)
+        self.inline_raid_map.setMinimumHeight(420)
         self.inline_raid_map.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
         )
-        spots_split.addWidget(self.inline_raid_map, 2)
-        spots.addLayout(spots_split)
-        raid_spot_actions = QHBoxLayout()
-        raid_spot_actions.setContentsMargins(0, 0, 0, 0)
-        raid_spot_actions.setSpacing(6)
+        map_layout.addWidget(self.inline_raid_map, 1)
 
-        view_assignments = QPushButton("Assignments")
-        view_assignments.setProperty("liveRaidSecondaryAction", True)
-        view_assignments.clicked.connect(lambda: self.pageRequested.emit("assignments"))
-        raid_spot_actions.addWidget(view_assignments, 1)
+        map_actions = QHBoxLayout()
+        map_actions.setContentsMargins(0, 0, 0, 0)
+        map_actions.setSpacing(6)
+        map_actions.addStretch(1)
 
         self.raid_map_button = QPushButton("Raid Map ▾")
         self.raid_map_button.setProperty("liveRaidSecondaryAction", True)
         self.raid_map_button.clicked.connect(self._show_raid_map_menu)
-        raid_spot_actions.addWidget(self.raid_map_button, 1)
+        map_actions.addWidget(self.raid_map_button)
+        map_layout.addLayout(map_actions)
 
-        spots.addLayout(raid_spot_actions)
+        self.raid_spots_tabs.addTab(map_tab, "Raid Map")
+        spots.addWidget(self.raid_spots_tabs)
         middle.addWidget(spots, 5)
 
         callouts = self._style_live_card(FoundryCard("Current Callouts", "warning"), "callouts")
