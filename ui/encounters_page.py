@@ -423,7 +423,7 @@ class EncountersPage(FoundryPage):
         # never persisted back into the reusable authoring layout.
         toggle_names = getattr(self.encounter_board, "_toggle_player_name_labels", None)
         if callable(toggle_names):
-            toggle_names(self.encounter_board, False)
+            toggle_names(False)
         self.encounter_board.save_state()
         self.raid_map_store.save_plan_layout(
             plan_id,
@@ -436,7 +436,7 @@ class EncountersPage(FoundryPage):
         # Render names only for the flattened Raid Plan projection, then restore
         # the editor to stable chair labels immediately afterward.
         if callable(toggle_names):
-            toggle_names(self.encounter_board, True)
+            toggle_names(True)
         self.encounter_board.capture_snapshot()
         record = self.raid_map_store.import_map(
             encounter_id,
@@ -444,7 +444,7 @@ class EncountersPage(FoundryPage):
             label=label,
         )
         if callable(toggle_names):
-            toggle_names(self.encounter_board, False)
+            toggle_names(False)
 
         self.raid_section_state.set_linked_raid_map_id(
             plan_id,
