@@ -20,13 +20,18 @@ class ExtremeSustainedDPSObjective32ScenarioPreflightService:
         cls,
         *,
         runtime_state_frontier: object | None,
+        candidate_runtime_state_resolver: object | None = None,
         candidate_runtime_state_resolver_present: bool = False,
         heavy_attack_channel_block_denominator_proven: bool,
         encounter_policy_adapter: object | None,
     ) -> ExtremeSustainedDPSObjective32ScenarioPreflight:
         blockers: list[str] = []
 
-        if runtime_state_frontier is None and not candidate_runtime_state_resolver_present:
+        candidate_runtime_present = bool(
+            candidate_runtime_state_resolver is not None
+            or candidate_runtime_state_resolver_present
+        )
+        if runtime_state_frontier is None and not candidate_runtime_present:
             blockers.append(
                 "Objective #32 theoretical closure requires an explicit runtime-state frontier or candidate-resolved runtime-state authority"
             )
@@ -59,6 +64,49 @@ class ExtremeSustainedDPSObjective32ScenarioPreflightService:
                 f"Objective #32 runtime-state theoretical scope omitted: {item}"
                 for item in omitted
             )
+        elif candidate_runtime_state_resolver is None:
+            blockers.append(
+                "Objective #32 candidate-resolved runtime-state authority is present but its closure evidence is not inspectable"
+            )
+        else:
+            if not bool(
+                getattr(
+                    candidate_runtime_state_resolver,
+                    "supplemental_event_denominator_proven",
+                    False,
+                )
+            ):
+                blockers.append(
+                    "Objective #32 candidate runtime-event denominator is not proven complete"
+                )
+            if not bool(
+                getattr(
+                    candidate_runtime_state_resolver,
+                    "supplemental_history_denominator_proven",
+                    False,
+                )
+            ):
+                blockers.append(
+                    "Objective #32 candidate runtime-history denominator is not proven complete"
+                )
+            scenario_frontier = getattr(
+                candidate_runtime_state_resolver,
+                "scenario_frontier",
+                None,
+            )
+            if scenario_frontier is None:
+                blockers.append(
+                    "Objective #32 candidate runtime-state authority is missing canonical scenario frontier"
+                )
+            else:
+                if getattr(scenario_frontier, "runtime_effect_universe", None) is None:
+                    blockers.append(
+                        "Objective #32 candidate runtime-state authority is missing canonical runtime EffectVariant discovery"
+                    )
+                if getattr(scenario_frontier, "runtime_effect_scaling", None) is None:
+                    blockers.append(
+                        "Objective #32 candidate runtime-state authority is missing canonical runtime effect scaling"
+                    )
 
         if not bool(heavy_attack_channel_block_denominator_proven):
             blockers.append(
@@ -79,7 +127,7 @@ class ExtremeSustainedDPSObjective32ScenarioPreflightService:
                     if runtime_state_frontier is not None
                     else (
                         "Candidate-resolved runtime-state authority is present"
-                        if candidate_runtime_state_resolver_present
+                        if candidate_runtime_present
                         else "Runtime-state frontier is absent"
                     )
                 ),
@@ -104,12 +152,14 @@ class ExtremeSustainedDPSObjective32ScenarioPreflightService:
         cls,
         *,
         runtime_state_frontier: object | None,
+        candidate_runtime_state_resolver: object | None = None,
         candidate_runtime_state_resolver_present: bool = False,
         heavy_attack_channel_block_denominator_proven: bool,
         encounter_policy_adapter: object | None,
     ) -> ExtremeSustainedDPSObjective32ScenarioPreflight:
         result = cls.assess(
             runtime_state_frontier=runtime_state_frontier,
+            candidate_runtime_state_resolver=candidate_runtime_state_resolver,
             candidate_runtime_state_resolver_present=(
                 candidate_runtime_state_resolver_present
             ),
