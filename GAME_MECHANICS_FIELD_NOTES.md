@@ -1647,3 +1647,14 @@ Two additional ZOS patch-note facts can be separated cleanly from the still-mess
 **Layman's version:** we can know exactly how one part works without pretending we know every part. Damage enchants have primary-source 4-second cooldown evidence; that does **not** prove Crusher's buff/debuff cooldown. And poisons do not politely take turns with a weapon glyph; they replace/suppress the enchantment for that weapon set.
 
 **For BFF:** weapon-enchantment cadence evidence is now tracked field by field. Direct-damage cooldown, activation causes, and poison suppression can be authoritative while off-bar ownership, shared-cooldown identity, and buff/debuff cooldown remain unresolved. Objective #32 must use only the proven fields and keep the rest fail-closed.
+
+
+---
+
+## 2026-09-23 — One hit cannot fire two weapon enchantments
+
+ZOS fixed a Dual Wield bug where both weapon enchantments could proc from one isolated damage instance. Their clarification matters: a multi-hit ability can still proc different enchantments on different hits, but **one individual damage occurrence gets at most one weapon enchantment**.
+
+**Layman's version:** one smack, one glyph proc. If a skill hits several times, later hits can create new opportunities, but BFF must not let the same hit independently activate every eligible enchantment.
+
+**For BFF:** the generic runtime system evaluates EffectVariants independently, so multiple weapon-enchantment variants sharing one activation event require an explicit source-selection layer. Until that exists, Objective #32 now fails closed instead of double-proccing enchantments.
