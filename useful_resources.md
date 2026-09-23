@@ -419,3 +419,11 @@ https://forums.elderscrollsonline.com/en/discussion/491043/pc-mac-patch-notes-v5
 **Use for:** Primary ZOS evidence for the Update 23 player-sourced Oblivion Damage model and Decrease Health weapon enchantment: target-Max-Health scaling, quality-scaled percentage with the documented Legendary CP160 ceiling, maximum damage cap, and the special bypass/non-critical behavior described for player-sourced Oblivion Damage.
 
 **Confidence:** Primary / reference-grade for the documented Update 23 mechanic. Current imported enchant descriptions should still be checked for present-version scaling metadata before exact U50 damage is applied; do not infer glyph quality from weapon quality.
+
+
+### ESO Support — What is poison-making in The Elder Scrolls Online?
+https://help.elderscrollsonline.com/app/answers/detail/a_id/34326/
+
+**Use for:** Current first-party support evidence that poisons are equipped alongside wielded weapon sets and that a poison suppresses the weapon enchantments on that specific weapon set.
+
+**Confidence:** Primary / reference-grade for poison-to-weapon-set ownership and enchantment suppression. This source does not establish current poison proc chance, cooldown, effect duration, or the complete poison formula catalog.
