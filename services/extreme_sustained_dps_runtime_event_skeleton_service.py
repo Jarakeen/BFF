@@ -12,6 +12,9 @@ from services.rotation_candidate_generation_service import GeneratedRotationCand
 from services.rotation_heavy_sustain_projection_service import (
     RotationHeavySustainProjectionService,
 )
+from services.extreme_sustained_dps_weapon_enchantment_activation_event_service import (
+    WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+)
 
 
 _PLAN_SKILL_TRIGGERS = {"cast", "skill_cast"}
@@ -154,6 +157,7 @@ class ExtremeSustainedDPSRuntimeEventSkeletonService:
         target_identity: str | None = None,
         supplemental_events: tuple[RuntimeEvent, ...] = (),
         supplemental_denominator_proven: bool = False,
+        weapon_enchantment_activation_service: object | None = None,
         source: str = "",
     ) -> ExtremeSustainedDPSRuntimeEventSkeletonResult:
         required = cls._required_triggers(tuple(effects))
@@ -162,6 +166,7 @@ class ExtremeSustainedDPSRuntimeEventSkeletonService:
         derived: list[str] = []
         scenario: list[str] = []
         excluded: list[str] = []
+        derived_evidence: list[str] = []
 
         supplemental_by_trigger: dict[str, list[RuntimeEvent]] = {}
         for event in supplemental_events:
@@ -196,6 +201,23 @@ class ExtremeSustainedDPSRuntimeEventSkeletonService:
                 )
                 unresolved.extend(damage_unresolved)
                 events.extend(rows)
+                derived.append(trigger)
+                continue
+
+            if trigger == WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER:
+                if weapon_enchantment_activation_service is None:
+                    unresolved.append(
+                        "weapon_enchantment_activation runtime skeleton requires canonical weapon-enchantment activation service"
+                    )
+                    continue
+                activation = weapon_enchantment_activation_service.resolve(
+                    candidate=candidate,
+                    occurrence_provider=occurrence_provider,
+                    target_identity=target_identity,
+                )
+                unresolved.extend(tuple(activation.unresolved))
+                events.extend(tuple(activation.events))
+                derived_evidence.extend(tuple(activation.evidence))
                 derived.append(trigger)
                 continue
 
@@ -255,6 +277,7 @@ class ExtremeSustainedDPSRuntimeEventSkeletonService:
                 f"Scenario event denominator source: {str(source or '').strip() or 'caller-supplied proof'}",
                 "Expected-value damage does not manufacture critical_damage trigger outcomes",
                 "Potion use is excluded because finalized plan potion timing is evaluated downstream",
+                *tuple(derived_evidence),
             ),
             unresolved=deduped_unresolved,
         )
