@@ -2,9 +2,10 @@ from __future__ import annotations
 
 """Classify and compare U50 weapon-line Weapon Damage passive challengers.
 
-The prior weapon/runtime audit now establishes the corrected Dual Wield
-Nirnhoned dual-sword witness before Ambidextrous at 934.4 sheet Weapon Damage
-delta and the Two-Handed Nirnhoned pre-passive reference at 806.0.
+The prior weapon/runtime audit establishes the Dual Wield and Two-Handed
+pre-passive weapon-power witnesses. This audit additionally verifies that the
+selected passive descriptions are truly max rank rather than a Rank 1 tooltip
+attached to the highest skill_rank row.
 
 This audit reads canonical max-rank weapon passive descriptions from eso.db and
 keeps distinct mechanic buckets distinct:
@@ -189,6 +190,22 @@ def main() -> int:
         if value is None:
             unresolved.append(f"could not parse {label}")
 
+    # Update 39 established the current live rank pairs. A max-rank record that
+    # resolves to these lower values is actually carrying Rank 1 semantics and
+    # must not be admitted as Objective #32 proof.
+    if twin_per_sword == 64.0:
+        unresolved.append(
+            "Twin Blade and Blunt max-rank row carries Rank 1 sword value 64; expected Rank 2 value 129"
+        )
+    if heavy_sword == 129.0:
+        unresolved.append(
+            "Heavy Weapons max-rank row carries Rank 1 sword value 129; expected Rank 2 value 258"
+        )
+    if ambidextrous_percent == 3.0:
+        unresolved.append(
+            "Ambidextrous max-rank row carries Rank 1 off-hand value 3%; expected Rank 2 value 6%"
+        )
+
     one_hand = float(WEAPON_POWER_CP160_GOLD["Sword"])
     two_hand = float(WEAPON_POWER_CP160_GOLD["Two-Handed"])
 
@@ -303,9 +320,9 @@ def main() -> int:
     print("PROOF GATES")
     print(f"weapon_passive_denominator_present={bool(rows)}")
     print(f"weapon_power_mentions_classified={not unresolved}")
-    print(f"corrected_twin_blade_value_used={twin_per_sword == 64.0}")
-    print(f"heavy_weapons_value_resolved={heavy_sword == 129.0}")
-    print(f"ambidextrous_value_resolved={ambidextrous_percent == 3.0}")
+    print(f"corrected_twin_blade_value_used={twin_per_sword == 129.0}")
+    print(f"heavy_weapons_value_resolved={heavy_sword == 258.0}")
+    print(f"ambidextrous_value_resolved={ambidextrous_percent == 6.0}")
     print(f"sword_board_percent_resolved={sword_board_percent == 3.0}")
     print(f"dual_wield_beats_two_handed={dual_beats_two_hand}")
     print("sword_board_global_percent_challenger_preserved=True")
