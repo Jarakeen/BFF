@@ -20,6 +20,8 @@ CandidateEvidenceResolver = Callable[[object], object]
 @dataclass(frozen=True)
 class ExtremeSustainedDPSCandidateRuntimeStateResolution:
     frontier: object
+    effects: tuple[object, ...]
+    effect_denominator_proven: bool
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
@@ -143,8 +145,23 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
                 source=self.source,
             )
         )
+        effect_denominator_proven = bool(
+            result.frontier.denominator_proven
+            and not result.frontier.omitted_scope
+            and not result.unresolved
+        )
+        effects = ()
+        if result.frontier.choices:
+            first_effects = tuple(result.frontier.choices[0].effects)
+            if all(tuple(choice.effects) == first_effects for choice in result.frontier.choices):
+                effects = first_effects
+            else:
+                effect_denominator_proven = False
+
         return ExtremeSustainedDPSCandidateRuntimeStateResolution(
             frontier=result.frontier,
+            effects=effects,
+            effect_denominator_proven=effect_denominator_proven,
             evidence=(
                 f"Candidate runtime_state resolved for {getattr(candidate, 'candidate_id', '(unknown)')}",
                 *tuple(result.evidence),
