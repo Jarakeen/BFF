@@ -13,9 +13,6 @@ from dataclasses import dataclass, replace
 from services.extreme_sustained_dps_generated_frontier_wiring_service import (
     ExtremeSustainedDPSIndexedFrontierAxis,
 )
-from services.extreme_sustained_dps_potion_cooldown_runtime_evidence_service import (
-    ExtremeSustainedDPSPotionCooldownRuntimeEvidenceService,
-)
 from services.extreme_sustained_dps_generated_runtime_state_axis_adapter_service import (
     ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService,
 )
@@ -46,7 +43,6 @@ class ExtremeSustainedDPSGeneratedAxisPipelineState:
     rotation: object | None = None
     runtime: object | None = None
     finalized_potion: object | None = None
-    runtime_state_resolution: object | None = None
     requires_finalized_potion: bool = False
 
     @property
@@ -160,18 +156,6 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             )
         return self.encounter_policy_adapter.root(assembled)
 
-    def _candidate_runtime_state_resolution(
-        self,
-        state: ExtremeSustainedDPSGeneratedAxisPipelineState,
-    ) -> object | None:
-        if self.runtime_state_frontier_resolver is None:
-            return None
-        if state.runtime_state_resolution is not None:
-            return state.runtime_state_resolution
-        if not state.complete:
-            return None
-        return self.runtime_state_frontier_resolver.resolve(state)
-
     def _resolved_potion_cooldown(
         self,
         state: ExtremeSustainedDPSGeneratedAxisPipelineState,
@@ -182,16 +166,6 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
                 raise ValueError("generated axis pipeline requires potion cooldown evidence")
             return float(state.potion_cooldown_seconds)
         scenario = state.potion_cooldown_scenario
-        if scenario is None and self.runtime_state_frontier_resolver is not None and state.complete:
-            runtime_resolution = self._candidate_runtime_state_resolution(state)
-            runtime_evidence = ExtremeSustainedDPSPotionCooldownRuntimeEvidenceService.resolve(
-                effects=tuple(getattr(runtime_resolution, "effects", ()) or ()),
-                denominator_proven=bool(
-                    getattr(runtime_resolution, "effect_denominator_proven", False)
-                ),
-                unresolved=tuple(getattr(runtime_resolution, "unresolved", ()) or ()),
-            )
-            scenario = runtime_evidence.scenario
         resolution = state.potion_cooldown_resolver.resolve(
             player_build=assembled.build,
             progression=getattr(assembled, "progression", None),
