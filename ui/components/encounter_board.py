@@ -850,10 +850,19 @@ class EncounterBoard(QWidget):
         self.state_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     def load_state(self) -> bool:
-        if not self.state_path.exists():
-            return False
+        return self.load_state_from(self.state_path)
+
+    def load_state_from(self, source_path) -> bool:
+        source = source_path
         try:
-            payload = json.loads(self.state_path.read_text(encoding="utf-8"))
+            source = source if hasattr(source, "exists") else self.data_dir / str(source)
+        except Exception:
+            return False
+        if not source.exists():
+            return False
+
+        try:
+            payload = json.loads(source.read_text(encoding="utf-8"))
             items = payload.get("items", [])
             mini_bosses = payload.get("mini_bosses", [])
             zones = payload.get("zones", [])
@@ -866,6 +875,13 @@ class EncounterBoard(QWidget):
                 zones = []
             if not items and not mini_bosses and not zones:
                 return False
+
+            for item in list(self._token_items()):
+                self.scene.removeItem(item)
+            for zone in list(self._zone_items()):
+                self.scene.removeItem(zone)
+            for key in self._counts:
+                self._counts[key] = 0
 
             self.boss_mode.blockSignals(True)
             self.boss_mode.setCurrentIndex(1 if int(payload.get("boss_count", 1)) == 2 else 0)
