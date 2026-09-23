@@ -20,6 +20,9 @@ from services.canonical_mechanics_coverage_inventory import (
 from services.extreme_sustained_dps_runtime_effect_relevance_service import (
     ExtremeSustainedDPSRuntimeEffectRelevance,
 )
+from services.extreme_sustained_dps_runtime_effect_scaling_service import (
+    ExtremeSustainedDPSRuntimeEffectScalingResult,
+)
 
 
 OBJECTIVE32_MECHANICS_DEPENDENCIES = (
@@ -67,6 +70,7 @@ class ExtremeSustainedDPSClosureInventoryService:
         cls,
         *,
         relevance: ExtremeSustainedDPSRuntimeEffectRelevance | None = None,
+        scaling: ExtremeSustainedDPSRuntimeEffectScalingResult | None = None,
         mechanics_dependency_keys: tuple[str, ...] = OBJECTIVE32_MECHANICS_DEPENDENCIES,
     ) -> ExtremeSustainedDPSClosureInventory:
         report = CanonicalMechanicsCoverageAuditService().audit(
@@ -80,14 +84,28 @@ class ExtremeSustainedDPSClosureInventoryService:
         advisory_mechanics = tuple(gap for gap in mechanics if not gap.blocking)
 
         source_data = (
-            tuple(relevance.source_data_unresolved)
-            if relevance is not None
-            else ()
+            *(
+                tuple(relevance.source_data_unresolved)
+                if relevance is not None
+                else ()
+            ),
+            *(
+                tuple(scaling.source_data_unresolved)
+                if scaling is not None
+                else ()
+            ),
         )
         math_review = (
-            tuple(relevance.math_unresolved)
-            if relevance is not None
-            else ()
+            *(
+                tuple(relevance.math_unresolved)
+                if relevance is not None
+                else ()
+            ),
+            *(
+                tuple(scaling.math_unresolved)
+                if scaling is not None
+                else ()
+            ),
         )
 
         return ExtremeSustainedDPSClosureInventory(
