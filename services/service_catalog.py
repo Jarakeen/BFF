@@ -1818,6 +1818,30 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_attempt_frontier_composition",
+        domain="extreme",
+        purpose=(
+            "Compose independent proven finite runtime-attempt frontiers into one exact Cartesian-product denominator without dropping any uncertainty axis."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_attempt_frontier_composition_service",
+        inputs=("RuntimeAttemptEvidenceFrontiers",),
+        outputs=("ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier",),
+        dependencies=(
+            "extreme.sustained_dps.runtime_attempt_evidence_frontier",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_runtime_attempt_frontier_composition",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Used when source-history uncertainty, such as weapon-enchantment source/cooldown sequencing, must remain independent from ordinary chance/condition uncertainty. "
+            "Any open component denominator keeps the composed frontier open."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_external_history_assembly",
         domain="extreme",
         purpose=(
@@ -1857,8 +1881,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "CanonicalEffectVariants",
             "EventSkeletonDenominatorProof",
             "SupplementalRuntimeHistoryDenominatorProof",
-            "OptionalWeaponEnchantmentActivationService",
-            "OptionalWeaponEnchantmentCooldownStateResolver",
+            "WeaponEnchantmentActivationService",
+            "WeaponEnchantmentCooldownPolicyResolver",
         ),
         outputs=("ExtremeSustainedDPSRuntimeScenarioFrontierResult",),
         dependencies=(
@@ -1869,7 +1893,10 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.weapon_enchantment_activation_events",
             "extreme.sustained_dps.weapon_enchantment_activation_resolution",
             "extreme.sustained_dps.weapon_enchantment_attempt_binding",
+            "extreme.sustained_dps.weapon_enchantment_cooldown_policy",
+            "extreme.sustained_dps.weapon_enchantment_sequence_frontier",
             "extreme.sustained_dps.runtime_attempt_evidence_frontier",
+            "extreme.sustained_dps.runtime_attempt_frontier_composition",
             "extreme.sustained_dps.runtime_external_history_assembly",
             "extreme.sustained_dps.runtime_external_history_frontier",
         ),
