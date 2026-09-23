@@ -403,7 +403,7 @@ class BuildEditor(QWidget):
     cancelRequested = Signal()
     addBuildRequested = Signal()
 
-    def __init__(self, race_choices=None, set_choices=None, skill_choices=None, cp_choices=None, food_choices=None, potion_choices=None, parent=None):
+    def __init__(self, race_choices=None, set_choices=None, skill_choices=None, cp_choices=None, food_choices=None, potion_choices=None, poison_choices=None, parent=None):
         super().__init__(parent)
         self.race_choices = race_choices or []
         self.set_choices = set_choices or []
@@ -411,6 +411,7 @@ class BuildEditor(QWidget):
         self.cp_choices = cp_choices or []
         self.food_choices = food_choices or []
         self.potion_choices = potion_choices or []
+        self.poison_choices = poison_choices or []
         self.image_path = ""
         self._notes = ""
         self._boss_cards = []
@@ -440,6 +441,8 @@ class BuildEditor(QWidget):
                 self.food_choices = ref.list_food_names()
             if not self.potion_choices:
                 self.potion_choices = ref.list_potion_names()
+            if not self.poison_choices:
+                self.poison_choices = ref.list_poison_names()
         except Exception:
             pass
 
@@ -729,12 +732,20 @@ class BuildEditor(QWidget):
         form.addRow("Back Bar", self.back_bar)
         self.food = self._combo(self.food_choices, True)
         self.potion = self._combo(self.potion_choices, True)
+        self.front_poison = self._combo(["", *self.poison_choices], True)
+        self.back_poison = self._combo(["", *self.poison_choices], True)
         consumables = QHBoxLayout()
         consumables.addWidget(QLabel("Food"))
         consumables.addWidget(self.food, 1)
         consumables.addWidget(QLabel("Potion"))
         consumables.addWidget(self.potion, 1)
         form.addRow("Consumables", consumables)
+        poisons = QHBoxLayout()
+        poisons.addWidget(QLabel("Front Poison"))
+        poisons.addWidget(self.front_poison, 1)
+        poisons.addWidget(QLabel("Back Poison"))
+        poisons.addWidget(self.back_poison, 1)
+        form.addRow("Weapon Set Poisons", poisons)
         card.addLayout(form)
         return card
 
@@ -839,6 +850,8 @@ class BuildEditor(QWidget):
             BackBarSkills=self.back_bar.value,
             Food=self.food.currentText().strip(),
             Potion=self.potion.currentText().strip(),
+            FrontBarPoison=self.front_poison.currentText().strip(),
+            BackBarPoison=self.back_poison.currentText().strip(),
             Notes=self._notes,
             BossLoadouts=[card.value for card in self._boss_cards],
             ReadyForRaid=getattr(self, "_ready_for_raid", False),
@@ -926,6 +939,8 @@ class BuildEditor(QWidget):
         self.back_bar.load(model.BackBarSkills)
         self.food.setCurrentText(model.Food)
         self.potion.setCurrentText(model.Potion)
+        self.front_poison.setCurrentText(getattr(model, "FrontBarPoison", "") or "")
+        self.back_poison.setCurrentText(getattr(model, "BackBarPoison", "") or "")
         for card in list(self._boss_cards):
             self._remove_boss_loadout(card)
         for loadout in model.BossLoadouts:
