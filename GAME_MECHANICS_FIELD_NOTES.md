@@ -1671,3 +1671,16 @@ ZOS clarified in Update 19 that an enchantment follows the **weapon that fired t
 **What it means in actual play:** back-bar weapon abilities can carry their source weapon's enchantment logic forward after a swap. Runtime modeling therefore needs source-weapon provenance, not just “which bar is active when damage lands.”
 
 **For BFF:** off-bar/source-weapon persistence is now primary-source proven. The remaining enchant cadence blockers are narrower: exact buff/debuff cooldown, cooldown-scope/shared-identity behavior, and explicit per-opportunity source selection.
+
+
+---
+
+## 2026-09-23 — Weapon-skill DoTs split into two enchantment behaviors
+
+Weapon-enchantment activation cannot treat every damage tick from a weapon ability the same way. Reviewed component shape matters: **single-target Damage over Time ticks are excluded**, while direct weapon-skill hits and area Damage over Time occurrences remain eligible activation opportunities when the rest of the enchantment rules are satisfied.
+
+**Layman's version:** “it dealt damage” is necessary, but not sufficient. A lingering single-target DoT tick does not get the same glyph-proc privilege as the direct hit or an eligible ground/AoE weapon effect. Naturally, ESO found room for a taxonomy lesson inside a weapon glyph.
+
+**What it means in actual play:** two ticks owned by the same cast can have different enchantment eligibility depending on the coefficient/component that produced them.
+
+**For BFF:** Objective #32 now classifies each exact damage occurrence from canonical per-coefficient DoT/AoE identity. Missing coefficient identity or incomplete component classification fails closed instead of guessing from timing, cast count, or skill name.
