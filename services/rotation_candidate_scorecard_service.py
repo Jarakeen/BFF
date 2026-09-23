@@ -177,7 +177,21 @@ class RotationCandidateScorecard:
                 )
             )
         )
-        return potion_timeline or heavy_timeline or progression_timeline
+        action_cost_timeline = any(
+            token in text
+            for token in (
+                "action cost could not be resolved",
+                "ability cost row not found",
+                "no positive canonical base cost",
+                "no canonical resource mechanic",
+            )
+        )
+        return (
+            potion_timeline
+            or heavy_timeline
+            or progression_timeline
+            or action_cost_timeline
+        )
 
     @property
     def hard_inherited_unresolved(self) -> tuple[str, ...]:
