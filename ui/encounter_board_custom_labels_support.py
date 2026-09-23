@@ -276,6 +276,46 @@ def _paint_reference(item, painter, option, widget=None) -> None:
     )
 
 
+
+
+def _seat_id_for_token(item, ordinal: int) -> str:
+    kind = str(getattr(item, "kind", "") or "").casefold()
+    if kind == "tank":
+        return f"tank-{ordinal}"
+    if kind == "healer":
+        return f"healer-{ordinal}"
+    if kind == "dps":
+        return f"dd-{ordinal}"
+    return ""
+
+
+def _refresh_player_name_labels(board) -> None:
+    enabled = bool(getattr(board, "_raid_map_show_player_names", False))
+    resolver = getattr(board, "raid_plan_member_labels_resolver", None)
+    labels = resolver() if enabled and callable(resolver) else {}
+    counters = {"tank": 0, "healer": 0, "dps": 0}
+    tokens = sorted(
+        (item for item in board._token_items() if str(item.kind).casefold() in counters),
+        key=lambda item: (str(item.kind).casefold(), item.pos().x(), item.pos().y()),
+    )
+    for item in tokens:
+        kind = str(item.kind).casefold()
+        counters[kind] += 1
+        seat_id = _seat_id_for_token(item, counters[kind])
+        if not hasattr(item, "_raid_map_seat_label"):
+            item._raid_map_seat_label = str(item.label)
+        seat_label = str(item._raid_map_seat_label)
+        player = str(labels.get(seat_id, "") or "").strip()
+        item.label = player if enabled and player else seat_label
+        item.update()
+    board.scene.update()
+    board.view.viewport().update()
+
+
+def _toggle_player_name_labels(board, checked: bool) -> None:
+    board._raid_map_show_player_names = bool(checked)
+    _refresh_player_name_labels(board)
+
 def _install_inline_controls(board) -> None:
     """Place rename/reference controls into existing Raid Map toolbar rows."""
 
@@ -356,6 +396,27 @@ def _install_inline_controls(board) -> None:
     actor_toolbar.addWidget(board.raid_map_add_reference)
     actor_toolbar.addWidget(board.raid_map_reference_lock)
 
+    board.raid_map_player_names = QPushButton("Player Names")
+    board.raid_map_player_names.setCheckable(True)
+    board.raid_map_player_names.setToolTip(
+        "Show Raid Plan player names on Tank, Healer, and DD seat markers; empty seats keep their seat labels."
+    )
+    board.raid_map_player_names.toggled.connect(
+        lambda checked: _toggle_player_name_labels(board, checked)
+    )
+    zone_toolbar = root.itemAt(1).layout()
+    if zone_toolbar is not None:
+        formation_index = next(
+            (
+                index + 1
+                for index in range(zone_toolbar.count())
+                if zone_toolbar.itemAt(index).widget() is not None
+                and "formation" in str(zone_toolbar.itemAt(index).widget().text()).casefold()
+            ),
+            zone_toolbar.count(),
+        )
+        zone_toolbar.insertWidget(formation_index, board.raid_map_player_names)
+
 
 def install() -> None:
     global _INSTALLED
@@ -410,6 +471,7 @@ def install() -> None:
 
     def init_with_labels(self, *args, **kwargs):
         self._reference_points_locked = False
+        self._raid_map_show_player_names = False
         original_init(self, *args, **kwargs)
         _reconcile_timeline_ids_after_reload(self)
         _apply_reference_lock(self, getattr(self, "_reference_points_locked", False))
@@ -423,6 +485,7 @@ def install() -> None:
     EncounterBoard.save_state = save_state_with_reference_lock
     EncounterBoard.load_state = load_state_with_reference_lock
     EncounterBoard._apply_reference_lock = _apply_reference_lock
+    EncounterBoard.refresh_player_name_labels = _refresh_player_name_labels
     EncounterBoard.__init__ = init_with_labels
     EncounterToken.paint = token_paint_with_references
     _INSTALLED = True
