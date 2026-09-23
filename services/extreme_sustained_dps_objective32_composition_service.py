@@ -134,6 +134,39 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires canonical candidate runtime effect scaling"
             )
+        runtime_effect_universe = getattr(
+            scenario_frontier,
+            "runtime_effect_universe",
+            None,
+        )
+        if getattr(
+            runtime_effect_universe,
+            "weapon_enchantment_runtime_source_service",
+            None,
+        ) is None or getattr(
+            runtime_effect_universe,
+            "weapon_enchantment_runtime_variant_service",
+            None,
+        ) is None:
+            raise ValueError(
+                "Objective #32 composition requires dedicated canonical weapon-enchantment runtime source and variant projection"
+            )
+        if getattr(
+            scenario_frontier,
+            "weapon_enchantment_activation_service",
+            None,
+        ) is None:
+            raise ValueError(
+                "Objective #32 composition requires canonical weapon-enchantment activation-event resolution"
+            )
+        if getattr(
+            scenario_frontier,
+            "weapon_enchantment_cooldown_policy_resolver",
+            None,
+        ) is None:
+            raise ValueError(
+                "Objective #32 composition requires canonical weapon-enchantment cooldown-policy authority"
+            )
         if not bool(
             getattr(
                 runtime_state_frontier_resolver,
@@ -209,6 +242,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
                 "Effective potion cooldown is resolved from each finalized build through the canonical fail-closed cooldown authority",
                 "Runtime state is resolved per finalized candidate inside the generated tree",
                 "Candidate runtime state is backed by canonical EffectVariant discovery and candidate-specific scaling",
+                "Canonical weapon-enchantment source projection, activation events, and cooldown-policy authority are required in the production runtime-state graph",
                 "Supplemental runtime-event and runtime-history denominators are proven complete before global traversal",
                 "Canonical Objective #32 search requires closure-ready Heavy Attack channel-block scenario evidence before traversal",
             ),
