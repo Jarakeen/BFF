@@ -1580,3 +1580,12 @@ During Objective #32 weapon-passive closure, the existing audit selected the hig
 **Layman's version:** “highest row” and “highest-rank tooltip” are not automatically the same fact if imported rank text is stale or misjoined. Databases, in their eternal quest for drama, can be structurally tidy and semantically wrong at the same time.
 
 **For BFF:** weapon-passive audits now reject those Rank 1 values when claiming max-rank proof. More broadly, passive mechanics that depend on skill_rank.raw_description need rank-integrity checks before Objective #32 treats them as authoritative.
+
+
+## 2026-09-23 — Two rank tooltips are not one proof
+
+The skill data can carry both a rank-level raw description and an ability-level description for the same passive rank. If those two texts disagree, choosing whichever column happens to be first in a SQL COALESCE is not mechanics resolution; it is database roulette.
+
+**Layman's version:** two labels saying different things about the same Rank 2 passive means we do not know which one is trustworthy yet. The fact that one of them parses beautifully does not make the argument disappear.
+
+**For BFF:** exact-rank passive evidence now fails closed when raw rank text and the matching ability tooltip disagree. The global Extreme passive universe preserves that conflict, and static passive projection cannot score through it.
