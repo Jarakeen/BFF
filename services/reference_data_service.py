@@ -40,6 +40,7 @@ class ReferenceDataService:
         self._skill_rows: list[dict] | None = None
         self._food_names: list[str] | None = None
         self._potion_names: list[str] | None = None
+        self._poison_names: list[str] | None = None
     # --------------------------------------------------
     # Combo box sources
     # --------------------------------------------------
@@ -314,6 +315,11 @@ class ReferenceDataService:
         if self._potion_names is None:
             self._potion_names = self._list_entity_names("potion")
         return self._potion_names
+
+    def list_poison_names(self) -> list[str]:
+        if self._poison_names is None:
+            self._poison_names = self._list_entity_names("poison")
+        return self._poison_names
 
     def _list_entity_names(self, *entity_types: str) -> list[str]:
         try:
