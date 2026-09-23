@@ -104,12 +104,27 @@ class EffectVariant:
     classified and runtime systems that need that proof must fail closed.
     """
 
+    source_slot: str | None = None
+    """
+    Optional equipment-source slot provenance such as main_hand or off_hand.
+    This is provenance, not effect identity: callers still compare logical effect
+    identity by name. Runtime systems may require the slot when ESO chooses
+    between multiple same-bar equipment sources.
+    """
+
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError("EffectVariant.name must be a non-empty identity.")
 
         if self.chance is not None and not 0.0 <= self.chance <= 1.0:
             raise ValueError("EffectVariant.chance must be between 0 and 1.")
+        if self.source_slot is not None:
+            source_slot = str(self.source_slot).strip().casefold().replace(" ", "_")
+            if source_slot not in {"main_hand", "off_hand"}:
+                raise ValueError(
+                    "EffectVariant.source_slot must be 'main_hand' or 'off_hand'"
+                )
+            object.__setattr__(self, "source_slot", source_slot)
 
     def is_available_on(self, active_bar: BarId) -> bool:
         """Whether this instance's bar requirement is satisfied."""
