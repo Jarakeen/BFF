@@ -128,10 +128,6 @@ class RotationPlanPotionCombatStateService:
             unresolved=tuple(dict.fromkeys(unresolved)),
         )
 
-    def restoration_events(self, build: PlayerBuild, *, plan: RotationPlan) -> tuple[ResourceRestorationEvent, ...]:
-        """Compatibility projection. New Extreme consumers should use the resolved result."""
-        return self.resolve_restoration_events(build, plan=plan).events
-
     @staticmethod
     def _ordered_before_or_at(
         action: RotationAction,
