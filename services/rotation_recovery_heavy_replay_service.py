@@ -17,6 +17,7 @@ from minmax.rotation_resource_reserve import RotationResourceReserveAssessment
 from minmax.rotation_wait_decision import PrematureRecastDecisionContext
 from models.build_model import PlayerBuild
 from services.rotation_sustain_service import RotationSustainProjection, RotationSustainService
+from services.rotation_plan_potion_combat_state_service import RotationPlanPotionCombatStateService
 
 
 VerifiedRecoveryHeavyRestorationResolver = Callable[
@@ -61,8 +62,14 @@ class RotationRecoveryHeavyReplayService:
     ordering, capping, clipping, waste, and shortfall.
     """
 
-    def __init__(self, sustain_service: RotationSustainService | None = None) -> None:
+    def __init__(
+        self,
+        sustain_service: RotationSustainService | None = None,
+        *,
+        potion_runtime_service: RotationPlanPotionCombatStateService | None = None,
+    ) -> None:
         self.sustain_service = sustain_service or RotationSustainService()
+        self.potion_runtime_service = potion_runtime_service or RotationPlanPotionCombatStateService()
 
     def replay(
         self,
@@ -83,7 +90,14 @@ class RotationRecoveryHeavyReplayService:
             calculation_context=calculation_context,
             displayed_recovery_at=displayed_recovery_at,
         )
-        initial = self.sustain_service.evaluate(**evaluate_kwargs)
+        potion_restoration_events = self.potion_runtime_service.restoration_events(
+            build,
+            plan=plan,
+        )
+        initial = self.sustain_service.evaluate(
+            **evaluate_kwargs,
+            restoration_events=potion_restoration_events,
+        )
         current = initial
         restoration_events: list[ResourceRestorationEvent] = []
         steps: list[RotationRecoveryHeavyReplayStep] = []
@@ -110,7 +124,7 @@ class RotationRecoveryHeavyReplayService:
             restoration_events.append(event)
             current = self.sustain_service.evaluate(
                 **evaluate_kwargs,
-                restoration_events=tuple(restoration_events),
+                restoration_events=potion_restoration_events + tuple(restoration_events),
             )
             steps.append(
                 RotationRecoveryHeavyReplayStep(
