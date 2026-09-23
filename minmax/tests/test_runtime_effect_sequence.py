@@ -130,3 +130,40 @@ def test_empty_sequence_preserves_initial_state():
     assert result.steps == ()
     assert result.activation_count == 0
     assert result.final_state == initial
+
+
+def test_bound_attempt_is_seen_only_by_selected_effect_source():
+    selected = _effect(source="Selected")
+    other = _effect(source="Other")
+    attempt = RuntimeEffectEventAttempt.for_bound_effect(
+        event=RuntimeEvent(
+            time_seconds=1.0,
+            trigger="damage_dealt",
+            source="Observed Event",
+        ),
+        effect=selected,
+    )
+
+    selected_result = process_effect_variant_runtime_sequence((attempt,), selected)
+    other_result = process_effect_variant_runtime_sequence((attempt,), other)
+
+    assert selected_result.activation_count == 1
+    assert len(selected_result.steps) == 1
+    assert other_result.activation_count == 0
+    assert other_result.steps == ()
+
+
+def test_unbound_attempt_preserves_shared_trigger_behavior():
+    attempt = _attempt(1.0)
+
+    first = process_effect_variant_runtime_sequence(
+        (attempt,),
+        _effect(source="First"),
+    )
+    second = process_effect_variant_runtime_sequence(
+        (attempt,),
+        _effect(source="Second"),
+    )
+
+    assert first.activation_count == 1
+    assert second.activation_count == 1
