@@ -17,10 +17,10 @@ from services.build_gear_enchantment_compatibility_service import (
 class CanonicalBuildBridge:
     """Bridge the existing Builds UI model onto the canonical catalog.
 
-    The UI still works with BuildRoster/PlayerBuild for now. The canonical
-    character/build catalog is the source of truth; builds.json remains a
-    compatibility mirror so existing exports and older tooling continue to
-    work during Phase 1.
+    The UI still works with BuildRoster/PlayerBuild for now. In the running
+    application, the canonical character/build catalog lives in foundrydock.db.
+    Explicit non-application paths retain JSON compatibility for isolated tests
+    and migration tooling.
     """
 
     _LEGACY_IDENTITY_FIELDS = frozenset(
@@ -122,11 +122,10 @@ class CanonicalBuildBridge:
         return roster
 
     def save(self, roster: BuildRoster) -> None:
-        """Persist canonical state first, then refresh the compatibility mirror.
+        """Persist canonical state first.
 
-        ``characters.json`` is authoritative. A compatibility-mirror failure must
-        therefore never prevent an already-valid canonical save from remaining the
-        source of truth.
+        The running application writes only foundrydock.db. Explicit legacy/test
+        paths may still refresh their compatibility mirror.
         """
         normalized = self.enchantment_compatibility.normalize_roster(roster)
         self.sync_from_roster(normalized)
