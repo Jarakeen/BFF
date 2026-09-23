@@ -28,6 +28,11 @@ class _ItemService:
         return SimpleNamespace(player_build=player_build, unresolved=self.unresolved)
 
 
+class _LegacyItemService:
+    def resolve(self, player_build):
+        return SimpleNamespace(player_build=player_build)
+
+
 class _CooldownService:
     def __init__(self, *, cooldown=43.0, unresolved=()):
         self.cooldown = cooldown
@@ -100,6 +105,26 @@ def test_progression_without_passive_inventory_fails_closed() -> None:
     assert not result.complete
     assert result.cooldown_seconds is None
     assert any("PassiveGrant derivation" in item for item in result.unresolved)
+
+
+def test_jewelry_evidence_without_unresolved_contract_fails_closed() -> None:
+    cooldown = _CooldownService(cooldown=45.0)
+    service = ExtremeSustainedDPSPotionCooldownResolutionService(
+        build_adapter=_BuildAdapter(build="canonical-build"),
+        item_service=_LegacyItemService(),
+        cooldown_service=cooldown,
+    )
+
+    result = service.resolve(
+        player_build="saved-build",
+        passive_inventory_complete=True,
+        scenario=ExtremeSustainedDPSPotionCooldownScenarioEvidence(complete=True),
+    )
+
+    assert not result.complete
+    assert result.resolution is None
+    assert cooldown.calls == []
+    assert any("lacks an explicit unresolved contract" in item for item in result.unresolved)
 
 
 def test_unresolved_jewelry_evidence_stops_before_cooldown_math() -> None:
