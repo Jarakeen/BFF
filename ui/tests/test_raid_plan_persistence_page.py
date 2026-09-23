@@ -392,3 +392,11 @@ def test_save_restores_captured_visible_player_character_class_and_build_name() 
     assert "role=captured_by_seat.get(" in source
     assert "eso_class=captured_by_seat.get(" in source
     assert "selected_build_name=captured_by_seat.get(" in source
+
+def test_raid_plan_persistence_helper_binding_contract() -> None:
+    source = Path(raid_plan_persistence_page.__file__).read_text(encoding="utf-8")
+
+    assert "def _refresh_action_availability(self) -> None:" in source
+    assert "@staticmethod\n    def _refresh_action_availability(self)" not in source
+    assert "@staticmethod\n    def _trial_display_for(plan: RaidPlan) -> str:" in source
+
