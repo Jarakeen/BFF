@@ -60,6 +60,16 @@ class _SustainService:
         )
 
 
+class _PotionRuntimeService:
+    def __init__(self, events=()):
+        self.events = tuple(events)
+        self.calls = []
+
+    def restoration_events(self, build, *, plan):
+        self.calls.append((build, plan))
+        return self.events
+
+
 class _ScorecardService:
     def __init__(self) -> None:
         self.calls = []
@@ -280,3 +290,29 @@ def test_effect_assessment_map_must_match_evaluated_candidate_set_exactly() -> N
             evaluated,
             effect_uptime_assessments_by_candidate={"full": ()},
         )
+
+
+def test_support_candidate_sustain_includes_scheduled_potion_restoration() -> None:
+    sustain = _SustainService()
+    potion_event = object()
+    potion_runtime = _PotionRuntimeService((potion_event,))
+    service = RotationSupportCadenceEvaluationService(
+        sustain_service=sustain,
+        scorecard_service=_ScorecardService(),
+        effect_obligation_ranker=_EffectRanker(),
+        potion_runtime_service=potion_runtime,
+    )
+    candidate = _candidate("candidate", plan_name="Candidate Plan")
+    build = SimpleNamespace()
+    caller_event = object()
+
+    service.evaluate(
+        build=build,
+        baseline_plan=_plan("Baseline"),
+        baseline_sustain=SimpleNamespace(marker="baseline"),
+        candidates=(candidate,),
+        context=RotationSupportCadenceEvaluationContext(restoration_events=(caller_event,)),
+    )
+
+    assert sustain.calls[0]["restoration_events"] == (caller_event, potion_event)
+    assert potion_runtime.calls == [(build, candidate.plan)]
