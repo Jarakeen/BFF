@@ -469,6 +469,7 @@ def install() -> None:
     EncounterBoard.load_state = load_state_with_reference_lock
     EncounterBoard._apply_reference_lock = _apply_reference_lock
     EncounterBoard.refresh_player_name_labels = _refresh_player_name_labels
+    EncounterBoard._toggle_player_name_labels = _toggle_player_name_labels
     EncounterBoard.__init__ = init_with_labels
     EncounterToken.paint = token_paint_with_references
     _INSTALLED = True
