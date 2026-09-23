@@ -1508,6 +1508,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_damage_policy",
+        domain="extreme",
+        purpose=(
+            "Project reviewed critical-eligibility semantics from exact selected weapon-enchantment damage consequences without inventing final damage."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_damage_policy_service",
+        inputs=("ExtremeSustainedDPSWeaponEnchantmentProcOccurrence",),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentDamagePolicyResolution",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_enchantment_proc_consequences",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_damage_policy_projection",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "The current authoritative special case is Oblivion weapon-enchantment damage being non-critical. "
+            "Ordinary elemental and absorb-glyph critical eligibility remains unresolved rather than inheriting normal skill rules. "
+            "Raw canonical magnitude is preserved; mitigation, Damage Taken, target Health, status effects, and final applied damage remain downstream."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_cadence_family",
         domain="extreme",
         purpose=(
