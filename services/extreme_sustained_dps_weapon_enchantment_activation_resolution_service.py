@@ -32,6 +32,7 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationResolution:
     activation_event: object
     exact: EffectVariant | None
     alternatives: tuple[EffectVariant, ...]
+    cooldown_state_proven: bool = False
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
@@ -43,7 +44,11 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationResolution:
     def proc_occurs(self) -> bool | None:
         if self.unresolved:
             return None
-        return self.exact is not None or bool(self.alternatives)
+        if self.exact is None and not self.alternatives:
+            return False
+        if not self.cooldown_state_proven:
+            return None
+        return True
 
 
 class ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService:
@@ -108,6 +113,7 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService:
                 "weapon-enchantment activation resolution accepts cooldown_ready or cooldown_states, not both"
             )
 
+        cooldown_state_proven = cooldown_ready is not None or cooldown_states is not None
         readiness_evidence: tuple[str, ...] = ()
         if cooldown_states is not None:
             readiness = self.readiness_service.resolve(
@@ -149,6 +155,7 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService:
             activation_event=activation_event,
             exact=selection.exact,
             alternatives=tuple(selection.alternatives),
+            cooldown_state_proven=cooldown_state_proven,
             evidence=evidence,
             unresolved=tuple(selection.unresolved),
         )
