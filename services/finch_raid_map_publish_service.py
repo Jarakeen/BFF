@@ -120,8 +120,58 @@ def publish_raid_map_webp_to_finch(
     )
 
 
+def publish_raid_map_and_plan_to_finch(
+    *,
+    source: Path,
+    plan_id: str,
+    encounter_id: str,
+    encounter_name: str,
+    map_label: str,
+    note: str = "",
+    data_dir: Path,
+    settings_path: Path = Path("settings.json"),
+    timeout: float = 10.0,
+) -> FinchRaidMapPreview:
+    preview = publish_raid_map_webp_to_finch(
+        source=source,
+        plan_id=plan_id,
+        encounter_id=encounter_id,
+        encounter_name=encounter_name,
+        map_label=map_label,
+        note=note,
+        data_dir=data_dir,
+        settings_path=settings_path,
+        timeout=timeout,
+    )
+
+    from services.raid_section_state_service import RaidSectionStateService
+    from services.finch_shared_publish_service import publish_raid_plan_to_finch
+
+    RaidSectionStateService().set_finch_raid_map_preview(
+        plan_id,
+        encounter_id,
+        {
+            "encounter_id": preview.encounter_id,
+            "encounter_name": preview.encounter_name,
+            "map_label": preview.map_label,
+            "map_image_url": preview.map_image_url,
+            "note": preview.note,
+            "content_sha256": preview.content_sha256,
+        },
+    )
+    publish_raid_plan_to_finch(
+        database_path=Path(data_dir) / "eso.db",
+        raid_plans_path=Path(data_dir) / "raid_plans.json",
+        plan_id=plan_id,
+        settings_path=settings_path,
+        timeout=timeout,
+    )
+    return preview
+
+
 __all__ = [
     "FinchRaidMapPreview",
     "publish_raid_map_webp_to_finch",
+    "publish_raid_map_and_plan_to_finch",
     "render_raid_map_webp",
 ]
