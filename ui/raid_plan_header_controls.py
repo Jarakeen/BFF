@@ -44,6 +44,8 @@ def rehome_plan_header_controls(
     show_plan_editor: bool = True,
     show_team_editor: bool = True,
     show_saved_plan_selector: bool = True,
+    action_button_names: tuple[str, ...] | None = None,
+    align_right: bool = False,
 ) -> QWidget:
     """Move planning context/actions out of FoundryHeader into one reusable strip.
 
@@ -73,13 +75,16 @@ def rehome_plan_header_controls(
         _detach_header_host(page, widget)
 
     buttons: list[QPushButton] = []
-    for name in (
-        "load_plan_button",
-        "save_plan_button",
-        "publish_plan_finch_button",
-        "get_shared_plans_button",
-        "delete_plan_button",
-    ):
+    button_names = action_button_names
+    if button_names is None:
+        button_names = (
+            "load_plan_button",
+            "save_plan_button",
+            "publish_plan_finch_button",
+            "get_shared_plans_button",
+            "delete_plan_button",
+        )
+    for name in button_names:
         button = getattr(page, name, None)
         if isinstance(button, QPushButton):
             button.setParent(None)
@@ -96,8 +101,11 @@ def rehome_plan_header_controls(
     row.setContentsMargins(0, 0, 0, 0)
     row.setSpacing(10)
 
-    row.addWidget(_field("TRIAL", trial_combo, minimum_width=180), 3)
-    row.addWidget(_field("DIFFICULTY", difficulty_combo, minimum_width=150), 2)
+    if align_right:
+        row.addStretch(1)
+
+    row.addWidget(_field("TRIAL", trial_combo, minimum_width=180), 0 if align_right else 3)
+    row.addWidget(_field("DIFFICULTY", difficulty_combo, minimum_width=150), 0 if align_right else 2)
 
     if plan_identity_widget is not None:
         row.addWidget(_field("PLAN", plan_identity_widget, minimum_width=180), 2)
