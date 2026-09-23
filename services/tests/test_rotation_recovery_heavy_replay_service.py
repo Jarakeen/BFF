@@ -18,13 +18,14 @@ from services.rotation_recovery_heavy_replay_service import (
 
 
 class _PotionRuntimeService:
-    def __init__(self, events=()):
+    def __init__(self, events=(), unresolved=()):
         self.events = tuple(events)
+        self.unresolved = tuple(unresolved)
         self.calls = []
 
     def resolve_restoration_events(self, build, *, plan):
         self.calls.append((build, plan))
-        return SimpleNamespace(events=self.events, unresolved=())
+        return SimpleNamespace(events=self.events, unresolved=self.unresolved)
 
 
 class _FakeSustainService:
@@ -72,7 +73,7 @@ class _FakeSustainService:
             ending_amount=current,
             events=tuple(applied),
         )
-        return SimpleNamespace(run=SimpleNamespace(timeline=timeline))
+        return SimpleNamespace(run=SimpleNamespace(timeline=timeline), unresolved=())
 
 
 def _plan() -> RotationPlan:
@@ -311,3 +312,25 @@ def test_recovery_heavy_replay_preserves_scheduled_potion_restoration() -> None:
     assert sustain.calls[0]["restoration_events"] == (potion,)
     assert sustain.calls[1]["restoration_events"] == (potion, replay.restoration_events[0])
     assert potion_runtime.calls == [(build, _plan())]
+
+
+
+def test_unresolved_potion_restore_evidence_survives_heavy_replay() -> None:
+    sustain = _FakeSustainService()
+    potion = _PotionRuntimeService(
+        unresolved=("scheduled potion restoration magnitude unresolved",)
+    )
+    service = RotationRecoveryHeavyReplayService(
+        sustain_service=sustain,
+        potion_runtime_service=potion,
+    )
+
+    replay = service.replay(
+        build=PlayerBuild(Name="Magrat", BuildName="DF Healer"),
+        plan=_plan(),
+        resource=ResourceType.MAGICKA,
+        restoration_resolver=_restore_for_first_heavy,
+    )
+
+    assert "scheduled potion restoration magnitude unresolved" in replay.initial_projection.unresolved
+    assert "scheduled potion restoration magnitude unresolved" in replay.final_projection.unresolved
