@@ -156,6 +156,27 @@ def test_missing_progression_and_passive_evidence_fails_closed() -> None:
 
 
 
+def test_explicit_passive_grants_require_complete_inventory_proof() -> None:
+    cooldown = _CooldownService(cooldown=44.0)
+    service = ExtremeSustainedDPSPotionCooldownResolutionService(
+        build_adapter=_BuildAdapter(build="canonical-build"),
+        item_service=_ItemService(),
+        cooldown_service=cooldown,
+    )
+    passive = object()
+
+    result = service.resolve(
+        player_build="saved-build",
+        passives=(passive,),
+        scenario=ExtremeSustainedDPSPotionCooldownScenarioEvidence(complete=True),
+    )
+
+    assert not result.complete
+    assert result.resolution is None
+    assert cooldown.calls == []
+    assert any("PassiveGrant inventory is not proven complete" in item for item in result.unresolved)
+
+
 def test_incomplete_empty_passive_inventory_fails_closed() -> None:
     cooldown = _CooldownService(cooldown=45.0)
     service = ExtremeSustainedDPSPotionCooldownResolutionService(
