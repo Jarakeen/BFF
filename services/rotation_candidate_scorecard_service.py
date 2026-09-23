@@ -177,13 +177,16 @@ class RotationCandidateScorecard:
                 )
             )
         )
-        action_cost_timeline = any(
-            token in text
-            for token in (
-                "action cost could not be resolved",
-                "ability cost row not found",
-                "no positive canonical base cost",
-                "no canonical resource mechanic",
+        action_cost_timeline = (
+            "action-cost modifier unresolved:" in text
+            or any(
+                token in text
+                for token in (
+                    "action cost could not be resolved",
+                    "ability cost row not found",
+                    "no positive canonical base cost",
+                    "no canonical resource mechanic",
+                )
             )
         )
         return (
