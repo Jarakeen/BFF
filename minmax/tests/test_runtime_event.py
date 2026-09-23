@@ -180,3 +180,24 @@ def test_runtime_event_rejects_negative_or_non_finite_time():
 
     with pytest.raises(ValueError, match="finite non-negative"):
         RuntimeEvent(time_seconds=float("inf"), trigger="tick", source="bad")
+
+
+def test_runtime_event_preserves_and_normalizes_source_bar():
+    event = RuntimeEvent(
+        time_seconds=1.0,
+        trigger="weapon_enchantment_activation",
+        source="Wall of Elements",
+        source_bar="BACK",
+    )
+
+    assert event.source_bar == "back"
+
+
+def test_runtime_event_rejects_unknown_source_bar():
+    with pytest.raises(ValueError, match="source_bar"):
+        RuntimeEvent(
+            time_seconds=1.0,
+            trigger="weapon_enchantment_activation",
+            source="Wall of Elements",
+            source_bar="sideways",
+        )
