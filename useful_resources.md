@@ -111,7 +111,7 @@ https://eso-hub.com/en/skills
 
 **Confidence:** Validation / corroboration.
 
-**Notes:** Useful for confirming the current visible passive roster and effect wording. Versioned numerical changes should still be reconciled against official patch notes or canonical game data before hardcoding combat math.
+**Notes:** Useful for confirming the visible passive roster and effect wording, but the site may expose PTS/future-update values before that update is live. On 2026-09-23, Update 51 was still scheduled for September 28 while current ESO-Hub weapon pages already reflected the U51-facing tooltip set. Always reconcile patch-sensitive values against the live update boundary and official notes before hardcoding combat math.
 
 ### UESP raw ESO Character Build Data
 https://chat.uesp.net/esobuilddata/
