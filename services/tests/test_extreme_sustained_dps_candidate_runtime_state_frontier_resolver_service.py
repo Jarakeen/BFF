@@ -38,6 +38,7 @@ class _Scenario:
                 ExtremeSustainedDPSRuntimeStateChoice(
                     f"runtime:{candidate_id}",
                     f"snapshot:{candidate_id}",
+                    effects=("effect-a",),
                 ),
             ),
             denominator_proven=True,
@@ -66,6 +67,8 @@ def test_resolver_uses_finalized_candidate_and_assembled_build() -> None:
     assert call["player_build"] == "build"
     assert call["target_identity"] == "Boss"
     assert call["effects"] is None
+    assert result.effects == ("effect-a",)
+    assert result.effect_denominator_proven is True
 
 
 def test_resolver_recomputes_runtime_family_per_candidate() -> None:
@@ -116,3 +119,38 @@ def test_resolver_requires_complete_final_pipeline_state() -> None:
 
     with pytest.raises(ValueError, match="complete finalized pipeline state"):
         resolver.resolve(SimpleNamespace(complete=False))
+
+
+
+class _ScenarioWithDivergentEffects(_Scenario):
+    def build_from_candidate(self, **kwargs):
+        candidate_id = kwargs["candidate"].candidate_id
+        frontier = ExtremeSustainedDPSRuntimeStateFrontierService.build(
+            (
+                ExtremeSustainedDPSRuntimeStateChoice(
+                    f"runtime:{candidate_id}:a",
+                    "snapshot:a",
+                    effects=("effect-a",),
+                ),
+                ExtremeSustainedDPSRuntimeStateChoice(
+                    f"runtime:{candidate_id}:b",
+                    "snapshot:b",
+                    effects=("effect-b",),
+                ),
+            ),
+            denominator_proven=True,
+            source="divergent runtime effects",
+        )
+        return SimpleNamespace(frontier=frontier, evidence=(), unresolved=())
+
+
+def test_resolver_does_not_claim_shared_effect_denominator_when_choices_diverge() -> None:
+    resolver = ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(
+        scenario_frontier=_ScenarioWithDivergentEffects(),
+        supplemental_history_denominator_proven=True,
+    )
+
+    result = resolver.resolve(_state())
+
+    assert result.effects == ()
+    assert result.effect_denominator_proven is False
