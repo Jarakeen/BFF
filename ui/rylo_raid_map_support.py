@@ -245,7 +245,15 @@ def install() -> None:
         saved_tokens = [item.to_dict() for item in self._token_items()]
         saved_zones = [item.to_dict() for item in self._zone_items()]
         background = getattr(self, "_raid_map_background_path", None)
+        # _draw_arena() clears the scene, then the base implementation seeds a
+        # default boss as part of drawing. Theme refresh must remove that seed
+        # before restoring the saved token snapshot or every refresh can create
+        # an extra boss at the default position.
         self._draw_arena()
+        for token in list(self._token_items()):
+            self.scene.removeItem(token)
+        for zone in list(self._zone_items()):
+            self.scene.removeItem(zone)
         for payload in saved_zones:
             zone = self._add_zone(
                 payload["zone_type"], payload["label"],
