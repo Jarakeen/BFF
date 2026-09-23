@@ -161,6 +161,27 @@ def test_missing_progression_and_passive_evidence_fails_closed() -> None:
 
 
 
+def test_competing_progression_and_explicit_empty_inventory_fail_closed() -> None:
+    cooldown = _CooldownService(cooldown=45.0)
+    service = ExtremeSustainedDPSPotionCooldownResolutionService(
+        build_adapter=_BuildAdapter(build="canonical-build"),
+        item_service=_ItemService(),
+        cooldown_service=cooldown,
+    )
+
+    result = service.resolve(
+        player_build="saved-build",
+        progression="progression",
+        passive_inventory_complete=True,
+        scenario=ExtremeSustainedDPSPotionCooldownScenarioEvidence(complete=True),
+    )
+
+    assert not result.complete
+    assert result.resolution is None
+    assert cooldown.calls == []
+    assert any("choose one authority" in item for item in result.unresolved)
+
+
 def test_competing_progression_and_explicit_passives_fail_closed() -> None:
     cooldown = _CooldownService(cooldown=44.0)
     service = ExtremeSustainedDPSPotionCooldownResolutionService(
