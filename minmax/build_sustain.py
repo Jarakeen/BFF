@@ -232,7 +232,10 @@ def evaluate_build_sustain(
         restoration_events=resource_restores,
         timeline=timeline,
         sustain=summarize_sustain(timeline),
-        unresolved=resolved_modifiers.unresolved + tuple(additional_unresolved),
+        unresolved=tuple(
+            f"action-cost modifier unresolved: {message}"
+            for message in resolved_modifiers.unresolved
+        ) + tuple(additional_unresolved),
         maximum_events=resource_maximums,
     )
 
