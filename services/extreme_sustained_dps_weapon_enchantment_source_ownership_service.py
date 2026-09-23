@@ -11,6 +11,7 @@ multiple same-bar candidates, infer a Dual Wield hand, or resolve cooldown state
 from dataclasses import dataclass
 
 from minmax.character_build.effect_instance import EffectVariant
+from minmax.runtime_effect_sequence import effect_variant_runtime_binding_key
 
 
 @dataclass(frozen=True)
@@ -69,6 +70,18 @@ class ExtremeSustainedDPSWeaponEnchantmentSourceOwnershipService:
             if effect_bar == source_bar:
                 owned.append(effect)
 
+        # One enchant source may expose several consequence variants (for example,
+        # one proc can deal damage and restore Health). Selection/cooldown ownership
+        # is source-level, so collapse identical runtime binding provenance here.
+        unique_owned: list[EffectVariant] = []
+        seen_source_keys: set[tuple[str, str, str, str]] = set()
+        for effect in owned:
+            key = effect_variant_runtime_binding_key(effect)
+            if key in seen_source_keys:
+                continue
+            seen_source_keys.add(key)
+            unique_owned.append(effect)
+
         if unresolved:
             return ExtremeSustainedDPSWeaponEnchantmentSourceOwnership(
                 activation_event=activation_event,
@@ -82,11 +95,12 @@ class ExtremeSustainedDPSWeaponEnchantmentSourceOwnershipService:
 
         return ExtremeSustainedDPSWeaponEnchantmentSourceOwnership(
             activation_event=activation_event,
-            candidates=tuple(owned),
+            candidates=tuple(unique_owned),
             evidence=(
                 f"Activation source bar: {source_bar}",
                 f"Weapon-enchantment effects inspected: {len(tuple(enchantment_effects))}",
-                f"Source-owned enchantment candidates: {len(owned)}",
+                f"Source-owned enchantment sources: {len(unique_owned)}",
+                f"Source-owned enchantment consequence variants: {len(owned)}",
                 "Source-bar ownership narrows candidates but does not choose a Dual Wield hand or prove cooldown availability",
             ),
         )
