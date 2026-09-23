@@ -49,7 +49,8 @@ def _source_database(path: Path) -> None:
         db.execute("INSERT INTO team_member VALUES (1, 1)")
         db.execute("INSERT INTO roster_member_assignment VALUES (1, 'Main Tank')")
         db.execute(
-            "INSERT INTO raid_plan(plan_id, payload_json) VALUES ('pm-rg', '{"plan_id":"pm-rg"}')"
+            "INSERT INTO raid_plan(plan_id, payload_json) VALUES (?, ?)",
+            ("pm-rg", '{"plan_id":"pm-rg"}'),
         )
         db.execute("INSERT INTO achievement_progress VALUES ('Default', '100')")
         db.execute("INSERT INTO collectible_progress VALUES ('Default', 42, 1)")
