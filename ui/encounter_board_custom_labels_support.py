@@ -406,15 +406,13 @@ def _install_inline_controls(board) -> None:
     )
     zone_toolbar = root.itemAt(1).layout()
     if zone_toolbar is not None:
-        formation_index = next(
-            (
-                index + 1
-                for index in range(zone_toolbar.count())
-                if zone_toolbar.itemAt(index).widget() is not None
-                and "formation" in str(zone_toolbar.itemAt(index).widget().text()).casefold()
-            ),
-            zone_toolbar.count(),
-        )
+        formation_index = zone_toolbar.count()
+        for index in range(zone_toolbar.count()):
+            widget = zone_toolbar.itemAt(index).widget()
+            text_method = getattr(widget, "text", None) if widget is not None else None
+            if callable(text_method) and "formation" in str(text_method()).casefold():
+                formation_index = index + 1
+                break
         zone_toolbar.insertWidget(formation_index, board.raid_map_player_names)
 
 
