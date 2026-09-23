@@ -17,6 +17,16 @@ from services.rotation_recovery_heavy_replay_service import (
 )
 
 
+class _PotionRuntimeService:
+    def __init__(self, events=()):
+        self.events = tuple(events)
+        self.calls = []
+
+    def restoration_events(self, build, *, plan):
+        self.calls.append((build, plan))
+        return self.events
+
+
 class _FakeSustainService:
     def __init__(self) -> None:
         self.calls = []
@@ -274,3 +284,30 @@ def test_replay_rejects_restore_before_scheduled_heavy_starts() -> None:
         assert "before the scheduled heavy starts" in str(exc)
     else:
         raise AssertionError("Expected invalid recovery-heavy restore timing to fail")
+
+
+def test_recovery_heavy_replay_preserves_scheduled_potion_restoration() -> None:
+    sustain = _FakeSustainService()
+    potion = ResourceRestorationEvent(
+        time_seconds=1.0,
+        resource=ResourceType.MAGICKA,
+        amount=1000,
+        source="Scheduled potion",
+    )
+    potion_runtime = _PotionRuntimeService((potion,))
+    service = RotationRecoveryHeavyReplayService(
+        sustain_service=sustain,
+        potion_runtime_service=potion_runtime,
+    )
+    build = PlayerBuild(Name="Magrat", BuildName="DF Healer")
+
+    replay = service.replay(
+        build=build,
+        plan=_plan(),
+        resource=ResourceType.MAGICKA,
+        restoration_resolver=_restore_for_first_heavy,
+    )
+
+    assert sustain.calls[0]["restoration_events"] == (potion,)
+    assert sustain.calls[1]["restoration_events"] == (potion, replay.restoration_events[0])
+    assert potion_runtime.calls == [(build, _plan())]
