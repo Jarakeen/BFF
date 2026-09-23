@@ -255,6 +255,19 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
         )
 
         effective_progression = explicit_progression.resolve(candidate_build).progression
+        static_preflight = static_context_service.resolve(candidate_build)
+        if not static_preflight.resolved:
+            return ExtremeGeneratedSustainedDPSRuntimeResult(
+                record=None,
+                summary=None,
+                evidence=(
+                    "Generated sustained-DPS static build context was preflighted before simulation",
+                ),
+                unresolved=self._dedupe(
+                    tuple(static_preflight.unresolved)
+                    or ("Generated sustained-DPS static build context is unresolved",)
+                ),
+            )
 
         def runtime_combat_state_resolver(time_seconds: float, sequence: int | None = None):
             return runtime_combat_state.resolve(
