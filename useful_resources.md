@@ -328,3 +328,13 @@ https://forums.elderscrollsonline.com/en/discussion/261799/pts-patch-notes-v2-4-
 **Confidence:** Primary / reference-grade for the documented suppression rule.
 
 **Notes:** This establishes replacement/suppression topology, not poison proc cadence or current enchantment cooldown values.
+
+
+### ZOS v4.2.6 one-damage-instance weapon-enchantment rule
+https://forums.elderscrollsonline.com/en/discussion/443312/pc-mac-patch-notes-v4-2-6
+
+**Use for:** Authoritative per-damage-instance weapon-enchantment exclusivity. ZOS fixed Dual Wield weapon enchantments both proccing from one isolated damage instance and clarified that separate hits from a multi-hit ability can proc separate enchantments.
+
+**Confidence:** Primary / reference-grade for the documented exclusivity rule.
+
+**Notes:** This proves that one isolated damage occurrence cannot activate two weapon enchantments simultaneously. It does not by itself establish same-identity shared cooldown behavior or the exact source-selection algorithm beyond the separately documented Update 20 off-cooldown preference.
