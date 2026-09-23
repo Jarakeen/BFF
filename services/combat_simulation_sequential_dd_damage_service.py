@@ -131,6 +131,7 @@ class CombatSimulationSequentialDDDamageService:
         target_identity: str,
         player_identity: str,
         ledger: CombatSimulationTargetHealthLedger | None = None,
+        supplemental_outgoing_damage: tuple[CombatSimulationOutgoingDamage, ...] = (),
     ) -> CombatSimulationSequentialDamageProjection:
         if candidate.plan != plan:
             raise ValueError(
@@ -153,6 +154,18 @@ class CombatSimulationSequentialDDDamageService:
         unresolved: list[str] = []
         suppressed: list[tuple[float, int]] = []
         pending: list[RotationActionDamageOccurrence] = []
+        supplemental = [
+            item
+            for item in sorted(
+                tuple(supplemental_outgoing_damage),
+                key=lambda item: (
+                    float(item.time_seconds),
+                    int(item.sequence),
+                    item.source.casefold(),
+                ),
+            )
+            if float(item.time_seconds) <= float(plan.duration_seconds)
+        ]
         terminated_at_seconds: float | None = None
         terminated_at_sequence: int | None = None
 
@@ -170,27 +183,37 @@ class CombatSimulationSequentialDDDamageService:
             )
         )
 
-        def apply_occurrence(occurrence: RotationActionDamageOccurrence) -> None:
+        def apply_outgoing(item: CombatSimulationOutgoingDamage) -> None:
             nonlocal terminated_at_seconds, terminated_at_sequence
             if ledger.is_dead:
                 return
-            amount = float(occurrence.damage_value)
+            if str(item.recipient or "").strip() != ledger.target_identity:
+                unresolved.append(
+                    f"{float(item.time_seconds):g}s supplemental outgoing damage target "
+                    f"{item.recipient!r} does not match sequential ledger target "
+                    f"{ledger.target_identity!r}"
+                )
+                return
+            amount = float(item.amount)
             ledger.apply_damage(amount)
             if amount > 0.0:
-                damage.append(
-                    CombatSimulationOutgoingDamage(
-                        time_seconds=float(occurrence.time_seconds),
-                        sequence=int(occurrence.sequence),
-                        source=occurrence.source_name,
-                        recipient=ledger.target_identity,
-                        amount=amount,
-                    )
-                )
+                damage.append(item)
             if ledger.is_dead and terminated_at_seconds is None:
-                terminated_at_seconds = float(occurrence.time_seconds)
-                terminated_at_sequence = int(occurrence.sequence)
+                terminated_at_seconds = float(item.time_seconds)
+                terminated_at_sequence = int(item.sequence)
 
-        def flush_before(time_seconds: float) -> None:
+        def apply_occurrence(occurrence: RotationActionDamageOccurrence) -> None:
+            apply_outgoing(
+                CombatSimulationOutgoingDamage(
+                    time_seconds=float(occurrence.time_seconds),
+                    sequence=int(occurrence.sequence),
+                    source=occurrence.source_name,
+                    recipient=ledger.target_identity,
+                    amount=float(occurrence.damage_value),
+                )
+            )
+
+        def flush_before(time_seconds: float) -> str | None:
             due = tuple(
                 sorted(
                     (
@@ -206,14 +229,63 @@ class CombatSimulationSequentialDDDamageService:
                     ),
                 )
             )
-            if not due:
-                return
+            due_supplemental = tuple(
+                item
+                for item in supplemental
+                if float(item.time_seconds) < float(time_seconds)
+            )
+            if not due and not due_supplemental:
+                return None
+
+            pending_times = {float(item.time_seconds) for item in due}
+            supplemental_times = {
+                float(item.time_seconds) for item in due_supplemental
+            }
+            collisions = sorted(pending_times & supplemental_times)
+            if collisions:
+                return (
+                    f"{collisions[0]:g}s damage ordering is unresolved: "
+                    "periodic action damage and supplemental outgoing damage share "
+                    "the exact timestamp, and no reviewed cross-source same-instant "
+                    "ordering rule is available"
+                )
+
             due_ids = {id(item) for item in due}
             pending[:] = [item for item in pending if id(item) not in due_ids]
-            for item in due:
+            supplemental_ids = {id(item) for item in due_supplemental}
+            supplemental[:] = [
+                item for item in supplemental if id(item) not in supplemental_ids
+            ]
+
+            ordered = [
+                (
+                    float(item.time_seconds),
+                    int(item.sequence),
+                    "periodic",
+                    item,
+                )
+                for item in due
+            ]
+            ordered.extend(
+                (
+                    float(item.time_seconds),
+                    int(item.sequence),
+                    "supplemental",
+                    item,
+                )
+                for item in due_supplemental
+            )
+            for _, _, kind, item in sorted(
+                ordered,
+                key=lambda row: (row[0], row[1], row[2]),
+            ):
                 if ledger.is_dead:
                     break
-                apply_occurrence(item)
+                if kind == "periodic":
+                    apply_occurrence(item)
+                else:
+                    apply_outgoing(item)
+            return None
 
         occurrence_aware = hasattr(
             action_damage_evidence_provider,
@@ -221,7 +293,7 @@ class CombatSimulationSequentialDDDamageService:
         )
 
         for action_index, action in enumerate(actions):
-            flush_before(action.time_seconds)
+            ordering_error = flush_before(action.time_seconds)
             action_key = (float(action.time_seconds), int(action.sequence))
 
             same_time_pending = tuple(
@@ -229,8 +301,13 @@ class CombatSimulationSequentialDDDamageService:
                 for item in pending
                 if float(item.time_seconds) == float(action.time_seconds)
             )
-            if same_time_pending:
-                reason = (
+            same_time_supplemental = tuple(
+                item
+                for item in supplemental
+                if float(item.time_seconds) == float(action.time_seconds)
+            )
+            if ordering_error is not None or same_time_pending or same_time_supplemental:
+                reason = ordering_error or (
                     f"{float(action.time_seconds):g}s damage ordering is unresolved: "
                     "one or more periodic damage occurrences share the exact timestamp "
                     "with a scheduled damage action, and no reviewed cross-source "
@@ -397,22 +474,59 @@ class CombatSimulationSequentialDDDamageService:
                 )
             )
 
-        for occurrence in sorted(
-            (
-                item
-                for item in pending
-                if float(item.time_seconds) <= float(plan.duration_seconds)
-            ),
-            key=lambda item: (
-                float(item.time_seconds),
-                int(item.sequence),
-                int(item.coefficient_number or 0),
-                -1 if item.occurrence_index is None else int(item.occurrence_index),
-            ),
-        ):
-            if ledger.is_dead:
-                break
-            apply_occurrence(occurrence)
+        remaining_pending = tuple(
+            sorted(
+                (
+                    item
+                    for item in pending
+                    if float(item.time_seconds) <= float(plan.duration_seconds)
+                ),
+                key=lambda item: (
+                    float(item.time_seconds),
+                    int(item.sequence),
+                    int(item.coefficient_number or 0),
+                    -1 if item.occurrence_index is None else int(item.occurrence_index),
+                ),
+            )
+        )
+        pending_times = {float(item.time_seconds) for item in remaining_pending}
+        supplemental_times = {float(item.time_seconds) for item in supplemental}
+        collisions = sorted(pending_times & supplemental_times)
+        if collisions:
+            unresolved.append(
+                f"{collisions[0]:g}s damage ordering is unresolved: periodic action "
+                "damage and supplemental outgoing damage share the exact timestamp, "
+                "and no reviewed cross-source same-instant ordering rule is available"
+            )
+        else:
+            ordered_remaining = [
+                (
+                    float(item.time_seconds),
+                    int(item.sequence),
+                    "periodic",
+                    item,
+                )
+                for item in remaining_pending
+            ]
+            ordered_remaining.extend(
+                (
+                    float(item.time_seconds),
+                    int(item.sequence),
+                    "supplemental",
+                    item,
+                )
+                for item in supplemental
+            )
+            for _, _, kind, item in sorted(
+                ordered_remaining,
+                key=lambda row: (row[0], row[1], row[2]),
+            ):
+                if ledger.is_dead:
+                    break
+                if kind == "periodic":
+                    apply_occurrence(item)
+                else:
+                    apply_outgoing(item)
 
         return CombatSimulationSequentialDamageProjection(
             damage=tuple(
