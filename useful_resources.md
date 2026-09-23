@@ -39,6 +39,15 @@ https://forums.elderscrollsonline.com/en/categories/patch-notes
 
 **Notes:** Especially useful when a current third-party tooltip has already moved to PTS/future-patch data. Record the exact patch/update being cited instead of treating the newest visible wording as timeless truth. Update 51 is a critical version boundary for named effects and Alchemy: Brutality absorbs Sorcery, Savagery absorbs Prophecy, and Vexation is introduced as Mending's healing-done reduction counterpart.
 
+### UESP ESO Log Collector source repository
+https://github.com/uesp/uesp-esolog
+
+**Use for:** Auditing how UESP derives and exports ESO Log Collector tables, including `minedItemSummary` field selection, version suffixes, raw-data provenance, and whether a field exists upstream before FoundryDock imports it.
+
+**Confidence:** Primary / reference-grade for UESP's own export implementation; it is evidence about the UESP data pipeline, not direct proof of an ESO combat mechanic.
+
+**Notes:** The current `createMinedItemSummary.php` implementation includes enchant name/description among summary fields and does not expose a weapon-enchantment cooldown field. Treat imported item/enchant identifiers as provenance/lookup data unless their game-mechanic meaning is separately proven; do not infer an internal cooldown from an item-link or default-enchant identifier.
+
 ### UESP ESO Log Collector
 https://esoitem.uesp.net/viewlog.php
 
