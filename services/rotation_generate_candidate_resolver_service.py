@@ -24,6 +24,7 @@ from services.rotation_recovery_heavy_final_family_evaluation_service import (
     RecoveryFinalScorecardResolver,
 )
 from services.rotation_sustain_service import RotationSustainProjection, RotationSustainService
+from services.rotation_plan_potion_combat_state_service import RotationPlanPotionCombatStateService
 
 
 @dataclass(frozen=True)
@@ -57,11 +58,13 @@ class RotationGenerateCandidateResolverService:
         scorecard_service: RotationCandidateScorecardService | None = None,
         ranking_service: RotationCandidateRankingService | None = None,
         duration_service: RotationDurationAnalysisService | None = None,
+        potion_runtime_service: RotationPlanPotionCombatStateService | None = None,
     ) -> None:
         self.sustain_service = sustain_service or RotationSustainService()
         self.scorecard_service = scorecard_service or RotationCandidateScorecardService()
         self.ranking_service = ranking_service or RotationCandidateRankingService()
         self.duration_service = duration_service or RotationDurationAnalysisService()
+        self.potion_runtime_service = potion_runtime_service or RotationPlanPotionCombatStateService()
 
     def build(
         self,
@@ -72,11 +75,23 @@ class RotationGenerateCandidateResolverService:
         context: RotationCandidateSharedEvaluationContext | None = None,
     ) -> RotationGenerateCandidateResolvers:
         evidence = context or RotationCandidateSharedEvaluationContext()
+        potion_restoration = self.potion_runtime_service.resolve_restoration_events(
+            player_build, plan=baseline_plan
+        )
         baseline_sustain = self.sustain_service.evaluate(
             build=player_build,
             plan=baseline_plan,
             resource=resource,
+            restoration_events=potion_restoration.events,
         )
+        if potion_restoration.unresolved:
+            baseline_sustain = RotationSustainProjection(
+                run=baseline_sustain.run,
+                unresolved=tuple(dict.fromkeys((
+                    *baseline_sustain.unresolved,
+                    *potion_restoration.unresolved,
+                ))),
+            )
 
         def scorecard_for(
             plan: RotationPlan,
