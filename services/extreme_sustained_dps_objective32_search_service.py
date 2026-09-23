@@ -13,6 +13,9 @@ from services.extreme_sustained_dps_axis_dominance_composition_service import (
 from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
     ExtremeSustainedDPSGeneratedSearchResult,
 )
+from services.extreme_sustained_dps_closure_inventory_service import (
+    ExtremeSustainedDPSClosureInventoryService,
+)
 from services.extreme_sustained_dps_generated_runtime_state_axis_adapter_service import (
     ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService,
 )
@@ -45,6 +48,7 @@ class ExtremeSustainedDPSObjective32SearchResult:
     axis_coverage: ExtremeSustainedDPSAxisDominanceComposition
     closure: ExtremeSustainedDPSTheoreticalMaximumClosure
     scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof
+    closure_inventory: object | None = None
 
     @property
     def best_modeled_dps(self) -> float | None:
@@ -81,6 +85,7 @@ class ExtremeSustainedDPSObjective32SearchService:
         root_bound_inputs=None,
         branch_bound_inputs=None,
         runtime_state_frontier=None,
+        closure_inventory: object | None = None,
         omitted_scope: tuple[str, ...] = (),
     ) -> ExtremeSustainedDPSObjective32SearchResult:
         search = self.pipeline_search.search(
@@ -122,6 +127,11 @@ class ExtremeSustainedDPSObjective32SearchService:
                 "Objective #32 axis coverage is not proven to match the generated search denominator",
             )
 
+        effective_closure_inventory = (
+            closure_inventory
+            if closure_inventory is not None
+            else ExtremeSustainedDPSClosureInventoryService.build()
+        )
         closure = ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
             search,
             axis_coverage=coverage,
@@ -129,6 +139,7 @@ class ExtremeSustainedDPSObjective32SearchService:
                 *tuple(omitted_scope),
                 *scope_unresolved,
             ),
+            closure_inventory=effective_closure_inventory,
         )
 
         return ExtremeSustainedDPSObjective32SearchResult(
@@ -136,6 +147,7 @@ class ExtremeSustainedDPSObjective32SearchService:
             axis_coverage=coverage,
             closure=closure,
             scope_proof=scope_proof,
+            closure_inventory=effective_closure_inventory,
         )
 
 
