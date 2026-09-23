@@ -200,15 +200,17 @@ def test_global_search_reports_structural_and_pipeline_axis_inventory() -> None:
 
 
 
-def test_global_search_rejects_static_and_candidate_runtime_state_together() -> None:
+def test_global_search_rejects_static_runtime_state_when_pipeline_resolves_candidates() -> None:
+    pipeline = _Pipeline()
+    pipeline.runtime_state_frontier_resolver = object()
     service = ExtremeSustainedDPSGlobalGeneratedSearchService(
         structural_families=_Families(),
         structural_materialization=_Materialization(),
-        pipeline=_Pipeline(),
+        pipeline=pipeline,
         leaf_evaluation=_Leaf(),
     )
 
-    with pytest.raises(ValueError, match="either static or candidate-resolved"):
+    with pytest.raises(ValueError, match="cannot combine pipeline candidate-resolved"):
         service.search(
             dual_bar_frontier="gear-frontier",
             candidate_id_prefix="objective32",
@@ -222,5 +224,4 @@ def test_global_search_rejects_static_and_candidate_runtime_state_together() -> 
             target_health=1_000_000,
             target_resistance=18_200.0,
             runtime_state_frontier=object(),
-            runtime_state_frontier_resolver=object(),
         )
