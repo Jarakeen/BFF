@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from services.achievement_progress_service import AchievementProgressService
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.encounter_runtime_guide_projection_service import EncounterRuntimeGuideProjectionService
@@ -67,9 +67,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         data_dir = get_data_dir()
         self.eso_data_service = EsoAchievementDatabaseService(data_dir / "eso.db")
-        self.achievement_progress_service = AchievementProgressService(
-            data_dir / "achievement_progress.json"
-        )
+        self.achievement_progress_service = AchievementProgressService(get_user_database_path())
         self.encounter_boss_guide_service = EncounterBossGuideService(data_dir / "eso.db")
         self.encounter_runtime_guide_service = EncounterRuntimeGuideProjectionService(data_dir)
         self.expedition_service = expedition if expedition is not None else ExpeditionService()
