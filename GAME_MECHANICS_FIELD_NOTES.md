@@ -1633,3 +1633,17 @@ ZOS's Update 20 patch notes explicitly state that weapon enchantments proc 100% 
 **What it means in actual play:** a missed, dodged, immune, or otherwise non-damaging attack cannot be treated as equivalent to a landed damaging event for enchant scheduling. Dual Wield cadence also needs both weapon cooldown states.
 
 **For BFF:** the activation-cause family is now primary-source evidence and can be modeled independently from the still-open base-cooldown and off-bar persistence questions. Objective #32 should therefore keep cooldown math fail-closed without throwing away the activation topology we actually know.
+
+
+---
+
+## 2026-09-23 — Weapon enchant evidence is not one all-or-nothing rule
+
+Two additional ZOS patch-note facts can be separated cleanly from the still-messy weapon-enchant cadence questions:
+
+- ZOS used a **4-second normal cooldown** for a direct-damage weapon enchantment in its Update 21 one-handed enchant balance example.
+- When a weapon set has a **poison equipped**, the weapon enchantment on that set is **suppressed**.
+
+**Layman's version:** we can know exactly how one part works without pretending we know every part. Damage enchants have primary-source 4-second cooldown evidence; that does **not** prove Crusher's buff/debuff cooldown. And poisons do not politely take turns with a weapon glyph; they replace/suppress the enchantment for that weapon set.
+
+**For BFF:** weapon-enchantment cadence evidence is now tracked field by field. Direct-damage cooldown, activation causes, and poison suppression can be authoritative while off-bar ownership, shared-cooldown identity, and buff/debuff cooldown remain unresolved. Objective #32 must use only the proven fields and keep the rest fail-closed.
