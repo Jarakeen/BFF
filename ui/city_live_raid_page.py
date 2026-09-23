@@ -66,6 +66,7 @@ def _parse_iso(value: object) -> datetime | None:
 class CityLiveRaidPage(FoundryPage):
     pageRequested = Signal(str)
     raidMapRequested = Signal(str, str)
+    bossMechanicsRequested = Signal(str)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -135,6 +136,14 @@ class CityLiveRaidPage(FoundryPage):
         self.encounter_combo.setProperty("liveRaidContext", True)
         self.encounter_combo.currentIndexChanged.connect(self._encounter_changed)
         self.header.add_context_widget(self.encounter_combo)
+
+        self.boss_mechanics_button = QPushButton("Boss Mechanics")
+        self.boss_mechanics_button.setProperty("liveRaidAction", "mechanics")
+        self.boss_mechanics_button.setToolTip(
+            "Open Mechanics & Timelines directly on the currently selected boss."
+        )
+        self.boss_mechanics_button.clicked.connect(self._open_boss_mechanics)
+        self.header.add_context_widget(self.boss_mechanics_button)
 
         self.start_button = QPushButton("Start Pull")
         self.start_button.setProperty("primary", True)
@@ -697,6 +706,9 @@ class CityLiveRaidPage(FoundryPage):
         self._load_encounter_context()
         self._refresh_raid_map_button()
         self._refresh_inline_raid_map()
+        self.boss_mechanics_button.setEnabled(
+            bool(self._plan is not None and _clean(self.encounter_combo.currentData()))
+        )
 
     def _encounter_changed(self, *_args) -> None:
         if self._plan is not None:
@@ -707,7 +719,17 @@ class CityLiveRaidPage(FoundryPage):
         self._load_encounter_context()
         self._refresh_raid_map_button()
         self._refresh_inline_raid_map()
+        self.boss_mechanics_button.setEnabled(
+            bool(self._plan is not None and _clean(self.encounter_combo.currentData()))
+        )
         self._render_encounter_context()
+
+    def _open_boss_mechanics(self) -> None:
+        encounter_id = _clean(self.encounter_combo.currentData())
+        if not encounter_id:
+            self.status.warning("Select an encounter before opening Boss Mechanics.")
+            return
+        self.bossMechanicsRequested.emit(encounter_id)
 
     def _load_encounter_context(self) -> None:
         self._encounter_context = None
