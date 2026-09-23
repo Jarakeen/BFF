@@ -13,9 +13,8 @@ separate from the canonical stores.
 import json
 from copy import deepcopy
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QMessageBox
 
 from services.ui_draft_recovery_service import UiDraftRecoveryService
@@ -78,6 +77,36 @@ def _select_roster_member_without_signal(page, member_id) -> None:
             selector(int(member_id))
         finally:
             table.blockSignals(False)
+
+
+def _roster_persisted_matches(page) -> bool:
+    model = getattr(getattr(page, "record", None), "model", None)
+    if model is None or getattr(model, "Id", None) is None:
+        return False
+    try:
+        persisted = page.roster_service.get_member(int(model.Id))
+    except Exception:
+        return False
+    if persisted is None:
+        return False
+    current = _model_signature(model)
+    saved = _model_signature(persisted)
+    for key in (
+        "PlayerName",
+        "CharacterName",
+        "EsoClass",
+        "PrimaryRole",
+        "SecondaryRole",
+        "Status",
+        "Team",
+        "DiscordName",
+        "YouTube",
+        "Twitch",
+        "PersonnelNotes",
+    ):
+        if current.get(key) != saved.get(key):
+            return False
+    return True
 
 
 def _roster_save_pending(page) -> bool:
@@ -182,11 +211,11 @@ def _install_roster_safety(cls) -> None:
         def save_with_state(self, *args, **kwargs):
             mark_saving(self)
             result = original_save(self, *args, **kwargs)
-            _capture_roster_baseline(self)
-            if _roster_has_pending(self):
-                mark_save_failed(self, "The player record is still unsaved.")
-            else:
+            if _roster_persisted_matches(self):
+                _capture_roster_baseline(self)
                 mark_saved(self)
+            else:
+                mark_save_failed(self, "The player record did not round-trip through storage.")
             return result
 
         setattr(cls, method_name, save_with_state)
@@ -202,9 +231,8 @@ def _build_editor_changed(page) -> bool:
         try:
             current = deepcopy(editor.model)
             original = members[index]
-            preserve = getattr(page, "_preserve_non_editor_build_state", None)
-            if callable(preserve):
-                current = preserve(original, current)
+            from ui.build_editor_inline_compat import _preserve_non_editor_build_state
+            current = _preserve_non_editor_build_state(original, current)
             if hasattr(current, "to_dict") and hasattr(original, "to_dict"):
                 if current.to_dict() != original.to_dict():
                     return True
@@ -232,7 +260,7 @@ def _build_editor_changed(page) -> bool:
             selected = tuple(
                 choices.item(i).text().strip()
                 for i in range(choices.count())
-                if choices.item(i).checkState().value == 2
+                if choices.item(i).checkState() == Qt.CheckState.Checked
             )
             saved = tuple(
                 str(name).strip()
@@ -369,10 +397,25 @@ def _apply_board_payload(board, payload: dict) -> bool:
     # Reuse the canonical loader rather than maintaining a second map parser.
     draft_root = UiDraftRecoveryService().root
     draft_root.mkdir(parents=True, exist_ok=True)
-    path = draft_root / ".raid-map-restore.json"
+    import tempfile
+
+    fd, temp_name = tempfile.mkstemp(
+        prefix=".raid-map-restore-",
+        suffix=".json",
+        dir=draft_root,
+        text=True,
+    )
+    path = Path(temp_name)
     try:
-        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        return bool(board.load_state_from(path))
+        import os
+
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, ensure_ascii=False, indent=2)
+        loaded = bool(board.load_state_from(path))
+        apply_lock = getattr(board, "_apply_reference_lock", None)
+        if loaded and callable(apply_lock):
+            apply_lock(bool(payload.get("reference_points_locked", False)))
+        return loaded
     finally:
         try:
             path.unlink()
