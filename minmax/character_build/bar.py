@@ -23,6 +23,9 @@ class Bar:
     main_hand: Weapon
     off_hand: Weapon | None
     slots: tuple[SlottedSkill, ...]
+    # Alchemical poisons are equipped per weapon set. A non-empty value
+    # suppresses this bar's weapon enchantments while preserving the other bar.
+    poison_id: str | None = None
 
     @property
     def weapon_skill_line(self) -> WeaponSkillLine:
