@@ -85,6 +85,16 @@ def test_shared_team_payload_is_small_and_excludes_private_personnel_fields(tmp_
     assert payload["team_name"] == "Performance Mode"
     assert payload["schedule"]["timezone"] == "America/New_York"
     assert payload["schedule"]["current_focus"] == "Swashbuckler Supreme"
+    assert payload["roster"] == {
+        "seat_capacity": 12,
+        "filled_seats": 1,
+        "open_seats": 11,
+        "open_seats_by_role": {
+            "Tank": 2,
+            "Healer": 2,
+            "Damage Dealer": 7,
+        },
+    }
     assert payload["members"][0] == {
         "player_name": "Rylo",
         "character_name": "Rylos Arcanist",
@@ -192,7 +202,7 @@ def test_publish_service_uses_versioned_snapshots(tmp_path: Path) -> None:
     plan_result = service.publish_raid_plan(plan)
 
     assert client.team_calls[0][0] == "Performance Mode"
-    assert client.team_calls[0][2] == 1
+    assert client.team_calls[0][2] == 2
     assert client.plan_calls[0][0] == "rg-pm"
     assert client.plan_calls[0][2] == 5
     assert team_result.kind == "team"
