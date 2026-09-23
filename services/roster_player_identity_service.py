@@ -57,8 +57,8 @@ class RosterPlayerIdentityService:
     """Own exact aliases and explicit Personnel/player identity merges."""
 
     def __init__(self, database: EsoDatabase, build_service: BuildService | None = None):
-        self.database = database
         self.roster = RosterService(database)
+        self.database = self.roster.db
         self.build_service = build_service
         self._ensure_schema()
 
