@@ -30,6 +30,7 @@ Current user-owned database responsibilities include:
 - Generated roster drafts/plans stored in SQLite
 - Collectible ownership and collectible profiles
 - Achievement completion and achievement profiles
+- Saved Raid Plans
 
 ## Legacy migration
 
@@ -59,3 +60,16 @@ The boundary is intentionally simple:
 - Human-created or human-owned state -> `foundrydock.db`
 
 Do not add new user-owned tables to `data/eso.db`.
+
+
+## Privacy-limited custom raid EXE
+
+`packaging/build_friend.ps1 -UseCurrentRaidSetup` creates a first-run user database seed containing only the current raid setup:
+
+- Personnel
+- Teams
+- Team memberships
+- Personnel assignments
+- Saved Raid Plans
+
+It intentionally excludes achievement progress, collectible progress, and other collection/checklist state. The build script first migrates any legacy Raid Plan JSON into `foundrydock.db`, then creates the limited seed. This profile is for deliberate one-off builds and does not change normal public-release behavior.
