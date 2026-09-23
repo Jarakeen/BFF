@@ -59,7 +59,9 @@ class RotationCandidateRankingService:
     bar-sensitive maximum evidence exists, normalized minimum/ending resource
     fractions break soft resource ties before raw absolute deltas. Otherwise-equal
     resource outcomes prefer less recovery/restoration wasted against the active
-    ceiling. Explicit bar-swap burden is used only as a final soft tie-break before
+    ceiling. Shared unresolved potion evidence is an exception to the ordinary
+    inherited-diagnostic rule because it invalidates the resource timeline itself.
+    Explicit bar-swap burden is used only as a final soft tie-break before
     the stable candidate-id fallback. Heavy-attack, total-action, light-attack, and
     potion burden are currently diagnostic only because extra actions may be
     required by sustain, encounter obligations, support maintenance, or explicit
