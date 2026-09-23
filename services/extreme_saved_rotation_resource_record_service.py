@@ -17,6 +17,7 @@ from services.extreme_resource_timeline_record_service import (
     ExtremeUltimateGenerationRecord,
 )
 from services.rotation_sustain_service import RotationSustainService
+from services.rotation_plan_potion_combat_state_service import RotationPlanPotionCombatStateService
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,7 @@ class ExtremeSavedRotationResourceRecordService:
         catalog_service=None,
         sustain_service: RotationSustainService | None = None,
         combat_ultimate_source: CombatAttackUltimateGenerationSource | None = None,
+        potion_runtime_service: RotationPlanPotionCombatStateService | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         data_dir = self.database_path.parent
@@ -74,6 +76,7 @@ class ExtremeSavedRotationResourceRecordService:
         self.sustain_service = sustain_service or RotationSustainService(
             self.database_path
         )
+        self.potion_runtime_service = potion_runtime_service or RotationPlanPotionCombatStateService()
         self.combat_ultimate_source = (
             combat_ultimate_source or CombatAttackUltimateGenerationSource()
         )
@@ -106,6 +109,10 @@ class ExtremeSavedRotationResourceRecordService:
                 unresolved=plan_unresolved,
             )
 
+        potion_restoration_events = self.potion_runtime_service.restoration_events(
+            build,
+            plan=plan,
+        )
         candidates = []
         projection_unresolved: list[str] = list(plan.unresolved)
         for resource in (ResourceType.MAGICKA, ResourceType.STAMINA):
@@ -113,6 +120,7 @@ class ExtremeSavedRotationResourceRecordService:
                 build=build,
                 plan=plan,
                 resource=resource,
+                restoration_events=potion_restoration_events,
             )
             projection_unresolved.extend(projection.unresolved)
             action_count = len(projection.run.action_cost_events)
@@ -143,6 +151,7 @@ class ExtremeSavedRotationResourceRecordService:
             f"Saved canonical rotation horizon: {plan.duration_seconds:g}s",
             f"Selected spent resource branch: {resource.value}",
             f"Resolved {action_count} {resource.value} action-cost events through Phase 4 sustain",
+            f"Included {len(potion_restoration_events)} scheduled potion restoration events in canonical sustain",
             "Unused primary-resource branches are not eligible to win by doing nothing",
         )
         unresolved = self._dedupe(
