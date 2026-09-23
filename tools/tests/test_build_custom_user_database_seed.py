@@ -89,3 +89,32 @@ def test_custom_exe_seed_keeps_raid_setup_and_drops_collection_progress(tmp_path
         assert "collectible_progress" not in tables
     finally:
         db.close()
+
+
+def test_custom_exe_seed_requires_plan_selection_when_multiple_plans_exist(tmp_path: Path) -> None:
+    import pytest
+
+    source = tmp_path / "foundrydock.db"
+    target = tmp_path / "seed.db"
+    _source_database(source)
+    db = sqlite3.connect(source)
+    try:
+        db.execute(
+            "INSERT INTO raid_plan(plan_id, payload_json) VALUES (?, ?)",
+            ("other-plan", '{"plan_id":"other-plan"}'),
+        )
+        db.commit()
+    finally:
+        db.close()
+
+    with pytest.raises(ValueError, match="multiple saved Raid Plans"):
+        build_seed(source, target)
+
+    counts = build_seed(source, target, plan_id="pm-rg")
+    assert counts["raid_plan"] == 1
+    db = sqlite3.connect(target)
+    try:
+        rows = db.execute("SELECT plan_id FROM raid_plan").fetchall()
+        assert rows == [("pm-rg",)]
+    finally:
+        db.close()
