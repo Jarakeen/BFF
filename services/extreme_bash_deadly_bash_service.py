@@ -14,11 +14,11 @@ remains an explicit blocker rather than granting a max-rank passive implicitly.
 """
 
 import re
-import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 
 from minmax.character_progression import CharacterProgression
+from minmax.passive_rank_description_repository import PassiveRankDescriptionRepository
 
 _COLOR = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 _NUMBER = r"([0-9]+(?:\.[0-9]+)?)"
@@ -41,56 +41,21 @@ class ExtremeDeadlyBashResult:
 class ExtremeDeadlyBashService:
     PASSIVE_NAME = "Deadly Bash"
 
-    def __init__(self, database_path: str | Path) -> None:
+    def __init__(
+        self,
+        database_path: str | Path,
+        *,
+        description_repository: PassiveRankDescriptionRepository | None = None,
+    ) -> None:
         self.database_path = Path(database_path)
+        self.description_repository = (
+            description_repository
+            or PassiveRankDescriptionRepository(self.database_path)
+        )
 
     @staticmethod
     def _clean(value: object) -> str:
         return " ".join(_COLOR.sub("", str(value or "")).split())
-
-    def _description_for_rank(self, rank: int) -> str | None:
-        if not self.database_path.exists():
-            return None
-        with sqlite3.connect(self.database_path) as db:
-            columns = {str(row[1]) for row in db.execute("PRAGMA table_info(skill_rank)").fetchall()}
-            ability_columns = {str(row[1]) for row in db.execute("PRAGMA table_info(ability)").fetchall()}
-            skill_columns = {str(row[1]) for row in db.execute("PRAGMA table_info(skill)").fetchall()}
-            if not {"skill_id", "ability_id", "rank"}.issubset(columns):
-                return None
-            if not {"ability_id", "description"}.issubset(ability_columns):
-                return None
-            if not {"id", "name", "is_passive"}.issubset(skill_columns):
-                return None
-            row = db.execute(
-                """
-                SELECT COALESCE(NULLIF(sr.raw_description, ''), NULLIF(a.description, ''), s.description)
-                FROM skill s
-                JOIN skill_rank sr ON sr.skill_id = s.id
-                JOIN ability a ON a.ability_id = sr.ability_id
-                WHERE COALESCE(s.is_passive, 0) = 1
-                  AND LOWER(TRIM(s.name)) = LOWER(TRIM(?))
-                  AND sr.rank = ?
-                ORDER BY sr.id
-                LIMIT 1
-                """
-                if "raw_description" in columns and "description" in skill_columns
-                else """
-                SELECT a.description
-                FROM skill s
-                JOIN skill_rank sr ON sr.skill_id = s.id
-                JOIN ability a ON a.ability_id = sr.ability_id
-                WHERE COALESCE(s.is_passive, 0) = 1
-                  AND LOWER(TRIM(s.name)) = LOWER(TRIM(?))
-                  AND sr.rank = ?
-                ORDER BY sr.rowid
-                LIMIT 1
-                """,
-                (self.PASSIVE_NAME, int(rank)),
-            ).fetchone()
-        if row is None:
-            return None
-        value = self._clean(row[0])
-        return value or None
 
     @classmethod
     def _parse(cls, description: str) -> tuple[float | None, float | None]:
@@ -124,16 +89,20 @@ class ExtremeDeadlyBashService:
                 skill_bash_cost=0.0,
             )
 
-        description = self._description_for_rank(rank)
-        if not description:
+        description_evidence = self.description_repository.resolve(
+            self.PASSIVE_NAME,
+            rank,
+        )
+        if not description_evidence.complete:
             return ExtremeDeadlyBashResult(
                 passive_name=self.PASSIVE_NAME,
                 rank=rank,
                 skill2_bash_damage=None,
                 skill_bash_cost=None,
-                unresolved=(f"Canonical Deadly Bash rank not found: {rank}",),
+                unresolved=tuple(description_evidence.unresolved),
             )
 
+        description = str(description_evidence.description)
         damage, cost = self._parse(description)
         if damage is None or cost is None:
             return ExtremeDeadlyBashResult(
