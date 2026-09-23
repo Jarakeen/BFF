@@ -59,6 +59,7 @@ class RaidSectionStateService:
                 "reviews": [],
                 "attempts": [],
                 "raid_map_links": {},
+                "finch_raid_map_previews": {},
             }
         try:
             payload = json.loads(self.path.read_text(encoding="utf-8"))
@@ -72,6 +73,7 @@ class RaidSectionStateService:
         payload.setdefault("reviews", [])
         payload.setdefault("attempts", [])
         payload.setdefault("raid_map_links", {})
+        payload.setdefault("finch_raid_map_previews", {})
         return payload
 
     def _write(self, payload: dict) -> None:
@@ -123,6 +125,56 @@ class RaidSectionStateService:
             for encounter_id, map_id in plan_links.items()
             if _clean(encounter_id) and _clean(map_id)
         }
+
+    def finch_raid_map_previews(self, plan_id: str) -> dict[str, dict[str, str]]:
+        payload = self._read()
+        previews = payload.get("finch_raid_map_previews", {})
+        plan_rows = previews.get(_clean(plan_id), {}) if isinstance(previews, dict) else {}
+        if not isinstance(plan_rows, dict):
+            return {}
+        result: dict[str, dict[str, str]] = {}
+        for encounter_id, raw in plan_rows.items():
+            if not isinstance(raw, dict):
+                continue
+            key = _clean(encounter_id)
+            url = _clean(raw.get("map_image_url"))
+            if not key or not url:
+                continue
+            result[key] = {
+                "encounter_id": key,
+                "encounter_name": _clean(raw.get("encounter_name")) or key,
+                "map_label": _clean(raw.get("map_label")) or "Raid Map",
+                "map_image_url": url,
+                "note": _clean(raw.get("note")),
+                "content_sha256": _clean(raw.get("content_sha256")),
+            }
+        return result
+
+    def set_finch_raid_map_preview(
+        self,
+        plan_id: str,
+        encounter_id: str,
+        preview: dict[str, object],
+    ) -> None:
+        plan_key = _clean(plan_id)
+        encounter_key = _clean(encounter_id)
+        if not plan_key or not encounter_key:
+            raise ValueError("plan_id and encounter_id are required for a Finch Raid Map preview")
+        url = _clean(preview.get("map_image_url"))
+        if not url:
+            raise ValueError("Finch Raid Map preview requires map_image_url")
+        payload = self._read()
+        previews = payload.setdefault("finch_raid_map_previews", {})
+        plan_rows = previews.setdefault(plan_key, {})
+        plan_rows[encounter_key] = {
+            "encounter_id": encounter_key,
+            "encounter_name": _clean(preview.get("encounter_name")) or encounter_key,
+            "map_label": _clean(preview.get("map_label")) or "Raid Map",
+            "map_image_url": url,
+            "note": _clean(preview.get("note")),
+            "content_sha256": _clean(preview.get("content_sha256")),
+        }
+        self._write(payload)
 
     def set_linked_raid_map_id(
         self,
