@@ -71,6 +71,16 @@ def test_application_build_service_migrates_json_then_writes_only_user_database(
     assert roster.Members[0].BuildName == "Main Tank"
     assert user_db.is_file()
 
+    # After migration, legacy files are no longer runtime authorities.
+    builds_path.write_text('{"Members": []}', encoding="utf-8")
+    characters_path.write_text('{"schema_version": 4, "players": [], "characters": [], "builds": [], "team_assignments": []}', encoding="utf-8")
+    reloaded = service.load()
+    assert len(reloaded.Members) == 1
+    assert reloaded.Members[0].BuildName == "Main Tank"
+
+    # Restore the migration inputs only to prove save does not rewrite them.
+    builds_path.write_bytes(original_builds)
+    characters_path.write_bytes(original_characters)
     service.save(BuildRoster(Members=list(roster.Members)))
 
     assert builds_path.read_bytes() == original_builds
