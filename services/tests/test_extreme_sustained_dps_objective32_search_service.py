@@ -88,8 +88,8 @@ def test_objective32_wrapper_can_close_theory_only_when_search_and_all_axes_clos
     runtime = _runtime_frontier()
 
     result = service.search(
-        closure_inventory=_closed_closure_inventory(),
         "root",
+        closure_inventory=_closed_closure_inventory(),
         coverage_proofs=(_proof_without_runtime(),),
         scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
             root_candidate_key="generated-root",
@@ -117,8 +117,8 @@ def test_objective32_wrapper_preserves_local_runtime_omission_and_withholds_theo
     )
 
     result = service.search(
-        closure_inventory=_closed_closure_inventory(),
         "root",
+        closure_inventory=_closed_closure_inventory(),
         coverage_proofs=(_proof_without_runtime(),),
         scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
             root_candidate_key="generated-root",
@@ -147,8 +147,8 @@ def test_objective32_wrapper_does_not_turn_incomplete_finite_search_into_theory(
     )
 
     result = service.search(
-        closure_inventory=_closed_closure_inventory(),
         "root",
+        closure_inventory=_closed_closure_inventory(),
         coverage_proofs=(_proof_without_runtime(),),
         scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
             root_candidate_key="generated-root",
@@ -173,8 +173,8 @@ def test_objective32_wrapper_rejects_coverage_scope_for_different_search_root() 
     )
 
     result = service.search(
-        closure_inventory=_closed_closure_inventory(),
         "root",
+        closure_inventory=_closed_closure_inventory(),
         coverage_proofs=(_proof_without_runtime(),),
         scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
             root_candidate_key="some-other-root",
@@ -202,8 +202,8 @@ def test_objective32_wrapper_requires_explicit_denominator_equivalence() -> None
     )
 
     result = service.search(
-        closure_inventory=_closed_closure_inventory(),
         "root",
+        closure_inventory=_closed_closure_inventory(),
         coverage_proofs=(_proof_without_runtime(),),
         scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
             root_candidate_key="generated-root",
