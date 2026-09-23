@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 import json
 
 from services.eso_database import EsoDatabase
+from services.user_database import user_database_for
 
 
 _AVAILABILITY_STATES = frozenset({"available", "unavailable", "maybe", "late", "tentative", "unknown"})
@@ -112,7 +113,7 @@ class RosterWorkspaceStateService:
     """Additive persistence for roster workflow state."""
 
     def __init__(self, db: EsoDatabase) -> None:
-        self.db = db
+        self.db = user_database_for(db)
         self._ensure_schema()
 
     def _ensure_schema(self) -> None:
