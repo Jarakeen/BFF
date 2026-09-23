@@ -652,3 +652,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Selected Crusher exact target-resistance projection** — source-bound Crushing glyph procs now become exact-duration resistance-reduction windows and feed the same canonical target-resistance path used by other reviewed reductions. Missing duration/target/magnitude or overlapping selected windows remain fail-closed rather than inventing stacking behavior.
 
 - **Selected Weapon/Spell Damage glyph runtime projection** — exact selected Weapon/Spell Damage glyph procs now become active timed `weapon_spell_damage` variants and reuse the existing runtime stat bridge, so their proven windows rebuild Weapon/Spell Damage in the ordinary exact-time build context instead of living only as source-selection evidence.
+
+
+- **Exact Decrease Health runtime damage integration** — selected CP160 Legendary Decrease Health glyph procs now enter the generated sustained-DPS target-Health ledger as exact Oblivion outgoing damage, so they can alter later execute-state math, terminate a fight, and appear in canonical damage summaries instead of living in an isolated policy service.
+- **Supplemental deterministic damage ledger** — canonical DD Combat Simulation can now interleave exact supplemental outgoing-damage events with action and periodic damage while preserving live target-Health feedback; unresolved same-instant cross-source ordering fails closed.
