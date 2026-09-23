@@ -1402,6 +1402,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_source_ownership",
+        domain="extreme",
+        purpose=(
+            "Narrow one exact weapon-enchantment activation opportunity to enchantment EffectVariants owned by the weapon bar that fired the source action."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_source_ownership_service",
+        inputs=(
+            "RuntimeEvent",
+            "WeaponEnchantmentEffectVariants",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentSourceOwnership",),
+        dependencies=(),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_source_ownership",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Consumes preserved front/back source-bar provenance from exact activation events and active_bar ownership from canonical weapon-enchantment EffectVariants. "
+            "The resolver does not choose between multiple same-bar Dual Wield candidates and does not infer cooldown availability or shared-cooldown identity."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_ability_enchantment_occurrence_classifier",
         domain="extreme",
         purpose=(
