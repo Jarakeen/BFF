@@ -138,7 +138,7 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
         )
         try:
             final = float(getattr(result, "final_cooldown"))
-        except (TypeError, ValueError):
+        except (AttributeError, TypeError, ValueError):
             return (
                 None,
                 (),
@@ -152,13 +152,31 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
             )
 
         reduction = getattr(result, "reduction", None)
+        reduction_note = ""
+        if reduction is not None:
+            try:
+                numeric_reduction = float(reduction)
+            except (TypeError, ValueError):
+                return (
+                    None,
+                    (),
+                    (
+                        f"{label}: cooldown-rule resolution returned non-numeric reduction evidence",
+                    ),
+                )
+            if not math.isfinite(numeric_reduction):
+                return (
+                    None,
+                    (),
+                    (
+                        f"{label}: cooldown-rule resolution returned invalid reduction evidence",
+                    ),
+                )
+            reduction_note = f" ({numeric_reduction:g}% reduction)"
+
         detail = (
             f"{label}: equipped weapon cooldown rules resolved {base:g}s -> {final:g}s"
-            + (
-                f" ({float(reduction):g}% reduction)"
-                if reduction is not None
-                else ""
-            )
+            + reduction_note
         )
         return final, (detail,), ()
 
