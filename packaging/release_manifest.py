@@ -188,8 +188,12 @@ FORBIDDEN_RELEASE_PATH_PARTS: tuple[str, ...] = (
     "research",
 )
 
+USER_DATABASE_FILENAME = "foundrydock.db"
+
 USER_OWNED_DATA_FILES: tuple[str, ...] = (
-    "foundrydock.db",
+    # Legacy migration input. New runtime writes achievement progress to
+    # user_data/foundrydock.db, but source checkouts may still carry this file.
+    "achievement_progress.json",
     "antiquity_progress.json",
     "builds.json",
     "capabilities.json",
