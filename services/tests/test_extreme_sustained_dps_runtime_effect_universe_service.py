@@ -174,7 +174,7 @@ def test_single_weapon_enchantment_runtime_variant_can_enter_universe() -> None:
     assert result.resolved is True
 
 
-def test_multiple_weapon_enchantment_variants_require_source_selection_frontier() -> None:
+def test_multiple_weapon_enchantment_variants_remain_for_runtime_source_binding() -> None:
     crusher = _effect(
         "crusher",
         trigger=WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
@@ -194,9 +194,10 @@ def test_multiple_weapon_enchantment_variants_require_source_selection_frontier(
     ).resolve(object())
 
     assert result.effects == (crusher, flame)
-    assert result.resolved is False
-    assert result.unresolved == (
-        "Multiple weapon-enchantment runtime variants require an explicit "
-        "per-opportunity source-selection frontier; one isolated damage "
-        "instance may proc only one weapon enchantment",
+    assert result.resolved is True
+    assert result.unresolved == ()
+    assert any(
+        "per-opportunity source/cooldown binding is owned by runtime scenario"
+        in row
+        for row in result.evidence
     )
