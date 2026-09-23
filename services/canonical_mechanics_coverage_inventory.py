@@ -294,30 +294,30 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             key="weapon_enchantments:runtime_cadence",
             status=CanonicalMechanicsCoverageStatus.MISSING_CRITICAL,
             capability=(
-                "Saved weapon enchantments can be resolved to canonical CombatEffects and "
-                "target-debuff EffectVariants with active-bar ownership, duration, and "
-                "trait-adjusted magnitude. Cooldown-modifier rules also exist independently. "
-                "A fail-closed cadence evidence catalog now carries ZOS-authoritative "
-                "activation causes (landed Light Attack, Heavy Attack, or weapon-ability damage), "
-                "while per-enchantment cooldown scope, off-bar source persistence, and effect-family "
-                "base cooldown observations remain provisional and are not promoted to exact combat math."
+                "Canonical equipped weapon-enchantment sources can now preserve exact bar/slot provenance, "
+                "classify cadence family from canonical consequences, materialize reviewed activation opportunities, "
+                "and branch finite source/cooldown histories without guessing. ZOS-authoritative evidence covers "
+                "landed Light/Heavy/qualifying weapon-ability activation, source-weapon persistence across bar swaps, "
+                "poison suppression, one-hit exclusivity, and the normal 4-second direct-damage cooldown example. "
+                "Cooldown topology and buff/debuff-family cadence remain separately fail-closed."
             ),
             evidence_source=(
                 "minmax/weapon_enchantment_repository.py; "
                 "minmax/weapon_enchantment_effect_service.py; "
                 "minmax/combat_cooldown_rules.py; "
                 "minmax/weapon_enchantment_runtime_cadence.py; "
-                "services/saved_build_capability_service.py"
+                "services/extreme_sustained_dps_weapon_enchantment_runtime_source_service.py; "
+                "services/extreme_sustained_dps_weapon_enchantment_activation_event_service.py; "
+                "services/extreme_sustained_dps_weapon_enchantment_sequence_frontier_service.py; "
+                "services/extreme_sustained_dps_weapon_enchantment_cooldown_policy_resolver.py"
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
-                "Activation causes are primary-source proven by ZOS Update 20, poison suppression is "
-                "primary-source proven from Dark Brotherhood, direct-damage 4-second cooldown has Update 21 "
-                "primary evidence, and v4.2.6 proves one isolated damage instance can proc at most one enchantment. "
-                "Update 19 now also provides primary source-weapon ownership across bar swaps. Exact cadence still "
-                "needs authoritative buff/debuff cooldown values, per-opportunity source selection, shared cooldown "
-                "identity/scope behavior, "
-                "and any remaining proc-damage exclusions before trait-adjusted cooldown rules can drive simulation."
+                "Exact cadence still needs an authoritative buff/debuff enchant base cooldown, authoritative proof "
+                "that duplicate enchant identities share one cooldown, authoritative proof that distinct enchant "
+                "identities retain independent cooldowns, and any remaining direct-damage consequence rules needed "
+                "for exact damage application. Community testing supports both cooldown-topology claims, but they "
+                "remain provisional and must not be promoted into Objective #32 combat math."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
