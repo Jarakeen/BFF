@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from types import SimpleNamespace
 
 from minmax.healer_recovery_heavy_pressure import evaluate_healer_recovery_heavy_pressure
@@ -26,6 +27,12 @@ class _PotionRuntimeService:
     def resolve_restoration_events(self, build, *, plan):
         self.calls.append((build, plan))
         return SimpleNamespace(events=self.events, unresolved=self.unresolved)
+
+
+@dataclass(frozen=True)
+class _Projection:
+    run: object
+    unresolved: tuple[str, ...] = ()
 
 
 class _FakeSustainService:
@@ -73,7 +80,7 @@ class _FakeSustainService:
             ending_amount=current,
             events=tuple(applied),
         )
-        return SimpleNamespace(run=SimpleNamespace(timeline=timeline), unresolved=())
+        return _Projection(run=SimpleNamespace(timeline=timeline))
 
 
 def _plan() -> RotationPlan:
