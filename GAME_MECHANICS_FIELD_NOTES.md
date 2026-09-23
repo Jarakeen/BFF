@@ -1730,3 +1730,13 @@ Weapon enchantments are easier to classify for cadence from the **source proc**,
 
 **For BFF:** cadence-family classification happens at the enchant-source level. Consequence rows stay separate for later damage/healing/resource/debuff projection, and family classification alone never proves cooldown duration or shared-timer behavior.
 
+## 2026-09-23 — Ambidextrous can contribute a decimal internally even though Weapon Damage finishes as an integer
+
+A CP160 Gold one-handed sword has reviewed base weapon power of **1335**. Max-rank Dual Wield **Ambidextrous** contributes **6% of the off-hand weapon's damage**, which is **80.1** in this case.
+
+BFF therefore keeps the exact pre-rounding value in the calculation trace. If the rest of the build produces 1000 Weapon Damage before Ambidextrous, the raw result is **1080.1**. ESO's integer-facing derived-stat rounding then ceilings that to a final **1081**. In the full dual-sword Phase 5 example, **1909.1** similarly becomes **1910**.
+
+**Layman's version:** a passive can add a fractional amount behind the scenes even though the character-sheet-style result is a whole number.
+
+**For BFF:** preserve the decimal in `raw_value` for math/audit provenance, but use the rounded `final_value` anywhere the resolved integer-facing Weapon/Spell Damage stat is required.
+
