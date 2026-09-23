@@ -47,7 +47,10 @@ def test_resolves_effective_cooldown_from_canonical_build_evidence() -> None:
 
     def passive_resolver(player_build, progression):
         passive_calls.append((player_build, progression))
-        return ("passive-grant",)
+        return ExtremePotionPassiveGrantEvidence(
+            passives=("passive-grant",),
+            complete=True,
+        )
 
     service = ExtremeSustainedDPSPotionCooldownResolutionService(
         build_adapter=_BuildAdapter(build="canonical-build"),
