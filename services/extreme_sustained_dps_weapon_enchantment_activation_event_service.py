@@ -74,11 +74,19 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationEventService:
         *,
         weapon_ability_occurrence_classifier: object | None = None,
     ):
+        if weapon_ability_occurrence_classifier is None:
+            from services.extreme_sustained_dps_weapon_ability_enchantment_occurrence_classifier import (
+                ExtremeSustainedDPSWeaponAbilityEnchantmentOccurrenceClassifier,
+            )
+
+            weapon_ability_occurrence_classifier = (
+                ExtremeSustainedDPSWeaponAbilityEnchantmentOccurrenceClassifier.from_database(
+                    database_path
+                )
+            )
         return cls(
             skill_line_repository=SkillLineRepository(database_path),
-            weapon_ability_occurrence_classifier=(
-                weapon_ability_occurrence_classifier
-            ),
+            weapon_ability_occurrence_classifier=weapon_ability_occurrence_classifier,
         )
 
     @staticmethod
