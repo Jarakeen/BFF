@@ -101,6 +101,8 @@ def rehome_plan_header_controls(
 
     if plan_identity_widget is not None:
         row.addWidget(_field("PLAN", plan_identity_widget, minimum_width=180), 2)
+        plan_name_edit.hide()
+        plan_name_edit.setParent(bar)
     elif show_plan_editor:
         row.addWidget(_field("PLAN", plan_name_edit, minimum_width=210), 3)
     else:
@@ -109,6 +111,9 @@ def rehome_plan_header_controls(
 
     if team_identity_widget is not None:
         row.addWidget(_field("TEAM", team_identity_widget, minimum_width=160), 2)
+        if isinstance(team_combo, QWidget):
+            team_combo.hide()
+            team_combo.setParent(bar)
     elif isinstance(team_combo, QWidget) and show_team_editor:
         row.addWidget(_field("TEAM", team_combo, minimum_width=180), 2)
     elif isinstance(team_combo, QWidget):
