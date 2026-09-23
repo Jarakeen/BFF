@@ -341,8 +341,63 @@ def test_effect_variant_resolution_includes_canonical_crusher_capability(tmp_pat
     assert crusher.duration == 5.0
     assert crusher.target_type == SupportTargetType.ENEMY
     assert crusher.active_bar.value == "front"
+    assert crusher.source_slot == "main_hand"
     assert crusher.trigger is None
     assert (
         "front main hand weapon enchantment runtime effect timing deferred: "
         "Crusher Enchantment"
     ) in result.boundaries
+
+
+def test_weapon_enchantment_resolution_preserves_dual_wield_hand_provenance(tmp_path):
+    service = SavedBuildCapabilityService(
+        BuildService(tmp_path / "builds.json"),
+        tmp_path / "eso.db",
+        skills=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        gear=SimpleNamespace(resolve=lambda *_args, **_kwargs: ()),
+        potions=SimpleNamespace(
+            resolve=lambda *_args, **_kwargs: SimpleNamespace(
+                effects=(),
+                unresolved=(),
+            )
+        ),
+        weapon_enchantment_repository=_CrusherRepository(),
+        weapon_enchantment_effect_service=_CrusherEffects(),
+    )
+    service._skill_component = lambda _build, _bar: SimpleNamespace(
+        effects=(), unresolved=(), boundaries=()
+    )
+    service._gear_component = lambda _build, _bar: SimpleNamespace(
+        effects=(), unresolved=(), boundaries=()
+    )
+
+    build = PlayerBuild(
+        Name="Generated",
+        BuildName="Dual Wield Enchants",
+        FrontBarWeapon=GearSlot(
+            WeaponType="Dagger",
+            Enchant="Crushing",
+            Trait="Infused",
+            Quality="Legendary",
+        ),
+        FrontBarOffHand=GearSlot(
+            WeaponType="Dagger",
+            Enchant="Crushing",
+            Trait="Infused",
+            Quality="Legendary",
+        ),
+    )
+
+    result = service.resolve_effect_variants(build)
+    crusher = tuple(
+        effect
+        for effect in result.effects
+        if effect.name == "physical_spell_resistance_reduction"
+    )
+
+    assert len(crusher) == 2
+    assert tuple(effect.source_slot for effect in crusher) == (
+        "main_hand",
+        "off_hand",
+    )
+    assert all(effect.active_bar.value == "front" for effect in crusher)
