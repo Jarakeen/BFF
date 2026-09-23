@@ -28,6 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from minmax.passive_rank_description_repository import PassiveRankDescriptionRepository
 from minmax.item_base_stats import (
     DUAL_WIELD_OFFHAND_POWER_RATIO,
     NAKED_LEVEL_50_POWER,
@@ -154,7 +155,9 @@ def main() -> int:
     heavy = _passive_by_name(rows, "Heavy Weapons")
     ambidextrous = _passive_by_name(rows, "Ambidextrous")
     sword_board = _passive_by_name(rows, "Sword and Board")
+    description_repository = PassiveRankDescriptionRepository(DATABASE)
 
+    exact_descriptions: dict[str, str] = {}
     for passive_name, row in (
         ("Twin Blade and Blunt", twin),
         ("Heavy Weapons", heavy),
@@ -163,23 +166,34 @@ def main() -> int:
     ):
         if row is None:
             unresolved.append(f"canonical max-rank passive missing: {passive_name}")
+            continue
+        evidence = description_repository.resolve(passive_name, int(row[2]))
+        if not evidence.complete:
+            unresolved.extend(evidence.unresolved)
+            continue
+        exact_descriptions[passive_name] = str(evidence.description)
 
-    twin_per_sword = None if twin is None else _extract(
+    twin_description = exact_descriptions.get("Twin Blade and Blunt", "")
+    heavy_description = exact_descriptions.get("Heavy Weapons", "")
+    ambidextrous_description = exact_descriptions.get("Ambidextrous", "")
+    sword_board_description = exact_descriptions.get("Sword and Board", "")
+
+    twin_per_sword = _extract(
         rf"Each sword increases your Weapon and Spell Damage by {_NUMBER}",
-        twin[3],
-    )
-    heavy_sword = None if heavy is None else _extract(
+        twin_description,
+    ) if twin_description else None
+    heavy_sword = _extract(
         rf"Swords increase your Weapon and Spell Damage by {_NUMBER}",
-        heavy[3],
-    )
-    ambidextrous_percent = None if ambidextrous is None else _extract(
+        heavy_description,
+    ) if heavy_description else None
+    ambidextrous_percent = _extract(
         rf"Increases Weapon and Spell Damage by {_NUMBER}% of off-hand weapon's damage",
-        ambidextrous[3],
-    )
-    sword_board_percent = None if sword_board is None else _extract(
+        ambidextrous_description,
+    ) if ambidextrous_description else None
+    sword_board_percent = _extract(
         rf"Increases your Weapon and Spell Damage by {_NUMBER}%",
-        sword_board[3],
-    )
+        sword_board_description,
+    ) if sword_board_description else None
 
     for label, value in (
         ("Twin Blade and Blunt sword magnitude", twin_per_sword),
