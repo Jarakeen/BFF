@@ -338,6 +338,7 @@ def test_strict_global_objective32_preflight_refuses_missing_runtime_state_autho
         global_search=global_search,
         structural_families=_StructuralFamilies(),
         require_closure_ready_scenario=True,
+        potion_cooldown_resolver=object(),
     )
 
     with pytest.raises(ValueError, match="runtime-state frontier or candidate-resolved runtime-state authority"):
@@ -367,6 +368,7 @@ def test_strict_global_objective32_preflight_accepts_candidate_runtime_state_aut
         global_search=global_search,
         structural_families=_StructuralFamilies(),
         require_closure_ready_scenario=True,
+        potion_cooldown_resolver=object(),
     )
 
     result = service.search(
@@ -401,6 +403,7 @@ def test_strict_global_objective32_rejects_duplicate_static_and_candidate_runtim
         global_search=global_search,
         structural_families=_StructuralFamilies(),
         require_closure_ready_scenario=True,
+        potion_cooldown_resolver=object(),
     )
 
     with pytest.raises(ValueError, match="cannot combine candidate-resolved"):
