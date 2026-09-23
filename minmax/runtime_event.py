@@ -34,6 +34,7 @@ class RuntimeEvent:
     source: str
     target: str | None = None
     sequence: int = 0
+    source_bar: str | None = None
 
     def __post_init__(self) -> None:
         if not math.isfinite(self.time_seconds) or self.time_seconds < 0:
@@ -46,6 +47,11 @@ class RuntimeEvent:
             raise ValueError("Runtime event requires a source")
         if self.sequence < 0:
             raise ValueError("Runtime event sequence cannot be negative")
+        if self.source_bar is not None:
+            source_bar = str(self.source_bar).strip().casefold()
+            if source_bar not in {"front", "back"}:
+                raise ValueError("Runtime event source_bar must be 'front' or 'back'")
+            object.__setattr__(self, "source_bar", source_bar)
 
     @classmethod
     def for_skill_component_trigger(
@@ -56,6 +62,7 @@ class RuntimeEvent:
         source: str,
         target: str | None = None,
         sequence: int = 0,
+        source_bar: str | None = None,
     ) -> "RuntimeEvent":
         """Create an event using the authoritative Phase 6 trigger identity."""
 
@@ -65,6 +72,7 @@ class RuntimeEvent:
             source=source,
             target=target,
             sequence=int(sequence),
+            source_bar=source_bar,
         )
 
     @classmethod
@@ -76,6 +84,7 @@ class RuntimeEvent:
         source: str | None = None,
         target: str | None = None,
         sequence: int = 0,
+        source_bar: str | None = None,
     ) -> "RuntimeEvent":
         """Create an event from an EffectVariant's existing named trigger."""
 
@@ -87,6 +96,7 @@ class RuntimeEvent:
             source=source or effect.source,
             target=target,
             sequence=int(sequence),
+            source_bar=source_bar,
         )
 
 
