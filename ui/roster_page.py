@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from models.roster_model import RosterMember
 from services.eso_database import EsoDatabase
 from services.finch_roster_sync_service import sync_finch_gear_needs
@@ -83,7 +83,7 @@ class RosterPage(FoundryPage):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.database = EsoDatabase(get_data_dir() / "eso.db")
+        self.database = EsoDatabase(get_user_database_path())
         self.roster_service = RosterService(self.database)
         self.identity_service = RosterPlayerIdentityService(self.database)
         self.members: list[RosterMember] = []
