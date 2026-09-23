@@ -419,6 +419,15 @@ def install() -> None:
             lambda _checked=False: rotate_rainbow(self, 90.0)
         )
 
+        self.raid_map_player_names = QPushButton("Player Names")
+        self.raid_map_player_names.setCheckable(True)
+        self.raid_map_player_names.setToolTip(
+            "Show the selected Raid Plan's player names on Tank, Healer, and DD seats."
+        )
+        self.raid_map_player_names.toggled.connect(
+            lambda checked: self._toggle_player_name_labels(checked)
+        )
+
         self.raid_map_more_tools_button = QPushButton("To Animate ▾")
         self.raid_map_more_tools_button.setCheckable(True)
         self.raid_map_more_tools_button.setToolTip(
@@ -435,6 +444,7 @@ def install() -> None:
         row.addWidget(self.formation_lock_button)
         row.addWidget(self.formation_rotate_left_button)
         row.addWidget(self.formation_rotate_right_button)
+        row.addWidget(self.raid_map_player_names)
         row.addStretch(1)
         row.addWidget(self.raid_map_more_tools_button)
 
