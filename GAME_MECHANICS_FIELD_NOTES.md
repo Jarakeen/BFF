@@ -1720,4 +1720,13 @@ Some weapon enchantments produce more than one gameplay consequence from the sam
 **Layman's version:** one glyph firing can do two things; that does not mean two glyphs fired.
 
 **For BFF:** weapon-enchantment source selection and cooldown state are keyed by the shared enchant provenance, not by the number of consequence rows. One bound proc attempt may feed multiple consequence variants belonging to that one source.
+---
+
+## 2026-09-23 — One proc family can have several consequences
+
+Weapon enchantments are easier to classify for cadence from the **source proc**, not from each output row. A glyph that deals damage and also restores Health is still one direct-damage enchant source; the restoration is another consequence of that same proc.
+
+**Layman's version:** classify the thing that fired, not every thing it did afterward.
+
+**For BFF:** cadence-family classification happens at the enchant-source level. Consequence rows stay separate for later damage/healing/resource/debuff projection, and family classification alone never proves cooldown duration or shared-timer behavior.
 
