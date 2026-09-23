@@ -69,6 +69,8 @@ def test_runtime_source_preserves_one_enchant_with_multiple_consequences():
     assert source.identity_label == "Absorb Health"
     assert source.source_label == "Glyph of Absorb Health"
     assert source.source_slot == "main_hand"
+    assert source.weapon_trait == "Infused"
+    assert source.weapon_quality == "Gold"
     assert len(source.effects) == 2
     assert effects.calls == [
         (
