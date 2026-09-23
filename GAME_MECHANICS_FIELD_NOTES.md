@@ -1693,3 +1693,12 @@ A valid weapon-enchantment activation opportunity does not guarantee that an enc
 **Layman's version:** an eligible hit is permission to check the glyph, not a promise that the glyph is ready. If both Dual Wield enchants are cooling down, nothing fires. ESO has graciously distinguished “you may knock” from “someone answers.”
 
 **For BFF:** Objective #32 now represents exact source, finite source alternatives, and resolved no-proc as different states. Missing cooldown truth remains unresolved rather than being confused with a proven empty ready set.
+
+
+## 2026-09-23 — Source ownership and cooldown readiness are separate facts
+
+A weapon-enchantment damage event can have one unambiguous source weapon while the actual proc result is still unknown because that source's cooldown state has not been proven. Source selection answers **which glyph would be checked**; cooldown readiness answers **whether that glyph can fire now**.
+
+**Layman's version:** knowing which door to knock on does not prove anyone is home. A single owned enchantment is not automatically an active proc if its timer is unknown.
+
+**For BFF:** Objective #32 now keeps source ownership, cooldown-state proof, and proc occurrence distinct. The shared runtime attempt model also supports binding one activation attempt to one exact EffectVariant source so a resolved one-hit enchant selection cannot leak into every matching enchantment.
