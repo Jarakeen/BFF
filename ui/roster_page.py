@@ -27,6 +27,8 @@ from services.finch_roster_sync_service import sync_finch_gear_needs
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
 from services.roster_service import RosterService
 from services.roster_player_identity_service import RosterPlayerIdentityService
+from services.user_safety_snapshot_service import UserSafetySnapshotService
+from ui.ui_safety import confirm_destructive_action
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -692,20 +694,21 @@ class RosterPage(FoundryPage):
         if str(current.Status or "").strip().casefold() != "archived":
             self.status.warning("Archive the player before permanent deletion.")
             return
-        confirm = QMessageBox.warning(
+        if not confirm_destructive_action(
             self,
-            "Delete Archived Player Permanently",
-            (
-                f"Permanently delete {current.PlayerName or 'this player'}?\n\n"
+            title="Delete Archived Player Permanently",
+            object_label=f'Permanently delete "{current.PlayerName or "this player"}"?',
+            impact=(
                 "This removes the Personnel record, current team memberships, aliases, "
-                "and roster assignment state. This cannot be undone.\n\n"
-                "Saved builds and historical raid-plan snapshots are not deleted."
+                "and roster assignment state. Saved builds and historical Raid Plan snapshots "
+                "are kept. A recoverable database snapshot is created first."
             ),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
-            QMessageBox.StandardButton.Cancel,
-        )
-        if confirm != QMessageBox.StandardButton.Yes:
+            confirm_text="Delete Permanently",
+        ):
             return
+        UserSafetySnapshotService().create(
+            f"delete-player-{current.Id or current.PlayerName}"
+        )
         try:
             self.roster_service.delete_member(int(model.Id))
             self.record.clear()
