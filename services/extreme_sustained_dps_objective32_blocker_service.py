@@ -183,7 +183,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
                             code="runtime_source_data_unresolved",
                             category="source_data",
                             detail=detail,
-                            source="runtime relevance closure inventory",
+                            source="runtime closure inventory",
                         )
                     )
 
@@ -197,7 +197,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
                             code="runtime_math_review_unresolved",
                             category="math_review",
                             detail=detail,
-                            source="runtime relevance closure inventory",
+                            source="runtime closure inventory",
                         )
                     )
 
