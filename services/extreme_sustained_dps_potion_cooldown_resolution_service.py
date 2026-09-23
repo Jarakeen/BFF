@@ -112,9 +112,7 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
             unresolved.append(
                 "Explicit Extreme potion cooldown PassiveGrant inventory is not proven complete"
             )
-        if passive_inventory_complete and not resolved_passives:
-            pass
-        elif progression is None and not resolved_passives:
+        if progression is None and not resolved_passives and not passive_inventory_complete:
             unresolved.append(
                 "Extreme potion cooldown requires passive progression or explicit PassiveGrant evidence"
             )
