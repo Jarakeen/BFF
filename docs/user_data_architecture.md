@@ -64,7 +64,7 @@ Do not add new user-owned tables to `data/eso.db`.
 
 ## Privacy-limited custom raid EXE
 
-`packaging/build_friend.ps1 -UseCurrentRaidSetup` creates a first-run user database seed containing only the current raid setup:
+`packaging/build_friend.ps1 -UseCurrentRaidSetup` creates a first-run user database seed containing only the current raid setup. When more than one Raid Plan exists, `-RaidPlanId` is required so an unrelated plan cannot leak into the custom EXE:
 
 - Personnel
 - Teams
