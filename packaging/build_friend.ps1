@@ -1,6 +1,7 @@
 param(
     [switch]$IncludeBroadcast,
     [switch]$UseCurrentRaidSetup,
+    [string]$RaidPlanId = "",
     [string]$UserDatabaseSeed = ""
 )
 
@@ -132,7 +133,12 @@ if ($UseCurrentRaidSetup) {
     }
 
     $PreparedUserDatabaseSeed = Join-Path $ReleaseSeedRoot "foundrydock.db"
-    python tools\build_custom_user_database_seed.py --source $CurrentUserDatabase --destination $PreparedUserDatabaseSeed
+    if ([string]::IsNullOrWhiteSpace($RaidPlanId)) {
+        python tools\build_custom_user_database_seed.py --source $CurrentUserDatabase --destination $PreparedUserDatabaseSeed
+    }
+    else {
+        python tools\build_custom_user_database_seed.py --source $CurrentUserDatabase --destination $PreparedUserDatabaseSeed --plan-id $RaidPlanId
+    }
     if ($LASTEXITCODE -ne 0) {
         throw "Could not create privacy-limited current raid setup seed."
     }
