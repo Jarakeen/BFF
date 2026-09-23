@@ -602,7 +602,6 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self._saved_plan_selection_changed(self.saved_plan_combo.currentIndex())
         self._refresh_action_availability()
 
-    @staticmethod
     def _refresh_action_availability(self) -> None:
         plan_id = self.saved_plan_combo.currentData() if hasattr(self, "saved_plan_combo") else None
         saved = isinstance(plan_id, str) and bool(plan_id.strip()) and plan_id != "__new_plan__"
@@ -643,6 +642,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             if saved else "Save or load a Raid Plan first.",
         )
 
+    @staticmethod
     def _trial_display_for(plan: RaidPlan) -> str:
         wanted = plan.trial_id.casefold()
         return next((name for name in COMP_MAKER_TRIALS if _slug(name) == wanted), plan.trial_id)
