@@ -26,7 +26,7 @@ from services.roster_service import RosterService
 from services.settings_service import SettingsService
 
 
-_SHARED_TEAM_SCHEMA_VERSION = 2
+_SHARED_TEAM_SCHEMA_VERSION = 3
 _SHARED_RAID_PLAN_SCHEMA_VERSION = 7
 
 
@@ -77,6 +77,7 @@ def _team_members(roster: RosterService, team_name: str) -> list[dict[str, objec
                 "primary_role": _shared_role(member.PrimaryRole),
                 "secondary_role": _shared_role(member.SecondaryRole),
                 "status": _clean(member.Status),
+                "discord_username": _clean(member.DiscordName),
             }
         )
     members.sort(
