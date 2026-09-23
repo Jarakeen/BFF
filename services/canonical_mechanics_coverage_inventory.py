@@ -274,8 +274,9 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
-                "Generated progression now has a fail-closed canonical PassiveGrant derivation "
-                "seam for potion-cooldown effects. Prove the external scenario denominator and "
+                "Generated progression now has an explicit completeness-bearing canonical PassiveGrant "
+                "derivation seam for potion-cooldown effects; incomplete or competing passive "
+                "authorities stop before cooldown math.  Prove the external scenario denominator and "
                 "promote only reviewed passive cooldown mechanics. Conditional skill/passive/set "
                 "cooldown modifiers discovered downstream of potion scheduling require a cadence-aware "
                 "runtime model and must not be flattened into a permanent pre-rotation reduction."
