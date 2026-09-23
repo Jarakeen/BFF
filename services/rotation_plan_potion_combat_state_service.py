@@ -15,6 +15,18 @@ from models.build_model import PlayerBuild
 
 
 @dataclass(frozen=True)
+class RotationPlanPotionRestorationResult:
+    """Source-backed instant potion restores plus explicit resolution state."""
+
+    events: tuple[ResourceRestorationEvent, ...] = ()
+    unresolved: tuple[str, ...] = ()
+
+    @property
+    def resolved(self) -> bool:
+        return not self.unresolved
+
+
+@dataclass(frozen=True)
 class RotationPlanPotionCombatStateResult:
     """Exact potion-derived attacker state for one ordered point in a final plan."""
 
@@ -55,28 +67,55 @@ class RotationPlanPotionCombatStateService:
         "Restore Stamina": ResourceType.STAMINA,
     }
 
-    def restoration_events(self, build: PlayerBuild, *, plan: RotationPlan) -> tuple[ResourceRestorationEvent, ...]:
-        """Project source-backed instant restores for explicitly scheduled potion uses."""
+    def resolve_restoration_events(
+        self, build: PlayerBuild, *, plan: RotationPlan
+    ) -> RotationPlanPotionRestorationResult:
+        """Project scheduled instant restores without silently discarding uncertainty."""
         potion_name = " ".join(str(getattr(build, "Potion", "") or "").strip().split())
+        potion_actions = tuple(
+            action for action in plan.actions if action.kind is RotationActionKind.POTION
+        )
         if not potion_name:
-            return ()
+            if potion_actions:
+                return RotationPlanPotionRestorationResult(
+                    unresolved=("Rotation schedules potion use but the saved build has no potion selection",),
+                )
+            return RotationPlanPotionRestorationResult()
+        if not potion_actions:
+            return RotationPlanPotionRestorationResult()
+
         event = self.event_resolver.resolve(potion_name)
         if not event.resolved:
-            return ()
+            return RotationPlanPotionRestorationResult(
+                unresolved=tuple(event.unresolved) or (
+                    f"scheduled potion restoration could not resolve potion evidence: {potion_name}",
+                ),
+            )
+
         restores = tuple(
             trait for trait in event.instant_restores
-            if trait.trait in self._RESTORE_RESOURCE_BY_TRAIT and trait.magnitude is not None
+            if trait.trait in self._RESTORE_RESOURCE_BY_TRAIT
         )
         rows: list[ResourceRestorationEvent] = []
-        for action in plan.actions:
-            if action.kind is not RotationActionKind.POTION:
-                continue
+        unresolved: list[str] = []
+        for action in potion_actions:
             action_name = " ".join(str(action.name or "").strip().split())
             if action_name and action_name.casefold() != potion_name.casefold():
+                unresolved.append(
+                    f"scheduled potion identity {action_name!r} does not match saved potion {potion_name!r}"
+                )
                 continue
             for trait in restores:
-                amount = float(trait.magnitude or 0.0)
+                if trait.magnitude is None:
+                    unresolved.append(
+                        f"{potion_name}: {trait.trait} restoration magnitude is unresolved"
+                    )
+                    continue
+                amount = float(trait.magnitude)
                 if amount < 0.0 or not amount.is_integer():
+                    unresolved.append(
+                        f"{potion_name}: {trait.trait} restoration magnitude is invalid: {trait.magnitude!r}"
+                    )
                     continue
                 rows.append(ResourceRestorationEvent(
                     time_seconds=float(action.time_seconds),
@@ -84,7 +123,14 @@ class RotationPlanPotionCombatStateService:
                     amount=int(amount),
                     source=f"{potion_name}: {trait.trait}",
                 ))
-        return tuple(rows)
+        return RotationPlanPotionRestorationResult(
+            events=tuple(rows),
+            unresolved=tuple(dict.fromkeys(unresolved)),
+        )
+
+    def restoration_events(self, build: PlayerBuild, *, plan: RotationPlan) -> tuple[ResourceRestorationEvent, ...]:
+        """Compatibility projection. New Extreme consumers should use the resolved result."""
+        return self.resolve_restoration_events(build, plan=plan).events
 
     @staticmethod
     def _ordered_before_or_at(
@@ -193,6 +239,7 @@ class RotationPlanPotionCombatStateService:
 
 
 __all__ = [
+    "RotationPlanPotionRestorationResult",
     "RotationPlanPotionCombatStateResult",
     "RotationPlanPotionCombatStateService",
 ]
