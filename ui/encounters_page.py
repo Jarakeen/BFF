@@ -10,9 +10,10 @@
 
 from __future__ import annotations
 
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
@@ -32,6 +33,7 @@ from engine.config import get_data_dir
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.encounter_raid_map_store import EncounterRaidMapStore
 from services.expedition_service import ExpeditionService
+from services.finch_raid_map_publish_service import publish_raid_map_and_plan_to_finch
 from services.raid_plan_repository import RaidPlanRepository
 from services.raid_section_state_service import RaidSectionStateService
 from ui.components.encounter_board import EncounterBoard
@@ -39,6 +41,12 @@ from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
+
+
+_FINCH_RAID_MAP_EXECUTOR = ThreadPoolExecutor(
+    max_workers=1,
+    thread_name_prefix="finch-raid-map",
+)
 
 
 class EncountersPage(FoundryPage):
@@ -56,6 +64,10 @@ class EncountersPage(FoundryPage):
             get_data_dir() / "eso.db"
         )
         self._guide_summaries = ()
+        self._finch_raid_map_future: Future | None = None
+        self._finch_raid_map_timer = QTimer(self)
+        self._finch_raid_map_timer.setInterval(100)
+        self._finch_raid_map_timer.timeout.connect(self._poll_finch_raid_map_publish)
         self.raid_plan_repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
         self.raid_map_store = EncounterRaidMapStore(get_data_dir())
         self.raid_section_state = RaidSectionStateService()
@@ -357,12 +369,30 @@ class EncountersPage(FoundryPage):
         board = getattr(self, "encounter_board", None)
         if board is None or board.layout() is None:
             return
-        button = QPushButton("Save to Raid Plan")
+        controls = QWidget()
+        row = QHBoxLayout(controls)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(6)
+
+        button = QPushButton("Save Map to Raid Plan")
         button.setObjectName("saveRaidMapToPlanButton")
-        button.setToolTip("Save this exact Raid Map layout as an asset owned by the selected Raid Plan.")
+        button.setToolTip(
+            "Save the full editable Raid Map layout locally and link it to the selected Raid Plan."
+        )
         button.clicked.connect(self._save_raid_map_to_plan)
         self.save_raid_map_to_plan_button = button
-        board.layout().insertWidget(max(0, board.layout().count() - 1), button)
+        row.addWidget(button)
+
+        self.save_raid_map_to_finch_button = QPushButton("Save Map to Finch (WebP)")
+        self.save_raid_map_to_finch_button.setObjectName("saveRaidMapToFinchWebpButton")
+        self.save_raid_map_to_finch_button.setProperty("primary", True)
+        self.save_raid_map_to_finch_button.setToolTip(
+            "Capture this Raid Map, flatten it to a compact WebP, save it to Finch, and republish the Raid Plan so the mobile site can display it."
+        )
+        self.save_raid_map_to_finch_button.clicked.connect(self._save_raid_map_to_finch)
+        row.addWidget(self.save_raid_map_to_finch_button)
+
+        board.layout().insertWidget(max(0, board.layout().count() - 1), controls)
 
     def _save_raid_map_to_plan(self) -> None:
         plan_id = str(self.raid_plan_combo.currentData() or "").strip()
@@ -389,6 +419,62 @@ class EncountersPage(FoundryPage):
             record.map_id,
         )
         self.status.success(f"Saved Raid Map to Raid Plan: {plan.name}.")
+
+    def _save_raid_map_to_finch(self) -> None:
+        plan_id = str(self.raid_plan_combo.currentData() or "").strip()
+        if not plan_id:
+            self.status.warning("Select a saved Raid Plan before sending this map to Finch.")
+            return
+        plan = self.raid_plan_repository.get(plan_id)
+        if plan is None:
+            self.status.warning("The selected Raid Plan no longer exists.")
+            return
+
+        encounter_id = str(self.boss_combo.currentData() or "").strip()
+        encounter_name = str(self.boss_combo.currentText() or "").strip()
+        if not encounter_id:
+            self.status.warning("Select a boss encounter before sending this map to Finch.")
+            return
+
+        if self._finch_raid_map_future is not None and not self._finch_raid_map_future.done():
+            self.status.info("A Raid Map WebP publish is already running.")
+            return
+
+        # Preserve the richer editable source locally, then create a flattened
+        # raid-night image for Finch. The Site never needs the authoring model.
+        self._save_raid_map_to_plan()
+        self.encounter_board.capture_snapshot()
+        label = f"{plan.name} • {encounter_name or 'Raid Map'}"
+
+        self.save_raid_map_to_finch_button.setEnabled(False)
+        self.status.info("Flattening Raid Map to WebP and saving it to Finch…")
+        self._finch_raid_map_future = _FINCH_RAID_MAP_EXECUTOR.submit(
+            publish_raid_map_and_plan_to_finch,
+            source=self.encounter_board.snapshot_path,
+            plan_id=plan_id,
+            encounter_id=encounter_id,
+            encounter_name=encounter_name,
+            map_label=label,
+            data_dir=get_data_dir(),
+            settings_path=Path("settings.json"),
+        )
+        self._finch_raid_map_timer.start()
+
+    def _poll_finch_raid_map_publish(self) -> None:
+        future = self._finch_raid_map_future
+        if future is None or not future.done():
+            return
+        self._finch_raid_map_timer.stop()
+        self._finch_raid_map_future = None
+        self.save_raid_map_to_finch_button.setEnabled(True)
+        try:
+            preview = future.result()
+        except Exception as exc:
+            self.status.error(f"Finch Raid Map WebP publish failed: {exc}")
+            return
+        self.status.success(
+            f"Saved {preview.encounter_name} to Finch as WebP and republished the Raid Plan."
+        )
 
     def _populate_raid_plan_context(self) -> None:
         if not hasattr(self, "raid_plan_combo"):
