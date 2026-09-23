@@ -25,7 +25,7 @@ from services.roster_service import RosterService
 from services.settings_service import SettingsService
 
 
-_SHARED_TEAM_SCHEMA_VERSION = 1
+_SHARED_TEAM_SCHEMA_VERSION = 2
 _SHARED_RAID_PLAN_SCHEMA_VERSION = 5
 
 
@@ -87,6 +87,38 @@ def _team_members(roster: RosterService, team_name: str) -> list[dict[str, objec
     return members
 
 
+_TRIAL_ROLE_CAPACITY: dict[str, int] = {
+    "Tank": 2,
+    "Healer": 2,
+    "Damage Dealer": 8,
+}
+_TRIAL_SEAT_CAPACITY = sum(_TRIAL_ROLE_CAPACITY.values())
+
+
+def _team_seat_summary(members: list[dict[str, object]]) -> dict[str, object]:
+    filled_by_role = {role: 0 for role in _TRIAL_ROLE_CAPACITY}
+    for member in members:
+        role = _shared_role(member.get("primary_role"))
+        if role in filled_by_role:
+            filled_by_role[role] += 1
+
+    filled_by_role = {
+        role: min(count, _TRIAL_ROLE_CAPACITY[role])
+        for role, count in filled_by_role.items()
+    }
+    open_by_role = {
+        role: _TRIAL_ROLE_CAPACITY[role] - filled_by_role[role]
+        for role in _TRIAL_ROLE_CAPACITY
+    }
+    filled = sum(filled_by_role.values())
+    return {
+        "seat_capacity": _TRIAL_SEAT_CAPACITY,
+        "filled_seats": filled,
+        "open_seats": _TRIAL_SEAT_CAPACITY - filled,
+        "open_seats_by_role": open_by_role,
+    }
+
+
 def shared_team_payload(roster: RosterService, team_name: str) -> dict[str, object]:
     name = _clean(team_name)
     if not name:
@@ -114,6 +146,7 @@ def shared_team_payload(roster: RosterService, team_name: str) -> dict[str, obje
             for slot in schedule.effective_slots
         ]
 
+    members = _team_members(roster, canonical)
     return {
         "team_name": canonical,
         "schedule": {
@@ -121,7 +154,8 @@ def shared_team_payload(roster: RosterService, team_name: str) -> dict[str, obje
             "timezone": _clean(schedule.TimeZone) if schedule else "",
             "current_focus": _clean(schedule.CurrentFocus) if schedule else "",
         },
-        "members": _team_members(roster, canonical),
+        "members": members,
+        "roster": _team_seat_summary(members),
     }
 
 
