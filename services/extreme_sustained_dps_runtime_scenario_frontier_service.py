@@ -145,6 +145,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             return resolver(
                 candidate=candidate,
                 enchantment_effects=enchantment_effects,
+                player_build=player_build,
             )
         method = getattr(resolver, "resolve", None)
         if method is None:
