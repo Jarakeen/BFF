@@ -65,3 +65,34 @@ def test_raid_map_store_rejects_non_image_and_path_like_encounter_ids(tmp_path: 
 
     with pytest.raises(ValueError, match="canonical id"):
         store.list_maps("../xalvakka")
+
+
+def test_saved_plan_layout_is_not_registered_as_boss_image(tmp_path: Path) -> None:
+    store = EncounterRaidMapStore(tmp_path)
+    layout = tmp_path / "layout.json"
+    layout.write_text('{"version": 2, "items": []}', encoding="utf-8")
+
+    record = store.save_plan_layout(
+        "rg-hm",
+        layout,
+        encounter_id="oaxiltso",
+        label="RG HM • Oaxiltso",
+    )
+
+    assert store.resolve_path(record).is_file()
+    assert record.relative_path.startswith("raid_maps/plans/")
+    assert store.list_maps("oaxiltso") == ()
+
+
+def test_legacy_json_manifest_rows_are_hidden_from_image_list(tmp_path: Path) -> None:
+    store = EncounterRaidMapStore(tmp_path)
+    legacy = tmp_path / "raid_maps" / "bosses" / "oaxiltso" / "legacy.json"
+    legacy.parent.mkdir(parents=True, exist_ok=True)
+    legacy.write_text("{}", encoding="utf-8")
+    store.manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    store.manifest_path.write_text(
+        '{"schema_version":1,"encounters":{"oaxiltso":[{"map_id":"legacy","label":"Old Layout","relative_path":"raid_maps/bosses/oaxiltso/legacy.json"}]}}',
+        encoding="utf-8",
+    )
+
+    assert store.list_maps("oaxiltso") == ()
