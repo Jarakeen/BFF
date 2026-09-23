@@ -666,11 +666,11 @@ class EncounterBoard(QWidget):
     def _seed_default_layout(self):
         self._set_boss_count(0)
         defaults = [
-            ("tank", "Main Tank", 480, 205),
-            ("tank", "Off Tank", 570, 245),
-            ("healer", "Healer 1", 390, 335),
-            ("healer", "Healer 2", 570, 335),
-            ("dps", "DD Stack", 480, 365),
+            ("tank", "Tank1", 480, 205),
+            ("tank", "Tank2", 570, 245),
+            ("healer", "Healer1", 390, 335),
+            ("healer", "Healer2", 570, 335),
+            ("dps", "DD1", 480, 365),
         ]
         for kind, label, x, y in defaults:
             self._add_token(kind, label, x, y)
@@ -727,9 +727,9 @@ class EncounterBoard(QWidget):
         self._counts[kind] = self._counts.get(kind, 0) + 1
         number = self._counts[kind]
         labels = {
-            "tank": f"Tank {number}",
-            "healer": f"Healer {number}",
-            "dps": "DD Stack" if number == 1 else f"DD {number}",
+            "tank": f"Tank{number}",
+            "healer": f"Healer{number}",
+            "dps": f"DD{number}",
             "portal": f"Portal {number}",
             "aoe": f"AOE {number}",
             "stack": f"Stack {number}",
