@@ -15,18 +15,14 @@ from minmax.jewelry_trait_repository import JewelryTraitRepository
 from models.build_model import PlayerBuild
 
 
-@dataclass(frozen=True)
-class ExtremePotionPassiveGrantEvidence:
-    passives: tuple[PassiveGrant, ...] = ()
-    complete: bool = False
-    unresolved: tuple[str, ...] = ()
-
+ExtremePotionPassiveGrantEvidence = ExtremeSustainedDPSPotionCooldownPassiveEvidence
 
 ExtremePotionPassiveGrantResolver = Callable[
     [PlayerBuild, object],
     ExtremePotionPassiveGrantEvidence,
 ]
 from services.extreme_sustained_dps_potion_cooldown_passive_grant_service import (
+    ExtremeSustainedDPSPotionCooldownPassiveEvidence,
     ExtremeSustainedDPSPotionCooldownPassiveGrantService,
 )
 from services.extreme_skill_universe_service import ExtremeSkillUniverseService
@@ -79,10 +75,7 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
             passive_service = ExtremeSustainedDPSPotionCooldownPassiveGrantService(
                 ExtremeSkillUniverseService(database)
             )
-            self.passive_grant_resolver = lambda build, progression: ExtremePotionPassiveGrantEvidence(
-                passives=tuple(passive_service.resolve(build, progression)),
-                complete=True,
-            )
+            self.passive_grant_resolver = passive_service.resolve
         else:
             self.passive_grant_resolver = passive_grant_resolver
 
