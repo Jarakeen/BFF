@@ -28,6 +28,8 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.build_service import BuildService
+from services.user_safety_snapshot_service import UserSafetySnapshotService
+from ui.ui_safety import confirm_destructive_action
 
 
 _INSTALLED = False
@@ -526,21 +528,23 @@ def _open_merge_dialog(page) -> None:
     if dialog.exec() != QDialog.DialogCode.Accepted:
         return
 
-    answer = QMessageBox.question(
+    if not confirm_destructive_action(
         page,
-        "Confirm Team Merge",
-        (
-            f'Merge "{dialog.source_team}" into "{dialog.destination_team}"?\n\n'
-            "The destination team will survive. The source team record will be deleted after its "
-            "roster memberships and canonical build assignments are transferred. People, characters, "
-            "and saved builds will not be deleted."
+        title="Confirm Team Merge",
+        object_label=f'Merge "{dialog.source_team}" into "{dialog.destination_team}"?',
+        impact=(
+            "The destination team survives. The source team is removed only after its "
+            "roster memberships and canonical build assignments are transferred. "
+            "People, characters, and saved builds are kept. A recoverable database "
+            "snapshot is created first."
         ),
-        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
-        QMessageBox.StandardButton.Cancel,
-    )
-    if answer != QMessageBox.StandardButton.Yes:
+        confirm_text="Merge Teams",
+    ):
         return
 
+    UserSafetySnapshotService().create(
+        f"merge-team-{dialog.source_team}-into-{dialog.destination_team}"
+    )
     try:
         result = merge_teams(
             page.roster_service,
