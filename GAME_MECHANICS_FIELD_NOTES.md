@@ -1767,3 +1767,12 @@ The selected-proc bridge now reaches the point where a glyph's damage consequenc
 **Layman's version:** a Flame glyph doing damage does not magically become a little fire skill just because both numbers hurt the boss.
 
 **For BFF:** selected Oblivion glyph damage may resolve `can_crit=False`. Ordinary glyph damage keeps `can_crit=None` until its own authoritative rule is established, so final sustained-DPS application remains fail-closed instead of borrowing skill semantics.
+
+
+## 2026-09-23 — Infused has two different enchantment jobs
+
+Weapon **Infused** changes two separate things: enchantment **magnitude** and enchantment **cooldown**. FoundryDock's older rule path correctly found the quality-dependent magnitude row, but cooldown math was handed that same row; the cooldown calculator intentionally ignores magnitude rules, so an Infused weapon could keep the unmodified base cooldown.
+
+**Layman's version:** making the glyph hit harder and making it fire sooner are two different switches. We had the first switch wired to both labels, which looked tidy and did absolutely nothing for the timer.
+
+**For BFF:** weapon-enchantment runtime now uses the quality-aware Infused magnitude rule plus the separate canonical `enchantment_cooldown_reduction` rule. Gold/Legendary quality aliases are normalized before the magnitude lookup, and cooldown policy remains fail-closed if the canonical cooldown rule is missing or ambiguous.
