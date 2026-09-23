@@ -57,7 +57,25 @@ def test_legacy_user_state_is_copied_without_mutating_source(tmp_path: Path) -> 
     legacy = tmp_path / "eso.db"
     target = tmp_path / "foundrydock.db"
     achievements = tmp_path / "achievement_progress.json"
+    raid_plans = tmp_path / "raid_plans.json"
     _legacy_database(legacy)
+    raid_plans.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "plans": [
+                    {
+                        "plan_id": "pm-rg",
+                        "trial_id": "rockgrove",
+                        "name": "Performance Mode RG",
+                        "members": [],
+                        "triggered_responsibilities": [],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
     achievements.write_text(
         json.dumps(
             {
@@ -74,6 +92,7 @@ def test_legacy_user_state_is_copied_without_mutating_source(tmp_path: Path) -> 
         legacy_database=legacy,
         user_database=target,
         achievement_progress=achievements,
+        raid_plans=raid_plans,
     )
 
     assert legacy.read_bytes() == before
@@ -82,6 +101,7 @@ def test_legacy_user_state_is_copied_without_mutating_source(tmp_path: Path) -> 
     assert counts["team_member"] == 1
     assert counts["collectible_progress"] == 1
     assert counts["achievement_progress"] == 2
+    assert counts["raid_plan"] == 1
 
     db = sqlite3.connect(target)
     try:
@@ -90,6 +110,9 @@ def test_legacy_user_state_is_copied_without_mutating_source(tmp_path: Path) -> 
         assert db.execute(
             "SELECT owned FROM collectible_progress WHERE profile_name='Default' AND collectible_id=42"
         ).fetchone()[0] == 1
+        assert db.execute(
+            "SELECT plan_id FROM raid_plan"
+        ).fetchone()[0] == "pm-rg"
     finally:
         db.close()
 
