@@ -41,7 +41,8 @@ def test_composite_resolver_keeps_off_bar_source_ownership():
     assert result.resolved is True
     assert result.exact is back
     assert result.alternatives == (back,)
-    assert result.proc_occurs is True
+    assert result.cooldown_state_proven is False
+    assert result.proc_occurs is None
 
 
 def test_composite_resolver_keeps_dual_wield_choice_open_without_cooldown_truth():
@@ -72,6 +73,7 @@ def test_composite_resolver_uses_caller_proven_ready_subset():
     assert result.resolved is True
     assert result.exact is off
     assert result.alternatives == (off,)
+    assert result.cooldown_state_proven is True
     assert result.proc_occurs is True
 
 
@@ -147,3 +149,17 @@ def test_composite_resolver_rejects_two_cooldown_truth_sources():
                 ),
             ),
         )
+
+
+def test_single_owned_source_with_explicit_ready_state_proves_proc():
+    main = _effect("Main Enchant", BarId.FRONT, "main_hand")
+
+    result = ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService().resolve(
+        activation_event=_event(),
+        enchantment_effects=(main,),
+        cooldown_ready=(main,),
+    )
+
+    assert result.exact is main
+    assert result.cooldown_state_proven is True
+    assert result.proc_occurs is True
