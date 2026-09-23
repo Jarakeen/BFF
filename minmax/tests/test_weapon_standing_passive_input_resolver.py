@@ -103,8 +103,10 @@ def test_ambidextrous_applies_reviewed_six_percent_of_offhand_weapon_damage():
     )
 
     state = _state(result)
-    assert state.derived[StatId.WEAPON_DAMAGE].final_value == 1080.1
-    assert state.derived[StatId.SPELL_DAMAGE].final_value == 1080.1
+    assert state.derived[StatId.WEAPON_DAMAGE].raw_value == 1080.1
+    assert state.derived[StatId.SPELL_DAMAGE].raw_value == 1080.1
+    assert state.derived[StatId.WEAPON_DAMAGE].final_value == 1081
+    assert state.derived[StatId.SPELL_DAMAGE].final_value == 1081
     assert not result.unresolved
 
 
@@ -272,8 +274,10 @@ def test_phase5_context_applies_owned_ambidextrous_from_verified_offhand_power()
         ),
     )
 
-    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1909.1
-    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1909.1
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].raw_value == 1909.1
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].raw_value == 1909.1
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1910
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1910
     assert not any("Ambidextrous" in item for item in context.unresolved_gear_effects)
 
 
