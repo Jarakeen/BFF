@@ -1232,21 +1232,21 @@ class CityLiveRaidPage(FoundryPage):
         mark_saving(self)
         try:
             state = self.user_state.set_run_notes(self._plan.plan_id, notes)
+            attempt = int(state.get("attempt", 0) or 0)
+            archived = self.user_state.save_review_note(
+                plan_id=self._plan.plan_id,
+                trial_id=self._plan.trial_id,
+                plan_name=self._plan.name,
+                attempt=attempt,
+                notes=notes,
+                started_at=_clean(state.get("started_at")),
+                ended_at=_clean(state.get("ended_at")),
+                encounter_id=_clean(state.get("encounter_id")),
+            )
         except Exception as exc:
             mark_save_failed(self, str(exc))
             self.status.error(f"Run notes could not be saved: {exc}")
             return
-        attempt = int(state.get("attempt", 0) or 0)
-        archived = self.user_state.save_review_note(
-            plan_id=self._plan.plan_id,
-            trial_id=self._plan.trial_id,
-            plan_name=self._plan.name,
-            attempt=attempt,
-            notes=notes,
-            started_at=_clean(state.get("started_at")),
-            ended_at=_clean(state.get("ended_at")),
-            encounter_id=_clean(state.get("encounter_id")),
-        )
         if archived is None:
             self.status.info("Blank notes cleared from the active Raid Plan.")
         else:
