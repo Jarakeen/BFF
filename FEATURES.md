@@ -627,3 +627,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Raw weapon-enchantment metadata audit** — A read-only research tool inventories every field in the raw UESP `minedItemSummary` weapon-enchantment export and highlights cooldown-, ability-, enchant-, proc-, duration-, effect-, and ID-related metadata with sample values. It never opens or mutates `eso.db`, giving Objective #32 a safe way to discover importable cadence metadata before any additive schema decision.
+
+
+- **Finch Discord identity reconciliation** — shared Team schema v3 includes the roster member's explicitly stored Discord username so Finch can exact-match the interacting Discord account to canonical Personnel without fuzzy-name guessing. Finch's immutable Discord user ID remains its stable private binding once observed.
+- **Finch seat confirmation intake** — Finch raid confirmations can be synchronized into Raid Readiness as explicit FINCH human-ready evidence keyed by Raid Plan and seat; this updates user-owned readiness state without replacing ESO/reference data or the FoundryDock database.
