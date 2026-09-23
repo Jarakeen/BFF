@@ -3294,6 +3294,30 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_consequence_coverage",
+        domain="extreme",
+        purpose=(
+            "Require every exact selected weapon-enchantment proc consequence to have an explicit downstream runtime consumer before an Objective #32 leaf may be called mechanically complete."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_consequence_coverage_service",
+        inputs=("WeaponEnchantmentProcConsequenceResolution", "ConsumedConsequenceTypes"),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentConsequenceCoverage",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_selected_consequence_coverage",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Source selection and cooldown sequencing prove which glyph fired, not that its damage, restore, buff, debuff, or other consequences reached exact runtime scoring. "
+            "Unconsumed selected consequence rows remain explicit leaf blockers."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_runtime_evaluation",
         domain="extreme",
         purpose=(
@@ -3313,6 +3337,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         dependencies=(
             "extreme.sustained_dps.gear_runtime_semantics",
             "extreme.sustained_dps.runtime_target_combat_state",
+            "extreme.sustained_dps.weapon_enchantment_runtime_source",
+            "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+            "extreme.sustained_dps.weapon_enchantment_consequence_coverage",
             "simulation.saved_build_dd",
         ),
         responsibilities=("extreme_sustained_dps_generated_runtime_evaluation",),
@@ -3325,7 +3352,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Bar-legal named gear buffs flow through the shared runtime CombatState path, while reviewed "
             "timed stat EffectVariants are projected into canonical runtime build-context inputs. "
             "Reviewed ENEMY-target Damage Taken, named or explicit numeric resistance-reduction, and Critical Damage Taken windows are projected into target state at exact damage timestamps. "
-            "Unknown runtime stat identities still fail closed."
+            "Unknown runtime stat identities still fail closed. "
+            "Selected weapon-enchantment proc consequences are audited branch-locally and any consequence without an explicit runtime consumer blocks mechanic completeness."
         ),
     ),
     ServiceDescriptor(
