@@ -111,6 +111,12 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
                 unresolved.append(str(exc))
 
         scenario_evidence = scenario or ExtremeSustainedDPSPotionCooldownScenarioEvidence()
+        if unresolved:
+            return ExtremeSustainedDPSPotionCooldownResolution(
+                cooldown_seconds=None,
+                resolution=None,
+                unresolved=tuple(dict.fromkeys(unresolved)),
+            )
         item_evidence = self.item_service.resolve(player_build)
         resolution = self.cooldown_service.resolve(
             character_build=adaptation.build,
