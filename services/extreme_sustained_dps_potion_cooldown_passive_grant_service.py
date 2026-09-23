@@ -53,11 +53,6 @@ class ExtremeSustainedDPSPotionCooldownPassiveGrantService:
                 "Extreme potion cooldown PassiveGrant derivation requires explicit passive ranks"
             )
 
-        owned_lines = {
-            self._key(value)
-            for value in progression.owned_skill_lines
-            if self._key(value)
-        }
         grants: list[PassiveGrant] = []
         for passive in self.universe_service.passives():
             name = str(getattr(passive, "name", "") or "").strip()
@@ -65,11 +60,13 @@ class ExtremeSustainedDPSPotionCooldownPassiveGrantService:
             rank = progression.passive_rank(name)
             if rank is None or rank <= 0:
                 continue
-            if self._key(line) not in owned_lines:
-                continue
-            reduction = self._cooldown_reduction_seconds(
-                str(getattr(passive, "description", "") or "")
-            )
+            description = str(getattr(passive, "description", "") or "")
+            reduction = self._cooldown_reduction_seconds(description)
+            normalized_description = self._key(description)
+            if reduction is None and "potion" in normalized_description and "cooldown" in normalized_description:
+                raise ValueError(
+                    f"Owned passive {line}: {name} has unreviewed potion cooldown semantics"
+                )
             if reduction is None:
                 continue
             grants.append(
