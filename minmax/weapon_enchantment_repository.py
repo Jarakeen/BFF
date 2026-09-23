@@ -18,6 +18,7 @@ class WeaponEnchantmentRepository:
         self.database_path = str(database_path)
         self._items_cache: tuple[tuple[int, str], ...] | None = None
         self._description_cache: dict[int, str] = {}
+        self._identity_label_cache: dict[int, str] = {}
         self._label_cache: dict[str, tuple[int, ...]] = {}
         self._effects_cache: dict[tuple[int, bool], tuple[CombatEffect, ...]] = {}
 
@@ -69,6 +70,40 @@ class WeaponEnchantmentRepository:
         self._description_cache[key] = result
         return result
 
+    def get_identity_label(self, item_id: int) -> str:
+        """Return the imported canonical enchantment identity label.
+
+        enchant_name is semantic enchant identity from the UESP item summary,
+        distinct from the glyph item's display name and from any runtime cooldown
+        policy. An empty result means the source data cannot prove an identity.
+        """
+        key = int(item_id)
+        if key in self._identity_label_cache:
+            return self._identity_label_cache[key]
+
+        with sqlite3.connect(self.database_path) as connection:
+            columns = {
+                str(row[1])
+                for row in connection.execute(
+                    "PRAGMA table_info(weapon_enchantment)"
+                ).fetchall()
+            }
+            if "enchant_name" not in columns:
+                self._identity_label_cache[key] = ""
+                return ""
+            row = connection.execute(
+                """
+                SELECT enchant_name
+                FROM weapon_enchantment
+                WHERE item_id = ?
+                LIMIT 1
+                """,
+                (key,),
+            ).fetchone()
+
+        result = "" if row is None else str(row[0] or "").strip()
+        self._identity_label_cache[key] = result
+        return result
     def find_item_ids_by_label(self, label: str) -> tuple[int, ...]:
         """Return exact or semantically verified matches for one saved label.
 
