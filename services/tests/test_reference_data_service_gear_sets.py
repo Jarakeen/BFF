@@ -95,3 +95,32 @@ def test_suggest_watches_for_sets_preserves_startup_api(tmp_path):
     expected = ["Major Courage", "Minor Aegis"]
     assert reference.buffs_for_sets(["Support Set"]) == expected
     assert reference.suggest_watches_for_sets(["Support Set"]) == expected
+
+
+
+def test_poison_picker_reads_canonical_poison_entities(tmp_path):
+    path = tmp_path / "poisons.db"
+    with sqlite3.connect(path) as db:
+        db.executescript(
+            """
+            CREATE TABLE entity (
+                id TEXT PRIMARY KEY,
+                entity_type TEXT NOT NULL,
+                name TEXT NOT NULL,
+                slug TEXT NOT NULL
+            );
+            """
+        )
+        db.execute(
+            "INSERT INTO entity(id, entity_type, name, slug) VALUES (?, ?, ?, ?)",
+            ("poison:damage_health_ix", "poison", "Damage Health Poison IX", "damage-health-poison-ix"),
+        )
+        db.execute(
+            "INSERT INTO entity(id, entity_type, name, slug) VALUES (?, ?, ?, ?)",
+            ("potion:essence_health", "potion", "Essence of Health", "essence-of-health"),
+        )
+        db.commit()
+
+    reference = ReferenceDataService(EsoDatabase(path))
+
+    assert reference.list_poison_names() == ["Damage Health Poison IX"]
