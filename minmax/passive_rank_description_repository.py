@@ -6,7 +6,7 @@ import re
 import sqlite3
 
 
-_COLOR = re.compile(r"\\|c[0-9a-fA-F]{6}|\\|r")
+_COLOR = re.compile(r"\|c[0-9a-fA-F]{6}|\|r")
 
 
 @dataclass(frozen=True)
