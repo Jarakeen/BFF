@@ -605,6 +605,12 @@ def test_sustained_dps_cross_axis_composition_keeps_context_and_assembly_separat
     ) == ("extreme.sustained_dps.dual_bar_gear_frontier",)
     assert tuple(
         row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(composition.service_id)
+    ) == (
+        "extreme.sustained_dps.runtime_attempt_evidence_frontier",
+    )
+    assert tuple(
+        row.service_id
         for row in SERVICE_CATALOG.dependencies_of(assembly.service_id)
     ) == (
         "extreme.sustained_dps.cross_axis_context",
@@ -1239,6 +1245,9 @@ def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely
     attempts = canonical_service_for(
         "extreme_sustained_dps_runtime_attempt_evidence_frontier"
     )
+    composition = canonical_service_for(
+        "extreme_sustained_dps_runtime_attempt_frontier_composition"
+    )
     assembly = canonical_service_for(
         "extreme_sustained_dps_runtime_external_history_assembly"
     )
@@ -1247,6 +1256,7 @@ def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely
     )
 
     assert attempts is not None
+    assert composition is not None
     assert assembly is not None
     assert scenario is not None
     assert SERVICE_CATALOG.dependencies_of(attempts.service_id) == ()
@@ -1267,12 +1277,17 @@ def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely
         "extreme.sustained_dps.weapon_enchantment_activation_events",
         "extreme.sustained_dps.weapon_enchantment_activation_resolution",
         "extreme.sustained_dps.weapon_enchantment_attempt_binding",
+        "extreme.sustained_dps.weapon_enchantment_cooldown_policy",
+        "extreme.sustained_dps.weapon_enchantment_sequence_frontier",
         "extreme.sustained_dps.runtime_attempt_evidence_frontier",
+        "extreme.sustained_dps.runtime_attempt_frontier_composition",
         "extreme.sustained_dps.runtime_external_history_assembly",
         "extreme.sustained_dps.runtime_external_history_frontier",
     )
     assert "chance-roll and condition-context" in attempts.purpose
     assert "proc-chance thresholds" in attempts.notes
+    assert "Cartesian-product denominator" in composition.purpose
+    assert "open component denominator" in composition.notes
     assert "empty supplemental choice" in assembly.notes
     assert "scenario-facing runtime_state builder" in scenario.notes
     assert "Explicit omitted scope is preserved" in scenario.notes
