@@ -46,6 +46,14 @@ from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
 from ui.raid_trial_banner_support import TrialBannerLabel, trial_banner_path
+from ui.ui_safety import (
+    confirm_destructive_action,
+    confirm_replacement,
+    confirm_unsaved_changes,
+    mark_save_failed,
+    mark_saved,
+    mark_saving,
+)
 
 
 def _clean(value: object) -> str:
@@ -82,6 +90,7 @@ class CityLiveRaidPage(FoundryPage):
         self._raid_map_source_pixmap = QPixmap()
         self._raid_map_zoom = 1.0
         self._plan: RaidPlan | None = None
+        self._run_notes_baseline = ""
         self._encounter_context: LiveRaidEncounterContext | None = None
         self._timer = QTimer(self)
         self._timer.setInterval(1000)
@@ -422,9 +431,53 @@ class CityLiveRaidPage(FoundryPage):
 
     def _load_selected_plan(self, *_args) -> None:
         plan_id = self.plan_combo.currentData()
+        current_id = str(getattr(self._plan, "plan_id", "") or "").strip()
+        target_id = str(plan_id or "").strip() if isinstance(plan_id, str) else ""
+        if (
+            current_id
+            and target_id != current_id
+            and self.has_pending_changes()
+            and not confirm_unsaved_changes(
+                self,
+                self,
+                action_text="switch Live Raid plans",
+            )
+        ):
+            self.plan_combo.blockSignals(True)
+            try:
+                index = self.plan_combo.findData(current_id)
+                if index >= 0:
+                    self.plan_combo.setCurrentIndex(index)
+            finally:
+                self.plan_combo.blockSignals(False)
+            return
+
         self._plan = self.repository.get(plan_id) if isinstance(plan_id, str) and plan_id else None
         self._refresh_encounters()
         self._render_plan()
+
+    def has_pending_changes(self) -> bool:
+        if self._plan is None or not hasattr(self, "run_notes_edit"):
+            return False
+        return self.run_notes_edit.toPlainText().strip() != self._run_notes_baseline
+
+    def save_pending_changes(self) -> bool:
+        if not self.has_pending_changes():
+            return True
+        self._save_run_notes()
+        return not self.has_pending_changes()
+
+    def discard_pending_changes(self) -> bool:
+        if self._plan is None:
+            self._run_notes_baseline = ""
+            if hasattr(self, "run_notes_edit"):
+                self.run_notes_edit.clear()
+            return True
+        saved = self.user_state.run_notes(self._plan.plan_id)
+        self.run_notes_edit.setPlainText(saved)
+        self._run_notes_baseline = self.run_notes_edit.toPlainText().strip()
+        mark_saved(self, "Discarded")
+        return True
 
     @staticmethod
     def _clear_layout(layout) -> None:
@@ -777,6 +830,21 @@ class CityLiveRaidPage(FoundryPage):
             return
         index = labels.index(selected)
         record = maps[index]
+        if (
+            current_map_id
+            and record.map_id != current_map_id
+            and not confirm_replacement(
+                self,
+                title="Change Raid Map Link",
+                object_label=f'Use "{record.label}" for this encounter instead?',
+                impact=(
+                    "The current Raid Map link will be replaced. Both saved maps remain "
+                    "available in Encounters."
+                ),
+                confirm_text="Change Link",
+            )
+        ):
+            return
         self.user_state.set_linked_raid_map_id(
             self._plan.plan_id,
             encounter_id,
@@ -795,6 +863,19 @@ class CityLiveRaidPage(FoundryPage):
             return
         encounter_id = _clean(self.encounter_combo.currentData())
         if not encounter_id:
+            return
+        record = self._current_linked_raid_map()
+        label = record.label if record is not None else "the linked Raid Map"
+        if not confirm_destructive_action(
+            self,
+            title="Clear Raid Map Link",
+            object_label=f'Clear "{label}" from this Live Raid encounter?',
+            impact=(
+                "This removes only the link from this Raid Plan encounter. "
+                "The saved Raid Map itself is not deleted."
+            ),
+            confirm_text="Clear Link",
+        ):
             return
         self.user_state.set_linked_raid_map_id(
             self._plan.plan_id,
@@ -1015,6 +1096,7 @@ class CityLiveRaidPage(FoundryPage):
             self.encounter_checklist_label.setText("No encounter checklist loaded.")
             self.events_label.setText("No manual run events yet.")
             self.run_notes_edit.clear()
+            self._run_notes_baseline = ""
             self._raid_map_source_pixmap = QPixmap()
             self.inline_raid_map.setPixmap(QPixmap())
             self.inline_raid_map.setText("No Raid Plan map linked for this encounter.")
@@ -1024,6 +1106,7 @@ class CityLiveRaidPage(FoundryPage):
         self.hero_art.set_source(trial_banner_path(plan.trial_id, plan.name))
         if not self.run_notes_edit.hasFocus():
             self.run_notes_edit.setPlainText(self.user_state.run_notes(plan.plan_id))
+            self._run_notes_baseline = self.run_notes_edit.toPlainText().strip()
         self.hero_title.setText(
             f"{plan.name}\n{plan.trial_id} · {plan.difficulty or 'Difficulty not set'}"
         )
@@ -1146,7 +1229,13 @@ class CityLiveRaidPage(FoundryPage):
             self.status.warning("Select a Raid Plan before saving run notes.")
             return
         notes = self.run_notes_edit.toPlainText().strip()
-        state = self.user_state.set_run_notes(self._plan.plan_id, notes)
+        mark_saving(self)
+        try:
+            state = self.user_state.set_run_notes(self._plan.plan_id, notes)
+        except Exception as exc:
+            mark_save_failed(self, str(exc))
+            self.status.error(f"Run notes could not be saved: {exc}")
+            return
         attempt = int(state.get("attempt", 0) or 0)
         archived = self.user_state.save_review_note(
             plan_id=self._plan.plan_id,
@@ -1163,6 +1252,8 @@ class CityLiveRaidPage(FoundryPage):
         else:
             label = f"attempt #{attempt}" if attempt else "general note"
             self.status.info(f"Run notes saved to Review for {label}.")
+        self._run_notes_baseline = notes
+        mark_saved(self)
         self._refresh_events()
 
     def _start_pull(self) -> None:
