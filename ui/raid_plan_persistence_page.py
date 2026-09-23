@@ -136,6 +136,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
     """Raid Plan editor with durable named-plan save/load controls."""
 
     assignmentsRequested = Signal(str)
+    raidMapRequested = Signal(str)
 
     def __init__(self, parent=None) -> None:
         self.plan_repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
@@ -185,6 +186,11 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.save_plan_button.clicked.connect(self.save_current_plan)
         row.addWidget(self.save_plan_button)
 
+        self.open_raid_map_button = QPushButton("Open Raid Map")
+        self.open_raid_map_button.setToolTip("Open the Raid Map editor scoped to this saved Raid Plan.")
+        self.open_raid_map_button.clicked.connect(self._open_saved_plan_raid_map)
+        row.addWidget(self.open_raid_map_button)
+
         self.publish_plan_finch_button = QPushButton("Publish")
         self.publish_plan_finch_button.setToolTip(
             "Publish this saved Raid Plan outline to Finch. Unsaved edits must be saved first."
@@ -206,6 +212,16 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         layout.addLayout(row)
         self.saved_plan_controls = controls
         self.header.add_context_widget(controls)
+
+    def _open_saved_plan_raid_map(self) -> None:
+        plan_id = self.saved_plan_combo.currentData()
+        if not isinstance(plan_id, str) or not plan_id.strip():
+            loaded = getattr(self, "_loaded_plan_snapshot", None)
+            plan_id = str(getattr(loaded, "plan_id", "") or "").strip()
+        if not plan_id:
+            self.status.warning("Save or load a Raid Plan before opening its Raid Map.")
+            return
+        self.raidMapRequested.emit(plan_id)
 
     def _publish_saved_plan_to_finch(self) -> None:
         if self.has_pending_changes():
