@@ -24,8 +24,8 @@ class CanonicalPlayerBinding:
 
 class RosterCanonicalPlayerBindingService:
     def __init__(self, database: EsoDatabase, build_service: BuildService):
-        self.database = database
         self.roster = RosterService(database)
+        self.database = self.roster.db
         self.build_service = build_service
 
     def _canonical_player(self, player_id: str) -> dict:
