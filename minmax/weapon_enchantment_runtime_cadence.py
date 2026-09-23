@@ -42,28 +42,55 @@ class WeaponEnchantmentCadenceEvidence:
     evidence_note: str
 
     @property
+    def runtime_blockers(self) -> tuple[str, ...]:
+        blockers: list[str] = []
+        if self.base_cooldown_seconds is None:
+            blockers.append("base cooldown value is unavailable")
+        if self.cooldown_authority is not WeaponEnchantmentCadenceAuthority.AUTHORITATIVE:
+            blockers.append("base cooldown is not authoritative")
+        if not self.activation_causes:
+            blockers.append("activation causes are unavailable")
+        if self.activation_authority is not WeaponEnchantmentCadenceAuthority.AUTHORITATIVE:
+            blockers.append("activation causes are not authoritative")
+        if self.off_bar_source_persists is None:
+            blockers.append("off-bar source persistence is unavailable")
+        if self.off_bar_authority is not WeaponEnchantmentCadenceAuthority.AUTHORITATIVE:
+            blockers.append("off-bar source persistence is not authoritative")
+        if not str(self.cooldown_scope or "").strip():
+            blockers.append("cooldown scope is unavailable")
+        if (
+            self.cooldown_scope_authority
+            is not WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+        ):
+            blockers.append("cooldown scope is not authoritative")
+        if self.poison_replaces_enchantment is None:
+            blockers.append("poison suppression/replacement rule is unavailable")
+        if (
+            self.poison_replacement_authority
+            is not WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+        ):
+            blockers.append("poison suppression/replacement rule is not authoritative")
+        if self.same_effect_identity_shares_cooldown is None:
+            blockers.append("same-identity cooldown sharing is unavailable")
+        if (
+            self.same_identity_cooldown_authority
+            is not WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+        ):
+            blockers.append("same-identity cooldown sharing is not authoritative")
+        if self.authority is not WeaponEnchantmentCadenceAuthority.AUTHORITATIVE:
+            blockers.append("effect-family cadence has not been promoted to authoritative")
+        return tuple(dict.fromkeys(blockers))
+
+    @property
     def runtime_ready(self) -> bool:
-        return (
-            self.authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
-            and self.base_cooldown_seconds is not None
-            and self.cooldown_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
-            and bool(self.activation_causes)
-            and self.activation_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
-            and self.off_bar_source_persists is not None
-            and self.off_bar_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
-            and self.cooldown_scope is not None
-            and self.cooldown_scope_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
-            and self.poison_replaces_enchantment is not None
-            and self.poison_replacement_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
-            and self.same_effect_identity_shares_cooldown is not None
-            and self.same_identity_cooldown_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
-        )
+        return not self.runtime_blockers
 
     def require_runtime_ready(self) -> "WeaponEnchantmentCadenceEvidence":
         if not self.runtime_ready:
             raise ValueError(
                 "Weapon-enchantment cadence evidence is not authoritative enough "
-                "for exact runtime simulation."
+                "for exact runtime simulation: "
+                + "; ".join(self.runtime_blockers)
             )
         return self
 
