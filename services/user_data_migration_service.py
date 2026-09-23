@@ -306,11 +306,55 @@ def _migrate_achievement_json(
     return inserted
 
 
+def _migrate_raid_plan_json(
+    raid_plan_path: Path,
+    target: sqlite3.Connection,
+) -> int:
+    target.execute(
+        """
+        CREATE TABLE IF NOT EXISTS raid_plan (
+            plan_id TEXT PRIMARY KEY,
+            payload_json TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    if _table_count(target, "raid_plan") or not raid_plan_path.is_file():
+        return 0
+    try:
+        raw = json.loads(raid_plan_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return 0
+    if not isinstance(raw, dict) or raw.get("schema_version") != 1:
+        return 0
+    plans = raw.get("plans")
+    if not isinstance(plans, list):
+        return 0
+
+    inserted = 0
+    for plan in plans:
+        if not isinstance(plan, dict):
+            continue
+        plan_id = str(plan.get("plan_id") or "").strip()
+        if not plan_id:
+            continue
+        target.execute(
+            """
+            INSERT OR IGNORE INTO raid_plan(plan_id, payload_json)
+            VALUES (?, ?)
+            """,
+            (plan_id, json.dumps(plan, sort_keys=True)),
+        )
+        inserted += 1
+    return inserted
+
+
 def migrate_legacy_user_data(
     *,
     legacy_database: Path | None = None,
     user_database: Path | None = None,
     achievement_progress: Path | None = None,
+    raid_plans: Path | None = None,
 ) -> dict[str, int]:
     """Copy legacy user state into foundrydock.db without mutating the source."""
 
@@ -319,6 +363,7 @@ def migrate_legacy_user_data(
     achievement_path = Path(
         achievement_progress or (get_data_dir() / "achievement_progress.json")
     )
+    raid_plan_path = Path(raid_plans or (get_data_dir() / "raid_plans.json"))
     target_path.parent.mkdir(parents=True, exist_ok=True)
 
     counts: dict[str, int] = {}
@@ -347,6 +392,7 @@ def migrate_legacy_user_data(
         counts["achievement_progress"] = _migrate_achievement_json(
             achievement_path, target
         )
+        counts["raid_plan"] = _migrate_raid_plan_json(raid_plan_path, target)
         target.execute(
             """
             INSERT OR IGNORE INTO user_data_migration(migration_key)
