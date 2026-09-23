@@ -314,8 +314,9 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "Activation causes are primary-source proven by ZOS Update 20, poison suppression is "
                 "primary-source proven from Dark Brotherhood, direct-damage 4-second cooldown has Update 21 "
                 "primary evidence, and v4.2.6 proves one isolated damage instance can proc at most one enchantment. "
-                "Exact cadence still needs authoritative buff/debuff cooldown values, periodic/off-bar weapon-skill "
-                "source ownership, per-opportunity source selection, independent/shared cooldown identity behavior, "
+                "Update 19 now also provides primary source-weapon ownership across bar swaps. Exact cadence still "
+                "needs authoritative buff/debuff cooldown values, per-opportunity source selection, shared cooldown "
+                "identity/scope behavior, "
                 "and any remaining proc-damage exclusions before trait-adjusted cooldown rules can drive simulation."
             ),
         ),
