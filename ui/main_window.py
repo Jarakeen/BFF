@@ -50,6 +50,7 @@ from ui.phase14_rotation_page import RotationBuilderPage
 from ui.themed_roster_page import RosterPage
 from ui.settings_page import SettingsPage
 from ui.stickerbook_page import StickerbookPage
+from ui.ui_safety import attach_save_state_badge, confirm_unsaved_changes
 
 
 def _tab_index_by_text(tabs, title: str) -> int:
@@ -176,6 +177,39 @@ class MainWindow(QMainWindow):
 
         register_raid_engine_pages(self)
 
+        self._install_page_safety_badges()
+
+    def _install_page_safety_badges(self) -> None:
+        """Give every page participating in the unsaved contract one status badge."""
+        for page in self.pages.values():
+            if callable(getattr(page, "has_pending_changes", None)):
+                attach_save_state_badge(page)
+
+    def _dirty_pages(self) -> list:
+        dirty = []
+        for page in self.pages.values():
+            has_pending = getattr(page, "has_pending_changes", None)
+            if not callable(has_pending):
+                continue
+            try:
+                if has_pending():
+                    dirty.append(page)
+            except Exception:
+                dirty.append(page)
+        return dirty
+
+    def closeEvent(self, event) -> None:
+        """Do not let application close silently discard edits on any page."""
+        for page in self._dirty_pages():
+            if not confirm_unsaved_changes(
+                self,
+                page,
+                action_text="close FoundryDock",
+            ):
+                event.ignore()
+                return
+        event.accept()
+
     def connect_signals(self):
         self.sidebar.pageRequested.connect(self.show_page)
 
@@ -256,42 +290,11 @@ class MainWindow(QMainWindow):
         page, current_container = self._current_page_for_navigation()
         if page is None or target_container is current_container:
             return True
-
-        has_pending = getattr(page, "has_pending_changes", None)
-        if not callable(has_pending) or not has_pending():
-            return True
-
-        title = "this page"
-        header = getattr(page, "header", None)
-        title_widget = getattr(header, "title", None)
-        if title_widget is not None and hasattr(title_widget, "text"):
-            title = str(title_widget.text() or title).strip() or title
-
-        box = QMessageBox(self)
-        box.setWindowTitle("Unsaved Changes")
-        box.setText(f"You have unsaved changes on {title}.")
-        box.setInformativeText(
-            "Save them before leaving, discard them, or cancel navigation."
+        return confirm_unsaved_changes(
+            self,
+            page,
+            action_text="leave this page",
         )
-        box.setStandardButtons(
-            QMessageBox.StandardButton.Save
-            | QMessageBox.StandardButton.Discard
-            | QMessageBox.StandardButton.Cancel
-        )
-        box.setDefaultButton(QMessageBox.StandardButton.Save)
-        answer = box.exec()
-
-        if answer == QMessageBox.StandardButton.Save:
-            save_pending = getattr(page, "save_pending_changes", None)
-            if not callable(save_pending):
-                return False
-            return bool(save_pending())
-        if answer == QMessageBox.StandardButton.Discard:
-            discard_pending = getattr(page, "discard_pending_changes", None)
-            if callable(discard_pending):
-                discard_pending()
-            return True
-        return False
 
     def _confirm_collectible_navigation(self, target_page: str) -> bool:
         collectibles_page = self.pages.get("collectibles_browser")
