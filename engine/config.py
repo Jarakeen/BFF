@@ -14,6 +14,7 @@ place this logic lives.
 
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -37,6 +38,55 @@ def get_app_root() -> Path:
 
 def get_data_dir() -> Path:
     return get_app_root() / "data"
+
+
+def get_user_data_dir() -> Path:
+    """Writable FoundryDock state, separate from replaceable app/reference data.
+
+    Source runs keep user state inside the repository user_data folder. Frozen
+    builds use LOCALAPPDATA by default so replacing or moving an EXE cannot
+    overwrite the user's roster/progress. FOUNDRYDOCK_USER_DATA_DIR is an
+    explicit escape hatch for portable/test builds and prepared workspaces.
+    """
+
+    override = str(os.environ.get("FOUNDRYDOCK_USER_DATA_DIR", "") or "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+
+    if getattr(sys, "frozen", False):
+        local = str(os.environ.get("LOCALAPPDATA", "") or "").strip()
+        if local:
+            return Path(local) / "FoundryDock"
+        return Path.home() / "AppData" / "Local" / "FoundryDock"
+
+    return get_app_root() / "user_data"
+
+
+def get_user_database_path() -> Path:
+    return get_user_data_dir() / "foundrydock.db"
+
+
+def ensure_user_database() -> Path:
+    """Provision the user-owned database without replacing an existing one.
+
+    Frozen builds may optionally bundle _seed_user_data/foundrydock.db. The
+    seed is copied only on first run, which supports prepared EXEs while
+    preserving every later local modification.
+    """
+
+    target = get_user_database_path()
+    if target.is_file():
+        return target
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if getattr(sys, "frozen", False):
+        seed = get_resource_path("_seed_user_data", "foundrydock.db")
+        if seed.is_file():
+            shutil.copy2(seed, target)
+            return target
+
+    target.touch(exist_ok=True)
+    return target
 
 
 def get_resource_path(*parts: str) -> Path:
