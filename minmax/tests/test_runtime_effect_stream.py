@@ -180,3 +180,25 @@ def test_runtime_stream_carries_per_attempt_condition_context():
     assert result.activation_count == 1
     assert result.steps[0].transition.activation.eligibility.reasons == ("condition_unsatisfied",)
     assert result.steps[1].activated
+
+
+def test_stream_ignores_attempt_bound_to_other_effect_source():
+    selected = _effect(source="Selected")
+    other = _effect(source="Other")
+    attempt = RuntimeEffectEventAttempt.for_bound_effect(
+        event=RuntimeEvent(
+            time_seconds=1.0,
+            trigger="damage_dealt",
+            source="Observed Event",
+        ),
+        effect=selected,
+    )
+
+    selected_result = process_effect_variant_runtime_stream((attempt,), selected)
+    other_result = process_effect_variant_runtime_stream((attempt,), other)
+
+    assert selected_result.activation_count == 1
+    assert len(selected_result.steps) == 1
+    assert other_result.activation_count == 0
+    assert other_result.steps == ()
+    assert other_result.final_state == RuntimeEffectRuntimeState()
