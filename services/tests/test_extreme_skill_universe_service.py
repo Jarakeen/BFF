@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import sqlite3
 
+import pytest
+
 from services.extreme_skill_universe_service import (
     ExtremeSkillDomain,
     ExtremeSkillUniverseService,
@@ -152,3 +154,19 @@ def test_player_skill_universe_is_shared_across_service_instances(tmp_path, monk
     assert len(first_rows) == 9
     assert len(second_rows) == 2
     assert connect_calls == 1
+
+
+
+def test_empty_player_skill_universe_cannot_prove_passive_denominator(tmp_path):
+    path = tmp_path / "empty.db"
+    db = sqlite3.connect(path)
+    db.execute(
+        "CREATE TABLE skill(id INTEGER PRIMARY KEY, name TEXT NOT NULL, is_passive INTEGER NOT NULL)"
+    )
+    db.commit()
+    db.close()
+
+    service = ExtremeSkillUniverseService(path)
+
+    with pytest.raises(ValueError, match="passive denominator is not proven"):
+        service.passives()
