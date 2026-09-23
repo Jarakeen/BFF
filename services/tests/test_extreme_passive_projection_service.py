@@ -16,6 +16,7 @@ def _passive(
     *,
     domain: ExtremeSkillDomain = ExtremeSkillDomain.CLASS,
     skill_line: str = "Test Line",
+    unresolved: tuple[str, ...] = (),
 ):
     return ExtremePlayerSkillRecord(
         skill_id=1,
@@ -31,6 +32,7 @@ def _passive(
         max_rank_ability_id=200,
         description=description,
         domain=domain,
+        unresolved=unresolved,
     )
 
 
@@ -198,3 +200,20 @@ def test_active_skill_is_rejected_by_passive_projector():
         assert "not a passive" in str(exc)
     else:
         raise AssertionError("active skill should not be projected as a passive")
+
+
+def test_source_evidence_disagreement_blocks_even_parseable_static_passive():
+    result = ExtremePassiveProjectionService.project(
+        _passive(
+            "Static Power",
+            "Increases your Weapon and Spell Damage by 258.",
+            unresolved=(
+                "Canonical max-rank passive tooltip disagreement: Static Power "
+                "raw_description != ability.description",
+            ),
+        )
+    )
+
+    assert result.status is ExtremePassiveProjectionStatus.UNRESOLVED
+    assert result.contributions == ()
+    assert "tooltip disagreement" in result.unresolved[0]
