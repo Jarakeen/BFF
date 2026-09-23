@@ -586,6 +586,15 @@ class BuildCalculationContextFactory:
         if message:
             unresolved.append(message)
 
+        bow_line = progression.owns_skill_line("Bow")
+        bow_accuracy, message = self._maxed_passive(
+            progression,
+            "Accuracy",
+            relevant=bow_line,
+        )
+        if message:
+            unresolved.append(message)
+
         if progression.passive_ranks is not None:
             gear = self.weapon_standing_passive_resolver.apply(
                 gear,
@@ -594,6 +603,7 @@ class BuildCalculationContextFactory:
                 twin_blade_and_blunt_owned=twin_blade_and_blunt,
                 ambidextrous_owned=ambidextrous,
                 heavy_weapons_owned=heavy_weapons,
+                bow_accuracy_owned=bow_accuracy,
             )
 
         undaunted_line = progression.owns_skill_line("Undaunted")
