@@ -8,8 +8,9 @@ Raid Brief -> Recommended Team Plan + Why This Plan -> Team Health.
 """
 
 from collections import Counter
+from dataclasses import asdict
 
-from PySide6.QtCore import Qt, QStringListModel
+from PySide6.QtCore import Qt, QStringListModel, QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -21,6 +22,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QTableWidget,
@@ -29,7 +31,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from services.ui_draft_recovery_service import UiDraftRecoveryService
+from services.user_safety_snapshot_service import UserSafetySnapshotService
 from ui.components.foundry_card import FoundryCard
+from ui.ui_safety import confirm_replacement, mark_save_failed, mark_saved
 
 
 _INSTALLED = False
@@ -1544,7 +1549,33 @@ def _set_group_size(page, size: int) -> None:
 def _generate_plan(page) -> None:
     from ui import comp_builder_build_candidate_support as candidate_support
 
+    state = getattr(page, "_comp_plan_state", None)
+    open_chairs = tuple(
+        chair
+        for chair in tuple(getattr(state, "chairs", ()) or ())
+        if not getattr(chair, "selected_build_id", None)
+        and not getattr(chair, "selected_build_name", None)
+        and not tuple(getattr(chair, "planned_gear_sets", ()) or ())
+    )
+    if state is not None and getattr(state, "dirty", False) and open_chairs:
+        if not confirm_replacement(
+            page,
+            title="Auto-Fill Comp Builds",
+            object_label="Apply recommendations to unresolved Comp Maker chairs?",
+            impact=(
+                f"{len(open_chairs)} unresolved chair(s) may receive build/gear recommendations. "
+                "Existing selected or locked choices are preserved. A recoverable database "
+                "snapshot is created before Auto-Fill."
+            ),
+            confirm_text="Auto-Fill Unresolved Chairs",
+        ):
+            return
+
+    _comp_snapshot_service(page).create(
+        "comp-autofill-" + _comp_draft_key(state)
+    )
     candidate_support._apply_best_candidates_to_all(page)
+    _save_comp_recovery_draft(page)
     _refresh_shell(page)
 
 
@@ -2029,6 +2060,129 @@ def _reload_bound_raid_plan(page) -> bool:
     return True
 
 
+def _comp_draft_key(state) -> str:
+    if state is None:
+        return "comp-maker-unbound"
+    plan_id = str(getattr(state, "raid_plan_id", "") or "").strip()
+    plan_name = str(getattr(state, "raid_plan_name", "") or "").strip()
+    identity = plan_id or plan_name or "unbound"
+    return f"comp-maker-{identity}"
+
+
+def _comp_draft_service(page) -> UiDraftRecoveryService:
+    service = getattr(page, "_comp_ui_draft_service", None)
+    if service is None:
+        service = UiDraftRecoveryService()
+        page._comp_ui_draft_service = service
+    return service
+
+
+def _comp_snapshot_service(page) -> UserSafetySnapshotService:
+    service = getattr(page, "_comp_ui_snapshot_service", None)
+    if service is None:
+        service = UserSafetySnapshotService()
+        page._comp_ui_snapshot_service = service
+    return service
+
+
+def _comp_state_from_payload(raw):
+    from models.comp_plan_state import CompChairState, CompPlanState
+
+    if not isinstance(raw, dict):
+        return None
+    chairs = []
+    for row in raw.get("chairs", []):
+        if not isinstance(row, dict):
+            continue
+        values = dict(row)
+        for name in (
+            "planned_gear_sets",
+            "planned_skills",
+            "utility_assignments",
+            "locked_fields",
+        ):
+            values[name] = tuple(values.get(name, ()) or ())
+        chairs.append(CompChairState(**values))
+    values = dict(raw)
+    values["chairs"] = tuple(chairs)
+    values["dirty"] = True
+    return CompPlanState(**values)
+
+
+def _save_comp_recovery_draft(page) -> None:
+    state = getattr(page, "_comp_plan_state", None)
+    if state is None or not getattr(state, "dirty", False):
+        return
+    try:
+        _comp_draft_service(page).save(
+            _comp_draft_key(state),
+            {"kind": "comp_plan", "state": asdict(state)},
+        )
+    except Exception:
+        return
+
+
+def _discard_comp_recovery_draft(page, state=None) -> None:
+    state = state if state is not None else getattr(page, "_comp_plan_state", None)
+    _comp_draft_service(page).discard(_comp_draft_key(state))
+
+
+def _offer_comp_recovery(page) -> None:
+    state = getattr(page, "_comp_plan_state", None)
+    if state is None or getattr(state, "dirty", False):
+        return
+    key = _comp_draft_key(state)
+    checked = getattr(page, "_comp_recovery_checked_keys", set())
+    if key in checked:
+        return
+    checked = set(checked)
+    checked.add(key)
+    page._comp_recovery_checked_keys = checked
+
+    draft = _comp_draft_service(page).load(key)
+    payload = draft.get("payload") if isinstance(draft, dict) else None
+    raw_state = payload.get("state") if isinstance(payload, dict) else None
+    try:
+        recovered = _comp_state_from_payload(raw_state)
+    except Exception:
+        recovered = None
+    if recovered is None:
+        return
+
+    box = QMessageBox(page)
+    box.setWindowTitle("Recovered Comp Maker Draft")
+    box.setText(
+        f'FoundryDock recovered unsaved Comp Maker changes for "{state.raid_plan_name}".'
+    )
+    box.setInformativeText(
+        "Restore the draft or continue with the last saved Comp/Raid Plan state."
+    )
+    restore = box.addButton("Restore Draft", QMessageBox.ButtonRole.AcceptRole)
+    saved = box.addButton("Use Saved Version", QMessageBox.ButtonRole.DestructiveRole)
+    box.setDefaultButton(restore)
+    box.exec()
+    if box.clickedButton() is restore:
+        page._comp_plan_state = recovered
+        page._comp_phase14_health_cache = None
+        page._comp_phase14_proposal_cache = None
+        page._comp_phase14_skill_seed_cache = None
+        _refresh_shell(page)
+        page.status.warning("Recovered unsaved Comp Maker draft. Review and Save Plan.")
+    elif box.clickedButton() is saved:
+        _discard_comp_recovery_draft(page, state)
+
+
+def _install_comp_draft_timer(page) -> None:
+    if getattr(page, "_comp_ui_draft_timer", None) is not None:
+        return
+    timer = QTimer(page)
+    timer.setInterval(2000)
+    timer.timeout.connect(lambda: _save_comp_recovery_draft(page))
+    timer.start()
+    page._comp_ui_draft_timer = timer
+    QTimer.singleShot(0, lambda: _offer_comp_recovery(page))
+
+
 def _save_to_originating_raid_plan(page) -> bool:
     """Save current Comp choices without silently applying recommendations.
 
@@ -2068,10 +2222,11 @@ def _save_to_originating_raid_plan(page) -> bool:
             state = page._comp_plan_state
             build_result = rebound_result
     except Exception as exc:
+        mark_save_failed(page, str(exc))
         page.status.error(
             f"Could not save Comp Builder plan: {type(exc).__name__}: {exc}"
         )
-        return
+        return False
 
     if plan is not None:
         page._raid_plan_origin_id = plan.plan_id
@@ -2140,10 +2295,15 @@ def _discard_pending_changes(page) -> None:
             page._comp_phase14_proposal_cache = None
             page._comp_phase14_skill_seed_cache = None
             _refresh_shell(page)
+            _discard_comp_recovery_draft(page, state)
+            mark_saved(page, "Discarded")
             page.status.info("Discarded unbound Comp planning changes.")
             return
     if not _reload_bound_raid_plan(page):
         page.status.warning("Could not restore Comp planning state.")
+        return
+    _discard_comp_recovery_draft(page, state)
+    mark_saved(page, "Discarded")
 
 
 def _build_health(page, card: FoundryCard) -> None:
