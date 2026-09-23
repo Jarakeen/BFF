@@ -353,11 +353,13 @@ class RosterPage(FoundryPage):
                 f"Finch sync: {summary.applied} applied, {summary.rejected} rejected. "
                 f"{first_rejection}"
             )
-        elif summary.fetched or summary.registrations_fetched:
+        elif summary.fetched or summary.registrations_fetched or summary.confirmations_fetched:
             self.status.success(
                 "Finch sync complete: "
                 f"{summary.registrations_applied}/{summary.registrations_fetched} "
                 "Discord identity record(s) refreshed; "
+                f"{summary.confirmations_applied}/{summary.confirmations_fetched} "
+                "Raid Plan confirmation(s) applied; "
                 f"{summary.applied} gear request(s) applied."
                 + (
                     f" {summary.registrations_unresolved} registration(s) need identity review."
@@ -366,7 +368,7 @@ class RosterPage(FoundryPage):
                 )
             )
         else:
-            self.status.info("Finch sync complete: no pending requests or registrations.")
+            self.status.info("Finch sync complete: no pending requests, registrations, or confirmations.")
 
     def _filtered_members(self, members: list[RosterMember]) -> list[RosterMember]:
         mode = self.show_combo.currentText().strip() if hasattr(self, "show_combo") else "All Players"
