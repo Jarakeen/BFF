@@ -297,10 +297,10 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "Saved weapon enchantments can be resolved to canonical CombatEffects and "
                 "target-debuff EffectVariants with active-bar ownership, duration, and "
                 "trait-adjusted magnitude. Cooldown-modifier rules also exist independently. "
-                "A fail-closed cadence evidence catalog now records community-observed "
-                "activation causes, per-enchantment cooldown scope, off-bar source persistence, "
-                "and provisional effect-family cooldown observations without promoting them "
-                "to authoritative combat math."
+                "A fail-closed cadence evidence catalog now carries ZOS-authoritative "
+                "activation causes (landed Light Attack, Heavy Attack, or weapon-ability damage), "
+                "while per-enchantment cooldown scope, off-bar source persistence, and effect-family "
+                "base cooldown observations remain provisional and are not promoted to exact combat math."
             ),
             evidence_source=(
                 "minmax/weapon_enchantment_repository.py; "
@@ -311,12 +311,11 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
-                "Promote the provisional cadence topology only after current-version authoritative "
-                "evidence resolves exact base proc cooldown values and activation trigger semantics, including "
-                "family), eligible periodic/direct weapon-skill trigger rules, off-bar source "
-                "ownership, independent/shared cooldown and target-lockout behavior, and proc-"
-                "damage exclusions. Only then may trait-adjusted cooldown rules be composed "
-                "into exact runtime cadence."
+                "Activation causes are now primary-source proven by ZOS Update 20. Promote exact cadence "
+                "only after current-version authoritative evidence resolves base proc cooldown values, eligible "
+                "periodic/off-bar weapon-skill source ownership, independent/shared cooldown and target-lockout "
+                "behavior, poison replacement, and any proc-damage exclusions. Only then may trait-adjusted "
+                "cooldown rules be composed into exact runtime cadence."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
