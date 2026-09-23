@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import DEFAULT_DATABASE, get_data_dir, get_resource_path
+from engine.config import DEFAULT_DATABASE, get_data_dir, get_resource_path, get_user_database_path
 from models.raid_plan import RaidPlan, RaidPlanMember
 from services.finch_shared_provenance_service import format_shared_timestamp
 from services.finch_shared_readiness_service import (
