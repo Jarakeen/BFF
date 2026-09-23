@@ -10,6 +10,7 @@ or ultimate percentage.
 from datetime import datetime, timezone
 
 from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -216,6 +217,10 @@ class CityLiveRaidPage(FoundryPage):
         middle.setSpacing(10)
 
         spots = self._style_live_card(FoundryCard("Raid Spots", "group"), "spots")
+        spots_split = QHBoxLayout()
+        spots_split.setContentsMargins(0, 0, 0, 0)
+        spots_split.setSpacing(8)
+
         self.spots_table = QTableWidget(0, 8)
         self.spots_table.setProperty("liveRaidRosterTable", True)
         self.spots_table.setHorizontalHeaderLabels(
@@ -227,7 +232,22 @@ class CityLiveRaidPage(FoundryPage):
         self.spots_table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.spots_table.setAlternatingRowColors(False)
         self.spots_table.setShowGrid(False)
-        spots.addWidget(self.spots_table)
+        spots_split.addWidget(self.spots_table, 3)
+
+        self.inline_raid_map = QLabel(
+            "No Raid Plan map linked for this encounter."
+        )
+        self.inline_raid_map.setProperty("positioningMap", True)
+        self.inline_raid_map.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.inline_raid_map.setWordWrap(True)
+        self.inline_raid_map.setMinimumWidth(340)
+        self.inline_raid_map.setMinimumHeight(300)
+        self.inline_raid_map.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+        spots_split.addWidget(self.inline_raid_map, 2)
+        spots.addLayout(spots_split)
         raid_spot_actions = QHBoxLayout()
         raid_spot_actions.setContentsMargins(0, 0, 0, 0)
         raid_spot_actions.setSpacing(6)
@@ -488,6 +508,38 @@ class CityLiveRaidPage(FoundryPage):
         except (OSError, RuntimeError, ValueError):
             return None
 
+    def _refresh_inline_raid_map(self) -> None:
+        if not hasattr(self, "inline_raid_map"):
+            return
+        record = self._current_linked_raid_map()
+        if record is None:
+            self.inline_raid_map.setPixmap(QPixmap())
+            self.inline_raid_map.setText(
+                "No Raid Plan map linked for this encounter."
+            )
+            return
+
+        path = self.raid_map_store.resolve_path(record)
+        pixmap = QPixmap(str(path))
+        if pixmap.isNull():
+            self.inline_raid_map.setPixmap(QPixmap())
+            self.inline_raid_map.setText(
+                "Linked Raid Plan map could not be displayed."
+            )
+            return
+
+        target = self.inline_raid_map.size()
+        if target.width() < 200 or target.height() < 200:
+            target = self.inline_raid_map.minimumSize()
+        self.inline_raid_map.setText("")
+        self.inline_raid_map.setPixmap(
+            pixmap.scaled(
+                target,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
     def _show_raid_map_menu(self) -> None:
         menu = QMenu(self)
         encounter_id = _clean(self.encounter_combo.currentData())
@@ -553,6 +605,7 @@ class CityLiveRaidPage(FoundryPage):
         )
         self.raid_map_button.setText(f"Raid Map: {record.label} ▾")
         self._render_encounter_context()
+        self._refresh_inline_raid_map()
         self._refresh_events()
         self.status.success(
             f"Linked {record.label} to {self._plan.name} • {self.encounter_combo.currentText()}."
@@ -571,6 +624,7 @@ class CityLiveRaidPage(FoundryPage):
         )
         self.raid_map_button.setText("Raid Map ▾")
         self._render_encounter_context()
+        self._refresh_inline_raid_map()
         self._refresh_events()
         self.status.info("Raid Map link cleared for this Live Plan encounter.")
 
@@ -618,6 +672,7 @@ class CityLiveRaidPage(FoundryPage):
         self.encounter_combo.blockSignals(False)
         self._load_encounter_context()
         self._refresh_raid_map_button()
+        self._refresh_inline_raid_map()
 
     def _encounter_changed(self, *_args) -> None:
         if self._plan is not None:
@@ -627,6 +682,7 @@ class CityLiveRaidPage(FoundryPage):
             )
         self._load_encounter_context()
         self._refresh_raid_map_button()
+        self._refresh_inline_raid_map()
         self._render_encounter_context()
 
     def _load_encounter_context(self) -> None:
@@ -767,6 +823,8 @@ class CityLiveRaidPage(FoundryPage):
             self.encounter_checklist_label.setText("No encounter checklist loaded.")
             self.events_label.setText("No manual run events yet.")
             self.run_notes_edit.clear()
+            self.inline_raid_map.setPixmap(QPixmap())
+            self.inline_raid_map.setText("No Raid Plan map linked for this encounter.")
             self.run_notes_edit.setEnabled(False)
             self.save_run_notes_button.setEnabled(False)
             return
@@ -810,6 +868,7 @@ class CityLiveRaidPage(FoundryPage):
             )
         self._render_callout_rows(plan_callouts)
         self._render_encounter_context()
+        self._refresh_inline_raid_map()
         self._refresh_run_state()
         self._refresh_events()
         self.status.info(f"Live Raid loaded {plan.name}. Runtime telemetry is not inferred.")
