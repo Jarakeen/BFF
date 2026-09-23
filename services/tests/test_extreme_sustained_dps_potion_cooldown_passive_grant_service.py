@@ -57,3 +57,19 @@ def test_owned_unreviewed_potion_cooldown_passive_fails_closed() -> None:
         assert "unreviewed potion cooldown semantics" in str(exc)
     else:
         raise AssertionError("unreviewed owned potion cooldown passive must fail closed")
+
+
+
+def test_passive_universe_enumeration_failure_fails_closed() -> None:
+    class _BrokenUniverse:
+        def passives(self):
+            raise RuntimeError("catalog unavailable")
+
+    service = ExtremeSustainedDPSPotionCooldownPassiveGrantService(_BrokenUniverse())
+
+    try:
+        service.resolve(object(), CharacterProgression(passive_ranks={}))
+    except ValueError as exc:
+        assert "passive universe could not be enumerated" in str(exc)
+    else:
+        raise AssertionError("failed passive-universe enumeration must fail closed")
