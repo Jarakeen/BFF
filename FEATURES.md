@@ -542,3 +542,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Live Raid map visibility** — When the current Raid Plan + encounter has a valid linked Raid Map, Live Raid shows `Map Available` beneath the phase guide and lists `MAP  <Encounter> • <Map Label>` in Recent Activity. Link/change/clear updates both surfaces immediately.
 
 - **Raid Plan Team selector** — Raid Plan now exposes an optional Team dropdown between Plan and Saved Plan. It defaults to No Team, persists `team_name` on Save, restores the saved team on Load, and uses the selected team for Personnel/team membership synchronization.
+
+- Raid Map plan assets: Raid Map can explicitly save its current tactical layout to the selected saved Raid Plan; Raid Plans can hand off directly to the plan-scoped Raid Map editor; Live Raid continues to consume encounter-linked Raid Maps; shared Raid Plan schema v6 publishes the plan's Raid Map link manifest for Finch/website consumers without embedding private local paths.
