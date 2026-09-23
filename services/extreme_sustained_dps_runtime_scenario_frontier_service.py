@@ -139,6 +139,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         *,
         candidate,
         enchantment_effects: tuple[EffectVariant, ...],
+        player_build: PlayerBuild,
     ):
         if callable(resolver):
             return resolver(
@@ -153,6 +154,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         return method(
             candidate=candidate,
             enchantment_effects=enchantment_effects,
+            player_build=player_build,
         )
 
     def _weapon_enchantment_attempt_frontier(
@@ -163,6 +165,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         effects: tuple[EffectVariant, ...],
         event_denominator_proven: bool,
         source: str,
+        player_build: PlayerBuild,
     ) -> tuple[
         tuple[RuntimeEvent, ...],
         ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier | None,
@@ -204,6 +207,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             self.weapon_enchantment_cooldown_policy_resolver,
             candidate=candidate,
             enchantment_effects=enchantment_effects,
+            player_build=player_build,
         )
         policy_unresolved = tuple(
             getattr(policy_result, "unresolved", ()) or ()
@@ -529,6 +533,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             effects=tuple(event_effects),
             event_denominator_proven=bool(skeleton.denominator_proven),
             source=source,
+            player_build=player_build,
         )
         fixed_attempts: tuple[RuntimeEffectEventAttempt, ...] = ()
         if (
