@@ -104,6 +104,10 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
             )
 
         resolved_passives = tuple(passives)
+        if resolved_passives and progression is not None:
+            unresolved.append(
+                "Extreme potion cooldown received both explicit PassiveGrant evidence and progression; choose one authority"
+            )
         if resolved_passives and not passive_inventory_complete:
             unresolved.append(
                 "Explicit Extreme potion cooldown PassiveGrant inventory is not proven complete"
