@@ -41,6 +41,7 @@ def test_phase5_owns_complete_finish_endgame_gear_action() -> None:
     assert 'row.level_combo.setCurrentText("CP160")' in phase5
     assert 'getattr(row, "enchant_tier_combo", None)' in phase5
     assert 'enchant_tier_combo.setCurrentText("Truly Superb")' in phase5
+    assert 'enchant_quality_combo.setCurrentText("Gold")' in phase5
     assert "BuildEditor.finish_endgame_gear = _finish_endgame_gear" in phase5
 
     assert "BuildEditor.finish_endgame_gear =" not in easy_mode
