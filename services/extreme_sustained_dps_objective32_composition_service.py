@@ -134,6 +134,26 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires canonical candidate runtime effect scaling"
             )
+        if not bool(
+            getattr(
+                runtime_state_frontier_resolver,
+                "supplemental_event_denominator_proven",
+                False,
+            )
+        ):
+            raise ValueError(
+                "Objective #32 composition requires a proven-complete supplemental runtime-event denominator"
+            )
+        if not bool(
+            getattr(
+                runtime_state_frontier_resolver,
+                "supplemental_history_denominator_proven",
+                False,
+            )
+        ):
+            raise ValueError(
+                "Objective #32 composition requires a proven-complete supplemental runtime-history denominator"
+            )
 
         cls._require_resource_denominator_proof(
             finalized_potion_evidence_resolver
@@ -189,6 +209,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
                 "Effective potion cooldown is resolved from each finalized build through the canonical fail-closed cooldown authority",
                 "Runtime state is resolved per finalized candidate inside the generated tree",
                 "Candidate runtime state is backed by canonical EffectVariant discovery and candidate-specific scaling",
+                "Supplemental runtime-event and runtime-history denominators are proven complete before global traversal",
                 "Canonical Objective #32 search requires closure-ready Heavy Attack channel-block scenario evidence before traversal",
             ),
         )
