@@ -43,7 +43,7 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
         dual_bar_frontier: object,
         candidate_id_prefix: str,
         duration_seconds: float,
-        potion_cooldown_seconds: float,
+        potion_cooldown_seconds: float | None,
         starting_ultimate: float,
         priorities: object,
         snapshot_resolver: object,
@@ -55,6 +55,8 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
         heavy_attack_windows: tuple[object, ...],
         heavy_attack_channel_blocks: tuple[object, ...],
         heavy_attack_channel_block_denominator_proven: bool,
+        potion_cooldown_resolver: object | None,
+        potion_cooldown_scenario: object | None,
     ) -> ExtremeSustainedDPSIndexedFrontierAxis:
         validated = self.structural_families.validate_denominator()
         if not validated.denominator_proven:
@@ -84,8 +86,10 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
                     f"|structural-family:{choice.structural_family_index}"
                 ),
                 duration_seconds=float(duration_seconds),
-                potion_cooldown_seconds=float(potion_cooldown_seconds),
+                potion_cooldown_seconds=potion_cooldown_seconds,
                 starting_ultimate=float(starting_ultimate),
+                potion_cooldown_resolver=potion_cooldown_resolver,
+                potion_cooldown_scenario=potion_cooldown_scenario,
                 priorities=priorities,
                 snapshot_resolver=snapshot_resolver,
                 target_identity=target_identity,
@@ -129,7 +133,7 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
         dual_bar_frontier: object,
         candidate_id_prefix: str,
         required_duration_seconds: float,
-        potion_cooldown_seconds: float,
+        potion_cooldown_seconds: float | None,
         starting_ultimate: float,
         priorities: object,
         snapshot_resolver: object,
@@ -150,6 +154,8 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
         root_bound_inputs=None,
         branch_bound_inputs=None,
         runtime_state_frontier=None,
+        potion_cooldown_resolver=None,
+        potion_cooldown_scenario=None,
     ):
         prefix = str(candidate_id_prefix or "").strip()
         if not prefix:
@@ -161,7 +167,7 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
             dual_bar_frontier=dual_bar_frontier,
             candidate_id_prefix=prefix,
             duration_seconds=float(required_duration_seconds),
-            potion_cooldown_seconds=float(potion_cooldown_seconds),
+            potion_cooldown_seconds=potion_cooldown_seconds,
             starting_ultimate=float(starting_ultimate),
             priorities=priorities,
             snapshot_resolver=snapshot_resolver,
@@ -177,6 +183,8 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
             heavy_attack_channel_block_denominator_proven=bool(
                 heavy_attack_channel_block_denominator_proven
             ),
+            potion_cooldown_resolver=potion_cooldown_resolver,
+            potion_cooldown_scenario=potion_cooldown_scenario,
         )
 
         axes = (
