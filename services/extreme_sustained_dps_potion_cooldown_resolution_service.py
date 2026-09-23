@@ -131,6 +131,10 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
                 unresolved.append(str(exc))
 
         scenario_evidence = scenario or ExtremeSustainedDPSPotionCooldownScenarioEvidence()
+        if not scenario_evidence.complete:
+            unresolved.append(
+                "Extreme potion cooldown external scenario effect inventory is not proven complete"
+            )
         if unresolved:
             return ExtremeSustainedDPSPotionCooldownResolution(
                 cooldown_seconds=None,
