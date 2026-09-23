@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from services.raid_plan_repository import RaidPlanRepository
 from services.team_composition_catalog import (
     CompositionSlot,
@@ -274,7 +274,7 @@ class CompBuilderPage(FoundryPage):
             achievement_goal=self.goal_combo.currentText().strip() or None,
         )
 
-        roster_service = RosterService(EsoDatabase(get_data_dir() / "eso.db"))
+        roster_service = RosterService(EsoDatabase(get_user_database_path()))
         personnel = tuple(roster_service.list_members())
 
         def _legacy_personnel_match(member):
