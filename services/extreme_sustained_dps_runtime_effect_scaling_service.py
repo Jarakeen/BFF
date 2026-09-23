@@ -11,6 +11,7 @@ from services.rotation_ultimate_service import RotationUltimateService
 
 
 _MASTER_ARCHITECT_SCALING = "1 second per 10 Ultimate spent"
+_ALKOSH_SCALING = "Weapon Damage, up to 6000 resistance reduction"
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,8 @@ class ExtremeSustainedDPSRuntimeEffectScalingResult:
     effects: tuple[EffectVariant, ...]
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+    source_data_unresolved: tuple[str, ...] = ()
+    math_unresolved: tuple[str, ...] = ()
 
     @property
     def resolved(self) -> bool:
@@ -48,6 +51,8 @@ class ExtremeSustainedDPSRuntimeEffectScalingService:
         resolved: list[EffectVariant] = []
         evidence: list[str] = []
         unresolved: list[str] = []
+        source_data_unresolved: list[str] = []
+        math_unresolved: list[str] = []
 
         for effect in effects:
             scaling = str(effect.scaling or "").strip()
@@ -71,16 +76,38 @@ class ExtremeSustainedDPSRuntimeEffectScalingService:
                     resolved.append(scaled)
                 evidence.extend(scaled_evidence)
                 unresolved.extend(scaled_unresolved)
+                source_data_unresolved.extend(scaled_unresolved)
                 continue
 
-            unresolved.append(
+            if (
+                effect.name == "roar_of_alkosh"
+                and effect.trigger == "synergy_activation"
+                and scaling == _ALKOSH_SCALING
+            ):
+                message = (
+                    f"{effect.source} {effect.name} requires activation-time Weapon Damage "
+                    "to resolve resistance reduction up to 6000"
+                )
+                unresolved.append(message)
+                source_data_unresolved.append(message)
+                continue
+
+            message = (
                 f"{effect.source} {effect.name} runtime scaling is not reviewed: {scaling}"
             )
+            unresolved.append(message)
+            math_unresolved.append(message)
 
         return ExtremeSustainedDPSRuntimeEffectScalingResult(
             effects=tuple(resolved),
             evidence=tuple(dict.fromkeys(row for row in evidence if row)),
             unresolved=tuple(dict.fromkeys(row for row in unresolved if row)),
+            source_data_unresolved=tuple(
+                dict.fromkeys(row for row in source_data_unresolved if row)
+            ),
+            math_unresolved=tuple(
+                dict.fromkeys(row for row in math_unresolved if row)
+            ),
         )
 
     def _resolve_master_architect(
