@@ -68,6 +68,9 @@ from services.extreme_sustained_dps_weapon_enchantment_proc_consequence_service 
 from services.extreme_sustained_dps_weapon_enchantment_runtime_source_service import (
     ExtremeSustainedDPSWeaponEnchantmentRuntimeSourceService,
 )
+from services.extreme_sustained_dps_weapon_enchantment_resistance_reduction_service import (
+    ExtremeSustainedDPSWeaponEnchantmentResistanceReductionService,
+)
 from services.extreme_sustained_dps_runtime_target_combat_state_service import (
     ExtremeSustainedDPSRuntimeTargetCombatStateService,
 )
@@ -269,10 +272,19 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 sources=tuple(enchantment_sources.sources),
             )
         )
+        enchantment_resistance = (
+            ExtremeSustainedDPSWeaponEnchantmentResistanceReductionService.resolve(
+                enchantment_consequences
+            )
+        )
         enchantment_coverage = (
             ExtremeSustainedDPSWeaponEnchantmentConsequenceCoverageService.assess(
                 enchantment_consequences,
-                consumed_effect_types=(),
+                consumed_effect_types=(
+                    ("physical_spell_resistance_reduction",)
+                    if enchantment_resistance.resolved
+                    else ()
+                ),
             )
         )
         activation = self.activation_service.build(gear_state, build=build)
@@ -371,7 +383,9 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             )
             return max(
                 0.0,
-                named_resistance - float(projection.explicit_resistance_reduction),
+                named_resistance
+                - float(projection.explicit_resistance_reduction)
+                - float(enchantment_resistance.reduction_at(time_seconds)),
             )
 
         simulator = CombatSimulationSavedBuildDDService(
@@ -407,10 +421,14 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             initial_bar=initial_bar,
             runtime_build_context_resolver=runtime_build_context_resolver,
             target_combat_state_resolver=(
-                target_combat_state_resolver if runtime_effects else None
+                target_combat_state_resolver
+                if runtime_effects or enchantment_resistance.windows
+                else None
             ),
             target_resistance_resolver=(
-                target_resistance_resolver if runtime_effects else None
+                target_resistance_resolver
+                if runtime_effects or enchantment_resistance.windows
+                else None
             ),
         )
         summary = self.summary_service.summarize(result, target_identity=target)
@@ -420,6 +438,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 *summary.damage_unresolved,
                 *tuple(target_runtime_unresolved),
                 *tuple(getattr(enchantment_sources, "unresolved", ()) or ()),
+                *tuple(enchantment_resistance.unresolved),
                 *tuple(enchantment_coverage.unresolved),
             )
         )
@@ -433,6 +452,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             "Reviewed enemy-target named and explicit numeric resistance reductions are applied through exact-time target resistance before mitigation",
             "Damage evaluated through Phase 14 Combat Simulation using candidate_build provenance",
             *tuple(getattr(enchantment_sources, "evidence", ()) or ()),
+            *tuple(enchantment_resistance.evidence),
             *tuple(enchantment_coverage.evidence),
         )
         if summary.modeled_dps is None:
