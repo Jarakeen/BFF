@@ -121,3 +121,54 @@ def test_master_architect_mixed_ultimate_costs_fail_closed() -> None:
 
     assert result.effects == ()
     assert any("different costs" in row for row in result.unresolved)
+
+
+def test_unreviewed_runtime_scaling_fails_closed_before_relevance() -> None:
+    alkosh = EffectVariant(
+        name="roar_of_alkosh",
+        layer=EffectLayer.PROC,
+        source="Roar of Alkosh (5)",
+        duration=10.0,
+        scaling="Weapon Damage, up to 6000 resistance reduction",
+        trigger="synergy_activation",
+        target_type=SupportTargetType.ENEMY,
+        resistance_reduction=6000.0,
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectScalingService(
+        ultimate_service=_UltimateService({}),
+    ).resolve(
+        build=PlayerBuild(),
+        plan=_plan(),
+        effects=(alkosh,),
+    )
+
+    assert result.effects == ()
+    assert result.resolved is False
+    assert any(
+        "Roar of Alkosh (5) roar_of_alkosh runtime scaling is not reviewed" in row
+        for row in result.unresolved
+    )
+
+
+def test_unscaled_runtime_effect_passes_through_unchanged() -> None:
+    effect = EffectVariant(
+        name="major_courage",
+        layer=EffectLayer.PROC,
+        source="Test",
+        magnitude=430.0,
+        duration=10.0,
+        trigger="damage_dealt",
+        target_type=SupportTargetType.SELF,
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectScalingService(
+        ultimate_service=_UltimateService({}),
+    ).resolve(
+        build=PlayerBuild(),
+        plan=_plan(),
+        effects=(effect,),
+    )
+
+    assert result.effects == (effect,)
+    assert result.unresolved == ()
