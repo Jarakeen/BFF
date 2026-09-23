@@ -166,6 +166,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.saved_plan_combo.addItem("New Plan…", "__new_plan__")
         self.saved_plan_combo.addItem("No saved plan", None)
         self.saved_plan_combo.activated.connect(self._saved_plan_activated)
+        self.saved_plan_combo.currentIndexChanged.connect(self._saved_plan_selection_changed)
 
         controls = QWidget()
         layout = QVBoxLayout(controls)
@@ -214,14 +215,10 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         layout.addLayout(row)
         self.saved_plan_controls = controls
         self.header.add_context_widget(controls)
-        self._plan_name_context = next(
-            (
-                widget for widget in self.header.findChildren(QWidget)
-                if widget is not self.plan_name_edit and widget.isAncestorOf(self.plan_name_edit)
-            ),
-            None,
+        self._plan_name_context = getattr(self, "plan_name_context", None)
+        self._set_plan_name_visible(
+            self.saved_plan_combo.currentData() == "__new_plan__"
         )
-        self._set_plan_name_visible(False)
 
     def _set_plan_name_visible(self, visible: bool) -> None:
         container = getattr(self, "_plan_name_context", None)
@@ -229,6 +226,12 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             container.setVisible(bool(visible))
         else:
             self.plan_name_edit.setVisible(bool(visible))
+
+    def _saved_plan_selection_changed(self, _index: int) -> None:
+        """Show the Plan-name field only while explicitly creating a new plan."""
+        self._set_plan_name_visible(
+            self.saved_plan_combo.currentData() == "__new_plan__"
+        )
 
     def _saved_plan_activated(self, index: int) -> None:
         if self.saved_plan_combo.itemData(index) != "__new_plan__":
@@ -512,6 +515,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 selected_index = self.saved_plan_combo.count() - 1
         self.saved_plan_combo.setCurrentIndex(selected_index)
         self.saved_plan_combo.blockSignals(False)
+        self._saved_plan_selection_changed(self.saved_plan_combo.currentIndex())
 
     @staticmethod
     def _trial_display_for(plan: RaidPlan) -> str:
