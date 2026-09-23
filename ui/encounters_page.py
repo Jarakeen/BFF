@@ -407,10 +407,19 @@ class EncountersPage(FoundryPage):
         self.encounter_board.save_state()
         encounter_id = str(self.boss_combo.currentData() or "").strip()
         label = f"{plan.name} • {self.boss_combo.currentText() or 'Raid Map'}"
-        record = self.raid_map_store.save_plan_layout(
+
+        # Keep the editable source with the Raid Plan, but give boss/map viewers
+        # a real raster preview. JSON is authoring state, not an image.
+        self.raid_map_store.save_plan_layout(
             plan_id,
             self.encounter_board.state_path,
             encounter_id=encounter_id,
+            label=label,
+        )
+        self.encounter_board.capture_snapshot()
+        record = self.raid_map_store.import_map(
+            encounter_id or f"plan-{plan_id}",
+            self.encounter_board.snapshot_path,
             label=label,
         )
         self.raid_section_state.set_linked_raid_map_id(
@@ -418,7 +427,9 @@ class EncountersPage(FoundryPage):
             encounter_id or f"plan-{plan_id}",
             record.map_id,
         )
-        self.status.success(f"Saved Raid Map to Raid Plan: {plan.name}.")
+        self.status.success(
+            f"Saved Raid Map to Raid Plan: {plan.name}. Editable layout + image preview are linked."
+        )
 
     def _save_raid_map_to_finch(self) -> None:
         plan_id = str(self.raid_plan_combo.currentData() or "").strip()
