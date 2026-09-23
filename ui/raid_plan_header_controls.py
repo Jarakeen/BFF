@@ -39,8 +39,17 @@ def rehome_plan_header_controls(
     page,
     *,
     trailing_widgets: Iterable[QWidget] = (),
+    plan_identity_widget: QWidget | None = None,
+    team_identity_widget: QWidget | None = None,
+    show_plan_editor: bool = True,
+    show_team_editor: bool = True,
+    show_saved_plan_selector: bool = True,
 ) -> QWidget:
-    """Move planning inputs/actions out of FoundryHeader into one reusable strip."""
+    """Move planning context/actions out of FoundryHeader into one reusable strip.
+
+    The City Raid Plan workspace can keep persisted identity read-only while still
+    reusing the legacy editor widgets internally for New Plan creation and state.
+    """
 
     existing = getattr(page, "plan_context_bar", None)
     if isinstance(existing, QWidget):
@@ -89,10 +98,28 @@ def rehome_plan_header_controls(
 
     row.addWidget(_field("TRIAL", trial_combo, minimum_width=180), 3)
     row.addWidget(_field("DIFFICULTY", difficulty_combo, minimum_width=150), 2)
-    row.addWidget(_field("PLAN", plan_name_edit, minimum_width=210), 3)
-    if isinstance(team_combo, QWidget):
+
+    if plan_identity_widget is not None:
+        row.addWidget(_field("PLAN", plan_identity_widget, minimum_width=180), 2)
+    elif show_plan_editor:
+        row.addWidget(_field("PLAN", plan_name_edit, minimum_width=210), 3)
+    else:
+        plan_name_edit.hide()
+        plan_name_edit.setParent(bar)
+
+    if team_identity_widget is not None:
+        row.addWidget(_field("TEAM", team_identity_widget, minimum_width=160), 2)
+    elif isinstance(team_combo, QWidget) and show_team_editor:
         row.addWidget(_field("TEAM", team_combo, minimum_width=180), 2)
-    row.addWidget(_field("SAVED PLAN", saved_plan_combo, minimum_width=220), 3)
+    elif isinstance(team_combo, QWidget):
+        team_combo.hide()
+        team_combo.setParent(bar)
+
+    if show_saved_plan_selector:
+        row.addWidget(_field("SAVED PLAN", saved_plan_combo, minimum_width=220), 3)
+    else:
+        saved_plan_combo.hide()
+        saved_plan_combo.setParent(bar)
 
     actions_host = QWidget()
     actions_layout = QVBoxLayout(actions_host)
