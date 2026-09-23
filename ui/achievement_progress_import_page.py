@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from services.achievement_progress_export_service import AchievementProgressExportService
 from services.achievement_progress_service import AchievementProgressService
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
@@ -45,7 +45,7 @@ class AchievementProgressImportPage(QWidget):
         self.embedded = bool(embedded)
         data_dir = get_data_dir()
         self.achievement_data = EsoAchievementDatabaseService(data_dir / "eso.db")
-        self.achievement_progress = AchievementProgressService(data_dir / "achievement_progress.json")
+        self.achievement_progress = AchievementProgressService(get_user_database_path())
         self.collectible_progress = ProfiledCollectibleService(data_dir / "eso.db")
         self.motif_progress = LearnedMotifService(data_dir / "eso.db")
         self.workbooks = LocalAchievementWorkbookService()
