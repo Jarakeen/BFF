@@ -374,20 +374,20 @@ class EncountersPage(FoundryPage):
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(6)
 
-        button = QPushButton("Save Map to Raid Plan")
+        button = QPushButton("Save Plan Map Only")
         button.setObjectName("saveRaidMapToPlanButton")
         button.setToolTip(
-            "Save the full editable Raid Map layout locally and link it to the selected Raid Plan."
+            "Save this player-specific Raid Plan map locally. Live Raid uses its player-name projection."
         )
         button.clicked.connect(self._save_raid_map_to_plan)
         self.save_raid_map_to_plan_button = button
         row.addWidget(button)
 
-        self.save_raid_map_to_finch_button = QPushButton("Save Map to Finch (WebP)")
+        self.save_raid_map_to_finch_button = QPushButton("Save Plan Map + Finch")
         self.save_raid_map_to_finch_button.setObjectName("saveRaidMapToFinchWebpButton")
         self.save_raid_map_to_finch_button.setProperty("primary", True)
         self.save_raid_map_to_finch_button.setToolTip(
-            "Capture this Raid Map, flatten it to a compact WebP, save it to Finch, and republish the Raid Plan so the mobile site can display it."
+            "Save this Raid Plan map locally, project seat labels to player names for Live Raid, convert that exact image to WebP, and publish it to Finch."
         )
         self.save_raid_map_to_finch_button.clicked.connect(self._save_raid_map_to_finch)
         row.addWidget(self.save_raid_map_to_finch_button)
@@ -708,9 +708,9 @@ class EncountersPage(FoundryPage):
             ),
             None,
         )
-        self.attach_raid_map_button = QPushButton("Attach to…")
+        self.attach_raid_map_button = QPushButton("Save Boss Template")
         self.attach_raid_map_button.setToolTip(
-            "Capture this Raid Map and attach it directly to a Mechanics & Timelines encounter."
+            "Save the current seat-labelled map as the reusable template for the selected boss. Player names are not included."
         )
         self.attach_raid_map_button.clicked.connect(self._attach_current_map_to_encounter)
 
@@ -726,75 +726,30 @@ class EncountersPage(FoundryPage):
             root.insertWidget(max(0, root.count() - 2), self.attach_raid_map_button)
 
     def _attach_current_map_to_encounter(self) -> None:
-        summaries = tuple(self.guide_service.encounter_summaries())
-        if not summaries:
-            self.status.warning("No Mechanics & Timelines encounters are available.")
+        encounter_id = str(self.boss_combo.currentData() or "").strip()
+        encounter_name = str(self.boss_combo.currentText() or "").strip()
+        if not encounter_id:
+            self.status.warning("Select a boss before saving its Raid Map template.")
             return
 
-        active_trial = str(self.expedition.expedition.Expedition or "").strip().casefold()
-        matching = tuple(
-            row
-            for row in summaries
-            if active_trial
-            and str(row.content_name or "").strip().casefold() == active_trial
-        )
-        choices = matching or summaries
-
-        selected_encounter_id = str(self.boss_combo.currentData() or "").strip()
-        labels = [
-            row.name if matching else f"{row.content_name} • {row.name}"
-            for row in choices
-        ]
-        default_index = next(
-            (
-                index
-                for index, row in enumerate(choices)
-                if row.encounter_id == selected_encounter_id
-            ),
-            0,
-        )
-        selected, accepted = QInputDialog.getItem(
-            self,
-            "Attach Raid Map",
-            "Mechanics & Timelines encounter:",
-            labels,
-            default_index,
-            False,
-        )
-        if not accepted:
-            return
-
-        index = labels.index(selected)
-        encounter = choices[index]
-
+        # Boss templates are reusable strategy maps. Keep stable seat labels and
+        # never bind this generic image to a specific Raid Plan.
+        toggle_names = getattr(self.encounter_board, "_toggle_player_name_labels", None)
+        if callable(toggle_names):
+            toggle_names(False)
         try:
             self.encounter_board.capture_snapshot()
             record = self.raid_map_store.import_map(
-                encounter.encounter_id,
+                encounter_id,
                 self.encounter_board.snapshot_path,
-                label=f"{encounter.name} Positioning",
+                label=f"{encounter_name or 'Boss'} Template",
             )
-            plan_id = str(self.raid_plan_combo.currentData() or "").strip()
-            if plan_id:
-                self.raid_section_state.set_linked_raid_map_id(
-                    plan_id,
-                    encounter.encounter_id,
-                    record.map_id,
-                )
-        except Exception as exc:
-            self.status.error(f"Raid Map attachment failed: {exc}")
+        except (OSError, RuntimeError, ValueError) as exc:
+            self.status.error(f"Boss Raid Map template could not be saved: {exc}")
             return
-
-        if plan_id:
-            plan = self.raid_plan_repository.get(plan_id)
-            plan_name = plan.name if plan is not None else plan_id
-            self.status.success(
-                f"Attached Raid Map to {encounter.name} and linked it to Raid Plan {plan_name}."
-            )
-        else:
-            self.status.success(
-                f"Attached Raid Map to Mechanics & Timelines • {encounter.name}."
-            )
+        self.status.success(
+            f"Saved reusable Raid Map template for {encounter_name or encounter_id}: {record.label}."
+        )
 
     def _positioning_snapshot_saved(self, path: str):
         self._load_positioning_preview(Path(path))
