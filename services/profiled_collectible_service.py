@@ -8,6 +8,7 @@ from pathlib import Path
 
 from engine.config import get_data_dir, get_user_database_path
 from services.eso_collectible_database_service import EsoCollectibleDatabaseService
+from services.user_data_migration_service import migrate_legacy_user_data
 
 
 class ProfiledCollectibleService(EsoCollectibleDatabaseService):
@@ -28,6 +29,8 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
                 ).resolve()
             except OSError:
                 is_app_catalog = self._requested_catalog_path == (get_data_dir() / "eso.db")
+            if is_app_catalog:
+                migrate_legacy_user_data(legacy_database=self._requested_catalog_path)
             progress_database_path = (
                 get_user_database_path() if is_app_catalog else self._requested_catalog_path
             )
