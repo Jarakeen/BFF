@@ -5,6 +5,8 @@ import json
 import sqlite3
 from pathlib import Path
 from typing import Any
+
+from engine.config import get_data_dir, get_user_database_path
 from uuid import NAMESPACE_URL, uuid5
 
 from models.build_model import BuildRoster, PlayerBuild
@@ -25,7 +27,23 @@ class BuildCatalogService:
     """
 
     def __init__(self, catalog_path: Path):
-        self.catalog_path = Path(catalog_path)
+        requested_path = Path(catalog_path)
+        try:
+            is_application_catalog = (
+                requested_path.resolve()
+                == (get_data_dir() / "characters.json").resolve()
+            )
+        except OSError:
+            is_application_catalog = requested_path == (get_data_dir() / "characters.json")
+
+        if is_application_catalog:
+            from services.user_data_migration_service import migrate_legacy_user_data
+
+            migrate_legacy_user_data()
+            self.catalog_path = get_user_database_path()
+        else:
+            self.catalog_path = requested_path
+
         self._database_mode = self.catalog_path.suffix.casefold() in {".db", ".sqlite", ".sqlite3"}
         if self._database_mode:
             self.catalog_path.parent.mkdir(parents=True, exist_ok=True)
