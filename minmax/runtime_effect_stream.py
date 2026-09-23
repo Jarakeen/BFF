@@ -83,6 +83,8 @@ def process_effect_variant_runtime_stream(
     steps: list[RuntimeEffectStreamStep] = []
 
     for attempt in order_runtime_effect_attempts(attempts):
+        if not attempt.applies_to(effect):
+            continue
         transition = apply_effect_variant_runtime_event(
             attempt.event,
             effect,
