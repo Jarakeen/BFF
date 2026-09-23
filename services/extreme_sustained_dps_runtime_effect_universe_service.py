@@ -60,6 +60,7 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
                 None if effect.resistance_reduction is None else float(effect.resistance_reduction),
                 None if effect.penetration is None else float(effect.penetration),
                 str(getattr(effect.active_bar, "value", effect.active_bar) or ""),
+                str(getattr(effect, "source_slot", "") or ""),
             )
             if key in seen:
                 continue
