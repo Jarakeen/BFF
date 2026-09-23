@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import get_data_dir
 from services.collectible_icon_catalog import CollectibleIconCatalog
-from services.eso_collectible_database_service import EsoCollectibleDatabaseService
+from services.profiled_collectible_service import ProfiledCollectibleService
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -51,7 +51,7 @@ class CollectiblesPage(QWidget):
         super().__init__(parent)
         self.data_dir = get_data_dir()
         self._owns_service = service is None
-        self.service = service or EsoCollectibleDatabaseService(self.data_dir / "eso.db")
+        self.service = service or ProfiledCollectibleService(self.data_dir / "eso.db")
         self.icon_catalog = CollectibleIconCatalog(self.data_dir)
         self.category = self.DEFAULT_CATEGORY
         self.current_collectible_id: int | None = None
