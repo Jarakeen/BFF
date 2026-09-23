@@ -13,10 +13,14 @@ from typing import Callable
 
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.support_effect_category import SupportEffectCategory
+from minmax.runtime_effect_sequence import effect_variant_runtime_binding_key
 from minmax.weapon_enchantment_runtime_cadence import (
     WeaponEnchantmentCadenceEvidence,
     WeaponEnchantmentEffectFamily,
     provisional_weapon_enchantment_cadence,
+)
+from services.extreme_sustained_dps_weapon_enchantment_cadence_family_service import (
+    ExtremeSustainedDPSWeaponEnchantmentCadenceFamilyService,
 )
 from services.extreme_sustained_dps_weapon_enchantment_sequence_frontier_service import (
     ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy,
@@ -49,11 +53,19 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
             WeaponEnchantmentEffectFamily | None,
         ]
         | None = None,
+        runtime_source_service: object | None = None,
+        cadence_family_service: object | None = None,
     ) -> None:
+        if (runtime_source_service is None) != (cadence_family_service is None):
+            raise ValueError(
+                "canonical weapon-enchantment policy resolution requires both runtime source and cadence-family services"
+            )
         self.cadence_provider = cadence_provider
         self.effect_family_resolver = (
             effect_family_resolver or self._default_effect_family
         )
+        self.runtime_source_service = runtime_source_service
+        self.cadence_family_service = cadence_family_service
 
     @staticmethod
     def _default_effect_family(
@@ -85,16 +97,50 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
         *,
         candidate=None,
         enchantment_effects: tuple[EffectVariant, ...],
+        player_build=None,
     ) -> ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolution:
         del candidate  # Signature matches RuntimeScenarioFrontier's resolver seam.
 
         policies: list[ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy] = []
         evidence: list[str] = []
         unresolved: list[str] = []
+        family_by_binding_key: dict[
+            tuple[str, str, str, str],
+            WeaponEnchantmentEffectFamily,
+        ] = {}
+
+        if self.runtime_source_service is not None:
+            if player_build is None:
+                unresolved.append(
+                    "canonical weapon-enchantment cooldown policy resolution requires player_build"
+                )
+            else:
+                source_resolution = self.runtime_source_service.resolve(player_build)
+                evidence.extend(tuple(getattr(source_resolution, "evidence", ()) or ()))
+                unresolved.extend(tuple(getattr(source_resolution, "unresolved", ()) or ()))
+                for source in tuple(getattr(source_resolution, "sources", ()) or ()):
+                    family_resolution = self.cadence_family_service.resolve(source)
+                    evidence.extend(tuple(family_resolution.evidence))
+                    unresolved.extend(tuple(family_resolution.unresolved))
+                    if family_resolution.family is None:
+                        continue
+                    key = (
+                        str(source.identity or "").strip().casefold(),
+                        str(source.source_label or "").strip().casefold(),
+                        str(getattr(source.active_bar, "value", source.active_bar) or "")
+                        .strip()
+                        .casefold(),
+                        str(source.source_slot or "").strip().casefold(),
+                    )
+                    family_by_binding_key[key] = family_resolution.family
 
         for effect in tuple(enchantment_effects):
             label = self._effect_label(effect)
-            family = self.effect_family_resolver(effect)
+            family = (
+                family_by_binding_key.get(effect_variant_runtime_binding_key(effect))
+                if self.runtime_source_service is not None
+                else self.effect_family_resolver(effect)
+            )
             if family is None:
                 unresolved.append(
                     f"weapon-enchantment effect family is not canonically classified: {label}"
