@@ -1452,6 +1452,29 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_cadence_family",
+        domain="extreme",
+        purpose=(
+            "Classify one canonical equipped weapon-enchantment source into the reviewed direct-damage or buff/debuff cadence family from its canonical consequence semantics without assigning any cooldown mechanics."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_cadence_family_service",
+        inputs=("CanonicalWeaponEnchantmentRuntimeSource",),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentCadenceFamilyResolution",),
+        dependencies=("extreme.sustained_dps.weapon_enchantment_runtime_source",),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_cadence_family_classification",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "A canonical damage consequence classifies the whole source as direct-damage even when the same proc also restores a resource. "
+            "Reviewed non-damage buff/debuff consequence types classify separately; restoration-only and unknown shapes remain fail-closed. "
+            "Family classification does not assign cooldown seconds, cooldown scope, or timer sharing."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_runtime_variant",
         domain="extreme",
         purpose=(
