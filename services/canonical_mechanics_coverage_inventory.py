@@ -103,7 +103,9 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "rank-aware Phase5BuildCalculationContextFactory, which applies racial passives and "
                 "reviewed Warden, "
                 "Dragonknight, Necromancer, Nightblade, Sorcerer, Templar, armor, One Hand and "
-                "Shield, Undaunted, guild, and Alliance Support passive resolvers."
+                "Shield, Undaunted, guild, and Alliance Support passive resolvers. Generated "
+                "sustained-DPS exact evaluation now preflights that static context and fails closed "
+                "before simulation when the canonical context retains unresolved mechanics."
             ),
             evidence_source=(
                 "minmax/character_build/passive_grant.py; "
@@ -112,7 +114,8 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "services/rotation_static_build_context_service.py; "
                 "minmax/racial_passive_stat_repository.py; "
                 "services/extreme_resource_racial_passive_ownership_service.py; "
-                "services/extreme_passive_projection_service.py"
+                "services/extreme_passive_projection_service.py; "
+                "services/extreme_sustained_dps_generated_runtime_evaluation_service.py"
             ),
             consumers=ALL_THREE,
             missing_evidence=(
