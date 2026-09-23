@@ -237,7 +237,8 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             consumers=ALL_THREE,
             missing_evidence=(
                 "Scheduled potion instant-restoration events now feed canonical generated-candidate "
-                "sustain evaluation; wire them into any remaining sustain/resource replay consumers "
+                "sustain evaluation, support-cadence sustain, and recovery-heavy replay; wire them "
+                "into any remaining sustain/resource replay consumers "
                 "that bypass that composition path and complete remaining potion runtime "
                 "effects beyond scheduled buff windows, plus poison effects, poison "
                 "trigger cadence, shared cooldowns, invisibility/detection/speed/Unstoppable "
