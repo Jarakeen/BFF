@@ -67,7 +67,12 @@ def _copy_table(source: sqlite3.Connection, target: sqlite3.Connection, table: s
     return len(rows)
 
 
-def build_seed(source_path: Path, destination_path: Path) -> dict[str, int]:
+def build_seed(
+    source_path: Path,
+    destination_path: Path,
+    *,
+    plan_id: str | None = None,
+) -> dict[str, int]:
     source_path = Path(source_path)
     destination_path = Path(destination_path)
     if not source_path.is_file():
@@ -83,6 +88,32 @@ def build_seed(source_path: Path, destination_path: Path) -> dict[str, int]:
     try:
         for table in KEEP_TABLES:
             counts[table] = _copy_table(source, target, table)
+
+        if _table_exists(target, "raid_plan"):
+            selected_plan_id = str(plan_id or "").strip()
+            plan_rows = target.execute(
+                "SELECT plan_id FROM raid_plan ORDER BY updated_at DESC, plan_id COLLATE NOCASE"
+            ).fetchall()
+            if selected_plan_id:
+                exists = any(
+                    str(row["plan_id"]).casefold() == selected_plan_id.casefold()
+                    for row in plan_rows
+                )
+                if not exists:
+                    raise ValueError(
+                        f"requested Raid Plan is not present in the user database: {selected_plan_id}"
+                    )
+                target.execute(
+                    "DELETE FROM raid_plan WHERE plan_id <> ? COLLATE NOCASE",
+                    (selected_plan_id,),
+                )
+                counts["raid_plan"] = 1
+            elif len(plan_rows) > 1:
+                raise ValueError(
+                    "multiple saved Raid Plans exist; provide --plan-id so the custom EXE "
+                    "does not accidentally include unrelated plans"
+                )
+
         target.execute("PRAGMA foreign_keys = ON")
         violations = target.execute("PRAGMA foreign_key_check").fetchall()
         if violations:
@@ -113,9 +144,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--destination", type=Path, required=True)
+    parser.add_argument("--plan-id", default="")
     args = parser.parse_args()
 
-    counts = build_seed(args.source, args.destination)
+    counts = build_seed(
+        args.source,
+        args.destination,
+        plan_id=args.plan_id or None,
+    )
     print(f"Created custom FoundryDock user seed: {args.destination}")
     for table in KEEP_TABLES:
         print(f"{table}: {counts.get(table, 0)}")
