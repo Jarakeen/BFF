@@ -77,6 +77,21 @@ class _StructuralFamilies:
         )
 
 
+
+def _candidate_runtime_resolver(
+    *,
+    event_proven=True,
+    history_proven=True,
+):
+    return SimpleNamespace(
+        supplemental_event_denominator_proven=event_proven,
+        supplemental_history_denominator_proven=history_proven,
+        scenario_frontier=SimpleNamespace(
+            runtime_effect_universe=object(),
+            runtime_effect_scaling=object(),
+        ),
+    )
+
 def _remaining_without_runtime():
     return ExtremeSustainedDPSAxisCoverageProof(
         source="all generated non-structural non-runtime axes",
@@ -346,7 +361,7 @@ def test_strict_global_objective32_preflight_accepts_candidate_runtime_state_aut
     global_search = _GlobalSearch(_search_result())
     global_search.pipeline = SimpleNamespace(
         encounter_policy_adapter=object(),
-        runtime_state_frontier_resolver=object(),
+        runtime_state_frontier_resolver=_candidate_runtime_resolver(),
     )
     service = ExtremeSustainedDPSGlobalObjective32SearchService(
         global_search=global_search,
@@ -380,7 +395,7 @@ def test_strict_global_objective32_rejects_duplicate_static_and_candidate_runtim
     global_search = _GlobalSearch(_search_result())
     global_search.pipeline = SimpleNamespace(
         encounter_policy_adapter=object(),
-        runtime_state_frontier_resolver=object(),
+        runtime_state_frontier_resolver=_candidate_runtime_resolver(),
     )
     service = ExtremeSustainedDPSGlobalObjective32SearchService(
         global_search=global_search,
@@ -476,6 +491,39 @@ def test_closure_ready_search_refuses_missing_potion_cooldown_authority() -> Non
             candidate_id_prefix="objective32",
             required_duration_seconds=20.0,
             potion_cooldown_seconds=45.0,
+            starting_ultimate=0.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="Boss",
+            runtime_snapshot="snapshot",
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+        )
+
+
+def test_strict_global_objective32_preflight_rejects_open_candidate_runtime_denominator() -> None:
+    import pytest
+
+    global_search = _GlobalSearch(_search_result())
+    global_search.pipeline = SimpleNamespace(
+        encounter_policy_adapter=object(),
+        runtime_state_frontier_resolver=_candidate_runtime_resolver(
+            event_proven=False,
+        ),
+    )
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=global_search,
+        structural_families=_StructuralFamilies(),
+        require_closure_ready_scenario=True,
+        potion_cooldown_resolver=object(),
+    )
+
+    with pytest.raises(ValueError, match="runtime-event denominator"):
+        service.search(
+            heavy_attack_channel_block_denominator_proven=True,
+            dual_bar_frontier="gear",
+            candidate_id_prefix="objective32",
+            required_duration_seconds=20.0,
             starting_ultimate=0.0,
             priorities="priorities",
             snapshot_resolver="resolver",
