@@ -5,7 +5,7 @@ from dataclasses import replace
 from models.build_model import PlayerBuild
 
 from .derived_stats import StatContribution
-from .gear_stat_inputs import GearCalculationInputs
+from .gear_stat_inputs import GearCalculationInputs, GearStatInputResolver
 from .item_base_stats import WEAPON_POWER_CP160_GOLD
 
 
@@ -17,6 +17,7 @@ _TWO_HANDED_TYPES = {"greatsword", "battleaxe", "battle axe", "maul"}
 _TWIN_BLADE_SWORD_DAMAGE_PER_SWORD = 64.0
 _HEAVY_WEAPONS_GREATSWORD_DAMAGE = 129.0
 _AMBIDEXTROUS_OFFHAND_PERCENT = 0.03
+_BOW_ACCURACY_CRITICAL_RATING = 1314.0
 
 
 class WeaponStandingPassiveInputResolver:
@@ -35,6 +36,36 @@ class WeaponStandingPassiveInputResolver:
         return (
             " ".join(str(main.WeaponType or "").strip().casefold().split()),
             " ".join(str(offhand.WeaponType or "").strip().casefold().split()),
+        )
+
+    @staticmethod
+    @staticmethod
+    def _add_critical_rating(
+        result: GearCalculationInputs,
+        *,
+        label: str,
+        rating: float,
+    ) -> GearCalculationInputs:
+        ratio = GearStatInputResolver.critical_rating_to_ratio(float(rating))
+        contribution = StatContribution(label, ratio)
+        core = result.core
+        core = replace(
+            core,
+            weapon_critical=replace(
+                core.weapon_critical,
+                additive_after_percent=core.weapon_critical.additive_after_percent
+                + (contribution,),
+            ),
+            spell_critical=replace(
+                core.spell_critical,
+                additive_after_percent=core.spell_critical.additive_after_percent
+                + (contribution,),
+            ),
+        )
+        return replace(
+            result,
+            core=core,
+            applied_effect_count=result.applied_effect_count + 2,
         )
 
     @staticmethod
@@ -72,12 +103,21 @@ class WeaponStandingPassiveInputResolver:
         twin_blade_and_blunt_owned: bool = False,
         ambidextrous_owned: bool = False,
         heavy_weapons_owned: bool = False,
+        bow_accuracy_owned: bool = False,
     ) -> GearCalculationInputs:
         main_type, offhand_type = self._active_weapon_types(build, active_bar)
         unresolved = list(result.unresolved)
 
         dual_wield = main_type in _ONE_HANDED_TYPES and offhand_type in _ONE_HANDED_TYPES
         two_handed = main_type in _TWO_HANDED_TYPES and not offhand_type
+        bow = main_type == "bow" and not offhand_type
+
+        if bow and bow_accuracy_owned:
+            result = self._add_critical_rating(
+                result,
+                label="Bow: Accuracy (Rank 2)",
+                rating=_BOW_ACCURACY_CRITICAL_RATING,
+            )
 
         if dual_wield and twin_blade_and_blunt_owned:
             if main_type == "sword" and offhand_type == "sword":
