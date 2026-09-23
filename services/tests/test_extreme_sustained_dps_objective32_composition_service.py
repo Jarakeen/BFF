@@ -40,6 +40,7 @@ def _kwargs():
         "encounter_policy_adapter": object(),
         "finalized_potion_evidence_resolver": _PotionEvidence(proven=True),
         "runtime_state_frontier_resolver": _runtime_state_frontier_resolver(),
+        "potion_cooldown_resolver": object(),
     }
 
 
@@ -56,8 +57,8 @@ def test_composition_wires_finalized_potion_axis_into_global_objective_graph() -
     assert result.global_search.pipeline is result.pipeline
     assert result.objective32.global_search is result.global_search
     assert result.objective32.require_closure_ready_scenario is True
-    assert result.objective32.potion_cooldown_resolver is None
-    assert any("caller-supplied" in row for row in result.evidence)
+    assert result.objective32.potion_cooldown_resolver is not None
+    assert any("canonical fail-closed cooldown authority" in row for row in result.evidence)
     assert result.pipeline.runtime_state_frontier_resolver is not None
     assert any(
         "Finalized potion timing is appended after runtime-policy axes" in row
@@ -128,11 +129,9 @@ def test_composition_refuses_legacy_heavy_attack_window_mode() -> None:
 
 
 
-def test_composition_can_inject_reviewed_potion_cooldown_authority() -> None:
-    resolver = object()
-    result = ExtremeSustainedDPSObjective32CompositionService.compose(
-        **_kwargs(),
-        potion_cooldown_resolver=resolver,
-    )
+def test_composition_requires_reviewed_potion_cooldown_authority() -> None:
+    kwargs = _kwargs()
+    kwargs["potion_cooldown_resolver"] = None
 
-    assert result.objective32.potion_cooldown_resolver is resolver
+    with pytest.raises(ValueError, match="requires a canonical potion cooldown resolver"):
+        ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
