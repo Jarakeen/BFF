@@ -38,7 +38,11 @@ class _Artifacts:
 
 
 class _SustainService:
-    def evaluate(self, *, build, plan, resource):
+    def __init__(self):
+        self.calls = []
+
+    def evaluate(self, *, build, plan, resource, restoration_events=()):
+        self.calls.append((resource, tuple(restoration_events)))
         if resource is ResourceType.MAGICKA:
             sustain = SimpleNamespace(
                 starting_amount=100,
@@ -66,6 +70,16 @@ class _SustainService:
         return SimpleNamespace(run=run, unresolved=())
 
 
+class _PotionRuntimeService:
+    def __init__(self, events=()):
+        self.events = tuple(events)
+        self.calls = []
+
+    def restoration_events(self, build, *, plan):
+        self.calls.append((build, plan))
+        return self.events
+
+
 class _CombatUltimateSource:
     def events_from_plan(self, *, plan, assume_scheduled_attacks_damage):
         assert assume_scheduled_attacks_damage is True
@@ -83,12 +97,13 @@ def _plan():
     return SimpleNamespace(duration_seconds=20.0, unresolved=())
 
 
-def _service(plan=None):
+def _service(plan=None, *, potion_runtime_service=None, sustain_service=None):
     return ExtremeSavedRotationResourceRecordService(
         "unused/eso.db",
         artifact_service=_Artifacts(_plan() if plan is None else plan),
         catalog_service=_Catalog(),
-        sustain_service=_SustainService(),
+        sustain_service=sustain_service or _SustainService(),
+        potion_runtime_service=potion_runtime_service or _PotionRuntimeService(),
         combat_ultimate_source=_CombatUltimateSource(),
     )
 
@@ -128,3 +143,20 @@ def test_missing_saved_rotation_fails_closed_for_both_records() -> None:
     assert "no saved canonical RotationPlan" in sustain.unresolved[0]
     assert ultimate.record is None
     assert "no saved canonical RotationPlan" in ultimate.unresolved[0]
+
+
+def test_resource_sustain_includes_scheduled_potion_restoration_evidence() -> None:
+    potion_event = object()
+    potion_runtime = _PotionRuntimeService((potion_event,))
+    sustain = _SustainService()
+    service = _service(potion_runtime_service=potion_runtime, sustain_service=sustain)
+    build = _build()
+
+    result = service.resource_sustain(build)
+
+    assert sustain.calls == [
+        (ResourceType.MAGICKA, (potion_event,)),
+        (ResourceType.STAMINA, (potion_event,)),
+    ]
+    assert potion_runtime.calls == [(build, service.artifact_service.plan)]
+    assert any("1 scheduled potion restoration events" in item for item in result.evidence)
