@@ -376,10 +376,12 @@ class SavedBuildCharacterAdapter:
             main_entry = saved.FrontBarWeapon
             off_entry = saved.FrontBarOffHand
             names = tuple(saved.FrontBarSkills)
+            poison_id = _text(getattr(saved, "FrontBarPoison", "")) or None
         else:
             main_entry = saved.BackBarWeapon
             off_entry = saved.BackBarOffHand
             names = tuple(saved.BackBarSkills)
+            poison_id = _text(getattr(saved, "BackBarPoison", "")) or None
 
         bar_has_data = (
             not main_entry.is_empty
@@ -449,6 +451,7 @@ class SavedBuildCharacterAdapter:
                 main_hand=main_hand,
                 off_hand=off_hand,
                 slots=tuple(slots),
+                poison_id=poison_id,
             ),
             tuple(unresolved),
         )
