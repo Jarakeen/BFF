@@ -323,3 +323,21 @@ def test_shared_cost_display_metadata_stays_advisory() -> None:
 
     assert scorecard.inherited_unresolved == (message,)
     assert scorecard.hard_inherited_unresolved == ()
+
+
+def test_shared_unresolved_action_cost_modifier_is_a_hard_ranking_failure() -> None:
+    message = (
+        "action-cost modifier unresolved: Light Armor: Evocation action-cost "
+        "behavior is not live-verified for 3 equipped Light pieces"
+    )
+    scorecard = RotationCandidateScorecardService().compare(
+        baseline_plan=_plan(),
+        candidate_plan=_plan(),
+        baseline_sustain=_sustain(ending=20000, unresolved=(message,)),
+        candidate_sustain=_sustain(ending=20000, unresolved=(message,)),
+    )
+
+    assert scorecard.candidate_specific_unresolved == ()
+    assert scorecard.inherited_unresolved == (message,)
+    assert scorecard.hard_inherited_unresolved == (message,)
+    assert scorecard.supplied_obligations_satisfied is False
