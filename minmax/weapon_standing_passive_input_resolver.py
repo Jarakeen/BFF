@@ -6,6 +6,7 @@ from models.build_model import PlayerBuild
 
 from .derived_stats import StatContribution
 from .gear_stat_inputs import GearCalculationInputs
+from .item_base_stats import WEAPON_POWER_CP160_GOLD
 
 
 _ONE_HANDED_TYPES = {"sword", "axe", "mace", "dagger"}
@@ -15,6 +16,7 @@ _TWO_HANDED_TYPES = {"greatsword", "battleaxe", "battle axe", "maul"}
 # to the branches proven by tools/audit_extreme_weapon_damage_weapon_passive_challengers.py.
 _TWIN_BLADE_SWORD_DAMAGE_PER_SWORD = 64.0
 _HEAVY_WEAPONS_GREATSWORD_DAMAGE = 129.0
+_AMBIDEXTROUS_OFFHAND_PERCENT = 0.03
 
 
 class WeaponStandingPassiveInputResolver:
@@ -91,10 +93,31 @@ class WeaponStandingPassiveInputResolver:
                 )
 
         if dual_wield and ambidextrous_owned:
-            unresolved.append(
-                "Dual Wield: Ambidextrous off-hand Weapon/Spell Damage derivation "
-                "is not yet owned by the canonical Phase 5 context"
-            )
+            _main, offhand = build.active_weapon_slots(active_bar)
+            offhand_level = str(offhand.Level or "").strip().casefold()
+            offhand_quality = str(offhand.Quality or "").strip().casefold()
+            offhand_label = " ".join(str(offhand.WeaponType or "").strip().split())
+            offhand_power = WEAPON_POWER_CP160_GOLD.get(offhand_label)
+            if offhand_level != "cp160" or offhand_quality != "gold":
+                unresolved.append(
+                    "Dual Wield: Ambidextrous requires verified CP160 Gold off-hand "
+                    f"weapon damage ({offhand.Level or 'level unset'}, "
+                    f"{offhand.Quality or 'quality unset'})"
+                )
+            elif offhand_power is None:
+                unresolved.append(
+                    "Dual Wield: Ambidextrous off-hand weapon damage is unavailable "
+                    f"for {offhand_label or 'unknown weapon'}"
+                )
+            else:
+                result = self._add_flat_damage(
+                    result,
+                    label=(
+                        "Dual Wield: Ambidextrous "
+                        f"(3% of {offhand_label} {offhand_power:g})"
+                    ),
+                    amount=float(offhand_power) * _AMBIDEXTROUS_OFFHAND_PERCENT,
+                )
 
         if heavy_weapons_owned:
             if two_handed and main_type == "greatsword":
