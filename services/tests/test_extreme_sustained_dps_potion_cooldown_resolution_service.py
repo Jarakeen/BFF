@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from services.extreme_sustained_dps_potion_cooldown_resolution_service import (
+    ExtremePotionPassiveGrantEvidence,
     ExtremeSustainedDPSPotionCooldownResolutionService,
     ExtremeSustainedDPSPotionCooldownScenarioEvidence,
 )
@@ -104,7 +105,9 @@ def test_incomplete_scenario_inventory_does_not_emit_effective_cooldown() -> Non
         build_adapter=_BuildAdapter(build="canonical-build"),
         item_service=_ItemService(),
         cooldown_service=cooldown,
-        passive_grant_resolver=lambda build, progression: (),
+        passive_grant_resolver=lambda build, progression: ExtremePotionPassiveGrantEvidence(
+            complete=True
+        ),
     )
 
     result = service.resolve(player_build="saved-build", progression="progression")
@@ -150,3 +153,25 @@ def test_missing_progression_and_passive_evidence_fails_closed() -> None:
     assert result.cooldown_seconds is None
     assert any("requires passive progression" in item for item in result.unresolved)
     assert result.resolution is None
+
+
+
+def test_incomplete_empty_passive_inventory_fails_closed() -> None:
+    cooldown = _CooldownService(cooldown=45.0)
+    service = ExtremeSustainedDPSPotionCooldownResolutionService(
+        build_adapter=_BuildAdapter(build="canonical-build"),
+        item_service=_ItemService(),
+        cooldown_service=cooldown,
+        passive_grant_resolver=lambda build, progression: ExtremePotionPassiveGrantEvidence(),
+    )
+
+    result = service.resolve(
+        player_build="saved-build",
+        progression="progression",
+        scenario=ExtremeSustainedDPSPotionCooldownScenarioEvidence(complete=True),
+    )
+
+    assert not result.complete
+    assert result.resolution is None
+    assert cooldown.calls == []
+    assert any("passive-grant inventory is not proven complete" in item for item in result.unresolved)
