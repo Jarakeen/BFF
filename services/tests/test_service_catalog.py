@@ -1842,3 +1842,24 @@ def test_selected_weapon_enchantment_runtime_consequence_consumers_are_cataloged
     )
     assert "overlapping" in resistance.notes
     assert "canonical weapon_spell_damage stat projection" in power.notes
+
+
+
+def test_weapon_enchantment_oblivion_damage_consumer_is_cataloged() -> None:
+    service = SERVICE_CATALOG.get(
+        "extreme.sustained_dps.weapon_enchantment_oblivion_damage"
+    )
+
+    assert service is not None
+    assert service.implementation_path == (
+        "services.extreme_sustained_dps_weapon_enchantment_oblivion_damage_service"
+    )
+    assert tuple(
+        row.service_id for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_enchantment_proc_consequences",
+    )
+    assert (
+        "extreme_sustained_dps_weapon_enchantment_oblivion_damage_resolution"
+        in service.responsibilities
+    )
