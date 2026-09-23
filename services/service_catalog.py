@@ -1423,7 +1423,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Primary ZOS Update 20 evidence makes landed Light Attack, Heavy Attack, and weapon-line ability damage eligible activation opportunities. "
             "Class/world/guild ability damage is excluded by canonical skill-line ownership. "
-            "This service intentionally does not resolve enchantment cooldown availability, weapon-source selection, poison replacement, off-bar persistence, or the actual proc decision."
+            "This service intentionally does not resolve enchantment cooldown availability, weapon-source selection, poison replacement, off-bar persistence, or the actual proc decision. "
+            "The underlying cadence evidence exposes exact field-level runtime blockers so closure diagnostics can distinguish a missing buff/debuff cooldown from open off-bar, cooldown-scope, or same-identity rules."
         ),
     ),
     ServiceDescriptor(
