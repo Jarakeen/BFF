@@ -186,11 +186,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
                 "Heavy Attack timing uses scheduler-derived complete-discovery mode",
                 "Exact leaves use canonical generated runtime evaluation",
                 "Additional potion resource-event denominator is explicitly proven complete",
-                (
-                    "Effective potion cooldown is resolved from each finalized build through the canonical fail-closed cooldown authority"
-                    if potion_cooldown_resolver is not None
-                    else "Effective potion cooldown authority remains caller-supplied until its external scenario denominator is proven"
-                ),
+                "Effective potion cooldown is resolved from each finalized build through the canonical fail-closed cooldown authority",
                 "Runtime state is resolved per finalized candidate inside the generated tree",
                 "Candidate runtime state is backed by canonical EffectVariant discovery and candidate-specific scaling",
                 "Canonical Objective #32 search requires closure-ready Heavy Attack channel-block scenario evidence before traversal",
