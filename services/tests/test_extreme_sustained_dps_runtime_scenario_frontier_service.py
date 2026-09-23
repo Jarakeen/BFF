@@ -755,3 +755,51 @@ def test_candidate_builder_carries_dual_wield_sequence_branches() -> None:
         "Finite weapon-enchantment source histories: 2" in row
         for row in result.evidence
     )
+
+
+
+def test_callable_weapon_enchantment_policy_resolver_receives_player_build() -> None:
+    main = _weapon_enchantment_effect("Main Enchant", "main_hand")
+    seen = {}
+
+    def cooldown_policies(*, candidate, enchantment_effects, player_build):
+        seen["candidate"] = candidate
+        seen["effects"] = enchantment_effects
+        seen["build"] = player_build
+        return (
+            ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy(
+                effect=main,
+                cooldown_identity="main",
+                cooldown_seconds=4.0,
+                authoritative=True,
+            ),
+        )
+
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    build = PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD")
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        weapon_enchantment_activation_service=_WeaponEnchantmentActivationService(),
+        weapon_enchantment_cooldown_policy_resolver=cooldown_policies,
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=build,
+        effects=(main,),
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed callable cooldown policy seam",
+    )
+
+    assert seen == {
+        "candidate": candidate,
+        "effects": (main,),
+        "build": build,
+    }
+    assert result.unresolved == ()
+    assert result.frontier.denominator_proven is True
