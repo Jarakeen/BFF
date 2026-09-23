@@ -281,3 +281,87 @@ def test_canonical_policy_resolution_requires_build_context():
     assert result.policies == ()
     assert any("requires player_build" in row for row in result.unresolved)
 
+
+
+
+class _MalformedCooldownRules:
+    def __init__(self, result):
+        self.result = result
+
+    def resolve_cooldown(self, **_kwargs):
+        return self.result
+
+
+class _CooldownResultWithoutFinal:
+    reduction = 50.0
+
+
+class _CooldownResultWithBadReduction:
+    final_cooldown = 2.0
+    reduction = "not-a-number"
+
+
+def test_malformed_cooldown_rule_result_fails_closed_instead_of_crashing():
+    source = _runtime_source(
+        identity="flame",
+        label="Glyph of Flame",
+        effect_type="damage",
+        damage_type="flame",
+        weapon_trait="Infused",
+        weapon_quality="Gold",
+    )
+    effect = _effect(
+        name="flame",
+        source="Glyph of Flame",
+        category=SupportEffectCategory.OTHER,
+    )
+    resolver = ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver(
+        cadence_provider=lambda family: _authoritative_cadence(family, 4.0),
+        runtime_source_service=_RuntimeSources((source,)),
+        cadence_family_service=ExtremeSustainedDPSWeaponEnchantmentCadenceFamilyService(),
+        cooldown_rule_resolver=_MalformedCooldownRules(_CooldownResultWithoutFinal()),
+    )
+
+    result = resolver.resolve(
+        player_build=object(),
+        enchantment_effects=(effect,),
+    )
+
+    assert result.policies == ()
+    assert any(
+        "returned no numeric final cooldown" in row
+        for row in result.unresolved
+    )
+
+
+def test_malformed_cooldown_reduction_evidence_fails_closed_instead_of_crashing():
+    source = _runtime_source(
+        identity="flame",
+        label="Glyph of Flame",
+        effect_type="damage",
+        damage_type="flame",
+        weapon_trait="Infused",
+        weapon_quality="Gold",
+    )
+    effect = _effect(
+        name="flame",
+        source="Glyph of Flame",
+        category=SupportEffectCategory.OTHER,
+    )
+    resolver = ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver(
+        cadence_provider=lambda family: _authoritative_cadence(family, 4.0),
+        runtime_source_service=_RuntimeSources((source,)),
+        cadence_family_service=ExtremeSustainedDPSWeaponEnchantmentCadenceFamilyService(),
+        cooldown_rule_resolver=_MalformedCooldownRules(_CooldownResultWithBadReduction()),
+    )
+
+    result = resolver.resolve(
+        player_build=object(),
+        enchantment_effects=(effect,),
+    )
+
+    assert result.policies == ()
+    assert any(
+        "returned non-numeric reduction evidence" in row
+        for row in result.unresolved
+    )
