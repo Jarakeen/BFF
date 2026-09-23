@@ -127,7 +127,9 @@ def test_release_builds_support_explicit_first_run_user_database_seed() -> None:
     assert "[switch]$UseCurrentRaidSetup" in friend
     assert '[string]$RaidPlanId = ""' in friend
     assert "build_custom_user_database_seed.py" in friend
+    assert "build_custom_raid_plan_catalog_seed.py" in friend
     assert "--plan-id $RaidPlanId" in friend
+    assert "Raid Plan-dependent character/build catalog: INCLUDED" in friend
     assert 'Join-Path $ReleaseSeedRoot "foundrydock.db"' in release
     assert 'Join-Path $ReleaseSeedRoot "foundrydock.db"' in friend
 
