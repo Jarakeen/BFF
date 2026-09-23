@@ -15,6 +15,7 @@ from dataclasses import dataclass
 import json
 
 from services.eso_database import EsoDatabase
+from services.user_database import user_database_for
 
 
 GENERATED_ROSTER_DRAFT_OWNERSHIP = "composition_recruitment_evidence_only"
@@ -75,7 +76,7 @@ class GeneratedRosterDraftService:
     )
 
     def __init__(self, database: EsoDatabase):
-        self.db = database
+        self.db = user_database_for(database)
         self._ensure_schema()
 
     def _table_exists(self, table: str) -> bool:
