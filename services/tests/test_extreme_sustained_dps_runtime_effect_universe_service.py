@@ -260,12 +260,54 @@ def test_dedicated_weapon_runtime_path_supersedes_legacy_enchant_timing_boundary
 
 
 def test_dedicated_weapon_runtime_path_keeps_non_enchant_deferred_boundaries_open():
+    enchantment = _effect(
+        "crusher",
+        trigger=WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+    )
     audit = SimpleNamespace(
         effects=(),
         unresolved=(),
         boundaries=(
             "front configured scribed skill recipe resolved; "
             "detailed scripted effect conversion deferred: Mystery Skill",
+            "front main hand weapon enchantment runtime effect timing deferred: "
+            "Glyph of Crushing",
+        ),
+    )
+    source = SimpleNamespace(identity="crusher")
+    source_resolution = SimpleNamespace(
+        sources=(source,),
+        evidence=(),
+        unresolved=(),
+    )
+    variant_resolution = SimpleNamespace(
+        effects=(enchantment,),
+        evidence=(),
+        unresolved=(),
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectUniverseService(
+        capability_service=_Capabilities(audit),
+        weapon_enchantment_runtime_source_service=_WeaponSources(source_resolution),
+        weapon_enchantment_runtime_variant_service=_WeaponVariants(variant_resolution),
+    ).resolve(object())
+
+    assert result.resolved is False
+    assert any(
+        "detailed scripted effect conversion deferred" in row
+        for row in result.unresolved
+    )
+    assert not any(
+        "weapon enchantment runtime effect timing deferred" in row
+        for row in result.unresolved
+    )
+
+
+def test_empty_dedicated_weapon_source_result_does_not_erase_legacy_timing_blocker():
+    audit = SimpleNamespace(
+        effects=(),
+        unresolved=(),
+        boundaries=(
             "front main hand weapon enchantment runtime effect timing deferred: "
             "Glyph of Crushing",
         ),
@@ -288,14 +330,7 @@ def test_dedicated_weapon_runtime_path_keeps_non_enchant_deferred_boundaries_ope
     ).resolve(object())
 
     assert result.resolved is False
-    assert any(
-        "detailed scripted effect conversion deferred" in row
-        for row in result.unresolved
-    )
-    assert not any(
-        "weapon enchantment runtime effect timing deferred" in row
-        for row in result.unresolved
-    )
+    assert result.unresolved == audit.boundaries
 
 
 def test_dedicated_weapon_runtime_path_propagates_source_or_variant_blockers():
