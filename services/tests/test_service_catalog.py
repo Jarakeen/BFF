@@ -1739,3 +1739,21 @@ def test_weapon_enchantment_sequence_frontier_is_cataloged_for_proc_consequences
     )
     assert frontier.service_id in consequences.dependencies
 
+
+
+
+def test_weapon_enchantment_damage_policy_bridge_is_cataloged() -> None:
+    consequences = SERVICE_CATALOG.get(
+        "extreme.sustained_dps.weapon_enchantment_proc_consequences"
+    )
+    policy = SERVICE_CATALOG.get(
+        "extreme.sustained_dps.weapon_enchantment_damage_policy"
+    )
+
+    assert consequences is not None
+    assert policy is not None
+    assert consequences.service_id in policy.dependencies
+    assert (
+        "extreme_sustained_dps_weapon_enchantment_damage_policy_projection"
+        in policy.responsibilities
+    )
