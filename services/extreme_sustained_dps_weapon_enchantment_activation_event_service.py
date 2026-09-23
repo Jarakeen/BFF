@@ -210,6 +210,7 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationEventService:
                             if str(target_identity or "").strip()
                             else action.target_key
                         ),
+                        source_bar=action.bar,
                     )
                 )
 
@@ -232,6 +233,7 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationEventService:
                 "Activation opportunity requires a positive exact-time damage occurrence",
                 "Light/Heavy attacks are eligible directly; skills and Ultimates require canonical weapon-line ownership plus occurrence-level enchant eligibility classification",
                 "Single-target Damage over Time weapon-ability occurrences are never inferred eligible from damage occurrence alone",
+                "Activation opportunities preserve the source action bar so off-bar weapon ownership can be resolved later",
                 "Opportunity evidence does not assert cooldown availability, source selection, poison replacement, or an actual enchantment proc",
             ),
             unresolved=deduped,
