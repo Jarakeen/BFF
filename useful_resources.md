@@ -299,3 +299,13 @@ https://eso-hub.com/en/sets/
 **Confidence:** Validation / corroboration.
 
 **Notes:** Useful for spotting runtime-scaling obligations before hardcoding them. Example: the current Roar of Alkosh tooltip states that its resistance reduction equals the user's Weapon Damage at activation, capped at 6000. Treat ESO-Hub as corroboration rather than the sole authority for formulas; confirm critical math against primary data, official patch notes, or in-game/runtime evidence before promoting it to canonical engine math.
+
+
+### ZOS Update 20 weapon-enchantment activation rules
+https://forums.elderscrollsonline.com/en/discussion/435633/pts-patch-notes-v4-2-0
+
+**Use for:** Authoritative weapon-enchantment activation topology. ZOS states that weapon enchantments proc 100% of the time when not on cooldown when a Light Attack, Heavy Attack, or weapon ability deals damage; Dual Wield weapon abilities may proc either weapon and favor an enchantment that is not on cooldown.
+
+**Confidence:** Primary / reference-grade for the documented activation rule.
+
+**Notes:** This closes activation-cause evidence, not the exact current base cooldown values, off-bar source persistence, poison replacement, or same-identity cooldown sharing. Those remain separately gated until current-version authoritative evidence is available.
