@@ -421,13 +421,25 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                 scaling_evidence = tuple(scaling.evidence)
                 scaling_unresolved = tuple(scaling.unresolved)
 
+            weapon_enchantment_control_effects = tuple(
+                effect
+                for effect in discovered_effects
+                if str(effect.trigger or "").strip()
+                == WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER
+            )
+            consequence_candidates = tuple(
+                effect
+                for effect in discovered_effects
+                if effect not in weapon_enchantment_control_effects
+            )
             relevance = ExtremeSustainedDPSRuntimeEffectRelevanceService.classify(
-                discovered_effects
+                consequence_candidates
             )
             effects = tuple(relevance.relevant)
             universe_evidence = (
                 *tuple(universe.evidence),
                 *scaling_evidence,
+                f"Weapon-enchantment runtime control variants separated from combat consequences: {len(weapon_enchantment_control_effects)}",
                 *tuple(relevance.evidence),
             )
             universe_unresolved = tuple(
@@ -472,9 +484,25 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                     ),
                 )
 
+        weapon_enchantment_control_effects = tuple(
+            effect
+            for effect in tuple(effects)
+            if str(effect.trigger or "").strip()
+            == WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER
+        ) if effects is not None and 'weapon_enchantment_control_effects' not in locals() else weapon_enchantment_control_effects
+        consequence_effects = tuple(
+            effect
+            for effect in tuple(effects)
+            if effect not in weapon_enchantment_control_effects
+        )
+        event_effects = (
+            *consequence_effects,
+            *weapon_enchantment_control_effects,
+        )
+
         skeleton = ExtremeSustainedDPSRuntimeEventSkeletonService.build(
             candidate=candidate,
-            effects=tuple(effects),
+            effects=tuple(event_effects),
             occurrence_provider=occurrence_provider,
             target_identity=target_identity,
             supplemental_events=tuple(supplemental_events),
@@ -494,7 +522,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         ) = self._weapon_enchantment_attempt_frontier(
             candidate=candidate,
             events=tuple(skeleton.events),
-            effects=tuple(effects),
+            effects=tuple(event_effects),
             event_denominator_proven=bool(skeleton.denominator_proven),
             source=source,
         )
@@ -514,14 +542,14 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             ) = self._bind_weapon_enchantment_attempts(
                 candidate=candidate,
                 events=tuple(skeleton.events),
-                effects=tuple(effects),
+                effects=tuple(event_effects),
             )
 
         result = self.build(
             plan=candidate.plan,
             player_build=player_build,
             events=runtime_events,
-            effects=tuple(effects),
+            effects=tuple(consequence_effects),
             event_denominator_proven=bool(
                 skeleton.denominator_proven
                 and not enchantment_binding_unresolved
