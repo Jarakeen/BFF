@@ -49,6 +49,7 @@ class BuildCalculationContextFactory:
         "Weight",
         "Quality",
         "EnchantTier",
+        "EnchantQuality",
         "Level",
         "WeaponType",
     )
