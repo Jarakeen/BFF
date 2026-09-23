@@ -201,3 +201,141 @@ def test_multiple_weapon_enchantment_variants_remain_for_runtime_source_binding(
         in row
         for row in result.evidence
     )
+
+class _WeaponSources:
+    def __init__(self, resolution):
+        self.resolution = resolution
+
+    def resolve(self, _build):
+        return self.resolution
+
+
+class _WeaponVariants:
+    def __init__(self, resolution):
+        self.resolution = resolution
+
+    def resolve(self, _sources):
+        return self.resolution
+
+
+def test_dedicated_weapon_runtime_path_supersedes_legacy_enchant_timing_boundary():
+    enchantment = _effect(
+        "crusher",
+        trigger=WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+    )
+    audit = SimpleNamespace(
+        effects=(),
+        unresolved=(),
+        boundaries=(
+            "front main hand weapon enchantment runtime effect timing deferred: "
+            "Glyph of Crushing",
+        ),
+    )
+    source = SimpleNamespace(identity="crusher")
+    source_resolution = SimpleNamespace(
+        sources=(source,),
+        evidence=("canonical weapon source resolved",),
+        unresolved=(),
+    )
+    variant_resolution = SimpleNamespace(
+        effects=(enchantment,),
+        evidence=("source-level runtime variant resolved",),
+        unresolved=(),
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectUniverseService(
+        capability_service=_Capabilities(audit),
+        weapon_enchantment_runtime_source_service=_WeaponSources(source_resolution),
+        weapon_enchantment_runtime_variant_service=_WeaponVariants(variant_resolution),
+    ).resolve(object())
+
+    assert result.resolved is True
+    assert result.effects == (enchantment,)
+    assert result.weapon_enchantment_sources == (source,)
+    assert result.boundaries == audit.boundaries
+    assert not any(
+        "weapon enchantment runtime effect timing deferred" in row
+        for row in result.unresolved
+    )
+
+
+def test_dedicated_weapon_runtime_path_keeps_non_enchant_deferred_boundaries_open():
+    audit = SimpleNamespace(
+        effects=(),
+        unresolved=(),
+        boundaries=(
+            "front configured scribed skill recipe resolved; "
+            "detailed scripted effect conversion deferred: Mystery Skill",
+            "front main hand weapon enchantment runtime effect timing deferred: "
+            "Glyph of Crushing",
+        ),
+    )
+    source_resolution = SimpleNamespace(
+        sources=(),
+        evidence=(),
+        unresolved=(),
+    )
+    variant_resolution = SimpleNamespace(
+        effects=(),
+        evidence=(),
+        unresolved=(),
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectUniverseService(
+        capability_service=_Capabilities(audit),
+        weapon_enchantment_runtime_source_service=_WeaponSources(source_resolution),
+        weapon_enchantment_runtime_variant_service=_WeaponVariants(variant_resolution),
+    ).resolve(object())
+
+    assert result.resolved is False
+    assert any(
+        "detailed scripted effect conversion deferred" in row
+        for row in result.unresolved
+    )
+    assert not any(
+        "weapon enchantment runtime effect timing deferred" in row
+        for row in result.unresolved
+    )
+
+
+def test_dedicated_weapon_runtime_path_propagates_source_or_variant_blockers():
+    audit = SimpleNamespace(effects=(), unresolved=(), boundaries=())
+    source_resolution = SimpleNamespace(
+        sources=(),
+        evidence=(),
+        unresolved=("weapon label ambiguous",),
+    )
+    variant_resolution = SimpleNamespace(
+        effects=(),
+        evidence=(),
+        unresolved=("runtime variant missing provenance",),
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectUniverseService(
+        capability_service=_Capabilities(audit),
+        weapon_enchantment_runtime_source_service=_WeaponSources(source_resolution),
+        weapon_enchantment_runtime_variant_service=_WeaponVariants(variant_resolution),
+    ).resolve(object())
+
+    assert result.resolved is False
+    assert result.unresolved == (
+        "weapon label ambiguous",
+        "runtime variant missing provenance",
+    )
+
+
+def test_dedicated_weapon_runtime_path_requires_source_and_variant_services_together():
+    try:
+        ExtremeSustainedDPSRuntimeEffectUniverseService(
+            capability_service=_Capabilities(
+                SimpleNamespace(effects=(), unresolved=(), boundaries=())
+            ),
+            weapon_enchantment_runtime_source_service=_WeaponSources(
+                SimpleNamespace(sources=(), evidence=(), unresolved=())
+            ),
+        )
+    except ValueError as exc:
+        assert "requires both source and variant services" in str(exc)
+    else:
+        raise AssertionError("expected paired dedicated weapon runtime dependency guard")
+
