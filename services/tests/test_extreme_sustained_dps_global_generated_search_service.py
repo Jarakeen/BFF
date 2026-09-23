@@ -225,3 +225,31 @@ def test_global_search_rejects_static_runtime_state_when_pipeline_resolves_candi
             target_resistance=18_200.0,
             runtime_state_frontier=object(),
         )
+
+
+
+def test_axis_inventory_uses_pipeline_candidate_runtime_state_without_search_inputs() -> None:
+    class _RuntimePipeline(_Pipeline):
+        runtime_state_frontier_resolver = object()
+
+        @staticmethod
+        def axes():
+            return (
+                ExtremeSustainedDPSIndexedFrontierAxis(
+                    "Runtime State",
+                    candidate_count=lambda _state: 1,
+                    candidate_at=lambda state, _index: state,
+                    canonical_axes=("runtime_state",),
+                ),
+            )
+
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_Materialization(),
+        pipeline=_RuntimePipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+
+    inventory = service.axis_inventory()
+
+    assert "runtime_state" in inventory.searched_canonical_axes
