@@ -289,3 +289,13 @@ A convenient calculator matching our expected number is evidence, not proof. ESO
 - **Useful for:** Discovering the candidate universe for Ultimate generation, including Class Masteries, passives, skills, gear, base combat generation, Heroism, and Decisive.
 - **Confidence:** **Medium for source discovery; low for hardcoded combat math without corroboration.** Labels and displayed rates still require canonical tooltip, trigger, cooldown, recipient, proc-chance, and build-legality verification.
 - **Version/provenance:** Saved U50 page snapshot reviewed 2026-09-13. Treat it as version-sensitive observational tooling rather than a replacement for canonical ESO mechanics data.
+
+
+### ESO-Hub set tooltips
+https://eso-hub.com/en/sets/
+
+**Use for:** Current live-facing set tooltip wording, set locations, piece bonuses, proc triggers, duration/cooldown wording, and quickly identifying mechanics that need deeper canonical validation.
+
+**Confidence:** Validation / corroboration.
+
+**Notes:** Useful for spotting runtime-scaling obligations before hardcoding them. Example: the current Roar of Alkosh tooltip states that its resistance reduction equals the user's Weapon Damage at activation, capped at 6000. Treat ESO-Hub as corroboration rather than the sole authority for formulas; confirm critical math against primary data, official patch notes, or in-game/runtime evidence before promoting it to canonical engine math.
