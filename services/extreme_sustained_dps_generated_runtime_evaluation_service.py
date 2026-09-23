@@ -62,6 +62,9 @@ from services.extreme_sustained_dps_runtime_effect_projection_service import (
 from services.extreme_sustained_dps_weapon_enchantment_consequence_coverage_service import (
     ExtremeSustainedDPSWeaponEnchantmentConsequenceCoverageService,
 )
+from services.extreme_sustained_dps_weapon_enchantment_oblivion_damage_service import (
+    ExtremeSustainedDPSWeaponEnchantmentOblivionDamageService,
+)
 from services.extreme_sustained_dps_weapon_enchantment_proc_consequence_service import (
     ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService,
 )
@@ -265,6 +268,18 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
         if float(target_resistance) < 0.0:
             raise ValueError("generated sustained-DPS target_resistance cannot be negative")
 
+        target = str(target_name or "").strip() or "Boss"
+        target_state = CombatSimulationTargetState(
+            combatants=(
+                CombatSimulationCombatant(
+                    target,
+                    "enemy",
+                    current_health=int(target_health),
+                    maximum_health=int(target_health),
+                ),
+            ),
+        )
+
         candidate_build = ExtremeDualBarGearStateService.materialize(build, gear_state)
         enchantment_sources = self.weapon_enchantment_runtime_source_service.resolve(
             candidate_build
@@ -285,6 +300,13 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 enchantment_consequences
             )
         )
+        enchantment_oblivion_damage = (
+            ExtremeSustainedDPSWeaponEnchantmentOblivionDamageService.resolve(
+                occurrences=tuple(enchantment_consequences.occurrences),
+                target_state=target_state,
+                target_identity=target,
+            )
+        )
         consumed_enchantment_effect_types: list[str] = []
         if enchantment_resistance.resolved:
             consumed_enchantment_effect_types.append(
@@ -292,6 +314,8 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             )
         if enchantment_weapon_spell_damage.resolved:
             consumed_enchantment_effect_types.append("weapon_spell_damage")
+        if enchantment_oblivion_damage.resolved and enchantment_oblivion_damage.damage:
+            consumed_enchantment_effect_types.append("damage")
         enchantment_coverage = (
             ExtremeSustainedDPSWeaponEnchantmentConsequenceCoverageService.assess(
                 enchantment_consequences,
@@ -421,17 +445,6 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 static_context_service=static_context_service,
             )
         )
-        target = str(target_name or "").strip() or "Boss"
-        target_state = CombatSimulationTargetState(
-            combatants=(
-                CombatSimulationCombatant(
-                    target,
-                    "enemy",
-                    current_health=int(target_health),
-                    maximum_health=int(target_health),
-                ),
-            ),
-        )
         result = simulator.simulate(
             build_snapshot=EffectiveBuildSnapshot.from_candidate_build(
                 candidate_build,
@@ -447,6 +460,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             target_resistance=float(target_resistance),
             initial_bar=initial_bar,
             runtime_build_context_resolver=runtime_build_context_resolver,
+            supplemental_outgoing_damage=tuple(enchantment_oblivion_damage.damage),
             target_combat_state_resolver=(
                 target_combat_state_resolver
                 if runtime_effects or enchantment_resistance.windows
@@ -467,6 +481,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 *tuple(getattr(enchantment_sources, "unresolved", ()) or ()),
                 *tuple(enchantment_resistance.unresolved),
                 *tuple(enchantment_weapon_spell_damage.unresolved),
+                *tuple(enchantment_oblivion_damage.unresolved),
                 *tuple(enchantment_coverage.unresolved),
             )
         )
@@ -482,6 +497,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             *tuple(getattr(enchantment_sources, "evidence", ()) or ()),
             *tuple(enchantment_resistance.evidence),
             *tuple(enchantment_weapon_spell_damage.evidence),
+            *tuple(enchantment_oblivion_damage.evidence),
             *tuple(enchantment_coverage.evidence),
         )
         if summary.modeled_dps is None:
