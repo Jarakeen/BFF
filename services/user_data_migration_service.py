@@ -194,7 +194,7 @@ def _migrate_collectible_progress(
                 int(row["owned"] or 0),
                 row["acquired_on"],
                 str(row["notes"] or ""),
-                str(row["updated_at"] or "") or None,
+                str(row["updated_at"] or ""),
             )
             for row in rows
         ],
