@@ -1684,3 +1684,12 @@ Weapon-enchantment activation cannot treat every damage tick from a weapon abili
 **What it means in actual play:** two ticks owned by the same cast can have different enchantment eligibility depending on the coefficient/component that produced them.
 
 **For BFF:** Objective #32 now classifies each exact damage occurrence from canonical per-coefficient DoT/AoE identity. Missing coefficient identity or incomplete component classification fails closed instead of guessing from timing, cast count, or skill name.
+
+
+## 2026-09-23 — “No proc” is a real resolved outcome
+
+A valid weapon-enchantment activation opportunity does not guarantee that an enchantment fires. Once source ownership is known, the cooldown-ready subset can be empty, which means the hit produces no weapon-enchantment proc even though the damage event itself was eligible to try.
+
+**Layman's version:** an eligible hit is permission to check the glyph, not a promise that the glyph is ready. If both Dual Wield enchants are cooling down, nothing fires. ESO has graciously distinguished “you may knock” from “someone answers.”
+
+**For BFF:** Objective #32 now represents exact source, finite source alternatives, and resolved no-proc as different states. Missing cooldown truth remains unresolved rather than being confused with a proven empty ready set.
