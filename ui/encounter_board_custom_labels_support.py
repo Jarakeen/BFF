@@ -170,7 +170,7 @@ def _apply_reference_lock(board, locked: bool) -> None:
     if hasattr(board, "raid_map_reference_lock"):
         board.raid_map_reference_lock.blockSignals(True)
         board.raid_map_reference_lock.setChecked(locked)
-        board.raid_map_reference_lock.setText("🔒" if locked else "🔓")
+        board.raid_map_reference_lock.setText("🔒 References" if locked else "🔓 References")
         board.raid_map_reference_lock.blockSignals(False)
     board.scene.update()
 
@@ -328,6 +328,10 @@ def _install_inline_controls(board) -> None:
     if actor_toolbar is None or layout_toolbar is None:
         return
 
+    # EDIT controls remain inline so the map keeps its compact toolbar layout.
+    edit_heading = QLabel("EDIT")
+    edit_heading.setProperty("sidebarHeading", True)
+
     # ------------------------------------------------------------------
     # LAYOUT row: rename stays visible on the left; destructive Delete is
     # deliberately pushed all the way to the right.
@@ -352,8 +356,9 @@ def _install_inline_controls(board) -> None:
         layout_toolbar.removeWidget(delete_button)
 
     # Caption remains first. Rename field/button immediately follow it.
-    layout_toolbar.insertWidget(1, board.raid_map_custom_label, 1)
-    layout_toolbar.insertWidget(2, board.raid_map_apply_label)
+    layout_toolbar.insertWidget(1, edit_heading)
+    layout_toolbar.insertWidget(2, board.raid_map_custom_label, 1)
+    layout_toolbar.insertWidget(3, board.raid_map_apply_label)
 
     # The existing stretch keeps view/output controls grouped away from Rename.
     # Re-adding Delete last makes it the far-right destructive action.
@@ -381,9 +386,9 @@ def _install_inline_controls(board) -> None:
     )
     board.raid_map_add_reference.clicked.connect(lambda: _add_reference(board))
 
-    board.raid_map_reference_lock = QPushButton("🔓")
+    board.raid_map_reference_lock = QPushButton("🔓 References")
     board.raid_map_reference_lock.setCheckable(True)
-    board.raid_map_reference_lock.setFixedWidth(38)
+    board.raid_map_reference_lock.setMinimumWidth(105)
     board.raid_map_reference_lock.setToolTip(
         "Lock Entrance, Exit, and Banner reference points."
     )
@@ -395,6 +400,10 @@ def _install_inline_controls(board) -> None:
     actor_toolbar.addWidget(board.raid_map_reference_type)
     actor_toolbar.addWidget(board.raid_map_add_reference)
     actor_toolbar.addWidget(board.raid_map_reference_lock)
+
+    key = QLabel("KEY  Boss  •  P portal  •  IN entrance  •  OUT exit  •  ⚑ banner")
+    key.setProperty("raidMapKey", True)
+    layout_toolbar.addWidget(key)
 
     # Formation support owns the row this belongs on and is installed later.
     # Keep only the behavior here; that layer places the button immediately after
