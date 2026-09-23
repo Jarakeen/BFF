@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from services.achievement_progress_service import AchievementProgressService
 from services.achievement_stats_service import AchievementStatsService
 from services.eso_achievement_database_service import EsoAchievementDatabaseService
@@ -52,7 +52,7 @@ class AchievementsPage(QWidget):
     def _build_services(self):
         data_dir = get_data_dir()
         self.eso_data_service = EsoAchievementDatabaseService(data_dir / "eso.db")
-        self.achievement_progress_service = AchievementProgressService(data_dir / "achievement_progress.json")
+        self.achievement_progress_service = AchievementProgressService(get_user_database_path())
         self.achievement_stats_service = AchievementStatsService(
             self.eso_data_service,
             self.achievement_progress_service,
