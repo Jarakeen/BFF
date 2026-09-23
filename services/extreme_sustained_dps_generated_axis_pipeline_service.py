@@ -169,7 +169,10 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         if state.potion_cooldown_resolver is None:
             if state.potion_cooldown_seconds is None:
                 raise ValueError("generated axis pipeline requires potion cooldown evidence")
-            return float(state.potion_cooldown_seconds)
+            cooldown = float(state.potion_cooldown_seconds)
+            if cooldown <= 0.0:
+                raise ValueError("generated axis pipeline potion cooldown must be positive")
+            return cooldown
         scenario = state.potion_cooldown_scenario
         resolution = state.potion_cooldown_resolver.resolve(
             player_build=assembled.build,
@@ -182,7 +185,10 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
                 "generated axis pipeline potion cooldown is unresolved"
                 + (f": {detail}" if detail else "")
             )
-        return float(resolution.cooldown_seconds)
+        cooldown = float(resolution.cooldown_seconds)
+        if cooldown <= 0.0:
+            raise ValueError("generated axis pipeline resolved potion cooldown must be positive")
+        return cooldown
 
     def _rotation_state(
         self,
