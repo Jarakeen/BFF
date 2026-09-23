@@ -122,9 +122,9 @@ class FinchRosterSyncService:
     @staticmethod
     def _public_discord_name(registration: FinchRegistration) -> str:
         return (
-            _clean(registration.discord_display_name)
+            _clean(registration.discord_username)
             or _clean(registration.discord_global_name)
-            or _clean(registration.discord_username)
+            or _clean(registration.discord_display_name)
         )
 
     def _resolve_registration_member(self, registration: FinchRegistration):
