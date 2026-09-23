@@ -35,6 +35,7 @@ from .static_build_inputs import StaticBuildInputResolver
 from .templar_passive_input_resolver import TemplarPassiveInputResolver
 from .undaunted_passive_input_resolver import UndauntedPassiveInputResolver
 from .warden_passive_input_resolver import WardenPassiveInputResolver
+from .weapon_standing_passive_input_resolver import WeaponStandingPassiveInputResolver
 
 
 class BuildCalculationContextFactory:
@@ -76,6 +77,7 @@ class BuildCalculationContextFactory:
         sorcerer_passive_resolver: SorcererPassiveInputResolver | None = None,
         templar_passive_resolver: TemplarPassiveInputResolver | None = None,
         one_hand_shield_passive_resolver: OneHandShieldPassiveInputResolver | None = None,
+        weapon_standing_passive_resolver: WeaponStandingPassiveInputResolver | None = None,
         block_item_resolver: BlockItemInputResolver | None = None,
         combat_state_resolver: CombatStateInputResolver | None = None,
     ) -> None:
@@ -87,6 +89,7 @@ class BuildCalculationContextFactory:
         self.armor_passive_resolver = armor_passive_resolver or ArmorPassiveInputResolver()
         self.undaunted_passive_resolver = undaunted_passive_resolver or UndauntedPassiveInputResolver()
         self.one_hand_shield_passive_resolver = one_hand_shield_passive_resolver or OneHandShieldPassiveInputResolver()
+        self.weapon_standing_passive_resolver = weapon_standing_passive_resolver or WeaponStandingPassiveInputResolver()
 
         database_path = getattr(gear_set_repository, "database_path", None)
         if gear_set_repository is not None and database_path:
@@ -557,6 +560,41 @@ class BuildCalculationContextFactory:
             deflect_bolts_owned=deflect_bolts,
             incoming_attack=incoming_attack,
         )
+
+        dual_wield_line = progression.owns_skill_line("Dual Wield")
+        twin_blade_and_blunt, message = self._maxed_passive(
+            progression,
+            "Twin Blade and Blunt",
+            relevant=dual_wield_line,
+        )
+        if message:
+            unresolved.append(message)
+        ambidextrous, message = self._maxed_passive(
+            progression,
+            "Ambidextrous",
+            relevant=dual_wield_line,
+        )
+        if message:
+            unresolved.append(message)
+
+        two_handed_line = progression.owns_skill_line("Two Handed")
+        heavy_weapons, message = self._maxed_passive(
+            progression,
+            "Heavy Weapons",
+            relevant=two_handed_line,
+        )
+        if message:
+            unresolved.append(message)
+
+        if progression.passive_ranks is not None:
+            gear = self.weapon_standing_passive_resolver.apply(
+                gear,
+                build,
+                active_bar=active_bar,
+                twin_blade_and_blunt_owned=twin_blade_and_blunt,
+                ambidextrous_owned=ambidextrous,
+                heavy_weapons_owned=heavy_weapons,
+            )
 
         undaunted_line = progression.owns_skill_line("Undaunted")
         undaunted_mettle, message = self._maxed_passive(progression, "Undaunted Mettle", relevant=undaunted_line)
