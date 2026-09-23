@@ -18,6 +18,7 @@ class ExtremeSustainedDPSRuntimeEffectUniverse:
     boundaries: tuple[str, ...]
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+    weapon_enchantment_sources: tuple[object, ...] = ()
 
     @property
     def resolved(self) -> bool:
@@ -34,12 +35,26 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
     finalized plan potion state is evaluated by the dedicated potion bridge.
     """
 
-    def __init__(self, *, capability_service: object) -> None:
+    def __init__(
+        self,
+        *,
+        capability_service: object,
+        weapon_enchantment_runtime_source_service: object | None = None,
+        weapon_enchantment_runtime_variant_service: object | None = None,
+    ) -> None:
         if capability_service is None:
             raise ValueError(
                 "runtime effect universe requires canonical saved-build capability service"
             )
+        if (weapon_enchantment_runtime_source_service is None) != (
+            weapon_enchantment_runtime_variant_service is None
+        ):
+            raise ValueError(
+                "dedicated weapon-enchantment runtime universe requires both source and variant services"
+            )
         self.capability_service = capability_service
+        self.weapon_enchantment_runtime_source_service = weapon_enchantment_runtime_source_service
+        self.weapon_enchantment_runtime_variant_service = weapon_enchantment_runtime_variant_service
 
     @staticmethod
     def _dedupe(
@@ -88,21 +103,60 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
                 if str(item).strip()
             )
         )
+        dedicated_weapon_runtime = self.weapon_enchantment_runtime_source_service is not None
         runtime_boundary_gaps = tuple(
             item
             for item in boundaries
             if (
                 "detailed scripted effect conversion deferred" in item.casefold()
                 or "effect semantics unavailable" in item.casefold()
-                or "runtime effect" in item.casefold()
-                and "deferred" in item.casefold()
+                or (
+                    "runtime effect" in item.casefold()
+                    and "deferred" in item.casefold()
+                    and not (
+                        dedicated_weapon_runtime
+                        and "weapon enchantment runtime effect timing deferred" in item.casefold()
+                    )
+                )
             )
         )
+
+        weapon_sources: tuple[object, ...] = ()
+        dedicated_weapon_effects: tuple[EffectVariant, ...] = ()
+        dedicated_weapon_evidence: tuple[str, ...] = ()
+        dedicated_weapon_unresolved: tuple[str, ...] = ()
+        if dedicated_weapon_runtime:
+            source_resolution = self.weapon_enchantment_runtime_source_service.resolve(build)
+            weapon_sources = tuple(getattr(source_resolution, "sources", ()) or ())
+            variant_resolution = self.weapon_enchantment_runtime_variant_service.resolve(
+                weapon_sources
+            )
+            dedicated_weapon_effects = tuple(
+                getattr(variant_resolution, "effects", ()) or ()
+            )
+            dedicated_weapon_evidence = tuple(
+                dict.fromkeys(
+                    (
+                        *tuple(getattr(source_resolution, "evidence", ()) or ()),
+                        *tuple(getattr(variant_resolution, "evidence", ()) or ()),
+                    )
+                )
+            )
+            dedicated_weapon_unresolved = tuple(
+                dict.fromkeys(
+                    (
+                        *tuple(getattr(source_resolution, "unresolved", ()) or ()),
+                        *tuple(getattr(variant_resolution, "unresolved", ()) or ()),
+                    )
+                )
+            )
+
         unresolved = tuple(
             dict.fromkeys(
                 (
                     *unresolved,
                     *runtime_boundary_gaps,
+                    *dedicated_weapon_unresolved,
                 )
             )
         )
@@ -118,6 +172,7 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
                 continue
             triggered.append(effect)
 
+        triggered.extend(dedicated_weapon_effects)
         runtime_effects = self._dedupe(tuple(triggered))
         excluded_plan_owned = self._dedupe(tuple(excluded))
 
@@ -131,8 +186,15 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
                 f"Plan-owned potion-triggered effects excluded: {len(excluded_plan_owned)}",
                 "Triggerless variants remain owned by static/conditional build mechanics rather than runtime event enumeration",
                 "Weapon-enchantment variants remain distinct in the runtime universe; per-opportunity source/cooldown binding is owned by runtime scenario construction",
+                *dedicated_weapon_evidence,
+                (
+                    f"Dedicated canonical weapon-enchantment runtime sources admitted: {len(weapon_sources)}"
+                    if dedicated_weapon_runtime
+                    else "Dedicated canonical weapon-enchantment runtime source projection was not supplied"
+                ),
             ),
             unresolved=unresolved,
+            weapon_enchantment_sources=weapon_sources,
         )
 
 
