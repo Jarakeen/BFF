@@ -185,6 +185,44 @@ class EncounterRaidMapStore:
             relative_path=relative,
         )
 
+    def list_plan_layouts(
+        self,
+        plan_id: str,
+        encounter_id: str,
+    ) -> tuple[EncounterRaidMap, ...]:
+        plan_key = str(plan_id or "").strip()
+        if not plan_key:
+            return ()
+        if any(part in plan_key for part in ("/", "\\", "..")):
+            raise ValueError("plan_id must be a stable id, not a path")
+        scope = self._clean_encounter_id(encounter_id)
+        directory = self.plan_layout_root / plan_key / scope
+        if not directory.is_dir():
+            return ()
+        rows: list[EncounterRaidMap] = []
+        for path in sorted(
+            directory.glob("*.json"),
+            key=lambda item: item.stat().st_mtime,
+            reverse=True,
+        ):
+            rows.append(
+                EncounterRaidMap(
+                    map_id=path.stem,
+                    encounter_id=scope,
+                    label="Raid Plan Map",
+                    relative_path=str(path.relative_to(self.data_dir)).replace("\\", "/"),
+                )
+            )
+        return tuple(rows)
+
+    def latest_plan_layout(
+        self,
+        plan_id: str,
+        encounter_id: str,
+    ) -> EncounterRaidMap | None:
+        rows = self.list_plan_layouts(plan_id, encounter_id)
+        return rows[0] if rows else None
+
     def remove_map(self, encounter_id: str, map_id: str) -> bool:
         encounter_id = self._clean_encounter_id(encounter_id)
         map_id = str(map_id or "").strip()
