@@ -193,3 +193,21 @@ def test_repository_migrates_legacy_main_off_tank_seat_ids(tmp_path) -> None:
     assert plan is not None
     assert plan.member("tank-1").eso_class == "Dragonknight"
     assert plan.member("tank-2").gamertag == "Friend"
+
+
+def test_repository_round_trips_sqlite_user_database(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "foundrydock.db")
+    plan = _plan()
+
+    repository.save(plan)
+
+    restored = repository.get(plan.plan_id)
+    assert restored == plan
+    assert repository.list_plans() == (plan,)
+
+    replacement = _plan(name="Performance Mode — Rockgrove Revised")
+    repository.save(replacement)
+    assert repository.list_plans() == (replacement,)
+
+    assert repository.delete(plan.plan_id) is True
+    assert repository.get(plan.plan_id) is None
