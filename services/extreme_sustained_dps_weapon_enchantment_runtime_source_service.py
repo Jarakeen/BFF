@@ -25,6 +25,8 @@ class ExtremeSustainedDPSWeaponEnchantmentRuntimeSource:
     active_bar: BarId
     source_slot: str
     effects: tuple[CombatEffect, ...]
+    weapon_trait: str | None = None
+    weapon_quality: str | None = None
     evidence: tuple[str, ...] = ()
 
 
@@ -127,6 +129,8 @@ class ExtremeSustainedDPSWeaponEnchantmentRuntimeSourceService:
                     )
                     continue
 
+                weapon_trait = self._clean(getattr(entry, "Trait", "")) or None
+                weapon_quality = self._clean(getattr(entry, "Quality", "")) or None
                 source = ExtremeSustainedDPSWeaponEnchantmentRuntimeSource(
                     item_id=item_id,
                     identity=identity,
@@ -135,9 +139,13 @@ class ExtremeSustainedDPSWeaponEnchantmentRuntimeSourceService:
                     active_bar=bar_id,
                     source_slot=source_slot,
                     effects=resolved_effects,
+                    weapon_trait=weapon_trait,
+                    weapon_quality=weapon_quality,
                     evidence=(
                         f"{slot_label}: canonical enchant identity={identity_label}",
                         f"{slot_label}: canonical consequence rows={len(resolved_effects)}",
+                        f"{slot_label}: weapon trait={weapon_trait or 'unspecified'}",
+                        f"{slot_label}: weapon quality={weapon_quality or 'unspecified'}",
                     ),
                 )
                 sources.append(source)
