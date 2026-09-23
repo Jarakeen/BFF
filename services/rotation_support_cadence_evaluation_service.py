@@ -47,6 +47,7 @@ from services.rotation_support_cadence_candidate_service import (
     RotationSupportCadencePlanCandidate,
 )
 from services.rotation_sustain_service import RotationSustainProjection, RotationSustainService
+from services.rotation_plan_potion_combat_state_service import RotationPlanPotionCombatStateService
 
 
 CandidateHardObligationResolver = Callable[[RotationPlan], tuple[str, ...]]
@@ -148,9 +149,11 @@ class RotationSupportCadenceEvaluationService:
         sustain_service: _SustainEvaluator | None = None,
         scorecard_service: _ScorecardEvaluator | None = None,
         effect_obligation_ranker: _EffectObligationRanker | None = None,
+        potion_runtime_service: RotationPlanPotionCombatStateService | None = None,
     ) -> None:
         self.sustain_service = sustain_service or RotationSustainService()
         self.scorecard_service = scorecard_service or RotationCandidateScorecardService()
+        self.potion_runtime_service = potion_runtime_service or RotationPlanPotionCombatStateService()
         self.effect_obligation_ranker = (
             effect_obligation_ranker or RotationCandidateEffectObligationService()
         )
@@ -169,11 +172,15 @@ class RotationSupportCadenceEvaluationService:
 
         evaluated: list[RotationSupportCadenceEvaluatedCandidate] = []
         for candidate in candidates:
+            potion_restoration_events = self.potion_runtime_service.restoration_events(
+                build,
+                plan=candidate.plan,
+            )
             sustain = self.sustain_service.evaluate(
                 build=build,
                 plan=candidate.plan,
                 resource=evidence.resource,
-                restoration_events=evidence.restoration_events,
+                restoration_events=evidence.restoration_events + potion_restoration_events,
                 maximum_events=evidence.maximum_events,
                 calculation_context=evidence.calculation_context,
                 displayed_recovery_at=evidence.displayed_recovery_at,
