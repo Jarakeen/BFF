@@ -26,6 +26,21 @@ def test_explicit_empty_rank_inventory_is_complete_empty_grant_inventory() -> No
     assert result.unresolved == ()
 
 
+def test_nonempty_unowned_passive_universe_certifies_empty_grants() -> None:
+    passive = SimpleNamespace(
+        name="Medicinal Use",
+        skill_line="Alchemy",
+        description="Potion effects last longer.",
+    )
+    service = ExtremeSustainedDPSPotionCooldownPassiveGrantService(_Universe((passive,)))
+
+    result = service.resolve(object(), CharacterProgression(passive_ranks={}))
+
+    assert result.complete
+    assert result.passives == ()
+    assert result.unresolved == ()
+
+
 def test_missing_passive_rank_inventory_fails_closed() -> None:
     service = ExtremeSustainedDPSPotionCooldownPassiveGrantService(_Universe())
 
