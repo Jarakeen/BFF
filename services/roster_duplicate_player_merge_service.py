@@ -189,6 +189,7 @@ def merge_duplicate_roster_players(database: EsoDatabase, *, create_backup: bool
     written and no backup is created.
     """
     roster = RosterService(database)
+    database = roster.db
     RosterAssignmentContextService(database)  # ensure context table/triggers exist
     members = roster.list_members()
 
