@@ -64,12 +64,12 @@ def test_dual_swords_apply_reviewed_twin_blade_flat_damage():
     )
 
     state = _state(result)
-    assert state.derived[StatId.WEAPON_DAMAGE].final_value == 1128
-    assert state.derived[StatId.SPELL_DAMAGE].final_value == 1128
+    assert state.derived[StatId.WEAPON_DAMAGE].final_value == 1258
+    assert state.derived[StatId.SPELL_DAMAGE].final_value == 1258
     assert not result.unresolved
 
 
-def test_twin_blade_non_sword_branch_fails_closed():
+def test_twin_blade_axe_branch_fails_closed():
     build = PlayerBuild(
         FrontBarWeapon=GearSlot(WeaponType="Dagger"),
         FrontBarOffHand=GearSlot(WeaponType="Axe"),
@@ -80,10 +80,10 @@ def test_twin_blade_non_sword_branch_fails_closed():
         twin_blade_and_blunt_owned=True,
     )
 
-    assert any("Twin Blade and Blunt standing effect" in item for item in result.unresolved)
+    assert any("Twin Blade and Blunt axe" in item for item in result.unresolved)
 
 
-def test_ambidextrous_applies_reviewed_three_percent_of_offhand_weapon_damage():
+def test_ambidextrous_applies_reviewed_six_percent_of_offhand_weapon_damage():
     build = PlayerBuild(
         FrontBarWeapon=GearSlot(
             WeaponType="Sword",
@@ -103,8 +103,8 @@ def test_ambidextrous_applies_reviewed_three_percent_of_offhand_weapon_damage():
     )
 
     state = _state(result)
-    assert state.derived[StatId.WEAPON_DAMAGE].final_value == 1040.05
-    assert state.derived[StatId.SPELL_DAMAGE].final_value == 1040.05
+    assert state.derived[StatId.WEAPON_DAMAGE].final_value == 1080.1
+    assert state.derived[StatId.SPELL_DAMAGE].final_value == 1080.1
     assert not result.unresolved
 
 
@@ -131,20 +131,20 @@ def test_greatsword_applies_reviewed_heavy_weapons_flat_damage():
     )
 
     state = _state(result)
-    assert state.derived[StatId.WEAPON_DAMAGE].final_value == 1129
-    assert state.derived[StatId.SPELL_DAMAGE].final_value == 1129
+    assert state.derived[StatId.WEAPON_DAMAGE].final_value == 1258
+    assert state.derived[StatId.SPELL_DAMAGE].final_value == 1258
     assert not result.unresolved
 
 
-def test_heavy_weapons_non_greatsword_branch_fails_closed():
-    build = PlayerBuild(FrontBarWeapon=GearSlot(WeaponType="Maul"))
+def test_heavy_weapons_battleaxe_branch_fails_closed():
+    build = PlayerBuild(FrontBarWeapon=GearSlot(WeaponType="Battleaxe"))
     result = WeaponStandingPassiveInputResolver().apply(
         GearCalculationInputs(),
         build,
         heavy_weapons_owned=True,
     )
 
-    assert any("Heavy Weapons standing effect" in item for item in result.unresolved)
+    assert any("Heavy Weapons battle axe" in item for item in result.unresolved)
 
 
 def test_heavy_weapons_legacy_two_handed_identity_fails_closed():
@@ -157,6 +157,40 @@ def test_heavy_weapons_legacy_two_handed_identity_fails_closed():
 
     assert any("requires a concrete weapon subtype" in item for item in result.unresolved)
 
+
+
+def test_twin_blade_dagger_and_mace_apply_reviewed_rank_two_stats():
+    build = PlayerBuild(
+        FrontBarWeapon=GearSlot(WeaponType="Dagger"),
+        FrontBarOffHand=GearSlot(WeaponType="Mace"),
+    )
+    result = WeaponStandingPassiveInputResolver().apply(
+        GearCalculationInputs(),
+        build,
+        twin_blade_and_blunt_owned=True,
+    )
+
+    state = _state(result)
+    expected_crit = 0.10 + GearStatInputResolver.critical_rating_to_ratio(657.0)
+    assert abs(state.derived[StatId.WEAPON_CRITICAL].final_value - expected_crit) < 1e-12
+    assert abs(state.derived[StatId.SPELL_CRITICAL].final_value - expected_crit) < 1e-12
+    assert state.derived[StatId.PHYSICAL_PENETRATION].final_value == 1487
+    assert state.derived[StatId.SPELL_PENETRATION].final_value == 1487
+    assert not result.unresolved
+
+
+def test_heavy_weapons_maul_applies_reviewed_rank_two_penetration():
+    build = PlayerBuild(FrontBarWeapon=GearSlot(WeaponType="Maul"))
+    result = WeaponStandingPassiveInputResolver().apply(
+        GearCalculationInputs(),
+        build,
+        heavy_weapons_owned=True,
+    )
+
+    state = _state(result)
+    assert state.derived[StatId.PHYSICAL_PENETRATION].final_value == 2974
+    assert state.derived[StatId.SPELL_PENETRATION].final_value == 2974
+    assert not result.unresolved
 
 class _SkillLineRepository:
     _MAX = {
@@ -203,8 +237,8 @@ def test_phase5_context_applies_owned_dual_sword_twin_blade_without_ambidextrous
         ),
     )
 
-    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1699
-    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1699
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1829
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1829
     assert not any("Twin Blade and Blunt" in item for item in context.unresolved_gear_effects)
 
 
@@ -238,8 +272,8 @@ def test_phase5_context_applies_owned_ambidextrous_from_verified_offhand_power()
         ),
     )
 
-    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1739.05
-    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1739.05
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1909.1
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1909.1
     assert not any("Ambidextrous" in item for item in context.unresolved_gear_effects)
 
 
@@ -265,8 +299,8 @@ def test_phase5_context_applies_owned_greatsword_heavy_weapons():
         ),
     )
 
-    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1700
-    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1700
+    assert context.core_state.derived[StatId.WEAPON_DAMAGE].final_value == 1829
+    assert context.core_state.derived[StatId.SPELL_DAMAGE].final_value == 1829
     assert not any("Heavy Weapons" in item for item in context.unresolved_gear_effects)
 
 
