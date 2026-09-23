@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from models.build_model import BuildRoster, PlayerBuild
 from models.roster_model import RosterMember
 from services.build_service import BuildService
@@ -47,7 +47,8 @@ class BuildsPage(FoundryPage):
         self.data_dir = get_data_dir()
         self.database = EsoDatabase(self.data_dir / "eso.db")
         self.reference = ReferenceDataService(self.database)
-        self.roster_service = RosterService(self.database)
+        self.user_database = EsoDatabase(get_user_database_path())
+        self.roster_service = RosterService(self.user_database)
         self.build_service = BuildService(self.data_dir / "builds.json")
         self.settings_service = SettingsService(Path("settings.json"))
         self.roster = BuildRoster()
