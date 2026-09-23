@@ -143,18 +143,6 @@ if ($UseCurrentRaidSetup) {
         throw "Could not create privacy-limited current raid setup seed."
     }
 
-    $PreparedCharacterCatalog = Join-Path $ReleaseSeedRoot "characters.json"
-    $SourceCharacterCatalog = Join-Path $ProjectRoot "data\characters.json"
-    if ([string]::IsNullOrWhiteSpace($RaidPlanId)) {
-        python tools\build_custom_raid_plan_catalog_seed.py --source-catalog $SourceCharacterCatalog --seed-database $PreparedUserDatabaseSeed --destination-catalog $PreparedCharacterCatalog
-    }
-    else {
-        python tools\build_custom_raid_plan_catalog_seed.py --source-catalog $SourceCharacterCatalog --seed-database $PreparedUserDatabaseSeed --destination-catalog $PreparedCharacterCatalog --plan-id $RaidPlanId
-    }
-    if ($LASTEXITCODE -ne 0) {
-        throw "Could not create Raid Plan-dependent character/build catalog."
-    }
-
     Write-Host "Prepared user database seed: CURRENT RAID SETUP ONLY"
 }
 elseif (-not [string]::IsNullOrWhiteSpace($UserDatabaseSeed)) {
@@ -277,25 +265,8 @@ else {
 # PowerShell 5 and PowerShell 7.
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
-# Start with an intentionally empty compatibility build roster. When this is a
-# current-raid custom build, copy only the canonical characters/builds referenced
-# by the selected Raid Plan.
-$CleanBuildsPath = Join-Path $DataRoot "builds.json"
-[System.IO.File]::WriteAllText($CleanBuildsPath, '{"Members": []}', $Utf8NoBom)
-
-$CharacterCatalogPath = Join-Path $DataRoot "characters.json"
-$PreparedCharacterCatalog = Join-Path $ReleaseSeedRoot "characters.json"
-if ($UseCurrentRaidSetup -and (Test-Path $PreparedCharacterCatalog -PathType Leaf)) {
-    Copy-Item $PreparedCharacterCatalog $CharacterCatalogPath -Force
-    Write-Host "Raid Plan-dependent character/build catalog: INCLUDED"
-}
-else {
-    [System.IO.File]::WriteAllText(
-        $CharacterCatalogPath,
-        '{"schema_version": 4, "players": [], "characters": [], "builds": [], "team_assignments": []}',
-        $Utf8NoBom
-    )
-}
+# Builds and characters now live in foundrydock.db.
+# New packages deliberately do not create data\builds.json or data\characters.json.
 
 # Ship clean portable settings rather than allowing workstation-specific
 # developer defaults to leak into a tester build.
