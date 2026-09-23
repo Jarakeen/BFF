@@ -45,3 +45,15 @@ def test_missing_rank_fails_closed(tmp_path):
     result = PassiveRankDescriptionRepository(_database(tmp_path)).resolve("Test Passive", 1)
     assert not result.complete
     assert result.unresolved == ("Canonical passive rank not found: Test Passive rank 1",)
+
+def test_matching_rank_descriptions_ignore_eso_color_markup(tmp_path):
+    result = PassiveRankDescriptionRepository(
+        _database(
+            tmp_path,
+            raw_description="Increases damage by |cffffff129|r.",
+            ability_description="Increases damage by 129.",
+        )
+    ).resolve("Test Passive", 2)
+
+    assert result.complete
+    assert result.description == "Increases damage by 129."
