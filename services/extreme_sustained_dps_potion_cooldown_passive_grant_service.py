@@ -7,6 +7,7 @@ semantics remain outside this narrow bridge and therefore cannot be flattened in
 static cooldown math.
 """
 
+from dataclasses import dataclass
 from pathlib import Path
 
 from minmax.character_build.effect_instance import EffectVariant
@@ -17,6 +18,13 @@ from services.extreme_skill_universe_service import ExtremeSkillUniverseService
 from services.rotation_potion_cooldown_effect_variant_service import (
     POTION_COOLDOWN_REDUCTION_EFFECT,
 )
+
+
+@dataclass(frozen=True)
+class ExtremeSustainedDPSPotionCooldownPassiveEvidence:
+    passives: tuple[PassiveGrant, ...] = ()
+    complete: bool = False
+    unresolved: tuple[str, ...] = ()
 
 
 class ExtremeSustainedDPSPotionCooldownPassiveGrantService:
@@ -46,7 +54,7 @@ class ExtremeSustainedDPSPotionCooldownPassiveGrantService:
         self,
         player_build: object,
         progression: CharacterProgression,
-    ) -> tuple[PassiveGrant, ...]:
+    ) -> ExtremeSustainedDPSPotionCooldownPassiveEvidence:
         del player_build  # ownership is progression-scoped; retained for resolver protocol.
         if not progression.has_explicit_passive_progression:
             raise ValueError(
@@ -80,7 +88,13 @@ class ExtremeSustainedDPSPotionCooldownPassiveGrantService:
                     ),
                 )
             )
-        return tuple(grants)
+        return ExtremeSustainedDPSPotionCooldownPassiveEvidence(
+            passives=tuple(grants),
+            complete=True,
+        )
 
 
-__all__ = ["ExtremeSustainedDPSPotionCooldownPassiveGrantService"]
+__all__ = [
+    "ExtremeSustainedDPSPotionCooldownPassiveEvidence",
+    "ExtremeSustainedDPSPotionCooldownPassiveGrantService",
+]
