@@ -20,7 +20,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QHBoxLayout, QWidget
 
-from engine.config import get_data_dir
+from engine.config import get_user_database_path
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.components.foundry_card import FoundryCard
@@ -63,7 +63,7 @@ class BroadcastPage(FoundryPage):
             port=self.settings["ObsWebSocketPort"],
             password=self.settings["ObsWebSocketPassword"],
         )
-        self.db = EsoDatabase(get_data_dir() / "eso.db")
+        self.db = EsoDatabase(get_user_database_path())
         self.roster_service = RosterService(self.db)
         self.briefing = BroadcastBriefing(roster_service=self.roster_service)
 
