@@ -624,3 +624,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Split weapon-enchantment cooldown-topology authority** — Objective #32 now tracks duplicate-identity shared cooldowns and distinct-identity independent cooldowns as separate proof requirements. Exact finite enchant sequencing remains fail-closed until both topology claims are authoritative, preventing a generic `per_effect_identity` label from silently proving more than the evidence actually supports.
+
+
+- **Raw weapon-enchantment metadata audit** — A read-only research tool inventories every field in the raw UESP `minedItemSummary` weapon-enchantment export and highlights cooldown-, ability-, enchant-, proc-, duration-, effect-, and ID-related metadata with sample values. It never opens or mutates `eso.db`, giving Objective #32 a safe way to discover importable cadence metadata before any additive schema decision.
