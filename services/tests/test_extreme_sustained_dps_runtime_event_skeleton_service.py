@@ -9,6 +9,9 @@ from minmax.runtime_event import RuntimeEvent
 from services.extreme_sustained_dps_runtime_event_skeleton_service import (
     ExtremeSustainedDPSRuntimeEventSkeletonService,
 )
+from services.extreme_sustained_dps_weapon_enchantment_activation_event_service import (
+    WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+)
 from services.rotation_candidate_dd_role_output_service import (
     RotationActionDamageOccurrence,
     RotationActionDamageOccurrenceEvidence,
@@ -166,5 +169,66 @@ def test_expected_value_damage_does_not_invent_critical_damage_events() -> None:
     assert result.denominator_proven is False
     assert any(
         "critical_damage" in row
+        for row in result.unresolved
+    )
+
+
+class _WeaponEnchantActivation:
+    def resolve(self, **_kwargs):
+        return SimpleNamespace(
+            events=(
+                RuntimeEvent(
+                    time_seconds=2.0,
+                    sequence=0,
+                    trigger=WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+                    source="Light Attack",
+                    target="Boss",
+                ),
+            ),
+            evidence=("authoritative weapon-enchantment activation opportunities",),
+            unresolved=(),
+        )
+
+
+def test_weapon_enchantment_activation_is_candidate_derived_not_scenario_owned() -> None:
+    result = ExtremeSustainedDPSRuntimeEventSkeletonService.build(
+        candidate=_candidate(),
+        effects=(
+            _effect(
+                "crusher",
+                WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+            ),
+        ),
+        occurrence_provider=_Occurrences(),
+        weapon_enchantment_activation_service=_WeaponEnchantActivation(),
+        target_identity="Boss",
+    )
+
+    assert result.denominator_proven is True
+    assert result.scenario_triggers == ()
+    assert result.derived_triggers == (WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,)
+    assert len(result.events) == 1
+    assert result.events[0].source == "Light Attack"
+    assert any(
+        "authoritative weapon-enchantment activation opportunities" in row
+        for row in result.evidence
+    )
+
+
+def test_weapon_enchantment_activation_trigger_fails_without_canonical_resolver() -> None:
+    result = ExtremeSustainedDPSRuntimeEventSkeletonService.build(
+        candidate=_candidate(),
+        effects=(
+            _effect(
+                "crusher",
+                WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+            ),
+        ),
+        occurrence_provider=_Occurrences(),
+    )
+
+    assert result.denominator_proven is False
+    assert any(
+        "requires canonical weapon-enchantment activation service" in row
         for row in result.unresolved
     )
