@@ -31,6 +31,7 @@ def test_finish_endgame_gear_is_batched_without_owning_build_editor_method() -> 
     assert 'row.quality_combo.setCurrentText("Gold")' in source
     assert 'row.level_combo.setCurrentText("CP160")' in source
     assert 'row.enchant_tier_combo.setCurrentText("Truly Superb")' in source
+    assert 'row.enchant_quality_combo.setCurrentText("Gold")' in source
     assert 'combo.setProperty("foundryLastValidIndex", combo.currentIndex())' in source
     assert "phase5_build_ui_support._finish_endgame_gear = finish_endgame_gear_batched" in source
     assert "BuildEditor.finish_endgame_gear =" not in source
