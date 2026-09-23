@@ -438,6 +438,7 @@ def install() -> None:
         self.encounter_board = board.EncounterBoard()
         self.encounter_board.raid_plan_member_labels_resolver = self._raid_plan_member_labels
         self.encounter_board.snapshotSaved.connect(self._positioning_snapshot_saved)
+        self._install_raid_plan_map_controls()
         board_card.addWidget(self.encounter_board)
         root.addWidget(board_card, 1)
 
