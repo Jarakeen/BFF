@@ -1812,3 +1812,20 @@ A selected Weapon/Spell Damage glyph proc does not directly contribute a separat
 **Layman's version:** this glyph makes later attacks stronger; it is not itself another attack. Adding its number directly to DPS would be spectacularly wrong in a very efficient way.
 
 **For BFF:** selected Weapon/Spell Damage glyph windows now reuse the canonical timed `weapon_spell_damage` runtime-effect projection. The exact build context is rebuilt while the window is active, and strict overlapping windows remain fail-closed pending reviewed refresh/stacking semantics.
+
+
+## 2026-09-23 — Gold weapon quality is not proof of a Gold glyph
+
+Weapon-enchantment runtime needs two different quality facts. The weapon's own quality controls trait math such as Infused, while Decrease Health's target-Max-Health percentage and damage ceiling are defined from the **enchantment's** level and quality. A Gold sword with an unknown-quality glyph does not prove a Legendary Decrease Health glyph.
+
+**Layman's version:** a fancy sword does not automatically make the rune glued to it fancy too. They are two different objects with two different quality knobs.
+
+**For BFF:** saved gear now carries `EnchantQuality` separately from item `Quality`; weapon-enchantment runtime preserves glyph quality, glyph tier, and item level as separate provenance. Exact Decrease Health damage stays unresolved when glyph quality is missing instead of borrowing the weapon's quality.
+
+## 2026-09-23 — Infused should not inflate Decrease Health's Oblivion damage
+
+ZOS Update 23 states that player-sourced Oblivion Damage bypasses positive and negative bonuses, while Decrease Health's Max-Health percentage and maximum damage scale from the enchantment's own quality/level. That makes ordinary enchant-strength bonuses the wrong layer for its damage magnitude even though Infused can still alter weapon-enchantment cooldown.
+
+**Layman's version:** Infused can make the glyph fire more often, but it does not get to sneak a normal “make the enchant stronger” multiplier into Oblivion damage that explicitly ignores those bonuses.
+
+**For BFF:** weapon-enchantment trait adjustment now leaves Oblivion damage magnitude unboosted while preserving the separate cooldown-reduction rule. Exact target-Max-Health scaling is resolved downstream from glyph provenance and target Health.
