@@ -29,6 +29,7 @@ class EncounterRaidMapStore:
     def __init__(self, data_dir: Path) -> None:
         self.data_dir = Path(data_dir)
         self.root = self.data_dir / "raid_maps" / "bosses"
+        self.plan_layout_root = self.data_dir / "raid_maps" / "plans"
         self.manifest_path = self.data_dir / "raid_maps" / "boss_maps.json"
 
     @staticmethod
@@ -73,12 +74,18 @@ class EncounterRaidMapStore:
         for raw in rows:
             if not isinstance(raw, dict):
                 continue
+            relative_path = str(raw.get("relative_path", ""))
+            if Path(relative_path).suffix.lower() not in SUPPORTED_IMAGE_SUFFIXES:
+                # Legacy Phase 14 builds accidentally registered editable JSON
+                # layouts in the boss image manifest. Keep those files on disk,
+                # but do not offer them to QPixmap-based image viewers.
+                continue
             maps.append(
                 EncounterRaidMap(
                     map_id=str(raw.get("map_id", "")),
                     encounter_id=encounter_id,
                     label=str(raw.get("label", "") or "Raid Map"),
-                    relative_path=str(raw.get("relative_path", "")),
+                    relative_path=relative_path,
                 )
             )
         return tuple(sorted(maps, key=lambda row: (row.label.casefold(), row.map_id)))
@@ -99,9 +106,9 @@ class EncounterRaidMapStore:
         if not source.is_file():
             raise FileNotFoundError(source)
         suffix = source.suffix.lower()
-        if suffix not in SUPPORTED_IMAGE_SUFFIXES | SUPPORTED_LAYOUT_SUFFIXES:
+        if suffix not in SUPPORTED_IMAGE_SUFFIXES:
             raise ValueError(
-                "Raid Map asset must be JSON, PNG, JPG, JPEG, or WebP; "
+                "Raid Map image must be PNG, JPG, JPEG, or WebP; "
                 f"got {source.suffix or '(no extension)'}"
             )
 
@@ -144,11 +151,39 @@ class EncounterRaidMapStore:
         encounter_id: str = "",
         label: str = "",
     ) -> EncounterRaidMap:
+        """Persist the rich editable Raid Map source without registering it as an image.
+
+        Boss-map viewers consume only raster images. Editable JSON belongs to the
+        saved Raid Plan and is kept separately so QPixmap never tries to open it.
+        """
         plan_key = str(plan_id or "").strip()
         if not plan_key:
             raise ValueError("plan_id is required")
+        if any(part in plan_key for part in ("/", "\\", "..")):
+            raise ValueError("plan_id must be a stable id, not a path")
         scope = str(encounter_id or "").strip() or f"plan-{plan_key}"
-        return self.import_map(scope, source, label=label or "Raid Plan Map")
+        scope = self._clean_encounter_id(scope)
+
+        source = Path(source)
+        if not source.is_file():
+            raise FileNotFoundError(source)
+        if source.suffix.lower() not in SUPPORTED_LAYOUT_SUFFIXES:
+            raise ValueError("Editable Raid Plan layout must be JSON")
+
+        digest = hashlib.sha256(source.read_bytes()).hexdigest()[:16]
+        destination_dir = self.plan_layout_root / plan_key / scope
+        destination_dir.mkdir(parents=True, exist_ok=True)
+        destination = destination_dir / f"{digest}.json"
+        if source.resolve() != destination.resolve() and not destination.exists():
+            shutil.copy2(source, destination)
+
+        relative = str(destination.relative_to(self.data_dir)).replace("\\", "/")
+        return EncounterRaidMap(
+            map_id=digest,
+            encounter_id=scope,
+            label=str(label or "Raid Plan Map").strip() or "Raid Plan Map",
+            relative_path=relative,
+        )
 
     def remove_map(self, encounter_id: str, map_id: str) -> bool:
         encounter_id = self._clean_encounter_id(encounter_id)
