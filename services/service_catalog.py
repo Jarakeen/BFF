@@ -1262,6 +1262,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "CanonicalAxisCoverageProofs",
             "Objective32SearchScopeProof",
             "OptionalProvenLocalRuntimeStateFrontier",
+            "ExtremeSustainedDPSClosureInventory",
             "ExplicitTargetScenario",
         ),
         outputs=("ExtremeSustainedDPSObjective32SearchResult",),
@@ -1278,7 +1279,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "The wrapper does not invent coverage. Callers supply proof objects for searched axes and an explicit scope proof that those proofs describe the same generated search denominator; "
-            "a supplied local runtime frontier contributes only its proven runtime_state coverage. The result reports finite-tree completion and theoretical Objective #32 closure as distinct facts."
+            "a supplied local runtime frontier contributes only its proven runtime_state coverage. Canonical mechanics closure is also required, using the shared Objective #32 mechanics audit when no explicit closure inventory is supplied. "
+            "The result reports finite-tree completion and theoretical Objective #32 closure as distinct facts."
         ),
     ),
     ServiceDescriptor(
