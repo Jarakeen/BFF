@@ -19,6 +19,15 @@ class _SustainService:
         return self.baseline
 
 
+class _PotionRuntimeService:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def resolve_restoration_events(self, build, *, plan):
+        self.calls.append((build, plan))
+        return SimpleNamespace(events=(), unresolved=())
+
+
 class _DurationService:
     def __init__(self) -> None:
         self.calls = []
@@ -57,11 +66,13 @@ def test_generate_resolvers_reuse_canonical_sustain_scorecard_and_ranking_servic
     duration = _DurationService()
     scorecards = _ScorecardService()
     ranking = _RankingService()
+    potion = _PotionRuntimeService()
     service = RotationGenerateCandidateResolverService(
         sustain_service=sustain,  # type: ignore[arg-type]
         duration_service=duration,  # type: ignore[arg-type]
         scorecard_service=scorecards,  # type: ignore[arg-type]
         ranking_service=ranking,  # type: ignore[arg-type]
+        potion_runtime_service=potion,  # type: ignore[arg-type]
     )
     build = object()
     baseline_plan = object()
@@ -82,8 +93,10 @@ def test_generate_resolvers_reuse_canonical_sustain_scorecard_and_ranking_servic
             "build": build,
             "plan": baseline_plan,
             "resource": ResourceType.MAGICKA,
+            "restoration_events": (),
         }
     ]
+    assert potion.calls == [(build, baseline_plan)]
     assert resolvers.baseline_sustain is sustain.baseline
 
     candidate_plan = object()
@@ -123,6 +136,7 @@ def test_generate_candidate_evaluator_rejects_empty_candidate_id() -> None:
         duration_service=_DurationService(),  # type: ignore[arg-type]
         scorecard_service=_ScorecardService(),  # type: ignore[arg-type]
         ranking_service=_RankingService(),  # type: ignore[arg-type]
+        potion_runtime_service=_PotionRuntimeService(),  # type: ignore[arg-type]
     )
 
     resolvers = service.build(
