@@ -145,7 +145,31 @@ def test_infused_returns_enchantment_rule():
         weapon_quality="Legendary",
     )
 
-    assert len(rules) == 1
+    assert len(rules) == 2
 
-    assert rules[0].rule_type == "enchantment_effect"
-    assert rules[0].value == 30
+    by_type = {rule.rule_type: rule for rule in rules}
+    assert by_type["enchantment_effect"].value == 30
+    assert by_type["enchantment_cooldown_reduction"].value == 50
+
+
+def test_infused_gold_alias_uses_legendary_magnitude_and_cooldown_rule():
+    rules = service().get_applicable_rules(
+        weapon_trait="Infused",
+        weapon_quality="Gold",
+    )
+
+    by_type = {rule.rule_type: rule for rule in rules}
+    assert by_type["enchantment_effect"].value == 30
+    assert by_type["enchantment_cooldown_reduction"].value == 50
+
+
+def test_infused_reduces_weapon_enchantment_cooldown_by_fifty_percent():
+    result = service().resolve_cooldown(
+        base_cooldown=10.0,
+        weapon_trait="Infused",
+        weapon_quality="Gold",
+    )
+
+    assert result.base_cooldown == 10.0
+    assert result.reduction == 50.0
+    assert result.final_cooldown == 5.0
