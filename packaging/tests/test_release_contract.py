@@ -124,6 +124,8 @@ def test_release_builds_support_explicit_first_run_user_database_seed() -> None:
     )
     assert '[string]$UserDatabaseSeed = ""' in release
     assert '[string]$UserDatabaseSeed = ""' in friend
+    assert "[switch]$UseCurrentRaidSetup" in friend
+    assert "build_custom_user_database_seed.py" in friend
     assert 'Join-Path $ReleaseSeedRoot "foundrydock.db"' in release
     assert 'Join-Path $ReleaseSeedRoot "foundrydock.db"' in friend
 
