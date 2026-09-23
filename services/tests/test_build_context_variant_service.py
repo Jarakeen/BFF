@@ -19,6 +19,8 @@ def test_context_variants_round_trip_with_full_override_shape() -> None:
                 FrontBarWeapon=GearSlot(Set="Roaring Opportunist", Trait="Powered"),
                 FrontBarSkills=["Combat Prayer", "", "", "", "", ""],
                 Food="Clockwork Citrus Filet",
+                FrontBarPoison="Damage Health Poison IX",
+                BackBarPoison="Drain Magicka Poison IX",
             )
         ],
     )
@@ -30,6 +32,8 @@ def test_context_variants_round_trip_with_full_override_shape() -> None:
     assert variant.TransformedForm == "werewolf"
     assert variant.Armor["Head"]["Set"] == "Pearls of Ehlnofey"
     assert variant.FrontBarWeapon.Set == "Roaring Opportunist"
+    assert variant.FrontBarPoison == "Damage Health Poison IX"
+    assert variant.BackBarPoison == "Drain Magicka Poison IX"
 
 
 def test_legacy_boss_loadouts_migrate_in_memory_to_boss_variants() -> None:
@@ -187,3 +191,24 @@ def test_blank_form_override_does_not_transform_werewolf_enabled_character() -> 
 def test_transformed_form_requires_matching_affiliation() -> None:
     build = PlayerBuild(TransformedForm="werewolf")
     assert "Werewolf form requires Werewolf affiliation." in build.validate()
+
+
+
+def test_sparse_context_variant_overrides_weapon_set_poisons_per_bar() -> None:
+    build = PlayerBuild(
+        Name="Damage Tester",
+        FrontBarPoison="Base Front Poison",
+        BackBarPoison="Base Back Poison",
+        ContextVariants=[
+            BuildContextVariant(
+                ContextType="Boss",
+                BossName="Boss A",
+                FrontBarPoison="Boss Front Poison",
+            )
+        ],
+    )
+
+    resolved = resolve_build_context(build, boss_name="Boss A")
+
+    assert resolved.FrontBarPoison == "Boss Front Poison"
+    assert resolved.BackBarPoison == "Base Back Poison"
