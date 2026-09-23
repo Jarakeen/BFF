@@ -119,7 +119,7 @@ class CityRaidReadinessPage(FoundryPage):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
+        self.repository = RaidPlanRepository(get_user_database_path())
         self.user_state = RaidSectionStateService()
         self.readiness_evidence = RaidReadinessEvidenceService(
             data_dir=get_data_dir(),
