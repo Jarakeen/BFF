@@ -216,6 +216,8 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     )
     assert "potion_cooldown_passive_grant_service.py" in potion_cooldown_row.evidence_source
     assert "cadence-aware" in potion_cooldown_row.missing_evidence
+    assert "completeness-bearing" in potion_cooldown_row.missing_evidence
+    assert "stop before cooldown math" in potion_cooldown_row.missing_evidence
     assert "permanent pre-rotation reduction" in potion_cooldown_row.missing_evidence
 
     armor_row = next(row for row in rows if row.key == "armor:weight_passive_semantics")
