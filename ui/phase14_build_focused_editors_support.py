@@ -876,6 +876,8 @@ def _consumables_tab(page, build) -> QWidget:
     for label, value, icon_name in (
         ("Food", _text(build.Food, "Not selected"), "food"),
         ("Potion", _text(build.Potion, "Not selected"), "potion"),
+        ("Front Bar Poison", _text(getattr(build, "FrontBarPoison", ""), "None"), "potion"),
+        ("Back Bar Poison", _text(getattr(build, "BackBarPoison", ""), "None"), "potion"),
     ):
         row = QHBoxLayout()
         row.addWidget(icon_label(icon_name, 22))
