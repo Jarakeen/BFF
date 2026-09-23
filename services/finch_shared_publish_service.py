@@ -27,7 +27,7 @@ from services.settings_service import SettingsService
 
 
 _SHARED_TEAM_SCHEMA_VERSION = 2
-_SHARED_RAID_PLAN_SCHEMA_VERSION = 6
+_SHARED_RAID_PLAN_SCHEMA_VERSION = 7
 
 
 def _clean(value: object) -> str:
@@ -223,6 +223,7 @@ def shared_raid_plan_payload(
     *,
     saved_builds=(),
     raid_maps: dict[str, str] | None = None,
+    raid_map_previews: dict[str, dict[str, str]] | None = None,
 ) -> dict[str, object]:
     if not isinstance(plan, RaidPlan):
         raise TypeError("plan must be a RaidPlan")
@@ -237,6 +238,11 @@ def shared_raid_plan_payload(
         "group_type": "trial",
         "group_capacity": _TRIAL_SEAT_CAPACITY,
         "raid_maps": dict(raid_maps or {}),
+        "raid_map_previews": [
+            dict(value)
+            for _key, value in sorted((raid_map_previews or {}).items())
+            if isinstance(value, dict) and _clean(value.get("map_image_url"))
+        ],
         "members": [
             {
                 "seat_id": member.seat_id,
@@ -293,11 +299,22 @@ class FinchSharedPublishService:
         )
         return self._result(snapshot)
 
-    def publish_raid_plan(self, plan: RaidPlan, *, raid_maps: dict[str, str] | None = None) -> FinchPublishResult:
+    def publish_raid_plan(
+        self,
+        plan: RaidPlan,
+        *,
+        raid_maps: dict[str, str] | None = None,
+        raid_map_previews: dict[str, dict[str, str]] | None = None,
+    ) -> FinchPublishResult:
         saved_builds = ()
         if self.build_service is not None:
             saved_builds = tuple(self.build_service.load().Members)
-        payload = shared_raid_plan_payload(plan, saved_builds=saved_builds, raid_maps=raid_maps)
+        payload = shared_raid_plan_payload(
+            plan,
+            saved_builds=saved_builds,
+            raid_maps=raid_maps,
+            raid_map_previews=raid_map_previews,
+        )
         snapshot = self.client.publish_shared_raid_plan(
             snapshot_key=plan.plan_id,
             payload=payload,
@@ -353,13 +370,15 @@ def publish_raid_plan_to_finch(
     database = EsoDatabase(Path(database_path))
     try:
         roster = RosterService(database)
+        state = RaidSectionStateService()
         return FinchSharedPublishService(
             client=_configured_client(settings_path=settings_path, timeout=timeout),
             roster=roster,
             build_service=BuildService(Path(database_path).with_name("builds.json")),
         ).publish_raid_plan(
             plan,
-            raid_maps=RaidSectionStateService().raid_map_links(plan.plan_id),
+            raid_maps=state.raid_map_links(plan.plan_id),
+            raid_map_previews=state.finch_raid_map_previews(plan.plan_id),
         )
     finally:
         database.close()
