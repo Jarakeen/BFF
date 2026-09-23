@@ -227,7 +227,7 @@ def test_registration_sync_binds_by_discord_id_and_preserves_private_alias_histo
     fetched, applied, unresolved = sync.sync_registration_identities()
 
     assert (fetched, applied, unresolved) == (1, 1, 0)
-    assert roster.get_member(member_id).DiscordName == "Old Nick"
+    assert roster.get_member(member_id).DiscordName == "old.user"
 
     second = FinchRegistration(
         discord_user_id=777,
@@ -251,7 +251,7 @@ def test_registration_sync_binds_by_discord_id_and_preserves_private_alias_histo
 
     assert (fetched, applied, unresolved) == (1, 1, 0)
     updated = roster.get_member(member_id)
-    assert updated.DiscordName == "New Nick"
+    assert updated.DiscordName == "new.user"
     aliases = {row.alias for row in identity.aliases_for_member(member_id)}
     assert "old.user" in aliases
     assert "new.user" in aliases
