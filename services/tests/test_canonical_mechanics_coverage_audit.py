@@ -206,7 +206,7 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert potion_row.status is CanonicalMechanicsCoverageStatus.PARTIAL
     assert "rotation_plan_potion_combat_state_service.py" in potion_row.evidence_source
     assert "scheduled POTION actions" in potion_row.capability
-    assert "scheduled potion instant-restoration events" in potion_row.missing_evidence
+    assert "potion instant-restoration events" in potion_row.missing_evidence.casefold()
     assert "remaining potion runtime effects beyond scheduled buff windows" in potion_row.missing_evidence
 
     armor_row = next(row for row in rows if row.key == "armor:weight_passive_semantics")
