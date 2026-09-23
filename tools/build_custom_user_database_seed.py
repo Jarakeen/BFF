@@ -7,6 +7,7 @@ This seed intentionally carries only raid-setup state:
 - Teams and memberships
 - Personnel assignments
 - Saved Raid Plans
+- Only the player/character/build records required by the selected Raid Plan
 
 Achievement/collectible and other checklist progress is not copied.
 """
