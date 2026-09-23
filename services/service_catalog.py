@@ -1164,6 +1164,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         implementation_path="services.extreme_sustained_dps_closure_inventory_service",
         inputs=(
             "ExtremeSustainedDPSRuntimeEffectRelevance",
+            "ExtremeSustainedDPSRuntimeEffectScalingResult",
             "CanonicalMechanicsCoverageInventory",
         ),
         outputs=("ExtremeSustainedDPSClosureInventory",),
@@ -1174,7 +1175,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Diagnostic composition only. It does not create proof, and partial mechanics "
+            "Diagnostic composition only. It accepts typed relevance and runtime-scaling debt, does not create proof, and partial mechanics "
             "coverage remains sufficient to keep theoretical Objective #32 closure open."
         ),
     ),
