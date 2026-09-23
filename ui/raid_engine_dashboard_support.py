@@ -127,18 +127,17 @@ def _open_raid_plan_map(window, plan_id: str) -> None:
     encounters = window.pages.get("console:1")
     if encounters is None:
         return
+    window.show_page("console:1")
+    opener = getattr(encounters, "open_saved_plan_map", None)
+    if callable(opener):
+        opener(str(plan_id or "").strip())
+        return
+
     combo = getattr(encounters, "raid_plan_combo", None)
     if combo is not None:
         index = combo.findData(str(plan_id or "").strip())
         if index >= 0:
             combo.setCurrentIndex(index)
-    tabs = getattr(encounters, "section_tabs", None)
-    if tabs is not None:
-        for index in range(tabs.count()):
-            if str(tabs.tabText(index) or "").strip().casefold() in {"raid map", "mechanics"}:
-                tabs.setCurrentIndex(index)
-                break
-    window.show_page("console:1")
 
 def _open_raid_plan_coverage(window, plan) -> None:
     coverage = window.pages.get("console:7")
