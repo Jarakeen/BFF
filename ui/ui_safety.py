@@ -49,6 +49,7 @@ def confirm_unsaved_changes(
             mark_save_failed(page, "This page does not expose a safe save action.")
             return False
         try:
+            mark_saving(page)
             saved = bool(save())
         except Exception as exc:
             mark_save_failed(page, str(exc))
@@ -174,6 +175,17 @@ def attach_save_state_badge(page, *, interval_ms: int = 350) -> QLabel | None:
     return badge
 
 
+def mark_saving(page) -> None:
+    page._ui_safety_save_error = ""
+    badge = getattr(page, "_ui_safety_badge", None)
+    if isinstance(badge, QLabel):
+        badge.setText("Saving…")
+        badge.setProperty("uiSafetyState", "saving")
+        badge.setToolTip("Saving changes.")
+        badge.style().unpolish(badge)
+        badge.style().polish(badge)
+
+
 def mark_saved(page, label: str = "Saved") -> None:
     page._ui_safety_save_error = ""
     page._ui_safety_saved_at = datetime.now().strftime("%I:%M %p").lstrip("0")
@@ -199,6 +211,7 @@ def wire_save_button(
 ) -> None:
     def run() -> None:
         try:
+            mark_saving(page)
             result = save()
         except Exception as exc:
             mark_save_failed(page, str(exc))
@@ -219,6 +232,7 @@ __all__ = [
     "confirm_unsaved_changes",
     "mark_save_failed",
     "mark_saved",
+    "mark_saving",
     "set_enabled_reason",
     "wire_save_button",
 ]
