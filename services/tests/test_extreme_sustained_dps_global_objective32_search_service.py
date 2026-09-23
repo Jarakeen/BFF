@@ -558,3 +558,33 @@ def test_strict_global_objective32_preflight_rejects_open_candidate_runtime_deno
             target_health=1_000_000,
             target_resistance=18_200.0,
         )
+
+
+def test_global_objective32_defaults_to_canonical_mechanics_closure_inventory() -> None:
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=_GlobalSearch(_search_result()),
+        structural_families=_StructuralFamilies(),
+    )
+
+    result = service.search(
+        runtime_state_frontier=_runtime_frontier(),
+        dual_bar_frontier="gear",
+        candidate_id_prefix="objective32",
+        required_duration_seconds=20.0,
+        potion_cooldown_seconds=45.0,
+        starting_ultimate=0.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="Boss",
+        runtime_snapshot="snapshot",
+        target_health=1_000_000,
+        target_resistance=18_200.0,
+    )
+
+    assert result.closure_inventory is not None
+    assert result.closure.mechanics_closure_complete is False
+    assert result.theoretical_maximum_proven is False
+    assert any(
+        row.category == "mechanics"
+        for row in result.blockers.blockers
+    )
