@@ -113,6 +113,15 @@ https://eso-hub.com/en/skills
 
 **Notes:** Useful for confirming the current visible passive roster and effect wording. Versioned numerical changes should still be reconciled against official patch notes or canonical game data before hardcoding combat math.
 
+### UESP raw ESO Character Build Data
+https://chat.uesp.net/esobuilddata/
+
+**Use for:** Raw character-build snapshots containing skill/passive names, ranks, ability IDs, and rendered tooltip values that can corroborate current passive wording and rank-specific magnitudes.
+
+**Confidence:** Validation / corroboration.
+
+**Notes:** Useful for cross-checking a passive against FoundryDock's imported canonical data. Individual build records may be old, so compare multiple records and a current source before promoting patch-sensitive values. For Bow Accuracy, multiple UESP records show Rank 2 at 1314 Critical Chance rating and Rank 1 at 657; ESO-Hub currently reports the same values.
+
 ### UESP Lifesteal mechanics page
 https://en.uesp.net/wiki/Online:Lifesteal
 
