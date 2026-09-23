@@ -22,9 +22,9 @@ class _PotionRuntimeService:
         self.events = tuple(events)
         self.calls = []
 
-    def restoration_events(self, build, *, plan):
+    def resolve_restoration_events(self, build, *, plan):
         self.calls.append((build, plan))
-        return self.events
+        return SimpleNamespace(events=self.events, unresolved=())
 
 
 class _FakeSustainService:
