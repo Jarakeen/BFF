@@ -1402,6 +1402,35 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_ability_enchantment_occurrence_classifier",
+        domain="extreme",
+        purpose=(
+            "Classify exact weapon-ability damage occurrences for enchantment activation from canonical per-coefficient component identity."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_ability_enchantment_occurrence_classifier",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "RotationAction",
+            "RotationActionDamageOccurrenceEvidence",
+            "CanonicalSkillCoefficientRepository",
+            "CanonicalSkillComponentRepository",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentEligibleOccurrences",),
+        dependencies=(),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_ability_enchantment_occurrence_classification",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Direct weapon-ability damage and area Damage over Time occurrences remain eligible. "
+            "Single-target Damage over Time occurrences are excluded from weapon-enchantment activation. "
+            "Missing coefficient identity, unresolved skill rank, non-damage component conflicts, and incomplete DoT/AoE component shape fail closed rather than being inferred from names or timing."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_activation_events",
         domain="extreme",
         purpose=(
@@ -1414,7 +1443,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "CanonicalExactTimeDamageOccurrenceEvidence",
         ),
         outputs=("ExtremeSustainedDPSWeaponEnchantmentActivationEventResult",),
-        dependencies=(),
+        dependencies=(
+            "extreme.sustained_dps.weapon_ability_enchantment_occurrence_classifier",
+        ),
         responsibilities=("extreme_sustained_dps_weapon_enchantment_activation_events",),
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
