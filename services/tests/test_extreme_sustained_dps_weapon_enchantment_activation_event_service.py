@@ -100,6 +100,7 @@ def test_landed_light_and_heavy_damage_are_activation_opportunities() -> None:
         WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
     )
     assert tuple(row.time_seconds for row in result.events) == (1.0, 5.2)
+    assert tuple(row.source_bar for row in result.events) == ("front", "back")
     assert all(row.target == "Boss" for row in result.events)
 
 
@@ -136,6 +137,7 @@ def test_weapon_line_skill_damage_is_eligible_but_class_skill_damage_is_not() ->
         "Wall of Elements",
         "Wall of Elements",
     )
+    assert tuple(row.source_bar for row in result.events) == ("back", "back")
 
 
 def test_zero_damage_occurrence_is_not_an_activation_opportunity() -> None:
