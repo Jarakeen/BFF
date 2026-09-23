@@ -338,6 +338,32 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
             total += rumor_total
         return owned, total
 
+    def progress_summary_for_type_keys(
+        self,
+        type_keys: tuple[str, ...],
+    ) -> tuple[int, int]:
+        """Return active-profile ownership for canonical collectible type keys."""
+        keys = tuple(str(value or "").strip() for value in type_keys if str(value or "").strip())
+        if not self.available or not keys:
+            return 0, 0
+        placeholders = ",".join("?" for _ in keys)
+        rows = self.connection.execute(
+            f"""
+            SELECT id
+            FROM collectible
+            WHERE canonical_type_key IN ({placeholders})
+            """,
+            keys,
+        ).fetchall()
+        ids = [int(row["id"]) for row in rows]
+        progress = self._progress_map(ids)
+        owned = sum(
+            1
+            for collectible_id in ids
+            if int(progress.get(collectible_id, {}).get("owned") or 0) == 1
+        )
+        return owned, len(ids)
+
     def collectibles(self, category: str, query: str = "") -> list[dict]:
         if not self.available:
             return []
