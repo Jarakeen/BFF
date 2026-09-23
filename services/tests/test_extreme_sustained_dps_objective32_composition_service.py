@@ -23,10 +23,16 @@ def _runtime_state_frontier_resolver(
     supplemental_event_denominator_proven=True,
     supplemental_history_denominator_proven=True,
 ):
+    runtime_effect_universe = SimpleNamespace(
+        weapon_enchantment_runtime_source_service=object(),
+        weapon_enchantment_runtime_variant_service=object(),
+    )
     return SimpleNamespace(
         scenario_frontier=SimpleNamespace(
-            runtime_effect_universe=object(),
+            runtime_effect_universe=runtime_effect_universe,
             runtime_effect_scaling=object(),
+            weapon_enchantment_activation_service=object(),
+            weapon_enchantment_cooldown_policy_resolver=object(),
         ),
         supplemental_event_denominator_proven=supplemental_event_denominator_proven,
         supplemental_history_denominator_proven=supplemental_history_denominator_proven,
@@ -168,4 +174,46 @@ def test_composition_requires_reviewed_potion_cooldown_authority() -> None:
     kwargs["potion_cooldown_resolver"] = None
 
     with pytest.raises(ValueError, match="requires a canonical potion cooldown resolver"):
+        ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
+
+
+
+@pytest.mark.parametrize(
+    ("attribute", "message"),
+    (
+        (
+            "weapon_enchantment_activation_service",
+            "weapon-enchantment activation-event resolution",
+        ),
+        (
+            "weapon_enchantment_cooldown_policy_resolver",
+            "weapon-enchantment cooldown-policy authority",
+        ),
+    ),
+)
+def test_composition_requires_weapon_enchantment_runtime_authorities(attribute, message):
+    kwargs = _kwargs()
+    resolver = kwargs["runtime_state_frontier_resolver"]
+    setattr(resolver.scenario_frontier, attribute, None)
+
+    with pytest.raises(ValueError, match=message):
+        ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    (
+        "weapon_enchantment_runtime_source_service",
+        "weapon_enchantment_runtime_variant_service",
+    ),
+)
+def test_composition_requires_dedicated_weapon_enchantment_runtime_universe(attribute):
+    kwargs = _kwargs()
+    resolver = kwargs["runtime_state_frontier_resolver"]
+    setattr(resolver.scenario_frontier.runtime_effect_universe, attribute, None)
+
+    with pytest.raises(
+        ValueError,
+        match="dedicated canonical weapon-enchantment runtime source and variant projection",
+    ):
         ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
