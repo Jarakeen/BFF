@@ -1794,3 +1794,21 @@ The weapon-enchantment parser and repository correctly preserve special runtime 
 **Layman's version:** the trait calculator changed the number and accidentally threw away the instruction card explaining what the number meant.
 
 **For BFF:** trait-adjusted enchant effects now preserve scaling and condition provenance. Runtime damage must still resolve those semantics explicitly; preservation prevents downstream code from mistaking a scaled effect for flat damage.
+
+
+## 2026-09-23 — Selected Crusher now changes exact-time target resistance
+
+Once the runtime branch proves that a Crushing glyph actually fired, its canonical resistance-reduction magnitude and duration are enough to affect the target during that exact window. Source selection alone was previously not enough; the consequence still had to be routed into mitigation math.
+
+**Layman's version:** knowing Crusher fired is finally connected to the boss actually having less armor while Crusher is active. Very ambitious concept, apparently.
+
+**For BFF:** selected non-overlapping Crusher windows now subtract their canonical magnitude through the shared exact-time target-resistance path. Missing target/duration/magnitude or overlapping windows remain unresolved rather than assuming stacking or overwrite behavior.
+
+
+## 2026-09-23 — Weapon Damage glyphs are timed stat state, not bonus damage events
+
+A selected Weapon/Spell Damage glyph proc does not directly contribute a separate damage hit. It opens a timed character-stat window that changes subsequent Weapon Damage and Spell Damage calculations.
+
+**Layman's version:** this glyph makes later attacks stronger; it is not itself another attack. Adding its number directly to DPS would be spectacularly wrong in a very efficient way.
+
+**For BFF:** selected Weapon/Spell Damage glyph windows now reuse the canonical timed `weapon_spell_damage` runtime-effect projection. The exact build context is rebuilt while the window is active, and strict overlapping windows remain fail-closed pending reviewed refresh/stacking semantics.
