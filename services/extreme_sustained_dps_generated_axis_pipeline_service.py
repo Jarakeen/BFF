@@ -23,7 +23,9 @@ class ExtremeSustainedDPSGeneratedAxisPipelineState:
     gear: object
     candidate_id_prefix: str
     duration_seconds: float
-    potion_cooldown_seconds: float
+    potion_cooldown_seconds: float | None
+    potion_cooldown_resolver: object | None
+    potion_cooldown_scenario: object | None
     starting_ultimate: float
     ultimate_generation_events: tuple[object, ...]
     heroism_windows: tuple[object, ...]
@@ -154,6 +156,28 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             )
         return self.encounter_policy_adapter.root(assembled)
 
+    def _resolved_potion_cooldown(
+        self,
+        state: ExtremeSustainedDPSGeneratedAxisPipelineState,
+        assembled: object,
+    ) -> float:
+        if state.potion_cooldown_resolver is None:
+            if state.potion_cooldown_seconds is None:
+                raise ValueError("generated axis pipeline requires potion cooldown evidence")
+            return float(state.potion_cooldown_seconds)
+        resolution = state.potion_cooldown_resolver.resolve(
+            player_build=assembled.build,
+            progression=getattr(assembled, "progression", None),
+            scenario=state.potion_cooldown_scenario,
+        )
+        if not bool(getattr(resolution, "complete", False)):
+            detail = "; ".join(tuple(getattr(resolution, "unresolved", ()) or ()))
+            raise ValueError(
+                "generated axis pipeline potion cooldown is unresolved"
+                + (f": {detail}" if detail else "")
+            )
+        return float(resolution.cooldown_seconds)
+
     def _rotation_state(
         self,
         state: ExtremeSustainedDPSGeneratedAxisPipelineState,
@@ -184,7 +208,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         return self.rotation_adapter.root(
             assembled,
             duration_seconds=state.duration_seconds,
-            potion_cooldown_seconds=state.potion_cooldown_seconds,
+            potion_cooldown_seconds=self._resolved_potion_cooldown(state, assembled),
             starting_ultimate=state.starting_ultimate,
             ultimate_generation_events=state.ultimate_generation_events,
             heroism_windows=state.heroism_windows,
@@ -265,7 +289,7 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             state,
             build=assembled.build,
             progression=assembled.progression,
-            potion_cooldown_seconds=state.potion_cooldown_seconds,
+            potion_cooldown_seconds=self._resolved_potion_cooldown(state, assembled),
             evidence_resolver=self.finalized_potion_evidence_resolver,
         )
 
@@ -389,8 +413,10 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         dual_bar_frontier: object,
         candidate_id_prefix: str,
         duration_seconds: float,
-        potion_cooldown_seconds: float,
+        potion_cooldown_seconds: float | None,
         starting_ultimate: float,
+        potion_cooldown_resolver: object | None = None,
+        potion_cooldown_scenario: object | None = None,
         priorities: object,
         snapshot_resolver: object,
         target_identity: str,
@@ -414,7 +440,11 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             gear=gear,
             candidate_id_prefix=prefix,
             duration_seconds=float(duration_seconds),
-            potion_cooldown_seconds=float(potion_cooldown_seconds),
+            potion_cooldown_seconds=(
+                None if potion_cooldown_seconds is None else float(potion_cooldown_seconds)
+            ),
+            potion_cooldown_resolver=potion_cooldown_resolver,
+            potion_cooldown_scenario=potion_cooldown_scenario,
             starting_ultimate=float(starting_ultimate),
             ultimate_generation_events=tuple(ultimate_generation_events),
             heroism_windows=tuple(heroism_windows),
