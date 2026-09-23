@@ -142,10 +142,7 @@ RUNTIME_EXTERNAL_DATA_DIRECTORIES: tuple[str, ...] = (
     "rotation_policy",
 )
 
-CLEAN_FIRST_INSTALL_DATA_FILES: tuple[str, ...] = (
-    "builds.json",
-    "characters.json",
-)
+CLEAN_FIRST_INSTALL_DATA_FILES: tuple[str, ...] = ()
 
 EXCLUDED_TOP_LEVEL_DATA_GLOBS: tuple[str, ...] = (
     "*.before-*",
