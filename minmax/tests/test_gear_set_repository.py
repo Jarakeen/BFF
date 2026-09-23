@@ -72,8 +72,8 @@ def test_get_bonuses_preserves_descriptions_exactly():
     assert descriptions[4] == "(4 items) Adds 3-129 Magicka Recovery"
     assert descriptions[5] == (
         "(5 items) When you cast an ability that costs resources while "
-        "under |cffffff25|r% Magicka, you restore |cffffff263-11350|r "
-        "Magicka. This effect can occur once every |cffffff45|r seconds."
+        "under 25% Magicka, you restore 263-11350 Magicka. "
+        "This effect can occur once every 45 seconds."
     )
 
 
