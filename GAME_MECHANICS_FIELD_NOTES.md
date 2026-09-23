@@ -1545,3 +1545,12 @@ A ranking comparison can give every candidate the same unresolved Heavy Attack r
 
 **For BFF:** shared Heavy Attack completion, landed-hit state, and restoration uncertainty now blocks candidate eligibility just like shared potion timeline uncertainty. Cosmetic Heavy Attack metadata remains advisory.
 
+
+
+## 2026-09-23 — Weapon passive ownership is not enough; subtype matters
+
+Several weapon-line passives are standing effects, but their math still depends on the exact weapon subtype on the active bar. The reviewed U50 data gives **Twin Blade and Blunt** +64 Weapon/Spell Damage for each equipped sword and **Heavy Weapons** +129 Weapon/Spell Damage for a greatsword. Other Twin Blade / Heavy Weapons branches use different mechanics, and Ambidextrous derives power from the off-hand weapon rather than adding the same flat number.
+
+**Layman's version:** owning the passive does not mean “add weapon damage.” A sword, dagger, axe, mace, greatsword, battle axe, and maul can send the same passive down different math paths. ESO has once again chosen a dropdown menu where a number would have been less theatrical.
+
+**For BFF:** Phase 5 now applies only the reviewed sword/greatsword standing branches when exact passive ownership and weapon subtype are known. Ambidextrous and unreviewed subtype branches remain unresolved and therefore block Objective #32 closure rather than borrowing the sword value.
