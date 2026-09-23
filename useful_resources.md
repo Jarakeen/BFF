@@ -309,3 +309,22 @@ https://forums.elderscrollsonline.com/en/discussion/435633/pts-patch-notes-v4-2-
 **Confidence:** Primary / reference-grade for the documented activation rule.
 
 **Notes:** This closes activation-cause evidence, not the exact current base cooldown values, off-bar source persistence, poison replacement, or same-identity cooldown sharing. Those remain separately gated until current-version authoritative evidence is available.
+
+
+### ZOS Update 21 weapon-enchantment cooldown example
+https://forums.elderscrollsonline.com/en/discussion/463161/playstation-4-patch-notes-v1-45-wrathstone-update-21
+
+**Use for:** Primary-source evidence that a normal direct-damage weapon enchantment uses a 4-second cooldown. ZOS's one-handed enchantment balance example explicitly preserves a 4-second cooldown while halving enchantment potency.
+
+**Confidence:** Primary / reference-grade for the documented direct-damage cooldown example.
+
+**Notes:** Do not generalize the 4-second value to Crusher, Weakening, Hardening, or other buff/debuff enchantments. Their family cooldown still needs its own authoritative evidence.
+
+### ZOS Dark Brotherhood poison/enchantment suppression rule
+https://forums.elderscrollsonline.com/en/discussion/261799/pts-patch-notes-v2-4-0
+
+**Use for:** Primary-source topology for poison-equipped weapon sets. ZOS states that while a weapon set has a poison equipped, weapon enchantments on that set are temporarily suppressed.
+
+**Confidence:** Primary / reference-grade for the documented suppression rule.
+
+**Notes:** This establishes replacement/suppression topology, not poison proc cadence or current enchantment cooldown values.
