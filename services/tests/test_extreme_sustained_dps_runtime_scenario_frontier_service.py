@@ -22,6 +22,9 @@ from services.extreme_sustained_dps_runtime_witness_composition_service import (
 from services.extreme_sustained_dps_weapon_enchantment_cooldown_readiness_service import (
     ExtremeSustainedDPSWeaponEnchantmentCooldownState,
 )
+from services.extreme_sustained_dps_weapon_enchantment_sequence_frontier_service import (
+    ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy,
+)
 
 
 def _plan():
@@ -664,5 +667,88 @@ def test_candidate_builder_can_prove_weapon_enchantment_no_proc() -> None:
     assert result.frontier.choices[0].snapshot.effect_attempts == ()
     assert any(
         "Weapon-enchantment opportunities proven no-proc: 1" in row
+        for row in result.evidence
+    )
+
+
+class _TwoWeaponEnchantmentActivationService:
+    def resolve(self, **_kwargs):
+        return SimpleNamespace(
+            events=(
+                RuntimeEvent(
+                    time_seconds=1.0,
+                    sequence=0,
+                    trigger="weapon_enchantment_activation",
+                    source="Light Attack",
+                    target="Boss",
+                    source_bar="front",
+                ),
+                RuntimeEvent(
+                    time_seconds=2.0,
+                    sequence=1,
+                    trigger="weapon_enchantment_activation",
+                    source="Light Attack",
+                    target="Boss",
+                    source_bar="front",
+                ),
+            ),
+            evidence=("two reviewed weapon-enchantment activation opportunities",),
+            unresolved=(),
+        )
+
+
+def test_candidate_builder_carries_dual_wield_sequence_branches() -> None:
+    main = _weapon_enchantment_effect("Main Enchant", "main_hand")
+    off = _weapon_enchantment_effect("Off Enchant", "off_hand")
+
+    def cooldown_policies(**_kwargs):
+        return (
+            ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy(
+                effect=main,
+                cooldown_identity="main",
+                cooldown_seconds=4.0,
+                authoritative=True,
+            ),
+            ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy(
+                effect=off,
+                cooldown_identity="off",
+                cooldown_seconds=4.0,
+                authoritative=True,
+            ),
+        )
+
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        weapon_enchantment_activation_service=_TwoWeaponEnchantmentActivationService(),
+        weapon_enchantment_cooldown_policy_resolver=cooldown_policies,
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        effects=(main, off),
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed dual wield sequence",
+    )
+
+    assert result.unresolved == ()
+    assert result.frontier.denominator_proven is True
+    assert result.frontier.candidate_count == 2
+    histories = tuple(
+        choice.snapshot.effect_attempts
+        for choice in result.frontier.choices
+    )
+    assert all(len(history) == 2 for history in histories)
+    assert all(
+        history[0].bound_effect_key != history[1].bound_effect_key
+        for history in histories
+    )
+    assert any(
+        "Finite weapon-enchantment source histories: 2" in row
         for row in result.evidence
     )
