@@ -116,6 +116,7 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
                 )
             ExtremeSustainedDPSObjective32ScenarioPreflightService.require_ready(
                 runtime_state_frontier=runtime_state_frontier,
+                candidate_runtime_state_resolver=candidate_runtime_state_resolver,
                 candidate_runtime_state_resolver_present=bool(
                     candidate_runtime_state_resolver is not None
                 ),
