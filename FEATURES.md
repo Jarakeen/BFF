@@ -575,3 +575,10 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Bow Accuracy** now resolves its reviewed Rank 2 +1314 Critical Chance rating only while the Bow is on the active bar, using the shared canonical critical-rating conversion.
 - The weapon-passive proof audit rejects Rank 1 values presented as max-rank evidence, preventing 64 / 129 / 3% from being accepted for Twin Blade swords / Heavy Weapons swords / Ambidextrous when Rank 2 ownership is required.
 - Generated sustained-DPS exact evaluation inherits this Phase 5 fail-closed behavior before simulation, so unresolved weapon-passive branches cannot produce a closure-ready theoretical candidate.
+
+
+### Objective #32 passive rank evidence authority
+- Rank-specific passive mechanics now have a shared fail-closed description authority that joins skill_rank.ability_id to the ESO game identity ability.ability_id, not the ability table local row ID.
+- When skill_rank.raw_description and the exact-rank ability.description both exist but disagree after normalization, the passive rank is unresolved instead of silently preferring one source.
+- Extreme's global player-skill universe carries max-rank passive source disagreement as explicit unresolved evidence, and ExtremePassiveProjectionService refuses to turn an otherwise parseable tooltip into static objective math while that disagreement exists.
+- Deadly Bash and the weapon-passive challenger audit now consume this rank evidence contract.
