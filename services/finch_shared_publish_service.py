@@ -27,7 +27,7 @@ from services.settings_service import SettingsService
 
 
 _SHARED_TEAM_SCHEMA_VERSION = 2
-_SHARED_RAID_PLAN_SCHEMA_VERSION = 5
+_SHARED_RAID_PLAN_SCHEMA_VERSION = 6
 
 
 def _clean(value: object) -> str:
