@@ -3,7 +3,6 @@ from __future__ import annotations
 """Fail a packaged FoundryDock first-install artifact if developer user state leaked in."""
 
 import argparse
-import json
 from pathlib import Path
 import sqlite3
 
@@ -53,24 +52,12 @@ def audit(package_root: Path) -> list[str]:
             if rows:
                 errors.append(f"packaged user-state table is not empty: {table} ({rows} row(s))")
 
-    characters = data / "characters.json"
-    if not characters.is_file():
-        errors.append(f"missing clean identity file: {characters}")
-    else:
-        payload = json.loads(characters.read_text(encoding="utf-8"))
-        for key in ("players", "characters", "builds", "team_assignments"):
-            rows = payload.get(key, [])
-            if rows:
-                errors.append(f"packaged characters.json has non-empty {key}: {len(rows)} row(s)")
-
-    builds = data / "builds.json"
-    if not builds.is_file():
-        errors.append(f"missing clean builds file: {builds}")
-    else:
-        payload = json.loads(builds.read_text(encoding="utf-8"))
-        members = payload.get("Members", [])
-        if members:
-            errors.append(f"packaged builds.json has non-empty Members: {len(members)} row(s)")
+    for legacy_name in ("characters.json", "builds.json"):
+        legacy_path = data / legacy_name
+        if legacy_path.exists():
+            errors.append(
+                f"legacy user-state file should not be packaged: {legacy_path}"
+            )
 
     return errors
 
