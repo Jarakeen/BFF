@@ -7,6 +7,9 @@ from services.extreme_sustained_dps_closure_inventory_service import (
 from services.extreme_sustained_dps_runtime_effect_relevance_service import (
     ExtremeSustainedDPSRuntimeEffectRelevanceService,
 )
+from services.extreme_sustained_dps_runtime_effect_scaling_service import (
+    ExtremeSustainedDPSRuntimeEffectScalingResult,
+)
 
 
 def test_closure_inventory_separates_source_and_math_runtime_blockers() -> None:
@@ -79,3 +82,34 @@ def test_default_objective32_inventory_names_open_closure() -> None:
     )
     assert inventory.closure_ready is False
     assert any("closure inventory remains open" in row for row in inventory.evidence)
+
+
+def test_closure_inventory_includes_typed_runtime_scaling_blockers() -> None:
+    scaling = ExtremeSustainedDPSRuntimeEffectScalingResult(
+        effects=(),
+        evidence=(),
+        unresolved=(
+            "Alkosh needs activation-time Weapon Damage",
+            "Mystery scaling formula is not reviewed",
+        ),
+        source_data_unresolved=(
+            "Alkosh needs activation-time Weapon Damage",
+        ),
+        math_unresolved=(
+            "Mystery scaling formula is not reviewed",
+        ),
+    )
+
+    inventory = ExtremeSustainedDPSClosureInventoryService.build(
+        scaling=scaling,
+        mechanics_dependency_keys=(),
+    )
+
+    assert inventory.source_data_blockers == (
+        "Alkosh needs activation-time Weapon Damage",
+    )
+    assert inventory.math_review_blockers == (
+        "Mystery scaling formula is not reviewed",
+    )
+    assert inventory.blocking_count == 2
+    assert inventory.closure_ready is False
