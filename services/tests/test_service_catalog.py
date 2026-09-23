@@ -548,10 +548,14 @@ def test_generated_sustained_dps_runtime_evaluation_consumes_canonical_simulatio
     ) == (
         "extreme.sustained_dps.gear_runtime_semantics",
         "extreme.sustained_dps.runtime_target_combat_state",
+        "extreme.sustained_dps.weapon_enchantment_runtime_source",
+        "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+        "extreme.sustained_dps.weapon_enchantment_consequence_coverage",
         "simulation.saved_build_dd",
     )
     assert "caller-owned" in service.notes
     assert "fail closed" in service.notes
+    assert "Selected weapon-enchantment proc consequences" in service.notes
 
 
 def test_sustained_dps_runtime_effect_projection_is_not_a_timing_authority() -> None:
@@ -1794,3 +1798,19 @@ def test_sustained_dps_candidate_runtime_state_factory_is_cataloged() -> None:
     )
     assert "shared weapon-enchantment repository" in factory.purpose
     assert "avoid circularly deriving runtime_state" in factory.notes
+
+
+
+def test_selected_weapon_enchantment_consequence_coverage_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_weapon_enchantment_selected_consequence_coverage"
+    )
+    assert service is not None
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+    )
+    assert "explicit downstream runtime consumer" in service.purpose
+    assert "leaf blockers" in service.notes
