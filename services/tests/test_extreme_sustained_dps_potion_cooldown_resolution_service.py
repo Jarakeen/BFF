@@ -149,3 +149,4 @@ def test_missing_progression_and_passive_evidence_fails_closed() -> None:
     assert not result.complete
     assert result.cooldown_seconds is None
     assert any("requires passive progression" in item for item in result.unresolved)
+    assert result.resolution is None
