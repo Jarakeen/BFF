@@ -12,7 +12,10 @@ from services.user_data_migration_service import migrate_legacy_user_data
 
 
 class ProfiledCollectibleService(EsoCollectibleDatabaseService):
-    """Keep the ESO collectible catalog in eso.db and ownership in foundrydock.db."""
+    """Keep the ESO collectible catalog in eso.db and ownership in foundrydock.db.
+
+    Existing single-profile progress is migrated conservatively to Default.
+    """
 
     DEFAULT_PROFILE = "Default"
 
