@@ -22,6 +22,8 @@ _USER_TABLES_IN_COPY_ORDER = (
     "team_member",
     "roster_member_assignment",
     "roster_member_availability",
+    "roster_recruitment_candidate",
+    "roster_archive_record",
     "roster_player_alias",
     "roster_assignment_context",
 )
