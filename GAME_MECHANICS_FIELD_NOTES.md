@@ -1829,3 +1829,12 @@ ZOS Update 23 states that player-sourced Oblivion Damage bypasses positive and n
 **Layman's version:** Infused can make the glyph fire more often, but it does not get to sneak a normal “make the enchant stronger” multiplier into Oblivion damage that explicitly ignores those bonuses.
 
 **For BFF:** weapon-enchantment trait adjustment now leaves Oblivion damage magnitude unboosted while preserving the separate cooldown-reduction rule. Exact target-Max-Health scaling is resolved downstream from glyph provenance and target Health.
+
+
+## 2026-09-23 — Proc damage has to enter the Health timeline before execute math
+
+An exact weapon-glyph damage number is not enough if it is added only after rotation damage has already been evaluated. A Decrease Health proc between two skills changes the boss's current Health before the second skill, which can change execute scaling, kill timing, later action legality, and overkill attribution.
+
+**Layman's version:** damage that happens at 1.5 seconds has to hurt the boss before a 2-second execute checks how hurt the boss is. Adding it to the total at the end is mathematically neat and mechanically wrong.
+
+**For BFF:** exact supplemental damage now runs through the same sequential target-Health ledger as action and periodic damage. Cross-source events sharing an exact timestamp remain fail-closed until ESO ordering for that instant is proven.
