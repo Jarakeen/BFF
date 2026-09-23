@@ -268,15 +268,17 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "services/extreme_sustained_dps_potion_cooldown_resolution_service.py; "
                 "services/extreme_sustained_dps_potion_cooldown_passive_grant_service.py; "
                 "services/extreme_sustained_dps_generated_axis_pipeline_service.py; "
-                "minmax/rotation_potion_cadence.py"
+                "services/extreme_sustained_dps_potion_cooldown_runtime_evidence_service.py; "
+                "services/extreme_sustained_dps_candidate_runtime_state_frontier_resolver_service.py; "                "minmax/rotation_potion_cadence.py"
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
                 "Generated progression now has a fail-closed canonical PassiveGrant derivation "
-                "seam for potion-cooldown effects; prove the external scenario potion-cooldown "
-                "effect denominator and promote only reviewed passive cooldown mechanics. Dynamic "
-                "skill/passive/set cooldown modifiers with runtime availability topology must "
-                "remain candidate-resolved rather than being flattened into a permanent reduction."
+                "seam for potion-cooldown effects, and candidate runtime-state resolution exposes "
+                "a proven shared effect denominator only when every retained runtime choice agrees. "
+                "Promote only reviewed passive cooldown mechanics and compose that runtime evidence "
+                "into finalized potion timing without flattening conditional skill/passive/set "
+                "availability into a permanent reduction."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
