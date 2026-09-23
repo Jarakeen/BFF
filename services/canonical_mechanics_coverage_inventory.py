@@ -122,9 +122,10 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             missing_evidence=(
                 "Expand the verified rotation-runtime passive catalog beyond the resolver families "
                 "already owned by the Phase 5 context path. Racial passive ownership/stat parsing "
-                "now reaches rotation static contexts. Reviewed Dual Wield sword Twin Blade and Blunt "
-                "and Two Handed greatsword Heavy Weapons standing-sheet branches now flow through "
-                "Phase 5; Ambidextrous and unreviewed weapon-subtype branches fail closed. Remaining "
+                "now reaches rotation static contexts. Reviewed Dual Wield sword Twin Blade and Blunt, "
+                "Dual Wield Ambidextrous, Two Handed greatsword Heavy Weapons, and Bow Accuracy "
+                "standing-sheet branches now flow through Phase 5; unreviewed weapon-subtype "
+                "branches fail closed. Remaining "
                 "weapon/world/vampire/werewolf and other passives still require runtime ownership. "
                 "ExtremePassiveProjectionService "
                 "already classifies simple unconditional passive tooltip contributions and fails "
