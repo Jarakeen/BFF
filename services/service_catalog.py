@@ -3318,6 +3318,53 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_resistance_reduction",
+        domain="extreme",
+        purpose=(
+            "Project exact selected weapon-enchantment resistance-reduction consequences into reviewed target-resistance windows."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_resistance_reduction_service",
+        inputs=("WeaponEnchantmentProcConsequenceResolution",),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentResistanceResolution",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_resistance_reduction_runtime_projection",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Canonical magnitude, target, and duration are required. Strictly overlapping selected windows fail closed until cross-source stacking or overwrite behavior is reviewed."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_weapon_spell_damage",
+        domain="extreme",
+        purpose=(
+            "Project exact selected Weapon/Spell Damage enchantment consequences into reviewed active runtime stat windows."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_weapon_spell_damage_service",
+        inputs=("WeaponEnchantmentProcConsequenceResolution",),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentWeaponSpellDamageResolution",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+            "extreme.sustained_dps.runtime_effect_projection",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_weapon_spell_damage_runtime_projection",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Timing comes only from the exact selected glyph proc. The active window reuses the canonical weapon_spell_damage stat projection rather than defining duplicate stat math. Strict overlap remains fail-closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_runtime_evaluation",
         domain="extreme",
         purpose=(
@@ -3339,6 +3386,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.runtime_target_combat_state",
             "extreme.sustained_dps.weapon_enchantment_runtime_source",
             "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+            "extreme.sustained_dps.weapon_enchantment_resistance_reduction",
+            "extreme.sustained_dps.weapon_enchantment_weapon_spell_damage",
             "extreme.sustained_dps.weapon_enchantment_consequence_coverage",
             "simulation.saved_build_dd",
         ),
