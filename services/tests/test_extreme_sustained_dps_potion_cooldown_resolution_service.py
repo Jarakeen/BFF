@@ -21,8 +21,11 @@ class _BuildAdapter:
 
 
 class _ItemService:
+    def __init__(self, unresolved=()):
+        self.unresolved = tuple(unresolved)
+
     def resolve(self, player_build):
-        return SimpleNamespace(player_build=player_build)
+        return SimpleNamespace(player_build=player_build, unresolved=self.unresolved)
 
 
 class _CooldownService:
@@ -97,6 +100,26 @@ def test_progression_without_passive_inventory_fails_closed() -> None:
     assert not result.complete
     assert result.cooldown_seconds is None
     assert any("PassiveGrant derivation" in item for item in result.unresolved)
+
+
+def test_unresolved_jewelry_evidence_stops_before_cooldown_math() -> None:
+    cooldown = _CooldownService(cooldown=45.0)
+    service = ExtremeSustainedDPSPotionCooldownResolutionService(
+        build_adapter=_BuildAdapter(build="canonical-build"),
+        item_service=_ItemService(unresolved=("jewelry potion-speed trait unresolved",)),
+        cooldown_service=cooldown,
+    )
+
+    result = service.resolve(
+        player_build="saved-build",
+        passive_inventory_complete=True,
+        scenario=ExtremeSustainedDPSPotionCooldownScenarioEvidence(complete=True),
+    )
+
+    assert not result.complete
+    assert result.resolution is None
+    assert cooldown.calls == []
+    assert result.unresolved == ("jewelry potion-speed trait unresolved",)
 
 
 def test_incomplete_scenario_inventory_does_not_emit_effective_cooldown() -> None:
