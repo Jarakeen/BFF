@@ -1536,3 +1536,12 @@ The reviewed heavy-attack reference table groups Lightning and Restoration Staff
 ## 2026-09-22 — Historical heavy-restoration formula exposes unresolved runtime axes
 
 The repository's older ESO math reference gives the heavy-resource formula as `(Base × (1 + restoration amplifiers) + flat bonuses) × block reduction`. It names Tenacity, Revitalize, Ulfnor's Favor, Off Balance, Rampaging Slash, and Arch-Mage as examples, and records a 50% restoration reduction when the target blocks. Its weapon bases are from an older ruleset and differ from the reviewed Update 35 table, so these modifier statements are discovery evidence rather than current executable constants. This explains why an observed 4247 Restoration Staff return can exceed the current 2970 base plus Cycle of Life without requiring a fake weapon base. The Extreme Engine must resolve current ownership/values for these axes before theoretical closure.
+
+## 2026-09-23 — Shared Heavy Attack uncertainty is still uncertainty
+
+A ranking comparison can give every candidate the same unresolved Heavy Attack restoration or hit-state evidence. That does not make the resource timeline trustworthy; it only makes the uncertainty common to every candidate.
+
+**Layman's version:** if every build is missing the same receipt, none of them suddenly has proof. A Heavy Attack that may or may not have completed, landed, or restored resources can change sustain and therefore change which rotation is actually viable.
+
+**For BFF:** shared Heavy Attack completion, landed-hit state, and restoration uncertainty now blocks candidate eligibility just like shared potion timeline uncertainty. Cosmetic Heavy Attack metadata remains advisory.
+
