@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 from engine.config import get_data_dir
 from minmax.character_build.effect_instance import EffectVariant
