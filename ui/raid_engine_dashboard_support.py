@@ -187,11 +187,18 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
         return False
 
     try:
-        plan = source_page.current_plan()
-        repository = getattr(source_page, "plan_repository", None)
-        if repository is not None:
-            repository.save(plan)
-        source_page._loaded_plan_snapshot = plan
+        has_pending = getattr(source_page, "has_pending_changes", None)
+        if callable(has_pending) and has_pending():
+            status = getattr(source_page, "status", None)
+            if status is not None:
+                status.warning("Save or discard Raid Plan changes before opening Comp Builder.")
+            return False
+        plan = getattr(source_page, "_loaded_plan_snapshot", None)
+        if plan is None:
+            status = getattr(source_page, "status", None)
+            if status is not None:
+                status.warning("Save the Raid Plan before opening Comp Builder.")
+            return False
     except (AttributeError, OSError, TypeError, ValueError):
         return False
 
