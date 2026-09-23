@@ -127,9 +127,9 @@ def test_release_builds_support_explicit_first_run_user_database_seed() -> None:
     assert "[switch]$UseCurrentRaidSetup" in friend
     assert '[string]$RaidPlanId = ""' in friend
     assert "build_custom_user_database_seed.py" in friend
-    assert "build_custom_raid_plan_catalog_seed.py" in friend
+    assert "build_custom_raid_plan_catalog_seed.py" not in friend
     assert "--plan-id $RaidPlanId" in friend
-    assert "Raid Plan-dependent character/build catalog: INCLUDED" in friend
+    assert "data\\builds.json or data\\characters.json" in friend
     assert 'Join-Path $ReleaseSeedRoot "foundrydock.db"' in release
     assert 'Join-Path $ReleaseSeedRoot "foundrydock.db"' in friend
 
@@ -288,15 +288,16 @@ def test_rotation_command_center_preserves_legacy_shell_without_delete_later() -
     assert not (ROOT / "ui" / "phase14_rotation_visual_target_support.py").exists()
 
 
-def test_first_install_starts_without_developer_character_identity() -> None:
+def test_first_install_keeps_build_and_character_state_out_of_data_directory() -> None:
     manifest = _load_manifest()
     build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
+    friend = (ROOT / "packaging" / "build_friend.ps1").read_text(encoding="utf-8")
 
-    assert "characters.json" in manifest.CLEAN_FIRST_INSTALL_DATA_FILES
-    assert '"players": []' in build
-    assert '"characters": []' in build
-    assert '"team_assignments": []' in build
-    assert '(Join-Path $DataRoot "characters.json")' in build
+    assert manifest.CLEAN_FIRST_INSTALL_DATA_FILES == ()
+    assert '[System.IO.File]::WriteAllText(\n        (Join-Path $DataRoot "characters.json")' not in build
+    assert '(Join-Path $DataRoot "builds.json")' not in build
+    assert '$CharacterCatalogPath = Join-Path $DataRoot "characters.json"' not in friend
+    assert '$CleanBuildsPath = Join-Path $DataRoot "builds.json"' not in friend
 
 
 def test_release_includes_rotation_encounter_policy_required_at_startup() -> None:
