@@ -290,3 +290,36 @@ def test_shared_progression_display_metadata_stays_advisory() -> None:
 
     assert scorecard.inherited_unresolved == (message,)
     assert scorecard.hard_inherited_unresolved == ()
+
+
+def test_shared_unresolved_action_cost_is_a_hard_ranking_failure() -> None:
+    message = "Budding Seeds: Ability cost row not found for source ability 12345"
+    scorecard = RotationCandidateScorecardService().compare(
+        baseline_plan=_plan(),
+        candidate_plan=_plan(),
+        baseline_sustain=_sustain(ending=20000, unresolved=(message,)),
+        candidate_sustain=_sustain(ending=20000, unresolved=(message,)),
+    )
+
+    assert scorecard.candidate_specific_unresolved == ()
+    assert scorecard.inherited_unresolved == (message,)
+    assert scorecard.hard_inherited_unresolved == (message,)
+    assert scorecard.supplied_obligations_satisfied is False
+
+    ranked = RotationCandidateRankingService().rank(
+        (RotationCandidateRankingInput(candidate_id="candidate", scorecard=scorecard),)
+    )
+    assert ranked[0].tier is RotationCandidateTier.INELIGIBLE
+
+
+def test_shared_cost_display_metadata_stays_advisory() -> None:
+    message = "action cost display label metadata is unresolved"
+    scorecard = RotationCandidateScorecardService().compare(
+        baseline_plan=_plan(),
+        candidate_plan=_plan(),
+        baseline_sustain=_sustain(ending=20000, unresolved=(message,)),
+        candidate_sustain=_sustain(ending=20000, unresolved=(message,)),
+    )
+
+    assert scorecard.inherited_unresolved == (message,)
+    assert scorecard.hard_inherited_unresolved == ()
