@@ -8,7 +8,7 @@ Saved Builds, Team records, and Rotation runtime state remain independently owne
 """
 
 from concurrent.futures import Future, ThreadPoolExecutor
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal
@@ -27,6 +27,8 @@ from services.raid_plan_member_identity_resolution_service import (
     RaidPlanMemberIdentityResolutionService,
 )
 from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
+from services.ui_draft_recovery_service import UiDraftRecoveryService
+from services.user_safety_snapshot_service import UserSafetySnapshotService
 from ui.raid_plan_page import (
     RAID_PLAN_SEATS,
     _clean,
@@ -35,6 +37,13 @@ from ui.raid_plan_page import (
     new_personnel_member,
 )
 from ui.raid_plan_stable_identity_selection_page import RaidPlanStableIdentitySelectionPage
+from ui.ui_safety import (
+    confirm_destructive_action,
+    confirm_unsaved_changes,
+    mark_save_failed,
+    mark_saved,
+    set_enabled_reason,
+)
 
 
 _FINCH_PLAN_PUBLISH_EXECUTOR = ThreadPoolExecutor(
@@ -152,11 +161,75 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self._finch_plan_read_timer = QTimer(self)
         self._finch_plan_read_timer.setInterval(100)
         self._finch_plan_read_timer.timeout.connect(self._poll_shared_plan_read)
+        self._draft_service = UiDraftRecoveryService()
+        self._safety_snapshots = UserSafetySnapshotService()
+        self._draft_timer = QTimer(self)
+        self._draft_timer.setInterval(2000)
+        self._draft_timer.timeout.connect(self._autosave_recovery_draft)
+        self._draft_timer.start()
         lower_save = getattr(self, "lower_save_plan_button", None)
         if lower_save is not None:
             lower_save.clicked.connect(self.save_current_plan)
         self.refresh_saved_plan_picker()
         self._navigation_baseline_plan = self.current_plan()
+        self._refresh_action_availability()
+
+    def _draft_key(self, plan_id: str | None = None) -> str:
+        explicit = _clean(plan_id)
+        if explicit:
+            return f"raid-plan-{explicit}"
+        loaded = getattr(self, "_loaded_plan_snapshot", None)
+        loaded_id = _clean(getattr(loaded, "plan_id", "")) if loaded is not None else ""
+        return f"raid-plan-{loaded_id or 'new'}"
+
+    def _autosave_recovery_draft(self) -> None:
+        if not self.has_pending_changes():
+            return
+        try:
+            plan = self.current_plan()
+            self._draft_service.save(
+                self._draft_key(plan.plan_id),
+                {"kind": "raid_plan", "plan": asdict(plan)},
+            )
+        except Exception:
+            # Draft creation is a safety net, never a reason to interrupt editing.
+            return
+
+    def _discard_recovery_draft(self, plan_id: str | None = None) -> None:
+        self._draft_service.discard(self._draft_key(plan_id))
+
+    def _offer_recovery_draft(self, saved_plan: RaidPlan) -> RaidPlan:
+        draft = self._draft_service.load(self._draft_key(saved_plan.plan_id))
+        payload = draft.get("payload") if isinstance(draft, dict) else None
+        raw_plan = payload.get("plan") if isinstance(payload, dict) else None
+        if not isinstance(raw_plan, dict):
+            return saved_plan
+        try:
+            recovered = self.plan_repository._decode_plan(raw_plan)
+        except Exception:
+            return saved_plan
+        if recovered == saved_plan:
+            self._discard_recovery_draft(saved_plan.plan_id)
+            return saved_plan
+
+        box = QMessageBox(self)
+        box.setWindowTitle("Recovered Raid Plan Draft")
+        box.setText(f'FoundryDock recovered unsaved changes for "{saved_plan.name}".')
+        box.setInformativeText(
+            "Restore the recovered draft, use the last saved version, or cancel loading."
+        )
+        restore = box.addButton("Restore Draft", QMessageBox.ButtonRole.AcceptRole)
+        saved = box.addButton("Use Saved Version", QMessageBox.ButtonRole.DestructiveRole)
+        cancel = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+        box.setDefaultButton(restore)
+        box.exec()
+        clicked = box.clickedButton()
+        if clicked is cancel:
+            raise RaidPlanRepositoryError("Raid Plan load cancelled.")
+        if clicked is saved:
+            self._discard_recovery_draft(saved_plan.plan_id)
+            return saved_plan
+        return recovered
 
     def _build_ui(self) -> None:
         super()._build_ui()
@@ -516,8 +589,34 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.saved_plan_combo.setCurrentIndex(selected_index)
         self.saved_plan_combo.blockSignals(False)
         self._saved_plan_selection_changed(self.saved_plan_combo.currentIndex())
+        self._refresh_action_availability()
 
     @staticmethod
+    def _refresh_action_availability(self) -> None:
+        plan_id = self.saved_plan_combo.currentData() if hasattr(self, "saved_plan_combo") else None
+        saved = isinstance(plan_id, str) and bool(plan_id.strip()) and plan_id != "__new_plan__"
+        set_enabled_reason(
+            self.load_plan_button,
+            saved,
+            "Choose a saved Raid Plan first.",
+        )
+        set_enabled_reason(
+            self.delete_plan_button,
+            saved,
+            "Choose a saved Raid Plan first.",
+        )
+        set_enabled_reason(
+            self.open_raid_map_button,
+            saved,
+            "Save or load a Raid Plan first.",
+        )
+        set_enabled_reason(
+            self.publish_plan_finch_button,
+            saved and not self.has_pending_changes(),
+            "Save Raid Plan changes before publishing to Finch."
+            if saved else "Save or load a Raid Plan first.",
+        )
+
     def _trial_display_for(plan: RaidPlan) -> str:
         wanted = plan.trial_id.casefold()
         return next((name for name in COMP_MAKER_TRIALS if _slug(name) == wanted), plan.trial_id)
@@ -618,10 +717,13 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                     "saved Raid Plan did not round-trip exactly; refusing to report success"
                 )
         except (RaidPlanRepositoryError, ValueError, TypeError) as exc:
+            mark_save_failed(self, str(exc))
             self.status.error(f"Could not save Raid Plan: {exc}")
             return None
 
         self._loaded_plan_snapshot = persisted
+        self._discard_recovery_draft(persisted.plan_id)
+        mark_saved(self)
 
         # Personnel can be refreshed safely only after the durable snapshot exists.
         # Reapply that snapshot afterward so autocomplete/source-backed defaults
@@ -679,16 +781,34 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         if not isinstance(plan_id, str) or not plan_id.strip():
             self.status.warning("Choose a saved Raid Plan to load.")
             return
+        loaded = getattr(self, "_loaded_plan_snapshot", None)
+        if (
+            loaded is not None
+            and loaded.plan_id.casefold() != plan_id.casefold()
+            and not confirm_unsaved_changes(
+                self,
+                self,
+                action_text="load another Raid Plan",
+            )
+        ):
+            self.refresh_saved_plan_picker(select_plan_id=loaded.plan_id)
+            return
         try:
             plan = self.plan_repository.get(plan_id)
+            if plan is not None:
+                plan = self._offer_recovery_draft(plan)
         except RaidPlanRepositoryError as exc:
-            self.status.error(f"Could not load Raid Plan: {exc}")
+            if str(exc) != "Raid Plan load cancelled.":
+                self.status.error(f"Could not load Raid Plan: {exc}")
             return
         if plan is None:
             self.status.warning("That saved Raid Plan no longer exists.")
             self.refresh_saved_plan_picker()
             return
         self.apply_plan(plan)
+        saved_plan = self.plan_repository.get(plan_id)
+        if saved_plan is not None and plan != saved_plan:
+            self._navigation_baseline_plan = saved_plan
         self.status.success(f"Loaded Raid Plan: {plan.name}")
 
     def delete_selected_plan(self) -> None:
@@ -696,6 +816,21 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         if not isinstance(plan_id, str) or not plan_id.strip():
             self.status.warning("Choose a saved Raid Plan to delete.")
             return
+        plan = self.plan_repository.get(plan_id)
+        label = plan.name if plan is not None else plan_id
+        if not confirm_destructive_action(
+            self,
+            title="Delete Raid Plan",
+            object_label=f'Delete Raid Plan "{label}"?',
+            impact=(
+                "This removes the saved Raid Plan and its plan-specific decisions. "
+                "Personnel, Teams, Characters, and saved Builds are kept. "
+                "A recoverable database snapshot is created first."
+            ),
+            confirm_text="Delete Raid Plan",
+        ):
+            return
+        self._safety_snapshots.create(f"delete-raid-plan-{plan_id}")
         try:
             deleted = self.plan_repository.delete(plan_id)
         except RaidPlanRepositoryError as exc:
@@ -714,6 +849,12 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             self.status.warning("That saved Raid Plan no longer exists.")
 
     def clear_plan(self) -> None:
+        if not confirm_unsaved_changes(
+            self,
+            self,
+            action_text="start a new Raid Plan",
+        ):
+            return
         self._loaded_plan_snapshot = None
         super().clear_plan()
         self._set_plan_name_visible(True)
