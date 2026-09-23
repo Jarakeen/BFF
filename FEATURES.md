@@ -582,3 +582,9 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - When skill_rank.raw_description and the exact-rank ability.description both exist but disagree after normalization, the passive rank is unresolved instead of silently preferring one source.
 - Extreme's global player-skill universe carries max-rank passive source disagreement as explicit unresolved evidence, and ExtremePassiveProjectionService refuses to turn an otherwise parseable tooltip into static objective math while that disagreement exists.
 - Deadly Bash and the weapon-passive challenger audit now consume this rank evidence contract.
+
+
+### Objective #32 shared sustain evidence hard gates
+- Shared unresolved canonical action-cost evidence can no longer remain ranking-eligible merely because baseline and candidate inherit the same missing cost.
+- Sustain tags unresolved racial/armor/jewelry cost-modifier evidence with explicit action-cost-modifier provenance, and shared tagged modifier uncertainty is a hard ranking failure.
+- Cosmetic cost/display metadata remains advisory; the hard gate is limited to evidence that changes actual resource spend.
