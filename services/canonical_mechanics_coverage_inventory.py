@@ -103,7 +103,8 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "rank-aware Phase5BuildCalculationContextFactory, which applies racial passives and "
                 "reviewed Warden, "
                 "Dragonknight, Necromancer, Nightblade, Sorcerer, Templar, armor, One Hand and "
-                "Shield, Undaunted, guild, and Alliance Support passive resolvers. Generated "
+                "Shield, reviewed weapon standing-passive branches, Undaunted, guild, and Alliance "
+                "Support passive resolvers. Generated "
                 "sustained-DPS exact evaluation now preflights that static context and fails closed "
                 "before simulation when the canonical context retains unresolved mechanics."
             ),
@@ -121,8 +122,11 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             missing_evidence=(
                 "Expand the verified rotation-runtime passive catalog beyond the resolver families "
                 "already owned by the Phase 5 context path. Racial passive ownership/stat parsing "
-                "now reaches rotation static contexts; missing weapon/world/vampire/werewolf and "
-                "other passives still require runtime ownership. ExtremePassiveProjectionService "
+                "now reaches rotation static contexts. Reviewed Dual Wield sword Twin Blade and Blunt "
+                "and Two Handed greatsword Heavy Weapons standing-sheet branches now flow through "
+                "Phase 5; Ambidextrous and unreviewed weapon-subtype branches fail closed. Remaining "
+                "weapon/world/vampire/werewolf and other passives still require runtime ownership. "
+                "ExtremePassiveProjectionService "
                 "already classifies simple unconditional passive tooltip contributions and fails "
                 "conditional/runtime clauses closed; those reviewed projections are not yet a shared "
                 "rotation runtime source of truth. Remaining work includes "
