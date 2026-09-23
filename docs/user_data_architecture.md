@@ -31,10 +31,11 @@ Current user-owned database responsibilities include:
 - Collectible ownership and collectible profiles
 - Achievement completion and achievement profiles
 - Saved Raid Plans
+- Canonical players, characters, builds, character progression, and build-to-team assignments
 
 ## Legacy migration
 
-On startup, `migrate_legacy_user_data()` copies legacy user-owned rows out of `data/eso.db` and legacy `data/achievement_progress.json` into `foundrydock.db`.
+On startup, `migrate_legacy_user_data()` copies legacy user-owned rows out of `data/eso.db` plus legacy `achievement_progress.json`, `raid_plans.json`, `characters.json`, and `builds.json` into `foundrydock.db`.
 
 Migration is additive and idempotent:
 
@@ -75,4 +76,4 @@ Do not add new user-owned tables to `data/eso.db`.
 It intentionally excludes achievement progress, collectible progress, and other collection/checklist state. The build script first migrates any legacy Raid Plan JSON into `foundrydock.db`, then creates the limited seed. This profile is for deliberate one-off builds and does not change normal public-release behavior.
 
 
-For the current-raid custom profile, FoundryDock also creates a filtered `characters.json` containing only canonical player/character/build records referenced by the selected Raid Plan. Unrelated saved builds are not packaged, and the compatibility `builds.json` remains empty.
+For the current-raid custom profile, the seeded `foundrydock.db` carries only the canonical player/character/build records referenced by the selected Raid Plan. Neither `characters.json` nor `builds.json` is created in the package.
