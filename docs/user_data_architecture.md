@@ -72,6 +72,7 @@ Do not add new user-owned tables to `data/eso.db`.
 - Team memberships
 - Personnel assignments
 - Saved Raid Plans
+- Selected Raid Plan player/character/build dependencies
 
 It intentionally excludes achievement progress, collectible progress, and other collection/checklist state. The build script first migrates any legacy Raid Plan JSON into `foundrydock.db`, then creates the limited seed. This profile is for deliberate one-off builds and does not change normal public-release behavior.
 
