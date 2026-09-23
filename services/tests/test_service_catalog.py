@@ -1264,6 +1264,9 @@ def test_sustained_dps_runtime_scenario_frontier_reduces_external_state_finitely
         "extreme.sustained_dps.runtime_effect_scaling",
         "extreme.sustained_dps.runtime_effect_relevance",
         "extreme.sustained_dps.runtime_event_skeleton",
+        "extreme.sustained_dps.weapon_enchantment_activation_events",
+        "extreme.sustained_dps.weapon_enchantment_activation_resolution",
+        "extreme.sustained_dps.weapon_enchantment_attempt_binding",
         "extreme.sustained_dps.runtime_attempt_evidence_frontier",
         "extreme.sustained_dps.runtime_external_history_assembly",
         "extreme.sustained_dps.runtime_external_history_frontier",
@@ -1583,7 +1586,7 @@ def test_sustained_dps_objective32_scenario_preflight_guards_theoretical_runs() 
     assert "search-time scenario evidence" in service.purpose
     assert "runtime-state frontier" in service.notes
     assert "Heavy Attack encounter channel-block denominator" in service.notes
-    assert "generic finite-denominator search wrappers" in service.notes
+    assert "generic finite-denominator search wrappers" in service.notes.casefold()
     assert "cannot prove search completion" in service.notes
 
 
