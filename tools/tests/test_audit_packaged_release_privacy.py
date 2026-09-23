@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 import sqlite3
 
@@ -26,19 +25,6 @@ def _package(tmp_path: Path) -> Path:
         )
         db.commit()
 
-    (data / "characters.json").write_text(
-        json.dumps(
-            {
-                "schema_version": 4,
-                "players": [],
-                "characters": [],
-                "builds": [],
-                "team_assignments": [],
-            }
-        ),
-        encoding="utf-8",
-    )
-    (data / "builds.json").write_text('{"Members": []}', encoding="utf-8")
     return root
 
 
@@ -60,15 +46,14 @@ def test_packaged_release_privacy_audit_rejects_roster_rows(tmp_path: Path) -> N
     ]
 
 
-def test_packaged_release_privacy_audit_rejects_canonical_players(tmp_path: Path) -> None:
+def test_packaged_release_privacy_audit_rejects_legacy_build_state_files(tmp_path: Path) -> None:
     root = _package(tmp_path)
-    characters = root / "data" / "characters.json"
-    payload = json.loads(characters.read_text(encoding="utf-8"))
-    payload["players"] = [{"player_id": "player-1", "name": "Jarakeen"}]
-    characters.write_text(json.dumps(payload), encoding="utf-8")
+    (root / "data" / "characters.json").write_text("{}", encoding="utf-8")
+    (root / "data" / "builds.json").write_text("{}", encoding="utf-8")
 
     errors = audit(root)
 
     assert errors == [
-        "packaged characters.json has non-empty players: 1 row(s)"
+        f"legacy user-state file should not be packaged: {root / 'data' / 'characters.json'}",
+        f"legacy user-state file should not be packaged: {root / 'data' / 'builds.json'}",
     ]
