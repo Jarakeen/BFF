@@ -152,23 +152,9 @@ try {
         Copy-Item $Source $Destination -Recurse -Force
     }
 
-    # A first install starts with no developer-owned builds. Existing installs
-    # keep their own file because the update archive never contains builds.json.
+    # Builds and characters are user-owned state in foundrydock.db.
+    # First installs deliberately do not create data\builds.json or data\characters.json.
     $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText(
-        (Join-Path $DataRoot "builds.json"),
-        '{"Members": []}',
-        $Utf8NoBom
-    )
-
-    # First install also starts with a clean canonical player/character/build
-    # catalog. Existing installs keep their own characters.json because the
-    # updater never ships or replaces user-owned identity state.
-    [System.IO.File]::WriteAllText(
-        (Join-Path $DataRoot "characters.json"),
-        '{"schema_version": 4, "players": [], "characters": [], "builds": [], "team_assignments": []}',
-        $Utf8NoBom
-    )
 
     Write-Host "Running packaged release privacy audit..."
     python tools\audit_packaged_release_privacy.py --package-root $PackageRoot
