@@ -1284,6 +1284,41 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.candidate_runtime_state_factory",
+        domain="extreme",
+        purpose=(
+            "Assemble the canonical production Objective #32 candidate runtime-state graph with shared weapon-enchantment repository, rule, source, variant, cadence, activation, scaling, and cooldown-policy authorities."
+        ),
+        implementation_path="services.extreme_sustained_dps_candidate_runtime_state_factory_service",
+        inputs=(
+            "CanonicalEsoDatabase",
+            "SavedBuildCapabilityService",
+            "PreRuntimeExactDamageOccurrenceAuthority",
+            "SupplementalScenarioRuntimeEvidenceResolvers",
+        ),
+        outputs=("ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService",),
+        dependencies=(
+            "extreme.sustained_dps.runtime_effect_universe",
+            "extreme.sustained_dps.runtime_effect_scaling",
+            "extreme.sustained_dps.weapon_enchantment_runtime_source",
+            "extreme.sustained_dps.weapon_enchantment_runtime_variant",
+            "extreme.sustained_dps.weapon_enchantment_activation_events",
+            "extreme.sustained_dps.weapon_enchantment_cooldown_policy",
+            "extreme.sustained_dps.runtime_scenario_frontier",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_candidate_runtime_state_factory",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Pre-runtime exact damage-occurrence evidence remains caller-owned to avoid circularly deriving runtime_state from a final damage evaluator that already consumes runtime_state. "
+            "All downstream weapon-enchantment runtime authorities are wired from one shared canonical ESO repository/rule graph."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.candidate_runtime_state_frontier_resolver",
         domain="extreme",
         purpose=(
