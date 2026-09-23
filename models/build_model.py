@@ -134,6 +134,8 @@ class BossLoadout:
     BackBarSkills: list[str] = field(default_factory=_empty_bar)
     Food: str = ""
     Potion: str = ""
+    FrontBarPoison: str = ""
+    BackBarPoison: str = ""
     Notes: str = ""
 
     def to_dict(self) -> dict:
@@ -148,6 +150,8 @@ class BossLoadout:
             BackBarSkills=list(data.get("BackBarSkills") or _empty_bar()),
             Food=str(data.get("Food", "") or ""),
             Potion=str(data.get("Potion", "") or ""),
+            FrontBarPoison=str(data.get("FrontBarPoison", "") or ""),
+            BackBarPoison=str(data.get("BackBarPoison", "") or ""),
             Notes=str(data.get("Notes", "") or ""),
         )
 
@@ -204,6 +208,8 @@ class BuildContextVariant:
             "BackBarSkills": list(self.BackBarSkills),
             "Food": self.Food,
             "Potion": self.Potion,
+            "FrontBarPoison": self.FrontBarPoison,
+            "BackBarPoison": self.BackBarPoison,
             "Notes": self.Notes,
         }
 
@@ -325,6 +331,11 @@ class PlayerBuild:
     SourcePlanId: str = ""
     SourcePlanName: str = ""
     SourceSeatId: str = ""
+    # Poisons are owned by weapon sets, not by the character globally. These
+    # additive fields preserve exact front/back ownership without disturbing
+    # historical positional PlayerBuild construction.
+    FrontBarPoison: str = ""
+    BackBarPoison: str = ""
 
     @property
     def attribute_points_total(self) -> int:
@@ -375,7 +386,9 @@ class PlayerBuild:
             "ChampionPoints": [cp.to_dict() for cp in self.ChampionPoints],
             "FrontBarSkills": list(self.FrontBarSkills), "BackBarSkills": list(self.BackBarSkills),
             "ScribedSkills": scribed_names,
-            "Food": self.Food, "Potion": self.Potion, "Notes": self.Notes,
+            "Food": self.Food, "Potion": self.Potion,
+            "FrontBarPoison": self.FrontBarPoison, "BackBarPoison": self.BackBarPoison,
+            "Notes": self.Notes,
             "BossLoadouts": [b.to_dict() for b in self.BossLoadouts],
             "ContextVariants": [variant.to_dict() for variant in self.ContextVariants],
             "ScribedSkillRecipes": [recipe.to_dict() for recipe in recipes],
@@ -486,6 +499,8 @@ class PlayerBuild:
             SourcePlanId=str(data.get("SourcePlanId", "") or ""),
             SourcePlanName=str(data.get("SourcePlanName", "") or ""),
             SourceSeatId=str(data.get("SourceSeatId", "") or ""),
+            FrontBarPoison=str(data.get("FrontBarPoison", "") or ""),
+            BackBarPoison=str(data.get("BackBarPoison", "") or ""),
         )
 
     def display_label(self, fallback: str) -> str:
