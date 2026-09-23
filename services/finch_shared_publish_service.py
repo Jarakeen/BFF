@@ -156,6 +156,8 @@ def shared_team_payload(roster: RosterService, team_name: str) -> dict[str, obje
             "current_focus": _clean(schedule.CurrentFocus) if schedule else "",
         },
         "members": members,
+        "group_type": "trial",
+        "group_capacity": _TRIAL_SEAT_CAPACITY,
         "roster": _team_seat_summary(members),
     }
 
@@ -232,6 +234,8 @@ def shared_raid_plan_payload(
         "team_name": plan.team_name or "",
         "difficulty": plan.difficulty or "",
         "status": plan.status,
+        "group_type": "trial",
+        "group_capacity": _TRIAL_SEAT_CAPACITY,
         "raid_maps": dict(raid_maps or {}),
         "members": [
             {
