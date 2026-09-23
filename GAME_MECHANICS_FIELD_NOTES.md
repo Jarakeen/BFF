@@ -1711,4 +1711,13 @@ The cooldown-policy resolver exposed a useful distinction: a trustworthy **4-sec
 **Layman's version:** knowing that a timer lasts four seconds is not the same thing as knowing which things are sharing that timer.
 
 **For BFF:** cooldown duration and cooldown topology stay separate proof requirements. `EffectVariant.name` can become the timer identity only after the game rule saying same identities share that timer is authoritative.
+---
+
+## 2026-09-23 — One enchant proc can have more than one consequence
+
+Some weapon enchantments produce more than one gameplay consequence from the same proc. A useful example is **Absorb Health**, whose imported canonical effect rows include both damage and Health restoration.
+
+**Layman's version:** one glyph firing can do two things; that does not mean two glyphs fired.
+
+**For BFF:** weapon-enchantment source selection and cooldown state are keyed by the shared enchant provenance, not by the number of consequence rows. One bound proc attempt may feed multiple consequence variants belonging to that one source.
 
