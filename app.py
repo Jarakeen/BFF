@@ -3,6 +3,7 @@ from __future__ import annotations
 import sqlite3
 import sys
 import traceback
+from datetime import datetime, timezone
 from pathlib import Path
 
 from PySide6.QtGui import QIcon
@@ -370,17 +371,37 @@ def _startup_crash_log_path() -> Path:
     return Path(__file__).resolve().parent / "FoundryDock-crash.log"
 
 
-if __name__ == "__main__":
+def _write_crash_log(exc_type, exc_value, exc_traceback) -> None:
+    """Append one uncaught exception to FoundryDock-crash.log."""
     try:
-        raise SystemExit(main())
-    except SystemExit:
-        raise
-    except BaseException:
-        try:
-            _startup_crash_log_path().write_text(
-                traceback.format_exc(),
-                encoding="utf-8",
-            )
-        except OSError:
-            pass
-        raise
+        path = _startup_crash_log_path()
+        stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        rendered = "".join(
+            traceback.format_exception(exc_type, exc_value, exc_traceback)
+        )
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(f"\n=== FoundryDock crash {stamp} ===\n")
+            handle.write(rendered)
+            if not rendered.endswith("\n"):
+                handle.write("\n")
+    except OSError:
+        pass
+
+
+def _install_crash_logging() -> None:
+    """Capture uncaught main-thread and worker-thread exceptions."""
+    sys.excepthook = _write_crash_log
+    try:
+        import threading
+
+        def _thread_exception_hook(args) -> None:
+            _write_crash_log(args.exc_type, args.exc_value, args.exc_traceback)
+
+        threading.excepthook = _thread_exception_hook
+    except (ImportError, AttributeError):
+        pass
+
+
+if __name__ == "__main__":
+    _install_crash_logging()
+    raise SystemExit(main())
