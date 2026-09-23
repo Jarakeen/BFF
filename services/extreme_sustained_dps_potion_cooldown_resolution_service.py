@@ -15,9 +15,16 @@ from minmax.jewelry_trait_repository import JewelryTraitRepository
 from models.build_model import PlayerBuild
 
 
+@dataclass(frozen=True)
+class ExtremePotionPassiveGrantEvidence:
+    passives: tuple[PassiveGrant, ...] = ()
+    complete: bool = False
+    unresolved: tuple[str, ...] = ()
+
+
 ExtremePotionPassiveGrantResolver = Callable[
     [PlayerBuild, object],
-    tuple[PassiveGrant, ...],
+    ExtremePotionPassiveGrantEvidence,
 ]
 from services.extreme_sustained_dps_potion_cooldown_passive_grant_service import (
     ExtremeSustainedDPSPotionCooldownPassiveGrantService,
@@ -68,11 +75,16 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
             JewelryTraitRepository(database),
         )
         self.cooldown_service = cooldown_service or RotationBuildPotionCooldownService()
-        self.passive_grant_resolver = passive_grant_resolver or (
-            ExtremeSustainedDPSPotionCooldownPassiveGrantService(
+        if passive_grant_resolver is None:
+            passive_service = ExtremeSustainedDPSPotionCooldownPassiveGrantService(
                 ExtremeSkillUniverseService(database)
-            ).resolve
-        )
+            )
+            self.passive_grant_resolver = lambda build, progression: ExtremePotionPassiveGrantEvidence(
+                passives=tuple(passive_service.resolve(build, progression)),
+                complete=True,
+            )
+        else:
+            self.passive_grant_resolver = passive_grant_resolver
 
     def resolve(
         self,
@@ -104,9 +116,13 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
             )
         elif progression is not None and not resolved_passives:
             try:
-                resolved_passives = tuple(
-                    self.passive_grant_resolver(player_build, progression)
-                )
+                passive_evidence = self.passive_grant_resolver(player_build, progression)
+                resolved_passives = tuple(passive_evidence.passives)
+                unresolved.extend(tuple(passive_evidence.unresolved))
+                if not passive_evidence.complete:
+                    unresolved.append(
+                        "Extreme potion cooldown passive-grant inventory is not proven complete"
+                    )
             except ValueError as exc:
                 unresolved.append(str(exc))
 
@@ -139,8 +155,8 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
 
 
 __all__ = [
-    "ExtremePotionPassiveGrantResolver",
-    "ExtremeSustainedDPSPotionCooldownResolution",
+    "ExtremePotionPassiveGrantEvidence",
+    "ExtremePotionPassiveGrantResolver",    "ExtremeSustainedDPSPotionCooldownResolution",
     "ExtremeSustainedDPSPotionCooldownResolutionService",
     "ExtremeSustainedDPSPotionCooldownScenarioEvidence",
 ]
