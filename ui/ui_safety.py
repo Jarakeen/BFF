@@ -26,8 +26,16 @@ def confirm_unsaved_changes(
     action_text: str = "leave this page",
 ) -> bool:
     has_pending = getattr(page, "has_pending_changes", None)
-    if not callable(has_pending) or not has_pending():
+    if not callable(has_pending):
         return True
+    try:
+        if not bool(has_pending()):
+            return True
+    except Exception as exc:
+        mark_save_failed(
+            page,
+            f"Could not verify whether this page has unsaved changes: {exc}",
+        )
 
     box = QMessageBox(parent)
     box.setWindowTitle("Unsaved Changes")
@@ -56,16 +64,26 @@ def confirm_unsaved_changes(
             return False
         if saved:
             mark_saved(page)
-        return saved
+            return True
+        mark_save_failed(page, "The page is still reporting unsaved changes after Save.")
+        return False
 
     if answer == QMessageBox.StandardButton.Discard:
         discard = getattr(page, "discard_pending_changes", None)
-        if callable(discard):
-            try:
-                discard()
-            except Exception as exc:
-                mark_save_failed(page, str(exc))
-                return False
+        if not callable(discard):
+            mark_save_failed(
+                page,
+                "This page cannot safely discard its current edits.",
+            )
+            return False
+        try:
+            discarded = discard()
+        except Exception as exc:
+            mark_save_failed(page, str(exc))
+            return False
+        if discarded is False:
+            mark_save_failed(page, "The page refused to discard its current edits.")
+            return False
         mark_saved(page, "Discarded")
         return True
 
@@ -215,7 +233,10 @@ def wire_save_button(
             result = save()
         except Exception as exc:
             mark_save_failed(page, str(exc))
-            raise
+            status = getattr(page, "status", None)
+            if status is not None and callable(getattr(status, "error", None)):
+                status.error(f"Save failed: {exc}")
+            return
         if result is False or result is None:
             if callable(getattr(page, "has_pending_changes", None)) and page.has_pending_changes():
                 mark_save_failed(page, "The save did not complete.")
