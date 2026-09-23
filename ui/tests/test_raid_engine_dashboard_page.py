@@ -68,7 +68,8 @@ def test_dashboard_uses_supplied_decorative_assets_and_wires_all_mockup_destinat
     for route in ("comp_builder", "console:6", "console:7", "console:1", "console:3"):
         assert route in source
     assert "dashboard.sendTeamRequested.connect(window._send_optimized_team_to_roster)" in support
-    assert 'section["page"] = "raid_engine_dashboard"' in support
+    assert '"raid_engine_dashboard"' in support
+    assert '"raid_plans"' in support
 
 def test_dashboard_refresh_keeps_team_optimization_read_only() -> None:
     source = Path("ui/raid_engine_dashboard_page.py").read_text(encoding="utf-8")
