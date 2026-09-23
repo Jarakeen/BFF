@@ -278,6 +278,7 @@ def apply_formation(board, preset_key: str) -> bool:
         start=1,
     ):
         token.label = f"DD {index}"
+        token._raid_map_seat_label = token.label
         token.setPos(x, y)
         token.update()
 
@@ -286,10 +287,14 @@ def apply_formation(board, preset_key: str) -> bool:
         start=1,
     ):
         token.label = f"Healer {index}"
+        token._raid_map_seat_label = token.label
         token.setPos(x, y)
         token.update()
 
     _set_formation_group(board, preset.key, [*dps_items, *healer_items])
+    refresh_names = getattr(board, "refresh_player_name_labels", None)
+    if callable(refresh_names):
+        refresh_names()
     board.scene.update()
     board.view.viewport().update()
     return True
