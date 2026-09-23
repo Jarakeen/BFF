@@ -67,6 +67,10 @@ class ExtremeSustainedDPSPotionCooldownPassiveGrantService:
             raise ValueError(
                 f"Extreme potion cooldown passive universe could not be enumerated: {exc}"
             ) from exc
+        if not passive_rows:
+            raise ValueError(
+                "Extreme potion cooldown passive universe is empty; denominator is not proven"
+            )
         grants: list[PassiveGrant] = []
         for passive in passive_rows:
             name = str(getattr(passive, "name", "") or "").strip()
