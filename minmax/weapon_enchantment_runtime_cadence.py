@@ -41,6 +41,11 @@ class WeaponEnchantmentCadenceEvidence:
     same_effect_identity_shares_cooldown: bool | None
     same_identity_cooldown_authority: WeaponEnchantmentCadenceAuthority
     evidence_note: str
+    distinct_effect_identities_have_independent_cooldowns: bool | None = None
+    distinct_identity_cooldown_authority: WeaponEnchantmentCadenceAuthority = (
+        WeaponEnchantmentCadenceAuthority.PROVISIONAL
+    )
+    distinct_identity_cooldown_evidence_note: str = ""
 
     @property
     def runtime_blockers(self) -> tuple[str, ...]:
@@ -78,6 +83,13 @@ class WeaponEnchantmentCadenceEvidence:
             is not WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
         ):
             blockers.append("same-identity cooldown sharing is not authoritative")
+        if self.distinct_effect_identities_have_independent_cooldowns is None:
+            blockers.append("distinct-identity cooldown independence is unavailable")
+        if (
+            self.distinct_identity_cooldown_authority
+            is not WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+        ):
+            blockers.append("distinct-identity cooldown independence is not authoritative")
         if self.authority is not WeaponEnchantmentCadenceAuthority.AUTHORITATIVE:
             blockers.append("effect-family cadence has not been promoted to authoritative")
         return tuple(dict.fromkeys(blockers))
@@ -145,6 +157,12 @@ _PROVISIONAL = {
         ),
         same_effect_identity_shares_cooldown=True,
         same_identity_cooldown_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
+        distinct_effect_identities_have_independent_cooldowns=True,
+        distinct_identity_cooldown_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
+        distinct_identity_cooldown_evidence_note=(
+            "Community testing consistently reports that different enchant identities "
+            "retain independent cooldown timers, but current primary proof is still missing."
+        ),
         evidence_note=(
             "Community-observed ESO behavior; current-version authoritative source "
             "still required before Objective #32 may consume this cadence."
@@ -187,6 +205,12 @@ _PROVISIONAL = {
         ),
         same_effect_identity_shares_cooldown=True,
         same_identity_cooldown_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
+        distinct_effect_identities_have_independent_cooldowns=True,
+        distinct_identity_cooldown_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
+        distinct_identity_cooldown_evidence_note=(
+            "Community testing consistently reports that different enchant identities "
+            "retain independent cooldown timers, but current primary proof is still missing."
+        ),
         evidence_note=(
             "Community observations disagree between roughly nine and ten seconds; "
             "the disputed base cooldown is intentionally unresolved."
