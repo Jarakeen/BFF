@@ -359,7 +359,7 @@ def test_strict_global_objective32_preflight_refuses_missing_runtime_state_autho
 
     with pytest.raises(ValueError, match="runtime-state frontier or candidate-resolved runtime-state authority"):
         service.search(
-        closure_inventory=_closed_closure_inventory(),
+            closure_inventory=_closed_closure_inventory(),
             heavy_attack_channel_block_denominator_proven=True,
             dual_bar_frontier="gear",
             candidate_id_prefix="objective32",
@@ -426,7 +426,7 @@ def test_strict_global_objective32_rejects_duplicate_static_and_candidate_runtim
 
     with pytest.raises(ValueError, match="cannot combine candidate-resolved"):
         service.search(
-        closure_inventory=_closed_closure_inventory(),
+            closure_inventory=_closed_closure_inventory(),
             runtime_state_frontier=_runtime_frontier(),
             heavy_attack_channel_block_denominator_proven=True,
             dual_bar_frontier="gear",
@@ -482,7 +482,7 @@ def test_canonical_objective32_rejects_competing_potion_cooldown_resolver() -> N
 
     with pytest.raises(ValueError, match="owns the potion cooldown resolver"):
         service.search(
-        closure_inventory=_closed_closure_inventory(),
+            closure_inventory=_closed_closure_inventory(),
             runtime_state_frontier=_runtime_frontier(),
             dual_bar_frontier="gear",
             candidate_id_prefix="objective32",
@@ -510,7 +510,7 @@ def test_closure_ready_search_refuses_missing_potion_cooldown_authority() -> Non
 
     with pytest.raises(ValueError, match="requires a canonical potion cooldown resolver"):
         service.search(
-        closure_inventory=_closed_closure_inventory(),
+            closure_inventory=_closed_closure_inventory(),
             runtime_state_frontier=_runtime_frontier(),
             dual_bar_frontier="gear",
             candidate_id_prefix="objective32",
@@ -545,7 +545,7 @@ def test_strict_global_objective32_preflight_rejects_open_candidate_runtime_deno
 
     with pytest.raises(ValueError, match="runtime-event denominator"):
         service.search(
-        closure_inventory=_closed_closure_inventory(),
+            closure_inventory=_closed_closure_inventory(),
             heavy_attack_channel_block_denominator_proven=True,
             dual_bar_frontier="gear",
             candidate_id_prefix="objective32",
