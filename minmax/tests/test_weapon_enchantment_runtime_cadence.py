@@ -16,6 +16,8 @@ def test_damage_cadence_is_research_evidence_not_runtime_authority() -> None:
 
     assert evidence.base_cooldown_seconds == 4.0
     assert evidence.authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
+    assert evidence.cooldown_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+    assert "ZOS Update 21 patch notes" in evidence.cooldown_evidence_note
     assert evidence.activation_causes == (
         "light_attack_damage",
         "heavy_attack_damage",
@@ -26,6 +28,8 @@ def test_damage_cadence_is_research_evidence_not_runtime_authority() -> None:
     assert evidence.off_bar_source_persists is True
     assert evidence.cooldown_scope == "per_effect_identity"
     assert evidence.poison_replaces_enchantment is True
+    assert evidence.poison_replacement_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+    assert "temporarily suppresses weapon enchantments" in evidence.poison_replacement_evidence_note
     assert evidence.same_effect_identity_shares_cooldown is True
     assert evidence.runtime_ready is False
 
@@ -39,6 +43,8 @@ def test_buff_debuff_cooldown_observation_remains_provisional() -> None:
     )
 
     assert evidence.base_cooldown_seconds == 10.0
+    assert evidence.cooldown_authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
+    assert evidence.poison_replacement_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
     assert evidence.runtime_ready is False
 
 
@@ -49,4 +55,18 @@ def test_authoritative_activation_topology_does_not_promote_open_cooldown_math()
 
     assert evidence.activation_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
     assert evidence.authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
+    assert evidence.runtime_ready is False
+
+
+def test_field_level_authority_preserves_remaining_runtime_blockers() -> None:
+    evidence = provisional_weapon_enchantment_cadence(
+        WeaponEnchantmentEffectFamily.DIRECT_DAMAGE
+    )
+
+    assert evidence.activation_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+    assert evidence.cooldown_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+    assert evidence.poison_replacement_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+    assert evidence.off_bar_authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
+    assert evidence.cooldown_scope_authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
+    assert evidence.same_identity_cooldown_authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
     assert evidence.runtime_ready is False
