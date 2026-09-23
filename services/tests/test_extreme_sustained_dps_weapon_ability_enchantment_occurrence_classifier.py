@@ -21,7 +21,7 @@ class _Coefficients:
             if self.skill_rank_id is None
             else SimpleNamespace(skill_rank_id=int(self.skill_rank_id))
         )
-        return SimpleNamespace(skill=skill, unresolved=self.unresolved)
+        return SimpleNamespace(rank=skill, unresolved=self.unresolved)
 
 
 class _Components:
