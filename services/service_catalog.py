@@ -1427,6 +1427,60 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_source_selection",
+        domain="extreme",
+        purpose=(
+            "Resolve the finite one-hit weapon-enchantment source-selection frontier from source-owned candidates and caller-proven cooldown-ready state."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_source_selection_service",
+        inputs=(
+            "ExtremeSustainedDPSWeaponEnchantmentSourceOwnership",
+            "OptionalCooldownReadyWeaponEnchantmentEffects",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentSourceSelection",),
+        dependencies=("extreme.sustained_dps.weapon_enchantment_source_ownership",),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_source_selection",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "A single source-owned candidate resolves exactly. Multiple Dual Wield candidates require exact cooldown-ready evidence; one ready candidate resolves, several remain finite alternatives, and no ready candidates prove that the opportunity produces no enchantment proc. "
+            "The service consumes cooldown truth but never calculates or invents cooldown cadence."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_activation_resolution",
+        domain="extreme",
+        purpose=(
+            "Compose exact activation-event source-bar ownership and one-hit source selection into one fail-closed weapon-enchantment proc-source decision."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_activation_resolution_service",
+        inputs=(
+            "WeaponEnchantmentActivationRuntimeEvent",
+            "WeaponEnchantmentEffectVariants",
+            "OptionalCooldownReadyWeaponEnchantmentEffects",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentActivationResolution",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_enchantment_source_ownership",
+            "extreme.sustained_dps.weapon_enchantment_source_selection",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_activation_resolution",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Rejects non-enchantment runtime events, preserves delayed off-bar source ownership, and exposes exact, finite-alternative, or no-proc outcomes without weakening cooldown authority gates. "
+            "This is the runtime/search integration seam for the one-hit-one-enchantment rule."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_ability_enchantment_occurrence_classifier",
         domain="extreme",
         purpose=(
