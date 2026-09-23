@@ -1427,6 +1427,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_cooldown_readiness",
+        domain="extreme",
+        purpose=(
+            "Resolve exact per-candidate weapon-enchantment cooldown readiness at one activation timestamp from explicit cooldown-state evidence."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_cooldown_readiness_service",
+        inputs=(
+            "ActivationTimestamp",
+            "SourceOwnedWeaponEnchantmentEffectVariants",
+            "ExplicitWeaponEnchantmentCooldownStates",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentCooldownReadiness",),
+        dependencies=(),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_cooldown_readiness",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Owns timestamp arithmetic only. Base cooldown values, shared-identity topology, poison suppression, and state production remain external evidence responsibilities. Missing, duplicate, or foreign per-candidate state fails closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_source_selection",
         domain="extreme",
         purpose=(
