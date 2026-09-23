@@ -1,10 +1,18 @@
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import BarId, EffectLayer
+from minmax.combat_effects import CombatEffect
+from minmax.effects import EffectUnit
 from minmax.support_effect_category import SupportEffectCategory
 from minmax.weapon_enchantment_runtime_cadence import (
     WeaponEnchantmentCadenceAuthority,
     WeaponEnchantmentCadenceEvidence,
     WeaponEnchantmentEffectFamily,
+)
+from services.extreme_sustained_dps_weapon_enchantment_cadence_family_service import (
+    ExtremeSustainedDPSWeaponEnchantmentCadenceFamilyService,
+)
+from services.extreme_sustained_dps_weapon_enchantment_runtime_source_service import (
+    ExtremeSustainedDPSWeaponEnchantmentRuntimeSource,
 )
 from services.extreme_sustained_dps_weapon_enchantment_cooldown_policy_resolver import (
     ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver,
@@ -149,3 +157,118 @@ def test_duplicate_same_identity_sources_receive_same_authoritative_cooldown_key
         "crusher",
         "crusher",
     ]
+
+class _RuntimeSources:
+    def __init__(self, sources):
+        self.sources = tuple(sources)
+
+    def resolve(self, _build):
+        class _Resolution:
+            sources = self.sources
+            evidence = ("canonical equipped enchant sources resolved",)
+            unresolved = ()
+        return _Resolution()
+
+
+def _runtime_source(*, identity, label, effect_type, damage_type=None):
+    return ExtremeSustainedDPSWeaponEnchantmentRuntimeSource(
+        item_id=1,
+        identity=identity,
+        identity_label=identity.replace("_", " ").title(),
+        source_label=label,
+        active_bar=BarId.FRONT,
+        source_slot="main_hand",
+        effects=(
+            CombatEffect(
+                effect_type=effect_type,
+                value=100.0,
+                source=label,
+                unit=EffectUnit.FLAT,
+                damage_type=damage_type,
+            ),
+        ),
+    )
+
+
+def test_canonical_direct_damage_source_reaches_four_second_evidence_but_stops_at_topology():
+    source = _runtime_source(
+        identity="flame",
+        label="Glyph of Flame",
+        effect_type="damage",
+        damage_type="flame",
+    )
+    effect = _effect(
+        name="flame",
+        source="Glyph of Flame",
+        category=SupportEffectCategory.OTHER,
+    )
+    resolver = ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver(
+        runtime_source_service=_RuntimeSources((source,)),
+        cadence_family_service=ExtremeSustainedDPSWeaponEnchantmentCadenceFamilyService(),
+    )
+
+    result = resolver.resolve(
+        player_build=object(),
+        enchantment_effects=(effect,),
+    )
+
+    assert result.policies == ()
+    assert any("cadence family=direct_damage" in row for row in result.evidence)
+    assert not any("base cooldown is not authoritative" in row for row in result.unresolved)
+    assert any("cooldown scope is not authoritative" in row for row in result.unresolved)
+    assert any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
+
+
+def test_canonical_crusher_source_reaches_buff_debuff_family_and_keeps_base_cooldown_open():
+    source = _runtime_source(
+        identity="crushing",
+        label="Glyph of Crushing",
+        effect_type="physical_spell_resistance_reduction",
+    )
+    effect = _effect(
+        name="crushing",
+        source="Glyph of Crushing",
+        category=SupportEffectCategory.OTHER,
+    )
+    resolver = ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver(
+        runtime_source_service=_RuntimeSources((source,)),
+        cadence_family_service=ExtremeSustainedDPSWeaponEnchantmentCadenceFamilyService(),
+    )
+
+    result = resolver.resolve(
+        player_build=object(),
+        enchantment_effects=(effect,),
+    )
+
+    assert result.policies == ()
+    assert any("cadence family=buff_or_debuff" in row for row in result.evidence)
+    assert any("base cooldown is not authoritative" in row for row in result.unresolved)
+    assert any("cooldown scope is not authoritative" in row for row in result.unresolved)
+    assert any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
+
+
+def test_canonical_policy_resolution_requires_build_context():
+    source = _runtime_source(
+        identity="flame",
+        label="Glyph of Flame",
+        effect_type="damage",
+        damage_type="flame",
+    )
+    resolver = ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver(
+        runtime_source_service=_RuntimeSources((source,)),
+        cadence_family_service=ExtremeSustainedDPSWeaponEnchantmentCadenceFamilyService(),
+    )
+
+    result = resolver.resolve(
+        enchantment_effects=(
+            _effect(
+                name="flame",
+                source="Glyph of Flame",
+                category=SupportEffectCategory.OTHER,
+            ),
+        ),
+    )
+
+    assert result.policies == ()
+    assert any("requires player_build" in row for row in result.unresolved)
+
