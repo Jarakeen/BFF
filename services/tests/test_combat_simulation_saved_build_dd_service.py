@@ -7,6 +7,7 @@ from models.build_model import PlayerBuild
 from models.combat_simulation import (
     CombatSimulationCombatant,
     CombatSimulationIncomingDamage,
+    CombatSimulationOutgoingDamage,
     CombatSimulationResourceResult,
     CombatSimulationTargetState,
 )
@@ -776,3 +777,77 @@ def test_periodic_occurrence_exactly_at_simulation_horizon_is_applied() -> None:
         for event in result.events
         if event.event_type == "death"
     ] == [(5.0, "Horizon DoT")]
+
+
+
+def test_saved_build_dd_orchestrator_interleaves_supplemental_damage_with_health_feedback() -> None:
+    provider_service = _ThresholdProviderService()
+    service = CombatSimulationSavedBuildDDService(
+        provider_service=provider_service,
+        simulation_service=_simulation_service(),
+    )
+    plan = RotationPlan(
+        character_name="Damage Tester",
+        build_name="DD Build",
+        duration_seconds=5.0,
+        actions=(
+            RotationAction(
+                time_seconds=1.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Opening Hit",
+                bar="front",
+            ),
+            RotationAction(
+                time_seconds=2.0,
+                sequence=0,
+                kind=RotationActionKind.SKILL,
+                name="Execute Hit",
+                bar="front",
+            ),
+        ),
+    )
+    state = CombatSimulationTargetState(
+        combatants=(
+            CombatSimulationCombatant(
+                "Boss",
+                "enemy",
+                current_health=10000,
+                maximum_health=10000,
+            ),
+        ),
+    )
+
+    result = service.simulate(
+        build_snapshot=_snapshot(),
+        plan=plan,
+        target_state=state,
+        damage_target_identity="Boss",
+        target_resistance=18200.0,
+        supplemental_outgoing_damage=(
+            CombatSimulationOutgoingDamage(
+                time_seconds=1.5,
+                sequence=0,
+                source="Glyph of Decrease Health",
+                recipient="Boss",
+                amount=1000.0,
+                damage_type="oblivion",
+            ),
+        ),
+    )
+
+    assert provider_service.provider is not None
+    assert provider_service.provider.seen == [
+        ("Opening Hit", 10000.0, 1.0),
+        ("Execute Hit", 3000.0, 0.3),
+    ]
+    outgoing = [
+        (event.time_seconds, event.source, event.payload_dict()["amount"])
+        for event in result.events
+        if event.event_type == "outgoing_damage"
+    ]
+    assert outgoing == [
+        (1.0, "Opening Hit", 6000.0),
+        (1.5, "Glyph of Decrease Health", 1000.0),
+        (2.0, "Execute Hit", 7000.0),
+    ]
