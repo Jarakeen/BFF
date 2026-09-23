@@ -61,8 +61,14 @@ class ExtremeSustainedDPSPotionCooldownPassiveGrantService:
                 "Extreme potion cooldown PassiveGrant derivation requires explicit passive ranks"
             )
 
+        try:
+            passive_rows = tuple(self.universe_service.passives())
+        except Exception as exc:
+            raise ValueError(
+                f"Extreme potion cooldown passive universe could not be enumerated: {exc}"
+            ) from exc
         grants: list[PassiveGrant] = []
-        for passive in self.universe_service.passives():
+        for passive in passive_rows:
             name = str(getattr(passive, "name", "") or "").strip()
             line = str(getattr(passive, "skill_line", "") or "").strip()
             rank = progression.passive_rank(name)
