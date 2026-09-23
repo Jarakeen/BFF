@@ -18,6 +18,9 @@ from minmax.combat_state import CombatState
 from minmax.combat_target_resistance import target_resistance_from_combat_state
 from minmax.gear_set_repository import GearSetRepository
 from minmax.rotation_plan import RotationPlan
+from minmax.rule_repository import RuleRepository
+from minmax.weapon_enchantment_effect_service import WeaponEnchantmentEffectService
+from minmax.weapon_enchantment_repository import WeaponEnchantmentRepository
 from models.build_model import PlayerBuild
 from models.combat_simulation import (
     CombatSimulationCombatant,
@@ -55,6 +58,15 @@ from services.extreme_saved_rotation_combat_record_service import (
 )
 from services.extreme_sustained_dps_runtime_effect_projection_service import (
     ExtremeSustainedDPSRuntimeEffectProjectionService,
+)
+from services.extreme_sustained_dps_weapon_enchantment_consequence_coverage_service import (
+    ExtremeSustainedDPSWeaponEnchantmentConsequenceCoverageService,
+)
+from services.extreme_sustained_dps_weapon_enchantment_proc_consequence_service import (
+    ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService,
+)
+from services.extreme_sustained_dps_weapon_enchantment_runtime_source_service import (
+    ExtremeSustainedDPSWeaponEnchantmentRuntimeSourceService,
 )
 from services.extreme_sustained_dps_runtime_target_combat_state_service import (
     ExtremeSustainedDPSRuntimeTargetCombatStateService,
@@ -162,6 +174,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
         *,
         activation_service: ExtremeDualBarSetActivationEvidenceService | None = None,
         summary_service: CombatSimulationDamageSummaryService | None = None,
+        weapon_enchantment_runtime_source_service: object | None = None,
     ) -> None:
         self.database_path = Path(database_path)
         repository = GearSetRepository(self.database_path)
@@ -171,6 +184,21 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             eligibility=eligibility,
         )
         self.summary_service = summary_service or CombatSimulationDamageSummaryService()
+        if weapon_enchantment_runtime_source_service is None:
+            enchantment_repository = WeaponEnchantmentRepository(self.database_path)
+            enchantment_effect_service = WeaponEnchantmentEffectService(
+                enchantment_repository,
+                RuleRepository(self.database_path),
+            )
+            weapon_enchantment_runtime_source_service = (
+                ExtremeSustainedDPSWeaponEnchantmentRuntimeSourceService(
+                    repository=enchantment_repository,
+                    effect_service=enchantment_effect_service,
+                )
+            )
+        self.weapon_enchantment_runtime_source_service = (
+            weapon_enchantment_runtime_source_service
+        )
 
     @staticmethod
     def _role_is_dd(build: PlayerBuild) -> bool:
@@ -232,6 +260,21 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             raise ValueError("generated sustained-DPS target_resistance cannot be negative")
 
         candidate_build = ExtremeDualBarGearStateService.materialize(build, gear_state)
+        enchantment_sources = self.weapon_enchantment_runtime_source_service.resolve(
+            candidate_build
+        )
+        enchantment_consequences = (
+            ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService.resolve(
+                attempts=tuple(runtime_snapshot.effect_attempts),
+                sources=tuple(enchantment_sources.sources),
+            )
+        )
+        enchantment_coverage = (
+            ExtremeSustainedDPSWeaponEnchantmentConsequenceCoverageService.assess(
+                enchantment_consequences,
+                consumed_effect_types=(),
+            )
+        )
         activation = self.activation_service.build(gear_state, build=build)
         if activation.unresolved:
             return ExtremeGeneratedSustainedDPSRuntimeResult(
@@ -376,6 +419,8 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 *summary.unresolved,
                 *summary.damage_unresolved,
                 *tuple(target_runtime_unresolved),
+                *tuple(getattr(enchantment_sources, "unresolved", ()) or ()),
+                *tuple(enchantment_coverage.unresolved),
             )
         )
         evidence = (
@@ -387,6 +432,8 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             "Reviewed enemy-target named and explicit numeric Damage Taken effects are projected through canonical target_combat_state at exact damage timestamps",
             "Reviewed enemy-target named and explicit numeric resistance reductions are applied through exact-time target resistance before mitigation",
             "Damage evaluated through Phase 14 Combat Simulation using candidate_build provenance",
+            *tuple(getattr(enchantment_sources, "evidence", ()) or ()),
+            *tuple(enchantment_coverage.evidence),
         )
         if summary.modeled_dps is None:
             return ExtremeGeneratedSustainedDPSRuntimeResult(
