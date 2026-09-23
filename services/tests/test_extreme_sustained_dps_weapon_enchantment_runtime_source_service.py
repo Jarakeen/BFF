@@ -57,6 +57,8 @@ def test_runtime_source_preserves_one_enchant_with_multiple_consequences():
             Enchant="Absorb Health",
             Trait="Infused",
             Quality="Gold",
+            EnchantTier="Truly Superb",
+            Level="CP160",
         )
     )
 
@@ -71,6 +73,8 @@ def test_runtime_source_preserves_one_enchant_with_multiple_consequences():
     assert source.source_slot == "main_hand"
     assert source.weapon_trait == "Infused"
     assert source.weapon_quality == "Gold"
+    assert source.enchantment_tier == "Truly Superb"
+    assert source.item_level == "CP160"
     assert len(source.effects) == 2
     assert effects.calls == [
         (
