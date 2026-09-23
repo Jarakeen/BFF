@@ -588,3 +588,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Shared unresolved canonical action-cost evidence can no longer remain ranking-eligible merely because baseline and candidate inherit the same missing cost.
 - Sustain tags unresolved racial/armor/jewelry cost-modifier evidence with explicit action-cost-modifier provenance, and shared tagged modifier uncertainty is a hard ranking failure.
 - Cosmetic cost/display metadata remains advisory; the hard gate is limited to evidence that changes actual resource spend.
+
+
+- **FoundryDock user database split** — Replaceable ESO/reference facts remain in `data/eso.db`, while Personnel, Teams, roster workflow state, collectible ownership/profiles, and achievement progress live in writable `foundrydock.db`. Startup performs additive legacy migration without deleting or replacing the source. Source runs use `user_data/foundrydock.db`; frozen builds use `%LOCALAPPDATA%\FoundryDock\foundrydock.db`. Friend and release packaging can optionally embed an explicit first-run `foundrydock.db` seed for deliberately customized EXEs, and existing user databases are never overwritten.
