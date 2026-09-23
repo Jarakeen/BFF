@@ -11,7 +11,7 @@ second pretend calendar.
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QLabel
 
-from engine.config import get_data_dir
+from engine.config import get_user_database_path
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
 from ui.components.foundry_card import FoundryCard
@@ -21,7 +21,7 @@ _LEGACY_PLACEHOLDER_TEAM_NAMES = {"godslayer composition"}
 
 
 def _saved_schedules():
-    service = RosterService(EsoDatabase(get_data_dir() / "eso.db"))
+    service = RosterService(EsoDatabase(get_user_database_path()))
     schedules = service.list_team_schedules()
     return [
         schedule
