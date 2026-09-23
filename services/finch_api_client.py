@@ -55,6 +55,16 @@ class FinchRegistration:
 
 
 @dataclass(frozen=True, slots=True)
+class FinchConfirmation:
+    discord_user_id: int
+    guild_id: int
+    plan_id: str
+    seat_id: str
+    player_name: str
+    confirmed_at: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class FinchSharedSnapshot:
     kind: str
     snapshot_key: str
@@ -146,6 +156,40 @@ class FinchApiClient:
             client=str(payload.get("client") or ""),
             client_scopes=scopes,
         )
+
+    def confirmations_private(
+        self,
+        *,
+        plan_id: str = "",
+    ) -> tuple[FinchConfirmation, ...]:
+        path = "/api/v1/confirmations/private"
+        if str(plan_id or "").strip():
+            path += "?plan_id=" + quote(str(plan_id).strip(), safe="")
+        payload = self._request_json(path)
+        rows = payload.get("confirmations")
+        if not isinstance(rows, list):
+            raise FinchApiError("Finch returned an invalid confirmations response.")
+        result: list[FinchConfirmation] = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            try:
+                discord_user_id = int(row.get("discord_user_id"))
+                guild_id = int(row.get("guild_id"))
+            except (TypeError, ValueError):
+                continue
+            result.append(
+                FinchConfirmation(
+                    discord_user_id=discord_user_id,
+                    guild_id=guild_id,
+                    plan_id=str(row.get("plan_id") or "").strip(),
+                    seat_id=str(row.get("seat_id") or "").strip(),
+                    player_name=str(row.get("player_name") or "").strip(),
+                    confirmed_at=str(row.get("confirmed_at") or "").strip(),
+                )
+            )
+        return tuple(result)
+
 
     def registrations_private(
         self,
@@ -473,6 +517,7 @@ __all__ = [
     "FinchApiClient",
     "FinchApiError",
     "FinchConnectionStatus",
+    "FinchConfirmation",
     "FinchGearNeedRequest",
     "FinchRegistration",
     "FinchRegistrationHistory",
