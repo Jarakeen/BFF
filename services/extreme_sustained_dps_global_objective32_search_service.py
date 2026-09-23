@@ -81,6 +81,10 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         **search_kwargs,
     ) -> ExtremeSustainedDPSGlobalObjective32SearchResult:
         normalized_root = str(root_key or "").strip() or "generated-global-root"
+        if self.require_closure_ready_scenario and self.potion_cooldown_resolver is None:
+            raise ValueError(
+                "Canonical Objective #32 closure requires a canonical potion cooldown resolver"
+            )
         if self.potion_cooldown_resolver is not None:
             supplied = search_kwargs.get("potion_cooldown_resolver")
             if supplied is not None and supplied is not self.potion_cooldown_resolver:
