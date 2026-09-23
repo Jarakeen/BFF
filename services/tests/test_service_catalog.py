@@ -1716,3 +1716,23 @@ def test_sustained_dps_theoretical_maximum_closure_is_explicit() -> None:
     )
     assert "full theoretical MOST Sustained DPS objective" in service.purpose
     assert "finite-tree maximum is not promoted" in service.notes
+
+def test_weapon_enchantment_sequence_frontier_is_cataloged_for_proc_consequences() -> None:
+    frontier = canonical_service_for(
+        "extreme_sustained_dps_weapon_enchantment_sequence_frontier"
+    )
+    consequences = SERVICE_CATALOG.get(
+        "extreme.sustained_dps.weapon_enchantment_proc_consequences"
+    )
+
+    assert frontier is not None
+    assert consequences is not None
+    assert (
+        frontier.service_id
+        == "extreme.sustained_dps.weapon_enchantment_sequence_frontier"
+    )
+    assert frontier.dependencies == (
+        "extreme.sustained_dps.weapon_enchantment_source_ownership",
+    )
+    assert frontier.service_id in consequences.dependencies
+
