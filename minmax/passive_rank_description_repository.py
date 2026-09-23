@@ -44,6 +44,57 @@ class PassiveRankDescriptionRepository:
     def _clean(value: object) -> str:
         return " ".join(_COLOR.sub("", str(value or "")).replace("\\n", " ").split())
 
+
+    @classmethod
+    def reconcile_descriptions(
+        cls,
+        *,
+        passive_name: str,
+        rank: int,
+        ability_id: int | None,
+        raw_description: object = None,
+        ability_description: object = None,
+    ) -> PassiveRankDescriptionEvidence:
+        name = " ".join(str(passive_name or "").strip().split())
+        requested_rank = int(rank)
+        raw = cls._clean(raw_description) or None
+        ability = cls._clean(ability_description) or None
+        if raw is not None and ability is not None and raw.casefold() != ability.casefold():
+            return PassiveRankDescriptionEvidence(
+                name,
+                requested_rank,
+                None,
+                ability_id,
+                raw,
+                ability,
+                (
+                    f"Canonical passive rank tooltip disagreement: {name} rank "
+                    f"{requested_rank} raw_description != ability.description",
+                ),
+            )
+        resolved = raw or ability
+        if resolved is None:
+            return PassiveRankDescriptionEvidence(
+                name,
+                requested_rank,
+                None,
+                ability_id,
+                raw,
+                ability,
+                (
+                    f"Canonical passive rank description unavailable: {name} rank "
+                    f"{requested_rank}",
+                ),
+            )
+        return PassiveRankDescriptionEvidence(
+            name,
+            requested_rank,
+            resolved,
+            ability_id,
+            raw,
+            ability,
+        )
+
     def resolve(self, passive_name: str, rank: int) -> PassiveRankDescriptionEvidence:
         name = " ".join(str(passive_name or "").strip().split())
         requested_rank = int(rank)
@@ -90,19 +141,13 @@ class PassiveRankDescriptionRepository:
             return PassiveRankDescriptionEvidence(name, requested_rank, None, None, unresolved=(f"Canonical passive rank is ambiguous: {name} rank {requested_rank} has {len(rows)} records",))
 
         row = rows[0]
-        ability_id = int(row["rank_ability_id"])
-        raw = self._clean(row["raw_description"]) or None
-        ability = self._clean(row["ability_description"]) or None
-        if raw is not None and ability is not None and raw.casefold() != ability.casefold():
-            return PassiveRankDescriptionEvidence(
-                name, requested_rank, None, ability_id, raw, ability,
-                (f"Canonical passive rank tooltip disagreement: {name} rank {requested_rank} raw_description != ability.description",),
-            )
-
-        resolved = raw or ability
-        if resolved is None:
-            return PassiveRankDescriptionEvidence(name, requested_rank, None, ability_id, raw, ability, (f"Canonical passive rank description unavailable: {name} rank {requested_rank}",))
-        return PassiveRankDescriptionEvidence(name, requested_rank, resolved, ability_id, raw, ability)
+        return self.reconcile_descriptions(
+            passive_name=name,
+            rank=requested_rank,
+            ability_id=int(row["rank_ability_id"]),
+            raw_description=row["raw_description"],
+            ability_description=row["ability_description"],
+        )
 
     @staticmethod
     def _schema_failure(passive_name: str, rank: int, table: str) -> PassiveRankDescriptionEvidence:
