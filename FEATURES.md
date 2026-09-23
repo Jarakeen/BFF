@@ -594,3 +594,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Privacy-limited current raid EXE seed** — Saved Raid Plans now persist in `foundrydock.db` alongside Personnel/Teams rather than `data/raid_plans.json`. Legacy Raid Plan JSON is copied additively on startup. The friend-build switch `-UseCurrentRaidSetup` creates a one-off first-install seed containing only Personnel, Teams, memberships, Personnel assignments, and one selected saved Raid Plan; achievement and collectible progress are deliberately excluded. If multiple plans exist, `-RaidPlanId` is required rather than silently packaging unrelated plans. The same custom profile filters `characters.json` down to only player/character/build records referenced by that selected plan.
+
+
+- **FoundryDock crash log** — Uncaught main-thread and worker-thread exceptions append to `FoundryDock-crash.log`. Frozen builds write the log beside `FoundryDock.exe`; source runs write it at the project root. Each entry includes a UTC timestamp and full traceback so packaged crashes can be diagnosed without relying on the Windows exception dialog.
