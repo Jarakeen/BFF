@@ -229,5 +229,6 @@ def test_trait_adjustment_preserves_enchantment_scaling_metadata():
     )
 
     assert len(result) == 1
+    assert result[0].value == 100.0
     assert result[0].scaling_type == "target_max_health"
     assert result[0].condition == "reviewed-condition"
