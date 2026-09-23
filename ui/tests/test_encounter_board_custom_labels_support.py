@@ -46,10 +46,10 @@ def test_reference_points_share_one_edit_reference_panel() -> None:
     assert '"Entrance"' in source
     assert '"Exit"' in source
     assert '"Banner"' in source
-    assert "QVBoxLayout(panel)" in source
-    assert "stack.addLayout(edit_row)" in source
-    assert "stack.addLayout(reference_row)" in source
-    assert "root.insertWidget(insert_at, _label_and_key_panel(self))" in source
+    assert 'QLabel("EDIT")' in source
+    assert 'QLabel("REFERENCE")' in source
+    assert "layout_toolbar.insertWidget" in source
+    assert "actor_toolbar.addWidget" in source
 
 
 def test_reference_points_are_lockable_and_persist_lock_state() -> None:
