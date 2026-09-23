@@ -648,3 +648,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Selected weapon-enchantment consequence coverage gate** — exact generated sustained-DPS leaves now recover the canonical consequences of each source-bound glyph proc and refuse mechanical completeness when any selected damage, restoration, buff/debuff, or other consequence lacks an explicit runtime consumer. Source selection and cooldown sequencing can no longer make an unscored glyph consequence silently disappear.
 
 - **Weapon-enchantment trait-adjusted scaling provenance** — trait-adjusted weapon-enchantment effects now preserve canonical `scaling_type` and condition metadata instead of reconstructing a stripped CombatEffect. This prevents Infused or other trait processing from erasing target-health scaling and other runtime semantics before exact scoring.
+
+- **Selected Crusher exact target-resistance projection** — source-bound Crushing glyph procs now become exact-duration resistance-reduction windows and feed the same canonical target-resistance path used by other reviewed reductions. Missing duration/target/magnitude or overlapping selected windows remain fail-closed rather than inventing stacking behavior.
+
+- **Selected Weapon/Spell Damage glyph runtime projection** — exact selected Weapon/Spell Damage glyph procs now become active timed `weapon_spell_damage` variants and reuse the existing runtime stat bridge, so their proven windows rebuild Weapon/Spell Damage in the ordinary exact-time build context instead of living only as source-selection evidence.
