@@ -1607,3 +1607,16 @@ Official Update 29 notes set Twin Blade and Blunt axes to 2/4% Critical Damage a
 **Layman's version:** the patch notes and observed live behavior argued with each other. That is not a license to pick the larger number because it looks modern.
 
 **For BFF:** Dual Wield axe and Two Handed battle-axe Critical Damage branches remain unresolved for Objective #32 until current-live U50 evidence establishes the actual rank values and behavior cleanly.
+
+
+---
+
+## 2026-09-23 — Alkosh cares about Weapon Damage when the synergy fires
+
+Roar of Alkosh does not simply carry one fixed resistance-reduction number baked into the set. Its current tooltip says the debuff reduces enemy Physical and Spell Resistance by the amount of the user's **Weapon Damage**, capped at **6000**, when the synergy proc is activated.
+
+**Layman's version:** two people wearing Alkosh can produce different debuff strengths, and the same character can theoretically produce a different value if their Weapon Damage is different at the moment the synergy fires.
+
+**What it means in actual play:** temporary Weapon Damage buffs can matter to the debuff magnitude at activation time. A resting character-sheet value is not automatically the correct number for every proc.
+
+**For BFF:** Alkosh must not be resolved from static build state alone. Extreme Engine needs activation-time Weapon Damage evidence, or it must leave the proc scaling unresolved. The runtime-scaling layer now fails closed on any triggered EffectVariant scaling rule that has not been explicitly reviewed.
