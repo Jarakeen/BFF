@@ -57,6 +57,7 @@ class SearchableGearSlotRow(build_editor.GearSlotRow):
         self.type_combo.setMinimumWidth(145)
         self.enchant_combo.setMinimumWidth(150)
         self.enchant_tier_combo.setMinimumWidth(130)
+        self.enchant_quality_combo.setMinimumWidth(110)
         self.level_combo.setMinimumWidth(90)
         for combo in (
             self.set_combo,
@@ -64,6 +65,7 @@ class SearchableGearSlotRow(build_editor.GearSlotRow):
             self.type_combo,
             self.enchant_combo,
             self.enchant_tier_combo,
+            self.enchant_quality_combo,
             self.level_combo,
         ):
             combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
