@@ -1758,3 +1758,12 @@ Cooldown topology has two separate questions: whether duplicate enchant identiti
 **Layman's version:** proving that two copies of Flame share a stopwatch does not automatically prove that Flame and Poison each get their own stopwatch. ESO mechanics, naturally, require us to audit the stopwatches.
 
 **For BFF:** Objective #32 now gates these as separate authority fields. Exact weapon-enchantment sequence simulation cannot close until both duplicate-identity sharing and distinct-identity independence are authoritative.
+
+
+## 2026-09-23 — A weapon glyph is not automatically a normal skill for critical-hit rules
+
+The selected-proc bridge now reaches the point where a glyph's damage consequence can be handed to damage policy. ZOS gives us an explicit special rule for Damage Health (Oblivion): that weapon-enchantment damage cannot critically strike. We still do not have equivalent authority proving the ordinary elemental and absorb glyph families should simply inherit normal skill critical behavior.
+
+**Layman's version:** a Flame glyph doing damage does not magically become a little fire skill just because both numbers hurt the boss.
+
+**For BFF:** selected Oblivion glyph damage may resolve `can_crit=False`. Ordinary glyph damage keeps `can_crit=None` until its own authoritative rule is established, so final sustained-DPS application remains fail-closed instead of borrowing skill semantics.
