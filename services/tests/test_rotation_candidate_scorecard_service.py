@@ -21,6 +21,11 @@ from services.rotation_candidate_scorecard_service import (
     RotationDemandActionRequirement,
 )
 from services.rotation_plan_consequence_service import RotationResourceConsequenceKind
+from services.rotation_candidate_ranking_service import (
+    RotationCandidateRankingInput,
+    RotationCandidateRankingService,
+    RotationCandidateTier,
+)
 
 
 def _plan(*actions: RotationAction, unresolved=()) -> RotationPlan:
@@ -183,3 +188,27 @@ def test_demand_requirement_must_reference_supplied_window() -> None:
                 ),
             ),
         )
+
+
+
+def test_shared_unresolved_potion_evidence_is_a_hard_ranking_failure() -> None:
+    message = "scheduled potion restoration magnitude is unresolved"
+    baseline = _plan()
+    candidate = _plan()
+    scorecard = RotationCandidateScorecardService().compare(
+        baseline_plan=baseline,
+        candidate_plan=candidate,
+        baseline_sustain=_sustain(ending=20000, unresolved=(message,)),
+        candidate_sustain=_sustain(ending=20000, unresolved=(message,)),
+    )
+
+    assert scorecard.candidate_specific_unresolved == ()
+    assert scorecard.inherited_unresolved == (message,)
+    assert scorecard.hard_inherited_unresolved == (message,)
+    assert scorecard.supplied_obligations_satisfied is False
+
+    ranked = RotationCandidateRankingService().rank(
+        (RotationCandidateRankingInput(candidate_id="candidate", scorecard=scorecard),)
+    )
+    assert ranked[0].tier is RotationCandidateTier.INELIGIBLE
+    assert any("hard inherited unresolved" in reason for reason in ranked[0].reasons)
