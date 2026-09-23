@@ -3,8 +3,8 @@
 # Persistence and export for the Builds page.
 #
 # Canonical user-owned player / character / build state lives in
-# data/characters.json through CanonicalBuildBridge. data/builds.json
-# remains a compatibility mirror for older tooling and exports.
+# user_data/foundrydock.db through CanonicalBuildBridge.
+# data/characters.json and data/builds.json are legacy migration inputs only.
 # eso.db is read-only ESO reference data shipped with the Foundry.
 
 from __future__ import annotations
