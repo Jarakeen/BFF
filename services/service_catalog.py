@@ -1452,6 +1452,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_cooldown_policy",
+        domain="extreme",
+        purpose=(
+            "Project canonical weapon-enchantment EffectVariants into finite-sequence cooldown policies only when every cadence and cooldown-topology denominator is authoritative."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_cooldown_policy_resolver",
+        inputs=(
+            "WeaponEnchantmentEffectVariants",
+            "WeaponEnchantmentCadenceEvidence",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolution",),
+        dependencies=(),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_cooldown_policy_resolution",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "EffectVariant.name becomes the cooldown identity only after authoritative same-identity sharing and cooldown-scope evidence exists. "
+            "Current Crusher/buff-debuff cadence therefore remains fail-closed, while the authoritative direct-damage 4-second value alone is insufficient to bypass unresolved topology."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_source_selection",
         domain="extreme",
         purpose=(
