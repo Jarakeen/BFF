@@ -60,7 +60,7 @@ def _source_database(path: Path) -> None:
                 '"characters":[{"character_id":"c1","player_id":"p1","name":"Tanky","gamertag":"Rikbacon"},'
                 '{"character_id":"c2","player_id":"p2","name":"Other","gamertag":"Other"}],'
                 '"builds":[{"build_id":"b1","character_id":"c1","name":"MT"},'
-                '{"build_id":"b2","character_id":"c2","name":"Other"}],"team_assignments":[]}'
+                '{"build_id":"b2","character_id":"c2","name":"Other"}],"team_assignments":[]}',
             ),
         )
         db.execute(
