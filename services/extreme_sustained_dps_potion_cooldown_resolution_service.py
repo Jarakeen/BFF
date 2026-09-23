@@ -80,6 +80,11 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
                 unresolved=tuple(dict.fromkeys(unresolved)),
             )
 
+        if progression is not None and not passives:
+            unresolved.append(
+                "Extreme potion cooldown progression was supplied without canonical PassiveGrant inventory"
+            )
+
         scenario_evidence = scenario or ExtremeSustainedDPSPotionCooldownScenarioEvidence()
         item_evidence = self.item_service.resolve(player_build)
         resolution = self.cooldown_service.resolve(
