@@ -31,7 +31,8 @@ def _db(tmp_path):
             id INTEGER PRIMARY KEY,
             skill_id INTEGER NOT NULL,
             rank INTEGER NOT NULL,
-            ability_id INTEGER NOT NULL
+            ability_id INTEGER NOT NULL,
+            raw_description TEXT
         );
         CREATE TABLE ability(
             ability_id INTEGER PRIMARY KEY,
@@ -170,3 +171,23 @@ def test_empty_player_skill_universe_cannot_prove_passive_denominator(tmp_path):
 
     with pytest.raises(ValueError, match="passive denominator is not proven"):
         service.passives()
+
+
+def test_passive_rank_tooltip_disagreement_is_preserved_as_unresolved(tmp_path):
+    path = _db(tmp_path)
+    with sqlite3.connect(path) as db:
+        db.execute(
+            "UPDATE skill_rank SET raw_description = ? WHERE skill_id = 2",
+            ("Rank one Heavy Weapons tooltip.",),
+        )
+        db.commit()
+
+    row = next(
+        item
+        for item in ExtremeSkillUniverseService(path).passives()
+        if item.name == "Heavy Weapons"
+    )
+
+    assert row.description == "Concrete description 2."
+    assert row.unresolved
+    assert "tooltip disagreement" in row.unresolved[0]
