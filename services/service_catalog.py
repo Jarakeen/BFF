@@ -1398,7 +1398,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Reuses SavedBuildCapabilityService for canonical skill/gear effect discovery and admits only variants with explicit runtime triggers. "
             "potion_use variants are excluded because finalized plan potion state is modeled separately. "
             "Triggerless static/passive variants remain with static/conditional build mechanics, while deferred runtime-effect conversion boundaries fail the runtime universe closed. "
-            "If multiple weapon-enchantment variants share the dedicated activation trigger, the universe fails closed until an explicit per-opportunity source-selection frontier prevents one isolated damage instance from activating more than one enchantment."
+            "Multiple weapon-enchantment variants remain distinct in this universe; exact per-opportunity source selection and cooldown binding are owned downstream by runtime scenario construction."
         ),
     ),
     ServiceDescriptor(
@@ -1503,6 +1503,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Rejects non-enchantment runtime events, preserves delayed off-bar source ownership, and exposes exact, finite-alternative, or no-proc outcomes without weakening cooldown authority gates. "
             "This is the runtime/search integration seam for the one-hit-one-enchantment rule."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_attempt_binding",
+        domain="extreme",
+        purpose=(
+            "Convert one fully resolved weapon-enchantment activation decision into at most one EffectVariant-bound runtime attempt."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_attempt_binding_service",
+        inputs=(
+            "ExtremeSustainedDPSWeaponEnchantmentActivationResolution",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentAttemptBinding",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_enchantment_activation_resolution",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_attempt_binding",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "A proven exact ready source becomes one source-bound RuntimeEffectEventAttempt. A proven all-on-cooldown opportunity becomes no attempt, while missing cooldown truth or unresolved source selection remains fail-closed."
         ),
     ),
     ServiceDescriptor(
@@ -1656,6 +1681,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "EventSkeletonDenominatorProof",
             "SupplementalRuntimeHistoryDenominatorProof",
             "OptionalWeaponEnchantmentActivationService",
+            "OptionalWeaponEnchantmentCooldownStateResolver",
         ),
         outputs=("ExtremeSustainedDPSRuntimeScenarioFrontierResult",),
         dependencies=(
@@ -1664,6 +1690,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.runtime_effect_relevance",
             "extreme.sustained_dps.runtime_event_skeleton",
             "extreme.sustained_dps.weapon_enchantment_activation_events",
+            "extreme.sustained_dps.weapon_enchantment_activation_resolution",
+            "extreme.sustained_dps.weapon_enchantment_attempt_binding",
             "extreme.sustained_dps.runtime_attempt_evidence_frontier",
             "extreme.sustained_dps.runtime_external_history_assembly",
             "extreme.sustained_dps.runtime_external_history_frontier",
@@ -1674,7 +1702,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "This is the scenario-facing runtime_state builder. Its candidate-facing path first resolves the canonical runtime effect universe, resolves reviewed candidate-specific scaling such as Master Architect Ultimate-spend duration, applies the proof-backed sustained-DPS relevance gate, then derives plan/damage-owned event skeletons. When configured, the weapon-enchantment activation resolver contributes ZOS-proven landed LA/HA/weapon-line damage opportunities without asserting actual procs; unsupported encounter trigger families remain caller-proven. The engine then enumerates finite chance/condition realizations, composes plan-owned bar truth, and emits ordinary canonical runtime_state choices. "
+            "This is the scenario-facing runtime_state builder. Its candidate-facing path first resolves the canonical runtime effect universe, resolves reviewed candidate-specific scaling such as Master Architect Ultimate-spend duration, applies the proof-backed sustained-DPS relevance gate, then derives plan/damage-owned event skeletons. When configured, the weapon-enchantment activation resolver contributes ZOS-proven landed LA/HA/weapon-line damage opportunities; exact per-opportunity cooldown-state evidence then resolves source ownership/selection and converts a proven proc into one EffectVariant-bound attempt or a proven all-on-cooldown opportunity into no attempt. Missing cooldown evidence remains fail-closed. Unsupported encounter trigger families remain caller-proven. The engine then enumerates finite chance/condition realizations, composes plan-owned bar truth, and emits ordinary canonical runtime_state choices. "
             "Explicit omitted scope is preserved so local runtime closure cannot be mistaken for global closure."
         ),
     ),
