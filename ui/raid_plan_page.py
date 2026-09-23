@@ -193,7 +193,8 @@ class RaidPlanPage(FoundryPage):
 
         self.header.add_context_widget(self._context_field("TRIAL", self.trial_combo))
         self.header.add_context_widget(self._context_field("DIFFICULTY", self.difficulty_combo))
-        self.header.add_context_widget(self._context_field("PLAN", self.plan_name_edit))
+        self.plan_name_context = self._context_field("PLAN", self.plan_name_edit)
+        self.header.add_context_widget(self.plan_name_context)
 
         workspace = QWidget()
         root = QVBoxLayout(workspace)
