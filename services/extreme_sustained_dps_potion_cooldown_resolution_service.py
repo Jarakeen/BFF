@@ -62,6 +62,7 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
         *,
         player_build: PlayerBuild,
         character_id: str | None = None,
+        progression: object | None = None,
         passives: tuple[PassiveGrant, ...] = (),
         scenario: ExtremeSustainedDPSPotionCooldownScenarioEvidence | None = None,
     ) -> ExtremeSustainedDPSPotionCooldownResolution:
