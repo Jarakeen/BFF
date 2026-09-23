@@ -594,7 +594,9 @@ def test_candidate_builder_binds_one_ready_weapon_enchantment_source() -> None:
     assert result.unresolved == ()
     assert result.frontier.denominator_proven is True
     assert result.frontier.candidate_count == 1
-    attempt = result.frontier.choices[0].snapshot.effect_attempts[0]
+    choice = result.frontier.choices[0]
+    attempt = choice.snapshot.effect_attempts[0]
+    assert choice.effects == ()
     assert attempt.applies_to(off) is True
     assert attempt.applies_to(main) is False
     assert any(
@@ -739,6 +741,7 @@ def test_candidate_builder_carries_dual_wield_sequence_branches() -> None:
     assert result.unresolved == ()
     assert result.frontier.denominator_proven is True
     assert result.frontier.candidate_count == 2
+    assert all(choice.effects == () for choice in result.frontier.choices)
     histories = tuple(
         choice.snapshot.effect_attempts
         for choice in result.frontier.choices
