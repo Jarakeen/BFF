@@ -1749,3 +1749,12 @@ ZOS explicitly documented the Damage Health (Oblivion) weapon enchant as unable 
 
 **For BFF:** the direct-damage consequence bridge may use the existing Oblivion non-crit policy when the canonical damage type is Oblivion. Ordinary glyph critical eligibility and which critical-stat family applies remain separate proof requirements.
 
+
+
+## 2026-09-23 — “Same glyphs share” and “different glyphs are independent” are different facts
+
+Cooldown topology has two separate questions: whether duplicate enchant identities share one timer, and whether different enchant identities keep independent timers. Community testing strongly supports both, but one does not logically prove the other.
+
+**Layman's version:** proving that two copies of Flame share a stopwatch does not automatically prove that Flame and Poison each get their own stopwatch. ESO mechanics, naturally, require us to audit the stopwatches.
+
+**For BFF:** Objective #32 now gates these as separate authority fields. Exact weapon-enchantment sequence simulation cannot close until both duplicate-identity sharing and distinct-identity independence are authoritative.
