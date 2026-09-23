@@ -308,6 +308,36 @@ QLabel[evidenceManual="true"] { color: #82B6D1; }
 QLabel[evidenceObserved="true"] { color: #A89BC8; }
 QLabel[evidenceReview="true"] { color: #A8B1B3; }
 
+/* Shared save-state safety badges: text + border shape carry meaning with color. */
+QLabel[uiSafetyState="saved"] {
+    color: #82B6D1;
+    border: 1px solid #536A76;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 8pt;
+}
+QLabel[uiSafetyState="dirty"] {
+    color: #D6B263;
+    border: 1px solid #8B7448;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 8pt;
+}
+QLabel[uiSafetyState="saving"] {
+    color: #A89BC8;
+    border: 1px solid #665A82;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 8pt;
+}
+QLabel[uiSafetyState="failed"] {
+    color: #E2B08D;
+    border: 2px solid #B56D49;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 8pt;
+}
+
 /* Live Raid: dense nocturnal field-console treatment. */
 QFrame[liveRaidCard="true"] {
     background-color: #0B171B;
