@@ -201,7 +201,8 @@ def _gear_row_grid(grid: QGridLayout, row_index: int, slot_name: str, controller
         enchant_column = 5
     grid.addWidget(controller.enchant_combo, row_index, enchant_column)
     grid.addWidget(controller.enchant_tier_combo, row_index, enchant_column + 1)
-    grid.addWidget(controller.level_combo, row_index, enchant_column + 2)
+    grid.addWidget(controller.enchant_quality_combo, row_index, enchant_column + 2)
+    grid.addWidget(controller.level_combo, row_index, enchant_column + 3)
 
 
 class _GearDialog(_FocusedDialog):
@@ -243,7 +244,7 @@ class _GearDialog(_FocusedDialog):
         headers = ["", "Slot", "Set", "Quality", "Trait"]
         if section in {"Armor", "Front Bar", "Back Bar"}:
             headers.append("Weight / Weapon")
-        headers.extend(["Enchantment", "Enchant Tier", "Level"])
+        headers.extend(["Enchantment", "Enchant Tier", "Glyph Quality", "Level"])
         for column, label in enumerate(headers):
             heading = QLabel(label)
             heading.setProperty("sidebarHeading", True)
