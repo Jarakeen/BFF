@@ -1,5 +1,6 @@
 param(
-    [switch]$SkipTests
+    [switch]$SkipTests,
+    [string]$UserDatabaseSeed = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -69,6 +70,22 @@ try {
     }
     if (-not (Test-Path $ReleaseSeedDatabase)) {
         throw "Sanitized release database seed was not created: $ReleaseSeedDatabase"
+    }
+
+    # Optional prepared user database for a deliberately customized first-install
+    # EXE. PyInstaller embeds it under _seed_user_data; runtime copies it only
+    # when the recipient has no existing foundrydock.db.
+    if (-not [string]::IsNullOrWhiteSpace($UserDatabaseSeed)) {
+        $ResolvedUserDatabaseSeed = (Resolve-Path $UserDatabaseSeed).Path
+        if (-not (Test-Path $ResolvedUserDatabaseSeed -PathType Leaf)) {
+            throw "User database seed not found: $UserDatabaseSeed"
+        }
+        $PreparedUserDatabaseSeed = Join-Path $ReleaseSeedRoot "foundrydock.db"
+        Copy-Item $ResolvedUserDatabaseSeed $PreparedUserDatabaseSeed -Force
+        Write-Host "Prepared user database seed: $ResolvedUserDatabaseSeed"
+    }
+    else {
+        Write-Host "Prepared user database seed: none"
     }
 
     Write-Host "Building $ExeName..."
