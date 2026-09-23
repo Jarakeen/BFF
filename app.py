@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from engine.config import ensure_default_database, get_resource_path
 from services.encounter_schema import ensure_encounter_schema_file
+from services.user_data_migration_service import migrate_legacy_user_data
 
 
 _REQUIRED_CANONICAL_TABLES = {
@@ -178,6 +179,20 @@ def main() -> int:
 
     if not _prepare_packaged_database():
         return 2
+
+    # Copy legacy user-owned state out of data/eso.db only when needed.
+    # The source database and legacy JSON remain untouched as a safety net.
+    try:
+        migrate_legacy_user_data()
+    except (OSError, sqlite3.Error, ValueError) as exc:
+        QMessageBox.critical(
+            None,
+            "FoundryDock user data unavailable",
+            "FoundryDock could not prepare its writable user database.\n\n"
+            "No legacy data was deleted or replaced.\n\n"
+            f"Details: {exc}",
+        )
+        return 3
 
     from ui.startup_splash import create_startup_splash
 
