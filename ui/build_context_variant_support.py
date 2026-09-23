@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_user_database_path
 from models.build_model import (
     ARMOR_SLOTS,
     ARMOR_TRAITS,
@@ -36,7 +36,7 @@ _INSTALLED = False
 
 def _team_names() -> list[str]:
     try:
-        service = RosterService(EsoDatabase(get_data_dir() / "eso.db"))
+        service = RosterService(EsoDatabase(get_user_database_path()))
         return service.list_team_names()
     except Exception:
         return []
