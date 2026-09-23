@@ -460,6 +460,10 @@ def _open_live_raid_boss_mechanics(window, encounter_id: str) -> None:
     mechanics = window.pages.get("console:4")
     if mechanics is None:
         return
+
+    # Let normal page refresh happen first, then pin the exact Live Raid boss.
+    # Otherwise Mechanics.refresh_context() can legitimately replace our selection.
+    window.show_page("console:4")
     opener = getattr(mechanics, "open_encounter_by_id", None)
     if not callable(opener) or not opener(encounter_id):
         live = window.pages.get("live_raid")
@@ -479,7 +483,14 @@ def _open_live_raid_boss_mechanics(window, encounter_id: str) -> None:
     if callable(setter):
         setter(True)
 
-    window.show_page("console:4")
+
+def _hide_live_return_for_sidebar_mechanics(window, route: str) -> None:
+    if str(route or "").strip() != "console:4":
+        return
+    mechanics = window.pages.get("console:4")
+    setter = getattr(mechanics, "set_live_raid_return_visible", None)
+    if callable(setter):
+        setter(False)
 
 
 def _return_to_live_raid(window) -> None:
@@ -565,6 +576,10 @@ def register_raid_engine_pages(window) -> None:
         )
     )
     _register_page(window, "finch_collaboration", finch_collaboration)
+
+    window.sidebar.pageRequested.connect(
+        lambda route: _hide_live_return_for_sidebar_mechanics(window, route)
+    )
 
     live_raid = CityLiveRaidPage()
     live_raid.pageRequested.connect(window.show_page)
