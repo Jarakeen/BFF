@@ -163,7 +163,9 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
 
         self.saved_plan_combo = QComboBox()
         self.saved_plan_combo.setMinimumWidth(230)
+        self.saved_plan_combo.addItem("New Plan…", "__new_plan__")
         self.saved_plan_combo.addItem("No saved plan", None)
+        self.saved_plan_combo.activated.connect(self._saved_plan_activated)
 
         controls = QWidget()
         layout = QVBoxLayout(controls)
@@ -212,6 +214,32 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         layout.addLayout(row)
         self.saved_plan_controls = controls
         self.header.add_context_widget(controls)
+        self._plan_name_context = next(
+            (
+                widget for widget in self.header.findChildren(QWidget)
+                if widget is not self.plan_name_edit and widget.isAncestorOf(self.plan_name_edit)
+            ),
+            None,
+        )
+        self._set_plan_name_visible(False)
+
+    def _set_plan_name_visible(self, visible: bool) -> None:
+        container = getattr(self, "_plan_name_context", None)
+        if container is not None:
+            container.setVisible(bool(visible))
+        else:
+            self.plan_name_edit.setVisible(bool(visible))
+
+    def _saved_plan_activated(self, index: int) -> None:
+        if self.saved_plan_combo.itemData(index) != "__new_plan__":
+            return
+        self._loaded_plan_snapshot = None
+        super().clear_plan()
+        self.plan_name_edit.setText("New Raid Plan")
+        self._set_plan_name_visible(True)
+        self.plan_name_edit.setFocus()
+        self.plan_name_edit.selectAll()
+        self.status.info("New Raid Plan: name it, choose the trial, then save when ready.")
 
     def _open_saved_plan_raid_map(self) -> None:
         plan_id = self.saved_plan_combo.currentData()
@@ -473,8 +501,9 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
 
         self.saved_plan_combo.blockSignals(True)
         self.saved_plan_combo.clear()
+        self.saved_plan_combo.addItem("New Plan…", "__new_plan__")
         self.saved_plan_combo.addItem("No saved plan", None)
-        selected_index = 0
+        selected_index = 1
         for plan in plans:
             trial = self._trial_display_for(plan)
             label = f"{plan.name} • {trial}"
@@ -683,6 +712,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
     def clear_plan(self) -> None:
         self._loaded_plan_snapshot = None
         super().clear_plan()
+        self._set_plan_name_visible(True)
         self.refresh_saved_plan_picker(select_plan_id=None)
 
     def apply_plan(self, plan: RaidPlan) -> None:
@@ -704,6 +734,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 if difficulty_index >= 0:
                     self.difficulty_combo.setCurrentIndex(difficulty_index)
             self.plan_name_edit.setText(plan.name)
+            self._set_plan_name_visible(False)
 
             members_by_seat = {member.seat_id.casefold(): member for member in plan.members}
             for row, seat in enumerate(RAID_PLAN_SEATS):
