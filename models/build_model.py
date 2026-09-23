@@ -50,7 +50,7 @@ def _empty_bar() -> list[str]:
 
 
 def _empty_armor() -> dict[str, dict[str, str]]:
-    return {slot: {"Set": "", "Set2": "", "Quality": "", "Trait": "", "Enchant": "", "EnchantTier": "", "Level": "", "Weight": ""} for slot in ARMOR_SLOTS}
+    return {slot: {"Set": "", "Set2": "", "Quality": "", "Trait": "", "Enchant": "", "EnchantTier": "", "EnchantQuality": "", "Level": "", "Weight": ""} for slot in ARMOR_SLOTS}
 
 
 def _int_value(value, default: int = 0) -> int:
@@ -71,6 +71,9 @@ class GearSlot:
     EnchantTier: str = ""
     Level: str = ""
     WeaponType: str = ""
+    # Glyph quality is distinct from item/weapon Quality. Appended for positional
+    # constructor compatibility with existing GearSlot callers.
+    EnchantQuality: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -88,6 +91,7 @@ class GearSlot:
             EnchantTier=str(data.get("EnchantTier", "") or ""),
             Level=str(data.get("Level", "") or ""),
             WeaponType=str(data.get("WeaponType", "") or ""),
+            EnchantQuality=str(data.get("EnchantQuality", "") or ""),
         )
 
     @property
@@ -104,6 +108,7 @@ class GearSlot:
                 self.EnchantTier,
                 self.Level,
                 self.WeaponType,
+                self.EnchantQuality,
             )
         )
 
