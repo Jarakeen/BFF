@@ -168,6 +168,7 @@ def install() -> None:
                 row.quality_combo,
                 row.level_combo,
                 row.enchant_tier_combo,
+                row.enchant_quality_combo,
             )
         ]
         blockers = [QSignalBlocker(combo) for combo in combos]
@@ -177,6 +178,7 @@ def install() -> None:
                 row.quality_combo.setCurrentText("Gold")
                 row.level_combo.setCurrentText("CP160")
                 row.enchant_tier_combo.setCurrentText("Truly Superb")
+                row.enchant_quality_combo.setCurrentText("Gold")
 
                 # Searchable fixed-catalog combos remember the last valid
                 # selection. Keep that guard in sync even though signals are
@@ -185,6 +187,7 @@ def install() -> None:
                     row.quality_combo,
                     row.level_combo,
                     row.enchant_tier_combo,
+                    row.enchant_quality_combo,
                 ):
                     if bool(combo.property("foundrySearchConfigured")):
                         combo.setProperty("foundryLastValidIndex", combo.currentIndex())
