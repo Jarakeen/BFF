@@ -29,7 +29,7 @@ _CONTEXT_ALIASES = {
     "twins": "lylanar_turlassil",
 }
 _GEAR_FIELDS = (
-    "Set", "Set2", "Trait", "Enchant", "Weight", "Quality", "EnchantTier", "Level", "WeaponType"
+    "Set", "Set2", "Trait", "Enchant", "Weight", "Quality", "EnchantTier", "EnchantQuality", "Level", "WeaponType"
 )
 
 
