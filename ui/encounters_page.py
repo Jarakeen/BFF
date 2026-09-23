@@ -346,11 +346,49 @@ class EncountersPage(FoundryPage):
         self.encounter_board.raid_plan_member_labels_resolver = self._raid_plan_member_labels
         self.encounter_board.snapshotSaved.connect(self._positioning_snapshot_saved)
         self._install_attach_to_control()
+        self._install_raid_plan_map_controls()
         board_card.addWidget(self.encounter_board)
         root.addWidget(board_card, 1)
 
         self._load_positioning_preview(self.encounter_board.snapshot_path)
         return tab
+
+    def _install_raid_plan_map_controls(self) -> None:
+        board = getattr(self, "encounter_board", None)
+        if board is None or board.layout() is None:
+            return
+        button = QPushButton("Save to Raid Plan")
+        button.setObjectName("saveRaidMapToPlanButton")
+        button.setToolTip("Save this exact Raid Map layout as an asset owned by the selected Raid Plan.")
+        button.clicked.connect(self._save_raid_map_to_plan)
+        self.save_raid_map_to_plan_button = button
+        board.layout().insertWidget(max(0, board.layout().count() - 1), button)
+
+    def _save_raid_map_to_plan(self) -> None:
+        plan_id = str(self.raid_plan_combo.currentData() or "").strip()
+        if not plan_id:
+            self.status.warning("Select a saved Raid Plan before saving this map to it.")
+            return
+        plan = self.raid_plan_repository.get(plan_id)
+        if plan is None:
+            self.status.warning("The selected Raid Plan no longer exists.")
+            return
+        self.encounter_board.raid_plan_id = plan_id
+        self.encounter_board.save_state()
+        encounter_id = str(self.boss_combo.currentData() or "").strip()
+        label = f"{plan.name} • {self.boss_combo.currentText() or 'Raid Map'}"
+        record = self.raid_map_store.save_plan_layout(
+            plan_id,
+            self.encounter_board.state_path,
+            encounter_id=encounter_id,
+            label=label,
+        )
+        self.raid_section_state.set_linked_raid_map_id(
+            plan_id,
+            encounter_id or f"plan-{plan_id}",
+            record.map_id,
+        )
+        self.status.success(f"Saved Raid Map to Raid Plan: {plan.name}.")
 
     def _populate_raid_plan_context(self) -> None:
         if not hasattr(self, "raid_plan_combo"):
