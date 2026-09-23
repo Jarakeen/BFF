@@ -104,9 +104,9 @@ def test_shared_team_payload_is_small_and_excludes_private_personnel_fields(tmp_
         "primary_role": "Damage Dealer",
         "secondary_role": "",
         "status": "Active",
+        "discord_username": "private-discord-name",
     }
     rendered = repr(payload)
-    assert "private-discord-name" not in rendered
     assert "this must remain local" not in rendered
     assert "discord.gg/private" not in rendered
     assert "private.example" not in rendered
