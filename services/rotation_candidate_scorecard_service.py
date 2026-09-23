@@ -139,13 +139,21 @@ class RotationCandidateScorecard:
         """Only genuinely unresolved evidence retained for ranking/diagnostics."""
         return self.inherited_unresolved + self.candidate_specific_unresolved
 
+    @staticmethod
+    def _is_hard_inherited_unresolved(item: str) -> bool:
+        text = str(item or "").casefold()
+        return "potion" in text and any(
+            token in text
+            for token in ("restor", "cooldown", "cadence", "timing")
+        )
+
     @property
     def hard_inherited_unresolved(self) -> tuple[str, ...]:
-        """Shared uncertainty that invalidates the measured resource timeline itself."""
+        """Shared uncertainty that invalidates the measured potion/resource timeline."""
         return tuple(
             item
             for item in self.inherited_unresolved
-            if "potion" in item.casefold()
+            if self._is_hard_inherited_unresolved(item)
         )
 
     @property
