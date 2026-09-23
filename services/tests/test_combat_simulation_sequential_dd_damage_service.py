@@ -3,6 +3,7 @@ from __future__ import annotations
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.combat_simulation import (
     CombatSimulationCombatant,
+    CombatSimulationOutgoingDamage,
     CombatSimulationTargetState,
 )
 from services.combat_simulation_sequential_dd_damage_service import (
@@ -600,3 +601,160 @@ def test_health_ledger_rejects_dead_target_at_simulation_start() -> None:
         assert "living target" in str(exc)
     else:
         raise AssertionError("Expected dead starting target to be rejected")
+
+
+
+def test_supplemental_damage_updates_health_before_later_action_evaluation() -> None:
+    plan = _plan()
+    candidate = GeneratedRotationCandidate(
+        candidate_id="supplemental-health",
+        plan=plan,
+        refresh_leads=(),
+        action_claims=(),
+    )
+    ledger = CombatSimulationTargetHealthLedger(
+        target_state=_state(),
+        target_identity="Boss",
+        player_identity="Damage Tester",
+    )
+    provider = _ThresholdAwareProvider(ledger.snapshot_at)
+
+    result = CombatSimulationSequentialDDDamageService().project(
+        plan=plan,
+        candidate=candidate,
+        action_damage_evidence_provider=provider,
+        target_state=_state(),
+        target_identity="Boss",
+        player_identity="Damage Tester",
+        ledger=ledger,
+        supplemental_outgoing_damage=(
+            CombatSimulationOutgoingDamage(
+                time_seconds=1.5,
+                sequence=0,
+                source="Glyph of Decrease Health",
+                recipient="Boss",
+                amount=1000.0,
+                damage_type="oblivion",
+            ),
+        ),
+    )
+
+    assert provider.seen_health == [
+        (0, 10000.0, 10000.0),
+        (0, 3000.0, 10000.0),
+    ]
+    assert [
+        (item.time_seconds, item.source, item.amount)
+        for item in result.damage
+    ] == [
+        (1.0, "Opening Hit", 6000.0),
+        (1.5, "Glyph of Decrease Health", 1000.0),
+        (2.0, "Execute Hit", 7000.0),
+    ]
+    assert result.unresolved == ()
+
+
+def test_supplemental_damage_can_kill_before_later_action() -> None:
+    plan = _plan()
+    candidate = GeneratedRotationCandidate(
+        candidate_id="supplemental-kill",
+        plan=plan,
+        refresh_leads=(),
+        action_claims=(),
+    )
+    provider = _RecordingFixedProvider(6000.0)
+
+    result = CombatSimulationSequentialDDDamageService().project(
+        plan=plan,
+        candidate=candidate,
+        action_damage_evidence_provider=provider,
+        target_state=_state(),
+        target_identity="Boss",
+        player_identity="Damage Tester",
+        supplemental_outgoing_damage=(
+            CombatSimulationOutgoingDamage(
+                time_seconds=1.5,
+                sequence=0,
+                source="Glyph of Decrease Health",
+                recipient="Boss",
+                amount=5000.0,
+                damage_type="oblivion",
+            ),
+        ),
+    )
+
+    assert provider.calls == [(1.0, 0, "Opening Hit")]
+    assert [item.source for item in result.damage] == [
+        "Opening Hit",
+        "Glyph of Decrease Health",
+    ]
+    assert result.terminated_at_seconds == 1.5
+    assert result.terminated_at_sequence == 0
+    assert result.suppressed_action_keys == ((2.0, 0),)
+
+
+def test_same_timestamp_supplemental_and_action_damage_fails_closed() -> None:
+    plan = _plan()
+    candidate = GeneratedRotationCandidate(
+        candidate_id="supplemental-same-time",
+        plan=plan,
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    result = CombatSimulationSequentialDDDamageService().project(
+        plan=plan,
+        candidate=candidate,
+        action_damage_evidence_provider=_RecordingFixedProvider(1000.0),
+        target_state=_state(),
+        target_identity="Boss",
+        player_identity="Damage Tester",
+        supplemental_outgoing_damage=(
+            CombatSimulationOutgoingDamage(
+                time_seconds=2.0,
+                sequence=99,
+                source="Glyph of Decrease Health",
+                recipient="Boss",
+                amount=1000.0,
+                damage_type="oblivion",
+            ),
+        ),
+    )
+
+    assert any(
+        "2s damage ordering is unresolved" in message
+        for message in result.unresolved
+    )
+
+
+def test_supplemental_damage_wrong_target_fails_closed() -> None:
+    plan = _plan()
+    candidate = GeneratedRotationCandidate(
+        candidate_id="supplemental-wrong-target",
+        plan=plan,
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    result = CombatSimulationSequentialDDDamageService().project(
+        plan=plan,
+        candidate=candidate,
+        action_damage_evidence_provider=_RecordingFixedProvider(1000.0),
+        target_state=_state(),
+        target_identity="Boss",
+        player_identity="Damage Tester",
+        supplemental_outgoing_damage=(
+            CombatSimulationOutgoingDamage(
+                time_seconds=1.5,
+                sequence=0,
+                source="Glyph",
+                recipient="Add",
+                amount=1000.0,
+            ),
+        ),
+    )
+
+    assert any(
+        "does not match sequential ledger target" in message
+        for message in result.unresolved
+    )
