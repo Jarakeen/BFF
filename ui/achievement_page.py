@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QListWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.components.foundry_card import FoundryCard
@@ -108,9 +108,7 @@ class AchievementPage(QWidget):
             data_dir / "eso.db"
         )
 
-        self.achievement_progress_service = AchievementProgressService(
-            data_dir / "achievement_progress.json"
-        )
+        self.achievement_progress_service = AchievementProgressService(get_user_database_path())
 
         self.achievement_stats_service = AchievementStatsService(
             self.eso_data_service,
