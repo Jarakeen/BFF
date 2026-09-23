@@ -343,6 +343,7 @@ class EncountersPage(FoundryPage):
 
         board_card = FoundryCard("Interactive Positioning Board", "treasure-map")
         self.encounter_board = EncounterBoard()
+        self.encounter_board.raid_plan_member_labels_resolver = self._raid_plan_member_labels
         self.encounter_board.snapshotSaved.connect(self._positioning_snapshot_saved)
         self._install_attach_to_control()
         board_card.addWidget(self.encounter_board)
@@ -383,12 +384,28 @@ class EncountersPage(FoundryPage):
                 self.raid_plan_combo.currentData() or ""
             ).strip()
 
+    def _raid_plan_member_labels(self) -> dict[str, str]:
+        plan_id = str(getattr(self.encounter_board, "raid_plan_id", "") or "").strip()
+        if not plan_id:
+            return {}
+        plan = self.raid_plan_repository.get(plan_id)
+        if plan is None:
+            return {}
+        return {
+            member.seat_id: (member.gamertag or member.character_name or "")
+            for member in plan.members
+            if member.gamertag or member.character_name
+        }
+
     def _raid_plan_context_changed(self, *_args) -> None:
         if not hasattr(self, "encounter_board"):
             return
         self.encounter_board.raid_plan_id = str(
             self.raid_plan_combo.currentData() or ""
         ).strip()
+        refresh = getattr(self.encounter_board, "refresh_player_name_labels", None)
+        if callable(refresh):
+            refresh()
         self.encounter_board.save_state()
 
     @staticmethod
