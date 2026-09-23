@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+import sqlite3
 from pathlib import Path
 from typing import Any
 from uuid import NAMESPACE_URL, uuid5
@@ -25,6 +26,19 @@ class BuildCatalogService:
 
     def __init__(self, catalog_path: Path):
         self.catalog_path = Path(catalog_path)
+        self._database_mode = self.catalog_path.suffix.casefold() in {".db", ".sqlite", ".sqlite3"}
+        if self._database_mode:
+            self.catalog_path.parent.mkdir(parents=True, exist_ok=True)
+            with sqlite3.connect(self.catalog_path) as db:
+                db.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS build_catalog (
+                        singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
+                        payload_json TEXT NOT NULL,
+                        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
 
     @staticmethod
     def _stable_id(kind: str, value: str) -> str:
@@ -242,18 +256,45 @@ class BuildCatalogService:
     def new_catalog(self) -> dict[str, Any]:
         return self._normalize(None)
 
-    def load(self) -> dict[str, Any]:
+    def load_strict(self) -> dict[str, Any]:
+        if self._database_mode:
+            with sqlite3.connect(self.catalog_path) as db:
+                row = db.execute(
+                    "SELECT payload_json FROM build_catalog WHERE singleton_id = 1"
+                ).fetchone()
+            if row is None:
+                return self._normalize(None)
+            payload = json.loads(str(row[0] or ""))
+            return self._normalize(payload)
+
         if not self.catalog_path.exists():
             return self._normalize(None)
+        payload = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        return self._normalize(payload)
+
+    def load(self) -> dict[str, Any]:
         try:
-            return self._normalize(
-                json.loads(self.catalog_path.read_text(encoding="utf-8"))
-            )
-        except (OSError, json.JSONDecodeError):
+            return self.load_strict()
+        except (OSError, sqlite3.Error, json.JSONDecodeError):
             return self._normalize(None)
 
     def save(self, catalog: dict[str, Any]) -> None:
         normalized = self._normalize(catalog)
+        if self._database_mode:
+            payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True)
+            with sqlite3.connect(self.catalog_path) as db:
+                db.execute(
+                    """
+                    INSERT INTO build_catalog(singleton_id, payload_json, updated_at)
+                    VALUES (1, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(singleton_id) DO UPDATE SET
+                        payload_json=excluded.payload_json,
+                        updated_at=CURRENT_TIMESTAMP
+                    """,
+                    (payload,),
+                )
+            return
+
         self.catalog_path.parent.mkdir(parents=True, exist_ok=True)
         temp = self.catalog_path.with_suffix(self.catalog_path.suffix + ".tmp")
         temp.write_text(
