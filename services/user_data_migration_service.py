@@ -26,6 +26,10 @@ _USER_TABLES_IN_COPY_ORDER = (
     "roster_archive_record",
     "roster_player_alias",
     "roster_assignment_context",
+    "generated_roster_plan",
+    "generated_roster_plan_slot",
+    "generated_roster_draft",
+    "generated_roster_draft_slot",
 )
 
 
