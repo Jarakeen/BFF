@@ -1397,7 +1397,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Reuses SavedBuildCapabilityService for canonical skill/gear effect discovery and admits only variants with explicit runtime triggers. "
             "potion_use variants are excluded because finalized plan potion state is modeled separately. "
-            "Triggerless static/passive variants remain with static/conditional build mechanics, while deferred runtime-effect conversion boundaries fail the runtime universe closed."
+            "Triggerless static/passive variants remain with static/conditional build mechanics, while deferred runtime-effect conversion boundaries fail the runtime universe closed. "
+            "If multiple weapon-enchantment variants share the dedicated activation trigger, the universe fails closed until an explicit per-opportunity source-selection frontier prevents one isolated damage instance from activating more than one enchantment."
         ),
     ),
     ServiceDescriptor(
