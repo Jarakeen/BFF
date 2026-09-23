@@ -120,6 +120,7 @@ def _overlay_gear(base: GearSlot, override: GearSlot) -> GearSlot:
         "Weight",
         "Quality",
         "EnchantTier",
+        "EnchantQuality",
         "Level",
         "WeaponType",
     ):
