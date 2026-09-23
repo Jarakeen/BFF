@@ -55,6 +55,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             ExtremeSustainedDPSRuntimeEffectUniverseService | object | None
         ) = None,
         runtime_effect_scaling: object | None = None,
+        weapon_enchantment_activation_service: object | None = None,
     ) -> None:
         self.external_history_frontier = (
             external_history_frontier
@@ -62,6 +63,9 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         )
         self.runtime_effect_universe = runtime_effect_universe
         self.runtime_effect_scaling = runtime_effect_scaling
+        self.weapon_enchantment_activation_service = (
+            weapon_enchantment_activation_service
+        )
 
     def build_from_candidate(
         self,
@@ -162,6 +166,9 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             supplemental_events=tuple(supplemental_events),
             supplemental_denominator_proven=bool(
                 supplemental_event_denominator_proven
+            ),
+            weapon_enchantment_activation_service=(
+                self.weapon_enchantment_activation_service
             ),
             source=f"{source}: runtime event skeletons",
         )
