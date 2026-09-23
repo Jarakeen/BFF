@@ -61,12 +61,14 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         global_search: object,
         structural_families: object | None = None,
         require_closure_ready_scenario: bool = False,
+        potion_cooldown_resolver: object | None = None,
     ) -> None:
         self.global_search = global_search
         self.structural_families = structural_families
         self.require_closure_ready_scenario = bool(
             require_closure_ready_scenario
         )
+        self.potion_cooldown_resolver = potion_cooldown_resolver
 
     def search(
         self,
@@ -79,6 +81,14 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         **search_kwargs,
     ) -> ExtremeSustainedDPSGlobalObjective32SearchResult:
         normalized_root = str(root_key or "").strip() or "generated-global-root"
+        if self.potion_cooldown_resolver is not None:
+            supplied = search_kwargs.get("potion_cooldown_resolver")
+            if supplied is not None and supplied is not self.potion_cooldown_resolver:
+                raise ValueError(
+                    "Canonical Objective #32 search owns the potion cooldown resolver"
+                )
+            search_kwargs["potion_cooldown_resolver"] = self.potion_cooldown_resolver
+            search_kwargs["potion_cooldown_seconds"] = None
 
         if self.require_closure_ready_scenario:
             pipeline = getattr(self.global_search, "pipeline", None)
