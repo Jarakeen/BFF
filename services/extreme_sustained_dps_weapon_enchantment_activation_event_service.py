@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 from minmax.rotation_plan import RotationActionKind
 from minmax.runtime_event import RuntimeEvent
+from minmax.skill_line_repository import SkillLineRepository
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 
 
@@ -50,6 +51,10 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationEventService:
                 "weapon-enchantment activation events require canonical skill-line repository"
             )
         self.skill_line_repository = skill_line_repository
+
+    @classmethod
+    def from_database(cls, database_path):
+        return cls(skill_line_repository=SkillLineRepository(database_path))
 
     @staticmethod
     def _action_identity(action) -> str:
