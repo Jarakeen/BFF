@@ -31,6 +31,7 @@ def test_damage_cadence_is_research_evidence_not_runtime_authority() -> None:
     assert evidence.poison_replacement_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
     assert "temporarily suppresses weapon enchantments" in evidence.poison_replacement_evidence_note
     assert evidence.same_effect_identity_shares_cooldown is True
+    assert evidence.distinct_effect_identities_have_independent_cooldowns is True
     assert evidence.runtime_ready is False
 
     with pytest.raises(ValueError, match="not authoritative"):
@@ -69,6 +70,7 @@ def test_field_level_authority_preserves_remaining_runtime_blockers() -> None:
     assert evidence.off_bar_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
     assert evidence.cooldown_scope_authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
     assert evidence.same_identity_cooldown_authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
+    assert evidence.distinct_identity_cooldown_authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
     assert evidence.runtime_ready is False
 
 
@@ -80,6 +82,7 @@ def test_direct_damage_cadence_names_only_remaining_proof_holes() -> None:
     assert evidence.runtime_blockers == (
         "cooldown scope is not authoritative",
         "same-identity cooldown sharing is not authoritative",
+        "distinct-identity cooldown independence is not authoritative",
         "effect-family cadence has not been promoted to authoritative",
     )
 
@@ -93,6 +96,7 @@ def test_buff_debuff_cadence_also_names_open_base_cooldown() -> None:
         "base cooldown is not authoritative",
         "cooldown scope is not authoritative",
         "same-identity cooldown sharing is not authoritative",
+        "distinct-identity cooldown independence is not authoritative",
         "effect-family cadence has not been promoted to authoritative",
     )
 
@@ -110,3 +114,4 @@ def test_runtime_ready_error_lists_exact_cadence_blockers() -> None:
     message = str(exc_info.value)
     assert "base cooldown is not authoritative" in message
     assert "same-identity cooldown sharing is not authoritative" in message
+    assert "distinct-identity cooldown independence is not authoritative" in message
