@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+
+import pytest
 from types import SimpleNamespace
 
 from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
@@ -195,3 +197,30 @@ def test_global_search_reports_structural_and_pipeline_axis_inventory() -> None:
         "champion_points",
     }.issubset(set(inventory.searched_canonical_axes))
     assert "encounter_policy" in inventory.missing_canonical_axes
+
+
+
+def test_global_search_rejects_static_and_candidate_runtime_state_together() -> None:
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_Materialization(),
+        pipeline=_Pipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+
+    with pytest.raises(ValueError, match="either static or candidate-resolved"):
+        service.search(
+            dual_bar_frontier="gear-frontier",
+            candidate_id_prefix="objective32",
+            required_duration_seconds=20.0,
+            potion_cooldown_seconds=45.0,
+            starting_ultimate=0.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="Boss",
+            runtime_snapshot="snapshot",
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+            runtime_state_frontier=object(),
+            runtime_state_frontier_resolver=object(),
+        )
