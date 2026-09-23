@@ -14,7 +14,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QInputDialog, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from models.raid_plan import RaidPlan
 from services.comp_builder_trial_scope import COMP_MAKER_TRIALS
 from services.finch_shared_provenance_service import format_shared_timestamp
@@ -139,7 +139,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
     raidMapRequested = Signal(str)
 
     def __init__(self, parent=None) -> None:
-        self.plan_repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
+        self.plan_repository = RaidPlanRepository(get_user_database_path())
         self._loading_plan = False
         self._loaded_plan_snapshot: RaidPlan | None = None
         self._finch_plan_publish_future: Future | None = None
