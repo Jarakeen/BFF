@@ -591,3 +591,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **FoundryDock user database split** — Replaceable ESO/reference facts remain in `data/eso.db`, while Personnel, Teams, roster workflow state, collectible ownership/profiles, and achievement progress live in writable `foundrydock.db`. Startup performs additive legacy migration without deleting or replacing the source. Source runs use `user_data/foundrydock.db`; frozen builds use `%LOCALAPPDATA%\FoundryDock\foundrydock.db`. Friend and release packaging can optionally embed an explicit first-run `foundrydock.db` seed for deliberately customized EXEs, and existing user databases are never overwritten.
+
+
+- **Privacy-limited current raid EXE seed** — Saved Raid Plans now persist in `foundrydock.db` alongside Personnel/Teams rather than `data/raid_plans.json`. Legacy Raid Plan JSON is copied additively on startup. The friend-build switch `-UseCurrentRaidSetup` creates a one-off first-install seed containing only Personnel, Teams, memberships, Personnel assignments, and saved Raid Plans; achievement and collectible progress are deliberately excluded.
