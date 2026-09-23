@@ -94,17 +94,23 @@ class CanonicalBuildBridge:
 
     def load(self) -> BuildRoster:
         catalog = self._load_catalog_strict()
+        canonical_roster = self.enchantment_compatibility.normalize_roster(
+            self._roster_from_catalog(catalog)
+        )
+
+        # The running application completes legacy migration before this bridge
+        # is constructed. From that point forward foundrydock.db is authoritative;
+        # data/builds.json and data/characters.json must never re-enter the runtime
+        # read path as competing sources of truth.
+        if self._application_user_database:
+            return canonical_roster
+
         if catalog["builds"]:
-            canonical_roster = self.enchantment_compatibility.normalize_roster(
-                self._roster_from_catalog(catalog)
-            )
             if canonical_roster.Members:
                 return canonical_roster
 
-            # Historical/placeholder canonical build rows must not shadow a
-            # populated compatibility mirror. Recover the real legacy roster
-            # and immediately resync it so the catalog becomes authoritative
-            # again on the same load.
+            # Explicit legacy/test paths retain the historical compatibility
+            # recovery behavior.
             roster = self.enchantment_compatibility.normalize_roster(self._load_legacy())
             if roster.Members:
                 catalog = self.sync_from_roster(roster)
