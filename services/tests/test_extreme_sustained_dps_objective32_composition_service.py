@@ -18,6 +18,15 @@ class _PotionEvidence:
         self.additional_resource_event_denominator_proven = proven
 
 
+def _runtime_state_frontier_resolver():
+    return SimpleNamespace(
+        scenario_frontier=SimpleNamespace(
+            runtime_effect_universe=object(),
+            runtime_effect_scaling=object(),
+        )
+    )
+
+
 def _kwargs():
     return {
         "structural_families": object(),
@@ -30,7 +39,7 @@ def _kwargs():
         "mundus_food_adapter": object(),
         "encounter_policy_adapter": object(),
         "finalized_potion_evidence_resolver": _PotionEvidence(proven=True),
-        "runtime_state_frontier_resolver": object(),
+        "runtime_state_frontier_resolver": _runtime_state_frontier_resolver(),
     }
 
 
