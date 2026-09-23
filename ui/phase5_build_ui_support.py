@@ -436,6 +436,9 @@ def _finish_endgame_gear(editor) -> None:
         enchant_tier_combo = getattr(row, "enchant_tier_combo", None)
         if enchant_tier_combo is not None:
             enchant_tier_combo.setCurrentText("Truly Superb")
+        enchant_quality_combo = getattr(row, "enchant_quality_combo", None)
+        if enchant_quality_combo is not None:
+            enchant_quality_combo.setCurrentText("Gold")
 
 
 def _character_id_for_page(page, build: PlayerBuild) -> str | None:
@@ -487,7 +490,7 @@ def install() -> None:
     def gear_card_with_finisher(self):
         card = original_gear_card(self)
         button = FoundryButton("✦ FINISH ENDGAME GEAR", role=ButtonRole.PRIMARY, compact=True)
-        button.setToolTip("Set every populated gear slot to CP160, Gold quality, and Truly Superb glyph tier. Sets, traits, enchants, weights, and weapon types are unchanged.")
+        button.setToolTip("Set every populated gear slot to CP160, Gold item quality, Gold glyph quality, and Truly Superb glyph tier. Sets, traits, enchants, weights, and weapon types are unchanged.")
         button.clicked.connect(lambda *_: _finish_endgame_gear(self))
         card.set_header_action(button)
         return card
