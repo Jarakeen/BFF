@@ -39,6 +39,7 @@ from services.rotation_saved_build_potion_cooldown_item_service import (
 class ExtremeSustainedDPSPotionCooldownScenarioEvidence:
     effects: tuple[EffectVariant, ...] = ()
     complete: bool = False
+    unresolved: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -133,6 +134,7 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
                 unresolved.append(str(exc))
 
         scenario_evidence = scenario or ExtremeSustainedDPSPotionCooldownScenarioEvidence()
+        unresolved.extend(tuple(scenario_evidence.unresolved))
         if not scenario_evidence.complete:
             unresolved.append(
                 "Extreme potion cooldown external scenario effect inventory is not proven complete"
