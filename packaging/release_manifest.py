@@ -47,6 +47,14 @@ SEED_DATAS: tuple[tuple[str, str], ...] = (
     ("build/release_seed/eso.db", "_seed_data"),
 )
 
+# Optional first-run user-data seed. Friend/specialized builds can place a
+# prepared foundrydock.db here; normal public releases omit it and start with a
+# blank user database. Runtime copies this seed only when the user's real
+# foundrydock.db does not already exist.
+OPTIONAL_SEED_DATAS: tuple[tuple[str, str], ...] = (
+    ("build/release_seed/foundrydock.db", "_seed_user_data"),
+)
+
 # Python namespaces that are explicitly outside the default release runtime. These may
 # remain in source for history, tests, migrations, or optional development work.
 PYINSTALLER_EXCLUDES: tuple[str, ...] = (
@@ -181,7 +189,7 @@ FORBIDDEN_RELEASE_PATH_PARTS: tuple[str, ...] = (
 )
 
 USER_OWNED_DATA_FILES: tuple[str, ...] = (
-    "achievement_progress.json",
+    "foundrydock.db",
     "antiquity_progress.json",
     "builds.json",
     "capabilities.json",
@@ -220,7 +228,7 @@ def pyinstaller_datas(project_root):
             raise FileNotFoundError(f"Required release asset is missing: {source}")
         entries.append((str(path), destination))
 
-    for source, destination in OPTIONAL_RUNTIME_ASSET_DATAS:
+    for source, destination in (*OPTIONAL_RUNTIME_ASSET_DATAS, *OPTIONAL_SEED_DATAS):
         path = project_root / source
         if path.exists():
             entries.append((str(path), destination))
