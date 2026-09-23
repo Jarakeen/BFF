@@ -140,6 +140,15 @@ class RotationCandidateScorecard:
         return self.inherited_unresolved + self.candidate_specific_unresolved
 
     @property
+    def hard_inherited_unresolved(self) -> tuple[str, ...]:
+        """Shared uncertainty that invalidates the measured resource timeline itself."""
+        return tuple(
+            item
+            for item in self.inherited_unresolved
+            if "potion" in item.casefold()
+        )
+
+    @property
     def schedule_notes(self) -> tuple[str, ...]:
         """Deterministic scheduler provenance that is informative, not uncertainty."""
         return self.inherited_schedule_notes + self.candidate_specific_schedule_notes
@@ -229,6 +238,7 @@ class RotationCandidateScorecard:
             and not self.ultimate_affordability_violations
             and not self.failed_runtime_uptime_assessments
             and not self.candidate_specific_unresolved
+            and not self.hard_inherited_unresolved
             and self.candidate_shortfall == 0
         )
 
