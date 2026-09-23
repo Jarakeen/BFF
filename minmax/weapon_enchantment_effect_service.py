@@ -41,6 +41,9 @@ class WeaponEnchantmentEffectService:
                     quality=weapon_quality,
                 )
             )
+            rules.append(
+                self.rule_repository.get_infused_weapon_cooldown_effect()
+            )
 
         if (
             weapon_trait is not None
