@@ -113,6 +113,7 @@ class RotationCandidateRankingService:
             getattr(scorecard, "ultimate_affordability_violations", ())
         )
         candidate_unresolved = len(scorecard.candidate_specific_unresolved)
+        hard_inherited_unresolved = len(scorecard.hard_inherited_unresolved)
         failed_uptimes = scorecard.failed_runtime_uptime_assessments
         uptime_failure_count = len(failed_uptimes)
         uptime_evidence_missing = sum(
@@ -145,6 +146,7 @@ class RotationCandidateRankingService:
             + active_bar_violations
             + ultimate_violations
             + candidate_unresolved
+            + hard_inherited_unresolved
             + uptime_failure_count
             + reserve_failure_count
             + (1 if scorecard.candidate_shortfall > 0 else 0)
@@ -166,6 +168,7 @@ class RotationCandidateRankingService:
             active_bar_violations,
             ultimate_violations,
             candidate_unresolved,
+            hard_inherited_unresolved,
             uptime_failure_count,
             uptime_evidence_missing,
             uptime_shortfall,
@@ -354,6 +357,11 @@ class RotationCandidateRankingService:
         if scorecard.inherited_unresolved:
             reasons.append(
                 f"{len(scorecard.inherited_unresolved)} inherited/shared unresolved evidence item(s)"
+            )
+        if scorecard.hard_inherited_unresolved:
+            reasons.extend(
+                f"hard inherited unresolved: {item}"
+                for item in scorecard.hard_inherited_unresolved
             )
 
         objective = scorecard.runtime_uptime_objective_assessment
