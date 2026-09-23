@@ -404,3 +404,57 @@ def test_strict_global_objective32_rejects_duplicate_static_and_candidate_runtim
             target_health=1_000_000,
             target_resistance=18_200.0,
         )
+
+
+
+def test_canonical_objective32_owns_potion_cooldown_resolver() -> None:
+    global_search = _GlobalSearch(_search_result())
+    resolver = object()
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=global_search,
+        potion_cooldown_resolver=resolver,
+    )
+
+    service.search(
+        runtime_state_frontier=_runtime_frontier(),
+        dual_bar_frontier="gear",
+        candidate_id_prefix="objective32",
+        required_duration_seconds=20.0,
+        potion_cooldown_seconds=45.0,
+        starting_ultimate=0.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="Boss",
+        runtime_snapshot="snapshot",
+        target_health=1_000_000,
+        target_resistance=18_200.0,
+    )
+
+    assert global_search.calls[0]["potion_cooldown_seconds"] is None
+    assert global_search.calls[0]["potion_cooldown_resolver"] is resolver
+
+
+def test_canonical_objective32_rejects_competing_potion_cooldown_resolver() -> None:
+    import pytest
+
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=_GlobalSearch(_search_result()),
+        potion_cooldown_resolver=object(),
+    )
+
+    with pytest.raises(ValueError, match="owns the potion cooldown resolver"):
+        service.search(
+            runtime_state_frontier=_runtime_frontier(),
+            dual_bar_frontier="gear",
+            candidate_id_prefix="objective32",
+            required_duration_seconds=20.0,
+            potion_cooldown_seconds=45.0,
+            potion_cooldown_resolver=object(),
+            starting_ultimate=0.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="Boss",
+            runtime_snapshot="snapshot",
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+        )
