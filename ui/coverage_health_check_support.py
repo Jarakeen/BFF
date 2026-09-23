@@ -350,7 +350,7 @@ def enhance_coverage_page(page) -> None:
         return
 
     page._health_check_enhanced = True
-    page.health_check_roster_service = RosterService(EsoDatabase(get_data_dir() / "eso.db"))
+    page.health_check_roster_service = RosterService(EsoDatabase(get_user_database_path()))
 
     if hasattr(page.header, "title"):
         page.header.title.setText("Coverage")
