@@ -73,3 +73,6 @@ Do not add new user-owned tables to `data/eso.db`.
 - Saved Raid Plans
 
 It intentionally excludes achievement progress, collectible progress, and other collection/checklist state. The build script first migrates any legacy Raid Plan JSON into `foundrydock.db`, then creates the limited seed. This profile is for deliberate one-off builds and does not change normal public-release behavior.
+
+
+For the current-raid custom profile, FoundryDock also creates a filtered `characters.json` containing only canonical player/character/build records referenced by the selected Raid Plan. Unrelated saved builds are not packaged, and the compatibility `builds.json` remains empty.
