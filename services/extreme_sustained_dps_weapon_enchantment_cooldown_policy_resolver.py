@@ -9,6 +9,7 @@ from names, sources, magnitudes, or tooltip text.
 """
 
 from dataclasses import dataclass
+import math
 from typing import Callable
 
 from minmax.character_build.effect_instance import EffectVariant
@@ -55,6 +56,7 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
         | None = None,
         runtime_source_service: object | None = None,
         cadence_family_service: object | None = None,
+        cooldown_rule_resolver: object | None = None,
     ) -> None:
         if (runtime_source_service is None) != (cadence_family_service is None):
             raise ValueError(
@@ -66,6 +68,10 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
         )
         self.runtime_source_service = runtime_source_service
         self.cadence_family_service = cadence_family_service
+        self.cooldown_rule_resolver = (
+            cooldown_rule_resolver
+            or getattr(runtime_source_service, "effect_service", None)
+        )
 
     @staticmethod
     def _default_effect_family(
@@ -80,6 +86,81 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
         }:
             return WeaponEnchantmentEffectFamily.BUFF_OR_DEBUFF
         return None
+
+    def _resolve_equipped_cooldown(
+        self,
+        *,
+        base_cooldown_seconds: float,
+        source,
+        label: str,
+    ) -> tuple[float | None, tuple[str, ...], tuple[str, ...]]:
+        base = float(base_cooldown_seconds)
+        trait = str(getattr(source, "weapon_trait", "") or "").strip()
+        quality = str(getattr(source, "weapon_quality", "") or "").strip()
+
+        if trait.casefold() == "infused" and not quality:
+            return (
+                None,
+                (),
+                (
+                    f"{label}: Infused weapon enchantment cooldown requires canonical weapon quality",
+                ),
+            )
+
+        resolver = self.cooldown_rule_resolver
+        if resolver is None:
+            if trait.casefold() == "infused":
+                return (
+                    None,
+                    (),
+                    (
+                        f"{label}: Infused weapon enchantment cooldown requires canonical cooldown-rule resolution",
+                    ),
+                )
+            return base, (f"{label}: no cooldown-modifying weapon trait applies",), ()
+
+        method = getattr(resolver, "resolve_cooldown", None)
+        if method is None:
+            if trait.casefold() == "infused":
+                return (
+                    None,
+                    (),
+                    (
+                        f"{label}: cooldown-rule resolver does not expose resolve_cooldown()",
+                    ),
+                )
+            return base, (f"{label}: no reviewed cooldown modifier was required",), ()
+
+        result = method(
+            base_cooldown=base,
+            weapon_trait=trait or None,
+            weapon_quality=quality or None,
+        )
+        try:
+            final = float(getattr(result, "final_cooldown"))
+        except (TypeError, ValueError):
+            return (
+                None,
+                (),
+                (f"{label}: cooldown-rule resolution returned no numeric final cooldown",),
+            )
+        if not math.isfinite(final) or final < 0.0:
+            return (
+                None,
+                (),
+                (f"{label}: cooldown-rule resolution returned an invalid final cooldown",),
+            )
+
+        reduction = getattr(result, "reduction", None)
+        detail = (
+            f"{label}: equipped weapon cooldown rules resolved {base:g}s -> {final:g}s"
+            + (
+                f" ({float(reduction):g}% reduction)"
+                if reduction is not None
+                else ""
+            )
+        )
+        return final, (detail,), ()
 
     @staticmethod
     def _effect_label(effect: EffectVariant) -> str:
@@ -108,6 +189,10 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
             tuple[str, str, str, str],
             WeaponEnchantmentEffectFamily,
         ] = {}
+        source_by_binding_key: dict[
+            tuple[str, str, str, str],
+            object,
+        ] = {}
 
         if self.runtime_source_service is not None:
             if player_build is None:
@@ -133,11 +218,13 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
                         str(source.source_slot or "").strip().casefold(),
                     )
                     family_by_binding_key[key] = family_resolution.family
+                    source_by_binding_key[key] = source
 
         for effect in tuple(enchantment_effects):
             label = self._effect_label(effect)
+            binding_key = effect_variant_runtime_binding_key(effect)
             family = (
-                family_by_binding_key.get(effect_variant_runtime_binding_key(effect))
+                family_by_binding_key.get(binding_key)
                 if self.runtime_source_service is not None
                 else self.effect_family_resolver(effect)
             )
@@ -171,21 +258,46 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
             # and poison replacement.
             # EffectVariant.name is the model's canonical logical identity, so it
             # becomes the cooldown key only after those mechanics are authoritative.
+            cooldown_seconds = float(cadence.base_cooldown_seconds)
+            cooldown_evidence: tuple[str, ...] = ()
+            if self.runtime_source_service is not None:
+                source = source_by_binding_key.get(binding_key)
+                if source is None:
+                    unresolved.append(
+                        f"{label}: canonical equipped weapon source is unavailable for cooldown-rule resolution"
+                    )
+                    continue
+                (
+                    resolved_cooldown,
+                    cooldown_evidence,
+                    cooldown_unresolved,
+                ) = self._resolve_equipped_cooldown(
+                    base_cooldown_seconds=cooldown_seconds,
+                    source=source,
+                    label=label,
+                )
+                evidence.extend(cooldown_evidence)
+                unresolved.extend(cooldown_unresolved)
+                if resolved_cooldown is None or cooldown_unresolved:
+                    continue
+                cooldown_seconds = resolved_cooldown
+
             policies.append(
                 ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy(
                     effect=effect,
                     cooldown_identity=effect.name,
-                    cooldown_seconds=float(cadence.base_cooldown_seconds),
+                    cooldown_seconds=cooldown_seconds,
                     authoritative=True,
                     evidence=(
                         cadence.cooldown_evidence_note,
                         cadence.evidence_note,
+                        *cooldown_evidence,
                     ),
                 )
             )
             evidence.append(
                 f"{label}: authoritative cooldown policy "
-                f"{effect.name} @ {float(cadence.base_cooldown_seconds):g}s"
+                f"{effect.name} @ {cooldown_seconds:g}s"
             )
 
         return ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolution(
