@@ -173,3 +173,61 @@ def test_infused_reduces_weapon_enchantment_cooldown_by_fifty_percent():
     assert result.base_cooldown == 10.0
     assert result.reduction == 50.0
     assert result.final_cooldown == 5.0
+
+
+
+def test_trait_adjustment_preserves_enchantment_scaling_metadata():
+    from minmax.combat_effects import CombatEffect
+    from minmax.effects import EffectUnit
+
+    class _Repository:
+        def get_effects(self, _item_id, *, use_max_value=True):
+            assert use_max_value is True
+            return [
+                CombatEffect(
+                    effect_type="damage",
+                    value=100.0,
+                    source="Damage Health",
+                    unit=EffectUnit.FLAT,
+                    damage_type="oblivion",
+                    target="target",
+                    scaling_type="target_max_health",
+                    condition="reviewed-condition",
+                )
+            ]
+
+    class _Rules:
+        def get_infused_effect(self, *, gear_type, quality):
+            from minmax.rule_effects import RuleEffect
+            assert gear_type == "Weapon"
+            assert quality == "Legendary"
+            return RuleEffect(
+                rule_type="enchantment_effect",
+                value=30.0,
+                source="Infused",
+                unit=EffectUnit.PERCENT,
+                target_system="enchantment",
+            )
+
+        def get_infused_weapon_cooldown_effect(self):
+            from minmax.rule_effects import RuleEffect
+            return RuleEffect(
+                rule_type="enchantment_cooldown_reduction",
+                value=50.0,
+                source="Infused",
+                unit=EffectUnit.PERCENT,
+                target_system="weapon_enchantment",
+            )
+
+    result = WeaponEnchantmentEffectService(
+        _Repository(),
+        _Rules(),
+    ).resolve_effects(
+        1,
+        weapon_trait="Infused",
+        weapon_quality="Legendary",
+    )
+
+    assert len(result) == 1
+    assert result[0].scaling_type == "target_max_health"
+    assert result[0].condition == "reviewed-condition"
