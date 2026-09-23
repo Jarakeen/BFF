@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
+from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
 from services.extreme_sustained_dps_runtime_attempt_evidence_frontier_service import (
     ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService,
@@ -154,3 +155,33 @@ def test_zero_threshold_does_not_duplicate_mixed_chance_regions() -> None:
     rolls = tuple(choice.attempts[0].chance_roll for choice in result.choices)
     assert rolls == (0.0, 0.25, 0.5)
     assert result.candidate_count == 3
+
+
+def test_fixed_attempts_are_carried_into_every_evidence_choice() -> None:
+    bound_effect = _effect("bound", trigger="weapon_enchantment_activation")
+    bound_event = RuntimeEvent(
+        time_seconds=0.5,
+        trigger="weapon_enchantment_activation",
+        source="Light Attack",
+        sequence=0,
+    )
+    fixed = RuntimeEffectEventAttempt.for_bound_effect(
+        event=bound_event,
+        effect=bound_effect,
+    )
+
+    result = ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService.build(
+        events=(_event(),),
+        effects=(bound_effect, _effect("chance", chance=0.5)),
+        event_denominator_proven=True,
+        source="reviewed event family",
+        fixed_attempts=(fixed,),
+    )
+
+    assert result.denominator_proven is True
+    assert result.candidate_count == 2
+    assert all(choice.attempts[0] == fixed for choice in result.choices)
+    assert any(
+        "Fixed source-bound runtime attempts supplied: 1" in row
+        for row in result.evidence
+    )
