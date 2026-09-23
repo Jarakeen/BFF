@@ -396,24 +396,9 @@ def _install_inline_controls(board) -> None:
     actor_toolbar.addWidget(board.raid_map_add_reference)
     actor_toolbar.addWidget(board.raid_map_reference_lock)
 
-    board.raid_map_player_names = QPushButton("Player Names")
-    board.raid_map_player_names.setCheckable(True)
-    board.raid_map_player_names.setToolTip(
-        "Show Raid Plan player names on Tank, Healer, and DD seat markers; empty seats keep their seat labels."
-    )
-    board.raid_map_player_names.toggled.connect(
-        lambda checked: _toggle_player_name_labels(board, checked)
-    )
-    zone_toolbar = root.itemAt(1).layout()
-    if zone_toolbar is not None:
-        formation_index = zone_toolbar.count()
-        for index in range(zone_toolbar.count()):
-            widget = zone_toolbar.itemAt(index).widget()
-            text_method = getattr(widget, "text", None) if widget is not None else None
-            if callable(text_method) and "formation" in str(text_method()).casefold():
-                formation_index = index + 1
-                break
-        zone_toolbar.insertWidget(formation_index, board.raid_map_player_names)
+    # Formation support owns the row this belongs on and is installed later.
+    # Keep only the behavior here; that layer places the button immediately after
+    # the formation controls once they actually exist.
 
 
 def install() -> None:
