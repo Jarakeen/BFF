@@ -16,6 +16,7 @@ from services.finch_api_client import FinchApiClient, FinchGearNeedRequest, Finc
 from services.roster_assignment_context_service import RosterAssignmentContextService
 from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.roster_service import RosterService
+from services.raid_section_state_service import RaidSectionStateService
 from services.settings_service import SettingsService
 
 
@@ -52,6 +53,8 @@ class FinchGearNeedSyncSummary:
     registrations_fetched: int = 0
     registrations_applied: int = 0
     registrations_unresolved: int = 0
+    confirmations_fetched: int = 0
+    confirmations_applied: int = 0
 
 
 class FinchRosterSyncService:
@@ -266,10 +269,33 @@ class FinchRosterSyncService:
             "an explicit alias."
         )
 
+    def sync_confirmations(self) -> tuple[int, int]:
+        confirmations = self.client.confirmations_private()
+        state = RaidSectionStateService()
+        applied = 0
+        for confirmation in confirmations:
+            plan_id = _clean(confirmation.plan_id)
+            seat_id = _clean(confirmation.seat_id)
+            if not plan_id or not seat_id:
+                continue
+            if state.human_ready(plan_id, seat_id) is not True:
+                state.set_human_ready(plan_id, seat_id, True)
+                state.add_event(
+                    plan_id,
+                    "human_ready",
+                    f"{_clean(confirmation.player_name) or seat_id} confirmed through Finch",
+                    evidence="FINCH",
+                )
+            applied += 1
+        return len(confirmations), applied
+
+
     def sync_gear_needs(self) -> FinchGearNeedSyncSummary:
         registrations_fetched = 0
         registrations_applied = 0
         registrations_unresolved = 0
+        confirmations_fetched = 0
+        confirmations_applied = 0
         try:
             (
                 registrations_fetched,
@@ -279,6 +305,12 @@ class FinchRosterSyncService:
         except Exception:
             # Gear-needs synchronization remains useful even when an older Finch
             # server does not yet expose the private registration feed.
+            pass
+
+        try:
+            confirmations_fetched, confirmations_applied = self.sync_confirmations()
+        except Exception:
+            # Older Finch deployments may not expose confirmations yet.
             pass
 
         requests = self.client.pending_gear_needs()
@@ -340,6 +372,8 @@ class FinchRosterSyncService:
             registrations_fetched=registrations_fetched,
             registrations_applied=registrations_applied,
             registrations_unresolved=registrations_unresolved,
+            confirmations_fetched=confirmations_fetched,
+            confirmations_applied=confirmations_applied,
         )
 
 
