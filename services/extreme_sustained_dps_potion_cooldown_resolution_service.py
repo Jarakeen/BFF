@@ -93,6 +93,7 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
         character_id: str | None = None,
         progression: object | None = None,
         passives: tuple[PassiveGrant, ...] = (),
+        passive_inventory_complete: bool = False,
         scenario: ExtremeSustainedDPSPotionCooldownScenarioEvidence | None = None,
     ) -> ExtremeSustainedDPSPotionCooldownResolution:
         adaptation = self.build_adapter.adapt(player_build, character_id=character_id)
@@ -110,6 +111,10 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
             )
 
         resolved_passives = tuple(passives)
+        if resolved_passives and not passive_inventory_complete:
+            unresolved.append(
+                "Explicit Extreme potion cooldown PassiveGrant inventory is not proven complete"
+            )
         if progression is None and not resolved_passives:
             unresolved.append(
                 "Extreme potion cooldown requires passive progression or explicit PassiveGrant evidence"
