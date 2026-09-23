@@ -104,13 +104,14 @@ def test_incomplete_scenario_inventory_does_not_emit_effective_cooldown() -> Non
         build_adapter=_BuildAdapter(build="canonical-build"),
         item_service=_ItemService(),
         cooldown_service=cooldown,
+        passive_grant_resolver=lambda build, progression: (),
     )
 
-    result = service.resolve(player_build="saved-build")
+    result = service.resolve(player_build="saved-build", progression="progression")
 
     assert not result.complete
     assert result.cooldown_seconds is None
-    assert "not proven complete" in result.unresolved[0]
+    assert any("not proven complete" in item for item in result.unresolved)
 
 
 def test_failed_canonical_build_adaptation_fails_closed_before_cooldown_math() -> None:
@@ -130,3 +131,21 @@ def test_failed_canonical_build_adaptation_fails_closed_before_cooldown_math() -
     assert result.cooldown_seconds is None
     assert "canonical build adaptation failed" in result.unresolved
     assert cooldown.calls == []
+
+
+
+def test_missing_progression_and_passive_evidence_fails_closed() -> None:
+    service = ExtremeSustainedDPSPotionCooldownResolutionService(
+        build_adapter=_BuildAdapter(build="canonical-build"),
+        item_service=_ItemService(),
+        cooldown_service=_CooldownService(cooldown=45.0),
+    )
+
+    result = service.resolve(
+        player_build="saved-build",
+        scenario=ExtremeSustainedDPSPotionCooldownScenarioEvidence(complete=True),
+    )
+
+    assert not result.complete
+    assert result.cooldown_seconds is None
+    assert any("requires passive progression" in item for item in result.unresolved)
