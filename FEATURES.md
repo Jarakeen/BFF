@@ -656,3 +656,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 - **Exact Decrease Health runtime damage integration** — selected CP160 Legendary Decrease Health glyph procs now enter the generated sustained-DPS target-Health ledger as exact Oblivion outgoing damage, so they can alter later execute-state math, terminate a fight, and appear in canonical damage summaries instead of living in an isolated policy service.
 - **Supplemental deterministic damage ledger** — canonical DD Combat Simulation can now interleave exact supplemental outgoing-damage events with action and periodic damage while preserving live target-Health feedback; unresolved same-instant cross-source ordering fails closed.
+
+
+- **Bar-specific poison ownership** — saved builds, legacy boss alternates, generalized Team/Boss context variants, canonical Bar state, and the Builds editor now preserve front- and back-weapon-set poisons independently rather than collapsing poison state into one character-wide flag.
+- **Authoritative poison/enchantment suppression** — weapon-enchantment runtime source projection now omits glyph sources only on the exact weapon set carrying an equipped poison, preserving the other bar. This uses current ESO Support evidence that poisons suppress enchantments on the weapon set where the poison is equipped; poison proc cadence and effects remain separately fail-closed.
+- **Canonical poison picker source** — ReferenceDataService now exposes canonical entity_type='poison' names for build editors without altering or rebuilding data/eso.db.
