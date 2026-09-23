@@ -221,25 +221,6 @@ foreach ($Name in $RuntimeDirectories) {
     Copy-Item $Source $Destination -Recurse -Force
 }
 
-$PersonalDataFiles = @(
-    "builds.json",
-    "characters.json",
-    "capabilities.json",
-    "team_prescription_observed_templates.json",
-    "achievement_progress.json", # legacy migration input only
-    "antiquity_progress.json",
-    "current_achievement_run.json",
-    "CurrentAchievementRun.json",
-    "CurrentBroadcast.json",
-    "CurrentExpedition.json",
-    "CurrentIncident.json",
-    "StreamEvents.json",
-    "StreamSession.json",
-    "MarkerLog.md",
-    "FieldNoteCounter.txt",
-    "ExpeditionCounter.txt",
-    "IncidentCounter.txt"
-)
 
 # Broadcast is a real optional payload. The core friend build deliberately
 # omits modules/broadcast, so the runtime manifest gate disables all Broadcast
