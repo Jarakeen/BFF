@@ -83,9 +83,21 @@ class WeaponEnchantmentEffectService:
         resolved: list[CombatEffect] = []
 
         for effect in base_effects:
+            effect_rules = rules
+            if str(effect.damage_type or "").strip().casefold() == "oblivion":
+                # Update 23 defines player-sourced Oblivion Damage as bypassing
+                # positive/negative bonuses. Weapon-enchantment strength rules
+                # therefore must not inflate Decrease Health damage; cooldown
+                # modifiers remain separately available through resolve_cooldown().
+                effect_rules = [
+                    rule
+                    for rule in rules
+                    if rule.rule_type
+                    not in {"enchantment_effect", "weapon_enchantment_effect"}
+                ]
             calculation = calculate_enchantment_effect(
                 base_value=effect.value,
-                rules=rules,
+                rules=effect_rules,
             )
 
             resolved.append(
