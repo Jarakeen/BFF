@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from engine.config import get_user_database_path
+
 try:
     import keyring
 except ImportError:
@@ -49,7 +51,7 @@ class SettingsService:
             "GoogleCredentialsPath": str(Path("google_service_account.json")),
             "GoogleSpreadsheetId": "",
             "GoogleSheetsPerson": "Jarakeen",
-            "AchievementProgressPath": str(Path("data/achievement_progress.json")),
+            "AchievementProgressPath": str(get_user_database_path()),
             "MarkerLogPath": str(Path("user_data/broadcast/MarkerLog.md")),
             "CurrentAchievementRunPath": str(Path("data/CurrentAchievementRun.json")),
             "CurrentBroadcastPath": str(Path("user_data/broadcast/CurrentBroadcast.json")),
@@ -116,8 +118,14 @@ class SettingsService:
             ),
             "GoogleSpreadsheetId": str(data.get("GoogleSpreadsheetId", "")),
             "GoogleSheetsPerson": str(data.get("GoogleSheetsPerson", "Jarakeen")),
-            "AchievementProgressPath": self._resolve_path(
-                data.get("AchievementProgressPath", "data/achievement_progress.json")
+            "AchievementProgressPath": (
+                str(get_user_database_path())
+                if str(data.get("AchievementProgressPath", "") or "").strip() in {
+                    "",
+                    "data/achievement_progress.json",
+                    "data\\achievement_progress.json",
+                }
+                else self._resolve_path(data.get("AchievementProgressPath", ""))
             ),
             "MarkerLogPath": self._resolve_path(
                 data.get("MarkerLogPath", "user_data/broadcast/MarkerLog.md")
