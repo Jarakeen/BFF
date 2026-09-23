@@ -640,3 +640,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 - **Fail-closed weapon-enchantment cooldown-rule validation** — Objective #32 now treats malformed equipped-weapon cooldown-rule results as unresolved evidence instead of allowing missing/non-numeric cooldown or reduction metadata to crash exact runtime policy projection.
 - **Candidate build context for callable enchant cooldown policies** — runtime scenario composition now passes the finalized `PlayerBuild` through both object-based and callable weapon-enchantment cooldown-policy seams, so production/test resolvers can apply exact equipped trait/quality provenance consistently.
+
+- **Infused weapon-enchantment cooldown rule split** — weapon-enchantment resolution now treats Infused magnitude and cooldown reduction as separate canonical trait consequences. Saved `Gold` quality normalizes to database `Legendary` for the quality-dependent magnitude, while the independent canonical cooldown-reduction rule is applied to runtime cooldown math instead of being lost behind the magnitude row.
