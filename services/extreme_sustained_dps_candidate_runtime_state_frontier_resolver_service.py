@@ -157,6 +157,8 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
                 effects = first_effects
             else:
                 effect_denominator_proven = False
+        if not effect_denominator_proven:
+            effects = ()
 
         return ExtremeSustainedDPSCandidateRuntimeStateResolution(
             frontier=result.frontier,
