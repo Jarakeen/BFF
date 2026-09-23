@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from engine.config import get_data_dir, get_user_database_path
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_catalog_service import BuildCatalogService
 from services.build_gear_enchantment_compatibility_service import (
@@ -43,16 +44,34 @@ class CanonicalBuildBridge:
 
     def __init__(self, legacy_path: Path, catalog_path: Path | None = None):
         self.legacy_path = Path(legacy_path)
-        self.catalog_path = catalog_path or self.legacy_path.with_name("characters.json")
+        self._application_user_database = False
+
+        if catalog_path is None:
+            try:
+                is_application_builds = (
+                    self.legacy_path.resolve()
+                    == (get_data_dir() / "builds.json").resolve()
+                )
+            except OSError:
+                is_application_builds = self.legacy_path == (get_data_dir() / "builds.json")
+
+            if is_application_builds:
+                from services.user_data_migration_service import migrate_legacy_user_data
+
+                migrate_legacy_user_data()
+                self.catalog_path = get_user_database_path()
+                self._application_user_database = True
+            else:
+                self.catalog_path = self.legacy_path.with_name("characters.json")
+        else:
+            self.catalog_path = Path(catalog_path)
+
         self.catalog_service = BuildCatalogService(self.catalog_path)
         self.enchantment_compatibility = BuildGearEnchantmentCompatibilityService()
 
     def _load_catalog_strict(self) -> dict[str, Any]:
         """Read canonical user state without converting corruption into emptiness."""
-        if not self.catalog_path.exists():
-            return self.catalog_service.new_catalog()
-        payload = json.loads(self.catalog_path.read_text(encoding="utf-8"))
-        return self.catalog_service._normalize(payload)
+        return self.catalog_service.load_strict()
 
     def load_catalog(self) -> dict[str, Any]:
         """Return strict canonical build state for trusted persistence workflows."""
@@ -69,7 +88,8 @@ class CanonicalBuildBridge:
         mirror = self.enchantment_compatibility.normalize_roster(
             self._roster_from_catalog(normalized)
         )
-        self._save_legacy(mirror)
+        if not self._application_user_database:
+            self._save_legacy(mirror)
         return normalized
 
     def load(self) -> BuildRoster:
@@ -110,7 +130,8 @@ class CanonicalBuildBridge:
         """
         normalized = self.enchantment_compatibility.normalize_roster(roster)
         self.sync_from_roster(normalized)
-        self._save_legacy(normalized)
+        if not self._application_user_database:
+            self._save_legacy(normalized)
 
     def sync_from_roster(self, roster: BuildRoster) -> dict[str, Any]:
         """Resync builds without deleting canonical characters that have none.
