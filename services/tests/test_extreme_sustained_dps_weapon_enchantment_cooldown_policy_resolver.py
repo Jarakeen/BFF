@@ -175,7 +175,7 @@ class _RuntimeSources:
         return _Resolution()
 
 
-def _runtime_source(*, identity, label, effect_type, damage_type=None):
+def _runtime_source(*, identity, label, effect_type, damage_type=None, weapon_trait=None, weapon_quality=None):
     return ExtremeSustainedDPSWeaponEnchantmentRuntimeSource(
         item_id=1,
         identity=identity,
@@ -192,6 +192,8 @@ def _runtime_source(*, identity, label, effect_type, damage_type=None):
                 damage_type=damage_type,
             ),
         ),
+        weapon_trait=weapon_trait,
+        weapon_quality=weapon_quality,
     )
 
 
