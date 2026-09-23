@@ -239,7 +239,7 @@ def test_saved_build_sustain_preserves_unresolved_build_cost_mechanics() -> None
         cost_modifier_resolver=resolver,
     )
 
-    assert run.unresolved == ("Evocation not verified for 3 Light pieces",)
+    assert run.unresolved == ("action-cost modifier unresolved: Evocation not verified for 3 Light pieces",)
 
 
 def test_saved_build_sustain_filters_actions_after_window_and_rejects_ultimate_pool() -> None:
