@@ -7,9 +7,9 @@ BuildsPage._build_ui at runtime. The legacy install() entry point remains tempor
 because app.py still invokes the Phase 5 startup installers.
 """
 
-from PySide6.QtWidgets import QMessageBox
-
+from services.user_safety_snapshot_service import UserSafetySnapshotService
 from ui.components.foundry_button import ButtonRole, FoundryButton
+from ui.ui_safety import confirm_destructive_action
 
 _INSTALLED = False
 
@@ -30,16 +30,20 @@ def _delete_selected(page) -> None:
 
     build = members[index]
     label = _label_for(build)
-    answer = QMessageBox.question(
+    if not confirm_destructive_action(
         page,
-        "Delete Build",
-        f"Delete {label}?\n\nThe character and Character Progression will be kept.",
-        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        QMessageBox.StandardButton.No,
-    )
-    if answer != QMessageBox.StandardButton.Yes:
+        title="Delete Build",
+        object_label=f'Delete build "{label}"?',
+        impact=(
+            "The character and shared Character Progression are kept. "
+            "A recoverable database snapshot is created before the build is removed."
+        ),
+        confirm_text="Delete Build",
+    ):
         return
 
+    build_id = str(getattr(build, "BuildId", "") or label).strip()
+    UserSafetySnapshotService().create(f"delete-build-{build_id}")
     members.pop(index)
     page.selected_index = min(index, max(0, len(members) - 1))
     page._save()
