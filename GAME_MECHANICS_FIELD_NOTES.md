@@ -1785,3 +1785,12 @@ The runtime sequence can prove exactly which weapon enchantment fired and when, 
 **Layman's version:** proving the glyph fired does not prove its damage, restore, or debuff reached the score. A perfectly scheduled proc can still be missing from DPS, sustain, or uptime if its consequence never reaches the relevant engine.
 
 **For BFF:** exact sustained-DPS leaves now audit every consequence row attached to selected glyph procs. Any selected consequence without an explicit consumer remains unresolved and blocks mechanic completeness rather than being treated as zero.
+
+
+## 2026-09-23 — Trait math must not erase enchant scaling metadata
+
+The weapon-enchantment parser and repository correctly preserve special runtime metadata such as Oblivion's `target_max_health` scaling. The trait-adjustment service rebuilt each `CombatEffect` after applying Infused/Jade-style value rules, but did not copy `scaling_type` or `condition`, so applying a weapon trait could silently turn a scaling enchant into an apparently flat one.
+
+**Layman's version:** the trait calculator changed the number and accidentally threw away the instruction card explaining what the number meant.
+
+**For BFF:** trait-adjusted enchant effects now preserve scaling and condition provenance. Runtime damage must still resolve those semantics explicitly; preservation prevents downstream code from mistaking a scaled effect for flat damage.
