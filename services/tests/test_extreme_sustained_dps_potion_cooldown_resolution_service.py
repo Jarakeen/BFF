@@ -147,6 +147,29 @@ def test_unresolved_jewelry_evidence_stops_before_cooldown_math() -> None:
     assert result.unresolved == ("jewelry potion-speed trait unresolved",)
 
 
+def test_complete_scenario_with_unresolved_evidence_still_fails_closed() -> None:
+    cooldown = _CooldownService(cooldown=45.0)
+    service = ExtremeSustainedDPSPotionCooldownResolutionService(
+        build_adapter=_BuildAdapter(build="canonical-build"),
+        item_service=_ItemService(),
+        cooldown_service=cooldown,
+    )
+
+    result = service.resolve(
+        player_build="saved-build",
+        passive_inventory_complete=True,
+        scenario=ExtremeSustainedDPSPotionCooldownScenarioEvidence(
+            complete=True,
+            unresolved=("scenario cooldown topology unresolved",),
+        ),
+    )
+
+    assert not result.complete
+    assert result.resolution is None
+    assert cooldown.calls == []
+    assert result.unresolved == ("scenario cooldown topology unresolved",)
+
+
 def test_incomplete_scenario_inventory_does_not_emit_effective_cooldown() -> None:
     cooldown = _CooldownService(
         cooldown=None,
