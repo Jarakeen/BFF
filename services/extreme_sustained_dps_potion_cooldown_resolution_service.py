@@ -12,6 +12,12 @@ from minmax.character_build.saved_build_adapter import SavedBuildCharacterAdapte
 from minmax.jewelry_potion_cooldown_repository import JewelryPotionCooldownRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from models.build_model import PlayerBuild
+
+
+ExtremePotionPassiveGrantResolver = Callable[
+    [PlayerBuild, object],
+    tuple[PassiveGrant, ...],
+]
 from services.rotation_build_potion_cooldown_service import (
     RotationBuildPotionCooldownResolution,
     RotationBuildPotionCooldownService,
@@ -48,6 +54,7 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
         build_adapter: SavedBuildCharacterAdapter | None = None,
         item_service: RotationSavedBuildPotionCooldownItemService | None = None,
         cooldown_service: RotationBuildPotionCooldownService | None = None,
+        passive_grant_resolver: ExtremePotionPassiveGrantResolver | None = None,
     ) -> None:
         database = Path(database_path) if database_path is not None else get_data_dir() / "eso.db"
         self.build_adapter = build_adapter or SavedBuildCharacterAdapter(database)
@@ -56,6 +63,7 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
             JewelryTraitRepository(database),
         )
         self.cooldown_service = cooldown_service or RotationBuildPotionCooldownService()
+        self.passive_grant_resolver = passive_grant_resolver
 
     def resolve(
         self,
@@ -80,17 +88,23 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
                 unresolved=tuple(dict.fromkeys(unresolved)),
             )
 
-        if progression is not None and not passives:
-            unresolved.append(
-                "Extreme potion cooldown progression was supplied without canonical PassiveGrant inventory"
-            )
+        resolved_passives = tuple(passives)
+        if progression is not None and not resolved_passives:
+            if self.passive_grant_resolver is None:
+                unresolved.append(
+                    "Extreme potion cooldown progression was supplied without canonical PassiveGrant inventory"
+                )
+            else:
+                resolved_passives = tuple(
+                    self.passive_grant_resolver(player_build, progression)
+                )
 
         scenario_evidence = scenario or ExtremeSustainedDPSPotionCooldownScenarioEvidence()
         item_evidence = self.item_service.resolve(player_build)
         resolution = self.cooldown_service.resolve(
             character_build=adaptation.build,
             item_evidence=item_evidence,
-            passives=tuple(passives),
+            passives=resolved_passives,
             scenario_effects=tuple(scenario_evidence.effects),
             scenario_inventory_complete=bool(scenario_evidence.complete),
         )
@@ -108,6 +122,7 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
 
 
 __all__ = [
+    "ExtremePotionPassiveGrantResolver",
     "ExtremeSustainedDPSPotionCooldownResolution",
     "ExtremeSustainedDPSPotionCooldownResolutionService",
     "ExtremeSustainedDPSPotionCooldownScenarioEvidence",
