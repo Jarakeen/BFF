@@ -560,6 +560,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Live Raid Boss Mechanics loop** — Live Raid includes a context-aware Boss Mechanics shortcut that opens Mechanics & Timelines directly on the currently selected encounter. Mechanics shows a temporary **← Back to Live Raid** control only for that handoff, returning to the same Live Raid plan/encounter context without making the user reselect raid state.
 
 ### Objective #32 theoretical closure hardening
-- Candidate ranking now treats shared unresolved potion timing/restoration/cooldown evidence and shared unresolved Heavy Attack completion/hit/restoration evidence as hard failures when they can change the measured resource or damage timeline.
+- Candidate ranking now treats shared unresolved potion timing/restoration/cooldown evidence, Heavy Attack completion/hit/restoration evidence, and canonical character-progression ownership gaps as hard failures when they can change the measured resource or damage timeline.
 - Shared display/metadata-only warnings remain advisory, so fail-closed mechanics evidence does not turn unrelated labels into false blockers.
 
