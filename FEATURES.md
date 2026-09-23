@@ -631,3 +631,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 - **Finch Discord identity reconciliation** — shared Team schema v3 includes the roster member's explicitly stored Discord username so Finch can exact-match the interacting Discord account to canonical Personnel without fuzzy-name guessing. Finch's immutable Discord user ID remains its stable private binding once observed.
 - **Finch seat confirmation intake** — Finch raid confirmations can be synchronized into Raid Readiness as explicit FINCH human-ready evidence keyed by Raid Plan and seat; this updates user-owned readiness state without replacing ESO/reference data or the FoundryDock database.
+
+
+- **Selected weapon-enchantment damage-policy bridge** — Exact source-selected glyph proc consequences can now project reviewed damage-policy semantics without pretending to own final damage math. Oblivion weapon-enchantment damage resolves as non-critical from primary ZOS evidence; ordinary elemental/absorb glyph critical eligibility remains explicitly unresolved rather than inheriting normal skill rules. Raw canonical magnitude is preserved for later target-side application.
