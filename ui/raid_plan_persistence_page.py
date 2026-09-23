@@ -129,7 +129,10 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
         if row.seat_id.casefold() in active_seats
     )
     return RaidPlan(
-        plan_id=visible.plan_id,
+        # A loaded Raid Plan keeps its stable persisted identity even when visible
+        # identity text changes through an explicit Rename operation. Recomputing
+        # plan_id from the display name would fork the plan into a duplicate row.
+        plan_id=loaded.plan_id,
         trial_id=visible.trial_id,
         name=visible.name,
         team_name=loaded.team_name,
