@@ -478,12 +478,7 @@ class MainWindow(QMainWindow):
                 and self.stack.currentWidget() is raid_plan_container
             ):
                 raid_plans = self.pages.get("raid_plans")
-                try:
-                    origin = raid_plans.current_plan()
-                    raid_plans.plan_repository.save(origin)
-                    raid_plans._loaded_plan_snapshot = origin
-                except (AttributeError, OSError, TypeError, ValueError):
-                    origin = None
+                origin = getattr(raid_plans, "_loaded_plan_snapshot", None)
                 if origin is not None:
                     optimizer._raid_plan_origin_id = origin.plan_id
                     optimizer._raid_plan_origin_trial_id = origin.trial_id
