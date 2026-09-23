@@ -288,7 +288,12 @@ class ExtremeSkillUniverseService:
         return result
 
     def passives(self) -> tuple[ExtremePlayerSkillRecord, ...]:
-        return tuple(row for row in self.all_player_skills() if row.is_passive)
+        rows = self.all_player_skills()
+        if not rows:
+            raise ValueError(
+                "canonical player skill universe is unavailable or empty; passive denominator is not proven"
+            )
+        return tuple(row for row in rows if row.is_passive)
 
     def actives(self) -> tuple[ExtremePlayerSkillRecord, ...]:
         return tuple(row for row in self.all_player_skills() if not row.is_passive)
