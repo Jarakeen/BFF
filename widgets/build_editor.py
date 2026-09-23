@@ -42,6 +42,7 @@ from services.eso_gear_icons import gear_icon_path
 QUALITY_CHOICES = ["", "White", "Green", "Blue", "Purple", "Gold"]
 LEVEL_CHOICES = ["", "Level 1", "Level 10", "Level 20", "Level 30", "Level 40", "Level 50", "CP10", "CP30", "CP50", "CP70", "CP100", "CP150", "CP160"]
 ENCHANT_TIER_CHOICES = ["", "Trifling", "Inferior", "Petty", "Slight", "Minor", "Lesser", "Moderate", "Average", "Strong", "Major", "Greater", "Grand", "Splendid", "Monumental", "Superb", "Truly Superb"]
+ENCHANT_QUALITY_CHOICES = QUALITY_CHOICES
 ENCHANT_CHOICES = ["", "Max Magicka", "Max Health", "Max Stamina", "Prismatic Defense", "Magicka Recovery", "Health Recovery", "Stamina Recovery", "Weapon Damage", "Spell Damage", "Absorb Magicka", "Absorb Health", "Absorb Stamina", "Poison", "Flame", "Frost", "Shock", "Crushing", "Disease", "Bashing", "Decrease Physical Harm"]
 MAX_ATTRIBUTE_POINTS = 64
 ONE_HANDED_WEAPON_TYPES = {"sword", "axe", "mace", "dagger"}
@@ -63,6 +64,7 @@ class GearSlotRow(QWidget):
         self.type_combo.setEnabled(armor or weapon)
         self.enchant_combo = self._combo(ENCHANT_CHOICES, editable=True)
         self.enchant_tier_combo = self._combo(ENCHANT_TIER_CHOICES)
+        self.enchant_quality_combo = self._combo(ENCHANT_QUALITY_CHOICES)
         self.level_combo = self._combo(LEVEL_CHOICES, editable=True)
         self.quality_combo.currentTextChanged.connect(self._style_quality)
         self._style_quality(self.quality_combo.currentText())
@@ -100,6 +102,7 @@ class GearSlotRow(QWidget):
             Trait=self.trait_combo.currentText().strip(),
             Enchant=self.enchant_combo.currentText().strip(),
             EnchantTier=self.enchant_tier_combo.currentText().strip(),
+            EnchantQuality=self.enchant_quality_combo.currentText().strip(),
             Level=self.level_combo.currentText().strip(),
             Weight=self.type_combo.currentText().strip() if self.armor else "",
             WeaponType=self.type_combo.currentText().strip() if self.weapon else "",
@@ -112,6 +115,7 @@ class GearSlotRow(QWidget):
         self.trait_combo.setCurrentText(slot.Trait or "")
         self.enchant_combo.setCurrentText(slot.Enchant or "")
         self.enchant_tier_combo.setCurrentText(getattr(slot, "EnchantTier", "") or "")
+        self.enchant_quality_combo.setCurrentText(getattr(slot, "EnchantQuality", "") or "")
         self.level_combo.setCurrentText(getattr(slot, "Level", "") or "")
         if self.armor:
             self.type_combo.setCurrentText(getattr(slot, "Weight", "") or "")
@@ -636,7 +640,7 @@ class BuildEditor(QWidget):
         grid.setContentsMargins(8, 5, 8, 5)
         grid.setHorizontalSpacing(6)
         grid.setVerticalSpacing(3)
-        headers = ["", "Slot", "Set 1", "Set 2 (Monster/Backup)", "Quality", "Trait", "Weight / Weapon", "Enchantment", "Enchant Tier", "Level", ""]
+        headers = ["", "Slot", "Set 1", "Set 2 (Monster/Backup)", "Quality", "Trait", "Weight / Weapon", "Enchantment", "Enchant Tier", "Glyph Quality", "Level", ""]
         for column, text in enumerate(headers):
             header = QLabel(text)
             header.setStyleSheet("font-weight:700;")
