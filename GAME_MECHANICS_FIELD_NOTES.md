@@ -1589,3 +1589,21 @@ The skill data can carry both a rank-level raw description and an ability-level 
 **Layman's version:** two labels saying different things about the same Rank 2 passive means we do not know which one is trustworthy yet. The fact that one of them parses beautifully does not make the argument disappear.
 
 **For BFF:** exact-rank passive evidence now fails closed when raw rank text and the matching ability tooltip disagree. The global Extreme passive universe preserves that conflict, and static passive projection cannot score through it.
+
+
+## 2026-09-23 — Shared missing action costs are not neutral
+
+Rotation sustain can fail to resolve an ability base cost or a build-owned cost modifier. If baseline and candidate both inherit that gap, their resource timelines are still not trustworthy; equal ignorance does not turn an unknown spend into zero spend.
+
+**Layman's version:** if we do not know what a skill costs, comparing two rotations that both cast it does not magically make the missing Magicka or Stamina irrelevant.
+
+**For BFF:** shared unresolved action-cost rows and explicitly tagged action-cost-modifier evidence now block candidate eligibility. Display-only cost metadata remains advisory.
+
+
+## 2026-09-23 — Axe passive history is contradictory enough to fail closed
+
+Official Update 29 notes set Twin Blade and Blunt axes to 2/4% Critical Damage and Healing Done per axe and Heavy Weapons axes to 4/8%. Official Update 30 notes then stated that Twin Blade axes were changing to 3/6% Critical Damage per axe, while contemporaneous live reports disputed whether the new value actually took effect. Later Update 39 notes adjusted swords, daggers and maces but did not settle the axe implementation history.
+
+**Layman's version:** the patch notes and observed live behavior argued with each other. That is not a license to pick the larger number because it looks modern.
+
+**For BFF:** Dual Wield axe and Two Handed battle-axe Critical Damage branches remain unresolved for Objective #32 until current-live U50 evidence establishes the actual rank values and behavior cleanly.
