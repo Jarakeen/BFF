@@ -24,6 +24,13 @@ class FakeFinchClient:
     def registrations_private(self):
         return ()
 
+    def correct_registration_identity(self, *, discord_user_id, guild_id, player_name):
+        if not hasattr(self, "identity_corrections"):
+            self.identity_corrections = []
+        self.identity_corrections.append(
+            (int(discord_user_id), int(guild_id), str(player_name))
+        )
+
     def acknowledge_gear_need(self, request_id, *, status, message=""):
         self.acks.append((int(request_id), str(status), str(message)))
 
@@ -268,3 +275,49 @@ def test_registration_sync_binds_by_discord_id_and_preserves_private_alias_histo
         (777, 888),
     ).fetchone()
     assert int(binding["roster_member_id"]) == member_id
+
+
+
+def test_registration_sync_repairs_bad_id_binding_from_exact_discord_username(tmp_path) -> None:
+    database = EsoDatabase(tmp_path / "eso.db")
+    roster = RosterService(database)
+    identity = RosterPlayerIdentityService(database)
+    assignments = RosterAssignmentContextService(database)
+
+    jarakeen = _member("Jarakeen")
+    jarakeen.DiscordName = "franklovesdogs"
+    jarakeen_id = roster.create_member(jarakeen)
+
+    rik = _member("Rik")
+    rik.DiscordName = "rikbacon"
+    rik_id = roster.create_member(rik)
+
+    registration = FinchRegistration(
+        discord_user_id=777,
+        guild_id=888,
+        team_name="Performance Mode",
+        player_name="Rik",
+        discord_username="franklovesdogs",
+    )
+    client = RegistrationFinchClient((registration,))
+    sync = FinchRosterSyncService(
+        client=client,
+        roster=roster,
+        identity=identity,
+        assignments=assignments,
+    )
+
+    sync._bind_registration(registration, rik_id)
+    fetched, applied, unresolved = sync.sync_registration_identities()
+
+    assert (fetched, applied, unresolved) == (1, 1, 0)
+    binding = database.execute(
+        """
+        SELECT roster_member_id
+        FROM finch_discord_identity_binding
+        WHERE discord_user_id = ? AND guild_id = ?
+        """,
+        (777, 888),
+    ).fetchone()
+    assert int(binding["roster_member_id"]) == jarakeen_id
+    assert client.identity_corrections == [(777, 888, "Jarakeen")]
