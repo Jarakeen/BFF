@@ -566,3 +566,10 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Live Raid full-map popup** — The Raid Map tab keeps the normal fitted view and adds **Open Full Map**, which opens the same linked Raid Plan map in a large modal with Fit / zoom out / zoom in controls. Closing the modal returns immediately to Live Raid.
+
+
+### Objective #32 weapon standing passive runtime coverage
+- Phase 5 static contexts now apply the reviewed max-rank Dual Wield sword branch of **Twin Blade and Blunt** (+64 Weapon/Spell Damage per equipped sword) and the reviewed Two Handed **Heavy Weapons** greatsword branch (+129 Weapon/Spell Damage).
+- These effects require explicit character passive ownership/rank evidence in canonical progression and exact active-bar weapon subtype evidence.
+- **Ambidextrous** and unreviewed Twin Blade / Heavy Weapons subtype branches remain explicit unresolved mechanics instead of being flattened into generic sheet power.
+- Generated sustained-DPS exact evaluation inherits this Phase 5 fail-closed behavior before simulation, so unresolved weapon-passive branches cannot produce a closure-ready theoretical candidate.
