@@ -675,6 +675,11 @@ class CollectiblesDashboardPage(QWidget):
     def _progress_for_types(self, type_keys: tuple[str, ...]) -> tuple[int, int]:
         if not self.service.available or not type_keys:
             return 0, 0
+        profiled = getattr(self.service, "progress_summary_for_type_keys", None)
+        if callable(profiled):
+            return profiled(type_keys)
+
+        # Compatibility fallback for the unprofiled single-database service.
         placeholders = ",".join("?" for _ in type_keys)
         row = self.service.connection.execute(
             f"""
