@@ -1658,3 +1658,16 @@ ZOS fixed a Dual Wield bug where both weapon enchantments could proc from one is
 **Layman's version:** one smack, one glyph proc. If a skill hits several times, later hits can create new opportunities, but BFF must not let the same hit independently activate every eligible enchantment.
 
 **For BFF:** the generic runtime system evaluates EffectVariants independently, so multiple weapon-enchantment variants sharing one activation event require an explicit source-selection layer. Until that exists, Objective #32 now fails closed instead of double-proccing enchantments.
+
+
+---
+
+## 2026-09-23 — Weapon enchantments remember which weapon launched the ability
+
+ZOS clarified in Update 19 that an enchantment follows the **weapon that fired the activating ability**, even if the player swaps bars before the damage lands.
+
+**Layman's version:** swapping bars does not magically reassign an in-flight bow shot or other weapon ability to the new weapon's glyph. The game remembers where the attack came from.
+
+**What it means in actual play:** back-bar weapon abilities can carry their source weapon's enchantment logic forward after a swap. Runtime modeling therefore needs source-weapon provenance, not just “which bar is active when damage lands.”
+
+**For BFF:** off-bar/source-weapon persistence is now primary-source proven. The remaining enchant cadence blockers are narrower: exact buff/debuff cooldown, cooldown-scope/shared-identity behavior, and explicit per-opportunity source selection.
