@@ -87,3 +87,38 @@ def test_source_ownership_fails_closed_when_enchantment_has_no_bar_identity():
 
     assert result.candidates == ()
     assert any("lacks source-bar ownership" in row for row in result.unresolved)
+
+def test_source_ownership_collapses_multi_consequence_variants_to_one_enchant_source():
+    damage = EffectVariant(
+        name="glyph_of_absorb_health",
+        layer=EffectLayer.PROC,
+        source="Glyph of Absorb Health",
+        active_bar=BarId.FRONT,
+        source_slot="main_hand",
+        magnitude=1900.0,
+    )
+    restore = EffectVariant(
+        name="glyph_of_absorb_health",
+        layer=EffectLayer.PROC,
+        source="Glyph of Absorb Health",
+        active_bar=BarId.FRONT,
+        source_slot="main_hand",
+        magnitude=861.0,
+    )
+    event = RuntimeEvent(
+        time_seconds=1.0,
+        trigger="weapon_enchantment_activation",
+        source="Light Attack",
+        source_bar="front",
+    )
+
+    result = ExtremeSustainedDPSWeaponEnchantmentSourceOwnershipService().resolve(
+        activation_event=event,
+        enchantment_effects=(damage, restore),
+    )
+
+    assert result.unresolved == ()
+    assert result.candidates == (damage,)
+    assert any("consequence variants: 2" in row for row in result.evidence)
+    assert any("enchantment sources: 1" in row for row in result.evidence)
+
