@@ -571,5 +571,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 ### Objective #32 weapon standing passive runtime coverage
 - Phase 5 static contexts now apply the reviewed max-rank Dual Wield sword branch of **Twin Blade and Blunt** (+64 Weapon/Spell Damage per equipped sword) and the reviewed Two Handed **Heavy Weapons** greatsword branch (+129 Weapon/Spell Damage).
 - These effects require explicit character passive ownership/rank evidence in canonical progression and exact active-bar weapon subtype evidence.
-- **Ambidextrous** and unreviewed Twin Blade / Heavy Weapons subtype branches remain explicit unresolved mechanics instead of being flattened into generic sheet power.
+- **Ambidextrous** now resolves its reviewed max-rank +3% of verified CP160 Gold off-hand weapon damage into flat Weapon/Spell Damage; missing off-hand item-power evidence fails closed.
+- **Bow Accuracy** now resolves its reviewed Rank 2 +1314 Critical Chance rating only while the Bow is on the active bar, using the shared canonical critical-rating conversion.
+- Unreviewed Twin Blade / Heavy Weapons subtype branches remain explicit unresolved mechanics instead of being flattened into generic sheet power.
 - Generated sustained-DPS exact evaluation inherits this Phase 5 fail-closed behavior before simulation, so unresolved weapon-passive branches cannot produce a closure-ready theoretical candidate.
