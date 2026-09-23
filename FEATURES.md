@@ -551,3 +551,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Raid Map WebP publishing to Finch** — Encounters → Raid Map now exposes **Save Map to Raid Plan** for the rich editable local layout and **Save Map to Finch (WebP)** for a compact raid-night snapshot. The Finch action captures the current board, renders a flattened WebP, uploads it to Finch, records the public preview metadata, and republishes the saved Raid Plan with only the minimal preview fields needed by mobile/web clients.
 
 - **Raid Map seat-to-player projection** — Encounters keeps stable chair labels such as Tank1, Healer2, and DD4 in the editable map. Saving a Raid Plan map creates a player-name projection from that exact layout for Live Raid, and the same player-labelled image is the source Finch converts to WebP. Live Raid shows the linked map inline beside Raid Spots, while reusable Boss Templates remain seat-labelled and plan-independent.
+
+
+- **Live Raid Raid Spots tabs** — Live Raid keeps the full Names & Assignments roster table on the first Raid Spots tab and gives the linked Raid Plan map its own full-width Raid Map tab, so spatial assignments such as house stacks are readable without squeezing the roster or leaving the page.
