@@ -6,18 +6,23 @@ from dataclasses import replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
     QComboBox,
     QGridLayout,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
+    QLayout,
     QListWidget,
     QListWidgetItem,
     QMenu,
+    QMessageBox,
     QPushButton,
     QPlainTextEdit,
+    QSizePolicy,
     QStackedWidget,
     QTableWidget,
     QVBoxLayout,
@@ -125,6 +130,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         roles_layout = QVBoxLayout(roles_surface)
         roles_layout.setContentsMargins(0, 0, 0, 0)
         roles_layout.setSpacing(8)
+        roles_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
         while self.workspace_layout.count():
             item = self.workspace_layout.takeAt(0)
@@ -137,6 +143,11 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         plan_context_bar = rehome_plan_header_controls(
             self,
             trailing_widgets=(self.share_builds_button,),
+            show_plan_editor=False,
+            show_team_editor=False,
+            show_saved_plan_selector=False,
+            action_button_names=(),
+            align_right=True,
         )
 
         assignment_card = _foundry_card_ancestor(getattr(self, "assignment_table", None))
@@ -175,7 +186,16 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.workspace_layout.addWidget(plan_context_bar)
         self.workspace_layout.addWidget(nav_host)
 
+        # FoundryPage already owns the page-level QScrollArea. The content layout
+        # must advertise its real minimum height or QStackedWidget will happily
+        # compress the bottom of the page into oblivion instead of letting the
+        # outer scroll area do its one job.
+        self.workspace_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         self.local_stack = QStackedWidget()
+        self.local_stack.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.MinimumExpanding,
+        )
         self.overview_surface = self._build_overview_surface()
         self.local_stack.addWidget(self.overview_surface)
         self.local_stack.addWidget(roles_surface)
@@ -191,9 +211,71 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
 
         left = FoundryCard("My Plans", "archive")
         self.plan_list = QListWidget()
-        self.plan_list.itemDoubleClicked.connect(self._load_overview_plan)
+        self.plan_list.itemClicked.connect(self._load_overview_plan)
+        self.plan_list.setToolTip(
+            "Select a Raid Plan here. Unsaved edits are protected before another plan can load."
+        )
         left.addWidget(self.plan_list)
-        field_note = QLabel("Plans are just stories we tell ourselves before the interesting part.")
+
+        self.new_identity_panel = QWidget()
+        identity_layout = QVBoxLayout(self.new_identity_panel)
+        identity_layout.setContentsMargins(0, 0, 0, 0)
+        identity_layout.setSpacing(6)
+
+        name_label = QLabel("NEW PLAN NAME")
+        name_label.setProperty("sidebarHeading", True)
+        identity_layout.addWidget(name_label)
+        self.plan_name_edit.setParent(self.new_identity_panel)
+        identity_layout.addWidget(self.plan_name_edit)
+
+        team_label = QLabel("TEAM")
+        team_label.setProperty("sidebarHeading", True)
+        identity_layout.addWidget(team_label)
+        self.team_combo.setParent(self.new_identity_panel)
+        identity_layout.addWidget(self.team_combo)
+        left.addWidget(self.new_identity_panel)
+
+        self.loaded_identity_label = QLabel()
+        self.loaded_identity_label.setWordWrap(True)
+        self.loaded_identity_label.setProperty("raidSnapshotValue", True)
+        left.addWidget(self.loaded_identity_label)
+
+        new_plan = QPushButton("New Plan")
+        new_plan.clicked.connect(self._start_new_plan_from_sidebar)
+        left.addWidget(new_plan)
+
+        self.rename_plan_button = QPushButton("Rename…")
+        self.rename_plan_button.clicked.connect(self._rename_loaded_plan)
+        left.addWidget(self.rename_plan_button)
+
+        self.change_team_button = QPushButton("Change Team…")
+        self.change_team_button.clicked.connect(self._change_loaded_plan_team)
+        left.addWidget(self.change_team_button)
+
+        self.save_plan_button.setParent(left)
+        self.save_plan_button.setText("Save")
+        self.save_plan_button.setProperty("primary", True)
+        left.addWidget(self.save_plan_button)
+
+        self.open_raid_map_button.setParent(left)
+        left.addWidget(self.open_raid_map_button)
+
+        self.archive_plan_button.setParent(left)
+        left.addWidget(self.archive_plan_button)
+
+        self.publish_plan_finch_button.setParent(left)
+        left.addWidget(self.publish_plan_finch_button)
+
+        self.get_shared_plans_button.setParent(left)
+        self.get_shared_plans_button.setText("Shared Plans")
+        left.addWidget(self.get_shared_plans_button)
+
+        self.delete_plan_button.setParent(left)
+        left.addWidget(self.delete_plan_button)
+
+        self.load_plan_button.hide()
+
+        field_note = QLabel("Plan identity changes are explicit. Ordinary edits cannot silently rename or re-home a saved plan.")
         field_note.setWordWrap(True)
         field_note.setProperty("muted", True)
         left.addWidget(field_note)
@@ -323,7 +405,8 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
     def _refresh_overview(self) -> None:
         if not hasattr(self, "plan_list"):
             return
-        current = self.saved_plan_combo.currentData() if hasattr(self, "saved_plan_combo") else None
+        loaded = getattr(self, "_loaded_plan_snapshot", None)
+        current = getattr(loaded, "plan_id", None)
         plans = self.plan_repository.list_plans()
         self.plan_list.clear()
         selected_item = None
@@ -336,8 +419,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         if selected_item is not None:
             self.plan_list.setCurrentItem(selected_item)
         plan = self._loaded_plan_snapshot
-        if plan is None and plans:
-            plan = plans[0]
+        self._refresh_plan_identity_ui()
         if plan is None:
             self._refresh_trial_banner()
             self.overview_hero.setText("No saved Raid Plan yet. Use Roles to assemble one without inventing missing identity.")
@@ -357,6 +439,138 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.encounter_snapshot.value_label.setText(plan.trial_id)
         self.strategy_snapshot.value_label.setText(f"{assigned} / {len(plan.members)} spots assigned")
         self.progress_snapshot.value_label.setText(f"{builds} builds linked")
+
+    def _refresh_plan_identity_ui(self) -> None:
+        if not hasattr(self, "new_identity_panel"):
+            return
+        plan = getattr(self, "_loaded_plan_snapshot", None)
+        is_new = plan is None
+        self.new_identity_panel.setVisible(is_new)
+        self.loaded_identity_label.setVisible(not is_new)
+        self.rename_plan_button.setVisible(not is_new)
+        self.change_team_button.setVisible(not is_new)
+
+        if is_new:
+            self.plan_name_edit.show()
+            self.team_combo.show()
+            self.loaded_identity_label.clear()
+            return
+
+        self.plan_name_edit.hide()
+        self.team_combo.hide()
+        team = str(getattr(plan, "team_name", "") or "").strip() or "No Team"
+        self.loaded_identity_label.setText(
+            f"{plan.name}\nTeam: {team}\n{self._trial_display_for(plan)} • "
+            f"{plan.difficulty or 'Difficulty not set'}"
+        )
+
+    def _start_new_plan_from_sidebar(self) -> None:
+        if self.has_pending_changes() and not self.discard_pending_changes():
+            return
+        self._loaded_plan_snapshot = None
+        RaidPlanAdviserPage.clear_plan(self)
+        self.plan_name_edit.setText("New Raid Plan")
+        self._refresh_team_choices("")
+        self.saved_plan_combo.blockSignals(True)
+        index = self.saved_plan_combo.findData("__new_plan__")
+        if index >= 0:
+            self.saved_plan_combo.setCurrentIndex(index)
+        self.saved_plan_combo.blockSignals(False)
+        self._navigation_baseline_plan = self.current_plan()
+        self._refresh_plan_identity_ui()
+        self._refresh_overview()
+        self.plan_name_edit.setFocus()
+        self.plan_name_edit.selectAll()
+        self.status.info("New Raid Plan ready. Name it, choose a Team if needed, then Save.")
+
+    def _rename_loaded_plan(self) -> None:
+        plan = getattr(self, "_loaded_plan_snapshot", None)
+        if plan is None:
+            self.status.warning("Save the new Raid Plan before renaming it.")
+            return
+        if self.has_pending_changes() and not self.save_pending_changes():
+            self.status.warning("Save or discard content edits before renaming this Raid Plan.")
+            return
+        new_name, ok = QInputDialog.getText(
+            self,
+            "Rename Raid Plan",
+            "Raid Plan name:",
+            text=plan.name,
+        )
+        new_name = " ".join(str(new_name or "").strip().split())
+        if not ok or not new_name or new_name == plan.name:
+            return
+        updated = replace(plan, name=new_name)
+        try:
+            self.plan_repository.save(updated)
+        except Exception as exc:
+            self.status.error(f"Could not rename Raid Plan: {exc}")
+            return
+        self.apply_plan(updated)
+        self.refresh_saved_plan_picker(select_plan_id=updated.plan_id)
+        self._refresh_overview()
+        self.status.success(f'Renamed Raid Plan to "{updated.name}".')
+
+    def _change_loaded_plan_team(self) -> None:
+        plan = getattr(self, "_loaded_plan_snapshot", None)
+        if plan is None:
+            self.status.warning("Choose the Team while creating the new Raid Plan.")
+            return
+        if self.has_pending_changes() and not self.save_pending_changes():
+            self.status.warning("Save or discard content edits before changing Team ownership.")
+            return
+        try:
+            team_names = tuple(self.roster_service.list_team_names())
+        except Exception as exc:
+            self.status.error(f"Could not load Teams: {exc}")
+            return
+
+        labels = ("No Team",) + team_names
+        current = plan.team_name or "No Team"
+        current_index = labels.index(current) if current in labels else 0
+        selected, ok = QInputDialog.getItem(
+            self,
+            "Change Raid Plan Team",
+            "Team:",
+            labels,
+            current_index,
+            False,
+        )
+        if not ok:
+            return
+        new_team = "" if selected == "No Team" else str(selected)
+        old_team = plan.team_name or "No Team"
+        if (new_team or "No Team") == old_team:
+            return
+
+        answer = QMessageBox.question(
+            self,
+            "Change Raid Plan Team",
+            (
+                f'Change Team for "{plan.name}"?\n\n'
+                f"Current Team: {old_team}\n"
+                f"New Team: {new_team or 'No Team'}\n\n"
+                "This changes the Team attached to this saved Raid Plan. "
+                "It does not rename, merge, or delete either Team."
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        updated = replace(plan, team_name=new_team or None)
+        try:
+            self.plan_repository.save(updated)
+        except Exception as exc:
+            self.status.error(f"Could not change Raid Plan Team: {exc}")
+            return
+        self.apply_plan(updated)
+        self.refresh_saved_plan_picker(select_plan_id=updated.plan_id)
+        self._refresh_overview()
+        self.status.success(
+            f'Raid Plan "{updated.name}" now belongs to {updated.team_name or "No Team"}.'
+        )
 
     def _resolved_plan_build_export(self):
         plan = self.current_plan()
@@ -471,6 +685,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         if hasattr(self, "plan_notes"):
             self.plan_notes.setPlainText(str(getattr(plan, "plan_note", "") or ""))
         self._navigation_baseline_plan = self.current_plan()
+        self._refresh_plan_identity_ui()
 
     def clear_plan(self) -> None:
         super().clear_plan()
@@ -479,6 +694,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             self.team_combo.setCurrentIndex(0)
         if hasattr(self, "plan_notes"):
             self.plan_notes.clear()
+        self._refresh_plan_identity_ui()
 
     def _load_overview_plan(self, item: QListWidgetItem) -> None:
         plan_id = item.data(Qt.ItemDataRole.UserRole)
