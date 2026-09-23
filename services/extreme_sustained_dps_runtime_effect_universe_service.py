@@ -6,6 +6,9 @@ from dataclasses import dataclass
 
 from minmax.character_build.effect_instance import EffectVariant
 from models.build_model import PlayerBuild
+from services.extreme_sustained_dps_weapon_enchantment_activation_event_service import (
+    WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
+)
 
 
 @dataclass(frozen=True)
@@ -117,6 +120,24 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
         runtime_effects = self._dedupe(tuple(triggered))
         excluded_plan_owned = self._dedupe(tuple(excluded))
 
+        weapon_enchantment_effects = tuple(
+            effect
+            for effect in runtime_effects
+            if str(effect.trigger or "").strip()
+            == WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER
+        )
+        if len(weapon_enchantment_effects) > 1:
+            unresolved = tuple(
+                dict.fromkeys(
+                    (
+                        *unresolved,
+                        "Multiple weapon-enchantment runtime variants require an explicit "
+                        "per-opportunity source-selection frontier; one isolated damage "
+                        "instance may proc only one weapon enchantment",
+                    )
+                )
+            )
+
         return ExtremeSustainedDPSRuntimeEffectUniverse(
             effects=runtime_effects,
             excluded_plan_owned=excluded_plan_owned,
@@ -126,6 +147,7 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
                 f"Runtime-triggered effects admitted: {len(runtime_effects)}",
                 f"Plan-owned potion-triggered effects excluded: {len(excluded_plan_owned)}",
                 "Triggerless variants remain owned by static/conditional build mechanics rather than runtime event enumeration",
+                "Weapon-enchantment activation opportunities are exclusive per isolated damage instance; multi-enchant source selection must be explicit",
             ),
             unresolved=unresolved,
         )
