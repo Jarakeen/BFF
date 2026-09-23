@@ -14,6 +14,7 @@ import shutil
 
 
 SUPPORTED_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
+SUPPORTED_LAYOUT_SUFFIXES = {".json"}
 
 
 @dataclass(frozen=True)
@@ -98,9 +99,9 @@ class EncounterRaidMapStore:
         if not source.is_file():
             raise FileNotFoundError(source)
         suffix = source.suffix.lower()
-        if suffix not in SUPPORTED_IMAGE_SUFFIXES:
+        if suffix not in SUPPORTED_IMAGE_SUFFIXES | SUPPORTED_LAYOUT_SUFFIXES:
             raise ValueError(
-                "Raid Map image must be PNG, JPG, JPEG, or WebP; "
+                "Raid Map asset must be JSON, PNG, JPG, JPEG, or WebP; "
                 f"got {source.suffix or '(no extension)'}"
             )
 
@@ -134,6 +135,20 @@ class EncounterRaidMapStore:
             rows.append(replacement)
         self._write_manifest(payload)
         return record
+
+    def save_plan_layout(
+        self,
+        plan_id: str,
+        source: Path,
+        *,
+        encounter_id: str = "",
+        label: str = "",
+    ) -> EncounterRaidMap:
+        plan_key = str(plan_id or "").strip()
+        if not plan_key:
+            raise ValueError("plan_id is required")
+        scope = str(encounter_id or "").strip() or f"plan-{plan_key}"
+        return self.import_map(scope, source, label=label or "Raid Plan Map")
 
     def remove_map(self, encounter_id: str, map_id: str) -> bool:
         encounter_id = self._clean_encounter_id(encounter_id)
