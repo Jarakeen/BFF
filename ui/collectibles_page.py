@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_data_dir
 from services.collectible_icon_catalog import CollectibleIconCatalog
 from services.profiled_collectible_service import ProfiledCollectibleService
 from ui.components.foundry_card import FoundryCard
@@ -301,29 +301,8 @@ class CollectiblesPage(QWidget):
     def save_pending_changes(self):
         if not self.pending_changes:
             return
-        db = self.service.connection
-        try:
-            db.execute("BEGIN")
-            for collectible_id, owned in self.pending_changes.items():
-                existing = self.service.collectible(int(collectible_id)) or {}
-                acquired_on = existing.get("acquired_on") or None
-                notes = existing.get("notes") or ""
-                db.execute(
-                    """
-                    INSERT INTO collectible_progress (collectible_id, owned, acquired_on, notes, updated_at)
-                    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-                    ON CONFLICT(collectible_id) DO UPDATE SET
-                        owned = excluded.owned,
-                        acquired_on = excluded.acquired_on,
-                        notes = excluded.notes,
-                        updated_at = CURRENT_TIMESTAMP
-                    """,
-                    (int(collectible_id), 1 if owned else 0, acquired_on, notes),
-                )
-            db.commit()
-        except Exception:
-            db.rollback()
-            raise
+        profile = getattr(self.service, "active_profile", "Default")
+        self.service.set_owned_batch(profile, dict(self.pending_changes))
         count = len(self.pending_changes)
         self.pending_changes.clear()
         self._last_clicked_row = None
@@ -386,7 +365,7 @@ class CollectiblesPage(QWidget):
 
     def _backup_collection(self):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = self.data_dir / "backups" / f"collectibles_{timestamp}.csv"
+        backup_path = get_user_data_dir() / "backups" / f"collectibles_{timestamp}.csv"
         try:
             path = self.service.export_progress_csv(backup_path)
         except Exception as exc:
