@@ -96,3 +96,28 @@ def test_legacy_json_manifest_rows_are_hidden_from_image_list(tmp_path: Path) ->
     )
 
     assert store.list_maps("oaxiltso") == ()
+
+
+
+def test_latest_plan_layout_returns_newest_saved_layout(tmp_path: Path) -> None:
+    store = EncounterRaidMapStore(tmp_path)
+    first = tmp_path / "first.json"
+    second = tmp_path / "second.json"
+    first.write_text('{"version": 2, "items": [{"label": "first"}]}', encoding="utf-8")
+    second.write_text('{"version": 2, "items": [{"label": "second"}]}', encoding="utf-8")
+
+    first_record = store.save_plan_layout(
+        "rg-hm",
+        first,
+        encounter_id="oaxiltso",
+    )
+    second_record = store.save_plan_layout(
+        "rg-hm",
+        second,
+        encounter_id="oaxiltso",
+    )
+
+    rows = store.list_plan_layouts("rg-hm", "oaxiltso")
+
+    assert {row.map_id for row in rows} == {first_record.map_id, second_record.map_id}
+    assert store.latest_plan_layout("rg-hm", "oaxiltso") is not None
