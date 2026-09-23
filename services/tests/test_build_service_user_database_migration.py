@@ -1,0 +1,77 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from models.build_model import BuildRoster
+from services import canonical_build_bridge as bridge_module
+from services import user_data_migration_service as migration_module
+from services.build_service import BuildService
+
+
+def test_application_build_service_migrates_json_then_writes_only_user_database(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    data_dir = tmp_path / "data"
+    user_dir = tmp_path / "user_data"
+    data_dir.mkdir()
+    user_dir.mkdir()
+    user_db = user_dir / "foundrydock.db"
+
+    builds_path = data_dir / "builds.json"
+    characters_path = data_dir / "characters.json"
+    builds_path.write_text('{"Members": []}', encoding="utf-8")
+    characters_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 4,
+                "players": [{"player_id": "p1", "gamertag": "Rikbacon"}],
+                "characters": [
+                    {
+                        "character_id": "c1",
+                        "player_id": "p1",
+                        "name": "Tanky",
+                        "gamertag": "Rikbacon",
+                        "eso_class": "Dragonknight",
+                    }
+                ],
+                "builds": [
+                    {
+                        "build_id": "b1",
+                        "character_id": "c1",
+                        "name": "Main Tank",
+                        "payload": {
+                            "Name": "Tanky",
+                            "Gamertag": "Rikbacon",
+                            "BuildName": "Main Tank",
+                            "Armor": {"Chest": {"Set": "Pearlescent Ward"}},
+                        },
+                    }
+                ],
+                "team_assignments": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(bridge_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(bridge_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(migration_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "ensure_user_database", lambda: user_db)
+
+    original_builds = builds_path.read_bytes()
+    original_characters = characters_path.read_bytes()
+
+    service = BuildService(builds_path)
+    roster = service.load()
+
+    assert len(roster.Members) == 1
+    assert roster.Members[0].BuildName == "Main Tank"
+    assert user_db.is_file()
+
+    service.save(BuildRoster(Members=list(roster.Members)))
+
+    assert builds_path.read_bytes() == original_builds
+    assert characters_path.read_bytes() == original_characters
