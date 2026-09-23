@@ -1554,3 +1554,20 @@ Several weapon-line passives are standing effects, but their math still depends 
 **Layman's version:** owning the passive does not mean “add weapon damage.” A sword, dagger, axe, mace, greatsword, battle axe, and maul can send the same passive down different math paths. ESO has once again chosen a dropdown menu where a number would have been less theatrical.
 
 **For BFF:** Phase 5 now applies only the reviewed sword/greatsword standing branches when exact passive ownership and weapon subtype are known. Ambidextrous and unreviewed subtype branches remain unresolved and therefore block Objective #32 closure rather than borrowing the sword value.
+
+
+## 2026-09-23 — Ambidextrous uses the off-hand weapon's own damage
+
+The reviewed U50 Dual Wield tooltip states that max-rank **Ambidextrous** increases Weapon and Spell Damage by 3% of the off-hand weapon's damage. The existing weapon-passive audit already treats that as a derived flat sheet-power contribution, separate from Twin Blade and Blunt and separate from Nirnhoned's own item-power contribution.
+
+**Layman's version:** Ambidextrous is not “+3% Weapon Damage.” It asks what the off-hand weapon itself is worth, then takes 3% of that number. Naturally, the wording contains just enough similarity to a global percentage bonus to make careless code look plausible.
+
+**For BFF:** Phase 5 resolves Ambidextrous only when the active bar is explicit Dual Wield and the off-hand has verified CP160 Gold weapon power. Unknown level/quality or unknown off-hand power remains unresolved and blocks Objective #32 closure.
+
+## 2026-09-23 — Bow Accuracy is active-bar Critical Chance rating
+
+Current ESO-Hub and UESP build-data records agree that max-rank **Accuracy** grants **1314 Critical Chance rating** while a Bow is equipped.
+
+**Layman's version:** owning Accuracy does not give permanent crit just because a Bow exists somewhere on the character. The Bow must be the weapon currently in use.
+
+**For BFF:** Accuracy is routed through the same critical-rating conversion used by other canonical rating sources and is applied only when the active bar is a Bow. This keeps front/back static snapshots mechanically distinct.
