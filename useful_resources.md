@@ -376,3 +376,22 @@ https://forums.elderscrollsonline.com/en/discussion/443598/adjustments-to-how-we
 **Confidence:** Primary / reference-grade for the documented trigger-family exception.
 
 **Notes:** This is the authority for classifying exact weapon-skill damage occurrences by component shape instead of treating every tick owned by a weapon ability as enchant-eligible. It does not establish current cooldown duration or duplicate-enchantment cooldown scope.
+
+
+### ESO forum community testing: duplicate weapon-enchantment cooldown sharing
+https://forums.elderscrollsonline.com/en/discussion/460533/clarification-on-enchants-unnecessarily-over-complicated
+
+**Use for:** Corroborative community evidence that identical weapon enchantments share a cooldown across weapon sources/bars. The thread also points back to the ZOS Wolfhunter activation-rule patch notes.
+
+**Confidence:** Community / corroborative only. Useful for shaping the research hypothesis, not sufficient to promote exact combat math.
+
+**Notes:** Keep `same_effect_identity_shares_cooldown` provisional until a ZOS-authored or equivalent current authoritative source directly establishes the shared-timer rule.
+
+### ESO forum community testing: distinct enchant identities use independent cooldowns
+https://forums.elderscrollsonline.com/en/discussion/363984/glyphs-cooldown-sharing
+
+**Use for:** Corroborative community evidence that different enchant identities can proc on their own cooldown timers while identical glyph identities share one timer.
+
+**Confidence:** Community / corroborative only. Useful for distinguishing duplicate-identity sharing from distinct-identity independence, but not sufficient for Objective #32 theoretical closure.
+
+**Notes:** This source supports keeping a separate provisional `distinct_effect_identities_have_independent_cooldowns` proof field rather than hiding both topology claims behind one generic cooldown-scope label.
