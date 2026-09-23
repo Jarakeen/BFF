@@ -32,7 +32,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from models.raid_plan import RaidPlan
 from services.encounter_raid_map_store import EncounterRaidMapStore
 from services.live_raid_encounter_projection_service import (
@@ -72,7 +72,7 @@ class CityLiveRaidPage(FoundryPage):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
+        self.repository = RaidPlanRepository(get_user_database_path())
         self.user_state = RaidSectionStateService()
         self.encounter_projection = LiveRaidEncounterProjectionService(
             get_data_dir() / "eso.db",
