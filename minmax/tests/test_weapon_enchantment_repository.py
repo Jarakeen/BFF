@@ -130,3 +130,14 @@ def test_weapon_enchantment_lookup_caches_are_instance_scoped(monkeypatch):
     fresh_repository = WeaponEnchantmentRepository(DB_PATH)
     assert fresh_repository.list_items() == first_items
     assert connect_count == 4
+
+def test_weapon_enchantment_exposes_canonical_identity_label():
+    repository = WeaponEnchantmentRepository(DB_PATH)
+
+    frost = repository.get_identity_label(FROST_ENCHANTMENT_ID := 5365)
+    crushing = repository.get_identity_label(CRUSHING_ENCHANTMENT_ID := 26845)
+
+    assert frost
+    assert crushing
+    assert frost != crushing
+
