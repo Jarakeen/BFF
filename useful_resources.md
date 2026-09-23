@@ -338,3 +338,13 @@ https://forums.elderscrollsonline.com/en/discussion/443312/pc-mac-patch-notes-v4
 **Confidence:** Primary / reference-grade for the documented exclusivity rule.
 
 **Notes:** This proves that one isolated damage occurrence cannot activate two weapon enchantments simultaneously. It does not by itself establish same-identity shared cooldown behavior or the exact source-selection algorithm beyond the separately documented Update 20 off-cooldown preference.
+
+
+### ZOS Update 19 weapon-source persistence rule
+https://forums.elderscrollsonline.com/en/discussion/428092/pts-patch-notes-v4-1-3
+
+**Use for:** Primary-source weapon-enchantment source ownership across weapon swaps. ZOS clarified that enchantments remember the weapon from which an ability was fired; if the ability deals damage after a bar swap, the enchantment on that original weapon fires.
+
+**Confidence:** Primary / reference-grade for source-weapon ownership across a swap.
+
+**Notes:** This promotes off-bar/source-weapon persistence independently from cooldown-sharing rules. It does not prove that duplicate enchantment identities share one cooldown or establish the buff/debuff-family base cooldown.
