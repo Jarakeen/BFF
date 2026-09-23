@@ -126,4 +126,4 @@ def test_failed_canonical_build_adaptation_fails_closed_before_cooldown_math() -
     assert not result.complete
     assert result.cooldown_seconds is None
     assert "canonical build adaptation failed" in result.unresolved
-    assert cooldown.calls == ()
+    assert cooldown.calls == []
