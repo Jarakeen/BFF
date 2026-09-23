@@ -4,6 +4,9 @@ from minmax.runtime_event import RuntimeEvent
 from services.extreme_sustained_dps_weapon_enchantment_activation_resolution_service import (
     ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService,
 )
+from services.extreme_sustained_dps_weapon_enchantment_cooldown_readiness_service import (
+    ExtremeSustainedDPSWeaponEnchantmentCooldownState,
+)
 
 
 def _effect(source, bar, slot):
@@ -97,3 +100,50 @@ def test_composite_resolver_rejects_non_enchantment_runtime_event():
     assert result.resolved is False
     assert result.proc_occurs is None
     assert any("canonical weapon_enchantment_activation" in row for row in result.unresolved)
+
+
+def test_composite_resolver_can_derive_ready_subset_from_explicit_cooldown_states():
+    main = _effect("Main Enchant", BarId.FRONT, "main_hand")
+    off = _effect("Off Enchant", BarId.FRONT, "off_hand")
+
+    result = ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService().resolve(
+        activation_event=_event(),
+        enchantment_effects=(main, off),
+        cooldown_states=(
+            ExtremeSustainedDPSWeaponEnchantmentCooldownState(
+                effect=main,
+                cooldown_seconds=4.0,
+                last_activation_time_seconds=0.0,
+            ),
+            ExtremeSustainedDPSWeaponEnchantmentCooldownState(
+                effect=off,
+                cooldown_seconds=4.0,
+                last_activation_time_seconds=None,
+            ),
+        ),
+    )
+
+    assert result.resolved is True
+    assert result.exact is off
+    assert result.alternatives == (off,)
+    assert result.proc_occurs is True
+    assert any("Cooldown-ready candidates" in row for row in result.evidence)
+
+
+def test_composite_resolver_rejects_two_cooldown_truth_sources():
+    import pytest
+
+    main = _effect("Main Enchant", BarId.FRONT, "main_hand")
+
+    with pytest.raises(ValueError, match="not both"):
+        ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService().resolve(
+            activation_event=_event(),
+            enchantment_effects=(main,),
+            cooldown_ready=(main,),
+            cooldown_states=(
+                ExtremeSustainedDPSWeaponEnchantmentCooldownState(
+                    effect=main,
+                    cooldown_seconds=4.0,
+                ),
+            ),
+        )
