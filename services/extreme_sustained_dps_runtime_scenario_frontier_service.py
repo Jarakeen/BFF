@@ -18,7 +18,12 @@ from services.extreme_sustained_dps_runtime_event_skeleton_service import (
     ExtremeSustainedDPSRuntimeEventSkeletonService,
 )
 from services.extreme_sustained_dps_runtime_attempt_evidence_frontier_service import (
+    ExtremeSustainedDPSRuntimeAttemptEvidenceChoice,
+    ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier,
     ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService,
+)
+from services.extreme_sustained_dps_runtime_attempt_frontier_composition_service import (
+    ExtremeSustainedDPSRuntimeAttemptFrontierCompositionService,
 )
 from services.extreme_sustained_dps_runtime_external_history_assembly_service import (
     ExtremeSustainedDPSRuntimeExternalHistoryAssemblyService,
@@ -38,6 +43,9 @@ from services.extreme_sustained_dps_weapon_enchantment_activation_resolution_ser
 )
 from services.extreme_sustained_dps_weapon_enchantment_attempt_binding_service import (
     ExtremeSustainedDPSWeaponEnchantmentAttemptBindingService,
+)
+from services.extreme_sustained_dps_weapon_enchantment_sequence_frontier_service import (
+    ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService,
 )
 
 
@@ -67,6 +75,8 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         runtime_effect_scaling: object | None = None,
         weapon_enchantment_activation_service: object | None = None,
         weapon_enchantment_cooldown_state_resolver: object | None = None,
+        weapon_enchantment_cooldown_policy_resolver: object | None = None,
+        weapon_enchantment_sequence_frontier_service: object | None = None,
         weapon_enchantment_activation_resolution_service: object | None = None,
         weapon_enchantment_attempt_binding_service: object | None = None,
     ) -> None:
@@ -81,6 +91,13 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         )
         self.weapon_enchantment_cooldown_state_resolver = (
             weapon_enchantment_cooldown_state_resolver
+        )
+        self.weapon_enchantment_cooldown_policy_resolver = (
+            weapon_enchantment_cooldown_policy_resolver
+        )
+        self.weapon_enchantment_sequence_frontier_service = (
+            weapon_enchantment_sequence_frontier_service
+            or ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService()
         )
         self.weapon_enchantment_activation_resolution_service = (
             weapon_enchantment_activation_resolution_service
@@ -114,6 +131,135 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             candidate=candidate,
             activation_event=activation_event,
             enchantment_effects=enchantment_effects,
+        )
+
+    @staticmethod
+    def _invoke_weapon_enchantment_cooldown_policy_resolver(
+        resolver: object,
+        *,
+        candidate,
+        enchantment_effects: tuple[EffectVariant, ...],
+    ):
+        if callable(resolver):
+            return resolver(
+                candidate=candidate,
+                enchantment_effects=enchantment_effects,
+            )
+        method = getattr(resolver, "resolve", None)
+        if method is None:
+            raise TypeError(
+                "weapon-enchantment cooldown-policy resolver must be callable or expose resolve()"
+            )
+        return method(
+            candidate=candidate,
+            enchantment_effects=enchantment_effects,
+        )
+
+    def _weapon_enchantment_attempt_frontier(
+        self,
+        *,
+        candidate,
+        events: tuple[RuntimeEvent, ...],
+        effects: tuple[EffectVariant, ...],
+        event_denominator_proven: bool,
+        source: str,
+    ) -> tuple[
+        tuple[RuntimeEvent, ...],
+        ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier | None,
+        tuple[str, ...],
+        tuple[str, ...],
+    ]:
+        enchantment_effects = tuple(
+            effect
+            for effect in effects
+            if str(effect.trigger or "").strip()
+            == WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER
+        )
+        enchantment_events = tuple(
+            event
+            for event in events
+            if event.trigger == WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER
+        )
+        generic_events = tuple(
+            event
+            for event in events
+            if event.trigger != WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER
+        )
+        if not enchantment_events:
+            return generic_events, None, (), ()
+
+        if not enchantment_effects:
+            return (
+                generic_events,
+                None,
+                (),
+                (
+                    "weapon-enchantment activation events exist without canonical weapon-enchantment EffectVariants",
+                ),
+            )
+        if self.weapon_enchantment_cooldown_policy_resolver is None:
+            return generic_events, None, (), ()
+
+        policy_result = self._invoke_weapon_enchantment_cooldown_policy_resolver(
+            self.weapon_enchantment_cooldown_policy_resolver,
+            candidate=candidate,
+            enchantment_effects=enchantment_effects,
+        )
+        policy_unresolved = tuple(
+            getattr(policy_result, "unresolved", ()) or ()
+        )
+        policy_evidence = tuple(
+            str(item)
+            for item in tuple(getattr(policy_result, "evidence", ()) or ())
+            if str(item).strip()
+        )
+        if hasattr(policy_result, "policies"):
+            policies = tuple(getattr(policy_result, "policies") or ())
+        else:
+            policies = tuple(policy_result or ())
+
+        sequence = self.weapon_enchantment_sequence_frontier_service.build(
+            events=enchantment_events,
+            effects=enchantment_effects,
+            policies=policies,
+            event_denominator_proven=bool(
+                event_denominator_proven and not policy_unresolved
+            ),
+            source=f"{source}: weapon-enchantment sequence",
+        )
+        choices = tuple(
+            ExtremeSustainedDPSRuntimeAttemptEvidenceChoice(
+                choice_id=choice.choice_id,
+                attempts=tuple(choice.attempts),
+                evidence=tuple(choice.evidence),
+            )
+            for choice in tuple(sequence.choices)
+        )
+        frontier = ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier(
+            choices=choices,
+            candidate_count=len(choices),
+            denominator_proven=bool(
+                sequence.denominator_proven
+                and not policy_unresolved
+            ),
+            evidence=(
+                *policy_evidence,
+                *tuple(sequence.evidence),
+            ),
+            unresolved=tuple(
+                dict.fromkeys(
+                    (
+                        *policy_unresolved,
+                        *tuple(sequence.unresolved),
+                    )
+                )
+            ),
+        )
+        return (
+            generic_events,
+            frontier,
+            tuple(frontier.evidence),
+            tuple(frontier.unresolved),
         )
 
     def _bind_weapon_enchantment_attempts(
@@ -342,14 +488,35 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         )
         (
             runtime_events,
-            fixed_attempts,
+            enchantment_attempt_frontier,
             enchantment_binding_evidence,
             enchantment_binding_unresolved,
-        ) = self._bind_weapon_enchantment_attempts(
+        ) = self._weapon_enchantment_attempt_frontier(
             candidate=candidate,
             events=tuple(skeleton.events),
             effects=tuple(effects),
+            event_denominator_proven=bool(skeleton.denominator_proven),
+            source=source,
         )
+        fixed_attempts: tuple[RuntimeEffectEventAttempt, ...] = ()
+        if (
+            enchantment_attempt_frontier is None
+            and any(
+                event.trigger == WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER
+                for event in tuple(skeleton.events)
+            )
+        ):
+            (
+                runtime_events,
+                fixed_attempts,
+                enchantment_binding_evidence,
+                enchantment_binding_unresolved,
+            ) = self._bind_weapon_enchantment_attempts(
+                candidate=candidate,
+                events=tuple(skeleton.events),
+                effects=tuple(effects),
+            )
+
         result = self.build(
             plan=candidate.plan,
             player_build=player_build,
@@ -360,6 +527,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                 and not enchantment_binding_unresolved
             ),
             fixed_attempts=fixed_attempts,
+            fixed_attempt_frontier=enchantment_attempt_frontier,
             supplemental_histories=tuple(supplemental_histories),
             supplemental_denominator_proven=bool(
                 supplemental_denominator_proven
@@ -397,6 +565,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         effects: tuple[EffectVariant, ...],
         event_denominator_proven: bool,
         fixed_attempts: tuple[RuntimeEffectEventAttempt, ...] = (),
+        fixed_attempt_frontier: ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier | None = None,
         supplemental_histories: tuple[
             ExtremeSustainedDPSRuntimeExternalHistoryChoice,
             ...,
@@ -413,6 +582,14 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             source=f"{source}: runtime event skeletons",
             fixed_attempts=tuple(fixed_attempts),
         )
+        if fixed_attempt_frontier is not None:
+            attempts = ExtremeSustainedDPSRuntimeAttemptFrontierCompositionService.compose(
+                (
+                    fixed_attempt_frontier,
+                    attempts,
+                ),
+                source=f"{source}: runtime attempt composition",
+            )
         assembled = ExtremeSustainedDPSRuntimeExternalHistoryAssemblyService.build(
             attempt_frontier=attempts,
             supplemental_histories=tuple(supplemental_histories),
