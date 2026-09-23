@@ -550,6 +550,8 @@ def test_generated_sustained_dps_runtime_evaluation_consumes_canonical_simulatio
         "extreme.sustained_dps.runtime_target_combat_state",
         "extreme.sustained_dps.weapon_enchantment_runtime_source",
         "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+        "extreme.sustained_dps.weapon_enchantment_resistance_reduction",
+        "extreme.sustained_dps.weapon_enchantment_weapon_spell_damage",
         "extreme.sustained_dps.weapon_enchantment_consequence_coverage",
         "simulation.saved_build_dd",
     )
@@ -1814,3 +1816,29 @@ def test_selected_weapon_enchantment_consequence_coverage_is_cataloged() -> None
     )
     assert "explicit downstream runtime consumer" in service.purpose
     assert "leaf blockers" in service.notes
+
+
+
+def test_selected_weapon_enchantment_runtime_consequence_consumers_are_cataloged() -> None:
+    resistance = canonical_service_for(
+        "extreme_sustained_dps_weapon_enchantment_resistance_reduction_runtime_projection"
+    )
+    power = canonical_service_for(
+        "extreme_sustained_dps_weapon_enchantment_weapon_spell_damage_runtime_projection"
+    )
+
+    assert resistance is not None
+    assert power is not None
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(resistance.service_id)
+    ) == ("extreme.sustained_dps.weapon_enchantment_proc_consequence",)
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(power.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+        "extreme.sustained_dps.runtime_effect_projection",
+    )
+    assert "overlapping" in resistance.notes
+    assert "canonical weapon_spell_damage stat projection" in power.notes
