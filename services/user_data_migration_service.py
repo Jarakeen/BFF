@@ -14,6 +14,8 @@ import sqlite3
 from pathlib import Path
 
 from engine.config import ensure_user_database, get_data_dir, get_user_database_path
+from models.build_model import BuildRoster, PlayerBuild
+from services.build_catalog_service import BuildCatalogService
 
 
 _USER_TABLES_IN_COPY_ORDER = (
@@ -306,6 +308,68 @@ def _migrate_achievement_json(
     return inserted
 
 
+def _migrate_build_catalog_json(
+    characters_path: Path,
+    builds_path: Path,
+    target: sqlite3.Connection,
+) -> int:
+    target.execute(
+        """
+        CREATE TABLE IF NOT EXISTS build_catalog (
+            singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
+            payload_json TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    if _table_count(target, "build_catalog"):
+        return 0
+
+    catalog: dict | None = None
+    if characters_path.is_file():
+        try:
+            raw = json.loads(characters_path.read_text(encoding="utf-8"))
+            if isinstance(raw, dict):
+                normalized = BuildCatalogService._normalize(raw)
+                if (
+                    normalized.get("players")
+                    or normalized.get("characters")
+                    or normalized.get("builds")
+                    or normalized.get("team_assignments")
+                ):
+                    catalog = normalized
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            catalog = None
+
+    if catalog is None and builds_path.is_file():
+        try:
+            raw = json.loads(builds_path.read_text(encoding="utf-8"))
+            members = [
+                PlayerBuild.from_dict(row)
+                for row in (raw or {}).get("Members", [])
+                if isinstance(row, dict)
+            ]
+            if members:
+                service = BuildCatalogService(
+                    builds_path.with_name(".migration-build-catalog.json")
+                )
+                catalog = service.import_legacy_roster(BuildRoster(Members=members))
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            catalog = None
+
+    if catalog is None:
+        catalog = BuildCatalogService._normalize(None)
+
+    target.execute(
+        """
+        INSERT OR IGNORE INTO build_catalog(singleton_id, payload_json)
+        VALUES (1, ?)
+        """,
+        (json.dumps(catalog, ensure_ascii=False, sort_keys=True),),
+    )
+    return len(catalog.get("builds", []))
+
+
 def _migrate_raid_plan_json(
     raid_plan_path: Path,
     target: sqlite3.Connection,
@@ -355,6 +419,8 @@ def migrate_legacy_user_data(
     user_database: Path | None = None,
     achievement_progress: Path | None = None,
     raid_plans: Path | None = None,
+    characters: Path | None = None,
+    builds: Path | None = None,
 ) -> dict[str, int]:
     """Copy legacy user state into foundrydock.db without mutating the source."""
 
@@ -364,6 +430,8 @@ def migrate_legacy_user_data(
         achievement_progress or (get_data_dir() / "achievement_progress.json")
     )
     raid_plan_path = Path(raid_plans or (get_data_dir() / "raid_plans.json"))
+    characters_path = Path(characters or (get_data_dir() / "characters.json"))
+    builds_path = Path(builds or (get_data_dir() / "builds.json"))
     target_path.parent.mkdir(parents=True, exist_ok=True)
 
     counts: dict[str, int] = {}
@@ -393,10 +461,13 @@ def migrate_legacy_user_data(
             achievement_path, target
         )
         counts["raid_plan"] = _migrate_raid_plan_json(raid_plan_path, target)
+        counts["build_catalog"] = _migrate_build_catalog_json(
+            characters_path, builds_path, target
+        )
         target.execute(
             """
             INSERT OR IGNORE INTO user_data_migration(migration_key)
-            VALUES ('legacy_user_state_split_v1')
+            VALUES ('legacy_user_state_split_v2')
             """
         )
         target.commit()
