@@ -127,8 +127,28 @@ class FinchRosterSyncService:
             or _clean(registration.discord_display_name)
         )
 
+    def _discord_username_match(self, registration: FinchRegistration):
+        username = _clean(registration.discord_username).lstrip("@").casefold()
+        if not username:
+            return None
+        matches = [
+            member
+            for member in self.roster.list_members()
+            if _clean(member.DiscordName).lstrip("@").casefold() == username
+        ]
+        return matches[0] if len(matches) == 1 else None
+
     def _resolve_registration_member(self, registration: FinchRegistration):
+        username_match = self._discord_username_match(registration)
         bound = self._bound_member(registration)
+        if username_match is not None:
+            if (
+                bound is None
+                or bound.Id is None
+                or int(bound.Id) != int(username_match.Id)
+            ):
+                return username_match
+            return bound
         if bound is not None:
             return bound
 
@@ -164,6 +184,12 @@ class FinchRosterSyncService:
 
             member_id = int(member.Id)
             self._bind_registration(registration, member_id)
+            if _clean(registration.player_name).casefold() != _clean(member.PlayerName).casefold():
+                self.client.correct_registration_identity(
+                    discord_user_id=registration.discord_user_id,
+                    guild_id=registration.guild_id,
+                    player_name=_clean(member.PlayerName),
+                )
 
             current_discord = self._public_discord_name(registration)
             if current_discord and _clean(member.DiscordName) != current_discord:
