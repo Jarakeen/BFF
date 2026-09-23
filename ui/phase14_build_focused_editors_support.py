@@ -369,17 +369,26 @@ class _ConsumablesDialog(_FocusedDialog):
         self.build = build
         self.food = _editable_combo(page.reference.list_food_names())
         self.potion = _editable_combo(page.reference.list_potion_names())
+        poison_choices = page.reference.list_poison_names()
+        self.front_poison = _editable_combo(poison_choices)
+        self.back_poison = _editable_combo(poison_choices)
         self.food.setCurrentText(build.Food)
         self.potion.setCurrentText(build.Potion)
+        self.front_poison.setCurrentText(getattr(build, "FrontBarPoison", "") or "")
+        self.back_poison.setCurrentText(getattr(build, "BackBarPoison", "") or "")
         form = QFormLayout()
         form.addRow("Food", self.food)
         form.addRow("Potion", self.potion)
+        form.addRow("Front Bar Poison", self.front_poison)
+        form.addRow("Back Bar Poison", self.back_poison)
         self.root.addLayout(form)
         self.add_actions("Save Consumables")
 
     def apply(self) -> None:
         self.build.Food = self.food.currentText().strip()
         self.build.Potion = self.potion.currentText().strip()
+        self.build.FrontBarPoison = self.front_poison.currentText().strip()
+        self.build.BackBarPoison = self.back_poison.currentText().strip()
 
 
 class _CPDialog(_FocusedDialog):
