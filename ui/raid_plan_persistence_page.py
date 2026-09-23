@@ -752,9 +752,16 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         return persisted
 
     def _open_assignments(self, *_args) -> None:
-        """Persist this plan, then explicitly hand its stable id to Assignments."""
-        persisted = self.save_current_plan()
+        """Open Assignments without silently committing visible Raid Plan edits."""
+        if self.has_pending_changes() and not confirm_unsaved_changes(
+            self,
+            self,
+            action_text="open Assignments",
+        ):
+            return
+        persisted = getattr(self, "_loaded_plan_snapshot", None)
         if persisted is None:
+            self.status.warning("Save the Raid Plan before opening Assignments.")
             return
         self.assignmentsRequested.emit(persisted.plan_id)
 
