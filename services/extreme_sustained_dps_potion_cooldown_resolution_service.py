@@ -144,6 +144,14 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
                 unresolved=tuple(dict.fromkeys(unresolved)),
             )
         item_evidence = self.item_service.resolve(player_build)
+        if not hasattr(item_evidence, "unresolved"):
+            return ExtremeSustainedDPSPotionCooldownResolution(
+                cooldown_seconds=None,
+                resolution=None,
+                unresolved=(
+                    "Extreme potion cooldown jewelry evidence lacks an explicit unresolved contract",
+                ),
+            )
         item_unresolved = tuple(getattr(item_evidence, "unresolved", ()) or ())
         if item_unresolved:
             return ExtremeSustainedDPSPotionCooldownResolution(
