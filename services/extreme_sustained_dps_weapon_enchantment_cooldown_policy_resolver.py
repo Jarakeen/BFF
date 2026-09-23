@@ -167,7 +167,8 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
                 continue
 
             # runtime_ready proves base cooldown, topology, same-identity sharing,
-            # activation semantics, source persistence, and poison replacement.
+            # distinct-identity independence, activation semantics, source persistence,
+            # and poison replacement.
             # EffectVariant.name is the model's canonical logical identity, so it
             # becomes the cooldown key only after those mechanics are authoritative.
             policies.append(
