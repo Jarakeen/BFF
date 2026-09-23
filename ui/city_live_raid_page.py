@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QMenu,
+    QScrollArea,
     QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
@@ -77,6 +78,8 @@ class CityLiveRaidPage(FoundryPage):
             get_data_dir(),
         )
         self.raid_map_store = EncounterRaidMapStore(get_data_dir())
+        self._raid_map_source_pixmap = QPixmap()
+        self._raid_map_zoom = 1.0
         self._plan: RaidPlan | None = None
         self._encounter_context: LiveRaidEncounterContext | None = None
         self._timer = QTimer(self)
@@ -278,14 +281,36 @@ class CityLiveRaidPage(FoundryPage):
         self.inline_raid_map.setWordWrap(True)
         self.inline_raid_map.setMinimumHeight(420)
         self.inline_raid_map.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Ignored,
+            QSizePolicy.Policy.Ignored,
         )
-        map_layout.addWidget(self.inline_raid_map, 1)
+
+        self.raid_map_scroll = QScrollArea()
+        self.raid_map_scroll.setWidgetResizable(False)
+        self.raid_map_scroll.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.raid_map_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.raid_map_scroll.setWidget(self.inline_raid_map)
+        map_layout.addWidget(self.raid_map_scroll, 1)
 
         map_actions = QHBoxLayout()
         map_actions.setContentsMargins(0, 0, 0, 0)
         map_actions.setSpacing(6)
+
+        zoom_out = QPushButton("−")
+        zoom_out.setToolTip("Zoom out Raid Map")
+        zoom_out.clicked.connect(lambda: self._change_raid_map_zoom(-0.25))
+        map_actions.addWidget(zoom_out)
+
+        fit_map = QPushButton("Fit")
+        fit_map.setToolTip("Fit the full Raid Map in the Live Raid card")
+        fit_map.clicked.connect(self._fit_raid_map)
+        map_actions.addWidget(fit_map)
+
+        zoom_in = QPushButton("+")
+        zoom_in.setToolTip("Zoom in Raid Map")
+        zoom_in.clicked.connect(lambda: self._change_raid_map_zoom(0.25))
+        map_actions.addWidget(zoom_in)
+
         map_actions.addStretch(1)
 
         self.raid_map_button = QPushButton("Raid Map ▾")
@@ -541,37 +566,71 @@ class CityLiveRaidPage(FoundryPage):
         except (OSError, RuntimeError, ValueError):
             return None
 
+    def _apply_raid_map_zoom(self) -> None:
+        pixmap = self._raid_map_source_pixmap
+        if pixmap.isNull():
+            return
+        scale = max(0.5, min(3.0, float(self._raid_map_zoom)))
+        width = max(1, int(round(pixmap.width() * scale)))
+        height = max(1, int(round(pixmap.height() * scale)))
+        rendered = pixmap.scaled(
+            width,
+            height,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        self.inline_raid_map.setText("")
+        self.inline_raid_map.setPixmap(rendered)
+        self.inline_raid_map.resize(rendered.size())
+
+    def _change_raid_map_zoom(self, delta: float) -> None:
+        if self._raid_map_source_pixmap.isNull():
+            return
+        self._raid_map_zoom = max(
+            0.5,
+            min(3.0, float(self._raid_map_zoom) + float(delta)),
+        )
+        self._apply_raid_map_zoom()
+
+    def _fit_raid_map(self) -> None:
+        pixmap = self._raid_map_source_pixmap
+        if pixmap.isNull() or not hasattr(self, "raid_map_scroll"):
+            return
+        viewport = self.raid_map_scroll.viewport().size()
+        if viewport.width() <= 0 or viewport.height() <= 0:
+            return
+        width_scale = viewport.width() / max(1, pixmap.width())
+        height_scale = viewport.height() / max(1, pixmap.height())
+        self._raid_map_zoom = max(0.5, min(3.0, min(width_scale, height_scale)))
+        self._apply_raid_map_zoom()
+
     def _refresh_inline_raid_map(self) -> None:
         if not hasattr(self, "inline_raid_map"):
             return
         record = self._current_linked_raid_map()
         if record is None:
+            self._raid_map_source_pixmap = QPixmap()
             self.inline_raid_map.setPixmap(QPixmap())
             self.inline_raid_map.setText(
                 "No Raid Plan map linked for this encounter."
             )
+            self.inline_raid_map.adjustSize()
             return
 
         path = self.raid_map_store.resolve_path(record)
         pixmap = QPixmap(str(path))
         if pixmap.isNull():
+            self._raid_map_source_pixmap = QPixmap()
             self.inline_raid_map.setPixmap(QPixmap())
             self.inline_raid_map.setText(
                 "Linked Raid Plan map could not be displayed."
             )
+            self.inline_raid_map.adjustSize()
             return
 
-        target = self.inline_raid_map.size()
-        if target.width() < 200 or target.height() < 200:
-            target = self.inline_raid_map.minimumSize()
-        self.inline_raid_map.setText("")
-        self.inline_raid_map.setPixmap(
-            pixmap.scaled(
-                target,
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-        )
+        self._raid_map_source_pixmap = pixmap
+        self._raid_map_zoom = 1.0
+        QTimer.singleShot(0, self._fit_raid_map)
 
     def _show_raid_map_menu(self) -> None:
         menu = QMenu(self)
@@ -869,6 +928,7 @@ class CityLiveRaidPage(FoundryPage):
             self.encounter_checklist_label.setText("No encounter checklist loaded.")
             self.events_label.setText("No manual run events yet.")
             self.run_notes_edit.clear()
+            self._raid_map_source_pixmap = QPixmap()
             self.inline_raid_map.setPixmap(QPixmap())
             self.inline_raid_map.setText("No Raid Plan map linked for this encounter.")
             self.run_notes_edit.setEnabled(False)
