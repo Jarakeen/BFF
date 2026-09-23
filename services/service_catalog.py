@@ -1401,6 +1401,31 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_activation_events",
+        domain="extreme",
+        purpose=(
+            "Derive ZOS-proven weapon-enchantment activation opportunities from exact landed damage occurrences without asserting that an enchantment actually procs."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_activation_event_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "CanonicalSkillLineRepository",
+            "CanonicalExactTimeDamageOccurrenceEvidence",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentActivationEventResult",),
+        dependencies=(),
+        responsibilities=("extreme_sustained_dps_weapon_enchantment_activation_events",),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Primary ZOS Update 20 evidence makes landed Light Attack, Heavy Attack, and weapon-line ability damage eligible activation opportunities. "
+            "Class/world/guild ability damage is excluded by canonical skill-line ownership. "
+            "This service intentionally does not resolve enchantment cooldown availability, weapon-source selection, poison replacement, off-bar persistence, or the actual proc decision."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_event_skeleton",
         domain="extreme",
         purpose=(
@@ -1411,6 +1436,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "GeneratedRotationCandidate",
             "CanonicalRuntimeEffectVariants",
             "OptionalDamageOccurrenceProvider",
+            "OptionalWeaponEnchantmentActivationService",
             "SupplementalScenarioRuntimeEvents",
             "SupplementalEventDenominatorProof",
         ),
@@ -1422,7 +1448,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Scheduled skills, Ultimates, Light Attacks, verified Heavy Attack completions, and exact damage occurrences may own specific trigger skeletons. "
+            "Scheduled skills, Ultimates, Light Attacks, verified Heavy Attack completions, exact damage occurrences, and canonically classified weapon-enchantment activation opportunities may own specific trigger skeletons. "
+            "Weapon-enchantment opportunities are derived only through the dedicated skill-line-aware resolver; generic damage_dealt is not reused because class-skill damage must not proc weapon enchants. "
             "Potion-use triggers are excluded because finalized plan POTION actions own potion runtime state. "
             "Expected-value damage/crit math never manufactures critical-hit trigger events; unsupported encounter triggers such as synergies, corpse consumption, off-balance target hits, or heals remain caller-proven scenario event families."
         ),
@@ -1491,6 +1518,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "CanonicalEffectVariants",
             "EventSkeletonDenominatorProof",
             "SupplementalRuntimeHistoryDenominatorProof",
+            "OptionalWeaponEnchantmentActivationService",
         ),
         outputs=("ExtremeSustainedDPSRuntimeScenarioFrontierResult",),
         dependencies=(
