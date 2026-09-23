@@ -1452,6 +1452,34 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_sequence_frontier",
+        domain="extreme",
+        purpose=(
+            "Enumerate every materially distinct exact weapon-enchantment source/cooldown sequence over a proven activation-event denominator."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_sequence_frontier_service",
+        inputs=(
+            "WeaponEnchantmentActivationEvents",
+            "WeaponEnchantmentEffectVariants",
+            "AuthoritativeWeaponEnchantmentCooldownPolicies",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentSequenceFrontier",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_enchantment_source_ownership",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_sequence_frontier",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Owns deterministic branching across source-owned enchantment candidates and authoritative cooldown policy only. "
+            "Missing event-denominator proof or cooldown policy fails the frontier closed; it does not infer cadence, shared cooldown identity, or source preference."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_proc_consequences",
         domain="extreme",
         purpose=(
