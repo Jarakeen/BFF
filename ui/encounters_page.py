@@ -392,6 +392,13 @@ class EncountersPage(FoundryPage):
         self.save_raid_map_to_finch_button.clicked.connect(self._save_raid_map_to_finch)
         row.addWidget(self.save_raid_map_to_finch_button)
 
+        self.remove_raid_map_from_finch_button = QPushButton("Remove Map from Finch")
+        self.remove_raid_map_from_finch_button.setToolTip(
+            "Remove the selected encounter's published Raid Map preview from this Raid Plan and republish the plan. The local editable map is kept."
+        )
+        self.remove_raid_map_from_finch_button.clicked.connect(self._remove_raid_map_from_finch)
+        row.addWidget(self.remove_raid_map_from_finch_button)
+
         board.layout().insertWidget(max(0, board.layout().count() - 1), controls)
 
     def _save_raid_map_to_plan(self) -> None:
@@ -429,6 +436,36 @@ class EncountersPage(FoundryPage):
         )
         self.status.success(
             f"Saved Raid Map to Raid Plan: {plan.name}. Editable layout + image preview are linked."
+        )
+
+    def _remove_raid_map_from_finch(self) -> None:
+        plan_id = str(self.raid_plan_combo.currentData() or "").strip()
+        encounter_id = str(self.boss_combo.currentData() or "").strip()
+        encounter_name = str(self.boss_combo.currentText() or "").strip()
+        if not plan_id or not encounter_id:
+            self.status.warning("Select a saved Raid Plan and boss before removing its Finch map.")
+            return
+
+        removed = self.raid_section_state.remove_finch_raid_map_preview(plan_id, encounter_id)
+        if not removed:
+            self.status.info(f"No Finch Raid Map preview is attached to {encounter_name or encounter_id}.")
+            return
+
+        try:
+            from services.finch_shared_publish_service import publish_raid_plan_to_finch
+            publish_raid_plan_to_finch(
+                database_path=Path(get_data_dir()) / "eso.db",
+                raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+                plan_id=plan_id,
+                settings_path=Path("settings.json"),
+            )
+        except Exception as exc:
+            self.status.error(
+                f"Removed the local Finch map link, but Raid Plan republish failed: {exc}"
+            )
+            return
+        self.status.success(
+            f"Removed {encounter_name or encounter_id} Raid Map from Finch. Local map kept."
         )
 
     def _save_raid_map_to_finch(self) -> None:
