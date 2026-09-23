@@ -1568,6 +1568,35 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_oblivion_damage",
+        domain="extreme",
+        purpose=(
+            "Resolve exact CP160 Legendary Decrease Health weapon-enchantment "
+            "Oblivion damage from selected proc occurrences and target maximum Health."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_oblivion_damage_service",
+        inputs=(
+            "ExtremeSustainedDPSWeaponEnchantmentProcOccurrence",
+            "CombatSimulationTargetState",
+            "CanonicalGlyphQualityTierLevel",
+        ),
+        outputs=("CombatSimulationOutgoingDamage",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_enchantment_proc_consequences",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_oblivion_damage_resolution",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Only the reviewed CP160 Legendary/Gold Truly Superb Decrease Health path "
+            "is exact here; other glyph damage families remain fail-closed."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_cadence_family",
         domain="extreme",
         purpose=(
