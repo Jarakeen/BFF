@@ -253,6 +253,7 @@ def main() -> int:
     from ui.application_window_composition import compose_application_window
     from services.performance_dd_analysis_support import install as install_performance_dd_analysis_support
     from ui.performance_dashboard_dd_support import install as install_performance_dashboard_dd_support
+    from ui.application_ui_safety_support import install as install_application_ui_safety_support
 
     install_searchable_selectors()
     install_scribing_support()
@@ -345,6 +346,9 @@ def main() -> int:
     # mutating any local ESO database state.
     install_performance_dd_analysis_support()
     install_performance_dashboard_dd_support()
+    # Install UI failsafes last so they wrap the final composed edit/navigation
+    # behavior rather than being bypassed by later presentation decorators.
+    install_application_ui_safety_support()
 
     from ui.main_window import MainWindow
 
