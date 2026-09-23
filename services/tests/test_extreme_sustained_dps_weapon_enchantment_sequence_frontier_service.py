@@ -158,3 +158,61 @@ def test_missing_policy_fails_closed():
 
     assert result.denominator_proven is False
     assert any("missing" in row for row in result.unresolved)
+
+def test_multi_consequence_variants_share_one_source_branch_and_one_proc_attempt():
+    damage = EffectVariant(
+        name="glyph_of_absorb_health",
+        layer=EffectLayer.PROC,
+        source="Glyph of Absorb Health",
+        active_bar=BarId.FRONT,
+        source_slot="main_hand",
+        trigger="weapon_enchantment_activation",
+        magnitude=1900.0,
+    )
+    restore = EffectVariant(
+        name="glyph_of_absorb_health",
+        layer=EffectLayer.PROC,
+        source="Glyph of Absorb Health",
+        active_bar=BarId.FRONT,
+        source_slot="main_hand",
+        trigger="weapon_enchantment_activation",
+        magnitude=861.0,
+    )
+
+    result = ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService().build(
+        events=(_event(1.0),),
+        effects=(damage, restore),
+        policies=(
+            _policy(damage, "glyph_of_absorb_health"),
+            _policy(restore, "glyph_of_absorb_health"),
+        ),
+        event_denominator_proven=True,
+        source="reviewed multi-consequence fixture",
+    )
+
+    assert result.denominator_proven is True
+    assert result.candidate_count == 1
+    attempt = result.choices[0].attempts[0]
+    assert attempt.applies_to(damage) is True
+    assert attempt.applies_to(restore) is True
+    assert any("consequence variants supplied: 2" in row for row in result.evidence)
+    assert any("Distinct weapon-enchantment sources supplied: 1" in row for row in result.evidence)
+
+
+def test_conflicting_policies_for_one_binding_source_fail_closed():
+    damage = _effect("Main Enchant", "main_hand")
+
+    result = ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService().build(
+        events=(_event(1.0),),
+        effects=(damage,),
+        policies=(
+            _policy(damage, "main", cooldown=4.0),
+            _policy(damage, "main", cooldown=5.0),
+        ),
+        event_denominator_proven=True,
+        source="conflicting policy fixture",
+    )
+
+    assert result.denominator_proven is False
+    assert any("conflicting" in row for row in result.unresolved)
+
