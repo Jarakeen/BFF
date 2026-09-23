@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from minmax.character_build.effect_instance import EffectVariant
-from minmax.character_build.effect_layer import EffectLayer
+from minmax.character_build.effect_layer import BarId, EffectLayer
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.runtime_event import RuntimeEvent
 from minmax.support_stacking import StackingBehavior
@@ -18,6 +18,9 @@ from services.extreme_sustained_dps_runtime_effect_scaling_service import (
 from services.rotation_candidate_generation_service import GeneratedRotationCandidate
 from services.extreme_sustained_dps_runtime_witness_composition_service import (
     ExtremeSustainedDPSRuntimeExternalHistoryChoice,
+)
+from services.extreme_sustained_dps_weapon_enchantment_cooldown_readiness_service import (
+    ExtremeSustainedDPSWeaponEnchantmentCooldownState,
 )
 
 
@@ -513,5 +516,153 @@ def test_candidate_builder_resolves_master_architect_duration_before_runtime_fro
     assert result.frontier.choices[0].effects[0].scaling is None
     assert any(
         "Master Architect duration resolved from canonical Ultimate spend" in row
+        for row in result.evidence
+    )
+
+
+def _weapon_enchantment_effect(source, slot):
+    return EffectVariant(
+        name=source.casefold().replace(" ", "_"),
+        layer=EffectLayer.PROC,
+        source=source,
+        active_bar=BarId.FRONT,
+        source_slot=slot,
+        trigger="weapon_enchantment_activation",
+        duration=5.0,
+        stacking=StackingBehavior.UNIQUE,
+    )
+
+
+class _WeaponEnchantmentActivationService:
+    def resolve(self, **_kwargs):
+        return SimpleNamespace(
+            events=(
+                RuntimeEvent(
+                    time_seconds=1.0,
+                    sequence=0,
+                    trigger="weapon_enchantment_activation",
+                    source="Light Attack",
+                    target="Boss",
+                    source_bar="front",
+                ),
+            ),
+            evidence=("reviewed weapon-enchantment activation opportunity",),
+            unresolved=(),
+        )
+
+
+def test_candidate_builder_binds_one_ready_weapon_enchantment_source() -> None:
+    main = _weapon_enchantment_effect("Main Enchant", "main_hand")
+    off = _weapon_enchantment_effect("Off Enchant", "off_hand")
+
+    def cooldown_states(**_kwargs):
+        return (
+            ExtremeSustainedDPSWeaponEnchantmentCooldownState(
+                effect=main,
+                cooldown_seconds=4.0,
+                last_activation_time_seconds=0.0,
+            ),
+            ExtremeSustainedDPSWeaponEnchantmentCooldownState(
+                effect=off,
+                cooldown_seconds=4.0,
+                last_activation_time_seconds=None,
+            ),
+        )
+
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        weapon_enchantment_activation_service=_WeaponEnchantmentActivationService(),
+        weapon_enchantment_cooldown_state_resolver=cooldown_states,
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        effects=(main, off),
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed weapon enchant scenario",
+    )
+
+    assert result.unresolved == ()
+    assert result.frontier.denominator_proven is True
+    assert result.frontier.candidate_count == 1
+    attempt = result.frontier.choices[0].snapshot.effect_attempts[0]
+    assert attempt.applies_to(off) is True
+    assert attempt.applies_to(main) is False
+    assert any(
+        "Weapon-enchantment source-bound runtime attempts: 1" in row
+        for row in result.evidence
+    )
+
+
+def test_candidate_builder_fails_closed_without_weapon_enchantment_cooldown_state() -> None:
+    main = _weapon_enchantment_effect("Main Enchant", "main_hand")
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        weapon_enchantment_activation_service=_WeaponEnchantmentActivationService(),
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        effects=(main,),
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="partial weapon enchant scenario",
+    )
+
+    assert result.frontier.denominator_proven is False
+    assert any(
+        "explicit per-opportunity cooldown-state evidence" in row
+        for row in result.unresolved
+    )
+
+
+def test_candidate_builder_can_prove_weapon_enchantment_no_proc() -> None:
+    main = _weapon_enchantment_effect("Main Enchant", "main_hand")
+
+    def cooldown_states(**_kwargs):
+        return (
+            ExtremeSustainedDPSWeaponEnchantmentCooldownState(
+                effect=main,
+                cooldown_seconds=4.0,
+                last_activation_time_seconds=0.0,
+            ),
+        )
+
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        weapon_enchantment_activation_service=_WeaponEnchantmentActivationService(),
+        weapon_enchantment_cooldown_state_resolver=cooldown_states,
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        effects=(main,),
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed weapon enchant scenario",
+    )
+
+    assert result.unresolved == ()
+    assert result.frontier.denominator_proven is True
+    assert result.frontier.choices[0].snapshot.effect_attempts == ()
+    assert any(
+        "Weapon-enchantment opportunities proven no-proc: 1" in row
         for row in result.evidence
     )
