@@ -555,3 +555,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Live Raid Raid Spots tabs** — Live Raid keeps the full Names & Assignments roster table on the first Raid Spots tab and gives the linked Raid Plan map its own full-width Raid Map tab, so spatial assignments such as house stacks are readable without squeezing the roster or leaving the page.
+
+
+- **Live Raid Boss Mechanics loop** — Live Raid includes a context-aware Boss Mechanics shortcut that opens Mechanics & Timelines directly on the currently selected encounter. Mechanics shows a temporary **← Back to Live Raid** control only for that handoff, returning to the same Live Raid plan/encounter context without making the user reselect raid state.
