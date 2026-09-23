@@ -1223,6 +1223,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "OptionalSupplementalAxisCoverageProofs",
             "OptionalSupplementalCoverageScopeProof",
             "OptionalProvenLocalRuntimeStateFrontier",
+            "ExtremeSustainedDPSClosureInventory",
         ),
         outputs=(
             "ExtremeSustainedDPSGlobalObjective32SearchResult",
@@ -1245,7 +1246,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Canonical axis coverage is derived from the exact completed generated tree rather than caller claims, so no scope certificate is required for same-tree closure. "
             "Supplemental proofs are accepted only when an explicit scope proof ties them to the same denominator; otherwise they are ignored and reported. "
-            "The generated-axis inventory must show every canonical axis physically present, and axis-carried omitted scope must be empty, before theoretical closure."
+            "The generated-axis inventory must show every canonical axis physically present, axis-carried omitted scope must be empty, and the canonical mechanics closure inventory must be closed before theoretical closure. "
+            "When no explicit inventory is supplied, the shared canonical Objective #32 mechanics audit is used by default."
         ),
     ),
     ServiceDescriptor(
