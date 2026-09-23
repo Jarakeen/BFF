@@ -569,6 +569,83 @@ class EncountersPage(FoundryPage):
             if member.gamertag or member.character_name
         }
 
+    def _load_saved_plan_layout_for_current_encounter(self, plan_id: str) -> bool:
+        encounter_id = str(self.boss_combo.currentData() or "").strip()
+        if not plan_id or not encounter_id:
+            return False
+        record = self.raid_map_store.latest_plan_layout(plan_id, encounter_id)
+        if record is None:
+            return False
+        path = self.raid_map_store.resolve_path(record)
+        self.encounter_board.raid_plan_id = plan_id
+        if not self.encounter_board.load_state_from(path):
+            return False
+        self.encounter_board.view.fit_arena()
+        self.encounter_board.capture_snapshot()
+        self._load_positioning_preview(self.encounter_board.snapshot_path)
+        return True
+
+    def open_saved_plan_map(self, plan_id: str) -> bool:
+        """Open the editable Raid Map saved for one exact Raid Plan."""
+        plan_id = str(plan_id or "").strip()
+        if not plan_id:
+            return False
+        plan = self.raid_plan_repository.get(plan_id)
+        if plan is None:
+            self.status.warning("That saved Raid Plan no longer exists.")
+            return False
+
+        self._populate_raid_plan_context()
+        index = self.raid_plan_combo.findData(plan_id)
+        if index >= 0:
+            self.raid_plan_combo.setCurrentIndex(index)
+
+        rows = tuple(self.guide_service.encounter_summaries())
+        wanted_trial = str(plan.trial_id or "").strip().casefold()
+        matching = tuple(
+            row for row in rows
+            if str(row.content_id or "").strip().casefold() == wanted_trial
+            or str(row.content_name or "").strip().casefold() == wanted_trial
+        )
+        if matching:
+            self._guide_summaries = matching
+            self.boss_combo.blockSignals(True)
+            self.boss_combo.clear()
+            for row in matching:
+                self.boss_combo.addItem(row.name, row.encounter_id)
+            self.boss_combo.blockSignals(False)
+
+        links = self.raid_section_state.raid_map_links(plan_id)
+        preferred = next(
+            (
+                encounter_id
+                for encounter_id in links
+                if self.raid_map_store.latest_plan_layout(plan_id, encounter_id) is not None
+            ),
+            "",
+        )
+        if preferred:
+            boss_index = self.boss_combo.findData(preferred)
+            if boss_index >= 0:
+                self.boss_combo.setCurrentIndex(boss_index)
+
+        for tab_index in range(self.section_tabs.count()):
+            if str(self.section_tabs.tabText(tab_index) or "").strip().casefold() == "mechanics":
+                self.section_tabs.setCurrentIndex(tab_index)
+                break
+
+        if self._load_saved_plan_layout_for_current_encounter(plan_id):
+            self.status.success(
+                f"Loaded saved Raid Map for {plan.name} • {self.boss_combo.currentText()}."
+            )
+            return True
+
+        self.encounter_board.raid_plan_id = plan_id
+        self.status.warning(
+            f"No editable Raid Map is saved for {plan.name} • {self.boss_combo.currentText()}."
+        )
+        return False
+
     def _raid_plan_context_changed(self, *_args) -> None:
         if not hasattr(self, "encounter_board"):
             return
