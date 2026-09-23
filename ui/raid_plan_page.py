@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from models.raid_plan import RaidPlan, RaidPlanMember
 from models.roster_model import ESO_CLASSES, RosterMember
 from services.build_service import BuildService
@@ -147,7 +147,7 @@ class RaidPlanPage(FoundryPage):
         super().__init__(parent)
         data_dir = get_data_dir()
         self.build_service = BuildService(data_dir / "builds.json")
-        self.roster_service = RosterService(EsoDatabase(data_dir / "eso.db"))
+        self.roster_service = RosterService(EsoDatabase(get_user_database_path()))
         self.saved_builds = []
         self.personnel_members: list[RosterMember] = []
         self._syncing_build_selection = False
