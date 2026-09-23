@@ -4,6 +4,7 @@ from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPla
 from services.extreme_sustained_dps_weapon_enchantment_activation_event_service import (
     WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER,
     ExtremeSustainedDPSWeaponEnchantmentActivationEventService,
+    ExtremeSustainedDPSWeaponEnchantmentEligibleOccurrences,
 )
 from services.rotation_candidate_dd_role_output_service import (
     RotationActionDamageOccurrence,
@@ -47,6 +48,22 @@ class _Occurrences:
             unresolved=(),
         )
 
+
+
+class _WeaponAbilityOccurrenceClassifier:
+    def __init__(self, *, keep=None, unresolved=()):
+        self.keep = keep
+        self.unresolved = tuple(unresolved)
+
+    def resolve(self, *, occurrence_evidence, **_kwargs):
+        rows = tuple(occurrence_evidence.occurrences)
+        if self.keep is not None:
+            rows = tuple(row for index, row in enumerate(rows) if index in self.keep)
+        return ExtremeSustainedDPSWeaponEnchantmentEligibleOccurrences(
+            occurrences=rows,
+            evidence=("reviewed weapon-ability occurrence eligibility",),
+            unresolved=self.unresolved,
+        )
 
 def _occurrence(time, sequence, source, damage=100.0):
     return RotationActionDamageOccurrence(
@@ -100,6 +117,7 @@ def test_weapon_line_skill_damage_is_eligible_but_class_skill_damage_is_not() ->
                 "Class Blast": "Storm Calling",
             }
         ),
+        weapon_ability_occurrence_classifier=_WeaponAbilityOccurrenceClassifier(),
     ).resolve(
         candidate=_candidate(wall, class_skill),
         occurrence_provider=_Occurrences(
@@ -162,3 +180,78 @@ def test_missing_occurrence_provider_fails_closed() -> None:
 
     assert result.events == ()
     assert any("exact-time damage occurrence evidence" in row for row in result.unresolved)
+
+
+def test_weapon_line_skill_occurrences_fail_closed_without_eligibility_classifier() -> None:
+    skill = RotationAction(
+        1.0, 0, RotationActionKind.SKILL, "Poison Injection", "back"
+    )
+    result = ExtremeSustainedDPSWeaponEnchantmentActivationEventService(
+        skill_line_repository=_SkillLines({"Poison Injection": "Bow"}),
+    ).resolve(
+        candidate=_candidate(skill),
+        occurrence_provider=_Occurrences(
+            {
+                (1.0, 0): (
+                    _occurrence(1.0, 0, "Poison Injection direct"),
+                    _occurrence(2.0, 1, "Poison Injection DoT"),
+                ),
+            }
+        ),
+    )
+
+    assert result.events == ()
+    assert any(
+        "occurrence-level eligibility classification" in row
+        for row in result.unresolved
+    )
+
+
+def test_weapon_ability_occurrence_classifier_can_exclude_single_target_dot_ticks() -> None:
+    skill = RotationAction(
+        1.0, 0, RotationActionKind.SKILL, "Poison Injection", "back"
+    )
+    result = ExtremeSustainedDPSWeaponEnchantmentActivationEventService(
+        skill_line_repository=_SkillLines({"Poison Injection": "Bow"}),
+        weapon_ability_occurrence_classifier=_WeaponAbilityOccurrenceClassifier(
+            keep={0},
+        ),
+    ).resolve(
+        candidate=_candidate(skill),
+        occurrence_provider=_Occurrences(
+            {
+                (1.0, 0): (
+                    _occurrence(1.0, 0, "Poison Injection direct"),
+                    _occurrence(2.0, 1, "Poison Injection DoT"),
+                ),
+            }
+        ),
+    )
+
+    assert result.unresolved == ()
+    assert tuple(row.source for row in result.events) == (
+        "Poison Injection direct",
+    )
+
+
+def test_weapon_ability_occurrence_classifier_blockers_fail_closed() -> None:
+    skill = RotationAction(
+        1.0, 0, RotationActionKind.SKILL, "Mystery Bow Skill", "back"
+    )
+    result = ExtremeSustainedDPSWeaponEnchantmentActivationEventService(
+        skill_line_repository=_SkillLines({"Mystery Bow Skill": "Bow"}),
+        weapon_ability_occurrence_classifier=_WeaponAbilityOccurrenceClassifier(
+            unresolved=("component trigger family unresolved",),
+        ),
+    ).resolve(
+        candidate=_candidate(skill),
+        occurrence_provider=_Occurrences(
+            {(1.0, 0): (_occurrence(1.0, 0, "Mystery Bow Skill"),)}
+        ),
+    )
+
+    assert result.events == ()
+    assert any(
+        "component trigger family unresolved" in row
+        for row in result.unresolved
+    )
