@@ -1772,3 +1772,25 @@ def test_weapon_enchantment_damage_policy_bridge_is_cataloged() -> None:
         "extreme_sustained_dps_weapon_enchantment_damage_policy_projection"
         in policy.responsibilities
     )
+
+
+
+def test_sustained_dps_candidate_runtime_state_factory_is_cataloged() -> None:
+    factory = canonical_service_for(
+        "extreme_sustained_dps_candidate_runtime_state_factory"
+    )
+    assert factory is not None
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(factory.service_id)
+    ) == (
+        "extreme.sustained_dps.runtime_effect_universe",
+        "extreme.sustained_dps.runtime_effect_scaling",
+        "extreme.sustained_dps.weapon_enchantment_runtime_source",
+        "extreme.sustained_dps.weapon_enchantment_runtime_variant",
+        "extreme.sustained_dps.weapon_enchantment_activation_events",
+        "extreme.sustained_dps.weapon_enchantment_cooldown_policy",
+        "extreme.sustained_dps.runtime_scenario_frontier",
+    )
+    assert "shared weapon-enchantment repository" in factory.purpose
+    assert "avoid circularly deriving runtime_state" in factory.notes
