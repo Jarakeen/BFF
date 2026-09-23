@@ -32,6 +32,13 @@ _WEAPON_SKILL_LINES = frozenset(
 
 
 @dataclass(frozen=True)
+class ExtremeSustainedDPSWeaponEnchantmentEligibleOccurrences:
+    occurrences: tuple[object, ...]
+    evidence: tuple[str, ...] = ()
+    unresolved: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class ExtremeSustainedDPSWeaponEnchantmentActivationEventResult:
     events: tuple[RuntimeEvent, ...]
     evidence: tuple[str, ...]
@@ -45,16 +52,34 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationEventResult:
 class ExtremeSustainedDPSWeaponEnchantmentActivationEventService:
     """Resolve exact damage events eligible to attempt a weapon enchantment proc."""
 
-    def __init__(self, *, skill_line_repository: object) -> None:
+    def __init__(
+        self,
+        *,
+        skill_line_repository: object,
+        weapon_ability_occurrence_classifier: object | None = None,
+    ) -> None:
         if skill_line_repository is None:
             raise ValueError(
                 "weapon-enchantment activation events require canonical skill-line repository"
             )
         self.skill_line_repository = skill_line_repository
+        self.weapon_ability_occurrence_classifier = (
+            weapon_ability_occurrence_classifier
+        )
 
     @classmethod
-    def from_database(cls, database_path):
-        return cls(skill_line_repository=SkillLineRepository(database_path))
+    def from_database(
+        cls,
+        database_path,
+        *,
+        weapon_ability_occurrence_classifier: object | None = None,
+    ):
+        return cls(
+            skill_line_repository=SkillLineRepository(database_path),
+            weapon_ability_occurrence_classifier=(
+                weapon_ability_occurrence_classifier
+            ),
+        )
 
     @staticmethod
     def _action_identity(action) -> str:
@@ -136,7 +161,34 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationEventService:
                 )
                 continue
 
-            for occurrence in tuple(evidence.occurrences):
+            occurrences = tuple(evidence.occurrences)
+            if action.kind in {
+                RotationActionKind.SKILL,
+                RotationActionKind.ULTIMATE,
+            }:
+                if self.weapon_ability_occurrence_classifier is None:
+                    unresolved.append(
+                        f"{self._action_identity(action)}: weapon-ability enchantment "
+                        "activation requires occurrence-level eligibility classification "
+                        "because single-target Damage over Time ticks are excluded"
+                    )
+                    continue
+                classified = self.weapon_ability_occurrence_classifier.resolve(
+                    candidate=candidate,
+                    action=action,
+                    occurrence_evidence=evidence,
+                )
+                unresolved.extend(
+                    f"{self._action_identity(action)}: {item}"
+                    for item in tuple(getattr(classified, "unresolved", ()) or ())
+                )
+                if tuple(getattr(classified, "unresolved", ()) or ()):
+                    continue
+                occurrences = tuple(
+                    getattr(classified, "occurrences", ()) or ()
+                )
+
+            for occurrence in occurrences:
                 if float(occurrence.damage_value) <= 0.0:
                     continue
                 events.append(
@@ -170,7 +222,8 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationEventService:
                 f"Weapon-enchantment eligible scheduled actions: {eligible_actions}",
                 f"Weapon-enchantment activation opportunities materialized: {len(ordered)}",
                 "Activation opportunity requires a positive exact-time damage occurrence",
-                "Light/Heavy attacks are eligible directly; skills and Ultimates require canonical weapon-line ownership",
+                "Light/Heavy attacks are eligible directly; skills and Ultimates require canonical weapon-line ownership plus occurrence-level enchant eligibility classification",
+                "Single-target Damage over Time weapon-ability occurrences are never inferred eligible from damage occurrence alone",
                 "Opportunity evidence does not assert cooldown availability, source selection, poison replacement, or an actual enchantment proc",
             ),
             unresolved=deduped,
@@ -179,6 +232,7 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationEventService:
 
 __all__ = [
     "WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER",
+    "ExtremeSustainedDPSWeaponEnchantmentEligibleOccurrences",
     "ExtremeSustainedDPSWeaponEnchantmentActivationEventResult",
     "ExtremeSustainedDPSWeaponEnchantmentActivationEventService",
 ]
