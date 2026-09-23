@@ -109,12 +109,21 @@ class ExtremeSavedRotationResourceRecordService:
                 unresolved=plan_unresolved,
             )
 
-        potion_restoration_events = self.potion_runtime_service.restoration_events(
-            build,
-            plan=plan,
-        )
+        if hasattr(self.potion_runtime_service, "resolve_restoration_events"):
+            potion_restoration = self.potion_runtime_service.resolve_restoration_events(
+                build, plan=plan
+            )
+            potion_restoration_events = tuple(potion_restoration.events)
+            potion_unresolved = tuple(potion_restoration.unresolved)
+        else:
+            # Compatibility for injected legacy/test doubles. Production uses the
+            # fail-closed result API above.
+            potion_restoration_events = self.potion_runtime_service.restoration_events(
+                build, plan=plan
+            )
+            potion_unresolved = ()
         candidates = []
-        projection_unresolved: list[str] = list(plan.unresolved)
+        projection_unresolved: list[str] = [*plan.unresolved, *potion_unresolved]
         for resource in (ResourceType.MAGICKA, ResourceType.STAMINA):
             projection = self.sustain_service.evaluate(
                 build=build,
@@ -123,13 +132,14 @@ class ExtremeSavedRotationResourceRecordService:
                 restoration_events=potion_restoration_events,
             )
             projection_unresolved.extend(projection.unresolved)
+            projection_unresolved.extend(potion_unresolved)
             action_count = len(projection.run.action_cost_events)
             if action_count <= 0:
                 continue
             record = ExtremeResourceTimelineRecordService.resource_sustain(
                 projection.run.sustain,
                 duration_seconds=plan.duration_seconds,
-                unresolved=projection.unresolved,
+                unresolved=self._dedupe((*projection.unresolved, *potion_unresolved)),
             )
             candidates.append((record.net_resource_per_second, resource.value, resource, record, action_count))
 
