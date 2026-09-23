@@ -185,6 +185,8 @@ class BuildContextVariant:
     BackBarSkills: list[str] = field(default_factory=_empty_bar)
     Food: str = ""
     Potion: str = ""
+    FrontBarPoison: str = ""
+    BackBarPoison: str = ""
     Notes: str = ""
 
     def to_dict(self) -> dict:
@@ -254,6 +256,8 @@ class BuildContextVariant:
             BackBarSkills=list(loadout.BackBarSkills),
             Food=loadout.Food,
             Potion=loadout.Potion,
+            FrontBarPoison=getattr(loadout, "FrontBarPoison", "") or "",
+            BackBarPoison=getattr(loadout, "BackBarPoison", "") or "",
             Notes=loadout.Notes,
         )
 
