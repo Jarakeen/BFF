@@ -82,6 +82,13 @@ class MechanicsPage(FoundryPage):
         self.header.add_context_widget(self._context_field("CONTENT", self.trial_combo))
         self.header.add_context_widget(self._context_field("BOSS", self.boss_combo))
         self.header.add_context_widget(self.view_all_button)
+        self.back_to_live_raid_button = QPushButton("← Back to Live Raid")
+        self.back_to_live_raid_button.setObjectName("backToLiveRaidButton")
+        self.back_to_live_raid_button.setToolTip(
+            "Return to the Live Raid page without changing the selected plan or encounter."
+        )
+        self.back_to_live_raid_button.hide()
+        self.header.add_context_widget(self.back_to_live_raid_button)
 
         workspace = QWidget()
         root = QVBoxLayout(workspace)
@@ -357,6 +364,27 @@ class MechanicsPage(FoundryPage):
         if self.boss_combo.count() > 0 and self.boss_combo.currentIndex() < 0:
             self.boss_combo.setCurrentIndex(0)
         self._boss_changed(self.boss_combo.currentIndex())
+
+    def open_encounter_by_id(self, encounter_id: str) -> bool:
+        """Open one exact persisted boss without depending on expedition state."""
+        wanted = str(encounter_id or "").strip()
+        if not wanted or self.guide_service is None:
+            return False
+        self._load_guide_index()
+        match = next(
+            (row for row in self._guide_summaries if str(row.encounter_id) == wanted),
+            None,
+        )
+        if match is None:
+            return False
+        content_index = self.trial_combo.findData(match.content_id)
+        if content_index >= 0:
+            self.trial_combo.setCurrentIndex(content_index)
+        self._populate_boss_combo(match.encounter_id)
+        return self.boss_combo.currentData() == match.encounter_id
+
+    def set_live_raid_return_visible(self, visible: bool) -> None:
+        self.back_to_live_raid_button.setVisible(bool(visible))
 
     def _content_changed(self, _index: int) -> None:
         self._populate_boss_combo()
