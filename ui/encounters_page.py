@@ -401,42 +401,60 @@ class EncountersPage(FoundryPage):
 
         board.layout().insertWidget(max(0, board.layout().count() - 1), controls)
 
-    def _save_raid_map_to_plan(self) -> None:
+    def _save_raid_map_to_plan(self):
         plan_id = str(self.raid_plan_combo.currentData() or "").strip()
         if not plan_id:
             self.status.warning("Select a saved Raid Plan before saving this map to it.")
-            return
+            return None
         plan = self.raid_plan_repository.get(plan_id)
         if plan is None:
             self.status.warning("The selected Raid Plan no longer exists.")
-            return
-        self.encounter_board.raid_plan_id = plan_id
-        self.encounter_board.save_state()
-        encounter_id = str(self.boss_combo.currentData() or "").strip()
-        label = f"{plan.name} • {self.boss_combo.currentText() or 'Raid Map'}"
+            return None
 
-        # Keep the editable source with the Raid Plan, but give boss/map viewers
-        # a real raster preview. JSON is authoring state, not an image.
+        encounter_id = str(self.boss_combo.currentData() or "").strip()
+        if not encounter_id:
+            self.status.warning("Select a boss encounter before saving this map to the Raid Plan.")
+            return None
+        label = f"{plan.name} • {self.boss_combo.currentText() or 'Raid Map'}"
+        self.encounter_board.raid_plan_id = plan_id
+
+        # The editable Encounters source always owns stable seat labels such as
+        # Tank1 / Healer2 / DD4. Player identities are a Raid Plan projection,
+        # never persisted back into the reusable authoring layout.
+        toggle_names = getattr(self.encounter_board, "_toggle_player_name_labels", None)
+        if callable(toggle_names):
+            toggle_names(self.encounter_board, False)
+        self.encounter_board.save_state()
         self.raid_map_store.save_plan_layout(
             plan_id,
             self.encounter_board.state_path,
             encounter_id=encounter_id,
             label=label,
         )
+
+        # Live Raid and Finch intentionally share the same player-labelled image.
+        # Render names only for the flattened Raid Plan projection, then restore
+        # the editor to stable chair labels immediately afterward.
+        if callable(toggle_names):
+            toggle_names(self.encounter_board, True)
         self.encounter_board.capture_snapshot()
         record = self.raid_map_store.import_map(
-            encounter_id or f"plan-{plan_id}",
+            encounter_id,
             self.encounter_board.snapshot_path,
             label=label,
         )
+        if callable(toggle_names):
+            toggle_names(self.encounter_board, False)
+
         self.raid_section_state.set_linked_raid_map_id(
             plan_id,
-            encounter_id or f"plan-{plan_id}",
+            encounter_id,
             record.map_id,
         )
         self.status.success(
-            f"Saved Raid Map to Raid Plan: {plan.name}. Editable layout + image preview are linked."
+            f"Saved Raid Plan map for {plan.name}: Encounters keeps seat labels; Live Raid/Finch use player names."
         )
+        return record
 
     def _remove_raid_map_from_finch(self) -> None:
         plan_id = str(self.raid_plan_combo.currentData() or "").strip()
@@ -488,17 +506,19 @@ class EncountersPage(FoundryPage):
             self.status.info("A Raid Map WebP publish is already running.")
             return
 
-        # Preserve the richer editable source locally, then create a flattened
-        # raid-night image for Finch. The Site never needs the authoring model.
-        self._save_raid_map_to_plan()
-        self.encounter_board.capture_snapshot()
+        # Save once. The resulting linked preview is the exact player-labelled
+        # image consumed by both Live Raid and Finch.
+        record = self._save_raid_map_to_plan()
+        if record is None:
+            return
+        source = self.raid_map_store.resolve_path(record)
         label = f"{plan.name} • {encounter_name or 'Raid Map'}"
 
         self.save_raid_map_to_finch_button.setEnabled(False)
-        self.status.info("Flattening Raid Map to WebP and saving it to Finch…")
+        self.status.info("Converting the Live Raid map to WebP and saving it to Finch…")
         self._finch_raid_map_future = _FINCH_RAID_MAP_EXECUTOR.submit(
             publish_raid_map_and_plan_to_finch,
-            source=self.encounter_board.snapshot_path,
+            source=source,
             plan_id=plan_id,
             encounter_id=encounter_id,
             encounter_name=encounter_name,
