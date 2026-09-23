@@ -144,6 +144,13 @@ class ExtremeSustainedDPSPotionCooldownResolutionService:
                 unresolved=tuple(dict.fromkeys(unresolved)),
             )
         item_evidence = self.item_service.resolve(player_build)
+        item_unresolved = tuple(getattr(item_evidence, "unresolved", ()) or ())
+        if item_unresolved:
+            return ExtremeSustainedDPSPotionCooldownResolution(
+                cooldown_seconds=None,
+                resolution=None,
+                unresolved=tuple(dict.fromkeys(item_unresolved)),
+            )
         resolution = self.cooldown_service.resolve(
             character_build=adaptation.build,
             item_evidence=item_evidence,
