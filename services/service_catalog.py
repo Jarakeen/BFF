@@ -1452,6 +1452,32 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_enchantment_runtime_source",
+        domain="extreme",
+        purpose=(
+            "Resolve exact equipped weapon-enchantment sources from a saved/generated build into canonical enchant identity, source bar/slot provenance, and every trait-adjusted CombatEffect consequence without inventing cadence."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_enchantment_runtime_source_service",
+        inputs=(
+            "PlayerBuild",
+            "WeaponEnchantmentRepository",
+            "WeaponEnchantmentEffectService",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponEnchantmentRuntimeSourceResolution",),
+        dependencies=(),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_enchantment_runtime_source_projection",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Uses imported canonical enchantName as semantic source identity and preserves all consequence rows for one equipped source. "
+            "It deliberately does not infer proc cadence, cooldown topology, runtime damage application, or cooldown identity from item ids."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_cooldown_policy",
         domain="extreme",
         purpose=(
