@@ -115,95 +115,11 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
 
     def axis_inventory(self, *, runtime_state_frontier=None):
         axes = tuple(self.pipeline.axes())
-        if runtime_state_frontier is not None and runtime_state_frontier_resolver is not None:
-            raise ValueError(
-                "global generated search accepts either static or candidate-resolved runtime_state, not both"
-            )
-        if runtime_state_frontier_resolver is not None:
-            axes = (
-                *axes,
-                ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.candidate_axis(
-                    runtime_state_frontier_resolver
-                ),
-            )
-        elif runtime_state_frontier is not None:
-            axes = (
-                *axes,
-                ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.axis(
-                    runtime_state_frontier
-                ),
-            )
-        return ExtremeSustainedDPSGeneratedAxisInventoryService.inventory(
-            axes,
-            additional_canonical_axes=("race", "class_route", "attributes"),
-        )
-
-    def search(
-        self,
-        *,
-        dual_bar_frontier: object,
-        candidate_id_prefix: str,
-        required_duration_seconds: float,
-        potion_cooldown_seconds: float | None,
-        starting_ultimate: float,
-        priorities: object,
-        snapshot_resolver: object,
-        target_identity: str,
-        runtime_snapshot: object,
-        target_health: int,
-        target_resistance: float,
-        target_name: str = "Boss",
-        initial_bar: str = "front",
-        ultimate_generation_events: tuple[object, ...] = (),
-        heroism_windows: tuple[object, ...] = (),
-        use_scheduled_combat_attacks_for_ultimate: bool = False,
-        duration_rules: tuple[object, ...] = (),
-        heavy_attack_windows: tuple[object, ...] = (),
-        heavy_attack_channel_blocks: tuple[object, ...] = (),
-        heavy_attack_channel_block_denominator_proven: bool = False,
-        root_key: str = "generated-global-root",
-        root_bound_inputs=None,
-        branch_bound_inputs=None,
-        runtime_state_frontier=None,
-        runtime_state_frontier_resolver=None,
-        potion_cooldown_resolver=None,
-        potion_cooldown_scenario=None,
-    ):
-        prefix = str(candidate_id_prefix or "").strip()
-        if not prefix:
-            raise ValueError(
-                "global generated sustained-DPS search candidate_id_prefix is required"
-            )
-
-        structural_axis = self._structural_axis(
-            dual_bar_frontier=dual_bar_frontier,
-            candidate_id_prefix=prefix,
-            duration_seconds=float(required_duration_seconds),
-            potion_cooldown_seconds=potion_cooldown_seconds,
-            starting_ultimate=float(starting_ultimate),
-            priorities=priorities,
-            snapshot_resolver=snapshot_resolver,
-            target_identity=target_identity,
-            ultimate_generation_events=tuple(ultimate_generation_events),
-            heroism_windows=tuple(heroism_windows),
-            use_scheduled_combat_attacks_for_ultimate=bool(
-                use_scheduled_combat_attacks_for_ultimate
-            ),
-            duration_rules=tuple(duration_rules),
-            heavy_attack_windows=tuple(heavy_attack_windows),
-            heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
-            heavy_attack_channel_block_denominator_proven=bool(
-                heavy_attack_channel_block_denominator_proven
-            ),
-            potion_cooldown_resolver=potion_cooldown_resolver,
-            potion_cooldown_scenario=potion_cooldown_scenario,
-        )
-
-        axes = (
-            structural_axis,
-            *tuple(self.pipeline.axes()),
-        )
         if runtime_state_frontier is not None:
+            if getattr(self.pipeline, "runtime_state_frontier_resolver", None) is not None:
+                raise ValueError(
+                    "global generated search cannot combine pipeline candidate-resolved runtime_state with a static runtime-state frontier"
+                )
             axes = (
                 *axes,
                 ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.axis(
