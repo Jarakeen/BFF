@@ -299,7 +299,9 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "and branch finite source/cooldown histories without guessing. ZOS-authoritative evidence covers "
                 "landed Light/Heavy/qualifying weapon-ability activation, source-weapon persistence across bar swaps, "
                 "poison suppression, one-hit exclusivity, and the normal 4-second direct-damage cooldown example. "
-                "Cooldown topology and buff/debuff-family cadence remain separately fail-closed."
+                "Selected CP160 Legendary Decrease Health procs can now resolve exact target-Max-Health Oblivion damage "
+                "through the sequential target-Health ledger. Cooldown topology, buff/debuff-family cadence, and ordinary "
+                "non-Oblivion glyph damage policy remain separately fail-closed."
             ),
             evidence_source=(
                 "minmax/weapon_enchantment_repository.py; "
@@ -309,14 +311,16 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "services/extreme_sustained_dps_weapon_enchantment_runtime_source_service.py; "
                 "services/extreme_sustained_dps_weapon_enchantment_activation_event_service.py; "
                 "services/extreme_sustained_dps_weapon_enchantment_sequence_frontier_service.py; "
-                "services/extreme_sustained_dps_weapon_enchantment_cooldown_policy_resolver.py"
+                "services/extreme_sustained_dps_weapon_enchantment_cooldown_policy_resolver.py; "
+                "services/extreme_sustained_dps_weapon_enchantment_oblivion_damage_service.py"
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
                 "Exact cadence still needs an authoritative buff/debuff enchant base cooldown, authoritative proof "
                 "that duplicate enchant identities share one cooldown, authoritative proof that distinct enchant "
-                "identities retain independent cooldowns, and any remaining direct-damage consequence rules needed "
-                "for exact damage application. Community testing supports both cooldown-topology claims, but they "
+                "identities retain independent cooldowns, and the remaining ordinary elemental/absorb direct-damage "
+                "consequence rules needed for exact damage application. Decrease Health/Oblivion is now exact for the "
+                "reviewed CP160 Legendary path. Community testing supports both cooldown-topology claims, but they "
                 "remain provisional and must not be promoted into Objective #32 combat math."
             ),
         ),
