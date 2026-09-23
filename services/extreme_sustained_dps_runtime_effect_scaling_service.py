@@ -73,7 +73,9 @@ class ExtremeSustainedDPSRuntimeEffectScalingService:
                 unresolved.extend(scaled_unresolved)
                 continue
 
-            resolved.append(effect)
+            unresolved.append(
+                f"{effect.source} {effect.name} runtime scaling is not reviewed: {scaling}"
+            )
 
         return ExtremeSustainedDPSRuntimeEffectScalingResult(
             effects=tuple(resolved),
