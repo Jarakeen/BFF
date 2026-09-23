@@ -138,3 +138,26 @@ def test_runtime_source_requires_all_consequences_to_share_one_canonical_source(
 
     assert result.sources == ()
     assert any("do not share one canonical source label" in row for row in result.unresolved)
+
+
+
+def test_runtime_source_omits_enchants_on_poisoned_weapon_set():
+    build = _build()
+    build.FrontBarPoison = "Damage Health Poison IX"
+
+    result = _service().resolve(build)
+
+    assert all(source.active_bar is not BarId.FRONT for source in result.sources)
+    assert any(
+        "front weapon set enchantments suppressed by equipped poison" in row
+        for row in result.evidence
+    )
+
+
+def test_runtime_source_preserves_other_bar_when_only_one_weapon_set_is_poisoned():
+    build = _build()
+    build.FrontBarPoison = "Damage Health Poison IX"
+
+    result = _service().resolve(build)
+
+    assert any(source.active_bar is BarId.BACK for source in result.sources)
