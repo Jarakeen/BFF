@@ -36,6 +36,7 @@ from engine.config import get_data_dir
 from models.build_model import BuildRoster, PlayerBuild
 from models.roster_model import ESO_CLASSES, RosterMember
 from services.build_service import BuildService
+from services.user_safety_snapshot_service import UserSafetySnapshotService
 
 
 _INSTALLED = False
@@ -1111,6 +1112,9 @@ def _import_roster_from_file(page) -> None:
         if not plan.team_name:
             page.status.warning("Enter a team name before importing.")
             return
+        UserSafetySnapshotService().create(
+            f"roster-import-{Path(filename).stem}"
+        )
         result = apply_roster_import(
             plan,
             page.roster_service,
