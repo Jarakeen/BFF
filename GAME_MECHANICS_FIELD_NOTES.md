@@ -1739,4 +1739,13 @@ BFF therefore keeps the exact pre-rounding value in the calculation trace. If th
 **Layman's version:** a passive can add a fractional amount behind the scenes even though the character-sheet-style result is a whole number.
 
 **For BFF:** preserve the decimal in `raw_value` for math/audit provenance, but use the rounded `final_value` anywhere the resolved integer-facing Weapon/Spell Damage stat is required.
+---
+
+## 2026-09-23 — Oblivion weapon-enchant damage is a documented crit exception
+
+ZOS explicitly documented the Damage Health (Oblivion) weapon enchant as unable to critically strike. That gives BFF one authoritative crit rule for weapon-enchant damage, but it does **not** prove the opposite rule for every ordinary elemental or absorb glyph.
+
+**Layman's version:** we know one glyph family definitely cannot crit; that does not automatically tell us how all the others crit.
+
+**For BFF:** the direct-damage consequence bridge may use the existing Oblivion non-crit policy when the canonical damage type is Oblivion. Ordinary glyph critical eligibility and which critical-stat family applies remain separate proof requirements.
 
