@@ -269,7 +269,8 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "services/extreme_sustained_dps_potion_cooldown_passive_grant_service.py; "
                 "services/extreme_sustained_dps_generated_axis_pipeline_service.py; "
                 "services/extreme_sustained_dps_potion_cooldown_runtime_evidence_service.py; "
-                "services/extreme_sustained_dps_candidate_runtime_state_frontier_resolver_service.py; "                "minmax/rotation_potion_cadence.py"
+                "services/extreme_sustained_dps_candidate_runtime_state_frontier_resolver_service.py; "
+                "minmax/rotation_potion_cadence.py"
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
