@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir, get_resource_path
+from engine.config import get_data_dir, get_resource_path, get_user_database_path
 from models.roster_model import ESO_CLASSES, ROLES, RosterMember
 from models.team_schedule import TeamSchedule
 from services.accessibility_preferences import VISUAL_THEME_RYLO
@@ -229,7 +229,7 @@ class RaidRosterWorkspacePage(FoundryPage):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         data_dir = get_data_dir()
-        self.database = EsoDatabase(data_dir / "eso.db")
+        self.database = EsoDatabase(get_user_database_path())
         self.roster_service = RosterService(self.database)
         self.workspace_state = RosterWorkspaceStateService(self.database)
         self.build_library = BuildService(data_dir / "builds.json")
