@@ -14,9 +14,12 @@ _TWO_HANDED_TYPES = {"greatsword", "battleaxe", "battle axe", "maul"}
 
 # Reviewed U50 max-rank standing-sheet values. These are intentionally limited
 # to the branches proven by tools/audit_extreme_weapon_damage_weapon_passive_challengers.py.
-_TWIN_BLADE_SWORD_DAMAGE_PER_SWORD = 64.0
-_HEAVY_WEAPONS_GREATSWORD_DAMAGE = 129.0
-_AMBIDEXTROUS_OFFHAND_PERCENT = 0.03
+_TWIN_BLADE_SWORD_DAMAGE_PER_SWORD = 129.0
+_TWIN_BLADE_DAGGER_CRITICAL_RATING_PER_DAGGER = 657.0
+_TWIN_BLADE_MACE_PENETRATION_PER_MACE = 1487.0
+_HEAVY_WEAPONS_GREATSWORD_DAMAGE = 258.0
+_HEAVY_WEAPONS_MAUL_PENETRATION = 2974.0
+_AMBIDEXTROUS_OFFHAND_PERCENT = 0.06
 _BOW_ACCURACY_CRITICAL_RATING = 1314.0
 
 
@@ -39,7 +42,6 @@ class WeaponStandingPassiveInputResolver:
         )
 
     @staticmethod
-    @staticmethod
     def _add_critical_rating(
         result: GearCalculationInputs,
         *,
@@ -60,6 +62,32 @@ class WeaponStandingPassiveInputResolver:
                 core.spell_critical,
                 additive_after_percent=core.spell_critical.additive_after_percent
                 + (contribution,),
+            ),
+        )
+        return replace(
+            result,
+            core=core,
+            applied_effect_count=result.applied_effect_count + 2,
+        )
+
+    @staticmethod
+    def _add_penetration(
+        result: GearCalculationInputs,
+        *,
+        label: str,
+        amount: float,
+    ) -> GearCalculationInputs:
+        contribution = StatContribution(label, float(amount))
+        core = result.core
+        core = replace(
+            core,
+            physical_penetration=replace(
+                core.physical_penetration,
+                flat=core.physical_penetration.flat + (contribution,),
+            ),
+            spell_penetration=replace(
+                core.spell_penetration,
+                flat=core.spell_penetration.flat + (contribution,),
             ),
         )
         return replace(
@@ -120,17 +148,42 @@ class WeaponStandingPassiveInputResolver:
             )
 
         if dual_wield and twin_blade_and_blunt_owned:
-            if main_type == "sword" and offhand_type == "sword":
-                result = self._add_flat_damage(
-                    result,
-                    label="Dual Wield: Twin Blade and Blunt (2 swords)",
-                    amount=2.0 * _TWIN_BLADE_SWORD_DAMAGE_PER_SWORD,
-                )
-            else:
-                unresolved.append(
-                    "Dual Wield: Twin Blade and Blunt standing effect is not yet "
-                    f"modeled for {main_type or 'unknown'} + {offhand_type or 'unknown'}"
-                )
+            for hand_label, weapon_type in (
+                ("main hand", main_type),
+                ("off hand", offhand_type),
+            ):
+                if weapon_type == "sword":
+                    result = self._add_flat_damage(
+                        result,
+                        label=(
+                            "Dual Wield: Twin Blade and Blunt "
+                            f"({hand_label} sword)"
+                        ),
+                        amount=_TWIN_BLADE_SWORD_DAMAGE_PER_SWORD,
+                    )
+                elif weapon_type == "dagger":
+                    result = self._add_critical_rating(
+                        result,
+                        label=(
+                            "Dual Wield: Twin Blade and Blunt "
+                            f"({hand_label} dagger)"
+                        ),
+                        rating=_TWIN_BLADE_DAGGER_CRITICAL_RATING_PER_DAGGER,
+                    )
+                elif weapon_type == "mace":
+                    result = self._add_penetration(
+                        result,
+                        label=(
+                            "Dual Wield: Twin Blade and Blunt "
+                            f"({hand_label} mace)"
+                        ),
+                        amount=_TWIN_BLADE_MACE_PENETRATION_PER_MACE,
+                    )
+                elif weapon_type == "axe":
+                    unresolved.append(
+                        "Dual Wield: Twin Blade and Blunt axe Critical Damage "
+                        "branch is not yet promoted from current-version evidence"
+                    )
 
         if dual_wield and ambidextrous_owned:
             _main, offhand = build.active_weapon_slots(active_bar)
@@ -154,7 +207,7 @@ class WeaponStandingPassiveInputResolver:
                     result,
                     label=(
                         "Dual Wield: Ambidextrous "
-                        f"(3% of {offhand_label} {offhand_power:g})"
+                        f"(6% of {offhand_label} {offhand_power:g})"
                     ),
                     amount=float(offhand_power) * _AMBIDEXTROUS_OFFHAND_PERCENT,
                 )
@@ -166,10 +219,16 @@ class WeaponStandingPassiveInputResolver:
                     label="Two Handed: Heavy Weapons (greatsword)",
                     amount=_HEAVY_WEAPONS_GREATSWORD_DAMAGE,
                 )
-            elif two_handed:
+            elif two_handed and main_type == "maul":
+                result = self._add_penetration(
+                    result,
+                    label="Two Handed: Heavy Weapons (maul)",
+                    amount=_HEAVY_WEAPONS_MAUL_PENETRATION,
+                )
+            elif two_handed and main_type in {"battleaxe", "battle axe"}:
                 unresolved.append(
-                    "Two Handed: Heavy Weapons standing effect is not yet modeled "
-                    f"for {main_type}"
+                    "Two Handed: Heavy Weapons battle axe Critical Damage "
+                    "branch is not yet promoted from current-version evidence"
                 )
             elif main_type in {"two-handed", "two handed"}:
                 unresolved.append(
