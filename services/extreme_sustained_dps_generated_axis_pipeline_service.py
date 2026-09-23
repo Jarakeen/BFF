@@ -10,6 +10,8 @@ axis-local optimistic-bound provider.
 
 from dataclasses import dataclass, replace
 
+from minmax.potion_cadence import BASE_POTION_COOLDOWN_SECONDS
+
 from services.extreme_sustained_dps_generated_frontier_wiring_service import (
     ExtremeSustainedDPSIndexedFrontierAxis,
 )
@@ -161,6 +163,9 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         state: ExtremeSustainedDPSGeneratedAxisPipelineState,
         assembled: object,
     ) -> float:
+        build = getattr(assembled, "build", None)
+        if hasattr(build, "Potion") and not str(getattr(build, "Potion", "") or "").strip():
+            return float(BASE_POTION_COOLDOWN_SECONDS)
         if state.potion_cooldown_resolver is None:
             if state.potion_cooldown_seconds is None:
                 raise ValueError("generated axis pipeline requires potion cooldown evidence")
