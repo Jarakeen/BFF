@@ -342,6 +342,13 @@ class ExtremePassiveProjectionService:
         if not passive.is_passive:
             raise ValueError(f"not a passive skill: {passive.name}")
 
+        if passive.unresolved:
+            return ExtremePassiveProjection(
+                passive=passive,
+                status=ExtremePassiveProjectionStatus.UNRESOLVED,
+                unresolved=tuple(passive.unresolved),
+            )
+
         name_key = cls._clean(passive.name).casefold()
         description_key = cls._clean(passive.description).casefold()
         consumable_context = any(term in description_key for term in _CONSUMABLE_CONTEXT_TERMS)
