@@ -271,6 +271,60 @@ class FinchApiClient:
         )
         return self._shared_snapshot(response.get("snapshot"))
 
+    def publish_shared_asset(
+        self,
+        *,
+        asset_key: str,
+        content: bytes,
+        content_type: str = "image/webp",
+    ) -> str:
+        key = str(asset_key or "").strip()
+        if not key:
+            raise ValueError("shared asset key is required")
+        body = bytes(content or b"")
+        if not body:
+            raise ValueError("shared asset content is required")
+        media_type = str(content_type or "").strip().casefold()
+        if media_type != "image/webp":
+            raise ValueError("shared asset content type must be image/webp")
+
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "User-Agent": "FoundryDock/FinchClient",
+            "Content-Type": media_type,
+        }
+        path = "/api/v1/shared/assets/" + quote(key, safe="")
+        request = Request(
+            self.base_url + path,
+            data=body,
+            headers=headers,
+            method="PUT",
+        )
+        try:
+            with urlopen(request, timeout=self.timeout) as response:
+                raw = response.read().decode("utf-8")
+        except HTTPError as exc:
+            if exc.code == 401:
+                raise FinchApiError("Finch rejected the API key.") from exc
+            if exc.code == 403:
+                raise FinchApiError("This Finch client is not permitted to publish assets.") from exc
+            raise FinchApiError(f"Finch API returned HTTP {exc.code}.") from exc
+        except URLError as exc:
+            reason = getattr(exc, "reason", exc)
+            raise FinchApiError(f"Could not reach Finch: {reason}") from exc
+        except TimeoutError as exc:
+            raise FinchApiError("Finch connection timed out.") from exc
+
+        try:
+            payload_data = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise FinchApiError("Finch returned an invalid asset response.") from exc
+        if not isinstance(payload_data, dict) or not payload_data.get("ok"):
+            raise FinchApiError("Finch did not accept the shared asset.")
+        return self.base_url + "/api/v1/public/assets/" + quote(key, safe="")
+
+
     def publish_shared_raid_plan(
         self,
         *,
