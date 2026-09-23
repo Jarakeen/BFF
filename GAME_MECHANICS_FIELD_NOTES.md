@@ -1620,3 +1620,16 @@ Roar of Alkosh does not simply carry one fixed resistance-reduction number baked
 **What it means in actual play:** temporary Weapon Damage buffs can matter to the debuff magnitude at activation time. A resting character-sheet value is not automatically the correct number for every proc.
 
 **For BFF:** Alkosh must not be resolved from static build state alone. Extreme Engine needs activation-time Weapon Damage evidence, or it must leave the proc scaling unresolved. The runtime-scaling layer now fails closed on any triggered EffectVariant scaling rule that has not been explicitly reviewed.
+
+
+---
+
+## 2026-09-23 — Weapon enchantments care about damage events, not merely button presses
+
+ZOS's Update 20 patch notes explicitly state that weapon enchantments proc 100% of the time when they are off cooldown when a **Light Attack, Heavy Attack, or weapon ability deals damage**. For Dual Wield weapon abilities, either weapon can supply the enchantment and the game favors one whose enchantment is not cooling down.
+
+**Layman's version:** casting a weapon skill is not, by itself, the proc event. The damage event is the important part. Dual Wield also has a source-selection rule instead of simply firing whichever hand a planner feels like assigning.
+
+**What it means in actual play:** a missed, dodged, immune, or otherwise non-damaging attack cannot be treated as equivalent to a landed damaging event for enchant scheduling. Dual Wield cadence also needs both weapon cooldown states.
+
+**For BFF:** the activation-cause family is now primary-source evidence and can be modeled independently from the still-open base-cooldown and off-bar persistence questions. Objective #32 should therefore keep cooldown math fail-closed without throwing away the activation topology we actually know.
