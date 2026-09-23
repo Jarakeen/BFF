@@ -403,3 +403,11 @@ https://forums.elderscrollsonline.com/en/discussion/460533/clarification-on-ench
 **Use for:** Community corroboration of weapon-enchantment cooldown topology after the Wolfhunter/Update 20 trigger changes. The thread explicitly distinguishes identical enchant identities sharing a cooldown from different enchant identities retaining separate cooldowns, and ties the discussion back to ZOS Update 20 plus Gilliam’s trigger clarification.
 
 **Confidence:** Community / corroborating only. Useful for narrowing the research target and validating that BFF’s provisional topology matches long-running player testing, but **not sufficient to promote same-identity sharing or distinct-identity independence to authoritative Objective #32 combat math** without primary/current proof.
+
+
+### ESO-Hub — Infused Weapon Trait
+https://eso-hub.com/en/traits/weapon/infused
+
+**Use for:** Current-live corroboration of the weapon Infused trait split: enchantment effect strength scales by item quality while enchantment cooldown reduction remains 50%. Useful for checking the imported trait semantics and the Gold/Legendary quality path used by saved builds.
+
+**Confidence:** Current community/reference-grade, not primary ZOS mechanics proof. Use to corroborate the canonical imported trait description and detect data-routing mistakes; prefer primary/client-derived evidence before introducing new hardcoded combat constants.
