@@ -348,3 +348,13 @@ https://forums.elderscrollsonline.com/en/discussion/428092/pts-patch-notes-v4-1-
 **Confidence:** Primary / reference-grade for source-weapon ownership across a swap.
 
 **Notes:** This promotes off-bar/source-weapon persistence independently from cooldown-sharing rules. It does not prove that duplicate enchantment identities share one cooldown or establish the buff/debuff-family base cooldown.
+
+
+### ZOS Combat Team: single-target DoTs do not trigger weapon enchants
+https://forums.elderscrollsonline.com/en/discussion/443598/adjustments-to-how-weapon-enchants-and-poisons-trigger
+
+**Use for:** Primary-source weapon-enchantment occurrence eligibility. ZOS Combat Team staff explicitly narrowed the Update 20 trigger model so single-target Damage over Time abilities, and abilities that apply a single-target DoT, do not repeatedly fire weapon enchantments; direct damage and ground-targeted/AoE effects remain outside that exclusion.
+
+**Confidence:** Primary / reference-grade for the documented trigger-family exception.
+
+**Notes:** This is the authority for classifying exact weapon-skill damage occurrences by component shape instead of treating every tick owned by a weapon ability as enchant-eligible. It does not establish current cooldown duration or duplicate-enchantment cooldown scope.
