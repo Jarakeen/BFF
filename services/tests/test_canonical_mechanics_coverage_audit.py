@@ -252,8 +252,12 @@ def test_weapon_enchantment_runtime_cadence_is_decision_critical_until_timing_is
     assert row.status is CanonicalMechanicsCoverageStatus.MISSING_CRITICAL
     assert "weapon_enchantment_effect_service.py" in row.evidence_source
     assert "combat_cooldown_rules.py" in row.evidence_source
-    assert "activation trigger semantics" in row.missing_evidence
-    assert "base proc cooldown" in row.missing_evidence
+    assert "weapon_enchantment_sequence_frontier_service.py" in row.evidence_source
+    assert "weapon_enchantment_cooldown_policy_resolver.py" in row.evidence_source
+    assert "buff/debuff enchant base cooldown" in row.missing_evidence
+    assert "duplicate enchant identities share one cooldown" in row.missing_evidence
+    assert "distinct enchant identities retain independent cooldowns" in row.missing_evidence
+    assert "source-weapon persistence across bar swaps" in row.capability
 
     rotation_gaps = report.dependency_gaps_for(
         "rotation_maker",
