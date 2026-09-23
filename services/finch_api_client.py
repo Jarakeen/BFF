@@ -191,6 +191,20 @@ class FinchApiClient:
         return tuple(result)
 
 
+    def correct_registration_identity(
+        self,
+        *,
+        discord_user_id: int,
+        guild_id: int,
+        player_name: str,
+    ) -> None:
+        self._request_json(
+            f"/api/v1/registrations/private/{int(guild_id)}/{int(discord_user_id)}/identity",
+            method="POST",
+            payload={"player_name": str(player_name or "").strip()},
+        )
+
+
     def registrations_private(
         self,
         *,
