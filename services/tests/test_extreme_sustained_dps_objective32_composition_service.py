@@ -56,6 +56,7 @@ def test_composition_wires_finalized_potion_axis_into_global_objective_graph() -
     assert result.global_search.pipeline is result.pipeline
     assert result.objective32.global_search is result.global_search
     assert result.objective32.require_closure_ready_scenario is True
+    assert result.objective32.potion_cooldown_resolver is not None
     assert result.pipeline.runtime_state_frontier_resolver is not None
     assert any(
         "Finalized potion timing is appended after runtime-policy axes" in row
@@ -123,3 +124,14 @@ def test_composition_refuses_legacy_heavy_attack_window_mode() -> None:
         match="complete Heavy Attack discovery mode",
     ):
         ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
+
+
+
+def test_composition_can_inject_reviewed_potion_cooldown_authority() -> None:
+    resolver = object()
+    result = ExtremeSustainedDPSObjective32CompositionService.compose(
+        **_kwargs(),
+        potion_cooldown_resolver=resolver,
+    )
+
+    assert result.objective32.potion_cooldown_resolver is resolver
