@@ -636,3 +636,7 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Selected weapon-enchantment damage-policy bridge** — Exact source-selected glyph proc consequences can now project reviewed damage-policy semantics without pretending to own final damage math. Oblivion weapon-enchantment damage resolves as non-critical from primary ZOS evidence; ordinary elemental/absorb glyph critical eligibility remains explicitly unresolved rather than inheriting normal skill rules. Raw canonical magnitude is preserved for later target-side application.
 
 - **Finch stale-identity repair** — Sync Finch now checks the current little Discord username against Personnel before trusting an older Discord-ID binding. A unique exact username match can repair a previously misbound account, rebind the Discord ID locally, and push the corrected canonical player name back to Finch. Fuzzy matching remains disabled.
+
+
+- **Fail-closed weapon-enchantment cooldown-rule validation** — Objective #32 now treats malformed equipped-weapon cooldown-rule results as unresolved evidence instead of allowing missing/non-numeric cooldown or reduction metadata to crash exact runtime policy projection.
+- **Candidate build context for callable enchant cooldown policies** — runtime scenario composition now passes the finalized `PlayerBuild` through both object-based and callable weapon-enchantment cooldown-policy seams, so production/test resolvers can apply exact equipped trait/quality provenance consistently.
