@@ -16,9 +16,6 @@ from services.extreme_sustained_dps_generated_finalized_potion_axis_adapter_serv
 from services.extreme_sustained_dps_global_generated_search_service import (
     ExtremeSustainedDPSGlobalGeneratedSearchService,
 )
-from services.extreme_sustained_dps_potion_cooldown_resolution_service import (
-    ExtremeSustainedDPSPotionCooldownResolutionService,
-)
 from services.extreme_sustained_dps_global_objective32_search_service import (
     ExtremeSustainedDPSGlobalObjective32SearchService,
 )
@@ -171,15 +168,11 @@ class ExtremeSustainedDPSObjective32CompositionService:
             pipeline=pipeline,
             leaf_evaluation=leaf_evaluation,
         )
-        canonical_potion_cooldown = (
-            potion_cooldown_resolver
-            or ExtremeSustainedDPSPotionCooldownResolutionService()
-        )
         objective32 = ExtremeSustainedDPSGlobalObjective32SearchService(
             global_search=global_search,
             structural_families=structural_families,
             require_closure_ready_scenario=True,
-            potion_cooldown_resolver=canonical_potion_cooldown,
+            potion_cooldown_resolver=potion_cooldown_resolver,
         )
 
         return ExtremeSustainedDPSObjective32Composition(
@@ -193,7 +186,11 @@ class ExtremeSustainedDPSObjective32CompositionService:
                 "Heavy Attack timing uses scheduler-derived complete-discovery mode",
                 "Exact leaves use canonical generated runtime evaluation",
                 "Additional potion resource-event denominator is explicitly proven complete",
-                "Effective potion cooldown is resolved from each finalized build through the canonical fail-closed cooldown authority",
+                (
+                    "Effective potion cooldown is resolved from each finalized build through the canonical fail-closed cooldown authority"
+                    if potion_cooldown_resolver is not None
+                    else "Effective potion cooldown authority remains caller-supplied until its external scenario denominator is proven"
+                ),
                 "Runtime state is resolved per finalized candidate inside the generated tree",
                 "Candidate runtime state is backed by canonical EffectVariant discovery and candidate-specific scaling",
                 "Canonical Objective #32 search requires closure-ready Heavy Attack channel-block scenario evidence before traversal",
