@@ -112,6 +112,7 @@ class ExtremePlayerSkillRecord:
     max_rank_ability_id: int | None
     description: str
     domain: ExtremeSkillDomain
+    unresolved: tuple[str, ...] = ()
 
     @property
     def line_key(self) -> str:
@@ -207,6 +208,8 @@ class ExtremeSkillUniverseService:
             rank_select = "NULL AS max_rank, NULL AS max_rank_ability_id"
             ability_join = ""
             concrete_description = "'' AS concrete_description"
+            raw_rank_description = "'' AS raw_rank_description"
+            max_rank_record_count = "0 AS max_rank_record_count"
             if has_ranks:
                 rank_join = """
                     LEFT JOIN (
@@ -219,6 +222,12 @@ class ExtremeSkillUniverseService:
                      AND sr.rank = r.max_rank
                 """
                 rank_select = "r.max_rank AS max_rank, MAX(sr.ability_id) AS max_rank_ability_id"
+                max_rank_record_count = "COUNT(sr.id) AS max_rank_record_count"
+                if "raw_description" in rank_columns:
+                    raw_rank_description = (
+                        "MAX(COALESCE(NULLIF(sr.raw_description, ''), '')) "
+                        "AS raw_rank_description"
+                    )
                 if {"ability_id", "description"}.issubset(ability_columns):
                     ability_join = "LEFT JOIN ability a ON a.ability_id = sr.ability_id"
                     concrete_description = "MAX(COALESCE(NULLIF(a.description, ''), '')) AS concrete_description"
@@ -236,7 +245,9 @@ class ExtremeSkillUniverseService:
                     {skill_expr('base_ability_id', 'NULL')},
                     {skill_expr('description', "''")},
                     {rank_select},
-                    {concrete_description}
+                    {concrete_description},
+                    {raw_rank_description},
+                    {max_rank_record_count}
                 FROM skill s
                 {rank_join}
                 {ability_join}
@@ -252,9 +263,27 @@ class ExtremeSkillUniverseService:
 
         records: list[ExtremePlayerSkillRecord] = []
         for row in rows:
-            description = _clean(row["concrete_description"] or row["description"])
+            ability_description = _clean(row["concrete_description"])
+            raw_rank_description = _clean(row["raw_rank_description"])
+            description = ability_description or raw_rank_description or _clean(row["description"])
             class_type = _clean(row["class_type"])
             skill_line = _clean(row["skill_line"])
+            unresolved: list[str] = []
+            if bool(row["is_passive"]) and int(row["max_rank_record_count"] or 0) > 1:
+                unresolved.append(
+                    f"Canonical max-rank passive evidence is ambiguous: {_clean(row['name'])} "
+                    f"has {int(row['max_rank_record_count'])} max-rank records"
+                )
+            if (
+                bool(row["is_passive"])
+                and raw_rank_description
+                and ability_description
+                and raw_rank_description.casefold() != ability_description.casefold()
+            ):
+                unresolved.append(
+                    f"Canonical max-rank passive tooltip disagreement: {_clean(row['name'])} "
+                    "raw_description != ability.description"
+                )
             records.append(
                 ExtremePlayerSkillRecord(
                     skill_id=int(row["id"]),
@@ -281,6 +310,7 @@ class ExtremeSkillUniverseService:
                         class_type=class_type,
                         skill_line=skill_line,
                     ),
+                    unresolved=tuple(unresolved),
                 )
             )
         result = tuple(records)
