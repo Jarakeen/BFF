@@ -171,6 +171,10 @@ def apply_context_variant(build: PlayerBuild, variant: BuildContextVariant) -> P
         result.Food = variant.Food
     if str(variant.Potion or "").strip():
         result.Potion = variant.Potion
+    if str(getattr(variant, "FrontBarPoison", "") or "").strip():
+        result.FrontBarPoison = variant.FrontBarPoison
+    if str(getattr(variant, "BackBarPoison", "") or "").strip():
+        result.BackBarPoison = variant.BackBarPoison
     return result
 
 
