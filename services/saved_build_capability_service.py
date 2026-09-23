@@ -594,6 +594,7 @@ class SavedBuildCapabilityService:
                         magnitude=float(effect.value),
                         duration=duration,
                         active_bar=bar_id,
+                        source_slot=("main_hand" if slot_index == 1 else "off_hand"),
                         target_type=SupportTargetType.ENEMY,
                         category=SupportEffectCategory.DEBUFF,
                         resistance_reduction=float(effect.value),
@@ -697,6 +698,7 @@ class SavedBuildCapabilityService:
                 str(effect.source),
                 str(effect.condition or ""),
                 str(getattr(effect.active_bar, "value", effect.active_bar) or ""),
+                str(getattr(effect, "source_slot", "") or ""),
                 None if effect.magnitude is None else float(effect.magnitude),
                 None if effect.resistance_reduction is None else float(effect.resistance_reduction),
             )
@@ -806,6 +808,7 @@ class SavedBuildCapabilityService:
                 str(effect.source),
                 str(effect.condition or ""),
                 str(getattr(effect.active_bar, "value", effect.active_bar) or ""),
+                str(getattr(effect, "source_slot", "") or ""),
                 None if effect.magnitude is None else float(effect.magnitude),
                 None if effect.resistance_reduction is None else float(effect.resistance_reduction),
             )
