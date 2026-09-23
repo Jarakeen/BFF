@@ -73,6 +73,8 @@ class ContextVariantCard(FoundryCard):
         self.cp_grid = build_editor_module.ChampionPointGrid(editor.cp_choices)
         self.food = _editable_combo(editor.food_choices)
         self.potion = _editable_combo(editor.potion_choices)
+        self.front_poison = _editable_combo(getattr(editor, "poison_choices", ()))
+        self.back_poison = _editable_combo(getattr(editor, "poison_choices", ()))
         self.notes = QLineEdit()
 
         self._refresh_form_choices()
@@ -172,6 +174,12 @@ class ContextVariantCard(FoundryCard):
         consumables.addWidget(QLabel("Potion"))
         consumables.addWidget(self.potion, 1)
         build_form.addRow("Consumables", consumables)
+        poisons = QHBoxLayout()
+        poisons.addWidget(QLabel("Front Poison"))
+        poisons.addWidget(self.front_poison, 1)
+        poisons.addWidget(QLabel("Back Poison"))
+        poisons.addWidget(self.back_poison, 1)
+        build_form.addRow("Weapon Set Poisons", poisons)
         build_form.addRow("Notes", self.notes)
         self.addLayout(build_form)
 
@@ -251,6 +259,8 @@ class ContextVariantCard(FoundryCard):
             BackBarSkills=self.back_bar.value,
             Food=self.food.currentText().strip(),
             Potion=self.potion.currentText().strip(),
+            FrontBarPoison=self.front_poison.currentText().strip(),
+            BackBarPoison=self.back_poison.currentText().strip(),
             Notes=self.notes.text().strip(),
         )
 
@@ -280,6 +290,8 @@ class ContextVariantCard(FoundryCard):
         self.back_bar.load(variant.BackBarSkills)
         self.food.setCurrentText(variant.Food)
         self.potion.setCurrentText(variant.Potion)
+        self.front_poison.setCurrentText(getattr(variant, "FrontBarPoison", "") or "")
+        self.back_poison.setCurrentText(getattr(variant, "BackBarPoison", "") or "")
         self.notes.setText(variant.Notes)
 
 
