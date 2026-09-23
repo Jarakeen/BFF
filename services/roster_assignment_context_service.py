@@ -9,6 +9,7 @@ optional per-encounter overrides without duplicating the member or build.
 
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
+from services.user_database import user_database_for
 
 
 _ASSIGNMENT_FIELDS = {
@@ -28,7 +29,7 @@ _EMPTY = {
 
 class RosterAssignmentContextService:
     def __init__(self, database: EsoDatabase):
-        self.db = database
+        self.db = user_database_for(database)
         self._ensure_schema()
 
     def _ensure_schema(self) -> None:
