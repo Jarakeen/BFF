@@ -79,6 +79,9 @@ def test_progression_without_passive_inventory_fails_closed() -> None:
         build_adapter=_BuildAdapter(build="canonical-build"),
         item_service=_ItemService(),
         cooldown_service=_CooldownService(cooldown=45.0),
+        passive_grant_resolver=lambda build, progression: (_ for _ in ()).throw(
+            ValueError("Extreme potion cooldown PassiveGrant derivation requires explicit passive ranks")
+        ),
     )
 
     result = service.resolve(
@@ -89,7 +92,7 @@ def test_progression_without_passive_inventory_fails_closed() -> None:
 
     assert not result.complete
     assert result.cooldown_seconds is None
-    assert any("PassiveGrant inventory" in item for item in result.unresolved)
+    assert any("PassiveGrant derivation" in item for item in result.unresolved)
 
 
 def test_incomplete_scenario_inventory_does_not_emit_effective_cooldown() -> None:
