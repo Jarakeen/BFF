@@ -199,6 +199,8 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert "now reaches rotation static contexts" in passive_row.missing_evidence
     assert "extreme_passive_projection_service.py" in passive_row.evidence_source
     assert "fails conditional/runtime clauses closed" in passive_row.missing_evidence
+    assert "extreme_sustained_dps_generated_runtime_evaluation_service.py" in passive_row.evidence_source
+    assert "preflights" in passive_row.capability
 
     potion_row = next(
         row for row in rows if row.key == "consumables:runtime_resource_and_buff_policy"
@@ -208,6 +210,13 @@ def test_seed_inventory_spans_shared_decision_domains_and_emits_research_queue()
     assert "scheduled POTION actions" in potion_row.capability
     assert "potion instant-restoration events" in potion_row.missing_evidence.casefold()
     assert "remaining potion runtime effects beyond scheduled buff windows" in potion_row.missing_evidence
+
+    potion_cooldown_row = next(
+        row for row in rows if row.key == "consumables:potion_cooldown_effective"
+    )
+    assert "potion_cooldown_passive_grant_service.py" in potion_cooldown_row.evidence_source
+    assert "cadence-aware" in potion_cooldown_row.missing_evidence
+    assert "permanent pre-rotation reduction" in potion_cooldown_row.missing_evidence
 
     armor_row = next(row for row in rows if row.key == "armor:weight_passive_semantics")
     assert armor_row.status is CanonicalMechanicsCoverageStatus.PARTIAL
