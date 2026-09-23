@@ -264,3 +264,41 @@ def test_shared_raid_plan_payload_includes_sub_ready_operational_build_fields() 
     assert summary["food"] == "Orzorga's Smoked Bear Haunch"
     assert summary["potion"] == "Tri-Stat"
     assert summary["planned_mundus"] == "The Atronach"
+
+
+
+def test_shared_raid_plan_payload_includes_minimal_webp_previews() -> None:
+    plan = RaidPlan(
+        plan_id="rg-pm",
+        trial_id="rockgrove",
+        name="Rockgrove HM",
+        team_name="Performance Mode",
+        members=(RaidPlanMember(seat_id="dd-1", gamertag="Rylo"),),
+    )
+
+    payload = shared_raid_plan_payload(
+        plan,
+        raid_maps={"oaxiltso": "local-map-id"},
+        raid_map_previews={
+            "oaxiltso": {
+                "encounter_id": "oaxiltso",
+                "encounter_name": "Oaxiltso",
+                "map_label": "Portal Assignments",
+                "map_image_url": "https://finch.example/api/v1/public/assets/oax.webp",
+                "note": "Portal west",
+                "content_sha256": "abc123",
+            }
+        },
+    )
+
+    assert payload["raid_maps"] == {"oaxiltso": "local-map-id"}
+    assert payload["raid_map_previews"] == [
+        {
+            "encounter_id": "oaxiltso",
+            "encounter_name": "Oaxiltso",
+            "map_label": "Portal Assignments",
+            "map_image_url": "https://finch.example/api/v1/public/assets/oax.webp",
+            "note": "Portal west",
+            "content_sha256": "abc123",
+        }
+    ]
