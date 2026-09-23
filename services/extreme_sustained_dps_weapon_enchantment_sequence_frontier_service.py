@@ -148,10 +148,20 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService:
                     "weapon-enchantment cooldown policy contains an effect outside the candidate universe"
                 )
                 continue
-            if key in rows:
-                unresolved.append(
-                    "duplicate weapon-enchantment cooldown policy for one effect source"
-                )
+            existing = rows.get(key)
+            if existing is not None:
+                if (
+                    existing.cooldown_identity != policy.cooldown_identity
+                    or abs(
+                        float(existing.cooldown_seconds)
+                        - float(policy.cooldown_seconds)
+                    )
+                    > 1e-12
+                    or existing.authoritative != policy.authoritative
+                ):
+                    unresolved.append(
+                        "conflicting weapon-enchantment cooldown policies for one effect source"
+                    )
                 continue
             if not policy.authoritative:
                 unresolved.append(
@@ -293,7 +303,8 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService:
             denominator_proven=complete,
             evidence=(
                 f"Weapon-enchantment activation events supplied: {len(ordered_events)}",
-                f"Weapon-enchantment sources supplied: {len(effects)}",
+                f"Weapon-enchantment consequence variants supplied: {len(effects)}",
+                f"Distinct weapon-enchantment sources supplied: {len(effect_keys)}",
                 f"Authoritative cooldown policies supplied: {len(policies)}",
                 f"Finite weapon-enchantment source histories: {len(choices)}",
                 f"Weapon-enchantment sequence source: {str(source or '').strip() or 'caller-supplied proof'}",
