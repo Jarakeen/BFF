@@ -114,6 +114,20 @@ def test_release_build_preserves_user_database_and_uses_fixed_update_asset_name(
     assert 'Copy-Item (Join-Path $DataRoot "builds.json")' not in build
 
 
+def test_release_builds_support_explicit_first_run_user_database_seed() -> None:
+    manifest = _load_manifest()
+    release = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
+    friend = (ROOT / "packaging" / "build_friend.ps1").read_text(encoding="utf-8")
+
+    assert ("build/release_seed/foundrydock.db", "_seed_user_data") in set(
+        manifest.OPTIONAL_SEED_DATAS
+    )
+    assert '[string]$UserDatabaseSeed = ""' in release
+    assert '[string]$UserDatabaseSeed = ""' in friend
+    assert 'Join-Path $ReleaseSeedRoot "foundrydock.db"' in release
+    assert 'Join-Path $ReleaseSeedRoot "foundrydock.db"' in friend
+
+
 def test_release_build_supports_nested_runtime_reference_data() -> None:
     manifest = _load_manifest()
     build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
