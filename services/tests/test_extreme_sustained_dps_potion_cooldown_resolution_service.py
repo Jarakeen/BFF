@@ -156,6 +156,24 @@ def test_missing_progression_and_passive_evidence_fails_closed() -> None:
 
 
 
+def test_explicit_complete_empty_passive_inventory_can_resolve() -> None:
+    cooldown = _CooldownService(cooldown=45.0)
+    service = ExtremeSustainedDPSPotionCooldownResolutionService(
+        build_adapter=_BuildAdapter(build="canonical-build"),
+        item_service=_ItemService(),
+        cooldown_service=cooldown,
+    )
+
+    result = service.resolve(
+        player_build="saved-build",
+        passive_inventory_complete=True,
+        scenario=ExtremeSustainedDPSPotionCooldownScenarioEvidence(complete=True),
+    )
+
+    assert result.complete
+    assert result.cooldown_seconds == 45.0
+
+
 def test_explicit_passive_grants_require_complete_inventory_proof() -> None:
     cooldown = _CooldownService(cooldown=44.0)
     service = ExtremeSustainedDPSPotionCooldownResolutionService(
