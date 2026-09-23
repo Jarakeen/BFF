@@ -227,6 +227,7 @@ def _empty_armor_payload() -> dict[str, dict[str, str]]:
             "Trait": "",
             "Enchant": "",
             "EnchantTier": "",
+            "EnchantQuality": "",
             "Level": "",
             "Weight": "",
         }
