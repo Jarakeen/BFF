@@ -458,3 +458,29 @@ def test_canonical_objective32_rejects_competing_potion_cooldown_resolver() -> N
             target_health=1_000_000,
             target_resistance=18_200.0,
         )
+
+
+
+def test_closure_ready_search_refuses_missing_potion_cooldown_authority() -> None:
+    import pytest
+
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=_GlobalSearch(_search_result()),
+        require_closure_ready_scenario=True,
+    )
+
+    with pytest.raises(ValueError, match="requires a canonical potion cooldown resolver"):
+        service.search(
+            runtime_state_frontier=_runtime_frontier(),
+            dual_bar_frontier="gear",
+            candidate_id_prefix="objective32",
+            required_duration_seconds=20.0,
+            potion_cooldown_seconds=45.0,
+            starting_ultimate=0.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="Boss",
+            runtime_snapshot="snapshot",
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+        )
