@@ -142,14 +142,33 @@ class RotationCandidateScorecard:
     @staticmethod
     def _is_hard_inherited_unresolved(item: str) -> bool:
         text = str(item or "").casefold()
-        return "potion" in text and any(
+
+        potion_timeline = "potion" in text and any(
             token in text
             for token in ("restor", "cooldown", "cadence", "timing")
         )
+        heavy_timeline = (
+            ("heavy attack" in text or "heavy-attack" in text)
+            and any(
+                token in text
+                for token in (
+                    "restor",
+                    "completion",
+                    "landed",
+                    "hit state",
+                    "hit-state",
+                    "blocked",
+                    "dodge",
+                    "miss",
+                    "immune",
+                )
+            )
+        )
+        return potion_timeline or heavy_timeline
 
     @property
     def hard_inherited_unresolved(self) -> tuple[str, ...]:
-        """Shared uncertainty that invalidates the measured potion/resource timeline."""
+        """Shared uncertainty that invalidates a measured resource/damage timeline."""
         return tuple(
             item
             for item in self.inherited_unresolved
@@ -231,8 +250,9 @@ class RotationCandidateScorecard:
         candidate carries the same limitation. Candidate-specific unresolved
         evidence is hard-failing because it means this candidate itself depends on
         mechanics that are not sufficiently resolved to recommend it safely. Shared
-        potion uncertainty is also hard-failing because it changes the resource
-        timeline rather than merely limiting comparative interpretation.
+        potion or Heavy Attack timeline uncertainty is also hard-failing because it
+        changes the measured resource/damage timeline rather than merely limiting
+        comparative interpretation.
         """
         return (
             not self.missing_demand_requirements
