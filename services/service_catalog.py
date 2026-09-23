@@ -1350,7 +1350,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
             "Currently resolves Master Architect Major Slayer duration from canonical Ultimate spend. "
-            "Inactive no-Ultimate branches clear the non-operative scaling obligation; incompatible per-activation costs fail closed."
+            "Inactive no-Ultimate branches clear the non-operative scaling obligation; incompatible per-activation costs fail closed. "
+            "Any other non-empty runtime scaling rule also fails closed here until an explicitly reviewed resolver owns it, preventing later relevance logic from accidentally treating partial proc math as complete."
         ),
     ),
     ServiceDescriptor(
