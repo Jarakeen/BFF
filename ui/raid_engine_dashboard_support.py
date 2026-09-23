@@ -456,6 +456,41 @@ def _open_exact_build(window, build_id: str) -> None:
         opener(build_id)
 
 
+def _open_live_raid_boss_mechanics(window, encounter_id: str) -> None:
+    mechanics = window.pages.get("console:4")
+    if mechanics is None:
+        return
+    opener = getattr(mechanics, "open_encounter_by_id", None)
+    if not callable(opener) or not opener(encounter_id):
+        live = window.pages.get("live_raid")
+        status = getattr(live, "status", None)
+        if status is not None:
+            status.warning("Boss Mechanics could not open the selected encounter.")
+        return
+
+    return_button = getattr(mechanics, "back_to_live_raid_button", None)
+    if return_button is not None:
+        try:
+            return_button.clicked.disconnect()
+        except (RuntimeError, TypeError):
+            pass
+        return_button.clicked.connect(lambda *_: _return_to_live_raid(window))
+    setter = getattr(mechanics, "set_live_raid_return_visible", None)
+    if callable(setter):
+        setter(True)
+
+    window.show_page("console:4")
+
+
+def _return_to_live_raid(window) -> None:
+    mechanics = window.pages.get("console:4")
+    if mechanics is not None:
+        setter = getattr(mechanics, "set_live_raid_return_visible", None)
+        if callable(setter):
+            setter(False)
+    window.show_page("live_raid")
+
+
 def _open_live_raid_map(window, encounter_id: str, map_id: str) -> None:
     encounter_id = str(encounter_id or "").strip()
     map_id = str(map_id or "").strip()
@@ -533,6 +568,12 @@ def register_raid_engine_pages(window) -> None:
 
     live_raid = CityLiveRaidPage()
     live_raid.pageRequested.connect(window.show_page)
+    live_raid.bossMechanicsRequested.connect(
+        lambda encounter_id: _open_live_raid_boss_mechanics(
+            window,
+            encounter_id,
+        )
+    )
     live_raid.raidMapRequested.connect(
         lambda encounter_id, map_id: _open_live_raid_map(
             window,
