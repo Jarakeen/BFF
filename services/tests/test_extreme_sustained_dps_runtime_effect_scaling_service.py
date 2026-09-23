@@ -145,8 +145,10 @@ def test_unreviewed_runtime_scaling_fails_closed_before_relevance() -> None:
 
     assert result.effects == ()
     assert result.resolved is False
+    assert result.math_unresolved == ()
+    assert result.source_data_unresolved == result.unresolved
     assert any(
-        "Roar of Alkosh (5) roar_of_alkosh runtime scaling is not reviewed" in row
+        "requires activation-time Weapon Damage" in row
         for row in result.unresolved
     )
 
@@ -172,3 +174,28 @@ def test_unscaled_runtime_effect_passes_through_unchanged() -> None:
 
     assert result.effects == (effect,)
     assert result.unresolved == ()
+
+
+def test_unknown_runtime_scaling_is_math_review_blocker() -> None:
+    effect = EffectVariant(
+        name="mystery_scaled_proc",
+        layer=EffectLayer.PROC,
+        source="Mystery Set",
+        duration=5.0,
+        scaling="mystery formula",
+        trigger="damage_dealt",
+        target_type=SupportTargetType.SELF,
+    )
+
+    result = ExtremeSustainedDPSRuntimeEffectScalingService(
+        ultimate_service=_UltimateService({}),
+    ).resolve(
+        build=PlayerBuild(),
+        plan=_plan(),
+        effects=(effect,),
+    )
+
+    assert result.effects == ()
+    assert result.source_data_unresolved == ()
+    assert result.math_unresolved == result.unresolved
+    assert any("runtime scaling is not reviewed" in row for row in result.unresolved)
