@@ -145,6 +145,7 @@ class ContextVariantCard(FoundryCard):
                     row.type_combo,
                     row.enchant_combo,
                     row.enchant_tier_combo,
+                    row.enchant_quality_combo,
                     row.level_combo,
                 ],
                 1,
