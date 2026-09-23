@@ -176,6 +176,24 @@ class RaidSectionStateService:
         }
         self._write(payload)
 
+    def remove_finch_raid_map_preview(self, plan_id: str, encounter_id: str) -> bool:
+        plan_key = _clean(plan_id)
+        encounter_key = _clean(encounter_id)
+        if not plan_key or not encounter_key:
+            return False
+        payload = self._read()
+        previews = payload.get("finch_raid_map_previews", {})
+        if not isinstance(previews, dict):
+            return False
+        plan_rows = previews.get(plan_key, {})
+        if not isinstance(plan_rows, dict) or encounter_key not in plan_rows:
+            return False
+        plan_rows.pop(encounter_key, None)
+        if not plan_rows:
+            previews.pop(plan_key, None)
+        self._write(payload)
+        return True
+
     def set_linked_raid_map_id(
         self,
         plan_id: str,
