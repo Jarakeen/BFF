@@ -7,6 +7,8 @@ from types import SimpleNamespace
 from PySide6.QtWidgets import QComboBox, QHeaderView, QInputDialog, QTableWidgetItem
 
 from services.roster_assignment_context_service import RosterAssignmentContextService
+from services.user_safety_snapshot_service import UserSafetySnapshotService
+from ui.ui_safety import confirm_replacement
 from services.team_composition_catalog import flexible_raid_slots
 from ui.roster_encounter_assignment_context_support import (
     selected_encounter_id,
@@ -441,6 +443,30 @@ def apply_roster_team_context(
     group_size: int | None = None,
 ) -> None:
     members = tuple(members)
+    current_state = getattr(page, "_comp_plan_state", None)
+    current_team = str(getattr(current_state, "team_name", "") or "").strip()
+    incoming_team = str(team_name or "").strip()
+    if (
+        current_state is not None
+        and getattr(current_state, "dirty", False)
+        and (incoming_team.casefold() != current_team.casefold() or members)
+    ):
+        if not confirm_replacement(
+            page,
+            title="Replace Comp Maker Players",
+            object_label="Load a different player list into Comp Maker?",
+            impact=(
+                "Unsaved chair/player context may be replaced by the incoming roster. "
+                "Saved Raid Plans and Builds are not deleted. A recoverable database "
+                "snapshot is created before the replacement."
+            ),
+            confirm_text="Load Players",
+        ):
+            page.status.info("Load Players cancelled; current Comp Maker work kept.")
+            return
+        UserSafetySnapshotService().create(
+            f"comp-load-players-{incoming_team or 'ad-hoc'}"
+        )
     assignments = dict(assignments or {})
     page._roster_team_context_name = str(team_name or "").strip()
     page._roster_encounter_context_id = str(encounter_id or "").strip()
