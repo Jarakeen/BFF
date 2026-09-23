@@ -72,7 +72,7 @@ class ExtremeSustainedDPSWeaponAbilityEnchantmentOccurrenceClassifier:
             for item in tuple(getattr(resolution, "unresolved", ()) or ())
             if str(item).strip()
         )
-        skill = getattr(resolution, "skill", None)
+        skill = getattr(resolution, "rank", None)
         if resolution_unresolved or skill is None:
             detail = resolution_unresolved or (
                 f"canonical skill rank is unavailable for {ability_name}",
