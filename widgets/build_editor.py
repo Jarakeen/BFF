@@ -682,6 +682,7 @@ class BuildEditor(QWidget):
                     editor.type_combo,
                     editor.enchant_combo,
                     editor.enchant_tier_combo,
+                    editor.enchant_quality_combo,
                     editor.level_combo,
                 ],
                 2,
@@ -691,7 +692,7 @@ class BuildEditor(QWidget):
             remove = FoundryButton("×", role=ButtonRole.GHOST, compact=True)
             remove.setFixedWidth(28)
             remove.clicked.connect(editor.clear)
-            grid.addWidget(remove, row, 10)
+            grid.addWidget(remove, row, 11)
             widgets.append(remove)
             if slot.endswith("off_hand"):
                 self._weapon_row_widgets[slot] = tuple(widgets)
