@@ -14,6 +14,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QDialog,
     QFrame,
     QGridLayout,
     QHBoxLayout,
@@ -296,20 +297,15 @@ class CityLiveRaidPage(FoundryPage):
         map_actions.setContentsMargins(0, 0, 0, 0)
         map_actions.setSpacing(6)
 
-        zoom_out = QPushButton("−")
-        zoom_out.setToolTip("Zoom out Raid Map")
-        zoom_out.clicked.connect(lambda: self._change_raid_map_zoom(-0.25))
-        map_actions.addWidget(zoom_out)
-
         fit_map = QPushButton("Fit")
         fit_map.setToolTip("Fit the full Raid Map in the Live Raid card")
         fit_map.clicked.connect(self._fit_raid_map)
         map_actions.addWidget(fit_map)
 
-        zoom_in = QPushButton("+")
-        zoom_in.setToolTip("Zoom in Raid Map")
-        zoom_in.clicked.connect(lambda: self._change_raid_map_zoom(0.25))
-        map_actions.addWidget(zoom_in)
+        open_full = QPushButton("Open Full Map")
+        open_full.setToolTip("Open the current Raid Map in a large zoomable window.")
+        open_full.clicked.connect(self._open_raid_map_popup)
+        map_actions.addWidget(open_full)
 
         map_actions.addStretch(1)
 
@@ -631,6 +627,97 @@ class CityLiveRaidPage(FoundryPage):
         self._raid_map_source_pixmap = pixmap
         self._raid_map_zoom = 1.0
         QTimer.singleShot(0, self._fit_raid_map)
+
+    def _open_raid_map_popup(self) -> None:
+        pixmap = self._raid_map_source_pixmap
+        if pixmap.isNull():
+            self.status.warning("No linked Raid Map is available to enlarge.")
+            return
+
+        dialog = QDialog(self)
+        encounter_name = (
+            self.encounter_combo.currentText().removeprefix("Encounter: ").strip()
+            or "Raid Map"
+        )
+        dialog.setWindowTitle(f"Raid Map • {encounter_name}")
+        dialog.resize(1280, 820)
+
+        root = QVBoxLayout(dialog)
+        root.setContentsMargins(8, 8, 8, 8)
+        root.setSpacing(6)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(False)
+        scroll.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+
+        map_label = QLabel()
+        map_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        scroll.setWidget(map_label)
+        root.addWidget(scroll, 1)
+
+        controls = QHBoxLayout()
+        controls.setContentsMargins(0, 0, 0, 0)
+        controls.setSpacing(6)
+        zoom_state = {"value": 1.0}
+
+        def render() -> None:
+            scale = max(0.5, min(4.0, float(zoom_state["value"])))
+            rendered = pixmap.scaled(
+                max(1, int(round(pixmap.width() * scale))),
+                max(1, int(round(pixmap.height() * scale))),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            map_label.setPixmap(rendered)
+            map_label.resize(rendered.size())
+
+        def zoom_by(delta: float) -> None:
+            zoom_state["value"] = max(
+                0.5,
+                min(4.0, float(zoom_state["value"]) + float(delta)),
+            )
+            render()
+
+        def fit() -> None:
+            viewport = scroll.viewport().size()
+            if viewport.width() <= 0 or viewport.height() <= 0:
+                return
+            zoom_state["value"] = max(
+                0.5,
+                min(
+                    4.0,
+                    min(
+                        viewport.width() / max(1, pixmap.width()),
+                        viewport.height() / max(1, pixmap.height()),
+                    ),
+                ),
+            )
+            render()
+
+        zoom_out = QPushButton("−")
+        zoom_out.setToolTip("Zoom out")
+        zoom_out.clicked.connect(lambda: zoom_by(-0.25))
+        controls.addWidget(zoom_out)
+
+        fit_button = QPushButton("Fit")
+        fit_button.clicked.connect(fit)
+        controls.addWidget(fit_button)
+
+        zoom_in = QPushButton("+")
+        zoom_in.setToolTip("Zoom in")
+        zoom_in.clicked.connect(lambda: zoom_by(0.25))
+        controls.addWidget(zoom_in)
+
+        controls.addStretch(1)
+
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(dialog.accept)
+        controls.addWidget(close_button)
+
+        root.addLayout(controls)
+        QTimer.singleShot(0, fit)
+        dialog.exec()
 
     def _show_raid_map_menu(self) -> None:
         menu = QMenu(self)
