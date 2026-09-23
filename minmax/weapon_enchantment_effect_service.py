@@ -98,6 +98,8 @@ class WeaponEnchantmentEffectService:
                     target=effect.target,
                     duration_value=effect.duration_value,
                     duration_unit=effect.duration_unit,
+                    scaling_type=effect.scaling_type,
+                    condition=effect.condition,
                 )
             )
 
