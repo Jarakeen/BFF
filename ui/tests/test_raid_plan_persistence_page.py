@@ -409,3 +409,27 @@ def test_roles_surface_displays_comp_planning_package_without_selected_build_nam
     assert 'or member.build_source_name' in source
     assert 'or "Comp Maker package"' in source
     assert 'f"Planned • {planned_sets}"' in source
+
+
+def test_stale_selected_build_id_is_repaired_before_current_plan_validation() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+
+    assert "def _repair_loaded_snapshot_after_missing_builds" in source
+    assert "catalog.get_build(build_id) is not None" in source
+    assert "selected_build_id=replacement_id or None" in source
+    assert source.index("self._repair_loaded_snapshot_after_missing_builds()") < source.index(
+        "visible = super().current_plan()"
+    )
+
+
+def test_stale_build_repair_preserves_planned_state_and_assignments() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+    repair = source.split("def _repair_loaded_snapshot_after_missing_builds", 1)[1].split(
+        "def _repair_loaded_snapshot_after_player_merges", 1
+    )[0]
+
+    assert "member.with_selection(" in repair
+    assert "selected_build_id=replacement_id or None" in repair
+    assert "planned_gear_sets=" not in repair
+    assert "planned_skills=" not in repair
+    assert "primary_assignment=" not in repair
