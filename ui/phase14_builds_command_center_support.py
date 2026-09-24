@@ -135,16 +135,45 @@ def _populate_build_table(page) -> None:
     page.phase14_table_source_rows = []
 
     if _template_mode(page):
-        for source_row in range(page.roster_list.count()):
-            item = page.roster_list.item(source_row)
+        templates = tuple(getattr(page, "_template_rows", ()) or ())
+        selected_class = str(page.phase14_class_filter.currentText() or "All")
+        selected_role = str(page.phase14_role_filter.currentText() or "All")
+        search = str(page.phase14_build_search.text() or "").strip().casefold()
+
+        for source_row, template in enumerate(templates):
+            template_class = str(getattr(template, "source_class", "") or "").strip()
+            template_role = str(getattr(template, "role", "") or "").strip()
+            template_name = str(getattr(template, "name", "") or "").strip()
+
+            if selected_class != "All" and selected_class.casefold() != template_class.casefold():
+                continue
+            if selected_role != "All" and selected_role.casefold() != template_role.casefold():
+                continue
+            if search and search not in " ".join(
+                (template_name, template_class, template_role)
+            ).casefold():
+                continue
+
             row = table.rowCount()
             table.insertRow(row)
-            for column, value in enumerate(("☆", item.text(), "Template", "—", "Template", "Reusable")):
+            values = (
+                "☆",
+                template_name or "Unnamed Template",
+                "Template",
+                template_class or "—",
+                template_role or "Template",
+                "Reusable",
+            )
+            for column, value in enumerate(values):
                 table.setItem(row, column, QTableWidgetItem(value))
             page.phase14_table_source_rows.append(source_row)
+
         table.blockSignals(False)
         if table.rowCount():
             table.selectRow(0)
+            _select_command_center_row(page, 0, 0)
+        else:
+            page._clear_detail()
         return
 
     mode = _active_library_mode(page)
@@ -184,7 +213,16 @@ def _select_command_center_row(page, row: int, _column: int = 0) -> None:
         return
     source_row = page.phase14_table_source_rows[row]
     if _template_mode(page):
-        page.roster_list.setCurrentRow(source_row)
+        # The visible Phase 14 table is the user's selection authority. Do not rely
+        # on a hidden legacy QListWidget signal to update the template inspector:
+        # that left the row highlight on Pippin while the right card still showed
+        # Jaded, making the action capable of applying the wrong template.
+        page.roster_list.blockSignals(True)
+        try:
+            page.roster_list.setCurrentRow(source_row)
+        finally:
+            page.roster_list.blockSignals(False)
+        page._select_member(source_row)
         return
     if source_row < 0 or source_row >= len(page.roster.Members):
         return
@@ -353,6 +391,11 @@ def _create_command_center(page) -> QWidget:
     page.phase14_content_filter.currentTextChanged.connect(lambda _text: _populate_build_table(page))
     page.phase14_source_filter.currentIndexChanged.connect(lambda _index: _populate_build_table(page))
     page.phase14_build_table.cellClicked.connect(lambda row, col: _select_command_center_row(page, row, col))
+    page.phase14_build_table.currentCellChanged.connect(
+        lambda row, col, _previous_row, _previous_col: (
+            _select_command_center_row(page, row, col) if row >= 0 else None
+        )
+    )
     return host
 
 
