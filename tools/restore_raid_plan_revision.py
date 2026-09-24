@@ -144,28 +144,75 @@ def _read_candidates(database_path: Path) -> tuple[RevisionCandidate, ...]:
     return tuple(rows)
 
 
+def _timestamp_value(value: str) -> datetime | None:
+    text = _clean(value)
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        try:
+            parsed = datetime.strptime(text, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def find_recovery_candidates(
+    database_path: Path,
+    *,
+    plan_hint: str,
+    tank_name: str,
+    unique_player: str,
+) -> tuple[RevisionCandidate, ...]:
+    candidates = _read_candidates(database_path)
+    return tuple(
+        row
+        for row in candidates
+        if row.source == "revision"
+        and _plan_matches(row, plan_hint)
+        and _tank_matches(row, tank_name)
+        and _count_player(row, unique_player) <= 1
+    )
+
+
 def find_recovery_candidate(
     database_path: Path,
     *,
     plan_hint: str,
     tank_name: str,
     unique_player: str,
+    target_age_minutes: int | None = None,
+    now: datetime | None = None,
 ) -> RevisionCandidate | None:
-    candidates = _read_candidates(database_path)
-    matches = [
-        row
-        for row in candidates
-        if _plan_matches(row, plan_hint)
-        and _tank_matches(row, tank_name)
-        and _count_player(row, unique_player) <= 1
-    ]
+    matches = list(
+        find_recovery_candidates(
+            database_path,
+            plan_hint=plan_hint,
+            tank_name=tank_name,
+            unique_player=unique_player,
+        )
+    )
     if not matches:
         return None
 
-    # Current state is intentionally not preferred over a revision. The caller is
-    # here because current state is suspected corrupt; newest revision wins.
-    revisions = [row for row in matches if row.source == "revision"]
-    return revisions[0] if revisions else matches[0]
+    if target_age_minutes is None:
+        return matches[0]
+
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    target = current.astimezone(timezone.utc).timestamp() - (int(target_age_minutes) * 60)
+
+    def distance(row: RevisionCandidate) -> tuple[float, int]:
+        stamp = _timestamp_value(row.timestamp)
+        if stamp is None:
+            return (float("inf"), -row.ordinal)
+        return (abs(stamp.timestamp() - target), -row.ordinal)
+
+    return min(matches, key=distance)
 
 
 def _seat_summary(candidate: RevisionCandidate) -> str:
@@ -218,6 +265,12 @@ def main() -> int:
         help="Player text that may appear in at most one seat. Default: Aces",
     )
     parser.add_argument(
+        "--target-age-minutes",
+        type=int,
+        default=None,
+        help="Prefer the matching revision closest to this many minutes ago.",
+    )
+    parser.add_argument(
         "--apply",
         action="store_true",
         help="Actually restore the matched revision. Without this flag, only preview it.",
@@ -230,6 +283,7 @@ def main() -> int:
         plan_hint=args.plan,
         tank_name=args.tank,
         unique_player=args.unique_player,
+        target_age_minutes=args.target_age_minutes,
     )
     if candidate is None:
         print(
