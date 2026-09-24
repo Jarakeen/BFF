@@ -35,7 +35,7 @@ def test_coverage_owns_saved_raid_plan_scope_selection() -> None:
     assert 'return f"raid_plan:' in plan_item
     assert "str(plan_id" in plan_item
     assert ".strip()" in plan_item
-    assert "RaidPlanRepository(get_data_dir() / \"raid_plans.json\").list_plans()" in source
+    assert "RaidPlanRepository(get_user_database_path()).list_plans()" in source
     assert 'label = f"{plan.name} • {trial} • {difficulty}"' in source
     assert "combo.addItem(label, _plan_item_data(plan.plan_id))" in source
     assert 'combo.addItem("No saved Raid Plans", None)' in source
