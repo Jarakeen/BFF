@@ -34,6 +34,9 @@ from services.extreme_sustained_dps_weapon_enchantment_runtime_source_service im
 from services.extreme_sustained_dps_weapon_enchantment_runtime_variant_service import (
     ExtremeSustainedDPSWeaponEnchantmentRuntimeVariantService,
 )
+from services.extreme_sustained_dps_weapon_poison_activation_event_service import (
+    ExtremeSustainedDPSWeaponPoisonActivationEventService,
+)
 
 
 class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
@@ -109,6 +112,11 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
                 )
             ),
             weapon_enchantment_cooldown_policy_resolver=cooldown_policy_resolver,
+            weapon_poison_activation_service=(
+                ExtremeSustainedDPSWeaponPoisonActivationEventService.from_database(
+                    database_path
+                )
+            ),
         )
         return ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(
             scenario_frontier=scenario_frontier,
