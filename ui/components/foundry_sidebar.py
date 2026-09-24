@@ -63,6 +63,7 @@ CORE_NAV_SECTIONS = [
     ]},
     {"label": "Review", "children": [
         ("Top Gear", "console:3"),
+        ("Brittle Uptime", "brittle_uptime"),
     ]},
     {"label": "Achievement", "page": "achievements", "children": []},
     {"label": "Collectibles", "page": "collectibles", "children": [
