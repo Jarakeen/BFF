@@ -700,6 +700,13 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             # Capture the visible Raid Plan before Personnel synchronization can
             # rebuild character/build widgets or auto-derive class values.
             visible_before_sync = super().current_plan()
+            checkpoint = self._safety_snapshots.create(
+                f"save-raid-plan-{visible_before_sync.plan_id}"
+            )
+            if checkpoint is None and get_user_database_path().is_file():
+                raise RaidPlanRepositoryError(
+                    "could not create the pre-save database checkpoint"
+                )
             created_players = self._ensure_named_players_in_personnel()
 
             # Re-run the persistence/stable-identity layer after Personnel creation,
@@ -742,7 +749,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 raise RaidPlanRepositoryError(
                     "saved Raid Plan did not round-trip exactly; refusing to report success"
                 )
-        except (RaidPlanRepositoryError, ValueError, TypeError) as exc:
+        except Exception as exc:
             mark_save_failed(self, str(exc))
             self.status.error(f"Could not save Raid Plan: {exc}")
             return None
