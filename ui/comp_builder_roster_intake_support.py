@@ -2,14 +2,17 @@ from __future__ import annotations
 
 """Carry roster-owned player/class/role/job context into Comp Builder without inventing builds."""
 
+from dataclasses import replace
 from types import SimpleNamespace
 
 from PySide6.QtWidgets import QComboBox, QHeaderView, QInputDialog, QTableWidgetItem
 
-from engine.config import get_user_database_path
+from engine.config import get_data_dir, get_user_database_path
 
+from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.roster_assignment_context_service import RosterAssignmentContextService
+from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.roster_service import RosterService
 from services.user_safety_snapshot_service import UserSafetySnapshotService
 from ui.ui_safety import confirm_replacement
@@ -22,6 +25,41 @@ from ui.roster_encounter_assignment_context_support import (
 
 _INSTALLED = False
 PLAYER_COLUMN = 11
+
+def _canonicalize_members_for_presentation(members):
+    """Use stable ids for visible Comp names and collapse duplicate canonical players."""
+    rows = []
+    seen_player_ids: set[str] = set()
+    try:
+        database = EsoDatabase(get_user_database_path())
+        build_service = BuildService(get_data_dir() / "builds.json")
+        identity = RosterPlayerIdentityService(database, build_service)
+    except Exception:
+        identity = None
+
+    for member in tuple(members or ()):
+        player_id = str(getattr(member, "CanonicalPlayerId", "") or "").strip()
+        if player_id:
+            key = player_id.casefold()
+            if key in seen_player_ids:
+                continue
+            seen_player_ids.add(key)
+
+        if identity is None or not hasattr(member, "__dataclass_fields__"):
+            rows.append(member)
+            continue
+
+        player_name = identity.canonical_player_label(member)
+        character_name = identity.canonical_character_label(member)
+        changes = {}
+        if player_name and player_name != str(getattr(member, "PlayerName", "") or "").strip():
+            changes["PlayerName"] = player_name
+        if character_name and character_name != str(getattr(member, "CharacterName", "") or "").strip():
+            changes["CharacterName"] = character_name
+        rows.append(replace(member, **changes) if changes else member)
+
+    return tuple(rows)
+
 
 
 def _role_key(value: object) -> str:
@@ -446,7 +484,7 @@ def apply_roster_team_context(
     assignments: dict[int, dict] | None = None,
     group_size: int | None = None,
 ) -> None:
-    members = tuple(members)
+    members = _canonicalize_members_for_presentation(members)
     current_state = getattr(page, "_comp_plan_state", None)
     current_team = str(getattr(current_state, "team_name", "") or "").strip()
     incoming_team = str(team_name or "").strip()
