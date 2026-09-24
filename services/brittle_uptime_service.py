@@ -39,11 +39,11 @@ class BrittleFightUptime:
     brittle_percent: float
     raid_brittle_seconds: float
     raid_brittle_percent: float
-    heroism_seconds: float
-    heroism_percent: float
-    immunity_seconds: float
-    immunity_percent: float
-    providers: tuple[BrittleProviderUptime, ...]
+    providers: tuple[BrittleProviderUptime, ...] = ()
+    heroism_seconds: float = 0.0
+    heroism_percent: float = 0.0
+    immunity_seconds: float = 0.0
+    immunity_percent: float = 0.0
 
 
 @dataclass(frozen=True)
