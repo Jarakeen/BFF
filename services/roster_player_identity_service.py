@@ -92,6 +92,72 @@ class RosterPlayerIdentityService:
         )
         self.database.commit()
 
+
+    def canonical_player_label(self, member_or_player_id, *, fallback: object = "") -> str:
+        """Return the current human-facing player name for one canonical identity.
+
+        Stable ids own identity. Stored roster/build text is only a display fallback.
+        Raw ids are never returned as a user-facing label.
+        """
+        player_id = ""
+        fallback_text = _text(fallback)
+        if hasattr(member_or_player_id, "CanonicalPlayerId"):
+            player_id = _text(getattr(member_or_player_id, "CanonicalPlayerId", ""))
+            fallback_text = _text(getattr(member_or_player_id, "PlayerName", "")) or fallback_text
+        else:
+            player_id = _text(member_or_player_id)
+
+        if player_id and self.build_service is not None:
+            try:
+                player = self.build_service.canonical.catalog_service.get_player(player_id)
+            except Exception:
+                player = None
+            if isinstance(player, dict):
+                label = _text(player.get("gamertag") or player.get("display_name"))
+                if label:
+                    return label
+        return fallback_text or "Unnamed Player"
+
+    def canonical_character_label(self, member_or_character_id, *, fallback: object = "") -> str:
+        """Return the current human-facing character name for one canonical identity."""
+        character_id = ""
+        fallback_text = _text(fallback)
+        if hasattr(member_or_character_id, "CanonicalCharacterId"):
+            character_id = _text(getattr(member_or_character_id, "CanonicalCharacterId", ""))
+            fallback_text = _text(getattr(member_or_character_id, "CharacterName", "")) or fallback_text
+        else:
+            character_id = _text(member_or_character_id)
+
+        if character_id and self.build_service is not None:
+            try:
+                character = self.build_service.canonical.catalog_service.get_character(character_id)
+            except Exception:
+                character = None
+            if isinstance(character, dict):
+                label = _text(character.get("name"))
+                if label:
+                    return label
+        return fallback_text
+
+    def deduplicated_members_for_pickers(self, *, include_archived: bool = False):
+        """Collapse Personnel presentation rows by canonical player id.
+
+        This is presentation-only. Rows lacking stable ids remain distinct so the UI
+        never guesses that unrelated people are duplicates from name similarity.
+        """
+        members = list(self.roster.list_members(include_archived=include_archived))
+        result = []
+        seen_player_ids: set[str] = set()
+        for member in members:
+            player_id = _text(getattr(member, "CanonicalPlayerId", ""))
+            if player_id:
+                key = player_id.casefold()
+                if key in seen_player_ids:
+                    continue
+                seen_player_ids.add(key)
+            result.append(member)
+        return result
+
     def aliases_for_member(self, roster_member_id: int) -> tuple[PlayerAlias, ...]:
         rows = self.database.execute(
             """
