@@ -168,3 +168,5 @@ jobs:
 # rebuild-after-raid-plan-player-merge-identity-repair
 
 # rebuild-after-build-template-roles-readiness-fixes
+
+# rebuild-after-stale-raid-plan-build-id-repair
