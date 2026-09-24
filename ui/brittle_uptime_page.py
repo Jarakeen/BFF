@@ -27,8 +27,10 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
+    QApplication,
 )
 
+from services.accessibility_preferences import VISUAL_THEME_RYLO
 from services.brittle_uptime_service import BrittleUptimeService
 from services.esologs_client import EsoLogsApiError, EsoLogsClient
 from services.settings_service import SettingsService
@@ -49,22 +51,49 @@ def _duration(seconds: float) -> str:
     return f"{minute:02d}:{second:02d}"
 
 
+def _is_rylo() -> bool:
+    app = QApplication.instance()
+    return bool(app is not None and app.property("visualTheme") == VISUAL_THEME_RYLO)
+
+
+def _chart_palette() -> dict[str, str]:
+    if _is_rylo():
+        return {
+            "surface": "#111519",
+            "gold": "#8C8580",
+            "accent": "#8B0E14",
+            "text": "#D8D0C2",
+            "muted": "#99928A",
+            "border": "#45484C",
+        }
+    return {
+        "surface": Colors.SURFACE,
+        "gold": Colors.GOLD,
+        "accent": Colors.ACCENT_LIGHT,
+        "text": Colors.TEXT,
+        "muted": Colors.TEXT_MUTED,
+        "border": Colors.BORDER,
+    }
+
+
 def _new_chart(title: str = "") -> QChart:
+    colors = _chart_palette()
     chart = QChart()
-    chart.setBackgroundBrush(QColor(Colors.SURFACE))
+    chart.setBackgroundBrush(QColor(colors["surface"]))
     chart.setBackgroundRoundness(0)
     chart.setMargins(QMargins(8, 8, 8, 8))
     chart.legend().hide()
     chart.setTitle(title)
-    chart.setTitleBrush(QColor(Colors.GOLD_LIGHT))
+    chart.setTitleBrush(QColor(colors["gold"]))
     return chart
 
 
 def _style_axis(axis, *, grid: bool = True) -> None:
-    axis.setLabelsColor(QColor(Colors.TEXT))
-    axis.setLinePen(QColor(Colors.BORDER))
+    colors = _chart_palette()
+    axis.setLabelsColor(QColor(colors["text"]))
+    axis.setLinePen(QColor(colors["border"]))
     if grid:
-        axis.setGridLineColor(QColor(Colors.BORDER))
+        axis.setGridLineColor(QColor(colors["border"]))
     else:
         axis.setGridLineVisible(False)
 
@@ -80,12 +109,12 @@ class _MetricTile(QWidget):
         self.value = QLabel("—")
         self.value.setFont(Fonts.statistic())
         self.value.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.value.setStyleSheet(f"color: {Colors.GOLD_LIGHT};")
+        self.value.setStyleSheet(f"color: {_chart_palette()['gold']};")
         layout.addWidget(self.value)
 
         label = QLabel(caption.upper())
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label.setStyleSheet(f"color: {Colors.TEXT_MUTED}; font-size: 10px;")
+        label.setStyleSheet(f"color: {_chart_palette()['muted']}; font-size: 10px;")
         layout.addWidget(label)
 
     def set_value(self, text: str) -> None:
@@ -124,7 +153,7 @@ class BrittleUptimePage(FoundryPage):
 
         title = QLabel("DEBUFF UPTIME DOSSIER")
         title.setFont(Fonts.heading())
-        title.setStyleSheet(f"color: {Colors.GOLD_LIGHT};")
+        title.setStyleSheet(f"color: {_chart_palette()['gold']};")
         hero_grid.addWidget(title, 0, 0, 1, 4)
 
         subtitle = QLabel(
@@ -132,7 +161,7 @@ class BrittleUptimePage(FoundryPage):
             "Provider attribution answers who actually contributed to keeping it there."
         )
         subtitle.setWordWrap(True)
-        subtitle.setStyleSheet(f"color: {Colors.TEXT_MUTED};")
+        subtitle.setStyleSheet(f"color: {_chart_palette()['muted']};")
         hero_grid.addWidget(subtitle, 1, 0, 1, 4)
 
         self.report_input = QLineEdit()
@@ -201,7 +230,7 @@ class BrittleUptimePage(FoundryPage):
         )
         self.brief_body.setWordWrap(True)
         self.brief_body.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.brief_body.setStyleSheet(f"color: {Colors.TEXT};")
+        self.brief_body.setStyleSheet(f"color: {_chart_palette()['text']};")
         brief_card.addWidget(self.brief_body)
 
         proof_note = QLabel(
@@ -211,7 +240,7 @@ class BrittleUptimePage(FoundryPage):
         proof_note.setWordWrap(True)
         proof_note.setProperty("muted", True)
         proof_note.setStyleSheet(
-            f"color: {Colors.TEXT_MUTED}; border-top: 1px solid {Colors.BORDER}; padding-top: 8px;"
+            f"color: {_chart_palette()['muted']}; border-top: 1px solid {_chart_palette()['border']}; padding-top: 8px;"
         )
         brief_card.addWidget(proof_note)
         visual_row.addWidget(brief_card, 2)
@@ -387,7 +416,7 @@ class BrittleUptimePage(FoundryPage):
             return
 
         values = QBarSet("Minor Brittle")
-        values.setColor(QColor(Colors.GOLD))
+        values.setColor(QColor(_chart_palette()["gold"]))
         categories: list[str] = []
         for fight in report.fights:
             values.append(float(fight.brittle_percent))
@@ -422,7 +451,7 @@ class BrittleUptimePage(FoundryPage):
 
         series = QHorizontalBarSeries()
         values = QBarSet("Source uptime")
-        values.setColor(QColor(Colors.ACCENT_LIGHT))
+        values.setColor(QColor(_chart_palette()["accent"]))
         categories: list[str] = []
         for provider in reversed(fight.providers[:8]):
             values.append(float(provider.uptime_percent))
