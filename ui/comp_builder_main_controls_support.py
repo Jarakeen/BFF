@@ -122,10 +122,10 @@ def _install_main_controls(page) -> None:
     load_team = QPushButton("Load Players")
     load_team.setProperty("compLoadTeam", True)
     load_team.setToolTip(
-        "Load or paste 4 or 12 player names. Use Recruit for open spots. "
+        "Load a saved Team from FoundryDock, or choose Ad-hoc / Paste Names. "
         "This fills player/chair context without choosing builds."
     )
-    load_team.clicked.connect(lambda *_: intake_support.open_team_list_dialog(page))
+    load_team.clicked.connect(lambda *_: intake_support.open_saved_team_dialog(page))
     page.comp_load_team_button = load_team
 
     # With plan identity and style moved to the header, the remaining controls can
