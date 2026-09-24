@@ -358,16 +358,22 @@ def install() -> None:
         _move_new_build_to_header(self)
         _decorate_library_table(self)
         refresh_theme_icons(self)
+        # One visible-pass reassertion is enough to catch widgets added by later
+        # compatibility layers. Rewalking the full descendant tree on every page
+        # visit is unnecessarily expensive.
+        self.setProperty("phase14IconShowRefreshPending", True)
 
     def show_event_with_phase14_icons(self, event):
         original_show_event(self, event)
+        if not bool(self.property("phase14IconShowRefreshPending")):
+            return
         # Phase 14 is assembled through several compatibility layers. Reassert
-        # semantic icons after the final visible widget tree exists so icons
-        # added to assets/icons locally are not lost merely because an earlier
-        # decorator constructed the label/button before the final dossier.
+        # semantic icons once after the final visible widget tree exists, then let
+        # explicit theme refreshes own future icon updates.
         _move_new_build_to_header(self)
         _decorate_library_table(self)
         refresh_theme_icons(self)
+        self.setProperty("phase14IconShowRefreshPending", False)
 
     ThemedBuildsPage._build_ui = build_ui_with_phase14_icon_polish
     ThemedBuildsPage.showEvent = show_event_with_phase14_icons
