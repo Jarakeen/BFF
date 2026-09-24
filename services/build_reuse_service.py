@@ -266,6 +266,8 @@ class BuildReuseService:
         destination_class: str,
         destination_race: str = "",
         destination_role: str = "",
+        destination_player_id: str = "",
+        destination_character_id: str = "",
         new_build_name: str = "",
         include_variants: bool = True,
         include_notes: bool = True,
@@ -283,6 +285,8 @@ class BuildReuseService:
                 "Race": str(destination_race or "").strip(),
                 "Role": str(destination_role or source.Role or "").strip(),
                 "BuildName": str(new_build_name or source.BuildName or "Copied Build").strip(),
+                "PlayerId": str(destination_player_id or "").strip(),
+                "CharacterId": str(destination_character_id or "").strip(),
                 "ReadyForRaid": False,
             }
         )
@@ -298,6 +302,8 @@ class BuildReuseService:
         destination_class: str,
         destination_race: str = "",
         destination_role: str = "",
+        destination_player_id: str = "",
+        destination_character_id: str = "",
         new_build_name: str = "",
         include_variants: bool = True,
     ) -> BuildReuseResult:
@@ -335,6 +341,8 @@ class BuildReuseService:
                 "Race": str(destination_race or "").strip(),
                 "Role": str(destination_role or template.role or "").strip(),
                 "BuildName": str(new_build_name or template.name).strip(),
+                "PlayerId": str(destination_player_id or "").strip(),
+                "CharacterId": str(destination_character_id or "").strip(),
                 "ReadyForRaid": False,
             }
         )
