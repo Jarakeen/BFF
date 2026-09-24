@@ -12,7 +12,7 @@ local readiness authority.
 from dataclasses import dataclass
 from pathlib import Path
 
-from engine.config import DEFAULT_DATABASE, get_data_dir
+from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path
 from models.raid_plan import RaidPlan
 from services.finch_api_client import FinchApiClient, FinchSharedSnapshot
 from services.raid_plan_repository import RaidPlanRepository
@@ -254,7 +254,7 @@ def publish_readiness_to_finch(
     raid_plans_path: Path | None = None,
     data_dir: Path | None = None,
     database_path: Path | None = None,
-    settings_path: Path = Path("settings.json"),
+    settings_path: Path = get_settings_path(),
     state_path: Path | None = None,
     timeout: float = 10.0,
 ) -> FinchReadinessPublishResult:
@@ -276,7 +276,7 @@ def list_shared_readiness_from_finch(
     *,
     data_dir: Path | None = None,
     database_path: Path | None = None,
-    settings_path: Path = Path("settings.json"),
+    settings_path: Path = get_settings_path(),
     state_path: Path | None = None,
     timeout: float = 10.0,
 ) -> tuple[FinchSharedReadinessPreview, ...]:
