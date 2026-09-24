@@ -755,15 +755,22 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             return None
 
         self._loaded_plan_snapshot = persisted
+        self._navigation_baseline_plan = persisted
         self._discard_recovery_draft(persisted.plan_id)
         mark_saved(self)
 
-        # Personnel can be refreshed safely only after the durable snapshot exists.
-        # Reapply that snapshot afterward so autocomplete/source-backed defaults
-        # cannot alter the just-saved chair values.
-        self.refresh_personnel()
-        self.apply_plan(persisted)
-        self.refresh_saved_plan_picker(select_plan_id=persisted.plan_id)
+        # A successful Save is a persistence checkpoint, not a page reload.
+        # Rebuilding Personnel/identity widgets here can invalidate live assignment
+        # controls and previously caused post-save crashes. Leave the current UI
+        # in place and make the verified persisted snapshot the new clean baseline.
+        try:
+            self.refresh_saved_plan_picker(select_plan_id=persisted.plan_id)
+        except Exception as exc:
+            # Picker refresh is cosmetic after the durable plan has already been
+            # verified. Never turn a successful save into an application crash.
+            self.status.warning(
+                f"Raid Plan saved, but the saved-plan picker could not refresh: {exc}"
+            )
 
         characters = sum(1 for member in persisted.members if member.character_name)
         roles = sum(1 for member in persisted.members if member.role)
