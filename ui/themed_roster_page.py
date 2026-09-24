@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir, get_settings_path
+from engine.config import get_data_dir, get_settings_path, get_user_database_path
 from models.team_schedule import TeamSchedule
 from services.accessibility_preferences import AccessibilityPreferences
 from services.build_service import BuildService
@@ -563,7 +563,7 @@ class RosterPage(BaseRosterPage):
         self.status.info(f"Publishing {team} to Finch…")
         self._finch_team_publish_future = _FINCH_TEAM_PUBLISH_EXECUTOR.submit(
             publish_team_to_finch,
-            database_path=Path(get_data_dir()) / "eso.db",
+            database_path=get_user_database_path(),
             team_name=team,
             settings_path=get_settings_path(),
         )
@@ -595,8 +595,8 @@ class RosterPage(BaseRosterPage):
         self.status.info("Fetching shared Teams from Finch…")
         self._finch_team_read_future = _FINCH_TEAM_READ_EXECUTOR.submit(
             list_shared_teams_from_finch,
-            database_path=Path(get_data_dir()) / "eso.db",
-            raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+            database_path=get_user_database_path(),
+            raid_plans_path=get_user_database_path(),
             settings_path=get_settings_path(),
         )
         self._finch_team_read_timer.start()
@@ -673,8 +673,8 @@ class RosterPage(BaseRosterPage):
             self._finch_team_read_future = _FINCH_TEAM_READ_EXECUTOR.submit(
                 import_shared_team_from_finch,
                 snapshot_key=preview.snapshot_key,
-                database_path=Path(get_data_dir()) / "eso.db",
-                raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+                database_path=get_user_database_path(),
+                raid_plans_path=get_user_database_path(),
                 settings_path=get_settings_path(),
             )
             return
