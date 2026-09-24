@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir, get_user_database_path
+from engine.config import get_data_dir, get_user_database_path, get_settings_path
 from models.roster_model import RosterMember
 from services.eso_database import EsoDatabase
 from services.finch_roster_sync_service import sync_finch_gear_needs
@@ -316,7 +316,7 @@ class RosterPage(FoundryPage):
         self._finch_sync_future = _FINCH_SYNC_EXECUTOR.submit(
             sync_finch_gear_needs,
             database_path=database_path,
-            settings_path=Path("settings.json"),
+            settings_path=get_settings_path(),
         )
         self._finch_sync_timer.start()
 
