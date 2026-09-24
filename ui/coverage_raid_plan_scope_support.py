@@ -10,7 +10,7 @@ falls back to all saved builds when a plan chair cannot be resolved.
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QTableWidgetItem
 
-from engine.config import DEFAULT_DATABASE, get_data_dir
+from engine.config import DEFAULT_DATABASE, get_data_dir, get_user_database_path
 from models.raid_plan import RaidPlan
 from services.raid_group_effect_catalog import (
     GROUP_COVERAGE_BY_NAME,
@@ -77,7 +77,7 @@ def _refresh_scope_plan_choices(page) -> None:
     )
 
     try:
-        plans = RaidPlanRepository(get_data_dir() / "raid_plans.json").list_plans()
+        plans = RaidPlanRepository(get_user_database_path()).list_plans()
     except Exception:
         plans = ()
 
@@ -108,7 +108,7 @@ def _load_selected_plan_scope(page):
     if not plan_id:
         return None
 
-    plan = RaidPlanRepository(get_data_dir() / "raid_plans.json").get(plan_id)
+    plan = RaidPlanRepository(get_user_database_path()).get(plan_id)
     if plan is None:
         return None
 
