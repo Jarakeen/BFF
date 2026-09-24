@@ -18,6 +18,7 @@ from engine.config import get_user_database_path
 from models.comp_plan_state import CompChairState, CompPlanState
 from services.canonical_build_bridge import CanonicalBuildBridge
 from services.eso_database import EsoDatabase
+from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.roster_service import RosterService
 
 
@@ -52,6 +53,37 @@ class CompBuildPersistenceService:
         )
         self.database = EsoDatabase(self.user_database_path)
         self.roster = RosterService(self.database)
+
+    def _repair_personnel_identity(self, chair: CompChairState) -> CompChairState:
+        """Recover an exact merged/current Personnel identity by player name.
+
+        Comp state can legitimately lag Personnel after a duplicate-player merge:
+        the chair may still display a learned alias while its stable ids were not
+        carried into the in-memory Comp session. Exact current-name/alias matching
+        is safe evidence; fuzzy matching remains forbidden.
+        """
+        if chair.is_open_player or not chair.player_name:
+            return chair
+        if chair.roster_member_id is not None and (
+            chair.player_id or chair.character_id
+        ):
+            return chair
+
+        identity = RosterPlayerIdentityService(self.database, None)
+        matches = identity.matching_members(chair.player_name)
+        if len(matches) != 1:
+            return chair
+
+        member = matches[0]
+        return chair.with_changes(
+            player_name=str(member.PlayerName or chair.player_name).strip(),
+            roster_member_id=int(member.Id) if member.Id is not None else chair.roster_member_id,
+            player_id=str(member.CanonicalPlayerId or "").strip() or chair.player_id,
+            character_id=str(member.CanonicalCharacterId or "").strip() or chair.character_id,
+            character_name=str(member.CharacterName or chair.character_name or "").strip() or chair.character_name,
+            eso_class=str(member.EsoClass or chair.eso_class or "").strip() or chair.eso_class,
+            role=str(member.PrimaryRole or chair.role or "").strip() or chair.role,
+        )
 
     @staticmethod
     def _is_real_player(chair: CompChairState) -> bool:
@@ -300,6 +332,11 @@ class CompBuildPersistenceService:
         staged_roster_bindings: list[tuple[int, str, str]] = []
 
         for chair in state.chairs:
+            repaired_chair = self._repair_personnel_identity(chair)
+            if repaired_chair != chair:
+                chair = repaired_chair
+                updated_state = updated_state.with_chair(chair)
+
             if not self._is_real_player(chair):
                 skipped.append(chair.seat_id)
                 reason = (
