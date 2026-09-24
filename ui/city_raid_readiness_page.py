@@ -270,6 +270,22 @@ class CityRaidReadinessPage(FoundryPage):
         self.status = FoundryStatusBar()
         self.set_status(self.status)
 
+    def showEvent(self, event) -> None:
+        """Refresh saved-plan evidence whenever Readiness becomes visible.
+
+        The page is long-lived inside the application stack. Comp Maker, Roles,
+        Assignments, and Builds can all change persisted plan/build evidence while
+        Readiness is hidden, so reopening the page must not keep a stale !GAP matrix
+        until the user manually presses Refresh Evidence.
+        """
+        super().showEvent(event)
+        try:
+            self.refresh_plans()
+        except Exception as exc:
+            self.status.warning(
+                f"Readiness could not refresh on page entry: {type(exc).__name__}: {exc}"
+            )
+
     def _publish_readiness_to_finch(self) -> None:
         plan = self._plan
         if plan is None:
