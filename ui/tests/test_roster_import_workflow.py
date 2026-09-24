@@ -8,6 +8,7 @@ from models.build_model import BuildRoster, PlayerBuild
 from models.roster_model import RosterMember
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
+from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.roster_service import RosterService
 from ui.roster_import_workflow import (
     ImportedBuildCandidate,
@@ -248,3 +249,56 @@ def test_apply_import_preserves_unrelated_roster_and_builds_and_assigns_team(tmp
     assert assignments[0]["team_name"] == "Swine and Punishment"
     assert assignments[0]["raid_role"] == "Healer"
     assert assignments[0]["slot_name"] == "Pillager / Heroism"
+
+
+def test_apply_import_reuses_explicit_player_alias_instead_of_creating_duplicate(tmp_path: Path) -> None:
+    roster_service = RosterService(EsoDatabase(tmp_path / "eso.db"))
+    survivor_id = roster_service.create_member(
+        RosterMember(
+            PlayerName="RealRikGamertag",
+            CharacterName="Rik Tank",
+            EsoClass="Sorcerer",
+            PrimaryRole="Tank",
+            Team="Existing Team",
+        )
+    )
+    build_service = BuildService(tmp_path / "builds.json")
+    identity = RosterPlayerIdentityService(roster_service.db, build_service)
+    identity.add_alias(survivor_id, "Rik", source="manual_merge")
+
+    imported = ImportedRosterMember(
+        gamertag="Rik",
+        character_name="Rik Tank",
+        eso_class="Sorcerer",
+        primary_role="Tank",
+        assignment="Tank 1",
+        builds=[
+            ImportedBuildCandidate(
+                gamertag="Rik",
+                build_name="PM Rik Tank",
+                eso_class="Sorcerer",
+                role="Tank",
+                assignment="Tank 1",
+                payload={
+                    "FrontBarSkills": ["Goading Throw", "", "", "", "", ""],
+                    "BackBarSkills": ["Elemental Blockade", "", "", "", "", ""],
+                },
+            )
+        ],
+    )
+    plan = RosterImportPlan(tmp_path / "pm.json", "Performance Mode", [imported])
+
+    result = apply_roster_import(plan, roster_service, build_service, import_builds=True)
+
+    assert result.created_roster_members == 0
+    assert result.updated_roster_members == 1
+    members = roster_service.list_members()
+    assert len(members) == 1
+    assert members[0].PlayerName == "RealRikGamertag"
+    assert "Performance Mode" in members[0].Team
+
+    saved = build_service.load().Members
+    assert len(saved) == 1
+    assert saved[0].Gamertag == "RealRikGamertag"
+    assert saved[0].Name == "Rik Tank"
+    assert saved[0].BuildName == "PM Rik Tank"
