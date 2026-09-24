@@ -86,7 +86,7 @@ class CompBuilderPage(FoundryPage):
         data_dir = get_data_dir()
         self.catalog = TeamCompositionCatalog(data_dir / "team_compositions.json")
         self.snapshot = self.catalog.load()
-        self.raid_plan_repository = RaidPlanRepository(data_dir / "raid_plans.json")
+        self.raid_plan_repository = RaidPlanRepository(get_user_database_path())
         self.current_template: TeamCompositionTemplate | None = None
         self.current_slots: tuple[CompositionSlot, ...] = ()
         self._build_ui()
