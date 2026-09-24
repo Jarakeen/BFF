@@ -48,6 +48,8 @@ jobs:
           python -m pytest `
             services/tests/test_performance_mode_u50_shared_templates.py `
             services/tests/test_build_reuse_service.py `
+            ui/tests/test_roster_import_workflow.py `
+            ui/tests/test_roster_player_alias_support.py `
             services/tests/test_finch_shared_import_service.py `
             services/tests/test_raid_coverage_catalog_expansion.py `
             services/tests/test_raid_plan_repository_revisions.py `
@@ -153,3 +155,5 @@ jobs:
               --notes "Patch release carrying the latest Phase 14 planning/build fixes plus the shared Performance Mode U50 comp catalog. Builds → Templates now includes reusable tank, healer, and DD packages for Jarakeen, Rylo, and other compatible Personnel characters. The update preserves foundrydock.db, saved builds, Personnel, Teams, Raid Plans, progress, settings, and session data."
             if ($LASTEXITCODE -ne 0) { throw "Could not create patch release from verified tag." }
           }
+
+# rebuild-after-alias-safe-roster-import-and-player-merge
