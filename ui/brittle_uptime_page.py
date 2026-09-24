@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QMargins
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QPainter
 from PySide6.QtCharts import (
     QBarCategoryAxis,
     QBarSeries,
@@ -183,7 +183,7 @@ class BrittleUptimePage(FoundryPage):
 
         pull_card = FoundryCard("Uptime by Pull", "chart")
         self.pull_chart_view = QChartView(_new_chart("Load a report to compare pulls"))
-        self.pull_chart_view.setRenderHint(self.pull_chart_view.renderHints().Antialiasing, True)
+        self.pull_chart_view.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         self.pull_chart_view.setMinimumHeight(300)
         self.pull_chart_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         pull_card.addWidget(self.pull_chart_view)
