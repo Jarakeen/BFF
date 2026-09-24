@@ -108,7 +108,7 @@ class _MergePlayersDialog(QDialog):
             if member.Team:
                 label += f"  ·  {member.Team}"
             self.donor_combo.addItem(label, int(member.Id))
-        root.addRow("MERGE INTO THIS PLAYER", self.donor_combo)
+        root.addRow("MERGE THIS DUPLICATE", self.donor_combo)
 
         note = QLabel(
             "The merged record's current name and known aliases are kept as alias history. "
@@ -122,7 +122,7 @@ class _MergePlayersDialog(QDialog):
             QDialogButtonBox.StandardButton.Cancel
             | QDialogButtonBox.StandardButton.Ok
         )
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Merge Players")
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Merge Duplicate")
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         root.addRow(buttons)
@@ -210,7 +210,7 @@ def _build_ui_with_alias_controls(self) -> None:
     if isinstance(record_layout, QFormLayout):
         record_layout.addRow("Known Aliases", alias_host)
 
-    self.merge_players_button = QPushButton("Merge Players…")
+    self.merge_players_button = QPushButton("Merge Duplicate Player…")
     self.merge_players_button.setToolTip(
         "Merge two Personnel records for the same human and keep old names as aliases."
     )
