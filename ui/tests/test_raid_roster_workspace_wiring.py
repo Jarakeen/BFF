@@ -276,3 +276,13 @@ def test_personnel_exposes_social_fields_and_discord_screenshot_intake() -> None
     assert "create_member" not in intake
     assert "update_member" not in intake
     assert "Nothing is saved automatically." in intake
+
+
+def test_city_players_surface_exposes_duplicate_player_merge_in_embedded_footer() -> None:
+    source = Path("ui/city_raid_roster_workspace_page.py").read_text(encoding="utf-8")
+
+    assert 'QPushButton("Merge Duplicate Player…")' in source
+    assert "self.merge_duplicate_player_button.clicked.connect(self._merge_duplicate_player)" in source
+    assert "def _merge_duplicate_player(self) -> None:" in source
+    assert '"city_roster_manual_merge"' in source
+    assert "New | Save | Merge Duplicate Player… | Cancel" in source
