@@ -140,13 +140,13 @@ class BrittleUptimePage(FoundryPage):
     def _build_ui(self) -> None:
         self.header = FoundryHeader(
             title="Brittle Uptime",
-            subtitle="Pull-by-pull Major Brittle uptime from Anonymous 72, with raid-wide context.",
+            subtitle="Pull-by-pull Major Brittle uptime for a selected ESO Logs actor, with raid-wide context.",
             department="RAID • REVIEW",
             icon="archive",
         )
         self.set_header(self.header)
 
-        hero = FoundryCard("Anonymous 72 · Major Brittle", "compass")
+        hero = FoundryCard("Selected Actor · Major Brittle", "compass")
         hero_grid = QGridLayout()
         hero_grid.setHorizontalSpacing(12)
         hero_grid.setVerticalSpacing(7)
@@ -157,7 +157,7 @@ class BrittleUptimePage(FoundryPage):
         hero_grid.addWidget(title, 0, 0, 1, 4)
 
         subtitle = QLabel(
-            "Primary measurement: Major Brittle applied by Anonymous 72. "
+            "Primary measurement: Major Brittle applied by the selected ESO Logs actor. "
             "Raid-wide uptime is shown only as encounter context."
         )
         subtitle.setWordWrap(True)
@@ -174,6 +174,12 @@ class BrittleUptimePage(FoundryPage):
         self.fights_input.returnPressed.connect(self.load_report)
         hero_grid.addWidget(self.fights_input, 2, 2)
 
+        self.actor_input = QLineEdit("72")
+        self.actor_input.setPlaceholderText("Actor ID, e.g. 72")
+        self.actor_input.setToolTip("ESO Logs source actor ID for the Major Brittle provider in this report.")
+        self.actor_input.returnPressed.connect(self.load_report)
+        hero_grid.addWidget(self.actor_input, 3, 0)
+
         controls = QHBoxLayout()
         self.kills_only = QCheckBox("Kills only")
         self.kills_only.setChecked(True)
@@ -184,6 +190,10 @@ class BrittleUptimePage(FoundryPage):
         self.load_button.clicked.connect(self.load_report)
         controls.addWidget(self.load_button)
         hero_grid.addLayout(controls, 2, 3)
+
+        actor_note = QLabel("Actor ID can change from report to report. Default: 72.")
+        actor_note.setProperty("muted", True)
+        hero_grid.addWidget(actor_note, 3, 1, 1, 3)
 
         hero.addLayout(hero_grid)
         self.workspace_layout.addWidget(hero)
@@ -254,7 +264,7 @@ class BrittleUptimePage(FoundryPage):
         comparison = FoundryCard("Pull Ledger", "archive")
         self.fight_table = QTableWidget(0, 8)
         self.fight_table.setHorizontalHeaderLabels(
-            ["FIGHT", "ENCOUNTER", "RESULT", "DURATION", "ANON 72 TIME", "ANON 72 UPTIME", "RAID UPTIME", "SOURCE"]
+            ["FIGHT", "ENCOUNTER", "RESULT", "DURATION", "ACTOR TIME", "ACTOR UPTIME", "RAID UPTIME", "SOURCE"]
         )
         self.fight_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.fight_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -268,7 +278,7 @@ class BrittleUptimePage(FoundryPage):
         detail_row = QHBoxLayout()
         detail_row.setSpacing(10)
 
-        provider_card = FoundryCard("Selected Pull · Anonymous 72", "chart")
+        provider_card = FoundryCard("Selected Pull · Actor", "chart")
         self.provider_heading = QLabel("Select a pull")
         self.provider_heading.setFont(Fonts.section_title())
         self.provider_heading.setWordWrap(True)
@@ -280,7 +290,7 @@ class BrittleUptimePage(FoundryPage):
         provider_card.addWidget(self.provider_chart_view)
         detail_row.addWidget(provider_card, 3)
 
-        provider_table_card = FoundryCard("Anonymous 72 Ledger", "clipboard")
+        provider_table_card = FoundryCard("Actor Ledger", "clipboard")
         self.provider_table = QTableWidget(0, 5)
         self.provider_table.setHorizontalHeaderLabels(
             ["PLAYER", "ROLE", "MAJOR BRITTLE TIME", "SOURCE UPTIME", "ACTOR ID"]
@@ -292,7 +302,7 @@ class BrittleUptimePage(FoundryPage):
         provider_table_card.addWidget(self.provider_table)
 
         provider_note = QLabel(
-            "Anonymous 72 source uptime is the monitored number. "
+            "Selected actor source uptime is the monitored number. "
             "Raid-wide Major Brittle is retained only as context for the selected pull."
         )
         provider_note.setWordWrap(True)
@@ -324,6 +334,11 @@ class BrittleUptimePage(FoundryPage):
         if not report_code:
             self.status_bar.warning("Enter an ESO Logs report URL or report code.")
             return
+        actor_text = self.actor_input.text().strip()
+        if not actor_text.isdigit() or int(actor_text) <= 0:
+            self.status_bar.warning("Enter a valid positive ESO Logs actor ID.")
+            return
+        actor_id = int(actor_text)
 
         self.load_button.setEnabled(False)
         self.status_bar.info("Loading Major Brittle evidence from ESO Logs…")
@@ -333,6 +348,7 @@ class BrittleUptimePage(FoundryPage):
                 report_code,
                 fight_ids=self._fight_ids(),
                 kills_only=self.kills_only.isChecked(),
+                provider_actor_id=actor_id,
             )
             self._render_report()
             self.status_bar.success(
@@ -413,7 +429,7 @@ class BrittleUptimePage(FoundryPage):
 
     def _render_pull_chart(self) -> None:
         report = self._report
-        chart = _new_chart("Major Brittle · Anonymous 72 Uptime")
+        chart = _new_chart("Major Brittle · Selected Actor Uptime")
         if report is None or not report.fights:
             chart.setTitle("No matching fights")
             self.pull_chart_view.setChart(chart)
@@ -504,7 +520,7 @@ class BrittleUptimePage(FoundryPage):
 
         self.brief_heading.setText(f"{len(report.fights)} pull evidence set")
         self.brief_body.setText(
-            f"Anonymous 72 Major Brittle averaged {report.average_percent:.1f}% across the selected fights.\n\n"
+            f"{top_provider} Major Brittle averaged {report.average_percent:.1f}% across the selected fights.\n\n"
             f"Strongest observed pull: Fight {best.fight_id} at {best.brittle_percent:.1f}%.\n"
             f"Lowest observed pull: Fight {low.fight_id} at {low.brittle_percent:.1f}%.\n"
             f"Observed spread: {spread:.1f} percentage points.\n\n"
@@ -521,7 +537,7 @@ class BrittleUptimePage(FoundryPage):
         lines = [
             f"Major Brittle uptime · ESO Logs {report.report_code}",
             f"Selected fights: {', '.join(str(row.fight_id) for row in report.fights)}",
-            f"Average Anonymous 72 uptime: {report.average_percent:.1f}%",
+            f"Average selected-actor uptime: {report.average_percent:.1f}%",
             f"Best observed: {report.best_percent:.1f}%",
             f"Lowest observed: {report.lowest_percent:.1f}%",
             "",
@@ -537,7 +553,7 @@ class BrittleUptimePage(FoundryPage):
         lines.extend(
             [
                 "",
-                "Note: headline uptime is source-attributed Major Brittle from Anonymous 72.",
+                "Note: headline uptime is source-attributed Major Brittle from the selected actor.",
                 "Raid-wide Major Brittle is shown only as pull context.",
                 "Duplicate named Major Brittle aura IDs are de-duplicated rather than added together.",
             ]
