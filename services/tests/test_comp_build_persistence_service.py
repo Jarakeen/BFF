@@ -358,3 +358,50 @@ def test_persist_reports_exact_skip_reasons_for_open_and_unplanned_chairs(tmp_pa
         ("dd-8", "open/recruit chair"),
         ("dd-7", "no saved or planned build package"),
     )
+
+
+def test_persist_repairs_exact_personnel_alias_before_skipping_comp_build(tmp_path: Path) -> None:
+    database_path = tmp_path / "foundrydock.db"
+    database = EsoDatabase(database_path)
+    roster = RosterService(database)
+    survivor_id = roster.create_member(
+        RosterMember(
+            PlayerName="Pippin Feux",
+            CharacterName="Pippin NB DD",
+            EsoClass="Nightblade",
+            PrimaryRole="DD",
+            Team="Performance Mode",
+        )
+    )
+    survivor = roster.get_member(survivor_id)
+    assert survivor is not None
+
+    identity = RosterPlayerIdentityService(database, None)
+    identity.add_alias(survivor_id, "Pippin", source="manual_merge")
+
+    service = CompBuildPersistenceService(tmp_path, database_path=database_path)
+    state = CompPlanState(
+        raid_plan_id="pm",
+        raid_plan_name="Core Team",
+        trial_id="sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="dd-5",
+                role="DD",
+                player_name="Pippin",
+                character_name="Pippin NB DD",
+                eso_class="Nightblade",
+                planned_gear_sets=("Perfected Slivers of the Null Arca", "Aegis Caller"),
+            ),
+        ),
+    )
+
+    result = service.persist(state)
+
+    assert result.saved_seats == ("dd-5",)
+    assert result.skipped_seats == ()
+    repaired = result.state.chair("dd-5")
+    assert repaired is not None
+    assert repaired.player_name == "Pippin Feux"
+    assert repaired.roster_member_id == survivor_id
+    assert repaired.selected_build_id
