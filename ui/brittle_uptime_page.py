@@ -152,7 +152,7 @@ class BrittleUptimePage(FoundryPage):
         hero_grid.setVerticalSpacing(7)
 
         title = QLabel("DEBUFF UPTIME DOSSIER")
-        title.setFont(Fonts.heading())
+        title.setFont(Fonts.section_title())
         title.setStyleSheet(f"color: {_chart_palette()['gold']};")
         hero_grid.addWidget(title, 0, 0, 1, 4)
 
