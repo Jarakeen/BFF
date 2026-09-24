@@ -1,0 +1,743 @@
+{
+  "schema_version": 1,
+  "templates": [
+    {
+      "template_id": "7175b489-98c4-5b28-9de7-ecc8c34b53b2",
+      "name": "PM U50 — Sorcerer Tank — Rik",
+      "role": "Tank",
+      "source_class": "Sorcerer",
+      "base_payload": {
+        "BuildName": "PM U50 — Sorcerer Tank — Rik",
+        "Role": "Tank",
+        "EsoClass": "Sorcerer",
+        "Werewolf": false,
+        "PlannedGearSets": [
+          "Roksa the Warped",
+          "Xoryn's Masterpiece",
+          "Pearlescent Ward"
+        ],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarWeapon": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": "Ice Staff",
+          "EnchantQuality": ""
+        },
+        "Notes": "Class Mastery: Calculated Defense + Sphere of Influence. Front bar Sword & Board; back bar Frost Staff. One tank in the raid must own the Infused Crusher Ice Staff assignment.",
+        "ReadyForRaid": false
+      },
+      "class_overlays": {
+        "Sorcerer": {
+          "FrontBarSkills": [
+            "Goading Throw",
+            "Bound Aegis",
+            "Boundless Storm",
+            "Resolving Vigor",
+            "Pierce Armor / Flex",
+            "Atronach"
+          ],
+          "BackBarSkills": [
+            "Chilling Trample",
+            "Elemental Blockade",
+            "Elemental Susceptibility",
+            "Leashing Soul",
+            "Hardened Ward",
+            "Aggressive Horn / Flex Ultimate"
+          ],
+          "ClassSkillLines": [],
+          "ClassMasteryAbilityIds": [],
+          "ScribedSkills": [],
+          "ScribedSkillRecipes": [],
+          "ContextVariants": [],
+          "BossLoadouts": []
+        }
+      },
+      "notes": "Class Mastery: Calculated Defense + Sphere of Influence. Front bar Sword & Board; back bar Frost Staff. One tank in the raid must own the Infused Crusher Ice Staff assignment."
+    },
+    {
+      "template_id": "15773aaf-2357-5011-87f6-d8ee8a9b27ef",
+      "name": "PM U50 — Necromancer Tank — Spithis",
+      "role": "Tank",
+      "source_class": "Necromancer",
+      "base_payload": {
+        "BuildName": "PM U50 — Necromancer Tank — Spithis",
+        "Role": "Tank",
+        "EsoClass": "Necromancer",
+        "Werewolf": false,
+        "PlannedGearSets": [
+          "Saxhleel Champion",
+          "Nazaray",
+          "Lucent Echoes"
+        ],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarWeapon": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": "Ice Staff",
+          "EnchantQuality": ""
+        },
+        "Notes": "Class Mastery: Veil's Forfeit + Malevolent Promise. Front bar Sword & Board; back bar Frost Staff. Glacial Colossus is the deliberate Major Vulnerability source after Roksa replaced Archdruid on Rik.",
+        "ReadyForRaid": false
+      },
+      "class_overlays": {
+        "Necromancer": {
+          "FrontBarSkills": [
+            "Pierce Armor",
+            "Ruinous Scythe",
+            "Spirit Guardian",
+            "Necrotic Potency",
+            "Agony Totem",
+            "Ravenous Goliath / Flex Defensive Ultimate"
+          ],
+          "BackBarSkills": [
+            "Destructive Clench",
+            "Elemental Blockade",
+            "Beckoning Armor",
+            "Resolving Vigor",
+            "Unnerving Boneyard",
+            "Glacial Colossus / Aggressive Horn"
+          ],
+          "ClassSkillLines": [],
+          "ClassMasteryAbilityIds": [],
+          "ScribedSkills": [],
+          "ScribedSkillRecipes": [],
+          "ContextVariants": [],
+          "BossLoadouts": []
+        }
+      },
+      "notes": "Class Mastery: Veil's Forfeit + Malevolent Promise. Front bar Sword & Board; back bar Frost Staff. Glacial Colossus is the deliberate Major Vulnerability source after Roksa replaced Archdruid on Rik."
+    },
+    {
+      "template_id": "43062821-6e3c-58da-adae-d3e9d795d343",
+      "name": "PM U50 — Arcanist Healer — Mrs Poe",
+      "role": "Healer",
+      "source_class": "Arcanist",
+      "base_payload": {
+        "BuildName": "PM U50 — Arcanist Healer — Mrs Poe",
+        "Role": "Healer",
+        "EsoClass": "Arcanist",
+        "Werewolf": false,
+        "PlannedGearSets": [
+          "Symphony of Blades",
+          "Pillager's Profit",
+          "Powerful Assault"
+        ],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarWeapon": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": "Ice Staff",
+          "EnchantQuality": ""
+        },
+        "Notes": "Class Mastery: Ink-Scribe's Verve + Erudite's Rigor. Rune of the Colorless Pool covers Minor Brittle + Minor Vulnerability. Zenas' Empowering Disc is the preferred Minor Courage source when that flex slot is used.",
+        "ReadyForRaid": false
+      },
+      "class_overlays": {
+        "Arcanist": {
+          "FrontBarSkills": [
+            "Combat Prayer",
+            "Illustrious Healing",
+            "Chakram Shields",
+            "Radiating Regeneration",
+            "Curative Surge",
+            "Glyphic of the Tides"
+          ],
+          "BackBarSkills": [
+            "Elemental Blockade",
+            "Energy Orb",
+            "Echoing Vigor",
+            "Rune of the Colorless Pool",
+            "Zenas' Empowering Disc / Flex",
+            "Aggressive Horn"
+          ],
+          "ClassSkillLines": [],
+          "ClassMasteryAbilityIds": [],
+          "ScribedSkills": [],
+          "ScribedSkillRecipes": [],
+          "ContextVariants": [],
+          "BossLoadouts": []
+        }
+      },
+      "notes": "Class Mastery: Ink-Scribe's Verve + Erudite's Rigor. Rune of the Colorless Pool covers Minor Brittle + Minor Vulnerability. Zenas' Empowering Disc is the preferred Minor Courage source when that flex slot is used."
+    },
+    {
+      "template_id": "e66a4915-59c9-562d-9ce5-625c9233438f",
+      "name": "PM U50 — Warden Healer — Jarakeen",
+      "role": "Healer",
+      "source_class": "Warden",
+      "base_payload": {
+        "BuildName": "PM U50 — Warden Healer — Jarakeen",
+        "Role": "Healer",
+        "EsoClass": "Warden",
+        "Werewolf": false,
+        "PlannedGearSets": [
+          "Ozezan the Inferno",
+          "Serpent's Disdain",
+          "Master Architect"
+        ],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarWeapon": {
+          "Set": "",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": "Ice Staff",
+          "EnchantQuality": ""
+        },
+        "Notes": "Class Mastery: Tundra's Maw + Bountiful Harvest. Tundra's Maw supplies Major Brittle through Chilled; Bountiful Harvest supplies group Major Heroism. Expansive Frost Cloak supplies Major Resolve.",
+        "ReadyForRaid": false
+      },
+      "class_overlays": {
+        "Warden": {
+          "FrontBarSkills": [
+            "Combat Prayer",
+            "Radiating Regeneration",
+            "Budding Seeds",
+            "Illustrious Healing",
+            "Energy Orb",
+            "Wild Guardian / Bear"
+          ],
+          "BackBarSkills": [
+            "Elemental Blockade",
+            "Echoing Vigor",
+            "Flex / Winter's Revenge",
+            "Expansive Frost Cloak",
+            "Blood Altar",
+            "Aggressive Horn / Barrier / Flex Ultimate"
+          ],
+          "ClassSkillLines": [],
+          "ClassMasteryAbilityIds": [],
+          "ScribedSkills": [],
+          "ScribedSkillRecipes": [],
+          "ContextVariants": [],
+          "BossLoadouts": []
+        }
+      },
+      "notes": "Class Mastery: Tundra's Maw + Bountiful Harvest. Tundra's Maw supplies Major Brittle through Chilled; Bountiful Harvest supplies group Major Heroism. Expansive Frost Cloak supplies Major Resolve."
+    },
+    {
+      "template_id": "12e98865-533f-50f7-af2f-bf5cc98e3aae",
+      "name": "PM U50 — Necromancer DD",
+      "role": "DD",
+      "source_class": "Necromancer",
+      "base_payload": {
+        "BuildName": "PM U50 — Necromancer DD",
+        "Role": "DD",
+        "EsoClass": "Necromancer",
+        "Werewolf": false,
+        "PlannedGearSets": [
+          "Corpseburster",
+          "Perfected Slivers of the Null Arca"
+        ],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarWeapon": {
+          "Set": "Perfected Merciless Charge",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": "Two-Handed",
+          "EnchantQuality": ""
+        },
+        "Notes": "Class Mastery: Nothing Wasted + Cycle Unending. Banner recipe: Shock + Class Mastery + Heroism. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword on the back bar. Rylo additionally uses Signet; Tunz/Clus use a medium Slimecraw one-piece where assigned.",
+        "ReadyForRaid": false
+      },
+      "class_overlays": {
+        "Necromancer": {
+          "FrontBarSkills": [
+            "Blighted Blastbones",
+            "Avid Boneyard",
+            "Detonating Siphon",
+            "Venom Skull",
+            "Banner",
+            "Flawless Dawnbreaker"
+          ],
+          "BackBarSkills": [
+            "Stampede",
+            "Carve",
+            "Trap Beast",
+            "Skeletal Archer",
+            "Banner",
+            "Onslaught"
+          ],
+          "ClassSkillLines": [],
+          "ClassMasteryAbilityIds": [],
+          "ScribedSkills": [],
+          "ScribedSkillRecipes": [],
+          "ContextVariants": [],
+          "BossLoadouts": []
+        }
+      },
+      "notes": "Class Mastery: Nothing Wasted + Cycle Unending. Banner recipe: Shock + Class Mastery + Heroism. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword on the back bar. Rylo additionally uses Signet; Tunz/Clus use a medium Slimecraw one-piece where assigned."
+    },
+    {
+      "template_id": "a3c6c5e3-f96f-5b37-9697-4702579007c6",
+      "name": "PM U50 — Nightblade Werewolf DD — Aces",
+      "role": "DD",
+      "source_class": "Nightblade",
+      "base_payload": {
+        "BuildName": "PM U50 — Nightblade Werewolf DD — Aces",
+        "Role": "DD",
+        "EsoClass": "Nightblade",
+        "Werewolf": true,
+        "PlannedGearSets": [
+          "Savage Werewolf",
+          "Perfected Slivers of the Null Arca"
+        ],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarWeapon": {
+          "Set": "Perfected Merciless Charge",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": "Two-Handed",
+          "EnchantQuality": ""
+        },
+        "Notes": "Class Mastery: An Eye for Exploitation + Above and Beyond. Werewolf package owns Major Courage. Assassination skills on the bar keep Hemorrhage/Minor Savagery available. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword back bar.",
+        "ReadyForRaid": false
+      },
+      "class_overlays": {
+        "Nightblade": {
+          "FrontBarSkills": [
+            "Surprise Attack",
+            "Ambush",
+            "Killer's Blade",
+            "Reaper's Mark",
+            "Relentless Focus",
+            "Werewolf Berserker"
+          ],
+          "BackBarSkills": [
+            "Stampede",
+            "Carve",
+            "Dark Shade",
+            "Debilitate",
+            "Siphoning Attacks",
+            "Soul Harvest"
+          ],
+          "ClassSkillLines": [],
+          "ClassMasteryAbilityIds": [],
+          "ScribedSkills": [],
+          "ScribedSkillRecipes": [],
+          "ContextVariants": [],
+          "BossLoadouts": []
+        }
+      },
+      "notes": "Class Mastery: An Eye for Exploitation + Above and Beyond. Werewolf package owns Major Courage. Assassination skills on the bar keep Hemorrhage/Minor Savagery available. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword back bar."
+    },
+    {
+      "template_id": "64fb35a1-07da-5396-9561-9c7b9dc1fd60",
+      "name": "PM U50 — Nightblade DD — Pippin",
+      "role": "DD",
+      "source_class": "Nightblade",
+      "base_payload": {
+        "BuildName": "PM U50 — Nightblade DD — Pippin",
+        "Role": "DD",
+        "EsoClass": "Nightblade",
+        "Werewolf": false,
+        "PlannedGearSets": [
+          "Perfected Slivers of the Null Arca",
+          "Aegis Caller",
+          "Slimecraw"
+        ],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarWeapon": {
+          "Set": "Perfected Merciless Charge",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": "Two-Handed",
+          "EnchantQuality": ""
+        },
+        "Notes": "Class Mastery: An Eye for Exploitation + Above and Beyond. Slimecraw one-piece is Medium. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword back bar.",
+        "ReadyForRaid": false
+      },
+      "class_overlays": {
+        "Nightblade": {
+          "FrontBarSkills": [
+            "Surprise Attack",
+            "Relentless Focus",
+            "Killer's Blade",
+            "Debilitate",
+            "Shadowy Disguise",
+            "Incapacitating Strike"
+          ],
+          "BackBarSkills": [
+            "Stampede",
+            "Siphoning Attacks",
+            "Dark Shade",
+            "Trap Beast",
+            "Simmering Frenzy",
+            "Onslaught"
+          ],
+          "ClassSkillLines": [],
+          "ClassMasteryAbilityIds": [],
+          "ScribedSkills": [],
+          "ScribedSkillRecipes": [],
+          "ContextVariants": [],
+          "BossLoadouts": []
+        }
+      },
+      "notes": "Class Mastery: An Eye for Exploitation + Above and Beyond. Slimecraw one-piece is Medium. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword back bar."
+    },
+    {
+      "template_id": "9852fc77-9d9f-5de0-9f4d-dc4a36f23abb",
+      "name": "PM U50 — Arcanist DD — Jaded",
+      "role": "DD",
+      "source_class": "Arcanist",
+      "base_payload": {
+        "BuildName": "PM U50 — Arcanist DD — Jaded",
+        "Role": "DD",
+        "EsoClass": "Arcanist",
+        "Werewolf": false,
+        "PlannedGearSets": [
+          "Morag Tong",
+          "War Machine",
+          "Slimecraw"
+        ],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarWeapon": {
+          "Set": "Perfected Merciless Charge",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": "Two-Handed",
+          "EnchantQuality": ""
+        },
+        "Notes": "Class Mastery: Abyssal Emergence + Unbound Potential. Slimecraw one-piece is Medium. War Machine is one of the raid's two Major Slayer sides. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword back bar.",
+        "ReadyForRaid": false
+      },
+      "class_overlays": {
+        "Arcanist": {
+          "FrontBarSkills": [
+            "Cephaliarch's Flail",
+            "Pragmatic Fatecarver",
+            "Camouflaged Hunter",
+            "Quick Cloak",
+            "Barbed Trap",
+            "Flawless Dawnbreaker"
+          ],
+          "BackBarSkills": [
+            "Inspired Scholarship",
+            "Stampede",
+            "Carve",
+            "Fulminating Rune",
+            "Scalding Rune",
+            "The Languid Eye"
+          ],
+          "ClassSkillLines": [],
+          "ClassMasteryAbilityIds": [],
+          "ScribedSkills": [],
+          "ScribedSkillRecipes": [],
+          "ContextVariants": [],
+          "BossLoadouts": []
+        }
+      },
+      "notes": "Class Mastery: Abyssal Emergence + Unbound Potential. Slimecraw one-piece is Medium. War Machine is one of the raid's two Major Slayer sides. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword back bar."
+    },
+    {
+      "template_id": "0d4e027a-0788-5b26-818a-1bca3dfd5564",
+      "name": "PM U50 — Dragonknight Z'enKosh — Cobble",
+      "role": "DD",
+      "source_class": "Dragonknight",
+      "base_payload": {
+        "BuildName": "PM U50 — Dragonknight Z'enKosh — Cobble",
+        "Role": "DD",
+        "EsoClass": "Dragonknight",
+        "Werewolf": false,
+        "PlannedGearSets": [
+          "Z'en's Redress",
+          "Roar of Alkosh",
+          "Spaulder of Ruin"
+        ],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarWeapon": {
+          "Set": "Perfected Merciless Charge",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": "Two-Handed",
+          "EnchantQuality": ""
+        },
+        "Notes": "Class Mastery: Lead from the Front + Wildfire Embers. Magma Fist owns Heat Shock. Sundering Knife owns Off Balance. IMPORTANT: Minor Brutality is not guaranteed by the current bar unless Cobble actively uses a Draconic Power ability to trigger the DK group passive. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword back bar.",
+        "ReadyForRaid": false
+      },
+      "class_overlays": {
+        "Dragonknight": {
+          "FrontBarSkills": [
+            "Molten Whip",
+            "Venomous Claw",
+            "Flames of Oblivion",
+            "Magma Fist",
+            "Sundering Knife",
+            "Flawless Dawnbreaker"
+          ],
+          "BackBarSkills": [
+            "Stampede",
+            "Carve",
+            "Engulfing Flames",
+            "Eruption",
+            "Barbed Trap",
+            "Standard of Might"
+          ],
+          "ClassSkillLines": [],
+          "ClassMasteryAbilityIds": [],
+          "ScribedSkills": [],
+          "ScribedSkillRecipes": [],
+          "ContextVariants": [],
+          "BossLoadouts": []
+        }
+      },
+      "notes": "Class Mastery: Lead from the Front + Wildfire Embers. Magma Fist owns Heat Shock. Sundering Knife owns Off Balance. IMPORTANT: Minor Brutality is not guaranteed by the current bar unless Cobble actively uses a Draconic Power ability to trigger the DK group passive. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword back bar."
+    },
+    {
+      "template_id": "053fa63f-927b-5fa9-9880-5e9238779ebe",
+      "name": "PM U50 — Templar DD",
+      "role": "DD",
+      "source_class": "Templar",
+      "base_payload": {
+        "BuildName": "PM U50 — Templar DD",
+        "Role": "DD",
+        "EsoClass": "Templar",
+        "Werewolf": false,
+        "PlannedGearSets": [
+          "Aetheric Lancer",
+          "Perfected Slivers of the Null Arca",
+          "Slimecraw"
+        ],
+        "FrontBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarSkills": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "BackBarWeapon": {
+          "Set": "Perfected Merciless Charge",
+          "Trait": "",
+          "Enchant": "",
+          "Weight": "",
+          "Set2": "",
+          "Quality": "",
+          "EnchantTier": "",
+          "Level": "",
+          "WeaponType": "Two-Handed",
+          "EnchantQuality": ""
+        },
+        "Notes": "Class Mastery: Judgment's Brand + Bright Harbinger. Slimecraw one-piece is Medium. Templar class support supplies Minor Sorcery. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword back bar.",
+        "ReadyForRaid": false
+      },
+      "class_overlays": {
+        "Templar": {
+          "FrontBarSkills": [
+            "Biting Jabs",
+            "Power of the Light",
+            "Radiant Glory",
+            "Barbed Trap",
+            "Camouflaged Hunter",
+            "Flawless Dawnbreaker"
+          ],
+          "BackBarSkills": [
+            "Stampede",
+            "Restoring Focus",
+            "Solar Barrage",
+            "Blazing Spear",
+            "Ritual of Retribution",
+            "Onslaught"
+          ],
+          "ClassSkillLines": [],
+          "ClassMasteryAbilityIds": [],
+          "ScribedSkills": [],
+          "ScribedSkillRecipes": [],
+          "ContextVariants": [],
+          "BossLoadouts": []
+        }
+      },
+      "notes": "Class Mastery: Judgment's Brand + Bright Harbinger. Slimecraw one-piece is Medium. Templar class support supplies Minor Sorcery. All DDs use 1 Light / 6 Medium and a Perfected Merciless Charge Greatsword back bar."
+    }
+  ]
+}
