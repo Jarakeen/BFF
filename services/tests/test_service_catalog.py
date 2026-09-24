@@ -1863,3 +1863,35 @@ def test_weapon_enchantment_oblivion_damage_consumer_is_cataloged() -> None:
         "extreme_sustained_dps_weapon_enchantment_oblivion_damage_resolution"
         in service.responsibilities
     )
+
+
+
+def test_weapon_poison_runtime_services_are_cataloged() -> None:
+    activation = SERVICE_CATALOG.get(
+        "extreme.sustained_dps.weapon_poison_activation_events"
+    )
+    sequence = SERVICE_CATALOG.get(
+        "extreme.sustained_dps.weapon_poison_sequence_frontier"
+    )
+
+    assert activation is not None
+    assert sequence is not None
+    assert tuple(
+        row.service_id for row in SERVICE_CATALOG.dependencies_of(sequence.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_poison_activation_events",
+    )
+    assert (
+        "extreme_sustained_dps_weapon_poison_sequence_frontier"
+        in sequence.responsibilities
+    )
+
+
+def test_candidate_runtime_factory_depends_on_poison_runtime_frontier() -> None:
+    factory = SERVICE_CATALOG.get(
+        "extreme.sustained_dps.candidate_runtime_state_factory"
+    )
+
+    assert factory is not None
+    assert "extreme.sustained_dps.weapon_poison_activation_events" in factory.dependencies
+    assert "extreme.sustained_dps.weapon_poison_sequence_frontier" in factory.dependencies
