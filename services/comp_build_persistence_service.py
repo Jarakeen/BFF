@@ -26,6 +26,7 @@ class CompBuildPersistenceResult:
     state: CompPlanState
     saved_seats: tuple[str, ...] = ()
     skipped_seats: tuple[str, ...] = ()
+    skipped_reasons: tuple[tuple[str, str], ...] = ()
 
 
 class CompBuildPersistenceService:
@@ -295,11 +296,22 @@ class CompBuildPersistenceService:
         updated_state = state
         saved: list[str] = []
         skipped: list[str] = []
+        skipped_reasons: list[tuple[str, str]] = []
         staged_roster_bindings: list[tuple[int, str, str]] = []
 
         for chair in state.chairs:
-            if not self._is_real_player(chair) or not self._has_build_plan(chair):
+            if not self._is_real_player(chair):
                 skipped.append(chair.seat_id)
+                reason = (
+                    "open/recruit chair"
+                    if chair.is_open_player or not chair.player_name
+                    else "player is not linked to canonical Personnel/character identity"
+                )
+                skipped_reasons.append((chair.seat_id, reason))
+                continue
+            if not self._has_build_plan(chair):
+                skipped.append(chair.seat_id)
+                skipped_reasons.append((chair.seat_id, "no saved or planned build package"))
                 continue
 
             canonical_player_id, character_id = self._ensure_canonical_identity(
@@ -418,6 +430,7 @@ class CompBuildPersistenceService:
             state=updated_state,
             saved_seats=tuple(saved),
             skipped_seats=tuple(skipped),
+            skipped_reasons=tuple(skipped_reasons),
         )
 
 
