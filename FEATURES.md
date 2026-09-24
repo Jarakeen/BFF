@@ -661,3 +661,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Bar-specific poison ownership** — saved builds, legacy boss alternates, generalized Team/Boss context variants, canonical Bar state, and the Builds editor now preserve front- and back-weapon-set poisons independently rather than collapsing poison state into one character-wide flag.
 - **Authoritative poison/enchantment suppression** — weapon-enchantment runtime source projection now omits glyph sources only on the exact weapon set carrying an equipped poison, preserving the other bar. This uses current ESO Support evidence that poisons suppress enchantments on the weapon set where the poison is equipped; poison proc cadence and effects remain separately fail-closed.
 - **Canonical poison picker source** — ReferenceDataService now exposes canonical entity_type='poison' names for build editors without altering or rebuilding data/eso.db.
+
+
+- **Authoritative weapon-poison cadence evidence** — Objective #32 now tracks poison proc chance, 10-second global cooldown scope, qualifying Light/Heavy/weapon-ability damage triggers, single-target DoT exclusion, and enchantment suppression as separate ZOS-evidenced fields. The cadence evidence is runtime-ready without borrowing weapon-enchantment assumptions.
