@@ -6,6 +6,7 @@ from models.comp_plan_state import CompChairState, CompPlanState
 from models.roster_model import RosterMember
 from services.build_catalog_service import BuildCatalogService
 from services.build_service import BuildService
+from services.canonical_build_bridge import CanonicalBuildBridge
 from services.comp_build_persistence_service import CompBuildPersistenceService
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
@@ -14,12 +15,12 @@ from services.roster_service import RosterService
 def _service(tmp_path: Path) -> CompBuildPersistenceService:
     return CompBuildPersistenceService(
         tmp_path,
-        database_path=tmp_path / "eso-test.db",
+        database_path=tmp_path / "foundrydock.db",
     )
 
 
 def _seed_catalog(tmp_path: Path) -> tuple[str, str]:
-    catalog = BuildCatalogService(tmp_path / "characters.json")
+    catalog = BuildCatalogService(tmp_path / "foundrydock.db")
     player_id = "player-rylo"
     character_id = "character-rylo"
     catalog.save(
@@ -83,7 +84,7 @@ def test_comp_save_creates_real_canonical_build_and_assigns_id(tmp_path: Path) -
     assert chair.selected_build_id
     assert chair.build_source_kind == "comp_build"
 
-    catalog = BuildCatalogService(tmp_path / "characters.json").load()
+    catalog = BuildCatalogService(tmp_path / "foundrydock.db").load()
     row = next(
         build
         for build in catalog["builds"]
@@ -114,7 +115,7 @@ def test_resaving_comp_chair_updates_same_build_id(tmp_path: Path) -> None:
     assert second_chair is not None
     assert second_chair.selected_build_id == first_chair.selected_build_id
 
-    catalog = BuildCatalogService(tmp_path / "characters.json").load()
+    catalog = BuildCatalogService(tmp_path / "foundrydock.db").load()
     comp_rows = [
         row
         for row in catalog["builds"]
@@ -149,11 +150,11 @@ def test_recruit_chair_does_not_create_build(tmp_path: Path) -> None:
 
     assert result.saved_seats == ()
     assert result.skipped_seats == ("DD1",)
-    assert BuildCatalogService(tmp_path / "characters.json").load()["builds"] == []
+    assert BuildCatalogService(tmp_path / "foundrydock.db").load()["builds"] == []
 
 
 def test_comp_save_promotes_real_personnel_row_without_existing_build(tmp_path: Path) -> None:
-    database_path = tmp_path / "eso-test.db"
+    database_path = tmp_path / "foundrydock.db"
     roster = RosterService(EsoDatabase(database_path))
     member_id = roster.create_member(
         RosterMember(
@@ -195,7 +196,7 @@ def test_comp_save_promotes_real_personnel_row_without_existing_build(tmp_path: 
     assert rebound.CanonicalPlayerId == chair.player_id
     assert rebound.CanonicalCharacterId == chair.character_id
 
-    builds = BuildService(tmp_path / "builds.json").load().Members
+    builds = CanonicalBuildBridge(tmp_path / "builds.json", catalog_path=tmp_path / "foundrydock.db").load().Members
     saved = next(build for build in builds if build.BuildId == chair.selected_build_id)
     assert saved.BuildKind == "comp"
     assert saved.Gamertag == "Jarakeen"
@@ -207,7 +208,7 @@ def test_comp_save_promotes_real_personnel_row_without_existing_build(tmp_path: 
 
 
 def test_comp_save_can_promote_personnel_without_character_name(tmp_path: Path) -> None:
-    database_path = tmp_path / "eso-test.db"
+    database_path = tmp_path / "foundrydock.db"
     roster = RosterService(EsoDatabase(database_path))
     member_id = roster.create_member(
         RosterMember(
@@ -238,7 +239,7 @@ def test_comp_save_can_promote_personnel_without_character_name(tmp_path: Path) 
     chair = result.state.chair("Tank1")
     assert chair is not None and chair.selected_build_id and chair.character_id
 
-    catalog = BuildCatalogService(tmp_path / "characters.json").load()
+    catalog = BuildCatalogService(tmp_path / "foundrydock.db").load()
     character = next(
         row for row in catalog["characters"]
         if row["character_id"] == chair.character_id
@@ -247,7 +248,7 @@ def test_comp_save_can_promote_personnel_without_character_name(tmp_path: Path) 
 
 
 def test_builds_edit_preserves_comp_build_id_and_kind(tmp_path: Path) -> None:
-    database_path = tmp_path / "eso-test.db"
+    database_path = tmp_path / "foundrydock.db"
     roster = RosterService(EsoDatabase(database_path))
     member_id = roster.create_member(
         RosterMember(
@@ -278,7 +279,7 @@ def test_builds_edit_preserves_comp_build_id_and_kind(tmp_path: Path) -> None:
     chair = result.state.chair("Healer1")
     assert chair is not None and chair.selected_build_id
 
-    builds = BuildService(tmp_path / "builds.json")
+    builds = CanonicalBuildBridge(tmp_path / "builds.json", catalog_path=tmp_path / "foundrydock.db")
     loaded = builds.load()
     build = next(
         item for item in loaded.Members
@@ -295,7 +296,7 @@ def test_builds_edit_preserves_comp_build_id_and_kind(tmp_path: Path) -> None:
     assert edited.BuildKind == "comp"
     assert edited.BackBarWeapon.Set == "Perfected Grand Rejuvenation"
 
-    catalog = BuildCatalogService(tmp_path / "characters.json").load()
+    catalog = BuildCatalogService(tmp_path / "foundrydock.db").load()
     record = next(row for row in catalog["builds"] if row["build_id"] == original_id)
     assert record["build_kind"] == "comp"
     assert record["source"]["kind"] == "comp_maker"
@@ -305,7 +306,7 @@ def test_comp_build_created_after_initial_build_service_load_appears_on_reload(
     tmp_path: Path,
 ) -> None:
     player_id, character_id = _seed_catalog(tmp_path)
-    builds = BuildService(tmp_path / "builds.json")
+    builds = CanonicalBuildBridge(tmp_path / "builds.json", catalog_path=tmp_path / "foundrydock.db")
 
     initial = builds.load()
     assert not [
