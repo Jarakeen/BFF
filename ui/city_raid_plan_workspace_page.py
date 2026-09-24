@@ -8,6 +8,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QFileDialog,
     QComboBox,
@@ -336,8 +337,8 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             )
         )
         self.offensive_stats_table.verticalHeader().setVisible(False)
-        self.offensive_stats_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.offensive_stats_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.offensive_stats_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.offensive_stats_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.offensive_stats_table.setMinimumHeight(265)
         self.offensive_stats_table.setToolTip(
             "Hover a value for its contribution ledger and unresolved evidence."
