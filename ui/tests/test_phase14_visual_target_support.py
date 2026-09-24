@@ -8,7 +8,7 @@ from ui import phase14_build_edit_return_support
 from ui import phase14_build_focused_editors_support
 from ui import phase14_build_lifecycle_guard_support
 from ui import phase14_build_visual_target_support
-from ui import phase14_rotation_visual_target_support
+from ui import phase14_rotation_command_center_support
 from ui import ux_icons
 from ui.components import foundry_card
 
@@ -92,61 +92,12 @@ def test_build_skill_cards_restore_canonical_ability_art() -> None:
     assert "card.addWidget(_skill_row(index, skill))" in source
 
 
-def test_rotation_visual_target_moves_results_below_builder_and_hides_team_chip() -> None:
-    source = _source(phase14_rotation_visual_target_support)
-
-    for label, icon_name in (
-        ("Timeline", "hourglass"),
-        ("Uptime & Resources", "filter"),
-        ("Explanations", "binoculars"),
-        ("Compare", "scales"),
-        ("Save & Export", "download"),
-    ):
-        assert f'"{label}"' in source
-        assert f'"{icon_name}"' in source
-    assert 'if key == "TEAM":' in source
-    assert "parent.hide()" in source
-    assert "tab_bar.setVisible(tabs.currentIndex() != 0)" in source
-    assert "layout.addWidget(nav)" in source
-
-
-def test_rotation_visual_target_strengthens_context_intent_and_primary_action() -> None:
-    source = _source(phase14_rotation_visual_target_support)
-
-    assert '"CHARACTER": "Character"' in source
-    assert "chip.setMinimumHeight(58)" in source
-    assert "button.setMinimumHeight(132)" in source
-    assert "button.setIconSize(QSize(38, 38))" in source
-    assert "button.setMinimumHeight(64)" in source
-    assert "background: #C8A46A" in source
-    assert 'save_to_build = getattr(page, "save_rotation_to_build_button", None)' in source
-    assert "save_to_build.hide()" in source
-
-
-def test_rotation_visual_target_preserves_legacy_builder_widget_lifetime() -> None:
-    source = _source(phase14_rotation_visual_target_support)
-
-    assert "page._phase14_preserved_legacy_builder = legacy_builder" in source
-    assert "legacy_builder.deleteLater = legacy_builder.hide" in source
-    assert "layout_support.install_phase14_rotation_command_center = install_target" in source
-
-
-def test_rotation_visual_target_reasserts_at_real_page_show_boundary() -> None:
-    source = _source(phase14_rotation_visual_target_support)
-
-    assert "from ui.rotation_dashboard_canonical_page import CanonicalRotationDashboardPage" in source
-    assert "original_show_event = CanonicalRotationDashboardPage.showEvent" in source
-    assert "def show_event_with_visual_target(self, event) -> None:" in source
-    assert "apply_phase14_rotation_visual_target(self)" in source
-    assert "CanonicalRotationDashboardPage.showEvent = show_event_with_visual_target" in source
-
-
 def test_visual_target_support_is_composed_before_page_construction() -> None:
     source = _source(application_workspace_bootstrap)
 
     assert "install_phase14_build_visual_target_support()" in source
     assert "install_phase14_build_icon_polish_support()" in source
-    assert "install_phase14_rotation_visual_target_support()" in source
+    assert "install_phase14_rotation_visual_target_support()" not in source
     assert source.index("install_phase14_build_lifecycle_guard_support()") < source.index(
         "install_phase14_build_visual_target_support()"
     )
@@ -181,13 +132,6 @@ def test_build_edit_save_and_cancel_return_to_phase14_library() -> None:
     assert "def cancel_and_return(self) -> None:" in source
     assert "apply_phase14_build_visual_target(page)" in source
     assert "_render_inspector(page)" in source
-
-
-def test_rotation_context_polish_is_idempotent_across_page_reopen() -> None:
-    source = _source(phase14_rotation_visual_target_support)
-
-    assert 'value_label.property("phase14ContextPolished")' in source
-    assert 'value_label.setProperty("phase14ContextPolished", True)' in source
 
 
 def test_phase14_build_focused_editors_replace_normal_legacy_route() -> None:
@@ -293,26 +237,16 @@ def test_phase14_build_icons_are_reasserted_when_page_becomes_visible() -> None:
 
 
 def test_phase14_rotation_front_page_is_the_four_requested_surfaces() -> None:
-    command = Path(phase14_rotation_visual_target_support.__file__).with_name(
-        "phase14_rotation_command_center_support.py"
-    ).read_text(encoding="utf-8")
-    visual = _source(phase14_rotation_visual_target_support)
+    command = _source(phase14_rotation_command_center_support)
 
     assert 'tab.setObjectName("phase14RotationFrontPage")' in command
     assert '_build_context(page)' in command
     assert '_build_intent_card(page)' in command
     assert '_build_obligations_card(page)' in command
-    assert 'layout.addWidget(nav)' in visual
-    assert 'card.header.hide()' in visual
-    assert 'card.set_icon("rotations")' in visual
-    assert 'card.set_icon("field-office")' in visual
-    assert "refresh_theme_icons(page)" in visual
 
 
 def test_phase14_rotation_intents_and_settings_match_target_card_controls() -> None:
-    command = Path(phase14_rotation_visual_target_support.__file__).with_name(
-        "phase14_rotation_command_center_support.py"
-    ).read_text(encoding="utf-8")
+    command = _source(phase14_rotation_command_center_support)
 
     assert "button = QToolButton()" in command
     assert "ToolButtonTextUnderIcon" in command
@@ -324,27 +258,10 @@ def test_phase14_rotation_intents_and_settings_match_target_card_controls() -> N
 
 
 def test_phase14_rotation_command_center_imports_qt_for_tool_button_style() -> None:
-    command = Path(phase14_rotation_visual_target_support.__file__).with_name(
-        "phase14_rotation_command_center_support.py"
-    ).read_text(encoding="utf-8")
+    command = _source(phase14_rotation_command_center_support)
 
     assert "from PySide6.QtCore import Qt" in command
     assert "Qt.ToolButtonStyle.ToolButtonTextUnderIcon" in command
-
-
-def test_phase14_rotation_headings_are_large_gold_and_reassert_result_icons() -> None:
-    visual = _source(phase14_rotation_visual_target_support)
-    command = Path(phase14_rotation_visual_target_support.__file__).with_name(
-        "phase14_rotation_command_center_support.py"
-    ).read_text(encoding="utf-8")
-
-    assert 'page.phase14_generated_settings_heading = QLabel("Generated Settings")' in command
-    assert "def _polish_primary_headings(page) -> None:" in visual
-    assert '"color: #C8A46A; font-size: 22px; font-weight: 700;"' in visual
-    assert '"color: #C8A46A; font-size: 20px; font-weight: 700;"' in visual
-    assert "card.icon_label.setFixedSize(30, 30)" in visual
-    assert "def _polish_result_nav(page) -> None:" in visual
-    assert "set_button_icon(button, icon_name, size=24)" in visual
 
 
 def test_phase14_semantic_icons_use_explicit_svg_renderer() -> None:
