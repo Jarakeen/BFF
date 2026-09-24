@@ -13,6 +13,7 @@ import re
 
 from PIL import Image
 
+from engine.config import get_settings_path
 from services.finch_api_client import FinchApiClient
 from services.settings_service import SettingsService
 
@@ -79,7 +80,7 @@ def publish_raid_map_webp_to_finch(
     map_label: str,
     note: str = "",
     data_dir: Path,
-    settings_path: Path = Path("settings.json"),
+    settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> FinchRaidMapPreview:
     plan_key = _clean(plan_id)
@@ -129,7 +130,7 @@ def publish_raid_map_and_plan_to_finch(
     map_label: str,
     note: str = "",
     data_dir: Path,
-    settings_path: Path = Path("settings.json"),
+    settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> FinchRaidMapPreview:
     preview = publish_raid_map_webp_to_finch(
