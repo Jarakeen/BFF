@@ -803,3 +803,59 @@ def test_callable_weapon_enchantment_policy_resolver_receives_player_build() -> 
     }
     assert result.unresolved == ()
     assert result.frontier.denominator_proven is True
+
+
+
+class _PoisonActivationService:
+    def resolve(self, **_kwargs):
+        return SimpleNamespace(
+            events=(
+                RuntimeEvent(
+                    time_seconds=1.0,
+                    sequence=0,
+                    trigger="weapon_poison_activation",
+                    source="Light Attack",
+                    target="Boss",
+                    source_bar="front",
+                ),
+            ),
+            evidence=("reviewed poison activation opportunity",),
+            unresolved=(),
+        )
+
+
+def test_candidate_builder_fails_closed_when_poison_proc_consequences_are_unmodeled() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="poison-candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        weapon_poison_activation_service=_PoisonActivationService(),
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(
+            Name="Generated",
+            BuildName="Candidate",
+            Role="DD",
+            FrontBarPoison="Damage Health Poison IX",
+        ),
+        effects=(),
+        occurrence_provider=object(),
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed poison scenario",
+    )
+
+    assert result.frontier.denominator_proven is False
+    assert any(
+        "selected poison effect identity/magnitude/dilution" in row
+        for row in result.unresolved
+    )
+    assert any(
+        "Weapon-poison chance/cooldown denominator is proven finite" in row
+        for row in result.evidence
+    )
