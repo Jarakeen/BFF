@@ -65,6 +65,22 @@ class RaidPlanRepository:
                 )
                 """
             )
+            db.execute(
+                """
+                CREATE TABLE IF NOT EXISTS raid_plan_revision (
+                    revision_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    plan_id TEXT NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    saved_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            db.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_raid_plan_revision_plan
+                ON raid_plan_revision(plan_id, revision_id DESC)
+                """
+            )
 
     def list_plans(self) -> tuple[RaidPlan, ...]:
         if self._database_mode:
@@ -98,6 +114,20 @@ class RaidPlanRepository:
         if self._database_mode:
             payload = json.dumps(self._encode_plan(plan), sort_keys=True)
             with self._connect() as db:
+                existing = db.execute(
+                    "SELECT payload_json FROM raid_plan WHERE plan_id = ? COLLATE NOCASE",
+                    (plan.plan_id,),
+                ).fetchone()
+                if existing is not None:
+                    previous = str(existing["payload_json"] or "")
+                    if previous and previous != payload:
+                        db.execute(
+                            """
+                            INSERT INTO raid_plan_revision(plan_id, payload_json)
+                            VALUES (?, ?)
+                            """,
+                            (plan.plan_id, previous),
+                        )
                 db.execute(
                     """
                     INSERT INTO raid_plan(plan_id, payload_json, updated_at)
@@ -107,6 +137,39 @@ class RaidPlanRepository:
                         updated_at=CURRENT_TIMESTAMP
                     """,
                     (plan.plan_id, payload),
+                )
+                persisted_row = db.execute(
+                    "SELECT payload_json FROM raid_plan WHERE plan_id = ? COLLATE NOCASE",
+                    (plan.plan_id,),
+                ).fetchone()
+                if persisted_row is None:
+                    raise RaidPlanRepositoryError(
+                        f"saved plan {plan.plan_id!r} could not be read back"
+                    )
+                try:
+                    persisted = self._decode_plan(
+                        json.loads(str(persisted_row["payload_json"] or ""))
+                    )
+                except (json.JSONDecodeError, TypeError, ValueError) as exc:
+                    raise RaidPlanRepositoryError(
+                        f"saved plan {plan.plan_id!r} failed read-back validation: {exc}"
+                    ) from exc
+                if persisted != plan:
+                    raise RaidPlanRepositoryError(
+                        "saved Raid Plan did not round-trip exactly"
+                    )
+                db.execute(
+                    """
+                    DELETE FROM raid_plan_revision
+                    WHERE revision_id IN (
+                        SELECT revision_id
+                        FROM raid_plan_revision
+                        WHERE plan_id = ? COLLATE NOCASE
+                        ORDER BY revision_id DESC
+                        LIMIT -1 OFFSET 50
+                    )
+                    """,
+                    (plan.plan_id,),
                 )
             return plan
         plans = list(self.list_plans())
