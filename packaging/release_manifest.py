@@ -67,6 +67,7 @@ PYINSTALLER_EXCLUDES: tuple[str, ...] = (
 )
 
 RUNTIME_EXTERNAL_DATA_FILES: tuple[str, ...] = (
+    "build_templates.json",
     "antiquities_01.csv",
     "antiquities_02.csv",
     "antiquities_03.csv",
