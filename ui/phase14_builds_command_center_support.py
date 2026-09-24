@@ -487,9 +487,10 @@ def install() -> None:
         _quiet_overview_action_bar(self)
 
     def load_phase14(self):
+        # _ORIGINAL_LOAD calls self._refresh_roster(). At this point that method is
+        # already the Phase 14 wrapper below, which rebuilds filters and the visible
+        # library table. Do not immediately perform the same full table rebuild again.
         _ORIGINAL_LOAD(self)
-        _set_filters_from_library(self)
-        _populate_build_table(self)
 
     def refresh_roster_phase14(self, *_args):
         result = _ORIGINAL_REFRESH_ROSTER(self, *_args)
