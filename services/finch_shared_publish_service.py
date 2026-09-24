@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from models.raid_plan import RaidPlan
+from engine.config import get_settings_path
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.finch_api_client import FinchApiClient, FinchSharedSnapshot
@@ -341,7 +342,7 @@ def publish_team_to_finch(
     *,
     database_path: Path,
     team_name: str,
-    settings_path: Path = Path("settings.json"),
+    settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> FinchPublishResult:
     database = EsoDatabase(Path(database_path))
@@ -360,7 +361,7 @@ def publish_raid_plan_to_finch(
     database_path: Path,
     raid_plans_path: Path,
     plan_id: str,
-    settings_path: Path = Path("settings.json"),
+    settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> FinchPublishResult:
     repository = RaidPlanRepository(Path(raid_plans_path))
