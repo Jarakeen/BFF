@@ -217,3 +217,20 @@ def test_ambiguous_legacy_two_handed_weapon_is_not_guessed(tmp_path: Path):
         in message
         for message in result.unresolved
     )
+
+
+def test_adapts_bar_owned_poison_identity(tmp_path: Path):
+    db_path = tmp_path / "eso.db"
+    _make_db(db_path)
+    saved = _df_healer_like_build()
+    saved.FrontBarPoison = "Damage Health Poison IX"
+
+    result = SavedBuildCharacterAdapter(
+        db_path,
+        skill_effect_repository=_SkillEffects(),
+    ).adapt(saved)
+
+    assert result.build is not None
+    assert result.build.front_bar is not None
+    assert result.build.front_bar.poison_id == "Damage Health Poison IX"
+    assert result.unresolved == ()
