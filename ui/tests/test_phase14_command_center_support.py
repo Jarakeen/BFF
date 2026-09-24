@@ -223,3 +223,12 @@ def test_comp_build_planning_state_is_visible_in_focused_build_editors() -> None
     assert 'FoundryCard("Comp Planned Skills", "clipboard")' in source
     assert '"Planned in Comp Maker. These are requirements/recommendations, not exact bar slots."' in source
     assert '"Planned in Comp Maker. These skills are not assigned to exact bar slots yet."' in source
+
+
+def test_template_application_switches_visible_phase14_library_to_all_builds() -> None:
+    source = Path("ui/build_reuse_template_support.py").read_text(encoding="utf-8")
+
+    assert 'FoundryButton("Create Saved Build…"' in source
+    assert 'if tabs.tabText(index) == "All":' in source
+    assert 'tabs.setCurrentIndex(index)' in source
+    assert 'Created saved Build' in source
