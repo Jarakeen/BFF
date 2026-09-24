@@ -2256,6 +2256,7 @@ def _save_to_originating_raid_plan(page) -> bool:
             page.plan_name_input.setText(plan.name)
         saved_builds = tuple(getattr(build_result, "saved_seats", ()) or ())
         skipped_builds = tuple(getattr(build_result, "skipped_seats", ()) or ())
+        skipped_reasons = tuple(getattr(build_result, "skipped_reasons", ()) or ())
         if not saved_builds and any(
             getattr(chair, "player_name", None)
             and not getattr(chair, "is_open_player", False)
@@ -2275,6 +2276,11 @@ def _save_to_originating_raid_plan(page) -> bool:
         )
         if skipped_builds:
             build_detail += f" Skipped {len(skipped_builds)} unresolved/open chair(s)."
+            if skipped_reasons:
+                reason_text = "; ".join(
+                    f"{seat}: {reason}" for seat, reason in skipped_reasons
+                )
+                build_detail += f" {reason_text}."
         page.status.success(
             f"Saved Comp Builder changes to Raid Plan: {plan.name}." + build_detail
         )
