@@ -348,7 +348,30 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
             self._refresh_build_options(row)
 
     def _apply_saved_build(self, row: int) -> None:
+        combo = self.team_table.cellWidget(row, 4)
+        saved_index = combo.currentData() if isinstance(combo, QComboBox) else None
+        selected_build = (
+            self.saved_builds[saved_index]
+            if isinstance(saved_index, int) and 0 <= saved_index < len(self.saved_builds)
+            else None
+        )
+        prior_player_text = self._player_text(row)
+        prior_player_id = (
+            self._selected_player_id(row)
+            if callable(getattr(self, "_selected_player_id", None))
+            else None
+        )
+
         super()._apply_saved_build(row)
+
+        # A canonical build may retain an older display alias after an explicit
+        # Personnel merge. If stable ownership agrees, keep the currently selected
+        # Personnel display name instead of replacing it with stale build text.
+        if selected_build is not None and prior_player_id and prior_player_text:
+            build_player_id = _clean(getattr(selected_build, "PlayerId", ""))
+            if build_player_id and build_player_id.casefold() == _clean(prior_player_id).casefold():
+                self._set_player_text(row, prior_player_text)
+
         self._refresh_character_options(row)
         self._refresh_build_options(row)
         self._refresh_personnel_button(row)
