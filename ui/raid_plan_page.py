@@ -89,12 +89,19 @@ def role_for_seat(seat: str) -> str:
 
 
 def personnel_player_names(members) -> tuple[str, ...]:
-    """Return unique global player identities in stable case-insensitive order."""
+    """Return one visible name per stable player identity.
+
+    Canonical player ids collapse duplicate Personnel presentation rows. Legacy rows
+    without stable ids remain distinct by exact display name so no identity is guessed.
+    """
     by_key: dict[str, str] = {}
     for member in tuple(members or ()):
         name = _clean(getattr(member, "PlayerName", ""))
-        if name:
-            by_key.setdefault(name.casefold(), name)
+        if not name:
+            continue
+        player_id = _clean(getattr(member, "CanonicalPlayerId", ""))
+        key = f"id:{player_id.casefold()}" if player_id else f"name:{name.casefold()}"
+        by_key.setdefault(key, name)
     return tuple(sorted(by_key.values(), key=str.casefold))
 
 
@@ -437,7 +444,27 @@ class RaidPlanPage(FoundryPage):
 
     def refresh_personnel(self) -> None:
         try:
-            self.personnel_members = list(self.roster_service.list_members())
+            identity = RosterPlayerIdentityService(
+                self.roster_service.db,
+                self.build_service,
+            )
+            raw_members = list(self.roster_service.list_members())
+            self.personnel_members = []
+            seen_player_ids: set[str] = set()
+            for member in raw_members:
+                player_id = _clean(getattr(member, "CanonicalPlayerId", ""))
+                if player_id:
+                    key = player_id.casefold()
+                    if key in seen_player_ids:
+                        continue
+                    seen_player_ids.add(key)
+                canonical_name = identity.canonical_player_label(member)
+                if canonical_name and canonical_name != _clean(member.PlayerName):
+                    member = RosterMember(**{
+                        **member.to_dict(),
+                        "PlayerName": canonical_name,
+                    })
+                self.personnel_members.append(member)
         except Exception as exc:
             self.personnel_members = []
             if hasattr(self, "status"):
