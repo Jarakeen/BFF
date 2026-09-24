@@ -554,6 +554,18 @@ class RaidPlanPage(FoundryPage):
         )
 
     def refresh_saved_builds(self) -> None:
+        prior_build_ids: dict[int, str] = {}
+        prior_build_names: dict[int, str] = {}
+        for row in range(self.team_table.rowCount()):
+            combo = self.team_table.cellWidget(row, 4)
+            if not isinstance(combo, QComboBox):
+                continue
+            prior_index = combo.currentData()
+            if isinstance(prior_index, int) and 0 <= prior_index < len(self.saved_builds):
+                prior = self.saved_builds[prior_index]
+                prior_build_ids[row] = _clean(getattr(prior, "BuildId", ""))
+                prior_build_names[row] = _clean(getattr(prior, "BuildName", ""))
+
         try:
             roster = self.build_service.load()
             self.saved_builds = list(getattr(roster, "Members", ()) or ())
@@ -565,26 +577,35 @@ class RaidPlanPage(FoundryPage):
             combo = self.team_table.cellWidget(row, 4)
             if not isinstance(combo, QComboBox):
                 continue
-            prior_name = ""
-            prior_index = combo.currentData()
-            if isinstance(prior_index, int) and 0 <= prior_index < len(self.saved_builds):
-                prior_name = _clean(getattr(self.saved_builds[prior_index], "BuildName", ""))
 
+            wanted_id = prior_build_ids.get(row, "")
+            wanted_name = prior_build_names.get(row, "")
             combo.blockSignals(True)
             combo.clear()
             combo.addItem("No build selected", None)
             for index, build in enumerate(self.saved_builds):
                 combo.addItem(self._build_display(build), index)
-            combo.blockSignals(False)
 
-            if prior_name:
+            restored = False
+            if wanted_id:
+                for combo_index in range(1, combo.count()):
+                    saved_index = combo.itemData(combo_index)
+                    if not isinstance(saved_index, int):
+                        continue
+                    candidate_id = _clean(getattr(self.saved_builds[saved_index], "BuildId", ""))
+                    if candidate_id and candidate_id.casefold() == wanted_id.casefold():
+                        combo.setCurrentIndex(combo_index)
+                        restored = True
+                        break
+            if not restored and wanted_name:
                 for combo_index in range(1, combo.count()):
                     saved_index = combo.itemData(combo_index)
                     if isinstance(saved_index, int):
                         candidate = _clean(getattr(self.saved_builds[saved_index], "BuildName", ""))
-                        if candidate.casefold() == prior_name.casefold():
+                        if candidate.casefold() == wanted_name.casefold():
                             combo.setCurrentIndex(combo_index)
                             break
+            combo.blockSignals(False)
 
         self.status.info(f"Raid Plan build picker loaded {len(self.saved_builds)} saved build(s).")
         self._update_summary()
