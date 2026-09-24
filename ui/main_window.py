@@ -30,7 +30,8 @@ from services.profiled_collectible_service import ProfiledCollectibleService
 from ui.achievements_page import AchievementsPage
 from ui.asylum_perfecta_timer_page import AsylumPerfectaTimerPage
 from ui.themed_builds_page import BuildsPage
-from ui.capabilities_page import CapabilitiesPage\nfrom ui.brittle_uptime_page import BrittleUptimePage
+from ui.capabilities_page import CapabilitiesPage
+from ui.brittle_uptime_page import BrittleUptimePage
 from ui.collectibles_dashboard_page import CollectiblesDashboardPage
 from ui.collectibles_page import CollectiblesPage
 from ui.comp_builder_page import CompBuilderPage
