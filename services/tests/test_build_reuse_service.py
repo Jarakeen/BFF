@@ -182,3 +182,48 @@ def test_template_application_does_not_inherit_comp_provenance(tmp_path: Path) -
     assert applied.SourceSeatId == ""
     assert applied.PlannedGearSets == []
     assert applied.PlannedSkills == []
+
+
+def test_replace_or_append_preserves_stable_identity_and_user_progress() -> None:
+    existing = PlayerBuild(
+        Name="Aces NB DD",
+        Gamertag="ACES UP AAAA",
+        BuildName="PM U50 — Nightblade Werewolf DD — Aces",
+        EsoClass="Nightblade",
+        Role="DD",
+        PlayerId="player-aces",
+        CharacterId="character-aces",
+        BuildId="build-aces",
+        BuildKind="comp",
+        PlannedGearSets=["Savage Werewolf"],
+        PlannedSkills=["Surprise Attack"],
+        SourcePlanId="pm-plan",
+        SourcePlanName="Performance Mode",
+        SourceSeatId="dd-2",
+        ReadyForRaid=True,
+    )
+    incoming = PlayerBuild(
+        Name=existing.Name,
+        Gamertag=existing.Gamertag,
+        BuildName=existing.BuildName,
+        EsoClass="Nightblade",
+        Role="DD",
+        FrontBarSkills=["Surprise Attack", "Ambush", "", "", "", ""],
+    )
+
+    updated = BuildReuseService.replace_or_append(
+        BuildRoster(Members=[existing]),
+        incoming,
+    ).Members[0]
+
+    assert updated.BuildId == "build-aces"
+    assert updated.CharacterId == "character-aces"
+    assert updated.PlayerId == "player-aces"
+    assert updated.BuildKind == "comp"
+    assert updated.SourcePlanId == "pm-plan"
+    assert updated.SourcePlanName == "Performance Mode"
+    assert updated.SourceSeatId == "dd-2"
+    assert updated.PlannedGearSets == ["Savage Werewolf"]
+    assert updated.PlannedSkills == ["Surprise Attack"]
+    assert updated.ReadyForRaid is True
+    assert updated.FrontBarSkills[:2] == ["Surprise Attack", "Ambush"]
