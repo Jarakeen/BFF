@@ -53,6 +53,8 @@ jobs:
             ui/tests/test_raid_roster_workspace_wiring.py `
             services/tests/test_roster_player_identity_service.py `
             ui/tests/test_raid_plan_persistence_page.py `
+            ui/tests/test_finch_shared_readiness_actions.py `
+            ui/tests/test_phase14_command_center_support.py `
             services/tests/test_finch_shared_import_service.py `
             services/tests/test_raid_coverage_catalog_expansion.py `
             services/tests/test_raid_plan_repository_revisions.py `
@@ -164,3 +166,5 @@ jobs:
 # rebuild-after-city-player-merge-button-fix
 
 # rebuild-after-raid-plan-player-merge-identity-repair
+
+# rebuild-after-build-template-roles-readiness-fixes
