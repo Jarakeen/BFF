@@ -232,3 +232,15 @@ def test_template_application_switches_visible_phase14_library_to_all_builds() -
     assert 'if tabs.tabText(index) == "All":' in source
     assert 'tabs.setCurrentIndex(index)' in source
     assert 'Created saved Build' in source
+
+
+def test_template_table_selection_updates_exact_template_detail_without_hidden_signal_dependency() -> None:
+    source = Path("ui/phase14_builds_command_center_support.py").read_text(encoding="utf-8")
+
+    assert "page.roster_list.blockSignals(True)" in source
+    assert "page._select_member(source_row)" in source
+    assert "currentCellChanged.connect" in source
+    assert "template_class" in source
+    assert "template_role" in source
+    assert "selected_class" in source
+    assert "selected_role" in source
