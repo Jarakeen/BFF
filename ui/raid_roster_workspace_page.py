@@ -833,7 +833,7 @@ class RaidRosterWorkspacePage(FoundryPage):
             player = catalog.get_player(identity) or {}
             characters = catalog.characters_for_player(identity)
             self.character_detail.set_title(_clean(player.get("gamertag")) or "Player")
-            self.character_detail_body.setText(f"Characters: {len(characters)}\nCanonical player id: {identity}")
+            self.character_detail_body.setText(f"Characters: {len(characters)}")
         elif kind == "character":
             character = catalog.get_character(identity) or {}
             player = catalog.player_for_character(identity) or {}
@@ -852,8 +852,7 @@ class RaidRosterWorkspacePage(FoundryPage):
             self.character_detail.set_title(_clean(build.get("name")) or "Build")
             self.character_detail_body.setText(
                 f"Character: {_clean(character.get('name')) or 'Unknown'}\n"
-                f"Role: {_clean(payload.get('Role')) or 'Not set'}\n"
-                f"Build id: {identity}"
+                f"Role: {_clean(payload.get('Role')) or 'Not set'}"
             )
 
     # ------------------------------------------------------------------
