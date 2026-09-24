@@ -141,7 +141,7 @@ class FinchCollaborationPage(FoundryPage):
         self._future = _FINCH_COLLAB_EXECUTOR.submit(
             load_finch_collaboration_overview,
             data_dir=root,
-            database_path=get_user_database_path(),
+            database_path=DEFAULT_DATABASE,
             raid_plans_path=get_user_database_path(),
             settings_path=get_settings_path(),
         )
