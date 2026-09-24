@@ -170,3 +170,5 @@ jobs:
 # rebuild-after-build-template-roles-readiness-fixes
 
 # rebuild-after-stale-raid-plan-build-id-repair
+
+# rebuild-after-template-selection-sync-fix
