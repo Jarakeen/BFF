@@ -41,7 +41,16 @@ jobs:
       - name: Run release regression tests
         shell: pwsh
         run: |
-          python -m pytest services/tests/test_finch_shared_import_service.py tools/tests/test_build_release_user_database_seed.py ui/tests/test_release_population_contract.py ui/tests/test_raid_engine_workflow_handoffs.py -q
+          python -m pytest `
+            services/tests/test_finch_shared_import_service.py `
+            services/tests/test_raid_coverage_catalog_expansion.py `
+            services/tests/test_raid_plan_repository_revisions.py `
+            tools/tests/test_build_release_user_database_seed.py `
+            ui/tests/test_release_population_contract.py `
+            ui/tests/test_raid_engine_workflow_handoffs.py `
+            ui/tests/test_raid_plan_coverage_support.py `
+            ui/tests/test_shared_plan_persistence_failsafes.py `
+            -q
 
       - name: Build friend package
         shell: pwsh
@@ -95,8 +104,10 @@ jobs:
             dist/FoundryDock-update.zip.sha256 `
             --target "${{ github.sha }}" `
             --title "FoundryDock 0.1.7" `
-            --notes "Patch release for Finch shared collaboration and raid-planning persistence. Coverage now reads canonical Raid Plans, plan context carries into Comp Builder/Coverage, and fresh installs receive a populated reference Team/Raid Plan so planning pages are not empty. Existing user databases are never replaced. Includes packaged EXE and first-run database smoke tests."
+            --notes "Patch release for Finch collaboration and raid-planning persistence. Shared Teams/Raid Plans now use foundrydock.db end to end; Assignments/Comp/Coverage handoffs require verified saved checkpoints; Raid Plan revisions and whole-database pre-save snapshots protect save points; shared planned skills survive Copy to Local; Coverage adds current BTV-style support effects and never renders empty. Fresh installs receive populated reference planning data. Existing user databases are never replaced."
 
 # rebuild-after-finch-settings-path
 
 # rebuild-after-populated-release-seed
+
+# rebuild-after-shared-plan-persistence-hardening
