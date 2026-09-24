@@ -307,7 +307,6 @@ def _comp_selected_saved_builds(page):
     data_dir = get_data_dir()
     roster = CanonicalBuildBridge(
         data_dir / "builds.json",
-        data_dir / "characters.json",
     ).load().Members
     builds_by_id = {
         str(getattr(build, "BuildId", "") or "").strip(): build
