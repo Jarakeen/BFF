@@ -2,8 +2,8 @@
 
 This file is the release-facing inventory for packaged FoundryDock builds. It is deliberately stricter than `FEATURES.md`: a feature may exist in source and still be excluded from a release.
 
-**Current release candidate:** `0.1.3`  
-**Status date:** 2026-09-20
+**Current release candidate:** `0.1.8`  
+**Status date:** 2026-09-24
 
 ## Release rules
 
@@ -15,6 +15,13 @@ This file is the release-facing inventory for packaged FoundryDock builds. It is
 - Final release approval requires a clean packaged-build smoke pass.
 
 ---
+
+## Patch 0.1.8 additions
+
+- Shared Performance Mode U50 build templates ship as reviewed runtime data and are available through **Builds → Templates** for any compatible Personnel character.
+- The shared package includes the current tank, healer, and DD bars, planned gear packages, Class Mastery notes, DD 1-Light/6-Medium guidance, and Perfected Merciless Charge back-bar ownership.
+- Update packaging includes the shared template catalog while preserving the existing live `foundrydock.db`, settings, Personnel, Teams, Raid Plans, saved builds, progress, and session data.
+- The current Cobble Z'enKosh template deliberately leaves DK Minor Brutality unresolved until a qualifying Draconic Power activation exists on the actual bar/rotation rather than inferring coverage from class identity alone.
 
 ## Release candidate: working / intended to ship
 
@@ -134,4 +141,4 @@ A release is ready only when all of the following are true:
 - first-install and embedded recovery databases contain no developer-owned Personnel, team, roster workflow, collectible/stickerbook progress, generated draft, or imported ESO Logs rows;
 - update archive contains no `eso.db`, settings, builds, roster/progress/session state;
 - upgrade from the previous release preserves user-owned data;
-- release artifacts report version `0.1.3`.
+- release artifacts report version `0.1.8`.
