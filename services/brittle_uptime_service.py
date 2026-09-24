@@ -9,6 +9,8 @@ reported uptime, matching the existing Performance Dashboard behavior.
 
 from dataclasses import dataclass
 
+from services.performance_dashboard_service import _iter_actors_by_role
+
 MAJOR_BRITTLE_NAME = "Major Brittle"
 DEFAULT_PROVIDER_ACTOR_ID = 72
 DEFAULT_PROVIDER_LABEL = "Anonymous 72"
@@ -92,7 +94,7 @@ class BrittleUptimeService:
         fight_ids: tuple[int, ...] | None = None,
         kills_only: bool = True,
         provider_actor_id: int = DEFAULT_PROVIDER_ACTOR_ID,
-        provider_label: str = DEFAULT_PROVIDER_LABEL,
+        provider_label: str | None = None,
     ) -> BrittleUptimeReport:
         code = self.client.normalize_report_code(report_code)
         fights = list(self.client.get_fights(code))
@@ -128,6 +130,27 @@ class BrittleUptimeService:
             )
             raid_brittle_ms = self._named_uptime_ms(raid_auras)
 
+            actor_label = str(provider_label or "").strip()
+            actor_role = ""
+            if not actor_label:
+                try:
+                    player_details = self.client.get_report_player_summary(code, fight_id, start, end)
+                except (AttributeError, TypeError):
+                    player_details = {}
+                for role, actor in _iter_actors_by_role(player_details):
+                    try:
+                        actor_id = int(actor.get("id"))
+                    except (TypeError, ValueError):
+                        continue
+                    if actor_id != int(provider_actor_id):
+                        continue
+                    actor_role = role
+                    raw_name = str(actor.get("name") or "").strip()
+                    actor_label = raw_name or f"Anonymous {provider_actor_id}"
+                    break
+            if not actor_label:
+                actor_label = f"Anonymous {provider_actor_id}"
+
             providers: list[BrittleProviderUptime] = []
             source_auras = self.client.get_aura_table(
                 code,
@@ -143,8 +166,8 @@ class BrittleUptimeService:
                 providers.append(
                     BrittleProviderUptime(
                         actor_id=int(provider_actor_id),
-                        actor_label=str(provider_label or DEFAULT_PROVIDER_LABEL),
-                        role="",
+                        actor_label=actor_label,
+                        role=actor_role,
                         uptime_seconds=round(source_ms / 1000.0, 2),
                         uptime_percent=self._percent(source_ms, duration_seconds),
                     )
