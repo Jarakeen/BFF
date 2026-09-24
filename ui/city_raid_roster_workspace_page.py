@@ -26,8 +26,10 @@ from PySide6.QtWidgets import (
     QDialog,
     QGridLayout,
     QHBoxLayout,
+    QInputDialog,
     QHeaderView,
     QLabel,
+    QMessageBox,
     QSizePolicy,
     QSplitter,
     QStackedWidget,
@@ -38,6 +40,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_data_dir, get_resource_path
+from services.roster_player_identity_service import RosterPlayerIdentityService
 from ui.components.foundry_card import FoundryCard
 from ui.raid_roster_workspace_page import RaidRosterWorkspacePage, _clean
 from ui.themed_raid_roster_workspace_page import ThemedRaidRosterWorkspacePage
@@ -264,6 +267,23 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
         self.actions = RosterActions()
         self.actions.configure_player_editor()
 
+        # This is the actual Phase 14 Player Record footer.  Older roster-page
+        # decorators do not own this embedded City workspace, so duplicate-player
+        # repair must be surfaced here rather than on the retired page shell.
+        self.merge_duplicate_player_button = QPushButton("Merge Duplicate Player…")
+        self.merge_duplicate_player_button.setToolTip(
+            "Keep the selected Personnel record and merge another duplicate player into it."
+        )
+        action_layout = self.actions.layout()
+        if action_layout is not None:
+            # New | Save | Merge Duplicate Player… | Cancel
+            cancel_index = action_layout.indexOf(self.actions.delete_button)
+            if cancel_index >= 0:
+                action_layout.insertWidget(cancel_index, self.merge_duplicate_player_button)
+            else:
+                action_layout.addWidget(self.merge_duplicate_player_button)
+        self.merge_duplicate_player_button.clicked.connect(self._merge_duplicate_player)
+
         player_page = QWidget()
         player_layout = QVBoxLayout(player_page)
         player_layout.setContentsMargins(8, 8, 8, 8)
@@ -394,6 +414,95 @@ class CityRaidRosterWorkspacePage(ThemedRaidRosterWorkspacePage):
     def _connect_signals(self) -> None:
         super()._connect_signals()
         self.actions.cancelRequested.connect(self._cancel_player_edit)
+
+    def _merge_duplicate_player(self) -> None:
+        survivor_id = (
+            self.player_detail_table.selected_member_id()
+            if hasattr(self, "player_detail_table")
+            else None
+        )
+        if survivor_id is None:
+            self.status.warning("Select the player record you want to KEEP first.")
+            return
+
+        survivor = self.roster_service.get_member(int(survivor_id))
+        if survivor is None:
+            self.status.warning("The selected Personnel record no longer exists.")
+            return
+
+        candidates = [
+            member
+            for member in self.roster_service.list_members()
+            if member.Id is not None and int(member.Id) != int(survivor_id)
+        ]
+        if not candidates:
+            self.status.info("There are no other Personnel records to merge.")
+            return
+
+        labels: list[str] = []
+        candidate_ids: list[int] = []
+        for member in candidates:
+            label = _clean(member.PlayerName) or "Unnamed player"
+            if _clean(member.CharacterName):
+                label += f" · {_clean(member.CharacterName)}"
+            if _clean(member.Team):
+                label += f" · {_clean(member.Team)}"
+            labels.append(label)
+            candidate_ids.append(int(member.Id))
+
+        choice, accepted = QInputDialog.getItem(
+            self,
+            "Merge Duplicate Player",
+            (
+                f"KEEP: {_clean(survivor.PlayerName)}\n\n"
+                "MERGE THIS DUPLICATE:"
+            ),
+            labels,
+            0,
+            False,
+        )
+        if not accepted or not choice:
+            return
+        donor_id = candidate_ids[labels.index(choice)]
+        donor = self.roster_service.get_member(donor_id)
+        if donor is None:
+            self.status.warning("The selected duplicate no longer exists.")
+            return
+
+        answer = QMessageBox.question(
+            self,
+            "Confirm Player Merge",
+            (
+                f"Keep {_clean(survivor.PlayerName)} and merge "
+                f"{_clean(donor.PlayerName)} into that player?\n\n"
+                "The duplicate's teams, assignments, characters/builds, and known "
+                "identity information will be preserved. Its current name will be "
+                "kept as an alias. A backup is created before the merge."
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            result = RosterPlayerIdentityService(
+                self.database,
+                self.build_library,
+            ).merge_players(
+                survivor_id=int(survivor_id),
+                donor_id=int(donor_id),
+                source="city_roster_manual_merge",
+            )
+            self.refresh()
+            self.player_detail_table.select_member_id(result.survivor_id)
+            self.load_member(result.survivor_id)
+            aliases = ", ".join(result.learned_aliases) or _clean(donor.PlayerName)
+            self.status.success(
+                f"Merged duplicate player. {_clean(survivor.PlayerName)} now remembers: {aliases}."
+            )
+        except Exception as exc:
+            self.status.error(f"Player merge failed: {exc}")
 
     def _cancel_player_edit(self) -> None:
         selected_id = (
