@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir, get_settings_path
+from engine.config import get_data_dir, get_settings_path, get_user_database_path
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.encounter_raid_map_store import EncounterRaidMapStore
 from services.expedition_service import ExpeditionService
@@ -472,8 +472,8 @@ class EncountersPage(FoundryPage):
         try:
             from services.finch_shared_publish_service import publish_raid_plan_to_finch
             publish_raid_plan_to_finch(
-                database_path=Path(get_data_dir()) / "eso.db",
-                raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+                database_path=get_user_database_path(),
+                raid_plans_path=get_user_database_path(),
                 plan_id=plan_id,
                 settings_path=get_settings_path(),
             )
