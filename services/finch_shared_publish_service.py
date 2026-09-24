@@ -376,7 +376,7 @@ def publish_raid_plan_to_finch(
         return FinchSharedPublishService(
             client=_configured_client(settings_path=settings_path, timeout=timeout),
             roster=roster,
-            build_service=BuildService(Path(database_path).with_name("builds.json")),
+            build_service=BuildService(get_data_dir() / "builds.json"),
         ).publish_raid_plan(
             plan,
             raid_maps=state.raid_map_links(plan.plan_id),
