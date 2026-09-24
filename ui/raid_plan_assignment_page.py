@@ -14,6 +14,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QCompleter, QHeaderView, QTableWidget, QTableWidgetItem
 
 from models.raid_plan import RaidPlan
+from services.raid_group_effect_catalog import GROUP_COVERAGE_NAMES
+from services.raid_unique_support_set_catalog import UNIQUE_SUPPORT_SET_NAMES
 from ui.components.foundry_card import FoundryCard
 from ui.raid_plan_page import RAID_PLAN_SEATS, _clean, _slug
 from ui.raid_plan_persistence_page import RaidPlanPersistencePage
@@ -21,8 +23,22 @@ from ui.roster_page import _assignment_choice_rows
 
 
 def raid_plan_assignment_choices() -> tuple[str, ...]:
-    """Return the same user-facing assignment vocabulary used by Roster Assignments."""
-    return tuple(label for label, _identity in _assignment_choice_rows() if _clean(label))
+    """Return one complete plan-owned support assignment vocabulary."""
+    values = [
+        *(label for label, _identity in _assignment_choice_rows() if _clean(label)),
+        *GROUP_COVERAGE_NAMES,
+        *UNIQUE_SUPPORT_SET_NAMES,
+    ]
+    seen: set[str] = set()
+    result: list[str] = []
+    for raw in values:
+        label = _clean(raw)
+        key = label.casefold()
+        if not label or key in seen:
+            continue
+        seen.add(key)
+        result.append(label)
+    return tuple(result)
 
 
 def merge_plan_assignment_values(
