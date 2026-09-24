@@ -235,7 +235,8 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "uses can now project source-backed instant Health/Magicka/Stamina restoration events. "
                 "Rotation requests "
                 "also carry potion selection/on-cooldown policy, but this is not yet exhaustive "
-                "runtime potion/poison mechanics."
+                "runtime potion/poison mechanics. Front/back poison identity and authoritative "
+                "20% / global-10-second trigger cadence are now available to runtime consumers."
             ),
             evidence_source=(
                 "minmax/character_build/saved_build_adapter.py; "
@@ -249,9 +250,9 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "Scheduled potion instant-restoration events now feed canonical generated-candidate "
                 "sustain evaluation, support-cadence sustain, recovery-heavy replay, and saved "
                 "Extreme resource records through the fail-closed result contract. Complete "
-                "remaining potion runtime effects beyond scheduled buff windows, plus poison effects, poison "
-                "trigger cadence, shared cooldowns, invisibility/detection/speed/Unstoppable "
-                "effects and any suppression or replacement rules."
+                "remaining potion runtime effects beyond scheduled buff windows, plus poison effect "
+                "magnitude/dilution/application, invisibility/detection/speed/Unstoppable effects, "
+                "and any poison-specific target/effect stacking rules not yet represented."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
@@ -330,15 +331,19 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             status=CanonicalMechanicsCoverageStatus.PARTIAL,
             capability=(
                 "Weapon type, bar ownership, traits, set identity and weapon-enchantment "
-                "identity are canonicalized from saved builds."
+                "identity are canonicalized from saved builds. Front/back poison ownership "
+                "is now persisted separately, adapted into canonical Bar state, and suppresses "
+                "only the enchantments on the poisoned weapon set. ZOS-backed poison cadence "
+                "evidence now covers 20% proc chance, qualifying damaging Light/Heavy/weapon "
+                "abilities, one global 10-second poison cooldown, and single-target DoT exclusion."
             ),
             evidence_source="minmax/character_build/saved_build_adapter.py",
             consumers=ALL_THREE,
             missing_evidence=(
                 "Verify weapon-specific light/heavy timing, bash cost/damage modifiers, "
-                "interrupt legality/timing, enchant proc/cooldown behavior, poison cadence, "
-                "dual-wield/two-hand legacy representation, arena weapon conditional rules "
-                "and weapon/passive interactions."
+                "interrupt legality/timing, remaining enchant cooldown topology, poison effect "
+                "identity/magnitude/dilution and runtime application, dual-wield/two-hand legacy "
+                "representation, arena weapon conditional rules and weapon/passive interactions."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
