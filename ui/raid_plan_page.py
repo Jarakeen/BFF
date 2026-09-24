@@ -32,6 +32,7 @@ from models.roster_model import ESO_CLASSES, RosterMember
 from services.build_service import BuildService
 from services.comp_builder_trial_scope import COMP_MAKER_TRIALS
 from services.eso_database import EsoDatabase
+from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.roster_service import RosterService
 from services.roster_placeholder_identity import is_personnel_placeholder
 from ui.components.foundry_button import ButtonRole, FoundryButton
@@ -405,14 +406,34 @@ class RaidPlanPage(FoundryPage):
         key = _clean(gamertag).casefold()
         if not key:
             return None
-        return next(
-            (
-                member
-                for member in self.personnel_members
-                if _clean(getattr(member, "PlayerName", "")).casefold() == key
-            ),
-            None,
-        )
+
+        exact = [
+            member
+            for member in self.personnel_members
+            if _clean(getattr(member, "PlayerName", "")).casefold() == key
+        ]
+        if len(exact) == 1:
+            return exact[0]
+
+        # Player merges deliberately retain the discarded display name as a durable
+        # alias.  Raid Plan chairs may still be showing that old text when Personnel
+        # is refreshed after a merge, so resolve the alias back to the survivor
+        # instead of treating the chair as an unknown/new player.
+        try:
+            matches = RosterPlayerIdentityService(
+                self.roster_service.db,
+                self.build_service,
+            ).matching_members(gamertag)
+        except Exception:
+            return None
+        return matches[0] if len(matches) == 1 else None
+
+    def _canonical_personnel_name(self, value: object) -> str:
+        text = _clean(value)
+        if not text:
+            return ""
+        match = self._personnel_match(text)
+        return _clean(getattr(match, "PlayerName", "")) if match is not None else text
 
     def refresh_personnel(self) -> None:
         try:
@@ -427,7 +448,7 @@ class RaidPlanPage(FoundryPage):
             combo = self.team_table.cellWidget(row, 1)
             if not isinstance(combo, QComboBox):
                 continue
-            current = _clean(combo.currentText())
+            current = self._canonical_personnel_name(combo.currentText())
             combo.blockSignals(True)
             combo.clear()
             combo.addItems(names)
