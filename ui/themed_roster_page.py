@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_settings_path
 from models.team_schedule import TeamSchedule
 from services.accessibility_preferences import AccessibilityPreferences
 from services.build_service import BuildService
@@ -565,7 +565,7 @@ class RosterPage(BaseRosterPage):
             publish_team_to_finch,
             database_path=Path(get_data_dir()) / "eso.db",
             team_name=team,
-            settings_path=Path("settings.json"),
+            settings_path=get_settings_path(),
         )
         self._finch_team_publish_timer.start()
 
@@ -597,7 +597,7 @@ class RosterPage(BaseRosterPage):
             list_shared_teams_from_finch,
             database_path=Path(get_data_dir()) / "eso.db",
             raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
-            settings_path=Path("settings.json"),
+            settings_path=get_settings_path(),
         )
         self._finch_team_read_timer.start()
 
@@ -675,7 +675,7 @@ class RosterPage(BaseRosterPage):
                 snapshot_key=preview.snapshot_key,
                 database_path=Path(get_data_dir()) / "eso.db",
                 raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
-                settings_path=Path("settings.json"),
+                settings_path=get_settings_path(),
             )
             return
 
