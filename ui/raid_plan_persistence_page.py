@@ -1022,20 +1022,25 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                                     break
                         if (
                             not matched
-                            and member.selected_build_name
                             and (
                                 member.planned_gear_sets
                                 or member.planned_skills
                                 or member.planned_mundus
                                 or member.candidate_id
                                 or member.build_source_kind
+                                or member.selected_build_name
                             )
                         ):
                             planned_sets = " + ".join(member.planned_gear_sets[:2])
+                            planned_name = (
+                                member.selected_build_name
+                                or member.build_source_name
+                                or "Comp Maker package"
+                            )
                             planned_label = (
                                 f"Planned • {planned_sets}"
                                 if planned_sets
-                                else f"Planned • {member.selected_build_name}"
+                                else f"Planned • {planned_name}"
                             )
                             build_combo.addItem(
                                 planned_label,
@@ -1044,7 +1049,9 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                             build_combo.setItemData(
                                 build_combo.count() - 1,
                                 " • ".join(member.planned_gear_sets)
-                                or member.selected_build_name,
+                                or member.selected_build_name
+                                or member.build_source_name
+                                or "Comp Maker package",
                                 Qt.ItemDataRole.ToolTipRole,
                             )
                             build_combo.setCurrentIndex(build_combo.count() - 1)
