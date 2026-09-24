@@ -1847,3 +1847,12 @@ Current ESO Support says poisons are equipped alongside wielded weapon sets and 
 **Layman's version:** poison on the back bar turns off the back-bar glyph. It does not reach across the character sheet and mug the front-bar glyph too.
 
 **For BFF:** saved builds and canonical bars now preserve front/back poison ownership separately, and weapon-enchantment source projection suppresses only the poisoned bar. Poison proc cadence, effect strength, and shared timing rules remain their own unresolved mechanics.
+
+
+## 2026-09-23 — Poisons use one global 10-second clock
+
+ZOS documented poisons as a 20% proc check on qualifying Light Attack, Heavy Attack, and weapon-ability damage, then separately documented that all poisons share one global cooldown and cannot proc more than once every 10 seconds. Single-target weapon-skill DoT ticks were later explicitly removed from poison proc eligibility.
+
+**Layman's version:** front-bar poison and back-bar poison do not each get their own little stopwatch. A poison proc spends the shared poison timer, and eligible hits only get a 20% chance when that timer is ready. Also, a lingering single-target DoT tick does not keep buying raffle tickets.
+
+**For BFF:** poison chance, trigger family, global cooldown scope, 10-second duration, and single-target DoT exclusion can now be modeled independently from poison effect magnitude/dilution. The remaining poison work is effect identity/application and integration into the finite runtime frontier.
