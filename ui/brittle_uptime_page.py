@@ -200,6 +200,15 @@ class BrittleUptimePage(FoundryPage):
         self.actor_note.setProperty("muted", True)
         hero_grid.addWidget(self.actor_note, 3, 2, 1, 2)
 
+        self.immunity_input = QLineEdit()
+        self.immunity_input.setPlaceholderText("Z'Maja immunity aura name (exact ESO Logs name)")
+        self.immunity_input.setToolTip(
+            "Optional exact boss immunity aura marker. When supplied, FoundryDock subtracts "
+            "that observed immune time and plots it beside Brittle/Heroism."
+        )
+        self.immunity_input.returnPressed.connect(self.load_report)
+        hero_grid.addWidget(self.immunity_input, 4, 0, 1, 4)
+
         hero.addLayout(hero_grid)
         self.workspace_layout.addWidget(hero)
 
@@ -211,12 +220,16 @@ class BrittleUptimePage(FoundryPage):
         self.best_tile = _MetricTile("Best Pull")
         self.low_tile = _MetricTile("Lowest Pull")
         self.spread_tile = _MetricTile("Spread")
+        self.heroism_tile = _MetricTile("Major Heroism")
+        self.immunity_tile = _MetricTile("Boss Immune")
         for tile in (
             self.count_tile,
             self.average_tile,
             self.best_tile,
             self.low_tile,
             self.spread_tile,
+            self.heroism_tile,
+            self.immunity_tile,
         ):
             metrics.addWidget(tile, 1)
         metrics_card.addLayout(metrics)
@@ -267,9 +280,13 @@ class BrittleUptimePage(FoundryPage):
         self.workspace_layout.addLayout(visual_row)
 
         comparison = FoundryCard("Pull Ledger", "archive")
-        self.fight_table = QTableWidget(0, 8)
+        self.fight_table = QTableWidget(0, 10)
         self.fight_table.setHorizontalHeaderLabels(
-            ["FIGHT", "ENCOUNTER", "RESULT", "DURATION", "ACTOR TIME", "ACTOR UPTIME", "RAID UPTIME", "SOURCE"]
+            [
+                "FIGHT", "ENCOUNTER", "RESULT", "DURATION",
+                "BRITTLE TIME", "BRITTLE UPTIME", "RAID BRITTLE",
+                "MAJOR HEROISM", "BOSS IMMUNE", "SOURCE",
+            ]
         )
         self.fight_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.fight_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -330,6 +347,11 @@ class BrittleUptimePage(FoundryPage):
         if not actor_id.isdigit() or int(actor_id) <= 0:
             actor_id = "72"
         self.actor_input.setText(actor_id)
+        try:
+            immunity_name = str(settings.get("BrittleImmunityAuraName", "") or "").strip()
+        except Exception:
+            immunity_name = ""
+        self.immunity_input.setText(immunity_name)
         self.actor_note.setText(f"Saved default actor: {actor_id}. Override it here for any report.")
 
     def _save_default_actor(self) -> None:
@@ -340,6 +362,7 @@ class BrittleUptimePage(FoundryPage):
         try:
             settings = self.settings_service.load()
             settings["BrittleDefaultActorId"] = actor_text
+            settings["BrittleImmunityAuraName"] = self.immunity_input.text().strip()
             self.settings_service.save(settings)
         except Exception as exc:
             self.status_bar.error(f"Could not save default Brittle actor: {exc}")
@@ -383,6 +406,8 @@ class BrittleUptimePage(FoundryPage):
                 fight_ids=self._fight_ids(),
                 kills_only=self.kills_only.isChecked(),
                 provider_actor_id=actor_id,
+                immunity_name=self.immunity_input.text().strip(),
+                immunity_kind="Buff",
             )
             self._render_report()
             self.status_bar.success(
@@ -409,6 +434,8 @@ class BrittleUptimePage(FoundryPage):
             self.best_tile,
             self.low_tile,
             self.spread_tile,
+            self.heroism_tile,
+            self.immunity_tile,
         ):
             tile.set_value("—")
         self.brief_heading.setText("No report loaded")
@@ -428,6 +455,14 @@ class BrittleUptimePage(FoundryPage):
         self.best_tile.set_value(f"{report.best_percent:.1f}%")
         self.low_tile.set_value(f"{report.lowest_percent:.1f}%")
         self.spread_tile.set_value(f"{spread:.1f} pts")
+        if report.fights:
+            heroism_avg = sum(row.heroism_percent for row in report.fights) / len(report.fights)
+            immunity_avg = sum(row.immunity_percent for row in report.fights) / len(report.fights)
+            self.heroism_tile.set_value(f"{heroism_avg:.1f}%")
+            self.immunity_tile.set_value(f"{immunity_avg:.1f}%")
+        else:
+            self.heroism_tile.set_value("—")
+            self.immunity_tile.set_value("—")
 
         self._render_pull_chart()
         self._render_brief()
@@ -443,6 +478,8 @@ class BrittleUptimePage(FoundryPage):
                 f"{fight.brittle_seconds:.1f}s",
                 f"{fight.brittle_percent:.1f}%",
                 f"{fight.raid_brittle_percent:.1f}%",
+                f"{fight.heroism_percent:.1f}% ({fight.heroism_seconds:.1f}s)",
+                f"{fight.immunity_percent:.1f}% ({fight.immunity_seconds:.1f}s)",
                 top_source,
             )
             for column, value in enumerate(values):
@@ -469,16 +506,30 @@ class BrittleUptimePage(FoundryPage):
             self.pull_chart_view.setChart(chart)
             return
 
-        values = QBarSet("Major Brittle")
-        values.setColor(QColor(_chart_palette()["gold"]))
+        brittle_values = QBarSet("Major Brittle")
+        brittle_values.setColor(QColor(_chart_palette()["gold"]))
+        heroism_values = QBarSet("Major Heroism")
+        heroism_values.setColor(QColor(_chart_palette()["accent"]))
+        immunity_values = QBarSet("Boss immune")
+        immunity_color = QColor(_chart_palette()["muted"])
+        immunity_color.setAlpha(150)
+        immunity_values.setColor(immunity_color)
+
         categories: list[str] = []
         for fight in report.fights:
-            values.append(float(fight.brittle_percent))
+            brittle_values.append(float(fight.brittle_percent))
+            heroism_values.append(float(fight.heroism_percent))
+            immunity_values.append(float(fight.immunity_percent))
             categories.append(f"#{fight.fight_id}")
 
         series = QBarSeries()
-        series.append(values)
+        series.append(brittle_values)
+        series.append(heroism_values)
+        if any(float(fight.immunity_percent) > 0 for fight in report.fights):
+            series.append(immunity_values)
         chart.addSeries(series)
+        chart.legend().setVisible(True)
+        chart.setTitle("Selected actor support uptime · boss immunity context")
 
         axis_x = QBarCategoryAxis()
         axis_x.append(categories)
@@ -557,7 +608,11 @@ class BrittleUptimePage(FoundryPage):
             f"{top_provider} Major Brittle averaged {report.average_percent:.1f}% across the selected fights.\n\n"
             f"Strongest observed pull: Fight {best.fight_id} at {best.brittle_percent:.1f}%.\n"
             f"Lowest observed pull: Fight {low.fight_id} at {low.brittle_percent:.1f}%.\n"
-            f"Observed spread: {spread:.1f} percentage points.\n\n"
+            f"Observed spread: {spread:.1f} percentage points.\n"
+            f"Major Heroism average group-recipient uptime: "
+            f"{sum(row.heroism_percent for row in report.fights) / len(report.fights):.1f}%.\n"
+            f"Observed boss-immunity time: "
+            f"{sum(row.immunity_seconds for row in report.fights):.1f}s across selected pulls.\n\n"
             f"Most source-attributed Brittle time across these pulls: {top_provider}.\n\n"
             "No performance target is assumed here. This page reports observed log evidence only."
         )
