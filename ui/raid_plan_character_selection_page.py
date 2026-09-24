@@ -45,19 +45,44 @@ def known_character_names(saved_builds, personnel_members, gamertag: str) -> tup
     return tuple(sorted(by_key.values(), key=str.casefold))
 
 
-def matching_saved_build_indices(saved_builds, gamertag: str, character_name: str = "") -> tuple[int, ...]:
-    """Return exact saved-build candidates for one player and optional character."""
+def matching_saved_build_indices(
+    saved_builds,
+    gamertag: str,
+    character_name: str = "",
+    *,
+    player_id: str | None = None,
+    character_id: str | None = None,
+) -> tuple[int, ...]:
+    """Return saved-build candidates using stable identity before display text.
+
+    Phase 14 canonical builds carry PlayerId/CharacterId/BuildId. Display names may
+    legitimately drift after Personnel merges or cleanup, so exact canonical identity
+    must outrank legacy Gamertag/character text matching.
+    """
     player_key = _clean(gamertag).casefold()
     character_key = _clean(character_name).casefold()
-    if not player_key:
+    canonical_player_id = _clean(player_id).casefold()
+    canonical_character_id = _clean(character_id).casefold()
+    if not player_key and not canonical_player_id:
         return ()
 
     matches: list[int] = []
     for index, build in enumerate(tuple(saved_builds or ())):
-        if _clean(getattr(build, "Gamertag", "")).casefold() != player_key:
+        build_player_id = _clean(getattr(build, "PlayerId", "")).casefold()
+        build_character_id = _clean(getattr(build, "CharacterId", "")).casefold()
+
+        if canonical_player_id:
+            if build_player_id != canonical_player_id:
+                continue
+        elif _clean(getattr(build, "Gamertag", "")).casefold() != player_key:
             continue
-        if character_key and _clean(getattr(build, "Name", "")).casefold() != character_key:
+
+        if canonical_character_id:
+            if build_character_id != canonical_character_id:
+                continue
+        elif character_key and _clean(getattr(build, "Name", "")).casefold() != character_key:
             continue
+
         matches.append(index)
     return tuple(matches)
 
@@ -223,10 +248,24 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
             _clean(getattr(prior_build, "BuildName", "")).casefold(),
         ) if prior_build is not None else None
 
-        matches = matching_saved_build_indices(
-            self.saved_builds,
-            self._player_text(row),
-            self._item_text(self.team_table, row, 2),
+        selected_player_id = (
+            self._selected_player_id(row)
+            if callable(getattr(self, "_selected_player_id", None))
+            else None
+        )
+        selected_character_id = (
+            self._selected_character_id(row)
+            if callable(getattr(self, "_selected_character_id", None))
+            else None
+        )
+        matches = list(
+            matching_saved_build_indices(
+                self.saved_builds,
+                self._player_text(row),
+                self._item_text(self.team_table, row, 2),
+                player_id=selected_player_id,
+                character_id=selected_character_id,
+            )
         )
 
         # A Raid Plan owns an explicit stable BuildId. Exact stable identity is
