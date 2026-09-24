@@ -11,6 +11,7 @@ resolution succeeds.
 from dataclasses import dataclass
 from pathlib import Path
 
+from engine.config import get_settings_path
 from services.eso_database import EsoDatabase
 from services.finch_api_client import FinchApiClient, FinchGearNeedRequest, FinchRegistration
 from services.roster_assignment_context_service import RosterAssignmentContextService
@@ -406,7 +407,7 @@ class FinchRosterSyncService:
 def sync_finch_gear_needs(
     *,
     database_path: Path,
-    settings_path: Path = Path("settings.json"),
+    settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> FinchGearNeedSyncSummary:
     """Run one explicit Finch sync using a worker-owned SQLite connection."""
