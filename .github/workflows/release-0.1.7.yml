@@ -96,19 +96,45 @@ jobs:
             throw "FoundryDock-update.zip was not produced."
           }
 
-      - name: Create patch release
+      - name: Create or update patch release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete phase14.1.7 --yes --cleanup-tag 2>$null
-          gh release create phase14.1.7 `
-            dist/FoundryDock-0.1.7.zip `
-            dist/FoundryDock-update.zip `
-            dist/FoundryDock-update.zip.sha256 `
-            --target "${{ github.sha }}" `
-            --title "FoundryDock 0.1.7" `
-            --notes "Patch release for Finch collaboration and raid-planning persistence. Shared Teams/Raid Plans now use foundrydock.db end to end; Assignments/Comp/Coverage handoffs require verified saved checkpoints; Raid Plan revisions and whole-database pre-save snapshots protect save points; shared planned skills survive Copy to Local; Coverage adds current BTV-style support effects and never renders empty. Fresh installs receive populated reference planning data. Existing user databases are never replaced."
+          $ErrorActionPreference = "Stop"
+          $tag = "phase14.1.7"
+          gh release view $tag *> $null
+          $releaseExists = ($LASTEXITCODE -eq 0)
+
+          if ($releaseExists) {
+            git tag -f $tag "${{ github.sha }}"
+            if ($LASTEXITCODE -ne 0) { throw "Could not update local release tag." }
+            git push origin "refs/tags/$tag" --force
+            if ($LASTEXITCODE -ne 0) { throw "Could not move release tag to tested commit." }
+
+            gh release upload $tag `
+              dist/FoundryDock-0.1.7.zip `
+              dist/FoundryDock-update.zip `
+              dist/FoundryDock-update.zip.sha256 `
+              --clobber
+            if ($LASTEXITCODE -ne 0) { throw "Could not replace release assets." }
+
+            gh release edit $tag `
+              --title "FoundryDock 0.1.7" `
+              --notes "Patch release for Finch collaboration and raid-planning persistence. Shared Teams/Raid Plans now use foundrydock.db end to end; Assignments/Comp/Coverage handoffs require verified saved checkpoints; Raid Plan revisions and whole-database pre-save snapshots protect save points; shared planned skills survive Copy to Local; Coverage adds current BTV-style support effects and never renders empty. Fresh installs receive populated reference planning data. Existing user databases are never replaced."
+            if ($LASTEXITCODE -ne 0) { throw "Could not update release metadata." }
+          }
+          else {
+            gh release create $tag `
+              dist/FoundryDock-0.1.7.zip `
+              dist/FoundryDock-update.zip `
+              dist/FoundryDock-update.zip.sha256 `
+              --target "${{ github.sha }}" `
+              --title "FoundryDock 0.1.7" `
+              --notes "Patch release for Finch collaboration and raid-planning persistence. Shared Teams/Raid Plans now use foundrydock.db end to end; Assignments/Comp/Coverage handoffs require verified saved checkpoints; Raid Plan revisions and whole-database pre-save snapshots protect save points; shared planned skills survive Copy to Local; Coverage adds current BTV-style support effects and never renders empty. Fresh installs receive populated reference planning data. Existing user databases are never replaced."
+            if ($LASTEXITCODE -ne 0) { throw "Could not create patch release." }
+          }
+
 
 # rebuild-after-finch-settings-path
 
@@ -125,3 +151,5 @@ jobs:
 # rebuild-after-planning-stability-green
 
 # final-rebuild-after-51-planning-tests-green
+
+# release-update-without-destructive-delete
