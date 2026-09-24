@@ -1,0 +1,155 @@
+name: FoundryDock Patch Release 0.1.8
+
+on:
+  push:
+    branches:
+      - phase14
+    paths:
+      - ".github/workflows/release-0.1.8.yml"
+
+concurrency:
+  group: foundrydock-release-0.1.8
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+      - name: Check out phase14
+        uses: actions/checkout@v4
+        with:
+          ref: phase14
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-build.txt
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python -m pip install --upgrade pip
+          if ($LASTEXITCODE -ne 0) { throw "pip upgrade failed" }
+          python -m pip install -r requirements-build.txt pytest
+          if ($LASTEXITCODE -ne 0) { throw "Windows build dependencies failed to install" }
+
+      - name: Run 0.1.8 release regression tests
+        shell: pwsh
+        run: |
+          python -m pytest `
+            services/tests/test_performance_mode_u50_shared_templates.py `
+            services/tests/test_build_reuse_service.py `
+            services/tests/test_finch_shared_import_service.py `
+            services/tests/test_raid_coverage_catalog_expansion.py `
+            services/tests/test_raid_plan_repository_revisions.py `
+            services/tests/test_phase14_planning_workflow_roundtrip.py `
+            services/tests/test_comp_build_persistence_service.py `
+            tools/tests/test_build_release_user_database_seed.py `
+            packaging/tests/test_release_contract.py `
+            ui/tests/test_release_population_contract.py `
+            ui/tests/test_raid_engine_workflow_handoffs.py `
+            ui/tests/test_raid_plan_coverage_support.py `
+            ui/tests/test_shared_plan_persistence_failsafes.py `
+            ui/tests/test_assignment_save_stability.py `
+            ui/tests/test_raid_plan_assignment_page.py `
+            -q
+          if ($LASTEXITCODE -ne 0) { throw "0.1.8 release regression tests failed." }
+
+      - name: Build friend package
+        shell: pwsh
+        run: |
+          ./packaging/build_friend.ps1 -IncludeBroadcast
+          if ($LASTEXITCODE -ne 0) { throw "Friend/update packaging failed." }
+
+      - name: Verify shared template data is packaged
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $template = "dist/BFF-Friend/data/build_templates.json"
+          if (-not (Test-Path $template -PathType Leaf)) {
+            throw "Shared build template catalog is missing from the packaged app."
+          }
+          python -c "import json,sys; p=json.load(open(sys.argv[1],encoding='utf-8')); names={x.get('name') for x in p.get('templates',[])}; assert 'PM U50 — Warden Healer — Jarakeen' in names; assert \"PM U50 — Dragonknight Z'enKosh — Cobble\" in names; print('Shared Performance Mode templates: PASS')" $template
+          if ($LASTEXITCODE -ne 0) { throw "Shared template package validation failed." }
+
+      - name: Smoke test packaged executable
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $exe = Resolve-Path "dist/BFF-Friend/FoundryDock.exe"
+          $crash = Join-Path (Split-Path $exe -Parent) "FoundryDock-crash.log"
+          if (Test-Path $crash) { Remove-Item $crash -Force }
+          $proc = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 20
+          if ($proc.HasExited) {
+            if (Test-Path $crash) {
+              Get-Content $crash -Raw
+            }
+            throw "Packaged FoundryDock exited during startup smoke test."
+          }
+          Stop-Process -Id $proc.Id -Force
+          Write-Host "Packaged FoundryDock remained running through startup smoke test."
+
+      - name: Prepare release assets
+        shell: pwsh
+        run: |
+          Copy-Item dist/BFF-Friend.zip dist/FoundryDock-0.1.8.zip -Force
+          if (-not (Test-Path dist/FoundryDock-update.zip)) {
+            throw "FoundryDock-update.zip was not produced."
+          }
+          if (-not (Test-Path dist/FoundryDock-update.zip.sha256)) {
+            throw "FoundryDock-update.zip.sha256 was not produced."
+          }
+
+      - name: Create or update patch release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $tag = "phase14.1.8"
+          gh release view $tag *> $null
+          $releaseExists = ($LASTEXITCODE -eq 0)
+
+          if ($releaseExists) {
+            git tag -f $tag "${{ github.sha }}"
+            if ($LASTEXITCODE -ne 0) { throw "Could not update local release tag." }
+            git push origin "refs/tags/$tag" --force
+            if ($LASTEXITCODE -ne 0) { throw "Could not move release tag to tested commit." }
+
+            gh release upload $tag `
+              dist/FoundryDock-0.1.8.zip `
+              dist/FoundryDock-update.zip `
+              dist/FoundryDock-update.zip.sha256 `
+              --clobber
+            if ($LASTEXITCODE -ne 0) { throw "Could not replace release assets." }
+
+            gh release edit $tag `
+              --title "FoundryDock 0.1.8" `
+              --notes "Patch release carrying the latest Phase 14 planning/build fixes plus the shared Performance Mode U50 comp catalog. Builds → Templates now includes reusable tank, healer, and DD packages for Jarakeen, Rylo, and other compatible Personnel characters. The update preserves foundrydock.db, saved builds, Personnel, Teams, Raid Plans, progress, settings, and session data."
+            if ($LASTEXITCODE -ne 0) { throw "Could not update release metadata." }
+          }
+          else {
+            git tag -f $tag "${{ github.sha }}"
+            if ($LASTEXITCODE -ne 0) { throw "Could not create local release tag." }
+            git push origin "refs/tags/$tag" --force
+            if ($LASTEXITCODE -ne 0) { throw "Could not publish tested release tag." }
+
+            gh release create $tag `
+              dist/FoundryDock-0.1.8.zip `
+              dist/FoundryDock-update.zip `
+              dist/FoundryDock-update.zip.sha256 `
+              --verify-tag `
+              --title "FoundryDock 0.1.8" `
+              --notes "Patch release carrying the latest Phase 14 planning/build fixes plus the shared Performance Mode U50 comp catalog. Builds → Templates now includes reusable tank, healer, and DD packages for Jarakeen, Rylo, and other compatible Personnel characters. The update preserves foundrydock.db, saved builds, Personnel, Teams, Raid Plans, progress, settings, and session data."
+            if ($LASTEXITCODE -ne 0) { throw "Could not create patch release from verified tag." }
+          }
