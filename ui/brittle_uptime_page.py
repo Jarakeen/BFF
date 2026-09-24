@@ -1,16 +1,28 @@
 from __future__ import annotations
 
-"""Review workspace for cross-pull Minor Brittle uptime."""
+"""Fancy Review workspace for cross-pull Minor Brittle uptime."""
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QMargins
+from PySide6.QtGui import QColor
+from PySide6.QtCharts import (
+    QBarCategoryAxis,
+    QBarSeries,
+    QBarSet,
+    QChart,
+    QChartView,
+    QHorizontalBarSeries,
+    QValueAxis,
+)
 from PySide6.QtWidgets import (
     QCheckBox,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
+    QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -24,6 +36,8 @@ from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
 from ui.foundry_page import FoundryPage
+from ui.theme.colors import Colors
+from ui.theme.fonts import Fonts
 
 
 def _duration(seconds: float) -> str:
@@ -33,6 +47,49 @@ def _duration(seconds: float) -> str:
     if hours:
         return f"{hours:d}:{minute:02d}:{second:02d}"
     return f"{minute:02d}:{second:02d}"
+
+
+def _new_chart(title: str = "") -> QChart:
+    chart = QChart()
+    chart.setBackgroundBrush(QColor(Colors.SURFACE))
+    chart.setBackgroundRoundness(0)
+    chart.setMargins(QMargins(8, 8, 8, 8))
+    chart.legend().hide()
+    chart.setTitle(title)
+    chart.setTitleBrush(QColor(Colors.GOLD_LIGHT))
+    return chart
+
+
+def _style_axis(axis, *, grid: bool = True) -> None:
+    axis.setLabelsColor(QColor(Colors.TEXT))
+    axis.setLinePen(QColor(Colors.BORDER))
+    if grid:
+        axis.setGridLineColor(QColor(Colors.BORDER))
+    else:
+        axis.setGridLineVisible(False)
+
+
+class _MetricTile(QWidget):
+    def __init__(self, caption: str, parent=None) -> None:
+        super().__init__(parent)
+        self.setProperty("brittleMetricTile", True)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 9, 12, 9)
+        layout.setSpacing(2)
+
+        self.value = QLabel("—")
+        self.value.setFont(Fonts.statistic())
+        self.value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.value.setStyleSheet(f"color: {Colors.GOLD_LIGHT};")
+        layout.addWidget(self.value)
+
+        label = QLabel(caption.upper())
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setStyleSheet(f"color: {Colors.TEXT_MUTED}; font-size: 10px;")
+        layout.addWidget(label)
+
+    def set_value(self, text: str) -> None:
+        self.value.setText(text)
 
 
 class BrittleUptimePage(FoundryPage):
@@ -54,59 +111,114 @@ class BrittleUptimePage(FoundryPage):
     def _build_ui(self) -> None:
         self.header = FoundryHeader(
             title="Brittle Uptime",
-            subtitle="Minor Brittle evidence from ESO Logs, pull by pull and provider by provider.",
+            subtitle="Pull-by-pull Minor Brittle evidence, with provider attribution and visual comparison.",
             department="RAID • REVIEW",
             icon="archive",
         )
         self.set_header(self.header)
 
-        inputs = FoundryCard("Log Scope", "search")
-        row = QHBoxLayout()
-        row.setSpacing(8)
+        hero = FoundryCard("Minor Brittle Field Study", "compass")
+        hero_grid = QGridLayout()
+        hero_grid.setHorizontalSpacing(12)
+        hero_grid.setVerticalSpacing(7)
+
+        title = QLabel("DEBUFF UPTIME DOSSIER")
+        title.setFont(Fonts.heading())
+        title.setStyleSheet(f"color: {Colors.GOLD_LIGHT};")
+        hero_grid.addWidget(title, 0, 0, 1, 4)
+
+        subtitle = QLabel(
+            "Raid-wide uptime answers whether the boss had Minor Brittle. "
+            "Provider attribution answers who actually contributed to keeping it there."
+        )
+        subtitle.setWordWrap(True)
+        subtitle.setStyleSheet(f"color: {Colors.TEXT_MUTED};")
+        hero_grid.addWidget(subtitle, 1, 0, 1, 4)
 
         self.report_input = QLineEdit()
         self.report_input.setPlaceholderText("ESO Logs report URL or code")
         self.report_input.returnPressed.connect(self.load_report)
-        row.addWidget(self.report_input, 3)
+        hero_grid.addWidget(self.report_input, 2, 0, 1, 2)
 
         self.fights_input = QLineEdit()
         self.fights_input.setPlaceholderText("Fight IDs, e.g. 6,21,25,32")
         self.fights_input.returnPressed.connect(self.load_report)
-        row.addWidget(self.fights_input, 2)
+        hero_grid.addWidget(self.fights_input, 2, 2)
 
+        controls = QHBoxLayout()
         self.kills_only = QCheckBox("Kills only")
         self.kills_only.setChecked(True)
-        row.addWidget(self.kills_only)
+        controls.addWidget(self.kills_only)
 
-        self.load_button = QPushButton("Load Brittle")
+        self.load_button = QPushButton("Analyze Brittle")
         self.load_button.setProperty("primary", True)
         self.load_button.clicked.connect(self.load_report)
-        row.addWidget(self.load_button)
-        inputs.addLayout(row)
+        controls.addWidget(self.load_button)
+        hero_grid.addLayout(controls, 2, 3)
 
-        note = QLabel(
-            "Raid uptime is the ESO Logs enemy-debuff uptime for Minor Brittle. "
-            "Duplicate Minor Brittle ability IDs are de-duplicated instead of summed. "
-            "Provider rows show source-attributed uptime and can overlap, so provider percentages "
-            "are evidence of contribution, not pieces that must add to the raid total."
+        hero.addLayout(hero_grid)
+        self.workspace_layout.addWidget(hero)
+
+        metrics_card = FoundryCard("At a Glance", "chart")
+        metrics = QHBoxLayout()
+        metrics.setSpacing(8)
+        self.count_tile = _MetricTile("Fights")
+        self.average_tile = _MetricTile("Average")
+        self.best_tile = _MetricTile("Best Pull")
+        self.low_tile = _MetricTile("Lowest Pull")
+        self.spread_tile = _MetricTile("Spread")
+        for tile in (
+            self.count_tile,
+            self.average_tile,
+            self.best_tile,
+            self.low_tile,
+            self.spread_tile,
+        ):
+            metrics.addWidget(tile, 1)
+        metrics_card.addLayout(metrics)
+        self.workspace_layout.addWidget(metrics_card)
+
+        visual_row = QHBoxLayout()
+        visual_row.setSpacing(10)
+
+        pull_card = FoundryCard("Uptime by Pull", "chart")
+        self.pull_chart_view = QChartView(_new_chart("Load a report to compare pulls"))
+        self.pull_chart_view.setRenderHint(self.pull_chart_view.renderHints().Antialiasing, True)
+        self.pull_chart_view.setMinimumHeight(300)
+        self.pull_chart_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        pull_card.addWidget(self.pull_chart_view)
+        visual_row.addWidget(pull_card, 3)
+
+        brief_card = FoundryCard("Evidence Brief", "clipboard")
+        self.brief_heading = QLabel("No report loaded")
+        self.brief_heading.setFont(Fonts.heading())
+        self.brief_heading.setWordWrap(True)
+        brief_card.addWidget(self.brief_heading)
+
+        self.brief_body = QLabel(
+            "Load an ESO Logs report and FoundryDock will summarize the strongest pull, "
+            "the weakest pull, consistency spread, and provider evidence without inventing a target threshold."
         )
-        note.setWordWrap(True)
-        note.setProperty("muted", True)
-        inputs.addWidget(note)
-        self.workspace_layout.addWidget(inputs)
+        self.brief_body.setWordWrap(True)
+        self.brief_body.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.brief_body.setStyleSheet(f"color: {Colors.TEXT};")
+        brief_card.addWidget(self.brief_body)
 
-        summary = FoundryCard("Kill Comparison", "compass")
-        summary_row = QHBoxLayout()
-        self.count_label = QLabel("Fights\n—")
-        self.average_label = QLabel("Average\n—")
-        self.best_label = QLabel("Best\n—")
-        self.low_label = QLabel("Lowest\n—")
-        for widget in (self.count_label, self.average_label, self.best_label, self.low_label):
-            widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            widget.setProperty("heroTitle", True)
-            summary_row.addWidget(widget, 1)
-        summary.addLayout(summary_row)
+        proof_note = QLabel(
+            "FIELD NOTE\nDuplicate Minor Brittle IDs are de-duplicated by effect name. "
+            "Provider rows may overlap, so they are not summed into raid uptime."
+        )
+        proof_note.setWordWrap(True)
+        proof_note.setProperty("muted", True)
+        proof_note.setStyleSheet(
+            f"color: {Colors.TEXT_MUTED}; border-top: 1px solid {Colors.BORDER}; padding-top: 8px;"
+        )
+        brief_card.addWidget(proof_note)
+        visual_row.addWidget(brief_card, 2)
 
+        self.workspace_layout.addLayout(visual_row)
+
+        comparison = FoundryCard("Pull Ledger", "archive")
         self.fight_table = QTableWidget(0, 8)
         self.fight_table.setHorizontalHeaderLabels(
             ["FIGHT", "ENCOUNTER", "RESULT", "DURATION", "BRITTLE TIME", "UPTIME", "PROVIDERS", "TOP SOURCE"]
@@ -117,14 +229,25 @@ class BrittleUptimePage(FoundryPage):
         self.fight_table.verticalHeader().setVisible(False)
         self.fight_table.itemSelectionChanged.connect(self._show_selected_providers)
         self.fight_table.horizontalHeader().setStretchLastSection(True)
-        summary.addWidget(self.fight_table)
-        self.workspace_layout.addWidget(summary)
+        comparison.addWidget(self.fight_table)
+        self.workspace_layout.addWidget(comparison)
 
-        detail = FoundryCard("Selected Pull · Provider Evidence", "clipboard")
+        detail_row = QHBoxLayout()
+        detail_row.setSpacing(10)
+
+        provider_card = FoundryCard("Selected Pull · Provider Contribution", "chart")
         self.provider_heading = QLabel("Select a pull")
-        self.provider_heading.setProperty("heroTitle", True)
-        detail.addWidget(self.provider_heading)
+        self.provider_heading.setFont(Fonts.heading())
+        self.provider_heading.setWordWrap(True)
+        provider_card.addWidget(self.provider_heading)
 
+        self.provider_chart_view = QChartView(_new_chart("Provider evidence appears here"))
+        self.provider_chart_view.setMinimumHeight(260)
+        self.provider_chart_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        provider_card.addWidget(self.provider_chart_view)
+        detail_row.addWidget(provider_card, 3)
+
+        provider_table_card = FoundryCard("Source Ledger", "clipboard")
         self.provider_table = QTableWidget(0, 5)
         self.provider_table.setHorizontalHeaderLabels(
             ["PLAYER", "ROLE", "BRITTLE TIME", "SOURCE UPTIME", "ACTOR ID"]
@@ -133,16 +256,18 @@ class BrittleUptimePage(FoundryPage):
         self.provider_table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
         self.provider_table.verticalHeader().setVisible(False)
         self.provider_table.horizontalHeader().setStretchLastSection(True)
-        detail.addWidget(self.provider_table)
+        provider_table_card.addWidget(self.provider_table)
 
         provider_note = QLabel(
-            "Source uptime can overlap when multiple players apply Minor Brittle. "
-            "Use raid uptime for whether the boss had the debuff; use provider rows to establish who contributed."
+            "Raid uptime is the authoritative 'was Minor Brittle on the boss?' number. "
+            "Source uptime is attribution evidence and can overlap between players."
         )
         provider_note.setWordWrap(True)
         provider_note.setProperty("muted", True)
-        detail.addWidget(provider_note)
-        self.workspace_layout.addWidget(detail)
+        provider_table_card.addWidget(provider_note)
+        detail_row.addWidget(provider_table_card, 2)
+
+        self.workspace_layout.addLayout(detail_row)
 
         self.status_bar = FoundryStatusBar()
         self.set_status(self.status_bar)
@@ -182,34 +307,47 @@ class BrittleUptimePage(FoundryPage):
             )
         except (EsoLogsApiError, ValueError) as exc:
             self._report = None
-            self._clear_tables()
+            self._clear()
             self.status_bar.error(str(exc))
         except Exception as exc:
             self._report = None
-            self._clear_tables()
+            self._clear()
             self.status_bar.error(f"Brittle analysis failed: {exc}")
         finally:
             self.load_button.setEnabled(True)
 
-    def _clear_tables(self) -> None:
+    def _clear(self) -> None:
         self.fight_table.setRowCount(0)
         self.provider_table.setRowCount(0)
         self.provider_heading.setText("Select a pull")
-        self.count_label.setText("Fights\n—")
-        self.average_label.setText("Average\n—")
-        self.best_label.setText("Best\n—")
-        self.low_label.setText("Lowest\n—")
+        for tile in (
+            self.count_tile,
+            self.average_tile,
+            self.best_tile,
+            self.low_tile,
+            self.spread_tile,
+        ):
+            tile.set_value("—")
+        self.brief_heading.setText("No report loaded")
+        self.brief_body.setText("Load a report to build the Brittle evidence brief.")
+        self.pull_chart_view.setChart(_new_chart("No pull data"))
+        self.provider_chart_view.setChart(_new_chart("No provider data"))
 
     def _render_report(self) -> None:
         report = self._report
         if report is None:
-            self._clear_tables()
+            self._clear()
             return
 
-        self.count_label.setText(f"Fights\n{len(report.fights)}")
-        self.average_label.setText(f"Average\n{report.average_percent:.1f}%")
-        self.best_label.setText(f"Best\n{report.best_percent:.1f}%")
-        self.low_label.setText(f"Lowest\n{report.lowest_percent:.1f}%")
+        spread = max(0.0, report.best_percent - report.lowest_percent)
+        self.count_tile.set_value(str(len(report.fights)))
+        self.average_tile.set_value(f"{report.average_percent:.1f}%")
+        self.best_tile.set_value(f"{report.best_percent:.1f}%")
+        self.low_tile.set_value(f"{report.lowest_percent:.1f}%")
+        self.spread_tile.set_value(f"{spread:.1f} pts")
+
+        self._render_pull_chart()
+        self._render_brief()
 
         self.fight_table.setRowCount(len(report.fights))
         for row_index, fight in enumerate(report.fights):
@@ -227,6 +365,8 @@ class BrittleUptimePage(FoundryPage):
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
                 item.setData(Qt.ItemDataRole.UserRole, row_index)
+                if column in (0, 2, 4, 5, 6):
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.fight_table.setItem(row_index, column, item)
 
         self.fight_table.resizeColumnsToContents()
@@ -236,6 +376,108 @@ class BrittleUptimePage(FoundryPage):
         else:
             self.provider_table.setRowCount(0)
             self.provider_heading.setText("No matching fights")
+            self.provider_chart_view.setChart(_new_chart("No provider data"))
+
+    def _render_pull_chart(self) -> None:
+        report = self._report
+        chart = _new_chart("Minor Brittle · Raid Uptime")
+        if report is None or not report.fights:
+            chart.setTitle("No matching fights")
+            self.pull_chart_view.setChart(chart)
+            return
+
+        values = QBarSet("Minor Brittle")
+        values.setColor(QColor(Colors.GOLD))
+        categories: list[str] = []
+        for fight in report.fights:
+            values.append(float(fight.brittle_percent))
+            categories.append(f"#{fight.fight_id}")
+
+        series = QBarSeries()
+        series.append(values)
+        chart.addSeries(series)
+
+        axis_x = QBarCategoryAxis()
+        axis_x.append(categories)
+        _style_axis(axis_x, grid=False)
+        chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
+        series.attachAxis(axis_x)
+
+        axis_y = QValueAxis()
+        axis_y.setRange(0.0, 100.0)
+        axis_y.setTickCount(6)
+        axis_y.setLabelFormat("%.0f%%")
+        _style_axis(axis_y)
+        chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
+        series.attachAxis(axis_y)
+
+        self.pull_chart_view.setChart(chart)
+
+    def _render_provider_chart(self, fight) -> None:
+        chart = _new_chart("Source-attributed Minor Brittle uptime")
+        if not fight.providers:
+            chart.setTitle("No source-attributed Minor Brittle provider found")
+            self.provider_chart_view.setChart(chart)
+            return
+
+        series = QHorizontalBarSeries()
+        values = QBarSet("Source uptime")
+        values.setColor(QColor(Colors.ACCENT_LIGHT))
+        categories: list[str] = []
+        for provider in reversed(fight.providers[:8]):
+            values.append(float(provider.uptime_percent))
+            categories.append(provider.actor_label)
+        series.append(values)
+        chart.addSeries(series)
+
+        axis_y = QBarCategoryAxis()
+        axis_y.append(categories)
+        _style_axis(axis_y, grid=False)
+        chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
+        series.attachAxis(axis_y)
+
+        axis_x = QValueAxis()
+        axis_x.setRange(0.0, 100.0)
+        axis_x.setTickCount(6)
+        axis_x.setLabelFormat("%.0f%%")
+        _style_axis(axis_x)
+        chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
+        series.attachAxis(axis_x)
+
+        self.provider_chart_view.setChart(chart)
+
+    def _render_brief(self) -> None:
+        report = self._report
+        if report is None or not report.fights:
+            self.brief_heading.setText("No matching fights")
+            self.brief_body.setText("Nothing to summarize.")
+            return
+
+        best = max(report.fights, key=lambda row: row.brittle_percent)
+        low = min(report.fights, key=lambda row: row.brittle_percent)
+        spread = best.brittle_percent - low.brittle_percent
+
+        provider_totals: dict[str, float] = {}
+        for fight in report.fights:
+            for provider in fight.providers:
+                provider_totals[provider.actor_label] = (
+                    provider_totals.get(provider.actor_label, 0.0) + provider.uptime_seconds
+                )
+        top_provider = (
+            max(provider_totals.items(), key=lambda row: row[1])[0]
+            if provider_totals
+            else "No source-attributed provider"
+        )
+
+        self.brief_heading.setText(f"{len(report.fights)} pull evidence set")
+        self.brief_body.setText(
+            f"Raid-wide Minor Brittle averaged {report.average_percent:.1f}% across the selected fights.\n\n"
+            f"Strongest observed pull: Fight {best.fight_id} at {best.brittle_percent:.1f}%.\n"
+            f"Lowest observed pull: Fight {low.fight_id} at {low.brittle_percent:.1f}%.\n"
+            f"Observed spread: {spread:.1f} percentage points.\n\n"
+            f"Most source-attributed Brittle time across these pulls: {top_provider}.\n\n"
+            "No performance target is assumed here. This page reports observed log evidence only."
+        )
 
     def _show_selected_providers(self) -> None:
         if self._report is None:
@@ -251,6 +493,8 @@ class BrittleUptimePage(FoundryPage):
         self.provider_heading.setText(
             f"Fight {fight.fight_id} · {fight.fight_name} · raid uptime {fight.brittle_percent:.1f}%"
         )
+        self._render_provider_chart(fight)
+
         self.provider_table.setRowCount(len(fight.providers))
         for row, provider in enumerate(fight.providers):
             values = (
@@ -261,7 +505,10 @@ class BrittleUptimePage(FoundryPage):
                 str(provider.actor_id),
             )
             for column, value in enumerate(values):
-                self.provider_table.setItem(row, column, QTableWidgetItem(value))
+                item = QTableWidgetItem(value)
+                if column in (2, 3, 4):
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.provider_table.setItem(row, column, item)
         self.provider_table.resizeColumnsToContents()
         self.provider_table.resizeRowsToContents()
 
