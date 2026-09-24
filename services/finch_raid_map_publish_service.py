@@ -13,7 +13,7 @@ import re
 
 from PIL import Image
 
-from engine.config import get_settings_path
+from engine.config import get_settings_path, get_user_database_path
 from services.finch_api_client import FinchApiClient
 from services.settings_service import SettingsService
 
@@ -161,8 +161,8 @@ def publish_raid_map_and_plan_to_finch(
         },
     )
     publish_raid_plan_to_finch(
-        database_path=Path(data_dir) / "eso.db",
-        raid_plans_path=Path(data_dir) / "raid_plans.json",
+        database_path=get_user_database_path(),
+        raid_plans_path=get_user_database_path(),
         plan_id=plan_id,
         settings_path=settings_path,
         timeout=timeout,
