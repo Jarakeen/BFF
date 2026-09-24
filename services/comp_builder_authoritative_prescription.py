@@ -87,7 +87,6 @@ class CompBuilderAuthoritativePrescriptionService:
     ) -> PrescribedRoster:
         saved = CanonicalBuildBridge(
             self.data_dir / "builds.json",
-            self.data_dir / "characters.json",
         ).load().Members
         templates = TeamPrescriptionTemplateCatalog(
             self.data_dir / "team_prescription_templates.json"
