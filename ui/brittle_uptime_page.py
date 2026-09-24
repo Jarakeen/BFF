@@ -220,7 +220,7 @@ class BrittleUptimePage(FoundryPage):
 
         brief_card = FoundryCard("Evidence Brief", "clipboard")
         self.brief_heading = QLabel("No report loaded")
-        self.brief_heading.setFont(Fonts.heading())
+        self.brief_heading.setFont(Fonts.section_title())
         self.brief_heading.setWordWrap(True)
         brief_card.addWidget(self.brief_heading)
 
@@ -270,7 +270,7 @@ class BrittleUptimePage(FoundryPage):
 
         provider_card = FoundryCard("Selected Pull · Provider Contribution", "chart")
         self.provider_heading = QLabel("Select a pull")
-        self.provider_heading.setFont(Fonts.heading())
+        self.provider_heading.setFont(Fonts.section_title())
         self.provider_heading.setWordWrap(True)
         provider_card.addWidget(self.provider_heading)
 
