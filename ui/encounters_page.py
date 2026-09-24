@@ -68,7 +68,7 @@ class EncountersPage(FoundryPage):
         self._finch_raid_map_timer = QTimer(self)
         self._finch_raid_map_timer.setInterval(100)
         self._finch_raid_map_timer.timeout.connect(self._poll_finch_raid_map_publish)
-        self.raid_plan_repository = RaidPlanRepository(get_data_dir() / "raid_plans.json")
+        self.raid_plan_repository = RaidPlanRepository(get_user_database_path())
         self.raid_map_store = EncounterRaidMapStore(get_data_dir())
         self.raid_section_state = RaidSectionStateService()
         self._build_ui()
