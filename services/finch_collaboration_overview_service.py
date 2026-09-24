@@ -9,7 +9,7 @@ preview contracts. It adds no new authority and performs no local mutation.
 from dataclasses import dataclass
 from pathlib import Path
 
-from engine.config import DEFAULT_DATABASE, get_data_dir
+from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path
 from services.finch_shared_coverage_service import list_shared_coverage_from_finch
 from services.finch_shared_import_service import (
     list_shared_raid_plans_from_finch,
@@ -206,7 +206,7 @@ def load_finch_collaboration_overview(
     data_dir: Path | None = None,
     database_path: Path | None = None,
     raid_plans_path: Path | None = None,
-    settings_path: Path = Path("settings.json"),
+    settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> FinchCollaborationOverview:
     root = Path(data_dir or get_data_dir())
