@@ -9,6 +9,7 @@ on:
       - "models/comp_plan_state.py"
       - "engine/config.py"
       - "services/raid_plan_repository.py"
+      - "services/raid_plan_offensive_stats_service.py"
       - "services/comp_plan_state_service.py"
       - "services/comp_build_persistence_service.py"
       - "services/comp_builder_build_candidates.py"
