@@ -1,0 +1,77 @@
+name: Phase 14 Planning Stability
+
+on:
+  push:
+    branches:
+      - phase14
+    paths:
+      - "models/raid_plan.py"
+      - "models/comp_plan_state.py"
+      - "engine/config.py"
+      - "services/raid_plan_repository.py"
+      - "services/comp_plan_state_service.py"
+      - "services/comp_build_persistence_service.py"
+      - "services/comp_builder_build_candidates.py"
+      - "services/comp_builder_provider_evidence.py"
+      - "services/comp_builder_authoritative_prescription.py"
+      - "services/finch_shared_import_service.py"
+      - "services/finch_shared_publish_service.py"
+      - "services/raid_plan_coverage_scope_service.py"
+      - "services/raid_group_effect_catalog.py"
+      - "services/raid_unique_support_set_catalog.py"
+      - "ui/raid_plan_persistence_page.py"
+      - "ui/raid_plan_assignment_page.py"
+      - "ui/city_raid_assignments_page.py"
+      - "ui/comp_builder_page.py"
+      - "ui/comp_builder_roster_intake_support.py"
+      - "ui/comp_builder_phase14_shell_support.py"
+      - "ui/coverage_page.py"
+      - "ui/coverage_raid_plan_scope_support.py"
+      - "ui/raid_engine_dashboard_support.py"
+      - "ui/tests/**"
+      - "services/tests/**"
+      - ".github/workflows/phase14-planning-stability.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  planning-stability:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out phase14
+        uses: actions/checkout@v4
+        with:
+          ref: phase14
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-build.txt
+
+      - name: Install test dependencies
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-build.txt pytest
+
+      - name: Run raid-planning stability suite
+        shell: pwsh
+        run: |
+          python -m pytest `
+            services/tests/test_finch_shared_import_service.py `
+            services/tests/test_raid_plan_repository_revisions.py `
+            services/tests/test_comp_build_persistence_service.py `
+            services/tests/test_phase14_planning_workflow_roundtrip.py `
+            services/tests/test_raid_coverage_catalog_expansion.py `
+            ui/tests/test_assignment_save_stability.py `
+            ui/tests/test_shared_plan_persistence_failsafes.py `
+            ui/tests/test_raid_engine_workflow_handoffs.py `
+            ui/tests/test_raid_plan_coverage_support.py `
+            ui/tests/test_raid_plan_assignment_page.py `
+            -q
