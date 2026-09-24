@@ -199,6 +199,16 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
             if status is not None:
                 status.warning("Save the Raid Plan before opening Comp Builder.")
             return False
+        repository = getattr(source_page, "plan_repository", None)
+        verified_plan = repository.get(plan.plan_id) if repository is not None else None
+        if verified_plan is None or verified_plan != plan:
+            status = getattr(source_page, "status", None)
+            if status is not None:
+                status.warning(
+                    "The loaded Raid Plan does not match its saved checkpoint. Reload the plan before opening Comp Builder."
+                )
+            return False
+        plan = verified_plan
     except (AttributeError, OSError, TypeError, ValueError):
         return False
 
@@ -392,8 +402,9 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
 
 
 def _open_plan_comp_builder(window, source_page) -> None:
-    """Load the current Raid Plan people into Comp Builder before navigation."""
-    _bind_plan_comp_builder(window, source_page)
+    """Load the verified saved Raid Plan into Comp Builder before navigation."""
+    if not _bind_plan_comp_builder(window, source_page):
+        return
     window.show_page("comp_builder")
 
 
@@ -416,11 +427,21 @@ def _route_plan_page(window, source_page, target: str) -> None:
                     )
                 return
             plan = getattr(source_page, "_loaded_plan_snapshot", None)
+            repository = getattr(source_page, "plan_repository", None)
+            if plan is not None and repository is not None:
+                verified_plan = repository.get(plan.plan_id)
+                plan = verified_plan if verified_plan == plan else None
         except (AttributeError, OSError, TypeError, ValueError):
             plan = None
         if plan is not None:
             _open_raid_plan_coverage(window, plan)
             return
+        status = getattr(source_page, "status", None)
+        if status is not None:
+            status.warning(
+                "Reload the saved Raid Plan before opening Coverage; the current page does not match its saved checkpoint."
+            )
+        return
 
     window.show_page(target)
 
