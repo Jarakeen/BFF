@@ -233,6 +233,10 @@ class BrittleUptimePage(FoundryPage):
         self.brief_body.setStyleSheet(f"color: {_chart_palette()['text']};")
         brief_card.addWidget(self.brief_body)
 
+        self.copy_brief_button = QPushButton("Copy Evidence Brief")
+        self.copy_brief_button.clicked.connect(self._copy_evidence_brief)
+        brief_card.addWidget(self.copy_brief_button)
+
         proof_note = QLabel(
             "FIELD NOTE\nDuplicate Minor Brittle IDs are de-duplicated by effect name. "
             "Provider rows may overlap, so they are not summed into raid uptime."
@@ -507,6 +511,38 @@ class BrittleUptimePage(FoundryPage):
             f"Most source-attributed Brittle time across these pulls: {top_provider}.\n\n"
             "No performance target is assumed here. This page reports observed log evidence only."
         )
+
+    def _copy_evidence_brief(self) -> None:
+        report = self._report
+        if report is None or not report.fights:
+            self.status_bar.warning("Load Brittle evidence before copying a brief.")
+            return
+
+        lines = [
+            f"Minor Brittle uptime · ESO Logs {report.report_code}",
+            f"Selected fights: {', '.join(str(row.fight_id) for row in report.fights)}",
+            f"Average raid uptime: {report.average_percent:.1f}%",
+            f"Best observed: {report.best_percent:.1f}%",
+            f"Lowest observed: {report.lowest_percent:.1f}%",
+            "",
+            "Pulls:",
+        ]
+        for fight in report.fights:
+            provider = fight.providers[0].actor_label if fight.providers else "no source-attributed provider"
+            lines.append(
+                f"Fight {fight.fight_id}: {fight.brittle_percent:.1f}% "
+                f"({fight.brittle_seconds:.1f}s / {fight.duration_seconds:.1f}s), "
+                f"top source {provider}"
+            )
+        lines.extend(
+            [
+                "",
+                "Note: raid uptime is boss debuff coverage. Provider uptimes may overlap and are not summed.",
+                "Duplicate named Minor Brittle aura IDs are de-duplicated rather than added together.",
+            ]
+        )
+        QApplication.clipboard().setText("\n".join(lines))
+        self.status_bar.success("Copied the Brittle evidence brief to the clipboard.")
 
     def _show_selected_providers(self) -> None:
         if self._report is None:
