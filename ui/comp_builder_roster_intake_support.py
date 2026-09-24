@@ -6,7 +6,11 @@ from types import SimpleNamespace
 
 from PySide6.QtWidgets import QComboBox, QHeaderView, QInputDialog, QTableWidgetItem
 
+from engine.config import get_user_database_path
+
+from services.eso_database import EsoDatabase
 from services.roster_assignment_context_service import RosterAssignmentContextService
+from services.roster_service import RosterService
 from services.user_safety_snapshot_service import UserSafetySnapshotService
 from ui.ui_safety import confirm_replacement
 from services.team_composition_catalog import flexible_raid_slots
@@ -599,6 +603,63 @@ def _team_list_names(text: str) -> tuple[str, ...]:
         for line in normalized.splitlines()
         if line.strip()
     )[:12]
+
+
+def open_saved_team_dialog(page) -> None:
+    """Load one exact saved Team from the canonical user database.
+
+    Manual/pasted names remain available as an explicit ad-hoc fallback.
+    """
+    roster_service = RosterService(EsoDatabase(get_user_database_path()))
+    team_names = tuple(roster_service.list_team_names())
+    choices = (*team_names, "Ad-hoc / Paste Names")
+    if not choices:
+        open_team_list_dialog(page)
+        return
+
+    selected, accepted = QInputDialog.getItem(
+        page,
+        "Load Players",
+        "Saved Team:",
+        choices,
+        0,
+        False,
+    )
+    if not accepted:
+        return
+    if selected == "Ad-hoc / Paste Names":
+        open_team_list_dialog(page)
+        return
+
+    members = tuple(roster_service.list_team_members(selected))
+    if not members:
+        page.status.warning(
+            f'Saved Team "{selected}" has no active Personnel assigned to it.'
+        )
+        return
+
+    assignments: dict[int, dict] = {}
+    context_service = RosterAssignmentContextService(roster_service.db)
+    for member in members:
+        if getattr(member, "Id", None) is None:
+            continue
+        assignments[int(member.Id)] = context_service.get_effective_assignment(
+            int(member.Id),
+            team_name=selected,
+            encounter_id="",
+            legacy_service=roster_service,
+        )
+
+    apply_roster_team_context(
+        page,
+        selected,
+        members,
+        assignments=assignments,
+        group_size=4 if len(members) <= 4 else 12,
+    )
+    page.status.success(
+        f'Loaded saved Team "{selected}" into Comp Builder: {len(members)} player(s).'
+    )
 
 
 def open_team_list_dialog(page) -> None:
