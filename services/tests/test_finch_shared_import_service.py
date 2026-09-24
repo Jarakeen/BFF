@@ -64,6 +64,7 @@ class FakeClient:
                             "source_kind": "comp",
                             "source_name": "Performance Mode RG",
                             "planned_gear_sets": ["Corpsebuster", "Null Arca"],
+                            "front_skills": ["Combat Prayer", "Aggressive Horn"],
                             "planned_mundus": "The Thief",
                         },
                     }
@@ -89,9 +90,10 @@ class FakeClient:
 
 
 def _service(tmp_path):
-    database = EsoDatabase(tmp_path / "eso.db")
+    database_path = tmp_path / "foundrydock.db"
+    database = EsoDatabase(database_path)
     roster = RosterService(database)
-    repository = RaidPlanRepository(tmp_path / "raid_plans.json")
+    repository = RaidPlanRepository(database_path)
     return database, roster, repository, FinchSharedImportService(
         client=FakeClient(),
         roster=roster,
@@ -147,6 +149,7 @@ def test_shared_raid_plan_decodes_without_local_identity_or_build_state(tmp_path
     assert plan.members[0].build_source_kind == "comp"
     assert plan.members[0].build_source_name == "Performance Mode RG"
     assert plan.members[0].planned_gear_sets == ("Corpsebuster", "Null Arca")
+    assert plan.members[0].planned_skills == ("Combat Prayer", "Aggressive Horn")
     assert plan.members[0].planned_mundus == "The Thief"
     assert repository.list_plans() == ()
     assert roster.list_members() == []
