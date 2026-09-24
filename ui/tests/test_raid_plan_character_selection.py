@@ -8,12 +8,22 @@ from ui.raid_plan_character_selection_page import (
 )
 
 
-def _build(*, gamertag: str, character: str, build_name: str, eso_class: str = "Warden"):
+def _build(
+    *,
+    gamertag: str,
+    character: str,
+    build_name: str,
+    eso_class: str = "Warden",
+    player_id: str = "",
+    character_id: str = "",
+):
     return SimpleNamespace(
         Gamertag=gamertag,
         Name=character,
         BuildName=build_name,
         EsoClass=eso_class,
+        PlayerId=player_id,
+        CharacterId=character_id,
     )
 
 
@@ -83,3 +93,55 @@ def test_character_class_does_not_guess_when_sources_conflict() -> None:
 
 def test_raid_plan_main_working_columns_fill_available_width() -> None:
     assert raid_plan_stretch_columns() == (1, 2, 3, 4)
+
+
+def test_matching_saved_builds_prefers_canonical_ids_over_stale_display_names() -> None:
+    saved_builds = [
+        _build(
+            gamertag="Old Alias",
+            character="Old Character Label",
+            build_name="Canonical Build",
+            player_id="player-1",
+            character_id="character-1",
+        ),
+        _build(
+            gamertag="Other",
+            character="Other Character",
+            build_name="Other Build",
+            player_id="player-2",
+            character_id="character-2",
+        ),
+    ]
+
+    assert matching_saved_build_indices(
+        saved_builds,
+        "Current Display Name",
+        "Current Character Name",
+        player_id="player-1",
+        character_id="character-1",
+    ) == (0,)
+
+
+def test_matching_saved_builds_can_use_canonical_player_before_character_is_selected() -> None:
+    saved_builds = [
+        _build(
+            gamertag="Old Alias",
+            character="First",
+            build_name="One",
+            player_id="player-1",
+            character_id="character-1",
+        ),
+        _build(
+            gamertag="Old Alias",
+            character="Second",
+            build_name="Two",
+            player_id="player-1",
+            character_id="character-2",
+        ),
+    ]
+
+    assert matching_saved_build_indices(
+        saved_builds,
+        "Current Display Name",
+        player_id="player-1",
+    ) == (0, 1)
