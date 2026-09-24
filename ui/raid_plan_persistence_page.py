@@ -697,48 +697,18 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
 
     def save_current_plan(self) -> RaidPlan | None:
         try:
-            # Capture the visible Raid Plan before Personnel synchronization can
-            # rebuild character/build widgets or auto-derive class values.
-            visible_before_sync = super().current_plan()
+            # Save only the plan. Personnel/Team promotion is an explicit user
+            # action through Save Player to Personnel and must never be a hidden
+            # side effect of saving Assignments or a shared Finch copy.
+            plan = self.current_plan()
             checkpoint = self._safety_snapshots.create(
-                f"save-raid-plan-{visible_before_sync.plan_id}"
+                f"save-raid-plan-{plan.plan_id}"
             )
             if checkpoint is None and get_user_database_path().is_file():
                 raise RaidPlanRepositoryError(
                     "could not create the pre-save database checkpoint"
                 )
-            created_players = self._ensure_named_players_in_personnel()
 
-            # Re-run the persistence/stable-identity layer after Personnel creation,
-            # but restore the captured visible chair values as authoritative.
-            plan = self.current_plan()
-            captured_by_seat = {
-                member.seat_id.casefold(): member
-                for member in visible_before_sync.members
-            }
-            plan = replace(
-                plan,
-                members=tuple(
-                    member.with_selection(
-                        gamertag=captured_by_seat.get(
-                            member.seat_id.casefold(), member
-                        ).gamertag,
-                        character_name=captured_by_seat.get(
-                            member.seat_id.casefold(), member
-                        ).character_name,
-                        role=captured_by_seat.get(
-                            member.seat_id.casefold(), member
-                        ).role,
-                        eso_class=captured_by_seat.get(
-                            member.seat_id.casefold(), member
-                        ).eso_class,
-                        selected_build_name=captured_by_seat.get(
-                            member.seat_id.casefold(), member
-                        ).selected_build_name,
-                    )
-                    for member in plan.members
-                ),
-            )
             self.plan_repository.save(plan)
             persisted = self.plan_repository.get(plan.plan_id)
             if persisted is None:
@@ -760,14 +730,11 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         mark_saved(self)
 
         # A successful Save is a persistence checkpoint, not a page reload.
-        # Rebuilding Personnel/identity widgets here can invalidate live assignment
-        # controls and previously caused post-save crashes. Leave the current UI
-        # in place and make the verified persisted snapshot the new clean baseline.
+        # Keep the live assignment controls intact. The picker refresh is cosmetic
+        # and must never turn a durable save into a crash.
         try:
             self.refresh_saved_plan_picker(select_plan_id=persisted.plan_id)
         except Exception as exc:
-            # Picker refresh is cosmetic after the durable plan has already been
-            # verified. Never turn a successful save into an application crash.
             self.status.warning(
                 f"Raid Plan saved, but the saved-plan picker could not refresh: {exc}"
             )
@@ -779,15 +746,10 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             for member in persisted.members
             if member.selected_build_name or member.planned_gear_sets
         )
-        created_note = (
-            f" • {created_players} new player(s) added to Personnel"
-            if created_players
-            else ""
-        )
         self.status.success(
             f"Saved Raid Plan: {persisted.name} • "
             f"{len(persisted.members)} player(s) • {characters} character(s) • "
-            f"{roles} role(s) • {planned} planned build(s){created_note}"
+            f"{roles} role(s) • {planned} planned build(s)"
         )
         return persisted
 
