@@ -20,3 +20,14 @@ def test_default_broadcast_settings_use_split_layout(tmp_path: Path) -> None:
         Path("modules/broadcast/resources/natural_history_narrator.json")
     )
     assert settings["WeatherFolder"] == str(Path("data/Weather"))
+
+
+def test_brittle_default_actor_setting_round_trips(tmp_path: Path) -> None:
+    service = SettingsService(tmp_path / "settings.json")
+    settings = service.load()
+    assert settings["BrittleDefaultActorId"] == "72"
+
+    settings["BrittleDefaultActorId"] = "91"
+    service.save(settings)
+
+    assert service.load()["BrittleDefaultActorId"] == "91"
