@@ -664,3 +664,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Authoritative weapon-poison cadence evidence** — Objective #32 now tracks poison proc chance, 10-second global cooldown scope, qualifying Light/Heavy/weapon-ability damage triggers, single-target DoT exclusion, and enchantment suppression as separate ZOS-evidenced fields. The cadence evidence is runtime-ready without borrowing weapon-enchantment assumptions.
+
+- **Shared Performance Mode U50 build templates** — Builds → Templates ships a reusable Performance Mode U50 package for the current Sorcerer/Necromancer tanks, Warden/Arcanist healers, and Necromancer/Nightblade/Arcanist/Dragonknight/Templar DD roles. Templates are player-neutral, so Jarakeen, Rylo, or another Personnel character can apply the same class-compatible package without copying player identity, progression, team membership, or replacing the user database. The bundled records preserve current bars, planned gear packages, DD 1-Light/6-Medium guidance, Perfected Merciless Charge back-bar ownership, and human-readable Class Mastery selections for review.
