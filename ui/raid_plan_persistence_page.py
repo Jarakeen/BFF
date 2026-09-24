@@ -522,6 +522,78 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             selected_build_id=resolution.selected_build_id,
         )
 
+    def _replacement_build_for_stale_member(self, member):
+        """Return one exact saved Build that can replace a dead BuildId.
+
+        Rebinding is intentionally conservative: player/character/build display
+        identity must agree, and ambiguous matches remain unresolved/planned rather
+        than letting a refresh silently choose somebody else's Build.
+        """
+        wanted_name = _clean(member.selected_build_name).casefold()
+        wanted_player = _clean(member.gamertag).casefold()
+        wanted_character = _clean(member.character_name).casefold()
+        candidates = []
+        for build in tuple(getattr(self, "saved_builds", ()) or ()):
+            build_id = _clean(getattr(build, "BuildId", ""))
+            if not build_id:
+                continue
+            if wanted_name and _clean(getattr(build, "BuildName", "")).casefold() != wanted_name:
+                continue
+            build_player = _clean(getattr(build, "Gamertag", "")).casefold()
+            if wanted_player and build_player and build_player != wanted_player:
+                # Allow exact Personnel aliases to resolve to the canonical player.
+                match = self._personnel_match(member.gamertag)
+                canonical = (
+                    _clean(getattr(match, "PlayerName", "")).casefold()
+                    if match is not None
+                    else wanted_player
+                )
+                if build_player != canonical:
+                    continue
+            build_character = _clean(getattr(build, "Name", "")).casefold()
+            if wanted_character and build_character and build_character != wanted_character:
+                continue
+            candidates.append(build)
+        return candidates[0] if len(candidates) == 1 else None
+
+    def _repair_loaded_snapshot_after_missing_builds(self) -> None:
+        """Remove or rebind dead selected BuildIds before Raid Plan validation.
+
+        A Comp/template refresh may legitimately replace a Build record while the
+        saved Raid Plan still carries the old stable BuildId. That stale reference
+        must not make Roles impossible to save or navigate away from. Preserve all
+        planned gear/skills/assignments; only the dead stable reference is repaired.
+        """
+        loaded = getattr(self, "_loaded_plan_snapshot", None)
+        if loaded is None:
+            return
+        catalog = self.build_service.canonical.catalog_service
+        changed = False
+        repaired_members = []
+        for member in loaded.members:
+            build_id = _clean(member.selected_build_id)
+            if not build_id or catalog.get_build(build_id) is not None:
+                repaired_members.append(member)
+                continue
+
+            replacement = self._replacement_build_for_stale_member(member)
+            replacement_id = (
+                _clean(getattr(replacement, "BuildId", ""))
+                if replacement is not None
+                else ""
+            )
+            repaired = member.with_selection(
+                selected_build_id=replacement_id or None,
+            )
+            repaired_members.append(repaired)
+            changed = changed or repaired != member
+
+        if changed:
+            self._loaded_plan_snapshot = replace(
+                loaded,
+                members=tuple(repaired_members),
+            )
+
     def _repair_loaded_snapshot_after_player_merges(self) -> None:
         """Self-heal a loaded plan whose Personnel player was explicitly merged.
 
@@ -574,6 +646,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
 
     def current_plan(self) -> RaidPlan:
         self._repair_loaded_snapshot_after_player_merges()
+        self._repair_loaded_snapshot_after_missing_builds()
         visible = super().current_plan()
         selected_ids = self._selected_build_ids_by_seat()
         resolver = self._stable_identity_resolver()
