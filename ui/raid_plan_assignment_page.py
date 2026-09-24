@@ -190,6 +190,13 @@ class RaidPlanAssignmentPage(RaidPlanPersistencePage):
             )
         self._update_summary()
 
+        # The persistence base establishes its navigation baseline before this
+        # subclass restores assignment widgets. Re-baseline only after the
+        # visible assignment state has been fully applied so a freshly loaded
+        # plan is not immediately treated as dirty.
+        self._navigation_baseline_plan = self.current_plan()
+        self._refresh_action_availability()
+
     def clear_plan(self) -> None:
         super().clear_plan()
         if not hasattr(self, "assignment_table"):
