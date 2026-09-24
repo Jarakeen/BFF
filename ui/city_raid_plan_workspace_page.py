@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QStackedWidget,
     QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -35,6 +36,7 @@ from services.raid_plan_build_export_service import (
     raid_plan_build_export,
     raid_plan_discord_builds_text,
 )
+from services.raid_plan_offensive_stats_service import RaidPlanOffensiveStatsService
 from ui.components.foundry_card import FoundryCard
 from ui.raid_plan_adviser_page import RaidPlanAdviserPage
 from ui.raid_plan_header_controls import rehome_plan_header_controls
@@ -311,6 +313,42 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             snapshot.addWidget(card, 0, index)
         center_layout.addLayout(snapshot)
 
+        offensive = FoundryCard("Critical Damage & Penetration", "crosshair")
+        offensive_note = QLabel(
+            "Current planned raid values. Crit Damage includes personal standing stats, "
+            "planned Force/Lucent/Brittle layers, and the 125% cap. Pen shows personal "
+            "Physical/Spell Pen plus planned target Armor reduction against 18,200 PvE Armor."
+        )
+        offensive_note.setWordWrap(True)
+        offensive_note.setProperty("muted", True)
+        offensive.addWidget(offensive_note)
+        self.offensive_stats_table = QTableWidget(0, 8)
+        self.offensive_stats_table.setHorizontalHeaderLabels(
+            (
+                "SEAT / PLAYER",
+                "CLASS",
+                "PERSONAL CRIT",
+                "RAID CRIT",
+                "PHYS PEN",
+                "SPELL PEN",
+                "RAID ARMOR ↓",
+                "EFFECTIVE P / S",
+            )
+        )
+        self.offensive_stats_table.verticalHeader().setVisible(False)
+        self.offensive_stats_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.offensive_stats_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.offensive_stats_table.setMinimumHeight(265)
+        self.offensive_stats_table.setToolTip(
+            "Hover a value for its contribution ledger and unresolved evidence."
+        )
+        offensive.addWidget(self.offensive_stats_table)
+        self.offensive_stats_summary = QLabel("Save and load a Raid Plan to calculate the team.")
+        self.offensive_stats_summary.setWordWrap(True)
+        self.offensive_stats_summary.setProperty("muted", True)
+        offensive.addWidget(self.offensive_stats_summary)
+        center_layout.addWidget(offensive)
+
         middle = QHBoxLayout()
         quick = FoundryCard("Quick Actions", "warning")
         edit_roles = QPushButton("Manage Roles / Spots")
@@ -425,6 +463,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             self.overview_hero.setText("No saved Raid Plan yet. Use Roles to assemble one without inventing missing identity.")
             for card in (self.team_snapshot, self.encounter_snapshot, self.strategy_snapshot, self.progress_snapshot):
                 card.value_label.setText("—")
+            self._clear_offensive_stats("Save and load a Raid Plan to calculate the team.")
             return
         assigned = sum(1 for member in plan.members if member.primary_assignment or member.secondary_assignment)
         builds = sum(1 for member in plan.members if member.build_selected)
@@ -439,6 +478,119 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.encounter_snapshot.value_label.setText(plan.trial_id)
         self.strategy_snapshot.value_label.setText(f"{assigned} / {len(plan.members)} spots assigned")
         self.progress_snapshot.value_label.setText(f"{builds} builds linked")
+        self._refresh_offensive_stats(plan)
+
+    @staticmethod
+    def _offensive_stat_tooltip(row) -> str:
+        lines = [
+            f"{row.seat_id} · {row.player_label}",
+            f"Class: {row.eso_class or 'Unknown'}",
+        ]
+        if row.personal_critical_damage is not None:
+            lines.append(f"Personal Critical Damage: {row.personal_critical_damage * 100:.1f}%")
+        if row.raid_critical_damage is not None:
+            lines.append(f"Raid-adjusted Critical Damage: {row.raid_critical_damage * 100:.1f}%")
+        if row.physical_penetration is not None:
+            lines.append(f"Physical Penetration: {row.physical_penetration:,.0f}")
+        if row.spell_penetration is not None:
+            lines.append(f"Spell Penetration: {row.spell_penetration:,.0f}")
+        lines.append(f"Raid target Armor reduction: {row.raid_armor_reduction:,.0f}")
+        if row.physical_overpenetration is not None:
+            label = "over" if row.physical_overpenetration >= 0 else "short"
+            lines.append(f"Physical: {abs(row.physical_overpenetration):,.0f} {label} of 18,200")
+        if row.spell_overpenetration is not None:
+            label = "over" if row.spell_overpenetration >= 0 else "short"
+            lines.append(f"Spell: {abs(row.spell_overpenetration):,.0f} {label} of 18,200")
+
+        if row.contributions:
+            lines.append("")
+            lines.append("Contributions:")
+            for contribution in row.contributions:
+                suffix = " (conditional/planned)" if contribution.conditional else ""
+                if "critical" in contribution.kind:
+                    value = (
+                        f"{contribution.value * 100:+.1f}%"
+                        if abs(contribution.value) <= 2.0
+                        else f"{contribution.value:+,.0f}"
+                    )
+                elif "multiplier" in contribution.kind:
+                    value = f"×{contribution.value:.3f}"
+                else:
+                    value = f"{contribution.value:+,.0f}"
+                lines.append(f"  {contribution.label}: {value}{suffix}")
+        if row.unresolved:
+            lines.append("")
+            lines.append("Unresolved / not assumed:")
+            lines.extend(f"  {message}" for message in row.unresolved[:12])
+            if len(row.unresolved) > 12:
+                lines.append(f"  … {len(row.unresolved) - 12} more")
+        return "\n".join(lines)
+
+    def _clear_offensive_stats(self, message: str) -> None:
+        if not hasattr(self, "offensive_stats_table"):
+            return
+        self.offensive_stats_table.setRowCount(0)
+        self.offensive_stats_summary.setText(message)
+
+    def _refresh_offensive_stats(self, plan) -> None:
+        if not hasattr(self, "offensive_stats_table"):
+            return
+        try:
+            service = getattr(self, "_offensive_stats_service", None)
+            if service is None:
+                service = RaidPlanOffensiveStatsService()
+                self._offensive_stats_service = service
+            result = service.calculate(plan)
+        except Exception as exc:
+            self._clear_offensive_stats(f"Crit / Pen calculation unavailable: {exc}")
+            return
+
+        table = self.offensive_stats_table
+        table.setRowCount(len(result.rows))
+        resolved = 0
+        capped = 0
+        for row_index, stat in enumerate(result.rows):
+            if stat.resolved:
+                resolved += 1
+            if stat.critical_capped:
+                capped += 1
+            player = stat.player_label or stat.seat_id
+            labels = (
+                f"{stat.seat_id} · {player}",
+                stat.eso_class or "—",
+                "—" if stat.personal_critical_damage is None else f"{stat.personal_critical_damage * 100:.1f}%",
+                "—" if stat.raid_critical_damage is None else (
+                    f"{stat.raid_critical_damage * 100:.1f}%"
+                    + (" CAP" if stat.critical_capped else "")
+                ),
+                "—" if stat.physical_penetration is None else f"{stat.physical_penetration:,.0f}",
+                "—" if stat.spell_penetration is None else f"{stat.spell_penetration:,.0f}",
+                f"{stat.raid_armor_reduction:,.0f}",
+                "—" if stat.effective_physical_penetration is None else (
+                    f"{stat.effective_physical_penetration:,.0f} / "
+                    f"{stat.effective_spell_penetration:,.0f}"
+                ),
+            )
+            tooltip = self._offensive_stat_tooltip(stat)
+            for column, label in enumerate(labels):
+                item = QTableWidgetItem(label)
+                item.setToolTip(tooltip)
+                table.setItem(row_index, column, item)
+
+        table.resizeColumnsToContents()
+        remaining = max(0.0, result.target_resistance - result.raid_armor_reduction)
+        summary = (
+            f"{resolved}/{len(result.rows)} builds resolved · "
+            f"{capped} at 125% raid Crit Damage cap · "
+            f"Raid Armor reduction {result.raid_armor_reduction:,.0f} · "
+            f"{remaining:,.0f} personal Pen needed vs 18,200"
+        )
+        if result.unresolved:
+            summary += f" · {len(result.unresolved)} raid effect(s) left fail-closed"
+        self.offensive_stats_summary.setText(summary)
+        self.offensive_stats_summary.setToolTip(
+            "\n".join(result.unresolved[:20]) if result.unresolved else ""
+        )
 
     def _refresh_plan_identity_ui(self) -> None:
         if not hasattr(self, "new_identity_panel"):
