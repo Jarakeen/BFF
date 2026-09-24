@@ -9,8 +9,6 @@ reported uptime, matching the existing Performance Dashboard behavior.
 
 from dataclasses import dataclass
 
-from services.performance_dashboard_service import _iter_actors_by_role
-
 MAJOR_BRITTLE_NAME = "Major Brittle"
 DEFAULT_PROVIDER_ACTOR_ID = 72
 DEFAULT_PROVIDER_LABEL = "Anonymous 72"
@@ -33,6 +31,8 @@ class BrittleFightUptime:
     duration_seconds: float
     brittle_seconds: float
     brittle_percent: float
+    raid_brittle_seconds: float
+    raid_brittle_percent: float
     providers: tuple[BrittleProviderUptime, ...]
 
 
@@ -126,7 +126,7 @@ class BrittleUptimeService:
                 data_type="Debuffs",
                 hostility_type="Enemies",
             )
-            brittle_ms = self._named_uptime_ms(raid_auras)
+            raid_brittle_ms = self._named_uptime_ms(raid_auras)
 
             providers: list[BrittleProviderUptime] = []
             source_auras = self.client.get_aura_table(
@@ -157,8 +157,10 @@ class BrittleUptimeService:
                     fight_name=str(fight.get("name") or f"Fight {fight_id}"),
                     kill=bool(fight.get("kill")),
                     duration_seconds=round(duration_seconds, 2),
-                    brittle_seconds=round(brittle_ms / 1000.0, 2),
-                    brittle_percent=self._percent(brittle_ms, duration_seconds),
+                    brittle_seconds=round(source_ms / 1000.0, 2),
+                    brittle_percent=self._percent(source_ms, duration_seconds),
+                    raid_brittle_seconds=round(raid_brittle_ms / 1000.0, 2),
+                    raid_brittle_percent=self._percent(raid_brittle_ms, duration_seconds),
                     providers=tuple(providers),
                 )
             )
