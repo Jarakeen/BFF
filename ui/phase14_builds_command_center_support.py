@@ -213,16 +213,23 @@ def _select_command_center_row(page, row: int, _column: int = 0) -> None:
         return
     source_row = page.phase14_table_source_rows[row]
     if _template_mode(page):
-        # The visible Phase 14 table is the user's selection authority. Do not rely
-        # on a hidden legacy QListWidget signal to update the template inspector:
-        # that left the row highlight on Pippin while the right card still showed
-        # Jaded, making the action capable of applying the wrong template.
+        # The visible Phase 14 table is the user's selection authority. Render the
+        # template action card directly instead of routing through the increasingly
+        # decorated hidden legacy selector. This guarantees that every visible
+        # Template row exposes Create Saved Build… on the right.
+        rows = tuple(getattr(page, "_template_rows", ()) or ())
+        if source_row < 0 or source_row >= len(rows):
+            page._clear_detail()
+            return
+        page._selected_template_index = source_row
         page.roster_list.blockSignals(True)
         try:
             page.roster_list.setCurrentRow(source_row)
         finally:
             page.roster_list.blockSignals(False)
-        page._select_member(source_row)
+
+        from ui.build_reuse_template_support import _show_template_detail
+        _show_template_detail(page, rows[source_row])
         return
     if source_row < 0 or source_row >= len(page.roster.Members):
         return
@@ -250,6 +257,21 @@ def _switch_library_mode(page, index: int) -> None:
         else:
             page.status.warning("Template browsing is not installed in this app session.")
             return
+        # Saved-build filters should not strand the Templates page with a blank
+        # inspector. Start Template browsing unfiltered; the user can narrow it
+        # afterward using the Template-aware class/role/search controls.
+        for combo in (page.phase14_class_filter, page.phase14_role_filter):
+            combo.blockSignals(True)
+            try:
+                if combo.count():
+                    combo.setCurrentIndex(0)
+            finally:
+                combo.blockSignals(False)
+        page.phase14_build_search.blockSignals(True)
+        try:
+            page.phase14_build_search.clear()
+        finally:
+            page.phase14_build_search.blockSignals(False)
     elif page.view_combo.findText("All Builds") >= 0:
         page.view_combo.setCurrentText("All Builds")
     _populate_build_table(page)
