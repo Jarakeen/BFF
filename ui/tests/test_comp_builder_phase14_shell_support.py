@@ -382,3 +382,17 @@ def test_saved_raid_plan_identity_is_carried_into_comp_intake() -> None:
     assert 'getattr(personnel_row, "Id", None)' in page
     assert "if member.roster_member_id is not None" in page
     assert 'Id=getattr(member, "roster_member_id", None)' in handoff
+
+
+def test_load_players_uses_saved_team_picker() -> None:
+    from pathlib import Path
+
+    controls = Path("ui/comp_builder_main_controls_support.py").read_text(encoding="utf-8")
+    intake = Path("ui/comp_builder_roster_intake_support.py").read_text(encoding="utf-8")
+    roster = Path("services/roster_service.py").read_text(encoding="utf-8")
+
+    assert "open_saved_team_dialog(page)" in controls
+    assert 'selected == "Ad-hoc / Paste Names"' in intake
+    assert "roster_service.list_team_names()" in intake
+    assert "roster_service.list_team_members(selected)" in intake
+    assert "def list_team_members(self, team_name: str)" in roster
