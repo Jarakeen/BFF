@@ -49,7 +49,6 @@ class CompBuilderProviderEvidenceService:
         self.build_service = BuildService(self.data_dir / "builds.json")
         self.canonical_build_bridge = CanonicalBuildBridge(
             self.data_dir / "builds.json",
-            self.data_dir / "characters.json",
         )
         self.template_catalog = TeamPrescriptionTemplateCatalog(
             self.data_dir / "team_prescription_templates.json"
