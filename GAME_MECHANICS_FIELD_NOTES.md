@@ -1864,3 +1864,11 @@ The current Z'enKosh Dragonknight package can theoretically provide group Minor 
 **Layman's version:** owning the class does not magically turn the buff on. If the bar never presses the kind of skill that triggers the passive, the raid does not get to count the buff just because a DK is standing there looking official.
 
 **For BFF:** class-passive coverage must be validated from the actual legal bar/rotation trigger, not inferred from class identity alone. The Performance Mode preset leaves Minor Brutality unresolved until a qualifying Draconic Power activation is present.
+
+## 2026-09-24 — ESO Logs can expose the same named Brittle effect under multiple IDs
+
+ESO Logs can return more than one aura row named **Minor Brittle** for the same pull, each under a different ability ID and with the same observed uptime. Adding those rows together would double-count one debuff window and can create impossible uptime above 100%.
+
+**Layman's version:** two log rows do not necessarily mean two separate Brittle effects. Sometimes the log has multiple IDs for the same named debuff window.
+
+**For BFF:** named Minor Brittle uptime must be de-duplicated before comparison. The Review dashboard keeps the maximum observed uptime for the name rather than summing duplicate IDs, while provider percentages remain separate attribution evidence and may legitimately overlap.
