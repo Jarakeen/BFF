@@ -198,6 +198,7 @@ class RosterPage(FoundryPage):
         )
         self.assignment_table.verticalHeader().setVisible(False)
         self.assignment_table.horizontalHeader().setStretchLastSection(True)
+        self.assignment_table.itemSelectionChanged.connect(self._refresh_assignment_detail)
         self.assignment_table.setMinimumHeight(430)
         roster_card.addWidget(self.assignment_table)
         root.addWidget(roster_card, 4)
@@ -215,6 +216,9 @@ class RosterPage(FoundryPage):
             .make_parchment()
             .set_watermark("feather", 0.12)
         )
+        self.assignment_detail_label = QLabel("Class: —")
+        self.assignment_detail_label.setProperty("sidebarMeta", True)
+        self.notes_card.addWidget(self.assignment_detail_label)
         self.notes_card.addWidget(
             QLabel(
                 "• Everyone knows portal.\n"
@@ -502,6 +506,19 @@ class RosterPage(FoundryPage):
                 if col in {0, 1, 2, 3, 8}:
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 self.assignment_table.setItem(row, col, item)
+
+        self._refresh_assignment_detail()
+
+    def _refresh_assignment_detail(self) -> None:
+        if not hasattr(self, "assignment_detail_label") or not hasattr(self, "assignment_table"):
+            return
+        row = self.assignment_table.currentRow()
+        if row < 0:
+            self.assignment_detail_label.setText("Class: —")
+            return
+        class_item = self.assignment_table.item(row, 2)
+        eso_class = str(class_item.text() if class_item is not None else "").strip() or "—"
+        self.assignment_detail_label.setText(f"Class: {eso_class}")
 
     @staticmethod
     def _default_assignment(role: str) -> str:
