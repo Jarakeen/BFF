@@ -296,11 +296,24 @@ def _apply_template(page, template: BuildTemplateRecord):
     )
     page.roster = _reuse_service().replace_or_append(page.roster, result.build)
     page.build_service.save(page.roster)
+
+    # Applying a template creates a real canonical Saved Build. Keep both the
+    # hidden legacy selector and the visible Phase 14 library in the same mode;
+    # otherwise the command-center tab can remain on Templates while the detail
+    # pane paints a normal Build underneath the template card.
     page.view_combo.setCurrentText("All Builds")
+    tabs = getattr(page, "phase14_library_tabs", None)
+    if tabs is not None:
+        for index in range(tabs.count()):
+            if tabs.tabText(index) == "All":
+                tabs.blockSignals(True)
+                tabs.setCurrentIndex(index)
+                tabs.blockSignals(False)
+                break
     page._load()
     if result.warnings:
         QMessageBox.information(page, "Template Applied", "\n".join(result.warnings))
-    page.status.success(f"Applied {template.name} to {destination['name']}.")
+    page.status.success(f"Created saved Build {result.build.BuildName or template.name} for {destination['name']}.")
 
 
 def _show_template_detail(page, template: BuildTemplateRecord):
@@ -320,7 +333,7 @@ def _show_template_detail(page, template: BuildTemplateRecord):
         note = QLabel(template.notes)
         note.setWordWrap(True)
         card.addWidget(note)
-    use = FoundryButton("Use Template For…", role=ButtonRole.PRIMARY)
+    use = FoundryButton("Create Saved Build…", role=ButtonRole.PRIMARY)
     use.clicked.connect(lambda: _apply_template(page, template))
     card.addWidget(use)
     page.detail_layout.addWidget(card)
