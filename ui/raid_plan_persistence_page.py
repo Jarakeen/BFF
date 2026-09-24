@@ -361,8 +361,8 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.status.info("Publishing saved Raid Plan to Finch…")
         self._finch_plan_publish_future = _FINCH_PLAN_PUBLISH_EXECUTOR.submit(
             publish_raid_plan_to_finch,
-            database_path=Path(get_data_dir()) / "eso.db",
-            raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+            database_path=get_user_database_path(),
+            raid_plans_path=get_user_database_path(),
             plan_id=plan_id,
             settings_path=get_settings_path(),
         )
@@ -394,8 +394,8 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.status.info("Fetching shared Raid Plans from Finch…")
         self._finch_plan_read_future = _FINCH_PLAN_READ_EXECUTOR.submit(
             list_shared_raid_plans_from_finch,
-            database_path=Path(get_data_dir()) / "eso.db",
-            raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+            database_path=get_user_database_path(),
+            raid_plans_path=get_user_database_path(),
             settings_path=get_settings_path(),
         )
         self._finch_plan_read_timer.start()
