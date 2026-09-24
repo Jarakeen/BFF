@@ -44,3 +44,11 @@ def test_shared_readiness_picker_shows_publisher_and_utc_time() -> None:
 
     assert "row.published_by" in source
     assert "format_shared_timestamp(row.updated_at)" in source
+
+
+def test_readiness_refreshes_current_plan_evidence_when_page_becomes_visible() -> None:
+    source = Path("ui/city_raid_readiness_page.py").read_text(encoding="utf-8")
+
+    assert "def showEvent(self, event) -> None:" in source
+    assert "self.refresh_plans()" in source
+    assert "stale !GAP matrix" in source
