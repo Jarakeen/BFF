@@ -8,10 +8,11 @@ def test_personnel_alias_surface_supports_history_manual_aliases_and_merges() ->
 
     assert "Known Aliases" in source
     assert "Add Alias…" in source
-    assert "Merge Players…" in source
+    assert "Merge Duplicate Player…" in source
     assert "Existing Player Identity" in source
     assert "personnel_rename" in source
     assert "rename_collision" in source
+    assert "MERGE THIS DUPLICATE" in source
     assert "merge_players(" in source
 
 
