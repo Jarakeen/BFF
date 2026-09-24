@@ -125,14 +125,19 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "Could not update release metadata." }
           }
           else {
+            git tag -f $tag "${{ github.sha }}"
+            if ($LASTEXITCODE -ne 0) { throw "Could not create local release tag." }
+            git push origin "refs/tags/$tag" --force
+            if ($LASTEXITCODE -ne 0) { throw "Could not publish tested release tag." }
+
             gh release create $tag `
               dist/FoundryDock-0.1.7.zip `
               dist/FoundryDock-update.zip `
               dist/FoundryDock-update.zip.sha256 `
-              --target "${{ github.sha }}" `
+              --verify-tag `
               --title "FoundryDock 0.1.7" `
               --notes "Patch release for Finch collaboration and raid-planning persistence. Shared Teams/Raid Plans now use foundrydock.db end to end; Assignments/Comp/Coverage handoffs require verified saved checkpoints; Raid Plan revisions and whole-database pre-save snapshots protect save points; shared planned skills survive Copy to Local; Coverage adds current BTV-style support effects and never renders empty. Fresh installs receive populated reference planning data. Existing user databases are never replaced."
-            if ($LASTEXITCODE -ne 0) { throw "Could not create patch release." }
+            if ($LASTEXITCODE -ne 0) { throw "Could not create patch release from verified tag." }
           }
 
 
@@ -153,3 +158,5 @@ jobs:
 # final-rebuild-after-51-planning-tests-green
 
 # release-update-without-destructive-delete
+
+# create-release-from-prepublished-tag
