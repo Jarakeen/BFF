@@ -38,10 +38,10 @@ jobs:
           python -m pip install -r requirements-build.txt pytest
           if ($LASTEXITCODE -ne 0) { throw "Windows build dependencies failed to install" }
 
-      - name: Run Finch shared import regression tests
+      - name: Run release regression tests
         shell: pwsh
         run: |
-          python -m pytest services/tests/test_finch_shared_import_service.py -q
+          python -m pytest services/tests/test_finch_shared_import_service.py tools/tests/test_build_release_user_database_seed.py ui/tests/test_release_population_contract.py ui/tests/test_raid_engine_workflow_handoffs.py -q
 
       - name: Build friend package
         shell: pwsh
@@ -66,6 +66,15 @@ jobs:
           Stop-Process -Id $proc.Id -Force
           Write-Host "Packaged FoundryDock remained running through startup smoke test."
 
+          $userDb = Join-Path $env:LOCALAPPDATA "FoundryDock\foundrydock.db"
+          if (-not (Test-Path $userDb -PathType Leaf)) {
+            throw "Packaged first run did not provision foundrydock.db from the release seed."
+          }
+          python -c "import sqlite3,sys; db=sqlite3.connect(sys.argv[1]); assert db.execute('select count(*) from roster_member').fetchone()[0] >= 12; assert db.execute('select count(*) from team').fetchone()[0] >= 1; assert db.execute('select count(*) from raid_plan').fetchone()[0] >= 1; print('Populated first-run user database smoke test: PASS')" $userDb
+          if ($LASTEXITCODE -ne 0) {
+            throw "Packaged first-run user database is not populated."
+          }
+
       - name: Prepare release assets
         shell: pwsh
         run: |
@@ -86,6 +95,8 @@ jobs:
             dist/FoundryDock-update.zip.sha256 `
             --target "${{ github.sha }}" `
             --title "FoundryDock 0.1.7" `
-            --notes "Patch release for Finch shared collaboration. Fixes current Finch Team schema v3 and Raid Plan schema v7 snapshots, and makes all Finch collaboration surfaces use the same canonical packaged settings/API credential path. Includes packaged EXE startup smoke test. No user database replacement."
+            --notes "Patch release for Finch shared collaboration and raid-planning persistence. Coverage now reads canonical Raid Plans, plan context carries into Comp Builder/Coverage, and fresh installs receive a populated reference Team/Raid Plan so planning pages are not empty. Existing user databases are never replaced. Includes packaged EXE and first-run database smoke tests."
 
 # rebuild-after-finch-settings-path
+
+# rebuild-after-populated-release-seed
