@@ -172,3 +172,5 @@ jobs:
 # rebuild-after-stale-raid-plan-build-id-repair
 
 # rebuild-after-template-selection-sync-fix
+
+# rebuild-after-template-stable-identity-preservation
