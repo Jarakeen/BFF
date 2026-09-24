@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import DEFAULT_DATABASE, get_data_dir, get_resource_path, get_user_database_path
+from engine.config import DEFAULT_DATABASE, get_data_dir, get_resource_path, get_user_database_path, get_settings_path
 from models.raid_plan import RaidPlan, RaidPlanMember
 from services.finch_shared_provenance_service import format_shared_timestamp
 from services.finch_shared_readiness_service import (
@@ -287,7 +287,7 @@ class CityRaidReadinessPage(FoundryPage):
             raid_plans_path=self.repository.path,
             data_dir=get_data_dir(),
             database_path=DEFAULT_DATABASE,
-            settings_path=Path("settings.json"),
+            settings_path=get_settings_path(),
         )
         self._finch_publish_timer.start()
 
@@ -320,7 +320,7 @@ class CityRaidReadinessPage(FoundryPage):
             list_shared_readiness_from_finch,
             data_dir=get_data_dir(),
             database_path=DEFAULT_DATABASE,
-            settings_path=Path("settings.json"),
+            settings_path=get_settings_path(),
         )
         self._finch_shared_timer.start()
 
