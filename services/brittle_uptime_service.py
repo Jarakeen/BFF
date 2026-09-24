@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-"""Focused Minor Brittle uptime analysis from ESO Logs.
+"""Focused Major Brittle uptime analysis from ESO Logs.
 
 The service intentionally reads fresh ESO Logs data and never persists combat results.
-Duplicate Minor Brittle aura IDs are de-duplicated by display name using the maximum
+Duplicate Major Brittle aura IDs are de-duplicated by display name using the maximum
 reported uptime, matching the existing Performance Dashboard behavior.
 """
 
@@ -11,7 +11,9 @@ from dataclasses import dataclass
 
 from services.performance_dashboard_service import _iter_actors_by_role
 
-MINOR_BRITTLE_NAME = "Minor Brittle"
+MAJOR_BRITTLE_NAME = "Major Brittle"
+DEFAULT_PROVIDER_ACTOR_ID = 72
+DEFAULT_PROVIDER_LABEL = "Anonymous 72"
 
 
 @dataclass(frozen=True)
@@ -55,13 +57,13 @@ class BrittleUptimeReport:
 
 
 class BrittleUptimeService:
-    """Compare raid-wide and provider-scoped Minor Brittle uptime across fights."""
+    """Compare raid-wide and provider-scoped Major Brittle uptime across fights."""
 
     def __init__(self, client) -> None:
         self.client = client
 
     @staticmethod
-    def _named_uptime_ms(auras: list[dict], name: str = MINOR_BRITTLE_NAME) -> float:
+    def _named_uptime_ms(auras: list[dict], name: str = MAJOR_BRITTLE_NAME) -> float:
         wanted = str(name or "").strip().casefold()
         values: list[float] = []
         for aura in auras or []:
@@ -89,6 +91,8 @@ class BrittleUptimeService:
         *,
         fight_ids: tuple[int, ...] | None = None,
         kills_only: bool = True,
+        provider_actor_id: int = DEFAULT_PROVIDER_ACTOR_ID,
+        provider_label: str = DEFAULT_PROVIDER_LABEL,
     ) -> BrittleUptimeReport:
         code = self.client.normalize_report_code(report_code)
         fights = list(self.client.get_fights(code))
@@ -124,32 +128,23 @@ class BrittleUptimeService:
             )
             brittle_ms = self._named_uptime_ms(raid_auras)
 
-            player_details = self.client.get_report_player_summary(code, fight_id, start, end)
             providers: list[BrittleProviderUptime] = []
-            for role, actor in _iter_actors_by_role(player_details):
-                actor_id = actor.get("id")
-                if actor_id is None:
-                    continue
-                source_auras = self.client.get_aura_table(
-                    code,
-                    fight_id,
-                    start,
-                    end,
-                    data_type="Debuffs",
-                    hostility_type="Enemies",
-                    source_id=int(actor_id),
-                )
-                source_ms = self._named_uptime_ms(source_auras)
-                if source_ms <= 0:
-                    continue
-
-                raw_name = str(actor.get("name") or "").strip()
-                actor_label = raw_name or f"Anonymous {actor_id}"
+            source_auras = self.client.get_aura_table(
+                code,
+                fight_id,
+                start,
+                end,
+                data_type="Debuffs",
+                hostility_type="Enemies",
+                source_id=int(provider_actor_id),
+            )
+            source_ms = self._named_uptime_ms(source_auras)
+            if source_ms > 0:
                 providers.append(
                     BrittleProviderUptime(
-                        actor_id=int(actor_id),
-                        actor_label=actor_label,
-                        role=role,
+                        actor_id=int(provider_actor_id),
+                        actor_label=str(provider_label or DEFAULT_PROVIDER_LABEL),
+                        role="",
                         uptime_seconds=round(source_ms / 1000.0, 2),
                         uptime_percent=self._percent(source_ms, duration_seconds),
                     )
@@ -172,7 +167,9 @@ class BrittleUptimeService:
 
 
 __all__ = [
-    "MINOR_BRITTLE_NAME",
+    "MAJOR_BRITTLE_NAME",
+    "DEFAULT_PROVIDER_ACTOR_ID",
+    "DEFAULT_PROVIDER_LABEL",
     "BrittleProviderUptime",
     "BrittleFightUptime",
     "BrittleUptimeReport",
