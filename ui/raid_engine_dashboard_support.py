@@ -66,6 +66,7 @@ def _install_canonical_sidebar_routes() -> None:
             "label": "Review",
             "children": [
                 ("Top Gear", "console:3"),
+                ("Brittle Uptime", "brittle_uptime"),
             ],
         },
         {"label": "Achievement", "page": "achievements", "children": []},
