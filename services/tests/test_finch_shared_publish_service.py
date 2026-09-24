@@ -208,7 +208,7 @@ def test_publish_service_uses_versioned_snapshots(tmp_path: Path) -> None:
     assert client.team_calls[0][0] == "Performance Mode"
     assert client.team_calls[0][2] == 3
     assert client.plan_calls[0][0] == "rg-pm"
-    assert client.plan_calls[0][2] == 5
+    assert client.plan_calls[0][2] == 7
     assert team_result.kind == "team"
     assert plan_result.kind == "raid_plan"
 
