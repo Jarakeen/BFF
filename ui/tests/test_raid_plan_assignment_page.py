@@ -6,12 +6,17 @@ from ui.raid_plan_assignment_page import (
 from ui.roster_page import _assignment_choice_rows
 
 
-def test_raid_plan_assignment_choices_reuse_roster_assignment_vocabulary() -> None:
+def test_raid_plan_assignment_choices_include_roster_and_full_coverage_vocabulary() -> None:
     expected = tuple(label for label, _identity in _assignment_choice_rows() if label.strip())
+    choices = raid_plan_assignment_choices()
 
-    assert raid_plan_assignment_choices() == expected
-    assert "Boss Positioning / Add Control" in expected
-    assert "Portal / Backup Control" in expected
+    assert set(expected) <= set(choices)
+    assert "Boss Positioning / Add Control" in choices
+    assert "Portal / Backup Control" in choices
+    assert "Major Courage" in choices
+    assert "Minor Heroism" in choices
+    assert "Xoryn's Masterpiece" in choices
+    assert "Ozezan's Plating" in choices
 
 
 def test_assignment_values_update_only_existing_plan_members() -> None:
@@ -102,22 +107,19 @@ def test_assignment_page_does_not_depend_on_roster_assignment_context_service() 
     assert "Type to find assignment" in source
 
 
-def test_raid_engine_registers_assignment_aware_raid_plan_page() -> None:
+def test_raid_engine_registers_current_assignment_aware_raid_plan_workspace() -> None:
     from pathlib import Path
 
     route_source = Path("ui/raid_engine_dashboard_support.py").read_text(encoding="utf-8")
-    adviser_source = Path("ui/raid_plan_adviser_page.py").read_text(encoding="utf-8")
-    rotation_source = Path("ui/raid_plan_rotation_page.py").read_text(encoding="utf-8")
-    coverage_source = Path("ui/raid_plan_coverage_page.py").read_text(encoding="utf-8")
+    workspace_source = Path("ui/city_raid_plan_workspace_page.py").read_text(encoding="utf-8")
+    assignment_source = Path("ui/city_raid_assignments_page.py").read_text(encoding="utf-8")
 
-    assert "from ui.raid_plan_adviser_page import RaidPlanAdviserPage" in route_source
-    assert "raid_plans = RaidPlanAdviserPage()" in route_source
-    assert "from ui.raid_plan_rotation_page import RaidPlanRotationPage" in adviser_source
-    assert "class RaidPlanAdviserPage(RaidPlanRotationPage):" in adviser_source
-    assert "from ui.raid_plan_coverage_page import RaidPlanCoveragePage" in rotation_source
-    assert "class RaidPlanRotationPage(RaidPlanCoveragePage):" in rotation_source
-    assert "from ui.raid_plan_assignment_page import RaidPlanAssignmentPage" in coverage_source
-    assert "class RaidPlanCoveragePage(RaidPlanAssignmentPage):" in coverage_source
+    assert "from ui.city_raid_plan_workspace_page import CityRaidPlanWorkspacePage" in route_source
+    assert "raid_plans = CityRaidPlanWorkspacePage()" in route_source
+    assert "from ui.city_raid_assignments_page import CityRaidAssignmentsPage" in route_source
+    assert "assignments = CityRaidAssignmentsPage()" in route_source
+    assert "class CityRaidAssignmentsPage(RaidPlanAssignmentPage):" in assignment_source
+    assert "assignmentsRequested" in workspace_source
 
 
 def test_raid_plan_member_persists_utility_assignments_separately() -> None:
@@ -141,7 +143,7 @@ def test_city_assignments_uses_separate_support_and_utility_surfaces() -> None:
 
     source = Path("ui/city_raid_assignments_page.py").read_text(encoding="utf-8")
 
-    assert "GROUP_COVERAGE_NAMES" in source
+    assert "raid_plan_assignment_choices" in source
     assert "UTILITY_CHOICES" in source
     assert "self._utility_by_seat" in source
     assert "utility_assignments=tuple(utilities)" in source
