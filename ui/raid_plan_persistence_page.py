@@ -1107,6 +1107,30 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                                     build_combo.setCurrentIndex(combo_index)
                                     matched = True
                                     break
+
+                            # Exact canonical BuildId outranks display-name filters.
+                            # After player merges/import cleanup the build can still
+                            # be valid even when its legacy Gamertag/Character text
+                            # differs from the chair. Make that exact build visible
+                            # rather than silently dropping the Roles selection.
+                            if not matched:
+                                exact_saved_index = next(
+                                    (
+                                        index
+                                        for index, saved in enumerate(self.saved_builds)
+                                        if _clean(getattr(saved, "BuildId", "")).casefold()
+                                        == wanted_id
+                                    ),
+                                    None,
+                                )
+                                if exact_saved_index is not None:
+                                    saved = self.saved_builds[exact_saved_index]
+                                    build_combo.addItem(
+                                        self._build_display(saved),
+                                        exact_saved_index,
+                                    )
+                                    build_combo.setCurrentIndex(build_combo.count() - 1)
+                                    matched = True
                         if not matched and member.selected_build_name:
                             for combo_index in range(1, build_combo.count()):
                                 saved_index = build_combo.itemData(combo_index)
