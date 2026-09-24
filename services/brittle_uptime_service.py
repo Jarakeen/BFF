@@ -10,6 +10,8 @@ reported uptime, matching the existing Performance Dashboard behavior.
 from dataclasses import dataclass
 
 from services.performance_dashboard_service import _iter_actors_by_role
+from services.performance_effect_id_catalog import DEBUFF_EFFECT_IDS
+from services.performance_effect_timeline import PerformanceEffectTimelineService, build_effect_windows
 
 MAJOR_BRITTLE_NAME = "Major Brittle"
 DEFAULT_PROVIDER_ACTOR_ID = 72
@@ -87,6 +89,70 @@ class BrittleUptimeService:
             return 0.0
         return round(min(100.0, max(0.0, (uptime_ms / 1000.0) / duration_seconds * 100.0)), 1)
 
+    def _source_event_uptime_ms(
+        self,
+        report_code: str,
+        fight_id: int,
+        start_ms: float,
+        end_ms: float,
+        actor_id: int,
+    ) -> float:
+        """Fallback to raw aura transitions when ESO Logs' source table is empty.
+
+        ESO Logs can expose Major Brittle in the raw Debuffs event stream with the
+        correct sourceID while its source-filtered aura summary table reports no
+        named Major Brittle row. The Brittle page must prefer the compact table when
+        it works, but a zero summary is not evidence of zero application.
+        """
+        effect_ids = DEBUFF_EFFECT_IDS.get(MAJOR_BRITTLE_NAME, frozenset())
+        if not effect_ids:
+            return 0.0
+
+        timeline = PerformanceEffectTimelineService(self.client)
+        events = timeline._fetch_events(
+            report_code,
+            fight_id,
+            start_ms,
+            end_ms,
+            data_type="Debuffs",
+            hostility_type="Enemies",
+        )
+        source_events = []
+        for row in events:
+            try:
+                source_id = int(row.get("sourceID"))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            if source_id == int(actor_id):
+                source_events.append(row)
+
+        windows = build_effect_windows(
+            source_events,
+            id_to_name={int(effect_id): MAJOR_BRITTLE_NAME for effect_id in effect_ids},
+            fight_start_ms=start_ms,
+            fight_end_ms=end_ms,
+            source_label=f"Actor {actor_id}",
+            choose_primary_target=True,
+        )
+        # Different numeric aliases can describe the same semantic Major Brittle
+        # interval. Union the observed windows so aliases never double-count time.
+        intervals = sorted(
+            (
+                max(0.0, float(window.StartSeconds)),
+                max(0.0, float(window.EndSeconds)),
+            )
+            for window in windows
+            if window.Name.casefold() == MAJOR_BRITTLE_NAME.casefold()
+            and window.EndSeconds > window.StartSeconds
+        )
+        merged: list[list[float]] = []
+        for left, right in intervals:
+            if not merged or left > merged[-1][1]:
+                merged.append([left, right])
+            else:
+                merged[-1][1] = max(merged[-1][1], right)
+        return sum(right - left for left, right in merged) * 1000.0
+
     def analyze(
         self,
         report_code: str,
@@ -162,6 +228,14 @@ class BrittleUptimeService:
                 source_id=int(provider_actor_id),
             )
             source_ms = self._named_uptime_ms(source_auras)
+            if source_ms <= 0:
+                source_ms = self._source_event_uptime_ms(
+                    code,
+                    fight_id,
+                    start,
+                    end,
+                    int(provider_actor_id),
+                )
             if source_ms > 0:
                 providers.append(
                     BrittleProviderUptime(
