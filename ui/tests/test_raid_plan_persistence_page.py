@@ -433,3 +433,17 @@ def test_stale_build_repair_preserves_planned_state_and_assignments() -> None:
     assert "planned_gear_sets=" not in repair
     assert "planned_skills=" not in repair
     assert "primary_assignment=" not in repair
+
+
+def test_roles_exact_build_id_can_bypass_display_identity_filters() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+    assert "Exact canonical BuildId outranks display-name filters." in source
+    assert "exact_saved_index = next(" in source
+    assert "build_combo.addItem(" in source
+
+
+def test_planning_pages_reload_latest_saved_plan_on_entry() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+    assert "def showEvent(self, event) -> None:" in source
+    assert "latest = self.plan_repository.get(loaded.plan_id)" in source
+    assert "self.apply_plan(latest)" in source
