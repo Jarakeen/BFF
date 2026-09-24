@@ -93,6 +93,14 @@ GROUP_COVERAGE_EFFECTS: tuple[RaidGroupEffectReference, ...] = (
         ("Sorcerer passive: Exploitation",),
     ),
     RaidGroupEffectReference(
+        "Major Savagery", "Buff",
+        ("Named Weapon Critical buff tracked as raid coverage; common sources include class/skill and consumable effects.",),
+    ),
+    RaidGroupEffectReference(
+        "Major Prophecy", "Buff",
+        ("Named Spell Critical buff tracked as raid coverage; common sources include class/skill and consumable effects.",),
+    ),
+    RaidGroupEffectReference(
         "Major Resolve", "Buff",
         ("Group ability: Frost Cloak / Expansive Frost Cloak", "Scribing: Resolve scripts"),
     ),
@@ -114,8 +122,20 @@ GROUP_COVERAGE_EFFECTS: tuple[RaidGroupEffectReference, ...] = (
         ("Set: Gossamer",),
     ),
     RaidGroupEffectReference(
+        "Minor Evasion", "Buff",
+        ("Named mitigation buff tracked per player in current raid coverage tools.",),
+    ),
+    RaidGroupEffectReference(
+        "Minor Aegis", "Buff",
+        ("Named trial-damage mitigation buff tracked per player in current raid coverage tools.",),
+    ),
+    RaidGroupEffectReference(
         "Major Heroism", "Buff",
         ("Set: Drake's Rush", "Sets also include Hanu's Compassion and Transformative Hope", "Scribing: Heroism on Trample"),
+    ),
+    RaidGroupEffectReference(
+        "Minor Heroism", "Buff",
+        ("Named Ultimate-generation buff tracked by current raid coverage tools.",),
     ),
     RaidGroupEffectReference(
         "Major Vitality", "Buff",
@@ -161,6 +181,14 @@ GROUP_COVERAGE_EFFECTS: tuple[RaidGroupEffectReference, ...] = (
     RaidGroupEffectReference(
         "Empower", "Buff",
         ("Group-capable ability: Empowering Grasp", "Scribing: Empower on Mender's Bond"),
+    ),
+    RaidGroupEffectReference(
+        "Feeding Frenzy", "Buff",
+        ("Named damage-support buff tracked by current raid coverage tools.",),
+    ),
+    RaidGroupEffectReference(
+        "Aggressive Horn", "Buff",
+        ("Ultimate: Aggressive Horn", "Tracked separately from its Major Force contribution for raid-planning visibility."),
     ),
     RaidGroupEffectReference(
         "Powerful Assault", "Buff",
@@ -235,6 +263,18 @@ GROUP_COVERAGE_EFFECTS: tuple[RaidGroupEffectReference, ...] = (
         ("Combat status: Off Balance", "Provider abilities are maintained in Combat Reference; the effect is cycle-limited rather than a permanent debuff."),
     ),
     RaidGroupEffectReference(
+        "Martial Knife", "Debuff",
+        ("Named damage debuff tracked by current raid coverage tools.",),
+    ),
+    RaidGroupEffectReference(
+        "Status Knife", "Debuff",
+        ("Named status-oriented damage debuff tracked by current raid coverage tools.",),
+    ),
+    RaidGroupEffectReference(
+        "Heat Shock (3 stacks)", "Debuff",
+        ("Named stacked damage debuff tracked by current raid coverage tools.",),
+    ),
+    RaidGroupEffectReference(
         "Roar of Alkosh", "Debuff",
         ("Set: Roar of Alkosh", "Unique synergy-triggered enemy resistance reduction; not Major/Minor Breach."),
     ),
@@ -279,6 +319,10 @@ GROUP_COVERAGE_EFFECTS: tuple[RaidGroupEffectReference, ...] = (
         "Crusher", "Debuff",
         ("Weapon enchantment: Crusher",),
         True,
+    ),
+    RaidGroupEffectReference(
+        "Weakening", "Debuff",
+        ("Weapon enchantment: Weakening", "Named mitigation debuff tracked by current raid coverage tools."),
     ),
 )
 
