@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import get_settings_path
 from services.optional_modules import broadcast_enabled
 from services.settings_service import SettingsService
 from ui.achievement_progress_import_page import AchievementProgressImportPage
@@ -53,7 +54,7 @@ class SettingsPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.broadcast_enabled = broadcast_enabled()
-        self.settings_service = SettingsService(Path("settings.json"))
+        self.settings_service = SettingsService(get_settings_path())
         self._loaded_settings: dict = {}
         self._section_buttons: list[QPushButton] = []
 
