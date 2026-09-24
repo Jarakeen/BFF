@@ -2200,6 +2200,13 @@ def _save_to_originating_raid_plan(page) -> bool:
         from services.comp_build_persistence_service import CompBuildPersistenceService
 
         was_unbound = not state.is_raid_plan_bound
+        checkpoint = UserSafetySnapshotService().create(
+            f"save-comp-plan-{state.raid_plan_id or state.raid_plan_name or 'new'}"
+        )
+        from engine.config import get_user_database_path
+        if checkpoint is None and get_user_database_path().is_file():
+            raise RuntimeError("could not create the pre-save database checkpoint")
+
         build_service = CompBuildPersistenceService(get_data_dir())
         build_result = build_service.persist(state)
         page._comp_plan_state = build_result.state
@@ -2221,6 +2228,19 @@ def _save_to_originating_raid_plan(page) -> bool:
             page._comp_plan_state = rebound_result.state.mark_saved()
             state = page._comp_plan_state
             build_result = rebound_result
+
+        if plan is not None:
+            from services.raid_plan_repository import RaidPlanRepository
+            verified_plan = RaidPlanRepository(get_user_database_path()).get(plan.plan_id)
+            if verified_plan is None:
+                raise RuntimeError(
+                    f"saved Raid Plan {plan.plan_id!r} could not be reloaded from foundrydock.db"
+                )
+            if verified_plan != plan:
+                raise RuntimeError(
+                    "saved Comp Raid Plan did not round-trip exactly; refusing to mark the Comp save clean"
+                )
+            plan = verified_plan
     except Exception as exc:
         mark_save_failed(page, str(exc))
         page.status.error(
