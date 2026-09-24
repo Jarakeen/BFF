@@ -32,7 +32,7 @@ def _payload(snapshot: FinchSharedSnapshot, *, kind: str) -> dict[str, object]:
         raise ValueError(
             f"Expected Finch shared {kind!r} snapshot, got {snapshot.kind!r}."
         )
-    allowed_versions = {1} if kind == "team" else {1, 2, 3}
+    allowed_versions = {1, 2, 3} if kind == "team" else {1, 2, 3, 4, 5, 6, 7}
     if snapshot.schema_version not in allowed_versions:
         raise ValueError(
             f"Unsupported Finch shared {kind} schema version: {snapshot.schema_version}"
