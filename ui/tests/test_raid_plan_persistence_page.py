@@ -400,3 +400,12 @@ def test_raid_plan_persistence_helper_binding_contract() -> None:
     assert "@staticmethod\n    def _refresh_action_availability(self)" not in source
     assert "@staticmethod\n    def _trial_display_for(plan: RaidPlan) -> str:" in source
 
+
+
+def test_roles_surface_displays_comp_planning_package_without_selected_build_name() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+
+    assert "member.planned_gear_sets" in source
+    assert 'or member.build_source_name' in source
+    assert 'or "Comp Maker package"' in source
+    assert 'f"Planned • {planned_sets}"' in source
