@@ -305,3 +305,24 @@ def test_phase14_build_identity_editor_exposes_vampire_and_werewolf() -> None:
     assert 'self.build.Werewolf = self.werewolf.isChecked()' in source
     assert 'self.werewolf.setChecked(False) if checked else None' in source
     assert 'self.vampire.setChecked(False) if checked else None' in source
+
+
+def test_phase14_build_load_does_not_rebuild_library_twice() -> None:
+    source = Path(phase14_build_focused_editors_support.__file__).with_name(
+        "phase14_builds_command_center_support.py"
+    ).read_text(encoding="utf-8")
+
+    start = source.index("    def load_phase14(self):")
+    end = source.index("\n    def refresh_roster_phase14", start)
+    load_block = source[start:end]
+    assert "_ORIGINAL_LOAD(self)" in load_block
+    assert "_set_filters_from_library(self)" not in load_block
+    assert "_populate_build_table(self)" not in load_block
+
+
+def test_phase14_build_icon_show_refresh_runs_only_once_per_page_instance() -> None:
+    source = _source(phase14_build_icon_polish_support)
+
+    assert 'self.setProperty("phase14IconShowRefreshPending", True)' in source
+    assert 'if not bool(self.property("phase14IconShowRefreshPending")):' in source
+    assert 'self.setProperty("phase14IconShowRefreshPending", False)' in source
