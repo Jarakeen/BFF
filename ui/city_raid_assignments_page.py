@@ -646,7 +646,12 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
     def save_current_plan(self):
         saved = super().save_current_plan()
         if saved is not None and hasattr(self, "assignment_summary_label"):
-            self._refresh_city_assignment_rows()
+            try:
+                self._refresh_city_assignment_rows()
+            except Exception as exc:
+                self.status.warning(
+                    f"Assignments saved, but the summary could not refresh: {exc}"
+                )
         return saved
 
 
