@@ -182,6 +182,57 @@ def test_repeated_shared_imports_increment_local_copy_identity(tmp_path) -> None
     assert repository.get("rg-pm-shared-copy-2") == second_plan
 
 
+def test_current_team_schema_v3_is_readable(tmp_path) -> None:
+    _db, _roster, _repository, service = _service(tmp_path)
+    service.client.team = FinchSharedSnapshot(
+        kind="team",
+        snapshot_key="performance mode",
+        schema_version=3,
+        payload={
+            "team_name": "Performance Mode",
+            "schedule": {"timezone": "EST", "slots": []},
+            "members": [],
+            "group_type": "trial",
+            "group_capacity": 12,
+        },
+        published_by="BFF",
+        updated_at="2026-09-23T00:00:00+00:00",
+    )
+
+    preview = service.team_preview(service.client.team)
+
+    assert preview.team_name == "Performance Mode"
+
+
+def test_current_raid_plan_schema_v7_is_readable(tmp_path) -> None:
+    _db, _roster, _repository, service = _service(tmp_path)
+    service.client.plan = FinchSharedSnapshot(
+        kind="raid_plan",
+        snapshot_key="current-plan",
+        schema_version=7,
+        payload={
+            "plan_id": "current-plan",
+            "name": "Current Shared Plan",
+            "trial_id": "sunspire",
+            "team_name": "Performance Mode",
+            "difficulty": "Veteran",
+            "status": "planning",
+            "group_type": "trial",
+            "group_capacity": 12,
+            "raid_maps": {},
+            "raid_map_previews": [],
+            "members": [],
+        },
+        published_by="BFF",
+        updated_at="2026-09-23T00:00:00+00:00",
+    )
+
+    plan = service.decoded_raid_plan("rg-pm")
+
+    assert plan.plan_id == "current-plan"
+    assert plan.team_name == "Performance Mode"
+
+
 def test_legacy_v1_shared_raid_plan_remains_readable(tmp_path) -> None:
     _db, _roster, _repository, service = _service(tmp_path)
     service.client.plan = FinchSharedSnapshot(
