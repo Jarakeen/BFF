@@ -7,6 +7,7 @@ from models.comp_plan_state import CompChairState
 from models.roster_model import RosterMember
 from services.build_catalog_service import BuildCatalogService
 from services.build_service import BuildService
+from services.canonical_build_bridge import CanonicalBuildBridge
 from services.comp_build_persistence_service import CompBuildPersistenceService
 from services.comp_plan_state_service import CompPlanStateService
 from services.eso_database import EsoDatabase
@@ -23,7 +24,7 @@ def test_phase14_comp_to_raid_plan_build_coverage_readiness_round_trip(
     tmp_path: Path,
 ) -> None:
     """One real-player plan must survive the Phase 14 planning loop by stable identity."""
-    database_path = tmp_path / "eso-test.db"
+    database_path = tmp_path / "foundrydock.db"
     roster = RosterService(EsoDatabase(database_path))
     roster_member_id = roster.create_member(
         RosterMember(
@@ -83,7 +84,7 @@ def test_phase14_comp_to_raid_plan_build_coverage_readiness_round_trip(
 
     plan_id = CompPlanStateService.unique_raid_plan_id(first.state)
     plan = CompPlanStateService.to_new_raid_plan(first.state, plan_id=plan_id)
-    repository = RaidPlanRepository(tmp_path / "raid_plans.json")
+    repository = RaidPlanRepository(database_path)
     repository.save(plan)
 
     persisted = repository.get(plan_id)
@@ -100,13 +101,14 @@ def test_phase14_comp_to_raid_plan_build_coverage_readiness_round_trip(
     assert second_healer is not None
     assert second_healer.selected_build_id == first_healer.selected_build_id
 
-    catalog = BuildCatalogService(tmp_path / "characters.json").load()
+    catalog = BuildCatalogService(database_path).load()
     comp_builds = [
         row
         for row in catalog["builds"]
         if row.get("build_kind") == "comp"
     ]
     assert len(comp_builds) == 1
+    assert not (tmp_path / "characters.json").exists()
     comp_record = comp_builds[0]
     assert comp_record["build_id"] == first_healer.selected_build_id
     assert comp_record["source"]["plan_id"] == plan_id
@@ -122,7 +124,7 @@ def test_phase14_comp_to_raid_plan_build_coverage_readiness_round_trip(
     reloaded_plan = repository.get(plan_id)
     assert reloaded_plan == final_plan
 
-    saved_builds = tuple(BuildService(tmp_path / "builds.json").load().Members)
+    saved_builds = tuple(CanonicalBuildBridge(tmp_path / "builds.json", catalog_path=database_path).load().Members)
     assert len(saved_builds) == 1
     assert saved_builds[0].BuildId == first_healer.selected_build_id
 
