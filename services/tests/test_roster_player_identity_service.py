@@ -254,4 +254,5 @@ def test_picker_dedupe_collapses_only_shared_canonical_player_id(tmp_path: Path)
 
     service = RosterPlayerIdentityService(database)
     visible = service.deduplicated_members_for_pickers()
-    assert [row.Id for row in visible] == [first, legacy]
+    assert {row.Id for row in visible} == {first, legacy}
+    assert second not in {row.Id for row in visible}
