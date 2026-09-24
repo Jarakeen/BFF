@@ -109,6 +109,8 @@ class _DestinationDialog(QDialog):
             return None
         player = self.players.get(str(character.get("player_id") or "").strip(), {})
         return {
+            "player_id": str(character.get("player_id") or "").strip(),
+            "character_id": str(character.get("character_id") or "").strip(),
             "name": str(character.get("name") or "").strip(),
             "gamertag": str(player.get("gamertag") or character.get("gamertag") or "").strip(),
             "eso_class": str(character.get("eso_class") or "").strip(),
@@ -188,6 +190,8 @@ def _copy_selected_build(page):
             destination_class=destination["eso_class"],
             destination_race=destination["race"],
             destination_role=destination["role"],
+            destination_player_id=destination["player_id"],
+            destination_character_id=destination["character_id"],
             new_build_name=dialog.build_name.text().strip(),
             include_variants=dialog.include_variants.isChecked(),
             include_notes=dialog.include_notes.isChecked(),
@@ -291,6 +295,8 @@ def _apply_template(page, template: BuildTemplateRecord):
         destination_class=destination["eso_class"],
         destination_race=destination["race"],
         destination_role=destination["role"],
+        destination_player_id=destination["player_id"],
+        destination_character_id=destination["character_id"],
         new_build_name=dialog.build_name.text().strip(),
         include_variants=dialog.include_variants.isChecked(),
     )
