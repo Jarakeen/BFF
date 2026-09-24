@@ -420,7 +420,7 @@ class _NotesDialog(_FocusedDialog):
 
 class _IdentityDialog(_FocusedDialog):
     def __init__(self, page, build):
-        super().__init__(page, f"Build Identity — {build.Name} / {build.BuildName}", width=620, height=440)
+        super().__init__(page, f"Build Identity — {build.Name} / {build.BuildName}", width=620, height=500)
         self.build = build
         self.build_name = QLineEdit(build.BuildName)
         self.character = QLineEdit(build.Name)
@@ -432,11 +432,29 @@ class _IdentityDialog(_FocusedDialog):
             "The Apprentice", "The Atronach", "The Lady", "The Lord", "The Lover", "The Mage",
             "The Ritual", "The Serpent", "The Shadow", "The Steed", "The Thief", "The Tower", "The Warrior",
         ))
+        self.vampire = QCheckBox("Vampire")
+        self.werewolf = QCheckBox("Werewolf")
+        self.vampire.setChecked(bool(getattr(build, "Vampire", False)))
+        self.werewolf.setChecked(bool(getattr(build, "Werewolf", False)))
+        self.vampire.toggled.connect(
+            lambda checked: self.werewolf.setChecked(False) if checked else None
+        )
+        self.werewolf.toggled.connect(
+            lambda checked: self.vampire.setChecked(False) if checked else None
+        )
         for combo, value in (
             (self.race, build.Race), (self.eso_class, build.EsoClass), (self.role, build.Role),
             (self.alliance, build.Alliance), (self.mundus, build.Mundus),
         ):
             combo.setCurrentText(value)
+
+        affiliation = QWidget()
+        affiliation_row = QHBoxLayout(affiliation)
+        affiliation_row.setContentsMargins(0, 0, 0, 0)
+        affiliation_row.setSpacing(16)
+        affiliation_row.addWidget(self.vampire)
+        affiliation_row.addWidget(self.werewolf)
+        affiliation_row.addStretch(1)
 
         form = QFormLayout()
         form.addRow("Build name", self.build_name)
@@ -446,6 +464,7 @@ class _IdentityDialog(_FocusedDialog):
         form.addRow("Role", self.role)
         form.addRow("Alliance", self.alliance)
         form.addRow("Mundus", self.mundus)
+        form.addRow("World state", affiliation)
         self.root.addLayout(form)
         self.add_actions("Save Identity")
 
@@ -457,6 +476,8 @@ class _IdentityDialog(_FocusedDialog):
         self.build.Role = self.role.currentText().strip()
         self.build.Alliance = self.alliance.currentText().strip()
         self.build.Mundus = self.mundus.currentText().strip()
+        self.build.Vampire = self.vampire.isChecked()
+        self.build.Werewolf = self.werewolf.isChecked()
 
 
 def _run_dialog(page, dialog, message: str) -> None:
