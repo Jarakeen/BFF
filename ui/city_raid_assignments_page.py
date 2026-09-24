@@ -159,6 +159,12 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         plan_context_bar = rehome_plan_header_controls(
             self,
             trailing_widgets=(self.save_assignments_button,),
+            action_button_names=(
+                "load_plan_button",
+                "publish_plan_finch_button",
+                "get_shared_plans_button",
+                "delete_plan_button",
+            ),
         )
         self.workspace_layout.addWidget(plan_context_bar)
 
@@ -638,10 +644,11 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
                     utility.setCurrentText("")
             self._refresh_city_assignment_rows()
 
-    def save_current_plan(self) -> None:
-        super().save_current_plan()
-        if hasattr(self, "assignment_summary_label"):
+    def save_current_plan(self):
+        saved = super().save_current_plan()
+        if saved is not None and hasattr(self, "assignment_summary_label"):
             self._refresh_city_assignment_rows()
+        return saved
 
 
 __all__ = ["CityRaidAssignmentsPage", "_role_icon_name", "_role_icon_pixmap"]
