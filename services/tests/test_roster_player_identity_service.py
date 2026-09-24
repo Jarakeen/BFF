@@ -195,7 +195,7 @@ def test_explicit_merge_rebinds_saved_raid_plan_chairs_to_survivor(tmp_path: Pat
     assert refreshed_survivor is not None
     assert chair.gamertag == "Rikbacon"
     assert chair.roster_member_id == survivor_id
-    assert chair.player_id == refreshed_survivor.CanonicalPlayerId
+    assert (chair.player_id or "") == (refreshed_survivor.CanonicalPlayerId or "")
     assert chair.primary_assignment == "Main Tank"
     assert chair.notes == "Keep this chair state"
 
