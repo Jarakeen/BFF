@@ -32,9 +32,11 @@ jobs:
       - name: Install dependencies
         shell: pwsh
         run: |
+          $ErrorActionPreference = "Stop"
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-build.txt
+          if ($LASTEXITCODE -ne 0) { throw "pip upgrade failed" }
+          python -m pip install -r requirements-build.txt pytest
+          if ($LASTEXITCODE -ne 0) { throw "Windows build dependencies failed to install" }
 
       - name: Run Finch shared import regression tests
         shell: pwsh
