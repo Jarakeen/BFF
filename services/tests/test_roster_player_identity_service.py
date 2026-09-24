@@ -198,3 +198,60 @@ def test_explicit_merge_rebinds_saved_raid_plan_chairs_to_survivor(tmp_path: Pat
     assert chair.player_id == refreshed_survivor.CanonicalPlayerId
     assert chair.primary_assignment == "Main Tank"
     assert chair.notes == "Keep this chair state"
+
+
+def test_canonical_player_label_prefers_catalog_name_and_never_returns_raw_id(tmp_path: Path) -> None:
+    database = EsoDatabase(tmp_path / "eso.db")
+    roster = RosterService(database)
+    member_id = roster.create_member(
+        _member("Old Alias", character="Current Toon", team="Performance Mode")
+    )
+
+    builds = BuildService(tmp_path / "builds.json")
+    builds.save(
+        BuildRoster(
+            Members=[
+                PlayerBuild(
+                    Name="Current Toon",
+                    Gamertag="CurrentName",
+                    BuildName="Healer",
+                    EsoClass="Warden",
+                    Role="Healer",
+                )
+            ]
+        )
+    )
+    member = roster.get_member(member_id)
+    assert member is not None
+
+    catalog = builds.canonical.catalog_service.load()
+    player_id = catalog["players"][0]["player_id"]
+    roster.db.execute(
+        "UPDATE roster_member SET canonical_player_id = ? WHERE id = ?",
+        (player_id, member_id),
+    )
+    roster.db.commit()
+    member = roster.get_member(member_id)
+    assert member is not None
+
+    service = RosterPlayerIdentityService(database, builds)
+    assert service.canonical_player_label(member) == "CurrentName"
+    assert service.canonical_player_label(player_id, fallback="Fallback") == "CurrentName"
+    assert service.canonical_player_label("missing-player-id", fallback="Fallback") == "Fallback"
+
+
+def test_picker_dedupe_collapses_only_shared_canonical_player_id(tmp_path: Path) -> None:
+    database = EsoDatabase(tmp_path / "eso.db")
+    roster = RosterService(database)
+    first = roster.create_member(_member("Name One", character="One", team="Performance Mode"))
+    second = roster.create_member(_member("Name Two", character="Two", team="Performance Mode"))
+    legacy = roster.create_member(_member("Name One", character="Legacy", team="Performance Mode"))
+    roster.db.execute(
+        "UPDATE roster_member SET canonical_player_id = 'player-shared' WHERE id IN (?, ?)",
+        (first, second),
+    )
+    roster.db.commit()
+
+    service = RosterPlayerIdentityService(database)
+    visible = service.deduplicated_members_for_pickers()
+    assert [row.Id for row in visible] == [first, legacy]
