@@ -40,6 +40,11 @@ def get_data_dir() -> Path:
     return get_app_root() / "data"
 
 
+def get_settings_path() -> Path:
+    """Canonical FoundryDock settings file beside the source tree or packaged EXE."""
+    return get_app_root() / "settings.json"
+
+
 def get_user_data_dir() -> Path:
     """Writable FoundryDock state, separate from replaceable app/reference data.
 
