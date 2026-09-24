@@ -643,6 +643,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             effects=tuple(consequence_effects),
             event_denominator_proven=bool(
                 skeleton.denominator_proven
+                and not poison_unresolved
                 and not enchantment_binding_unresolved
             ),
             fixed_attempts=fixed_attempts,
