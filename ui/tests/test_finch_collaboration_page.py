@@ -11,7 +11,7 @@ def test_finch_collaboration_page_is_explicit_read_only_overview() -> None:
     assert 'QPushButton("Refresh Finch")' in source
     assert 'QPushButton("Open Workspace")' in source
     assert "load_finch_collaboration_overview" in source
-    assert "Publishing and Copy to Local" in source
+    assert "Publish and Copy to Local" in source
     assert "owning workspaces." in source
     assert "publish_" not in source
     assert "import_shared_" not in source
