@@ -374,3 +374,15 @@ def test_foundry_semantic_icons_are_gold_and_backing_tiles_are_stripped() -> Non
     assert "themed = _rylo_icon(path) if _is_rylo_theme() else _foundry_icon(path)" in source
     assert "_strip_full_canvas_background(svg)" in source
     assert '"cog": ("cog", "gears")' in source
+
+
+def test_phase14_build_identity_editor_exposes_vampire_and_werewolf() -> None:
+    source = _source(phase14_build_focused_editors_support)
+
+    assert 'self.vampire = QCheckBox("Vampire")' in source
+    assert 'self.werewolf = QCheckBox("Werewolf")' in source
+    assert 'form.addRow("World state", affiliation)' in source
+    assert 'self.build.Vampire = self.vampire.isChecked()' in source
+    assert 'self.build.Werewolf = self.werewolf.isChecked()' in source
+    assert 'self.werewolf.setChecked(False) if checked else None' in source
+    assert 'self.vampire.setChecked(False) if checked else None' in source
