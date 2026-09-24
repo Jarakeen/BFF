@@ -86,3 +86,73 @@ def test_actor_id_can_change_per_report_and_resolves_visible_name():
     assert fight.brittle_percent == 12.0
     assert fight.providers[0].actor_id == 9
     assert fight.providers[0].actor_label == "Named Provider"
+
+
+def test_source_major_brittle_falls_back_to_raw_events_when_aura_table_is_zero() -> None:
+    class Client:
+        @staticmethod
+        def normalize_report_code(value):
+            return value
+
+        @staticmethod
+        def get_fights(_code):
+            return [{
+                "id": 32,
+                "name": "Z'Maja",
+                "kill": True,
+                "startTime": 1000.0,
+                "endTime": 11000.0,
+            }]
+
+        @staticmethod
+        def get_aura_table(*_args, **kwargs):
+            if kwargs.get("source_id") is not None:
+                return []
+            return [{"name": "Major Brittle", "guid": 145977, "totalUptime": 4000.0}]
+
+        @staticmethod
+        def get_report_player_summary(*_args, **_kwargs):
+            return {
+                "playerDetails": {
+                    "healers": [{"id": 72, "name": "Anonymous 72"}]
+                }
+            }
+
+        @staticmethod
+        def _query(_query, variables):
+            # Raw Debuffs events prove source 72 applied Major Brittle for 4 seconds.
+            return {
+                "reportData": {
+                    "report": {
+                        "events": {
+                            "data": [
+                                {
+                                    "timestamp": 2000.0,
+                                    "type": "applydebuff",
+                                    "sourceID": 72,
+                                    "targetID": 13,
+                                    "abilityGameID": 145977,
+                                },
+                                {
+                                    "timestamp": 6000.0,
+                                    "type": "removedebuff",
+                                    "sourceID": 72,
+                                    "targetID": 13,
+                                    "abilityGameID": 145977,
+                                },
+                            ],
+                            "nextPageTimestamp": None,
+                        }
+                    }
+                }
+            }
+
+    result = BrittleUptimeService(Client()).analyze(
+        "report",
+        fight_ids=(32,),
+        provider_actor_id=72,
+    )
+
+    assert result.fights[0].brittle_seconds == 4.0
+    assert result.fights[0].brittle_percent == 40.0
+    assert result.fights[0].providers[0].actor_id == 72
