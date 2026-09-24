@@ -11,7 +11,7 @@ or runtime combat telemetry. Receiving shared Coverage is read-only.
 from dataclasses import dataclass
 from pathlib import Path
 
-from engine.config import DEFAULT_DATABASE, get_data_dir
+from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path
 from models.raid_plan import RaidPlan
 from services.build_service import BuildService
 from services.finch_api_client import FinchApiClient, FinchSharedSnapshot
@@ -390,7 +390,7 @@ def publish_coverage_to_finch(
     raid_plans_path: Path | None = None,
     data_dir: Path | None = None,
     database_path: Path | None = None,
-    settings_path: Path = Path("settings.json"),
+    settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> FinchCoveragePublishResult:
     root = Path(data_dir or get_data_dir())
@@ -410,7 +410,7 @@ def list_shared_coverage_from_finch(
     *,
     data_dir: Path | None = None,
     database_path: Path | None = None,
-    settings_path: Path = Path("settings.json"),
+    settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> tuple[FinchSharedCoveragePreview, ...]:
     root = Path(data_dir or get_data_dir())
