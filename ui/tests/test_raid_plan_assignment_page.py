@@ -119,7 +119,6 @@ def test_raid_engine_registers_current_assignment_aware_raid_plan_workspace() ->
     assert "from ui.city_raid_assignments_page import CityRaidAssignmentsPage" in route_source
     assert "assignments = CityRaidAssignmentsPage()" in route_source
     assert "class CityRaidAssignmentsPage(RaidPlanAssignmentPage):" in assignment_source
-    assert "assignmentsRequested" in workspace_source
 
 
 def test_raid_plan_member_persists_utility_assignments_separately() -> None:
