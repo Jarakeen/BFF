@@ -201,6 +201,38 @@ class RosterService:
         """, (1 if include_archived else 0,)).fetchall()
         return [self._row_to_member(row) for row in rows]
 
+    def list_team_members(self, team_name: str) -> list[RosterMember]:
+        """Return active Personnel assigned to one exact saved Team."""
+        name = str(team_name or "").strip()
+        if not name:
+            return []
+        rows = self.db.execute("""
+            SELECT
+                rm.id,
+                rm.player_name,
+                rm.character_name,
+                rm.eso_class,
+                rm.primary_role,
+                rm.secondary_role,
+                rm.status,
+                rm.canonical_player_id,
+                rm.canonical_character_id,
+                rm.discord_name,
+                rm.youtube,
+                rm.twitch,
+                rm.personnel_notes,
+                t.name AS team_name
+            FROM team t
+            INNER JOIN team_member tm ON tm.team_id = t.id
+            INNER JOIN roster_member rm ON rm.id = tm.roster_member_id
+            WHERE t.name = ? COLLATE NOCASE
+              AND lower(trim(rm.status)) <> 'archived'
+            ORDER BY
+                rm.player_name COLLATE NOCASE,
+                rm.character_name COLLATE NOCASE
+        """, (name,)).fetchall()
+        return [self._row_to_member(row) for row in rows]
+
     def get_member(self, member_id: int) -> RosterMember | None:
         row = self.db.execute("""
             SELECT
