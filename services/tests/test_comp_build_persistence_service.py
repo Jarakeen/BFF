@@ -327,3 +327,34 @@ def test_comp_build_created_after_initial_build_service_load_appears_on_reload(
     assert comp.SourcePlanId == "plan-1"
     assert comp.SourceSeatId == "DD1"
     assert comp.PlannedGearSets == ["Corpseburster", "Null Arca"]
+
+
+def test_persist_reports_exact_skip_reasons_for_open_and_unplanned_chairs(tmp_path: Path) -> None:
+    service = CompBuildPersistenceService(tmp_path, database_path=tmp_path / "foundrydock.db")
+    state = CompPlanState(
+        raid_plan_id="pm",
+        raid_plan_name="Core Team",
+        chairs=(
+            CompChairState(
+                seat_id="dd-8",
+                role="DD",
+                player_name="Recruit",
+                is_open_player=True,
+            ),
+            CompChairState(
+                seat_id="dd-7",
+                role="DD",
+                player_name="Known Player",
+                roster_member_id=999,
+            ),
+        ),
+    )
+
+    result = service.persist(state)
+
+    assert result.saved_seats == ()
+    assert result.skipped_seats == ("dd-8", "dd-7")
+    assert result.skipped_reasons == (
+        ("dd-8", "open/recruit chair"),
+        ("dd-7", "no saved or planned build package"),
+    )
