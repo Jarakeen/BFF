@@ -66,6 +66,7 @@ jobs:
           python -m pytest `
             services/tests/test_finch_shared_import_service.py `
             services/tests/test_raid_plan_repository_revisions.py `
+            services/tests/test_raid_plan_offensive_stats_service.py `
             services/tests/test_comp_build_persistence_service.py `
             services/tests/test_phase14_planning_workflow_roundtrip.py `
             services/tests/test_raid_coverage_catalog_expansion.py `
