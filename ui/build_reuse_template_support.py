@@ -294,6 +294,24 @@ def _apply_template(page, template: BuildTemplateRecord):
         new_build_name=dialog.build_name.text().strip(),
         include_variants=dialog.include_variants.isChecked(),
     )
+    existing = _existing_build_for(page, result.build)
+    if existing is not None and not confirm_replacement(
+        page,
+        title="Update Existing Saved Build",
+        object_label=f'Update "{existing.BuildName or "build"}" for {existing.Name or existing.Gamertag}?',
+        impact=(
+            "The existing Saved Build will keep its canonical Player/Character/Build identity "
+            "and Raid Plan links. Template-owned build fields will be updated. Character "
+            "progression and unrelated Builds are kept."
+        ),
+        confirm_text="Update Saved Build",
+    ):
+        return
+    if existing is not None:
+        UserSafetySnapshotService().create(
+            f"apply-template-update-build-{existing.BuildId or existing.BuildName}"
+        )
+
     page.roster = _reuse_service().replace_or_append(page.roster, result.build)
     page.build_service.save(page.roster)
 
