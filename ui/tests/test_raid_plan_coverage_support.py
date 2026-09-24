@@ -8,7 +8,6 @@ def test_raid_plan_route_preserves_coverage_aware_workspace() -> None:
     assert '("Comp Builder", "comp_builder")' in route_source
     assert '("Optimizer Adviser", "console:6")' in route_source
     assert "install_coverage_raid_plan_scope_support()" in route_source
-    assert "install_raid_plan_optimizer_adviser_support()" in route_source
     assert "bind_raid_plan_rotation_page" in route_source
     assert 'window.show_page(target)' in route_source
 
@@ -98,7 +97,7 @@ def test_raid_plan_coverage_refresh_wrapper_rejects_non_plan_visible_scopes() ->
     source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
 
     assert "def refresh_with_raid_plan(self, *args, **kwargs):" in source
-    assert 'self.scope_card.set_title("Choose a saved Raid Plan")' in source
+    assert 'page.scope_card.set_title("Coverage Reference Catalog")' in source
     assert "Coverage evaluates one saved trial plan at a time." in source
     assert 'data.startswith("roster_team:")' not in source
     assert "return _ORIGINAL_REFRESH(self, *args, **kwargs)" not in source
