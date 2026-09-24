@@ -398,9 +398,30 @@ def _open_plan_comp_builder(window, source_page) -> None:
 
 
 def _route_plan_page(window, source_page, target: str) -> None:
-    del source_page
-    # Navigation is intentionally dumb. Comp Maker, Coverage, and other destination
-    # pages own their saved-plan selection instead of depending on the route used.
+    """Preserve the current saved Raid Plan across plan-workflow navigation."""
+    target = str(target or "").strip()
+
+    if target == "comp_builder":
+        _open_plan_comp_builder(window, source_page)
+        return
+
+    if target == "console:7":
+        try:
+            has_pending = getattr(source_page, "has_pending_changes", None)
+            if callable(has_pending) and has_pending():
+                status = getattr(source_page, "status", None)
+                if status is not None:
+                    status.warning(
+                        "Save or discard Raid Plan changes before opening Coverage."
+                    )
+                return
+            plan = getattr(source_page, "_loaded_plan_snapshot", None)
+        except (AttributeError, OSError, TypeError, ValueError):
+            plan = None
+        if plan is not None:
+            _open_raid_plan_coverage(window, plan)
+            return
+
     window.show_page(target)
 
 
