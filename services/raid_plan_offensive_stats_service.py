@@ -215,6 +215,13 @@ class RaidPlanOffensiveStatsService:
 
             for effect in audit.resolved_effects:
                 effect_name = _clean(getattr(effect, "name", ""))
+                target = _key(
+                    getattr(
+                        getattr(effect, "target_type", None),
+                        "value",
+                        getattr(effect, "target_type", ""),
+                    )
+                )
                 canonical = next(
                     (
                         name
@@ -227,11 +234,14 @@ class RaidPlanOffensiveStatsService:
                     ),
                     None,
                 )
-                if canonical:
+                if canonical in _NAMED_CRIT_DAMAGE and target == "group":
+                    named.add(canonical)
+                elif canonical in _TARGET_CRIT_DAMAGE_TAKEN and target == "enemy":
+                    named.add(canonical)
+                elif canonical in _FIXED_TARGET_RESISTANCE_REDUCTION and target == "enemy":
                     named.add(canonical)
 
                 reduction = getattr(effect, "resistance_reduction", None)
-                target = _key(getattr(getattr(effect, "target_type", None), "value", getattr(effect, "target_type", "")))
                 scaling = _clean(getattr(effect, "scaling", ""))
                 if reduction is None or float(reduction) <= 0 or target != "enemy":
                     continue
