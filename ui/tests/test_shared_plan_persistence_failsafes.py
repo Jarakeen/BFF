@@ -43,3 +43,17 @@ def test_comp_handoff_refuses_dirty_or_unverified_plan() -> None:
     assert "verified_plan = repository.get(plan.plan_id)" in bind
     assert "verified_plan != plan" in bind
     assert "if not _bind_plan_comp_builder(window, source_page):" in opener
+
+
+def test_raid_plan_save_does_not_implicitly_promote_personnel() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+    method = source[
+        source.index("    def save_current_plan(self)"):
+        source.index("    def _open_assignments", source.index("    def save_current_plan(self)"))
+    ]
+
+    assert "_ensure_named_players_in_personnel()" not in method
+    assert "self.refresh_personnel()" not in method
+    assert "self.apply_plan(persisted)" not in method
+    assert "plan = self.current_plan()" in method
+    assert "self.plan_repository.save(plan)" in method
