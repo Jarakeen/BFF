@@ -27,6 +27,7 @@ class SettingsService:
         return {
             "EsoLogsClientId": "",
             "EsoLogsClientSecret": "",
+            "BrittleDefaultActorId": "72",
             "BuildsExportFolder": "",
             "FinchApiUrl": "",
             "FinchApiKey": "",
@@ -75,6 +76,7 @@ class SettingsService:
         return {
             "EsoLogsClientId": str(data.get("EsoLogsClientId", "")),
             "EsoLogsClientSecret": self._load_secret(data),
+            "BrittleDefaultActorId": str(data.get("BrittleDefaultActorId", "72")),
             "BuildsExportFolder": str(data.get("BuildsExportFolder", "")),
             "FinchApiUrl": str(data.get("FinchApiUrl", "")),
             "FinchApiKey": self._load_finch_api_key(data),
