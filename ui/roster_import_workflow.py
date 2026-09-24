@@ -36,6 +36,7 @@ from engine.config import get_data_dir
 from models.build_model import BuildRoster, PlayerBuild
 from models.roster_model import ESO_CLASSES, RosterMember
 from services.build_service import BuildService
+from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.user_safety_snapshot_service import UserSafetySnapshotService
 
 
@@ -849,6 +850,8 @@ def apply_roster_import(
     canonical_team = roster_service.ensure_team_name(team_name)
     existing_members = roster_service.list_members()
     selected_members = [member for member in plan.members if member.selected]
+    identity_service = RosterPlayerIdentityService(roster_service.db, build_service)
+    resolved_player_names: dict[int, str] = {}
     created = 0
     updated = 0
     warnings: list[str] = []
@@ -870,6 +873,22 @@ def apply_roster_import(
         if target is None and not character_key:
             same_player = [member for member in existing_members if member.PlayerName.casefold() == tag_key]
             target = same_player[0] if len(same_player) == 1 else None
+
+        # Exact learned aliases are durable player identity evidence.  Once a raid
+        # lead explicitly merges "Rik" into the real Personnel record, a later
+        # import using "Rik" must update that person instead of birthing another
+        # Personnel row.  Similar-looking names remain intentionally unresolved.
+        if target is None:
+            alias_matches = identity_service.matching_members(imported.gamertag)
+            if len(alias_matches) == 1:
+                target = alias_matches[0]
+            elif len(alias_matches) > 1:
+                names = ", ".join(member.PlayerName for member in alias_matches)
+                raise ValueError(
+                    f"Import identity {imported.gamertag!r} matches multiple Personnel records "
+                    f"({names}). Use Merge Players to resolve the identity before importing."
+                )
+
         if target is None:
             target = RosterMember(
                 PlayerName=imported.gamertag,
@@ -893,6 +912,8 @@ def apply_roster_import(
             roster_service.update_member(target)
             updated += 1
 
+        resolved_player_names[id(imported)] = str(target.PlayerName or imported.gamertag).strip()
+
     imported_build_count = 0
     skipped_builds = 0
     if import_builds:
@@ -913,7 +934,7 @@ def apply_roster_import(
                     continue
                 payload = deepcopy(candidate.payload)
                 payload["Name"] = imported.character_name
-                payload["Gamertag"] = imported.gamertag
+                payload["Gamertag"] = resolved_player_names.get(id(imported), imported.gamertag)
                 payload["BuildName"] = candidate.build_name
                 payload["EsoClass"] = imported.eso_class or candidate.eso_class
                 payload["Role"] = imported.primary_role or candidate.role
