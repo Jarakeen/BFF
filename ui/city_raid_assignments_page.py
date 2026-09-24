@@ -21,9 +21,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from services.raid_group_effect_catalog import GROUP_COVERAGE_NAMES
 from ui.components.foundry_card import FoundryCard
-from ui.raid_plan_assignment_page import RaidPlanAssignmentPage
+from ui.raid_plan_assignment_page import RaidPlanAssignmentPage, raid_plan_assignment_choices
 from ui.raid_plan_header_controls import rehome_plan_header_controls
 from ui.raid_plan_page import RAID_PLAN_SEATS, _slug
 from ui.ux_icons import set_button_icon
@@ -327,7 +326,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
         combo.setEditable(True)
         combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         combo.addItem("")
-        combo.addItems(tuple(GROUP_COVERAGE_NAMES))
+        combo.addItems(raid_plan_assignment_choices())
         if combo.lineEdit() is not None:
             combo.lineEdit().setClearButtonEnabled(True)
             combo.lineEdit().setPlaceholderText(placeholder)
