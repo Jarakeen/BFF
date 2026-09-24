@@ -53,6 +53,7 @@ jobs:
             ui/tests/test_raid_plan_coverage_support.py `
             ui/tests/test_shared_plan_persistence_failsafes.py `
             ui/tests/test_assignment_save_stability.py `
+            ui/tests/test_raid_plan_assignment_page.py `
             -q
 
       - name: Build friend package
@@ -120,3 +121,5 @@ jobs:
 # rebuild-after-coverage-contract-refresh
 
 # rebuild-after-canonical-comp-persistence-sweep
+
+# rebuild-after-planning-stability-green
