@@ -155,7 +155,16 @@ elseif (-not [string]::IsNullOrWhiteSpace($UserDatabaseSeed)) {
     Write-Host "Prepared user database seed: $ResolvedUserDatabaseSeed"
 }
 else {
-    Write-Host "Prepared user database seed: none (fresh user database on first run)"
+    $PreparedUserDatabaseSeed = Join-Path $ReleaseSeedRoot "foundrydock.db"
+    Write-Host "Preparing populated first-install FoundryDock planning seed..."
+    python tools\build_release_user_database_seed.py --destination $PreparedUserDatabaseSeed
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not create populated first-install user database seed."
+    }
+    if (-not (Test-Path $PreparedUserDatabaseSeed -PathType Leaf)) {
+        throw "First-install user database seed was not created: $PreparedUserDatabaseSeed"
+    }
+    Write-Host "Prepared user database seed: POPULATED REFERENCE RAID"
 }
 
 Write-Host "Building $ExeName..."
