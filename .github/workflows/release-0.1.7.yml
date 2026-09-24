@@ -45,6 +45,8 @@ jobs:
             services/tests/test_finch_shared_import_service.py `
             services/tests/test_raid_coverage_catalog_expansion.py `
             services/tests/test_raid_plan_repository_revisions.py `
+            services/tests/test_phase14_planning_workflow_roundtrip.py `
+            services/tests/test_comp_build_persistence_service.py `
             tools/tests/test_build_release_user_database_seed.py `
             ui/tests/test_release_population_contract.py `
             ui/tests/test_raid_engine_workflow_handoffs.py `
@@ -116,3 +118,5 @@ jobs:
 # rebuild-after-assignment-save-crash-fix
 
 # rebuild-after-coverage-contract-refresh
+
+# rebuild-after-canonical-comp-persistence-sweep
