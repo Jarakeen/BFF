@@ -522,7 +522,58 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             selected_build_id=resolution.selected_build_id,
         )
 
+    def _repair_loaded_snapshot_after_player_merges(self) -> None:
+        """Self-heal a loaded plan whose Personnel player was explicitly merged.
+
+        A merge deletes only the donor Personnel row and records the donor name as
+        an exact alias on the survivor. Older in-memory/saved plan snapshots may
+        still carry the deleted roster_member_id/player_id. Resolve that exact
+        alias to the survivor before the ordinary save merge so assignments,
+        planned gear, build references, notes, and character state are preserved.
+        """
+        loaded = getattr(self, "_loaded_plan_snapshot", None)
+        if loaded is None:
+            return
+
+        changed = False
+        repaired_members = []
+        catalog = self.build_service.canonical.catalog_service
+        for member in loaded.members:
+            roster_id = member.roster_member_id
+            roster_row = (
+                self.roster_service.get_member(int(roster_id))
+                if roster_id is not None
+                else None
+            )
+            player_exists = bool(
+                not _clean(member.player_id)
+                or catalog.get_player(_clean(member.player_id)) is not None
+            )
+            if roster_row is not None and player_exists:
+                repaired_members.append(member)
+                continue
+
+            survivor = self._personnel_match(member.gamertag)
+            if survivor is None or survivor.Id is None:
+                repaired_members.append(member)
+                continue
+
+            repaired = member.with_selection(
+                gamertag=_clean(survivor.PlayerName),
+                roster_member_id=int(survivor.Id),
+                player_id=_clean(survivor.CanonicalPlayerId) or None,
+            )
+            repaired_members.append(repaired)
+            changed = changed or repaired != member
+
+        if changed:
+            self._loaded_plan_snapshot = replace(
+                loaded,
+                members=tuple(repaired_members),
+            )
+
     def current_plan(self) -> RaidPlan:
+        self._repair_loaded_snapshot_after_player_merges()
         visible = super().current_plan()
         selected_ids = self._selected_build_ids_by_seat()
         resolver = self._stable_identity_resolver()
