@@ -182,6 +182,59 @@ def _overlay_planned_skills(snapshot, scope):
         effect_names=RAID_PLAN_COVERAGE_NAMES,
     )
 
+def _render_reference_catalog(page) -> None:
+    """Render the complete Coverage reference universe without requiring a saved plan."""
+    page._raid_plan_coverage_scope = None
+    page.scope_card.set_title("Coverage Reference Catalog")
+    page.scope_note.setText(
+        "No saved Raid Plan is selected. FoundryDock still shows the full raid-facing "
+        "buff/debuff/support catalog so Coverage is never an empty page. Save or select "
+        "a Raid Plan to replace reference-only rows with live planned providers."
+    )
+    page.table.setRowCount(0)
+    for effect in _effect_names(page):
+        row = page.table.rowCount()
+        page.table.insertRow(row)
+        values = (
+            effect,
+            _type_text(effect),
+            _required_text(effect),
+            "—",
+            "—",
+            "—",
+            "—",
+            "—",
+            "No provider assigned",
+        )
+        reference = _reference(effect)
+        notes = tuple(getattr(reference, "source_notes", ()) or ()) if reference is not None else ()
+        tooltip = "\n".join(str(value) for value in notes if str(value).strip())
+        for column, value in enumerate(values):
+            item = QTableWidgetItem(str(value))
+            if column == 8:
+                item.setData(Qt.ItemDataRole.UserRole, "not_found")
+            if tooltip:
+                item.setToolTip(tooltip)
+            page.table.setItem(row, column, item)
+
+    _apply_filters(page)
+    page.summary_card.clear()
+    page.summary_card.addWidget(QLabel(
+        f"TOTAL EFFECTS   {len(_effect_names(page))}\n"
+        "COVERED  0\n"
+        f"MISSING  {len(_effect_names(page))}\n"
+        "REFERENCE MODE  No Raid Plan selected"
+    ))
+    page.providers_card.clear()
+    page.providers_card.addWidget(
+        QLabel("Reference sources are shown in row tooltips until a Raid Plan supplies providers.")
+    )
+    page.status.info(
+        f"Coverage reference catalog • {len(_effect_names(page))} effects visible; "
+        "select a saved Raid Plan to evaluate planned providers."
+    )
+
+
 def _render_raid_plan_scope(page) -> None:
     scope = getattr(page, "_raid_plan_coverage_scope", None)
     if scope is None:
@@ -438,18 +491,7 @@ def install() -> None:
             _render_raid_plan_scope(self)
             return
 
-        self._raid_plan_coverage_scope = None
-        self.table.setRowCount(0)
-        self.scope_card.set_title("Choose a saved Raid Plan")
-        self.scope_note.setText(
-            "Coverage evaluates one saved trial plan at a time. "
-            "Create or save a Raid Plan first, then return here."
-        )
-        self.summary_card.clear()
-        self.summary_card.addWidget(QLabel("No Raid Plan selected."))
-        self.providers_card.clear()
-        self.providers_card.addWidget(QLabel("No plan-scoped provider evidence loaded."))
-        self.status.info("Coverage is waiting for a saved Raid Plan.")
+        _render_reference_catalog(self)
         return
 
     def set_raid_plan_scope(self, raid_plan: RaidPlan) -> None:
