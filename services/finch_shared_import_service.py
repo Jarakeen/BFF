@@ -262,6 +262,15 @@ class FinchSharedImportService:
                             )
                             if _clean(value)
                         ),
+                        planned_skills=tuple(
+                            _clean(value)
+                            for value in (
+                                build_summary.get("front_skills")
+                                if isinstance(build_summary.get("front_skills"), list)
+                                else []
+                            )
+                            if _clean(value)
+                        ),
                         planned_mundus=_clean(build_summary.get("planned_mundus")) or None,
                     )
                 )
