@@ -46,7 +46,25 @@ jobs:
       - name: Build friend package
         shell: pwsh
         run: |
-          ./packaging/build_friend.ps1
+          ./packaging/build_friend.ps1 -IncludeBroadcast
+
+      - name: Smoke test packaged executable
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $exe = Resolve-Path "dist/BFF-Friend/FoundryDock.exe"
+          $crash = Join-Path (Split-Path $exe -Parent) "FoundryDock-crash.log"
+          if (Test-Path $crash) { Remove-Item $crash -Force }
+          $proc = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 20
+          if ($proc.HasExited) {
+            if (Test-Path $crash) {
+              Get-Content $crash -Raw
+            }
+            throw "Packaged FoundryDock exited during startup smoke test."
+          }
+          Stop-Process -Id $proc.Id -Force
+          Write-Host "Packaged FoundryDock remained running through startup smoke test."
 
       - name: Prepare release assets
         shell: pwsh
