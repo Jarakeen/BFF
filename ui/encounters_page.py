@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_settings_path
 from services.encounter_boss_guide import EncounterBossGuideService
 from services.encounter_raid_map_store import EncounterRaidMapStore
 from services.expedition_service import ExpeditionService
@@ -475,7 +475,7 @@ class EncountersPage(FoundryPage):
                 database_path=Path(get_data_dir()) / "eso.db",
                 raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
                 plan_id=plan_id,
-                settings_path=Path("settings.json"),
+                settings_path=get_settings_path(),
             )
         except Exception as exc:
             self.status.error(
@@ -524,7 +524,7 @@ class EncountersPage(FoundryPage):
             encounter_name=encounter_name,
             map_label=label,
             data_dir=get_data_dir(),
-            settings_path=Path("settings.json"),
+            settings_path=get_settings_path(),
         )
         self._finch_raid_map_timer.start()
 
