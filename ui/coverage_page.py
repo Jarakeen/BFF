@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path
+from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path, get_user_database_path
 from models.build_model import BuildRoster, PlayerBuild
 from services.build_service import BuildService
 from services.finch_shared_provenance_service import format_shared_timestamp
@@ -126,7 +126,7 @@ class CoveragePage(FoundryPage):
         self._finch_publish_future = _FINCH_COVERAGE_EXECUTOR.submit(
             publish_coverage_to_finch,
             plan_id=plan_id,
-            raid_plans_path=get_data_dir() / "raid_plans.json",
+            raid_plans_path=get_user_database_path(),
             data_dir=get_data_dir(),
             database_path=DEFAULT_DATABASE,
             settings_path=get_settings_path(),
