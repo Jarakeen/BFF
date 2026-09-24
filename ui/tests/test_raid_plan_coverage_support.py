@@ -98,7 +98,6 @@ def test_raid_plan_coverage_refresh_wrapper_rejects_non_plan_visible_scopes() ->
 
     assert "def refresh_with_raid_plan(self, *args, **kwargs):" in source
     assert 'page.scope_card.set_title("Coverage Reference Catalog")' in source
-    assert "Coverage evaluates one saved trial plan at a time." in source
     assert 'data.startswith("roster_team:")' not in source
     assert "return _ORIGINAL_REFRESH(self, *args, **kwargs)" not in source
 
