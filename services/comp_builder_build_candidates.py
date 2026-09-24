@@ -166,7 +166,6 @@ class CompBuilderBuildCandidateService:
     ) -> list[CompBuildCandidate]:
         roster = CanonicalBuildBridge(
             self.data_dir / "builds.json",
-            self.data_dir / "characters.json",
         ).load()
         results: list[CompBuildCandidate] = []
         for index, build in enumerate(roster.Members):
