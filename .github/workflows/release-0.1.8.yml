@@ -50,6 +50,7 @@ jobs:
             services/tests/test_build_reuse_service.py `
             ui/tests/test_roster_import_workflow.py `
             ui/tests/test_roster_player_alias_support.py `
+            ui/tests/test_raid_roster_workspace_wiring.py `
             services/tests/test_finch_shared_import_service.py `
             services/tests/test_raid_coverage_catalog_expansion.py `
             services/tests/test_raid_plan_repository_revisions.py `
@@ -157,3 +158,5 @@ jobs:
           }
 
 # rebuild-after-alias-safe-roster-import-and-player-merge
+
+# rebuild-after-city-player-merge-button-fix
