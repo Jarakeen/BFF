@@ -14,7 +14,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QInputDialog, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
-from engine.config import get_data_dir, get_user_database_path
+from engine.config import get_data_dir, get_user_database_path, get_settings_path
 from models.raid_plan import RaidPlan
 from services.comp_builder_trial_scope import COMP_MAKER_TRIALS
 from services.finch_shared_provenance_service import format_shared_timestamp
@@ -364,7 +364,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             database_path=Path(get_data_dir()) / "eso.db",
             raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
             plan_id=plan_id,
-            settings_path=Path("settings.json"),
+            settings_path=get_settings_path(),
         )
         self._finch_plan_publish_timer.start()
 
@@ -396,7 +396,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             list_shared_raid_plans_from_finch,
             database_path=Path(get_data_dir()) / "eso.db",
             raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
-            settings_path=Path("settings.json"),
+            settings_path=get_settings_path(),
         )
         self._finch_plan_read_timer.start()
 
@@ -475,7 +475,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 snapshot_key=preview.snapshot_key,
                 database_path=Path(get_data_dir()) / "eso.db",
                 raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
-                settings_path=Path("settings.json"),
+                settings_path=get_settings_path(),
             )
             return
 
