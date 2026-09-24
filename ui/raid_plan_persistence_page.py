@@ -473,8 +473,8 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             self._finch_plan_read_future = _FINCH_PLAN_READ_EXECUTOR.submit(
                 import_shared_raid_plan_from_finch,
                 snapshot_key=preview.snapshot_key,
-                database_path=Path(get_data_dir()) / "eso.db",
-                raid_plans_path=Path(get_data_dir()) / "raid_plans.json",
+                database_path=get_user_database_path(),
+                raid_plans_path=get_user_database_path(),
                 settings_path=get_settings_path(),
             )
             return
