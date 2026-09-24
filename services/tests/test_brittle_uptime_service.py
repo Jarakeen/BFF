@@ -13,6 +13,12 @@ class _FakeClient:
             {"id": 7, "name": "Boss", "kill": False, "startTime": 0, "endTime": 80000},
         ]
 
+    def get_report_player_summary(self, code, fight_id, start, end):
+        return {
+            "healers": [{"id": 72, "name": "", "anonymous": True}],
+            "dps": [{"id": 9, "name": "Named Provider"}],
+        }
+
     def get_aura_table(self, code, fight_id, start, end, **kwargs):
         source_id = kwargs.get("source_id")
         if source_id == 72:
@@ -46,13 +52,15 @@ def test_report_compares_raid_and_provider_uptime():
 
     assert len(result.fights) == 1
     fight = result.fights[0]
-    assert fight.brittle_seconds == 87.0
-    assert fight.brittle_percent == 87.0
+    assert fight.brittle_seconds == 61.0
+    assert fight.brittle_percent == 61.0
+    assert fight.raid_brittle_seconds == 87.0
+    assert fight.raid_brittle_percent == 87.0
     assert len(fight.providers) == 1
     assert fight.providers[0].actor_id == 72
     assert fight.providers[0].actor_label == "Anonymous 72"
     assert fight.providers[0].uptime_percent == 61.0
-    assert result.average_percent == 87.0
+    assert result.average_percent == 61.0
 
 
 def test_kills_only_filters_wipes_when_no_explicit_fight_ids():
@@ -64,3 +72,17 @@ def test_other_major_brittle_sources_are_not_included_as_monitored_provider():
     client = _FakeClient()
     result = BrittleUptimeService(client).analyze("REPORT", fight_ids=(6,))
     assert [row.actor_id for row in result.fights[0].providers] == [72]
+
+
+def test_actor_id_can_change_per_report_and_resolves_visible_name():
+    result = BrittleUptimeService(_FakeClient()).analyze(
+        "REPORT",
+        fight_ids=(6,),
+        provider_actor_id=9,
+    )
+
+    fight = result.fights[0]
+    assert fight.brittle_seconds == 12.0
+    assert fight.brittle_percent == 12.0
+    assert fight.providers[0].actor_id == 9
+    assert fight.providers[0].actor_label == "Named Provider"
