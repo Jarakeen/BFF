@@ -212,6 +212,11 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
             if isinstance(prior_index, int) and 0 <= prior_index < len(self.saved_builds)
             else None
         )
+        prior_build_id = (
+            _clean(getattr(prior_build, "BuildId", ""))
+            if prior_build is not None
+            else ""
+        )
         prior_identity = (
             _clean(getattr(prior_build, "Gamertag", "")).casefold(),
             _clean(getattr(prior_build, "Name", "")).casefold(),
@@ -223,6 +228,23 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
             self._player_text(row),
             self._item_text(self.team_table, row, 2),
         )
+
+        # A Raid Plan owns an explicit stable BuildId. Exact stable identity is
+        # stronger evidence than display-text filters, especially after player
+        # merges/aliases or character-name cleanup. Keep the selected canonical
+        # Build available even when the current player/character text would have
+        # filtered it out of the picker.
+        if prior_build_id:
+            exact_index = next(
+                (
+                    index
+                    for index, build in enumerate(self.saved_builds)
+                    if _clean(getattr(build, "BuildId", "")) == prior_build_id
+                ),
+                None,
+            )
+            if exact_index is not None and exact_index not in matches:
+                matches.append(exact_index)
 
         combo.blockSignals(True)
         combo.clear()
