@@ -114,3 +114,5 @@ jobs:
 # rebuild-after-shared-plan-persistence-hardening
 
 # rebuild-after-assignment-save-crash-fix
+
+# rebuild-after-coverage-contract-refresh
