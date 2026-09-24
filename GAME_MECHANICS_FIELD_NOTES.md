@@ -1856,3 +1856,11 @@ ZOS documented poisons as a 20% proc check on qualifying Light Attack, Heavy Att
 **Layman's version:** front-bar poison and back-bar poison do not each get their own little stopwatch. A poison proc spends the shared poison timer, and eligible hits only get a 20% chance when that timer is ready. Also, a lingering single-target DoT tick does not keep buying raffle tickets.
 
 **For BFF:** poison chance, trigger family, global cooldown scope, 10-second duration, and single-target DoT exclusion can now be modeled independently from poison effect magnitude/dilution. The remaining poison work is effect identity/application and integration into the finite runtime frontier.
+
+## 2026-09-24 — A class passive is not coverage unless its trigger is actually on the bar
+
+The current Z'enKosh Dragonknight package can theoretically provide group Minor Brutality through the DK passive that fires from Draconic Power ability use, but the drafted Cobble bar is built from Ardent Flame, Earthen Heart, weapon, Fighter's Guild, and scribed skills. A Dragonknight being present is therefore not enough evidence by itself.
+
+**Layman's version:** owning the class does not magically turn the buff on. If the bar never presses the kind of skill that triggers the passive, the raid does not get to count the buff just because a DK is standing there looking official.
+
+**For BFF:** class-passive coverage must be validated from the actual legal bar/rotation trigger, not inferred from class identity alone. The Performance Mode preset leaves Minor Brutality unresolved until a qualifying Draconic Power activation is present.
