@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Fancy Review workspace for cross-pull Minor Brittle uptime."""
+"""Fancy Review workspace for cross-pull Major Brittle uptime."""
 
 from pathlib import Path
 
@@ -122,7 +122,7 @@ class _MetricTile(QWidget):
 
 
 class BrittleUptimePage(FoundryPage):
-    """Read-only Minor Brittle comparison desk backed by the ESO Logs API."""
+    """Read-only Major Brittle comparison desk backed by the ESO Logs API."""
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -140,25 +140,25 @@ class BrittleUptimePage(FoundryPage):
     def _build_ui(self) -> None:
         self.header = FoundryHeader(
             title="Brittle Uptime",
-            subtitle="Pull-by-pull Minor Brittle evidence, with provider attribution and visual comparison.",
+            subtitle="Pull-by-pull Major Brittle uptime from Anonymous 72, with raid-wide context.",
             department="RAID • REVIEW",
             icon="archive",
         )
         self.set_header(self.header)
 
-        hero = FoundryCard("Minor Brittle Field Study", "compass")
+        hero = FoundryCard("Anonymous 72 · Major Brittle", "compass")
         hero_grid = QGridLayout()
         hero_grid.setHorizontalSpacing(12)
         hero_grid.setVerticalSpacing(7)
 
-        title = QLabel("DEBUFF UPTIME DOSSIER")
+        title = QLabel("MAJOR BRITTLE UPTIME")
         title.setFont(Fonts.section_title())
         title.setStyleSheet(f"color: {_chart_palette()['gold']};")
         hero_grid.addWidget(title, 0, 0, 1, 4)
 
         subtitle = QLabel(
-            "Raid-wide uptime answers whether the boss had Minor Brittle. "
-            "Provider attribution answers who actually contributed to keeping it there."
+            "Primary measurement: Major Brittle applied by Anonymous 72. "
+            "Raid-wide uptime is shown only as encounter context."
         )
         subtitle.setWordWrap(True)
         subtitle.setStyleSheet(f"color: {_chart_palette()['muted']};")
@@ -179,7 +179,7 @@ class BrittleUptimePage(FoundryPage):
         self.kills_only.setChecked(True)
         controls.addWidget(self.kills_only)
 
-        self.load_button = QPushButton("Analyze Brittle")
+        self.load_button = QPushButton("Analyze Major Brittle")
         self.load_button.setProperty("primary", True)
         self.load_button.clicked.connect(self.load_report)
         controls.addWidget(self.load_button)
@@ -238,7 +238,7 @@ class BrittleUptimePage(FoundryPage):
         brief_card.addWidget(self.copy_brief_button)
 
         proof_note = QLabel(
-            "FIELD NOTE\nDuplicate Minor Brittle IDs are de-duplicated by effect name. "
+            "FIELD NOTE\nDuplicate Major Brittle IDs are de-duplicated by effect name. "
             "Provider rows may overlap, so they are not summed into raid uptime."
         )
         proof_note.setWordWrap(True)
@@ -268,7 +268,7 @@ class BrittleUptimePage(FoundryPage):
         detail_row = QHBoxLayout()
         detail_row.setSpacing(10)
 
-        provider_card = FoundryCard("Selected Pull · Provider Contribution", "chart")
+        provider_card = FoundryCard("Selected Pull · Anonymous 72", "chart")
         self.provider_heading = QLabel("Select a pull")
         self.provider_heading.setFont(Fonts.section_title())
         self.provider_heading.setWordWrap(True)
@@ -280,10 +280,10 @@ class BrittleUptimePage(FoundryPage):
         provider_card.addWidget(self.provider_chart_view)
         detail_row.addWidget(provider_card, 3)
 
-        provider_table_card = FoundryCard("Source Ledger", "clipboard")
+        provider_table_card = FoundryCard("Anonymous 72 Ledger", "clipboard")
         self.provider_table = QTableWidget(0, 5)
         self.provider_table.setHorizontalHeaderLabels(
-            ["PLAYER", "ROLE", "BRITTLE TIME", "SOURCE UPTIME", "ACTOR ID"]
+            ["PLAYER", "ROLE", "MAJOR BRITTLE TIME", "SOURCE UPTIME", "ACTOR ID"]
         )
         self.provider_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.provider_table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
@@ -292,8 +292,8 @@ class BrittleUptimePage(FoundryPage):
         provider_table_card.addWidget(self.provider_table)
 
         provider_note = QLabel(
-            "Raid uptime is the authoritative 'was Minor Brittle on the boss?' number. "
-            "Source uptime is attribution evidence and can overlap between players."
+            "Anonymous 72 source uptime is the monitored number. "
+            "Raid-wide Major Brittle is retained only as context for the selected pull."
         )
         provider_note.setWordWrap(True)
         provider_note.setProperty("muted", True)
@@ -326,7 +326,7 @@ class BrittleUptimePage(FoundryPage):
             return
 
         self.load_button.setEnabled(False)
-        self.status_bar.info("Loading Minor Brittle evidence from ESO Logs…")
+        self.status_bar.info("Loading Major Brittle evidence from ESO Logs…")
         try:
             service = BrittleUptimeService(self._build_client())
             self._report = service.analyze(
@@ -413,13 +413,13 @@ class BrittleUptimePage(FoundryPage):
 
     def _render_pull_chart(self) -> None:
         report = self._report
-        chart = _new_chart("Minor Brittle · Raid Uptime")
+        chart = _new_chart("Major Brittle · Raid Uptime")
         if report is None or not report.fights:
             chart.setTitle("No matching fights")
             self.pull_chart_view.setChart(chart)
             return
 
-        values = QBarSet("Minor Brittle")
+        values = QBarSet("Major Brittle")
         values.setColor(QColor(_chart_palette()["gold"]))
         categories: list[str] = []
         for fight in report.fights:
@@ -447,9 +447,9 @@ class BrittleUptimePage(FoundryPage):
         self.pull_chart_view.setChart(chart)
 
     def _render_provider_chart(self, fight) -> None:
-        chart = _new_chart("Source-attributed Minor Brittle uptime")
+        chart = _new_chart("Source-attributed Major Brittle uptime")
         if not fight.providers:
-            chart.setTitle("No source-attributed Minor Brittle provider found")
+            chart.setTitle("No source-attributed Major Brittle provider found")
             self.provider_chart_view.setChart(chart)
             return
 
@@ -504,7 +504,7 @@ class BrittleUptimePage(FoundryPage):
 
         self.brief_heading.setText(f"{len(report.fights)} pull evidence set")
         self.brief_body.setText(
-            f"Raid-wide Minor Brittle averaged {report.average_percent:.1f}% across the selected fights.\n\n"
+            f"Raid-wide Major Brittle averaged {report.average_percent:.1f}% across the selected fights.\n\n"
             f"Strongest observed pull: Fight {best.fight_id} at {best.brittle_percent:.1f}%.\n"
             f"Lowest observed pull: Fight {low.fight_id} at {low.brittle_percent:.1f}%.\n"
             f"Observed spread: {spread:.1f} percentage points.\n\n"
@@ -519,7 +519,7 @@ class BrittleUptimePage(FoundryPage):
             return
 
         lines = [
-            f"Minor Brittle uptime · ESO Logs {report.report_code}",
+            f"Major Brittle uptime · ESO Logs {report.report_code}",
             f"Selected fights: {', '.join(str(row.fight_id) for row in report.fights)}",
             f"Average raid uptime: {report.average_percent:.1f}%",
             f"Best observed: {report.best_percent:.1f}%",
@@ -538,7 +538,7 @@ class BrittleUptimePage(FoundryPage):
             [
                 "",
                 "Note: raid uptime is boss debuff coverage. Provider uptimes may overlap and are not summed.",
-                "Duplicate named Minor Brittle aura IDs are de-duplicated rather than added together.",
+                "Duplicate named Major Brittle aura IDs are de-duplicated rather than added together.",
             ]
         )
         QApplication.clipboard().setText("\n".join(lines))
