@@ -227,3 +227,43 @@ def test_replace_or_append_preserves_stable_identity_and_user_progress() -> None
     assert updated.PlannedSkills == ["Surprise Attack"]
     assert updated.ReadyForRaid is True
     assert updated.FrontBarSkills[:2] == ["Surprise Attack", "Ambush"]
+
+
+def test_template_application_attaches_destination_canonical_identity(tmp_path: Path) -> None:
+    service = BuildReuseService(tmp_path / "build_templates.json")
+    template = service.save_template_from_build(_healer(), template_name="Core Healer")
+
+    applied = service.apply_template(
+        template,
+        destination_name="Maeve",
+        destination_gamertag="OtherPlayer",
+        destination_class="Warden",
+        destination_role="Healer",
+        destination_player_id="player-maeve",
+        destination_character_id="character-maeve",
+    ).build
+
+    assert applied.PlayerId == "player-maeve"
+    assert applied.CharacterId == "character-maeve"
+    assert applied.BuildKind == "saved"
+    assert applied.BuildId == ""
+
+
+def test_exact_copy_uses_destination_identity_not_source_identity() -> None:
+    source = _healer()
+    source.PlayerId = "source-player"
+    source.CharacterId = "source-character"
+    source.BuildId = "source-build"
+
+    copied = BuildReuseService.copy_build(
+        source,
+        destination_name="Maeve",
+        destination_gamertag="OtherPlayer",
+        destination_class="Warden",
+        destination_player_id="player-maeve",
+        destination_character_id="character-maeve",
+    ).build
+
+    assert copied.PlayerId == "player-maeve"
+    assert copied.CharacterId == "character-maeve"
+    assert copied.BuildId == ""
