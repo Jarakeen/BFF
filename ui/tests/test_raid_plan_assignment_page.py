@@ -148,3 +148,20 @@ def test_city_assignments_uses_separate_support_and_utility_surfaces() -> None:
     assert "utility_assignments=tuple(utilities)" in source
     assert 'FoundryCard("Plan Snapshot", "compass")' in source
     assert 'FoundryCard("Mechanic Coverage", "shield")' not in source
+
+
+def test_raid_plan_workspace_exposes_crit_and_pen_calculator() -> None:
+    from pathlib import Path
+
+    source = Path("ui/city_raid_plan_workspace_page.py").read_text(encoding="utf-8")
+
+    assert "RaidPlanOffensiveStatsService" in source
+    assert 'FoundryCard("Critical Damage & Penetration", "crosshair")' in source
+    assert '"PERSONAL CRIT"' in source
+    assert '"RAID CRIT"' in source
+    assert '"PHYS PEN"' in source
+    assert '"SPELL PEN"' in source
+    assert '"RAID ARMOR ↓"' in source
+    assert '"EFFECTIVE P / S"' in source
+    assert "self._refresh_offensive_stats(plan)" in source
+    assert "18,200" in source
