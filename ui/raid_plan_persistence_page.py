@@ -224,7 +224,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         restore = box.addButton("Restore Draft", QMessageBox.ButtonRole.AcceptRole)
         saved = box.addButton("Use Saved Version", QMessageBox.ButtonRole.DestructiveRole)
         cancel = box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
-        box.setDefaultButton(restore)
+        box.setDefaultButton(saved)
         box.exec()
         clicked = box.clickedButton()
         if clicked is cancel:
@@ -951,9 +951,12 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             self.refresh_saved_plan_picker(select_plan_id=loaded.plan_id)
             return
         try:
-            plan = self.plan_repository.get(plan_id)
-            if plan is not None:
-                plan = self._offer_recovery_draft(plan)
+            saved_plan = self.plan_repository.get(plan_id)
+            plan = (
+                self._offer_recovery_draft(saved_plan)
+                if saved_plan is not None
+                else None
+            )
         except RaidPlanRepositoryError as exc:
             if str(exc) != "Raid Plan load cancelled.":
                 self.status.error(f"Could not load Raid Plan: {exc}")
@@ -963,10 +966,17 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             self.refresh_saved_plan_picker()
             return
         self.apply_plan(plan)
-        saved_plan = self.plan_repository.get(plan_id)
         if saved_plan is not None and plan != saved_plan:
+            # A recovered draft is reviewable unsaved state, never the new clean
+            # authority. Keep its full snapshot for merge/current-plan behavior,
+            # but compare navigation/save safety against the durable saved plan.
             self._navigation_baseline_plan = saved_plan
-        self.status.success(f"Loaded Raid Plan: {plan.name}")
+            self.status.warning(
+                f"Recovered unsaved Raid Plan draft: {plan.name}. "
+                "The last saved version remains authoritative until you explicitly Save."
+            )
+        else:
+            self.status.success(f"Loaded Raid Plan: {plan.name}")
 
     def toggle_archive_selected_plan(self) -> None:
         plan_id = self.saved_plan_combo.currentData()
