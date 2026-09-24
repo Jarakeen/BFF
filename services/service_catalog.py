@@ -1304,6 +1304,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.weapon_enchantment_runtime_variant",
             "extreme.sustained_dps.weapon_enchantment_activation_events",
             "extreme.sustained_dps.weapon_enchantment_cooldown_policy",
+            "extreme.sustained_dps.weapon_poison_activation_events",
+            "extreme.sustained_dps.weapon_poison_sequence_frontier",
             "extreme.sustained_dps.runtime_scenario_frontier",
         ),
         responsibilities=(
@@ -1512,6 +1514,64 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Owns deterministic branching across source-owned enchantment candidates and authoritative cooldown policy only. "
             "Missing event-denominator proof or cooldown policy fails the frontier closed; it does not infer cadence, shared cooldown identity, or source preference."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_poison_activation_events",
+        domain="extreme",
+        purpose=(
+            "Project exact poison proc-check opportunities from reviewed weapon-damage "
+            "occurrences and exact front/back poison ownership."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_poison_activation_event_service",
+        inputs=(
+            "GeneratedRotationCandidate",
+            "PlayerBuild",
+            "PreRuntimeExactDamageOccurrenceAuthority",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponPoisonActivationEventResult",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_enchantment_activation_events",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_poison_activation_events",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Reuses the reviewed weapon-attack occurrence classifier but narrows events "
+            "to the exact source bar carrying poison. Chance/cooldown state is downstream."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_poison_sequence_frontier",
+        domain="extreme",
+        purpose=(
+            "Enumerate finite 20% poison proc/miss histories under the authoritative "
+            "shared 10-second global poison cooldown."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_poison_sequence_frontier_service",
+        inputs=(
+            "WeaponPoisonActivationEvents",
+            "PlayerBuild",
+            "WeaponPoisonCadenceEvidence",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponPoisonSequenceFrontier",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_poison_activation_events",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_poison_sequence_frontier",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "A successful poison proc starts the one player-global poison cooldown; "
+            "a chance miss does not. Effect identity/magnitude/dilution remains separate."
         ),
     ),
     ServiceDescriptor(
