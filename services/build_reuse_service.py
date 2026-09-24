@@ -343,7 +343,11 @@ class BuildReuseService:
     @staticmethod
     def replace_or_append(roster: BuildRoster, build: PlayerBuild) -> BuildRoster:
         members = list(roster.Members)
-        key = (build.Gamertag.strip().casefold(), build.Name.strip().casefold(), build.BuildName.strip().casefold())
+        key = (
+            build.Gamertag.strip().casefold(),
+            build.Name.strip().casefold(),
+            build.BuildName.strip().casefold(),
+        )
         for index, existing in enumerate(members):
             existing_key = (
                 existing.Gamertag.strip().casefold(),
@@ -351,6 +355,25 @@ class BuildReuseService:
                 existing.BuildName.strip().casefold(),
             )
             if existing_key == key:
+                # Re-applying a template to the same saved Build is an edit, not a
+                # delete/recreate operation. Keep stable canonical ownership so
+                # Character Progression, Raid Plan references, favorites/readiness,
+                # and Comp provenance do not become detached merely because the
+                # template supplied a fresh PlayerBuild object.
+                for field_name in (
+                    "PlayerId",
+                    "CharacterId",
+                    "BuildId",
+                    "BuildKind",
+                    "SourcePlanId",
+                    "SourcePlanName",
+                    "SourceSeatId",
+                    "PlannedGearSets",
+                    "PlannedSkills",
+                    "ReadyForRaid",
+                ):
+                    if hasattr(existing, field_name) and hasattr(build, field_name):
+                        setattr(build, field_name, deepcopy(getattr(existing, field_name)))
                 members[index] = build
                 return BuildRoster(Members=members)
         members.append(build)
