@@ -14,7 +14,7 @@ from pathlib import Path
 from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from models.build_model import PlayerBuild
-from engine.config import DEFAULT_DATABASE
+from engine.config import get_user_database_path
 from models.comp_plan_state import CompChairState, CompPlanState
 from services.canonical_build_bridge import CanonicalBuildBridge
 from services.eso_database import EsoDatabase
@@ -36,13 +36,20 @@ class CompBuildPersistenceService:
         database_path: str | Path | None = None,
     ):
         self.data_dir = Path(data_dir)
+        self.user_database_path = (
+            Path(database_path)
+            if database_path is not None
+            else get_user_database_path()
+        )
+
+        # Comp Builds, canonical Players/Characters, and Personnel are all
+        # user-owned state. They must share the same foundrydock.db authority.
+        # The legacy JSON paths are migration inputs only.
         self.bridge = CanonicalBuildBridge(
             self.data_dir / "builds.json",
-            self.data_dir / "characters.json",
+            catalog_path=self.user_database_path,
         )
-        self.database = EsoDatabase(
-            Path(database_path) if database_path is not None else DEFAULT_DATABASE
-        )
+        self.database = EsoDatabase(self.user_database_path)
         self.roster = RosterService(self.database)
 
     @staticmethod
