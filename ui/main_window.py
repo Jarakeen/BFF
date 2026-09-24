@@ -30,7 +30,7 @@ from services.profiled_collectible_service import ProfiledCollectibleService
 from ui.achievements_page import AchievementsPage
 from ui.asylum_perfecta_timer_page import AsylumPerfectaTimerPage
 from ui.themed_builds_page import BuildsPage
-from ui.capabilities_page import CapabilitiesPage
+from ui.capabilities_page import CapabilitiesPage\nfrom ui.brittle_uptime_page import BrittleUptimePage
 from ui.collectibles_dashboard_page import CollectiblesDashboardPage
 from ui.collectibles_page import CollectiblesPage
 from ui.comp_builder_page import CompBuilderPage
@@ -134,7 +134,7 @@ class MainWindow(QMainWindow):
             "console:6": optimization_page,
             "console:7": CoveragePage(),
             "console:8": ReferenceDataPage(),
-            "raid_review": RaidReviewPage(),
+            "raid_review": RaidReviewPage(),\n            "brittle_uptime": BrittleUptimePage(),
             "rotations": RotationBuilderPage(),
             "gear_lookup": GearLookupPage(),
             "timers": AsylumPerfectaTimerPage(),
