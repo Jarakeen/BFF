@@ -210,3 +210,21 @@ def test_personnel_autocomplete_collapses_shared_canonical_player_id() -> None:
         SimpleNamespace(PlayerName="Other", CanonicalPlayerId="player-2"),
     )
     assert personnel_player_names(members) == ("Old Alias", "Other")
+
+
+def test_raid_plan_refresh_preserves_build_selection_by_stable_id() -> None:
+    source = Path("ui/raid_plan_page.py").read_text(encoding="utf-8")
+    refresh = source.split("def refresh_saved_builds", 1)[1].split("def _apply_saved_build", 1)[0]
+
+    assert "prior_build_ids" in refresh
+    assert 'getattr(prior, "BuildId", "")' in refresh
+    assert 'getattr(self.saved_builds[saved_index], "BuildId", "")' in refresh
+
+
+def test_main_window_refreshes_raid_plan_builds_and_personnel_on_entry() -> None:
+    source = Path("ui/main_window.py").read_text(encoding="utf-8")
+    show_page = source.split("def show_page(self, page_name: str):", 1)[1]
+
+    assert 'if page_name == "raid_plans":' in show_page
+    assert 'getattr(raid_plans, "refresh_personnel", None)' in show_page
+    assert 'getattr(raid_plans, "refresh_saved_builds", None)' in show_page
