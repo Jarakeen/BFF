@@ -86,4 +86,6 @@ jobs:
             dist/FoundryDock-update.zip.sha256 `
             --target "${{ github.sha }}" `
             --title "FoundryDock 0.1.7" `
-            --notes "Patch release for Finch shared collaboration. Fixes FoundryDock rejecting current Finch Team schema v3 and Raid Plan schema v7 snapshots. No user database replacement."
+            --notes "Patch release for Finch shared collaboration. Fixes current Finch Team schema v3 and Raid Plan schema v7 snapshots, and makes all Finch collaboration surfaces use the same canonical packaged settings/API credential path. Includes packaged EXE startup smoke test. No user database replacement."
+
+# rebuild-after-finch-settings-path
