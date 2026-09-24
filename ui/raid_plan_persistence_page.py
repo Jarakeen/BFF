@@ -234,6 +234,30 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             return saved_plan
         return recovered
 
+    def showEvent(self, event) -> None:
+        """Reconcile this long-lived page with the latest persisted Raid Plan.
+
+        Roles, Assignments, Comp Maker, Builds, and Readiness are separate page
+        instances. When another page saves the shared Raid Plan, reopening this
+        page must hydrate that newer snapshot instead of continuing to show stale
+        chair/build state. Unsaved local edits are never overwritten.
+        """
+        super().showEvent(event)
+        loaded = getattr(self, "_loaded_plan_snapshot", None)
+        if loaded is None:
+            return
+        try:
+            if self.has_pending_changes():
+                return
+            latest = self.plan_repository.get(loaded.plan_id)
+            if latest is not None and latest != loaded:
+                self.apply_plan(latest)
+                self.status.info(f"Reloaded latest saved Raid Plan: {latest.name}")
+        except Exception as exc:
+            self.status.warning(
+                f"Could not refresh the latest Raid Plan on page entry: {type(exc).__name__}: {exc}"
+            )
+
     def _build_ui(self) -> None:
         super()._build_ui()
 
