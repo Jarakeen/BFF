@@ -22,7 +22,7 @@ def test_raid_plan_and_comp_saves_create_database_checkpoints() -> None:
     raid_plan = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
     comp = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
 
-    assert 'f"save-raid-plan-{visible_before_sync.plan_id}"' in raid_plan
+    assert 'f"save-raid-plan-{plan.plan_id}"' in raid_plan
     assert 'f"save-comp-plan-{state.raid_plan_id or state.raid_plan_name or \'new\'}"' in comp
     assert "saved Comp Raid Plan did not round-trip exactly" in comp
 
