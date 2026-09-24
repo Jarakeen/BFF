@@ -14,6 +14,8 @@ from services.performance_effect_id_catalog import DEBUFF_EFFECT_IDS
 from services.performance_effect_timeline import PerformanceEffectTimelineService, build_effect_windows
 
 MAJOR_BRITTLE_NAME = "Major Brittle"
+MAJOR_HEROISM_NAME = "Major Heroism"
+MAJOR_HEROISM_EFFECT_IDS = frozenset({61709})
 DEFAULT_PROVIDER_ACTOR_ID = 72
 DEFAULT_PROVIDER_LABEL = "Anonymous 72"
 
@@ -37,6 +39,10 @@ class BrittleFightUptime:
     brittle_percent: float
     raid_brittle_seconds: float
     raid_brittle_percent: float
+    heroism_seconds: float
+    heroism_percent: float
+    immunity_seconds: float
+    immunity_percent: float
     providers: tuple[BrittleProviderUptime, ...]
 
 
@@ -153,6 +159,73 @@ class BrittleUptimeService:
                 merged[-1][1] = max(merged[-1][1], right)
         return sum(right - left for left, right in merged) * 1000.0
 
+    def _source_group_buff_average_ms(
+        self,
+        report_code: str,
+        fight_id: int,
+        start_ms: float,
+        end_ms: float,
+        actor_id: int,
+        effect_ids: frozenset[int],
+        effect_name: str,
+    ) -> float:
+        """Average observed recipient uptime for a group buff caused by one actor."""
+        timeline = PerformanceEffectTimelineService(self.client)
+        events = timeline._fetch_events(
+            report_code,
+            fight_id,
+            start_ms,
+            end_ms,
+            data_type="Buffs",
+            hostility_type="Friendlies",
+        )
+        source_events = []
+        targets: set[int] = set()
+        for row in events:
+            try:
+                source_id = int(row.get("sourceID"))
+                ability_id = int(row.get("abilityGameID"))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            if source_id != int(actor_id) or ability_id not in effect_ids:
+                continue
+            source_events.append(row)
+            try:
+                targets.add(int(row.get("targetID")))
+            except (TypeError, ValueError):
+                pass
+
+        if not source_events or not targets:
+            return 0.0
+
+        windows = build_effect_windows(
+            source_events,
+            id_to_name={int(effect_id): effect_name for effect_id in effect_ids},
+            fight_start_ms=start_ms,
+            fight_end_ms=end_ms,
+            source_label=f"Actor {actor_id}",
+            choose_primary_target=False,
+        )
+        by_target: dict[int, list[tuple[float, float]]] = {}
+        for window in windows:
+            if window.TargetId is None or window.EndSeconds <= window.StartSeconds:
+                continue
+            by_target.setdefault(int(window.TargetId), []).append(
+                (float(window.StartSeconds), float(window.EndSeconds))
+            )
+
+        totals: list[float] = []
+        for target_id in targets:
+            intervals = sorted(by_target.get(target_id, ()))
+            merged: list[list[float]] = []
+            for left, right in intervals:
+                if not merged or left > merged[-1][1]:
+                    merged.append([left, right])
+                else:
+                    merged[-1][1] = max(merged[-1][1], right)
+            totals.append(sum(right - left for left, right in merged))
+        return (sum(totals) / len(totals) * 1000.0) if totals else 0.0
+
     def analyze(
         self,
         report_code: str,
@@ -161,6 +234,8 @@ class BrittleUptimeService:
         kills_only: bool = True,
         provider_actor_id: int = DEFAULT_PROVIDER_ACTOR_ID,
         provider_label: str | None = None,
+        immunity_name: str = "",
+        immunity_kind: str = "Buff",
     ) -> BrittleUptimeReport:
         code = self.client.normalize_report_code(report_code)
         fights = list(self.client.get_fights(code))
@@ -247,6 +322,31 @@ class BrittleUptimeService:
                     )
                 )
 
+            heroism_ms = self._source_group_buff_average_ms(
+                code,
+                fight_id,
+                start,
+                end,
+                int(provider_actor_id),
+                MAJOR_HEROISM_EFFECT_IDS,
+                MAJOR_HEROISM_NAME,
+            )
+
+            immunity_seconds = 0.0
+            if str(immunity_name or "").strip():
+                try:
+                    from services.capability_service import CapabilityService
+                    active_seconds = CapabilityService(self.client, reference=None).compute_boss_active_seconds(
+                        code,
+                        fight_id,
+                        str(immunity_name).strip(),
+                        immunity_kind,
+                    )
+                    if active_seconds is not None:
+                        immunity_seconds = max(0.0, duration_seconds - float(active_seconds))
+                except Exception:
+                    immunity_seconds = 0.0
+
             providers.sort(key=lambda row: (-row.uptime_seconds, row.actor_label.casefold()))
             results.append(
                 BrittleFightUptime(
@@ -258,6 +358,13 @@ class BrittleUptimeService:
                     brittle_percent=self._percent(source_ms, duration_seconds),
                     raid_brittle_seconds=round(raid_brittle_ms / 1000.0, 2),
                     raid_brittle_percent=self._percent(raid_brittle_ms, duration_seconds),
+                    heroism_seconds=round(heroism_ms / 1000.0, 2),
+                    heroism_percent=self._percent(heroism_ms, duration_seconds),
+                    immunity_seconds=round(immunity_seconds, 2),
+                    immunity_percent=round(
+                        min(100.0, max(0.0, immunity_seconds / duration_seconds * 100.0)),
+                        1,
+                    ) if duration_seconds > 0 else 0.0,
                     providers=tuple(providers),
                 )
             )
@@ -267,6 +374,8 @@ class BrittleUptimeService:
 
 __all__ = [
     "MAJOR_BRITTLE_NAME",
+    "MAJOR_HEROISM_NAME",
+    "MAJOR_HEROISM_EFFECT_IDS",
     "DEFAULT_PROVIDER_ACTOR_ID",
     "DEFAULT_PROVIDER_LABEL",
     "BrittleProviderUptime",
