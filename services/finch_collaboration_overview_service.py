@@ -9,7 +9,7 @@ preview contracts. It adds no new authority and performs no local mutation.
 from dataclasses import dataclass
 from pathlib import Path
 
-from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path
+from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path, get_user_database_path
 from services.finch_shared_coverage_service import list_shared_coverage_from_finch
 from services.finch_shared_import_service import (
     list_shared_raid_plans_from_finch,
@@ -210,8 +210,9 @@ def load_finch_collaboration_overview(
     timeout: float = 10.0,
 ) -> FinchCollaborationOverview:
     root = Path(data_dir or get_data_dir())
-    db_path = Path(database_path or DEFAULT_DATABASE)
-    plans_path = Path(raid_plans_path or (root / "raid_plans.json"))
+    reference_db_path = Path(database_path or DEFAULT_DATABASE)
+    user_db_path = get_user_database_path()
+    plans_path = Path(raid_plans_path or user_db_path)
 
     errors: list[str] = []
     values: dict[str, tuple] = {}
@@ -220,7 +221,7 @@ def load_finch_collaboration_overview(
         (
             "Teams",
             lambda: list_shared_teams_from_finch(
-                database_path=db_path,
+                database_path=user_db_path,
                 raid_plans_path=plans_path,
                 settings_path=settings_path,
                 timeout=timeout,
@@ -229,7 +230,7 @@ def load_finch_collaboration_overview(
         (
             "Raid Plans",
             lambda: list_shared_raid_plans_from_finch(
-                database_path=db_path,
+                database_path=user_db_path,
                 raid_plans_path=plans_path,
                 settings_path=settings_path,
                 timeout=timeout,
@@ -239,7 +240,7 @@ def load_finch_collaboration_overview(
             "Readiness",
             lambda: list_shared_readiness_from_finch(
                 data_dir=root,
-                database_path=db_path,
+                database_path=reference_db_path,
                 settings_path=settings_path,
                 timeout=timeout,
             ),
@@ -248,7 +249,7 @@ def load_finch_collaboration_overview(
             "Coverage",
             lambda: list_shared_coverage_from_finch(
                 data_dir=root,
-                database_path=db_path,
+                database_path=reference_db_path,
                 settings_path=settings_path,
                 timeout=timeout,
             ),
