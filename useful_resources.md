@@ -427,3 +427,27 @@ https://help.elderscrollsonline.com/app/answers/detail/a_id/34326/
 **Use for:** Current first-party support evidence that poisons are equipped alongside wielded weapon sets and that a poison suppresses the weapon enchantments on that specific weapon set.
 
 **Confidence:** Primary / reference-grade for poison-to-weapon-set ownership and enchantment suppression. This source does not establish current poison proc chance, cooldown, effect duration, or the complete poison formula catalog.
+
+
+### ZOS PC/Mac Patch Notes v4.2.5 — poison 20% activation
+https://forums.elderscrollsonline.com/en/discussion/comment/5552032
+
+**Use for:** Primary ZOS live Update 20 evidence that all poisons proc 20% of the time when a Light Attack, Heavy Attack, or weapon ability deals damage.
+
+**Confidence:** Primary / reference-grade for poison proc chance and qualifying damaging attack families.
+
+
+### ZOS PC/Mac Patch Notes v4.2.7 — poison single-target DoT exclusion
+https://forums.elderscrollsonline.com/en/discussion/444322/pc-mac-patch-notes-v4-2-7
+
+**Use for:** Primary ZOS evidence that weapon enchantments and poisons no longer proc from single-target weapon-ability Damage over Time effects, with specific excluded examples.
+
+**Confidence:** Primary / reference-grade for the single-target DoT exclusion.
+
+
+### ZOS Update 13 Sneak Peek — global poison cooldown
+https://forums.elderscrollsonline.com/en/discussion/310623/update-13-sneak-peak-notes
+
+**Use for:** Primary developer evidence from ESO Creative Director Rich Lambert that all poisons share one global cooldown, no longer have individual cooldowns, and cannot proc more than once every 10 seconds.
+
+**Confidence:** Primary / reference-grade for the introduced global 10-second poison cooldown rule. Later poison fixes found during review do not document a replacement cadence; future contrary ZOS evidence should supersede this field rather than being blended with it.
