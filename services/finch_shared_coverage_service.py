@@ -11,7 +11,7 @@ or runtime combat telemetry. Receiving shared Coverage is read-only.
 from dataclasses import dataclass
 from pathlib import Path
 
-from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path
+from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path, get_user_database_path
 from models.raid_plan import RaidPlan
 from services.build_service import BuildService
 from services.finch_api_client import FinchApiClient, FinchSharedSnapshot
@@ -394,7 +394,7 @@ def publish_coverage_to_finch(
     timeout: float = 10.0,
 ) -> FinchCoveragePublishResult:
     root = Path(data_dir or get_data_dir())
-    plans = RaidPlanRepository(Path(raid_plans_path or (root / "raid_plans.json")))
+    plans = RaidPlanRepository(Path(raid_plans_path) if raid_plans_path is not None else get_user_database_path())
     plan = plans.get(plan_id)
     if plan is None:
         raise ValueError(f"Saved Raid Plan {plan_id!r} does not exist.")
