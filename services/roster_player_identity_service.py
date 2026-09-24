@@ -9,7 +9,7 @@ This service records aliases only from explicit user action or an explicit playe
 merge, then reuses that evidence for future exact identity matching.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 import shutil
 
@@ -21,6 +21,7 @@ from services.roster_duplicate_player_merge_service import (
     _merge_legacy_assignment,
     _merge_personnel_identity,
 )
+from services.raid_plan_repository import RaidPlanRepository
 from services.roster_service import RosterService
 
 
@@ -257,6 +258,45 @@ class RosterPlayerIdentityService:
         roster = self.build_service.load()
         self.build_service.save(roster)
 
+    def _rewrite_raid_plan_player_identity(
+        self,
+        *,
+        survivor_id: int,
+        donor_id: int,
+        survivor_name: str,
+        donor_name: str,
+        survivor_player_id: str,
+        donor_player_id: str,
+    ) -> None:
+        """Move persisted Raid Plan chairs from a merged donor to the survivor.
+
+        Personnel merges are identity changes, not roster deletions. Any saved Raid
+        Plan that still points at the donor roster/player id must therefore follow
+        the survivor while preserving the chair's character/build/assignment state.
+        """
+        repository = RaidPlanRepository(Path(self.database.database))
+        donor_key = _identity_key(donor_name)
+        for plan in repository.list_plans():
+            changed = False
+            members = []
+            for member in plan.members:
+                donor_roster = member.roster_member_id == donor_id
+                donor_player = bool(
+                    donor_player_id
+                    and _text(member.player_id) == donor_player_id
+                )
+                donor_label = _identity_key(member.gamertag) == donor_key
+                if donor_roster or donor_player or donor_label:
+                    member = member.with_selection(
+                        gamertag=survivor_name,
+                        roster_member_id=survivor_id,
+                        player_id=survivor_player_id or None,
+                    )
+                    changed = True
+                members.append(member)
+            if changed:
+                repository.save(replace(plan, members=tuple(members)))
+
     def merge_players(
         self,
         *,
@@ -296,6 +336,8 @@ class RosterPlayerIdentityService:
         learned: list[str] = []
         donor_name = _text(donor.PlayerName)
         survivor_name = _text(survivor.PlayerName)
+        survivor_player_id = _text(getattr(survivor, "CanonicalPlayerId", ""))
+        donor_player_id = _text(getattr(donor, "CanonicalPlayerId", ""))
 
         try:
             # Alias writes are staged directly here so the entire Personnel merge
@@ -385,6 +427,14 @@ class RosterPlayerIdentityService:
         # after the roster transaction commits; backups above make the operation
         # reversible if a later filesystem write fails.
         self._merge_canonical_players(survivor_name, donor_name)
+        self._rewrite_raid_plan_player_identity(
+            survivor_id=survivor_id,
+            donor_id=donor_id,
+            survivor_name=survivor_name,
+            donor_name=donor_name,
+            survivor_player_id=survivor_player_id,
+            donor_player_id=donor_player_id,
+        )
 
         return PlayerIdentityMergeResult(
             survivor_id=survivor_id,
