@@ -1,9 +1,11 @@
 from pathlib import Path
 
 from models.build_model import BuildRoster, PlayerBuild
+from models.raid_plan import RaidPlan, RaidPlanMember
 from models.roster_model import RosterMember
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
+from services.raid_plan_repository import RaidPlanRepository
 from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.roster_service import RosterService
 
@@ -118,3 +120,81 @@ def test_matching_members_can_explicitly_include_archived_identity(tmp_path: Pat
     assert [row.PlayerName for row in service.matching_members(
         "Old Rylo", include_archived=True
     )] == ["Rylo"]
+
+
+def test_explicit_merge_rebinds_saved_raid_plan_chairs_to_survivor(tmp_path: Path) -> None:
+    database_path = tmp_path / "foundrydock.db"
+    database = EsoDatabase(database_path)
+    roster = RosterService(database)
+    survivor_id = roster.create_member(
+        _member("Rikbacon", character="Rik", team="Performance Mode")
+    )
+    donor_id = roster.create_member(
+        _member("Rik", character="Rik Sorc Tnk", team="Performance Mode")
+    )
+
+    builds = BuildService(tmp_path / "builds.json")
+    builds.save(
+        BuildRoster(
+            Members=[
+                PlayerBuild(
+                    Name="Rik",
+                    Gamertag="Rikbacon",
+                    BuildName="Tank",
+                    EsoClass="Sorcerer",
+                    Role="Tank",
+                ),
+                PlayerBuild(
+                    Name="Rik Sorc Tnk",
+                    Gamertag="Rik",
+                    BuildName="Imported Tank",
+                    EsoClass="Sorcerer",
+                    Role="Tank",
+                ),
+            ]
+        )
+    )
+
+    survivor = roster.get_member(survivor_id)
+    donor = roster.get_member(donor_id)
+    assert survivor is not None and donor is not None
+
+    repository = RaidPlanRepository(database_path)
+    repository.save(
+        RaidPlan(
+            plan_id="pm-test",
+            trial_id="test",
+            name="PM Test",
+            members=(
+                RaidPlanMember(
+                    seat_id="tank-1",
+                    gamertag="Rik",
+                    character_name="Rik Sorc Tnk",
+                    role="Tank",
+                    roster_member_id=donor_id,
+                    player_id=donor.CanonicalPlayerId or None,
+                    character_id=donor.CanonicalCharacterId or None,
+                    primary_assignment="Main Tank",
+                    notes="Keep this chair state",
+                ),
+            ),
+        )
+    )
+
+    service = RosterPlayerIdentityService(database, builds)
+    service.merge_players(
+        survivor_id=survivor_id,
+        donor_id=donor_id,
+        create_backups=False,
+    )
+
+    saved = repository.get("pm-test")
+    assert saved is not None
+    chair = saved.members[0]
+    refreshed_survivor = roster.get_member(survivor_id)
+    assert refreshed_survivor is not None
+    assert chair.gamertag == "Rikbacon"
+    assert chair.roster_member_id == survivor_id
+    assert chair.player_id == refreshed_survivor.CanonicalPlayerId
+    assert chair.primary_assignment == "Main Tank"
+    assert chair.notes == "Keep this chair state"
