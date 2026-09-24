@@ -2281,6 +2281,13 @@ def _save_to_originating_raid_plan(page) -> bool:
                     f"{seat}: {reason}" for seat, reason in skipped_reasons
                 )
                 build_detail += f" {reason_text}."
+                QMessageBox.warning(
+                    page,
+                    "Comp Save Needs Review",
+                    "The Raid Plan was saved, but these chairs did not become canonical Comp Builds:\n\n"
+                    + "\n".join(f"• {seat}: {reason}" for seat, reason in skipped_reasons)
+                    + "\n\nResolve those chairs in Personnel/Builds or give them a planned build package, then Save Plan again.",
+                )
         page.status.success(
             f"Saved Comp Builder changes to Raid Plan: {plan.name}." + build_detail
         )
