@@ -201,3 +201,12 @@ def test_city_raid_plan_exposes_build_share_menu() -> None:
     assert "export_raid_plan_builds_pdf" in source
     assert "export_raid_plan_builds_csv" in source
     assert "raid_plan_discord_builds_text" in source
+
+
+def test_personnel_autocomplete_collapses_shared_canonical_player_id() -> None:
+    members = (
+        SimpleNamespace(PlayerName="Old Alias", CanonicalPlayerId="player-1"),
+        SimpleNamespace(PlayerName="Current Name", CanonicalPlayerId="player-1"),
+        SimpleNamespace(PlayerName="Other", CanonicalPlayerId="player-2"),
+    )
+    assert personnel_player_names(members) == ("Old Alias", "Other")
