@@ -129,6 +129,7 @@ class BrittleUptimePage(FoundryPage):
         self.settings_service = SettingsService(Path("settings.json"))
         self._report = None
         self._build_ui()
+        self._load_default_actor()
 
     def _build_client(self) -> EsoLogsClient:
         settings = self.settings_service.load()
@@ -174,11 +175,15 @@ class BrittleUptimePage(FoundryPage):
         self.fights_input.returnPressed.connect(self.load_report)
         hero_grid.addWidget(self.fights_input, 2, 2)
 
-        self.actor_input = QLineEdit("72")
+        self.actor_input = QLineEdit()
         self.actor_input.setPlaceholderText("Actor ID, e.g. 72")
         self.actor_input.setToolTip("ESO Logs source actor ID for the Major Brittle provider in this report.")
         self.actor_input.returnPressed.connect(self.load_report)
         hero_grid.addWidget(self.actor_input, 3, 0)
+
+        self.save_actor_button = QPushButton("Save Default Actor")
+        self.save_actor_button.clicked.connect(self._save_default_actor)
+        hero_grid.addWidget(self.save_actor_button, 3, 1)
 
         controls = QHBoxLayout()
         self.kills_only = QCheckBox("Kills only")
@@ -191,9 +196,9 @@ class BrittleUptimePage(FoundryPage):
         controls.addWidget(self.load_button)
         hero_grid.addLayout(controls, 2, 3)
 
-        actor_note = QLabel("Actor ID can change from report to report. Default: 72.")
-        actor_note.setProperty("muted", True)
-        hero_grid.addWidget(actor_note, 3, 1, 1, 3)
+        self.actor_note = QLabel("Actor ID can change from report to report.")
+        self.actor_note.setProperty("muted", True)
+        hero_grid.addWidget(self.actor_note, 3, 2, 1, 2)
 
         hero.addLayout(hero_grid)
         self.workspace_layout.addWidget(hero)
@@ -314,6 +319,35 @@ class BrittleUptimePage(FoundryPage):
 
         self.status_bar = FoundryStatusBar()
         self.set_status(self.status_bar)
+
+
+    def _load_default_actor(self) -> None:
+        try:
+            settings = self.settings_service.load()
+            actor_id = str(settings.get("BrittleDefaultActorId", "72") or "72").strip()
+        except Exception:
+            actor_id = "72"
+        if not actor_id.isdigit() or int(actor_id) <= 0:
+            actor_id = "72"
+        self.actor_input.setText(actor_id)
+        self.actor_note.setText(f"Saved default actor: {actor_id}. Override it here for any report.")
+
+    def _save_default_actor(self) -> None:
+        actor_text = self.actor_input.text().strip()
+        if not actor_text.isdigit() or int(actor_text) <= 0:
+            self.status_bar.warning("Enter a valid positive ESO Logs actor ID before saving it.")
+            return
+        try:
+            settings = self.settings_service.load()
+            settings["BrittleDefaultActorId"] = actor_text
+            self.settings_service.save(settings)
+        except Exception as exc:
+            self.status_bar.error(f"Could not save default Brittle actor: {exc}")
+            return
+        self.actor_note.setText(
+            f"Saved default actor: {actor_text}. Override it here for any report."
+        )
+        self.status_bar.success(f"Saved Major Brittle default actor {actor_text}.")
 
     def _fight_ids(self) -> tuple[int, ...]:
         text = self.fights_input.text().strip()
