@@ -50,6 +50,7 @@ jobs:
             ui/tests/test_raid_engine_workflow_handoffs.py `
             ui/tests/test_raid_plan_coverage_support.py `
             ui/tests/test_shared_plan_persistence_failsafes.py `
+            ui/tests/test_assignment_save_stability.py `
             -q
 
       - name: Build friend package
@@ -111,3 +112,5 @@ jobs:
 # rebuild-after-populated-release-seed
 
 # rebuild-after-shared-plan-persistence-hardening
+
+# rebuild-after-assignment-save-crash-fix
