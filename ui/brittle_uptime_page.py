@@ -254,7 +254,7 @@ class BrittleUptimePage(FoundryPage):
         comparison = FoundryCard("Pull Ledger", "archive")
         self.fight_table = QTableWidget(0, 8)
         self.fight_table.setHorizontalHeaderLabels(
-            ["FIGHT", "ENCOUNTER", "RESULT", "DURATION", "BRITTLE TIME", "UPTIME", "PROVIDERS", "TOP SOURCE"]
+            ["FIGHT", "ENCOUNTER", "RESULT", "DURATION", "ANON 72 TIME", "ANON 72 UPTIME", "RAID UPTIME", "SOURCE"]
         )
         self.fight_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.fight_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -392,7 +392,7 @@ class BrittleUptimePage(FoundryPage):
                 _duration(fight.duration_seconds),
                 f"{fight.brittle_seconds:.1f}s",
                 f"{fight.brittle_percent:.1f}%",
-                str(len(fight.providers)),
+                f"{fight.raid_brittle_percent:.1f}%",
                 top_source,
             )
             for column, value in enumerate(values):
@@ -413,7 +413,7 @@ class BrittleUptimePage(FoundryPage):
 
     def _render_pull_chart(self) -> None:
         report = self._report
-        chart = _new_chart("Major Brittle · Raid Uptime")
+        chart = _new_chart("Major Brittle · Anonymous 72 Uptime")
         if report is None or not report.fights:
             chart.setTitle("No matching fights")
             self.pull_chart_view.setChart(chart)
@@ -504,7 +504,7 @@ class BrittleUptimePage(FoundryPage):
 
         self.brief_heading.setText(f"{len(report.fights)} pull evidence set")
         self.brief_body.setText(
-            f"Raid-wide Major Brittle averaged {report.average_percent:.1f}% across the selected fights.\n\n"
+            f"Anonymous 72 Major Brittle averaged {report.average_percent:.1f}% across the selected fights.\n\n"
             f"Strongest observed pull: Fight {best.fight_id} at {best.brittle_percent:.1f}%.\n"
             f"Lowest observed pull: Fight {low.fight_id} at {low.brittle_percent:.1f}%.\n"
             f"Observed spread: {spread:.1f} percentage points.\n\n"
@@ -521,7 +521,7 @@ class BrittleUptimePage(FoundryPage):
         lines = [
             f"Major Brittle uptime · ESO Logs {report.report_code}",
             f"Selected fights: {', '.join(str(row.fight_id) for row in report.fights)}",
-            f"Average raid uptime: {report.average_percent:.1f}%",
+            f"Average Anonymous 72 uptime: {report.average_percent:.1f}%",
             f"Best observed: {report.best_percent:.1f}%",
             f"Lowest observed: {report.lowest_percent:.1f}%",
             "",
@@ -537,7 +537,8 @@ class BrittleUptimePage(FoundryPage):
         lines.extend(
             [
                 "",
-                "Note: raid uptime is boss debuff coverage. Provider uptimes may overlap and are not summed.",
+                "Note: headline uptime is source-attributed Major Brittle from Anonymous 72.",
+                "Raid-wide Major Brittle is shown only as pull context.",
                 "Duplicate named Major Brittle aura IDs are de-duplicated rather than added together.",
             ]
         )
