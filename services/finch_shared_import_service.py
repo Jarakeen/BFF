@@ -12,7 +12,7 @@ It never creates Personnel, Characters, Saved Builds, or local build identity.
 from dataclasses import dataclass, replace
 from pathlib import Path
 
-from engine.config import get_data_dir, get_settings_path
+from engine.config import get_data_dir, get_settings_path, get_user_database_path
 from models.raid_plan import RaidPlan, RaidPlanMember
 from models.team_schedule import TeamSchedule, TeamScheduleSlot
 from services.eso_database import EsoDatabase
@@ -322,8 +322,8 @@ def list_shared_teams_from_finch(
     settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> tuple[FinchSharedTeamPreview, ...]:
-    db_path = Path(database_path or (get_data_dir() / "eso.db"))
-    plans_path = Path(raid_plans_path or (get_data_dir() / "raid_plans.json"))
+    db_path = Path(database_path or get_user_database_path())
+    plans_path = Path(raid_plans_path or get_user_database_path())
     database = EsoDatabase(db_path)
     try:
         service = FinchSharedImportService(
@@ -343,8 +343,8 @@ def list_shared_raid_plans_from_finch(
     settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> tuple[FinchSharedRaidPlanPreview, ...]:
-    db_path = Path(database_path or (get_data_dir() / "eso.db"))
-    plans_path = Path(raid_plans_path or (get_data_dir() / "raid_plans.json"))
+    db_path = Path(database_path or get_user_database_path())
+    plans_path = Path(raid_plans_path or get_user_database_path())
     database = EsoDatabase(db_path)
     try:
         service = FinchSharedImportService(
@@ -365,8 +365,8 @@ def import_shared_team_from_finch(
     settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> str:
-    db_path = Path(database_path or (get_data_dir() / "eso.db"))
-    plans_path = Path(raid_plans_path or (get_data_dir() / "raid_plans.json"))
+    db_path = Path(database_path or get_user_database_path())
+    plans_path = Path(raid_plans_path or get_user_database_path())
     database = EsoDatabase(db_path)
     try:
         service = FinchSharedImportService(
@@ -387,8 +387,8 @@ def import_shared_raid_plan_from_finch(
     settings_path: Path = get_settings_path(),
     timeout: float = 10.0,
 ) -> RaidPlan:
-    db_path = Path(database_path or (get_data_dir() / "eso.db"))
-    plans_path = Path(raid_plans_path or (get_data_dir() / "raid_plans.json"))
+    db_path = Path(database_path or get_user_database_path())
+    plans_path = Path(raid_plans_path or get_user_database_path())
     database = EsoDatabase(db_path)
     try:
         service = FinchSharedImportService(
