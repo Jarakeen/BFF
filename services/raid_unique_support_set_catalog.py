@@ -78,6 +78,15 @@ UNIQUE_SUPPORT_SET_EFFECTS: tuple[RaidUniqueSupportSetReference, ...] = (
         ("Set: Arkasis's Genius", "Potion use supplies a unique Ultimate gain to the wearer and nearby group members."),
     ),
     RaidUniqueSupportSetReference(
+        "Xoryn's Masterpiece", "Buff", "Unique: damage support",
+        ("Set: Xoryn's Masterpiece", "Unique raid-support effect tracked separately in current coverage tools."),
+    ),
+    RaidUniqueSupportSetReference(
+        "Ozezan's Plating", "Buff", "Unique: Armor support",
+        ("Monster set: Ozezan the Inferno", "Named plating effect tracked separately from Minor Vitality for raid coverage."),
+        required_pieces=2,
+    ),
+    RaidUniqueSupportSetReference(
         "Roar of Alkosh", "Debuff", "Unique: up to -6000 Armor",
         ("Set: Roar of Alkosh", "Synergy activation applies a unique enemy resistance reduction; it is not Major or Minor Breach."),
     ),
