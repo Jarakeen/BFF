@@ -244,3 +244,18 @@ def test_template_table_selection_updates_exact_template_detail_without_hidden_s
     assert "template_role" in source
     assert "selected_class" in source
     assert "selected_role" in source
+
+
+def test_template_selection_always_renders_create_saved_build_card_directly() -> None:
+    source = Path("ui/phase14_builds_command_center_support.py").read_text(encoding="utf-8")
+
+    assert "from ui.build_reuse_template_support import _show_template_detail" in source
+    assert "_show_template_detail(page, rows[source_row])" in source
+    assert "Create Saved Build" in Path("ui/build_reuse_template_support.py").read_text(encoding="utf-8")
+
+
+def test_entering_templates_clears_saved_build_filters_before_rendering() -> None:
+    source = Path("ui/phase14_builds_command_center_support.py").read_text(encoding="utf-8")
+
+    assert "Saved-build filters should not strand the Templates page" in source
+    assert "page.phase14_build_search.clear()" in source
