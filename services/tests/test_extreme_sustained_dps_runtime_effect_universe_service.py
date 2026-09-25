@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from services.extreme_sustained_dps_runtime_effect_universe_service import (
+    ExtremeSustainedDPSRuntimeEffectUniverse,
     ExtremeSustainedDPSRuntimeEffectUniverseService,
 )
 from services.extreme_sustained_dps_weapon_enchantment_activation_event_service import (
@@ -374,3 +377,27 @@ def test_dedicated_weapon_runtime_path_requires_source_and_variant_services_toge
     else:
         raise AssertionError("expected paired dedicated weapon runtime dependency guard")
 
+
+
+def test_runtime_effect_universe_rejects_non_effect_records() -> None:
+    with pytest.raises(TypeError, match="effects must contain EffectVariant"):
+        ExtremeSustainedDPSRuntimeEffectUniverse(
+            effects=(object(),),
+            excluded_plan_owned=(),
+            boundaries=(),
+            evidence=(),
+            unresolved=(),
+        )
+
+
+def test_runtime_effect_universe_rejects_active_and_excluded_overlap() -> None:
+    effect = _effect("damage-proc", trigger="damage_dealt")
+
+    with pytest.raises(ValueError, match="both active and plan-owned excluded"):
+        ExtremeSustainedDPSRuntimeEffectUniverse(
+            effects=(effect,),
+            excluded_plan_owned=(effect,),
+            boundaries=(),
+            evidence=(),
+            unresolved=(),
+        )
