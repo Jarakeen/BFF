@@ -461,3 +461,13 @@ https://forums.elderscrollsonline.com/en/discussion/261818/official-feedback-thr
 **Confidence:** High for the documented mechanic shape and historical design change because the relevant post is from ZOS staff. Do **not** use the 2016-era numeric tooltip values as current hardcoded magnitudes without a modern canonical data source or current in-game/log validation.
 
 **BFF rule:** Safe evidence for poison runtime topology and consequence structure. Not sufficient by itself for 2026 poison damage/healing/resource magnitudes, dilution, tick interval, or current named-effect values.
+
+
+### ESO-PvP Alchemy Guide — Update 50 poison relationship cross-check
+https://eso-pvp.com/alchemy/
+
+**Use for:** Current U50 crafted potion/poison recipe and relationship cross-checks, especially which poison-side Alchemy traits produce named effects on the target or wielder. The page was checked in September 2026 and explicitly labels itself Update 50.
+
+**Confidence:** Medium for trait -> named-effect relationships and recipe/item cross-checking. Do not treat its displayed named-effect percentages as BFF's numeric authority when they conflict with FoundryDock's separately reviewed canonical named-effect semantics.
+
+**BFF rule:** Safe corroboration for relationships such as Breach -> Minor Breach, Protection poison -> target Minor Vulnerability + self Minor Protection, Increase Weapon Power poison -> target Minor Maim + self Minor Brutality, and Increase Spell Power poison -> target Minor Cowardice + self Minor Sorcery under U50. Keep U51 semantics separately versioned; Update 51 lands September 28, 2026.
