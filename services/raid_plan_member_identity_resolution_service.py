@@ -34,9 +34,31 @@ class RaidPlanMemberIdentityResolution:
 class RaidPlanMemberIdentityResolutionService:
     """Fail closed when one stable RaidPlan identity contradicts another."""
 
-    def __init__(self, database: EsoDatabase, build_service: BuildService):
-        self.roster = RosterService(database)
-        self.catalog = build_service.canonical.catalog_service
+    def __init__(
+        self,
+        database: EsoDatabase,
+        build_service: BuildService,
+        *,
+        roster_service: RosterService | None = None,
+        catalog_snapshot: dict | None = None,
+    ):
+        self.roster = roster_service if roster_service is not None else RosterService(database)
+        catalog = (
+            catalog_snapshot if catalog_snapshot is not None
+            else build_service.canonical.catalog_service.load_strict()
+        )
+        self.players = {
+            str(row.get("player_id") or ""): row
+            for row in catalog["players"] if isinstance(row, dict)
+        }
+        self.characters = {
+            str(row.get("character_id") or ""): row
+            for row in catalog["characters"] if isinstance(row, dict)
+        }
+        self.builds = {
+            str(row.get("build_id") or ""): row
+            for row in catalog["builds"] if isinstance(row, dict)
+        }
 
     def _roster_members_for_character(self, character_id: str):
         key = _clean(character_id)
@@ -81,13 +103,13 @@ class RaidPlanMemberIdentityResolutionService:
 
         player = None
         if player_id:
-            player = self.catalog.get_player(player_id)
+            player = self.players.get(player_id)
             if player is None:
                 unresolved.append(f"canonical player {player_id!r} does not exist")
 
         character = None
         if character_id:
-            character = self.catalog.get_character(character_id)
+            character = self.characters.get(character_id)
             if character is None:
                 unresolved.append(f"canonical character {character_id!r} does not exist")
             else:
@@ -98,14 +120,14 @@ class RaidPlanMemberIdentityResolutionService:
                     )
                 elif not player_id and character_player_id:
                     player_id = character_player_id
-                    player = self.catalog.get_player(player_id)
+                    player = self.players.get(player_id)
                     if player is None:
                         unresolved.append(
                             f"canonical player {player_id!r} for character does not exist"
                         )
 
         if build_id:
-            build = self.catalog.get_build(build_id)
+            build = self.builds.get(build_id)
             if build is None:
                 unresolved.append(f"canonical build {build_id!r} does not exist")
             else:
@@ -116,7 +138,7 @@ class RaidPlanMemberIdentityResolutionService:
                     )
                 elif not character_id and build_character_id:
                     character_id = build_character_id
-                    character = self.catalog.get_character(character_id)
+                    character = self.characters.get(character_id)
                     if character is None:
                         unresolved.append(
                             f"canonical character {character_id!r} for selected build does not exist"
@@ -129,7 +151,7 @@ class RaidPlanMemberIdentityResolutionService:
                             )
                         elif not player_id and character_player_id:
                             player_id = character_player_id
-                            if self.catalog.get_player(player_id) is None:
+                            if self.players.get(player_id) is None:
                                 unresolved.append(
                                     f"canonical player {player_id!r} for selected build does not exist"
                                 )

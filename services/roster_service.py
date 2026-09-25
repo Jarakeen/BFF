@@ -72,7 +72,12 @@ class RosterService:
         # A single player may legitimately have multiple Personnel rows because the
         # current roster model is still player+character shaped. Character identity,
         # not player identity, is the one-to-one bridge at this layer.
-        self.db.execute("DROP INDEX IF EXISTS roster_member_canonical_player_id_unique")
+        obsolete_player_index = self.db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'index' "
+            "AND name = 'roster_member_canonical_player_id_unique'"
+        ).fetchone()
+        if obsolete_player_index is not None:
+            self.db.execute("DROP INDEX roster_member_canonical_player_id_unique")
         self.db.execute(
             """
             CREATE INDEX IF NOT EXISTS roster_member_canonical_player_id_index

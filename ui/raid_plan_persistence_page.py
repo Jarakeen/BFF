@@ -194,20 +194,27 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
     def _autosave_recovery_draft(self) -> None:
         if not self.isVisible():
             return
-        if not self.has_pending_changes():
+        if getattr(self, "_navigation_baseline_plan", None) is None:
             return
         try:
             plan = self.current_plan()
+            if plan == self._navigation_baseline_plan:
+                return
+            key = self._draft_key(plan.plan_id)
+            if getattr(self, "_last_recovery_draft", None) == (key, plan):
+                return
             self._draft_service.save(
-                self._draft_key(plan.plan_id),
+                key,
                 {"kind": "raid_plan", "plan": asdict(plan)},
             )
+            self._last_recovery_draft = (key, plan)
         except Exception:
             # Draft creation is a safety net, never a reason to interrupt editing.
             return
 
     def _discard_recovery_draft(self, plan_id: str | None = None) -> None:
         self._draft_service.discard(self._draft_key(plan_id))
+        self._last_recovery_draft = None
 
     def _offer_recovery_draft(self, saved_plan: RaidPlan) -> RaidPlan:
         draft = self._draft_service.load(self._draft_key(saved_plan.plan_id))
@@ -660,10 +667,12 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 selected[_slug(seat).casefold()] = build_id
         return selected
 
-    def _stable_identity_resolver(self) -> RaidPlanMemberIdentityResolutionService:
+    def _stable_identity_resolver(self, catalog) -> RaidPlanMemberIdentityResolutionService:
         return RaidPlanMemberIdentityResolutionService(
             self.roster_service.db,
             self.build_service,
+            roster_service=self.roster_service,
+            catalog_snapshot=catalog,
         )
 
     @staticmethod
@@ -714,7 +723,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             candidates.append(build)
         return candidates[0] if len(candidates) == 1 else None
 
-    def _repair_loaded_snapshot_after_missing_builds(self) -> None:
+    def _repair_loaded_snapshot_after_missing_builds(self, catalog) -> None:
         """Remove or rebind dead selected BuildIds before Raid Plan validation.
 
         A Comp/template refresh may legitimately replace a Build record while the
@@ -725,12 +734,15 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         loaded = getattr(self, "_loaded_plan_snapshot", None)
         if loaded is None:
             return
-        catalog = self.build_service.canonical.catalog_service
+        build_ids = {
+            _clean(row.get("build_id"))
+            for row in catalog["builds"] if isinstance(row, dict)
+        }
         changed = False
         repaired_members = []
         for member in loaded.members:
             build_id = _clean(member.selected_build_id)
-            if not build_id or catalog.get_build(build_id) is not None:
+            if not build_id or build_id in build_ids:
                 repaired_members.append(member)
                 continue
 
@@ -752,7 +764,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 members=tuple(repaired_members),
             )
 
-    def _repair_loaded_snapshot_after_player_merges(self) -> None:
+    def _repair_loaded_snapshot_after_player_merges(self, catalog) -> None:
         """Self-heal a loaded plan whose Personnel player was explicitly merged.
 
         A merge deletes only the donor Personnel row and records the donor name as
@@ -767,7 +779,10 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
 
         changed = False
         repaired_members = []
-        catalog = self.build_service.canonical.catalog_service
+        player_ids = {
+            _clean(row.get("player_id"))
+            for row in catalog["players"] if isinstance(row, dict)
+        }
         for member in loaded.members:
             roster_id = member.roster_member_id
             roster_row = (
@@ -777,7 +792,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             )
             player_exists = bool(
                 not _clean(member.player_id)
-                or catalog.get_player(_clean(member.player_id)) is not None
+                or _clean(member.player_id) in player_ids
             )
             if roster_row is not None and player_exists:
                 repaired_members.append(member)
@@ -803,11 +818,12 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             )
 
     def current_plan(self) -> RaidPlan:
-        self._repair_loaded_snapshot_after_player_merges()
-        self._repair_loaded_snapshot_after_missing_builds()
+        catalog = self.build_service.canonical.catalog_service.load_strict()
+        self._repair_loaded_snapshot_after_player_merges(catalog)
+        self._repair_loaded_snapshot_after_missing_builds(catalog)
         visible = super().current_plan()
         selected_ids = self._selected_build_ids_by_seat()
-        resolver = self._stable_identity_resolver()
+        resolver = self._stable_identity_resolver(catalog)
 
         members = []
         for member in visible.members:

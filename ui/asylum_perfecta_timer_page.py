@@ -222,8 +222,16 @@ class AsylumPerfectaTimerPage(FoundryPage):
         self._ticker = QTimer(self)
         self._ticker.setInterval(250)
         self._ticker.timeout.connect(self._tick)
-        self._ticker.start()
         self._refresh()
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self._tick()  # Account for elapsed time while the console was hidden.
+        self._ticker.start()
+
+    def hideEvent(self, event) -> None:
+        self._ticker.stop()
+        super().hideEvent(event)
 
     @staticmethod
     def _big_label(text: str = "--:--", size: int = 40) -> QLabel:
@@ -504,7 +512,7 @@ class AsylumPerfectaTimerPage(FoundryPage):
 
     def _tick(self) -> None:
         now = time.monotonic()
-        delta = max(0.0, min(1.0, now - self._last_tick))
+        delta = max(0.0, now - self._last_tick)
         self._last_tick = now
         self.model.advance(delta)
         self._refresh()

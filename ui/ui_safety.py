@@ -140,7 +140,7 @@ def set_enabled_reason(widget: QWidget, enabled: bool, reason: str = "") -> None
         widget.setToolTip(f"Unavailable: {reason}")
 
 
-def attach_save_state_badge(page, *, interval_ms: int = 350) -> QLabel | None:
+def attach_save_state_badge(page, *, interval_ms: int = 1000) -> QLabel | None:
     existing = getattr(page, "_ui_safety_badge", None)
     if isinstance(existing, QLabel):
         return existing
@@ -160,11 +160,13 @@ def attach_save_state_badge(page, *, interval_ms: int = 350) -> QLabel | None:
     timer.setInterval(max(150, int(interval_ms)))
 
     def refresh() -> None:
+        # Some pages assemble their entire plan and resolve database identities
+        # in has_pending_changes(). Hidden pages have no badge to update.
+        if not page.isVisible():
+            return
         failed = str(getattr(page, "_ui_safety_save_error", "") or "").strip()
         if failed:
-            badge.setText("Save Failed")
-            badge.setProperty("uiSafetyState", "failed")
-            badge.setToolTip(failed)
+            label, state, tip = "Save Failed", "failed", failed
         else:
             pending = getattr(page, "has_pending_changes", None)
             dirty = False
@@ -174,17 +176,19 @@ def attach_save_state_badge(page, *, interval_ms: int = 350) -> QLabel | None:
                 except Exception:
                     dirty = True
             if dirty:
-                badge.setText("Unsaved")
-                badge.setProperty("uiSafetyState", "dirty")
-                badge.setToolTip("This page has unsaved changes.")
+                label, state, tip = "Unsaved", "dirty", "This page has unsaved changes."
             else:
                 saved_at = str(getattr(page, "_ui_safety_saved_at", "") or "").strip()
                 suffix = f" · {saved_at}" if saved_at else ""
-                badge.setText(f"Saved{suffix}")
-                badge.setProperty("uiSafetyState", "saved")
-                badge.setToolTip("This page has no unsaved changes.")
-        badge.style().unpolish(badge)
-        badge.style().polish(badge)
+                label, state, tip = f"Saved{suffix}", "saved", "This page has no unsaved changes."
+        if badge.text() != label:
+            badge.setText(label)
+        if badge.toolTip() != tip:
+            badge.setToolTip(tip)
+        if badge.property("uiSafetyState") != state:
+            badge.setProperty("uiSafetyState", state)
+            badge.style().unpolish(badge)
+            badge.style().polish(badge)
 
     timer.timeout.connect(refresh)
     timer.start()

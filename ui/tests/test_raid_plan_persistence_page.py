@@ -415,9 +415,9 @@ def test_stale_selected_build_id_is_repaired_before_current_plan_validation() ->
     source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
 
     assert "def _repair_loaded_snapshot_after_missing_builds" in source
-    assert "catalog.get_build(build_id) is not None" in source
+    assert "build_id in build_ids" in source
     assert "selected_build_id=replacement_id or None" in source
-    assert source.index("self._repair_loaded_snapshot_after_missing_builds()") < source.index(
+    assert source.index("self._repair_loaded_snapshot_after_missing_builds(catalog)") < source.index(
         "visible = super().current_plan()"
     )
 

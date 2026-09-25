@@ -448,19 +448,25 @@ def _map_draft_key(page) -> str:
 
 
 def _save_map_draft(page) -> None:
-    if not _map_has_pending(page):
+    if not page.isVisible() or not _map_has_pending(page):
         return
     try:
+        key = _map_draft_key(page)
+        payload = _board_payload(page.encounter_board)
+        if getattr(page, "_ui_safety_last_map_draft", None) == (key, payload):
+            return
         UiDraftRecoveryService().save(
-            _map_draft_key(page),
-            {"kind": "raid_map", "map": _board_payload(page.encounter_board)},
+            key,
+            {"kind": "raid_map", "map": payload},
         )
+        page._ui_safety_last_map_draft = (key, payload)
     except Exception:
         pass
 
 
 def _discard_map_draft(page) -> None:
     UiDraftRecoveryService().discard(_map_draft_key(page))
+    page._ui_safety_last_map_draft = None
 
 
 def _map_save_pending(page) -> bool:
