@@ -4,7 +4,9 @@ from minmax.alchemy_formula_catalog import AlchemyFormula
 from minmax.combat_effect_semantics import GameUpdate
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_generated_weapon_poison_formula_authority_service import (
+    ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthority,
     ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthorityService,
+    ExtremeSustainedDPSGeneratedWeaponPoisonFormulaEntry,
 )
 from services.extreme_sustained_dps_weapon_poison_frontier_service import (
     ExtremeSustainedDPSWeaponPoisonLoadoutCandidate,
