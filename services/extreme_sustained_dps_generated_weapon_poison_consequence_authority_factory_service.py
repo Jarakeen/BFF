@@ -59,8 +59,6 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonConsequenceAuthorityFactoryService
             else getattr(assembled, "poison_tier_loadout", None)
         )
         if tier_loadout is None:
-            tier_loadout = getattr(late, "poison_tier_loadout", None)
-        if tier_loadout is None:
             raise ValueError(
                 "generated poison consequence authority requires retained poison tier loadout"
             )
