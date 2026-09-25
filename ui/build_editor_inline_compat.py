@@ -27,7 +27,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import DEFAULT_DATABASE
 from services.character_progression_service import CharacterProgressionService
+from services.class_mastery_repository import ClassMasteryRepository
 from ui.components.foundry_button import ButtonRole, FoundryButton
 
 
@@ -231,6 +233,34 @@ def install() -> None:
         for legacy_index in (1, 2, 3):
             tabs.setTabVisible(legacy_index, False)
 
+        mastery_tab = QWidget(tabs)
+        _force_dark_surface(mastery_tab)
+        mastery_layout = QVBoxLayout(mastery_tab)
+        mastery_layout.setContentsMargins(0, 0, 0, 0)
+        mastery_layout.setSpacing(8)
+        mastery_selector_row = QHBoxLayout()
+        mastery_selector_row.addWidget(QLabel("Character Name"))
+        self.mastery_build_selector = QComboBox(mastery_tab)
+        self.mastery_build_selector.setMinimumWidth(320)
+        mastery_selector_row.addWidget(self.mastery_build_selector)
+        mastery_selector_row.addStretch()
+        mastery_layout.addLayout(mastery_selector_row)
+        self.mastery_note = QLabel(
+            "Class Mastery is available to pure-class builds only. Choose up to two passives from this build's class."
+        )
+        self.mastery_note.setWordWrap(True)
+        mastery_layout.addWidget(self.mastery_note)
+        self.mastery_choices = QListWidget(mastery_tab)
+        mastery_layout.addWidget(self.mastery_choices, 1)
+        self.save_mastery_button = FoundryButton(
+            "Save Class Masteries", role=ButtonRole.SUCCESS, compact=True
+        )
+        mastery_actions = QHBoxLayout()
+        mastery_actions.addStretch()
+        mastery_actions.addWidget(self.save_mastery_button)
+        mastery_layout.addLayout(mastery_actions)
+        self.mastery_tab_index = tabs.addTab(mastery_tab, "Class Masteries")
+
         self.workspace_layout.addWidget(tabs, 1)
         self.build_tabs = tabs
         self._build_editor = None
@@ -239,6 +269,8 @@ def install() -> None:
         self._progression_index = None
         self._progression_character_id = None
         self._scribed_index = None
+        self._mastery_index = None
+        self._class_mastery_repository = ClassMasteryRepository(DEFAULT_DATABASE)
         self._syncing_build_selectors = False
 
         tabs.currentChanged.connect(lambda index: self._build_workspace_tab_changed(index))
@@ -253,6 +285,10 @@ def install() -> None:
         )
         self.save_progression_button.clicked.connect(lambda *_: self._save_progression_tab())
         self.save_scribed_button.clicked.connect(lambda *_: self._save_scribed_tab())
+        self.mastery_build_selector.currentIndexChanged.connect(
+            lambda *_: self._build_selector_changed(self.mastery_build_selector, self.mastery_tab_index)
+        )
+        self.save_mastery_button.clicked.connect(lambda *_: self._save_mastery_tab())
 
     def refresh_build_selectors(self) -> None:
         labels = _build_display_names(self.roster.Members)
@@ -262,6 +298,7 @@ def install() -> None:
                 self.edit_build_selector,
                 self.progression_build_selector,
                 self.scribed_build_selector,
+                self.mastery_build_selector,
             ):
                 combo.blockSignals(True)
                 combo.clear()
@@ -327,6 +364,8 @@ def install() -> None:
             self._load_progression_tab(index)
         elif tab_index == 3:
             self._load_scribed_tab(index)
+        elif tab_index == self.mastery_tab_index:
+            self._load_mastery_tab(index)
 
     def load_edit_tab(self, index: int) -> None:
         if index < 0 or index >= len(self.roster.Members):
@@ -453,6 +492,100 @@ def install() -> None:
         self._scribed_index = index
         _set_combo_index(self.scribed_build_selector, index)
 
+    def load_mastery_tab(self, index: int) -> None:
+        if index < 0 or index >= len(self.roster.Members):
+            return
+        build = self.roster.Members[index]
+        self._mastery_index = index
+        _set_combo_index(self.mastery_build_selector, index)
+        self.mastery_choices.clear()
+
+        eso_class = str(getattr(build, "EsoClass", "") or "").strip()
+        class_lines = tuple(
+            str(value).strip() for value in (getattr(build, "ClassSkillLines", ()) or ())
+            if str(value).strip()
+        )
+        is_subclassed = bool(class_lines) and any(
+            eso_class.casefold() not in line.casefold() for line in class_lines
+        )
+        if is_subclassed:
+            self.mastery_note.setText(
+                f"{eso_class or 'This build'} is subclassed. ESO does not allow Class Mastery while subclassed."
+            )
+            self.mastery_choices.setEnabled(False)
+            self.save_mastery_button.setEnabled(False)
+            return
+
+        choices = self._class_mastery_repository.for_class(eso_class)
+        self.mastery_choices.setEnabled(True)
+        self.save_mastery_button.setEnabled(bool(choices))
+        self.mastery_note.setText(
+            f"{eso_class or 'Class not set'} • choose up to two Class Mastery passives. "
+            "These selections persist with this Saved Build and are consumed by the Extreme Engine."
+        )
+        selected = {int(value) for value in (getattr(build, "ClassMasteryAbilityIds", ()) or ())}
+        for passive in choices:
+            item = QListWidgetItem(passive.name)
+            item.setData(Qt.ItemDataRole.UserRole, int(passive.base_ability_id))
+            item.setToolTip(passive.description)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(
+                Qt.CheckState.Checked
+                if int(passive.base_ability_id) in selected
+                else Qt.CheckState.Unchecked
+            )
+            self.mastery_choices.addItem(item)
+        if not choices:
+            self.mastery_note.setText(
+                f"No canonical Class Mastery passives were found for {eso_class or 'this build'}. "
+                "Set the build's class first."
+            )
+
+    def save_mastery_tab(self) -> None:
+        index = self._mastery_index
+        if index is None or index < 0 or index >= len(self.roster.Members):
+            return
+        selected = [
+            int(self.mastery_choices.item(item_index).data(Qt.ItemDataRole.UserRole))
+            for item_index in range(self.mastery_choices.count())
+            if self.mastery_choices.item(item_index).checkState() == Qt.CheckState.Checked
+        ]
+        if len(selected) > 2:
+            self.status.warning("Class Mastery allows at most two selections. Nothing was saved.")
+            return
+        build = self.roster.Members[index]
+        allowed = {
+            int(row.base_ability_id)
+            for row in self._class_mastery_repository.for_class(getattr(build, "EsoClass", ""))
+        }
+        if any(value not in allowed for value in selected):
+            self.status.error("Class Mastery selection does not belong to this build's class. Nothing was saved.")
+            return
+        build.ClassMasteryAbilityIds = selected
+        self.selected_index = index
+        self._save()
+        persisted = self.build_service.load()
+        matched = next(
+            (
+                row for row in persisted.Members
+                if str(getattr(row, "BuildId", "") or "") == str(getattr(build, "BuildId", "") or "")
+            ),
+            None,
+        )
+        if matched is None or tuple(getattr(matched, "ClassMasteryAbilityIds", ()) or ()) != tuple(selected):
+            self.status.error("Class Mastery save failed read-back verification.")
+            return
+        names = [
+            self.mastery_choices.item(i).text()
+            for i in range(self.mastery_choices.count())
+            if self.mastery_choices.item(i).checkState() == Qt.CheckState.Checked
+        ]
+        self.status.success(
+            "Class Masteries saved and verified"
+            + (f": {', '.join(names)}." if names else ".")
+        )
+        self._refresh_detail()
+
     def save_scribed_tab(self) -> None:
         index = self._scribed_index
         if index is None or index < 0 or index >= len(self.roster.Members):
@@ -487,6 +620,8 @@ def install() -> None:
     BuildsPage._save_progression_tab = save_progression_tab
     BuildsPage._load_scribed_tab = load_scribed_tab
     BuildsPage._save_scribed_tab = save_scribed_tab
+    BuildsPage._load_mastery_tab = load_mastery_tab
+    BuildsPage._save_mastery_tab = save_mastery_tab
 
     # Keep compatibility names used by older tests/extensions, but route them to
     # the permanent Edit tab rather than creating a transient editor surface.
