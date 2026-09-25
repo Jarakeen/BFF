@@ -39,21 +39,36 @@ class ExtremeSustainedDPSObjective32CompositionService:
     """
 
     @staticmethod
+    def _require_true_boolean_attribute(
+        owner: object,
+        attribute: str,
+        *,
+        type_error: str,
+        false_error: str,
+    ) -> None:
+        value = getattr(owner, attribute, None)
+        if not isinstance(value, bool):
+            raise TypeError(type_error)
+        if value is not True:
+            raise ValueError(false_error)
+
+    @classmethod
     def _require_resource_denominator_proof(
+        cls,
         finalized_potion_evidence_resolver: object,
     ) -> None:
-        proven = bool(
-            getattr(
-                finalized_potion_evidence_resolver,
-                "additional_resource_event_denominator_proven",
-                False,
-            )
-        )
-        if not proven:
-            raise ValueError(
+        cls._require_true_boolean_attribute(
+            finalized_potion_evidence_resolver,
+            "additional_resource_event_denominator_proven",
+            type_error=(
+                "Objective #32 finalized potion additional_resource_event_denominator_proven "
+                "must be boolean"
+            ),
+            false_error=(
                 "Objective #32 composition requires finalized potion timing evidence "
                 "with a proven-complete additional resource-event denominator"
-            )
+            ),
+        )
 
     @staticmethod
     def _require_late_axis(late_adapter: object, canonical_axis: str) -> None:
@@ -129,16 +144,17 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires canonical generated runtime evaluation"
             )
-        if not bool(
-            getattr(
-                runtime_policy_adapter,
-                "require_complete_heavy_attack_discovery",
-                False,
-            )
-        ):
-            raise ValueError(
+        cls._require_true_boolean_attribute(
+            runtime_policy_adapter,
+            "require_complete_heavy_attack_discovery",
+            type_error=(
+                "Objective #32 runtime-policy require_complete_heavy_attack_discovery "
+                "must be boolean"
+            ),
+            false_error=(
                 "Objective #32 composition requires runtime-policy adapter complete Heavy Attack discovery mode"
-            )
+            ),
+        )
         if finalized_potion_evidence_resolver is None:
             raise ValueError(
                 "Objective #32 composition requires finalized potion timing evidence"
@@ -213,26 +229,26 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires explicit weapon-poison consequence authority"
             )
-        if not bool(
-            getattr(
-                runtime_state_frontier_resolver,
-                "supplemental_event_denominator_proven",
-                False,
-            )
-        ):
-            raise ValueError(
+        cls._require_true_boolean_attribute(
+            runtime_state_frontier_resolver,
+            "supplemental_event_denominator_proven",
+            type_error=(
+                "Objective #32 supplemental_event_denominator_proven must be boolean"
+            ),
+            false_error=(
                 "Objective #32 composition requires a proven-complete supplemental runtime-event denominator"
-            )
-        if not bool(
-            getattr(
-                runtime_state_frontier_resolver,
-                "supplemental_history_denominator_proven",
-                False,
-            )
-        ):
-            raise ValueError(
+            ),
+        )
+        cls._require_true_boolean_attribute(
+            runtime_state_frontier_resolver,
+            "supplemental_history_denominator_proven",
+            type_error=(
+                "Objective #32 supplemental_history_denominator_proven must be boolean"
+            ),
+            false_error=(
                 "Objective #32 composition requires a proven-complete supplemental runtime-history denominator"
-            )
+            ),
+        )
 
         cls._require_resource_denominator_proof(
             finalized_potion_evidence_resolver
