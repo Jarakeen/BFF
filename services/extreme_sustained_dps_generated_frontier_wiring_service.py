@@ -97,6 +97,40 @@ class ExtremeSustainedDPSGeneratedFrontierNode:
     coordinates: tuple[tuple[str, int], ...]
     evidence: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        candidate_key = str(self.candidate_key or "").strip()
+        if not candidate_key:
+            raise ValueError("generated frontier node requires candidate_key")
+
+        normalized_coordinates: list[tuple[str, int]] = []
+        for row in self.coordinates:
+            if not isinstance(row, (tuple, list)) or len(row) != 2:
+                raise TypeError(
+                    "generated frontier node coordinates must contain (axis_name, index) pairs"
+                )
+            axis_name = " ".join(str(row[0] or "").strip().split())
+            index = row[1]
+            if not axis_name:
+                raise ValueError(
+                    "generated frontier node coordinate axis name cannot be empty"
+                )
+            if isinstance(index, bool) or not isinstance(index, int) or index < 0:
+                raise ValueError(
+                    "generated frontier node coordinate index must be a non-negative integer"
+                )
+            normalized_coordinates.append((axis_name, index))
+
+        evidence = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.evidence
+                if str(item).strip()
+            )
+        )
+        object.__setattr__(self, "candidate_key", candidate_key)
+        object.__setattr__(self, "coordinates", tuple(normalized_coordinates))
+        object.__setattr__(self, "evidence", evidence)
+
     @property
     def depth(self) -> int:
         return len(self.coordinates)
@@ -215,7 +249,12 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
                 return ()
 
             axis = axes[axis_index]
-            count = int(axis.candidate_count(node.state))
+            raw_count = axis.candidate_count(node.state)
+            if isinstance(raw_count, bool) or not isinstance(raw_count, int):
+                raise TypeError(
+                    f"generated frontier axis {axis.name!r} candidate count must be an integer"
+                )
+            count = raw_count
             if count < 0:
                 raise ValueError(
                     f"generated frontier axis {axis.name!r} returned a negative candidate count"
