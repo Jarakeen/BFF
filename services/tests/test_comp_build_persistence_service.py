@@ -236,6 +236,101 @@ def test_selected_saved_build_remains_reference_not_comp_copy(tmp_path: Path) ->
     assert after["builds"][0]["build_kind"] == "saved"
 
 
+def test_selected_saved_build_rebinds_stale_character_for_same_player(tmp_path: Path) -> None:
+    player_id, stale_character_id = _seed_catalog(tmp_path)
+    catalog_service = BuildCatalogService(tmp_path / "foundrydock.db")
+    catalog = catalog_service.load()
+    saved_character_id = "character-bacon"
+    build_id = "saved-build-rik"
+    catalog["characters"].append(
+        {
+            "character_id": saved_character_id,
+            "player_id": player_id,
+            "name": "Bacon",
+            "gamertag": "Rylo",
+            "eso_class": "Sorcerer",
+            "role": "Tank",
+        }
+    )
+    catalog["builds"] = [
+        {
+            "build_id": build_id,
+            "character_id": saved_character_id,
+            "name": "Rik — Sorcerer Tank",
+            "build_kind": "saved",
+            "payload": {},
+            "legacy": {},
+            "source": {},
+        }
+    ]
+    catalog_service.save(catalog)
+    base = _state(player_id, stale_character_id)
+    chair = base.chair("DD1")
+    assert chair is not None
+    state = base.with_chair(
+        chair.with_changes(
+            selected_build_id=build_id,
+            selected_build_name="Rik — Sorcerer Tank",
+        )
+    )
+
+    result = _service(tmp_path).persist(state)
+    rebound = result.state.chair("DD1")
+    assert rebound is not None
+    assert rebound.player_id == player_id
+    assert rebound.character_id == saved_character_id
+    assert rebound.character_name == "Bacon"
+    assert rebound.selected_build_id == build_id
+    assert rebound.build_source_kind == "saved_build"
+
+
+def test_selected_saved_build_never_rebinds_across_players(tmp_path: Path) -> None:
+    player_id, character_id = _seed_catalog(tmp_path)
+    catalog_service = BuildCatalogService(tmp_path / "foundrydock.db")
+    catalog = catalog_service.load()
+    catalog["players"].append(
+        {"player_id": "player-other", "gamertag": "Other", "display_name": "Other"}
+    )
+    catalog["characters"].append(
+        {
+            "character_id": "character-other",
+            "player_id": "player-other",
+            "name": "Other Character",
+            "gamertag": "Other",
+            "eso_class": "Nightblade",
+            "role": "DD",
+        }
+    )
+    catalog["builds"] = [
+        {
+            "build_id": "other-build",
+            "character_id": "character-other",
+            "name": "Other Build",
+            "build_kind": "saved",
+            "payload": {},
+            "legacy": {},
+            "source": {},
+        }
+    ]
+    catalog_service.save(catalog)
+    base = _state(player_id, character_id)
+    chair = base.chair("DD1")
+    assert chair is not None
+    state = base.with_chair(chair.with_changes(selected_build_id="other-build"))
+
+    result = _service(tmp_path).persist(state)
+
+    assert result.saved_seats == ()
+    assert result.skipped_seats == ("DD1",)
+    assert result.skipped_reasons == (
+        ("DD1", "selected Build belongs to a different player"),
+    )
+    unchanged = result.state.chair("DD1")
+    assert unchanged is not None
+    assert unchanged.player_id == player_id
+    assert unchanged.character_id == character_id
+
+
 def test_legacy_comp_build_is_detached_not_deleted(tmp_path: Path) -> None:
     player_id, character_id = _seed_catalog(tmp_path)
     catalog_service = BuildCatalogService(tmp_path / "foundrydock.db")
