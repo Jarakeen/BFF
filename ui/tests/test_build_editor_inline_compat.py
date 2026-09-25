@@ -103,7 +103,17 @@ def test_builds_exposes_class_aware_mastery_workspace() -> None:
     assert 'tabs.addTab(mastery_tab, "Class Masteries")' in source
     assert "ClassMasteryRepository(DEFAULT_DATABASE)" in source
     assert "for_class(eso_class)" in source
-    assert "ClassMasteryAbilityIds = selected" in source
+    assert 'build.ClassMasteryAbilityIds = list(recent["class_mastery_ability_ids"])' in source
     assert "if len(selected) > 2:" in source
     assert "Class Mastery save failed read-back verification." in source
     assert "ESO does not allow Class Mastery while subclassed." in source
+
+
+def test_class_mastery_save_is_guarded_and_rolls_back_on_failure() -> None:
+    source = Path(build_editor_inline_compat.__file__).read_text(encoding="utf-8")
+
+    assert "validate_build_recent_state_payload" in source
+    assert 'previous = list(getattr(build, "ClassMasteryAbilityIds", ()) or ())' in source
+    assert "if not self._save():" in source
+    assert "build.ClassMasteryAbilityIds = previous" in source
+    assert "verification could not reload Builds" in source
