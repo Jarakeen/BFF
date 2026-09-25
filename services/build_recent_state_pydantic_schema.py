@@ -6,6 +6,9 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator, model_validator
 
+from minmax.character_build.character_class import CLASS_SKILL_LINES, CharacterClass
+from services.extreme_heal_class_route_service import canonical_class_skill_line_id
+
 
 class BuildRecentStatePayload(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -49,8 +52,23 @@ class BuildRecentStatePayload(BaseModel):
     def validate_world_state(self):
         if self.vampire and self.werewolf:
             raise ValueError("a Saved Build cannot be both Vampire and Werewolf")
-        if self.class_skill_lines and self.class_mastery_ability_ids:
-            raise ValueError("subclassed Builds cannot select Class Masteries")
+        if self.class_mastery_ability_ids and self.class_skill_lines:
+            try:
+                base_class = CharacterClass(self.eso_class.strip().casefold())
+            except ValueError:
+                base_class = None
+            explicit_lines = {
+                canonical_class_skill_line_id(value)
+                for value in self.class_skill_lines
+                if canonical_class_skill_line_id(value)
+            }
+            native_lines = (
+                set(CLASS_SKILL_LINES.get(base_class, frozenset()))
+                if base_class is not None
+                else set()
+            )
+            if not base_class or explicit_lines != native_lines:
+                raise ValueError("subclassed Builds cannot select Class Masteries")
         return self
 
 
