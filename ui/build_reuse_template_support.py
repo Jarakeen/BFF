@@ -38,7 +38,7 @@ def _reuse_service() -> BuildReuseService:
 
 
 def _catalog_snapshot(page):
-    catalog = page.build_service.canonical.catalog_service.load()
+    catalog = page.build_service.canonical.catalog_service.load_strict()
     personnel = tuple(
         RosterService(EsoDatabase(get_user_database_path())).list_members(
             include_archived=True
