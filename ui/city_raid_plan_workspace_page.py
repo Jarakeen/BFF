@@ -368,24 +368,16 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         center_layout.addWidget(offensive)
 
         middle = QHBoxLayout()
-        quick = FoundryCard("Quick Actions", "warning")
-        edit_roles = QPushButton("Manage Roles / Spots")
-        edit_roles.clicked.connect(lambda: self._show_local_view(1))
-        quick.addWidget(edit_roles)
-        for title, route in (
-            ("Edit Assignments", "assignments"),
-            ("Check Coverage", "console:7"),
-            ("Open Readiness", "readiness"),
-            ("Create Run Sheet", "live_raid"),
-        ):
-            button = QPushButton(title)
-            button.clicked.connect(lambda _=False, target=route: self.pageRequested.emit(target))
-            quick.addWidget(button)
-        save = QPushButton("Save Current Plan")
-        save.setProperty("primary", True)
-        save.clicked.connect(self._save_from_overview)
-        quick.addWidget(save)
-        middle.addWidget(quick, 2)
+        schedule = FoundryCard("Team Schedule", "stopwatch")
+        self.team_schedule_label = QLabel("No Team Schedule")
+        self.team_schedule_label.setWordWrap(True)
+        self.team_schedule_label.setProperty("raidSnapshotValue", True)
+        schedule.addWidget(self.team_schedule_label)
+        self.team_schedule_focus = QLabel("")
+        self.team_schedule_focus.setWordWrap(True)
+        self.team_schedule_focus.setProperty("muted", True)
+        schedule.addWidget(self.team_schedule_focus)
+        middle.addWidget(schedule, 2)
 
         notes = FoundryCard("Plan Note", "feather")
         notes.setProperty("parchment", True)
@@ -408,25 +400,11 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         middle.addWidget(timeline, 3)
         center_layout.addLayout(middle)
 
-        lower = QHBoxLayout()
         recent = FoundryCard("Recent Activity", "archive")
         self.recent_label = QLabel("Saved RaidPlan snapshots are the durable activity boundary on this surface.")
         self.recent_label.setWordWrap(True)
         recent.addWidget(self.recent_label)
-        lower.addWidget(recent, 1)
-        linked = FoundryCard("Linked Resources", "clipboard")
-        for title, route in (
-            ("Comp Builder", "comp_builder"),
-            ("Builds", "console:2"),
-            ("Rotation Builder", "rotations"),
-            ("Coverage", "console:7"),
-            ("Optimizer Adviser", "console:6"),
-        ):
-            button = QPushButton(title)
-            button.clicked.connect(lambda _=False, target=route: self.pageRequested.emit(target))
-            linked.addWidget(button)
-        lower.addWidget(linked, 1)
-        center_layout.addLayout(lower)
+        center_layout.addWidget(recent)
         root.addWidget(center, 7)
         return page
 
@@ -482,6 +460,9 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             for card in (self.team_snapshot, self.encounter_snapshot, self.strategy_snapshot, self.progress_snapshot):
                 card.value_label.setText("—")
             self._clear_offensive_stats("Save and load a Raid Plan to calculate the team.")
+            if hasattr(self, "team_schedule_label"):
+                self.team_schedule_label.setText("No Team Schedule")
+                self.team_schedule_focus.setText("Load a Team-owned Raid Plan to see its schedule.")
             return
         assigned = sum(1 for member in plan.members if member.primary_assignment or member.secondary_assignment)
         builds = sum(1 for member in plan.members if member.build_selected)
@@ -493,10 +474,35 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             f"{plan.name}\n{plan.trial_id} · {plan.difficulty or 'Difficulty not set'} · {len(plan.members)} players\nStatus: {plan.status.title()}"
         )
         self.team_snapshot.value_label.setText(plan.team_name or "Ad-hoc team")
+        self._refresh_team_schedule(plan)
         self.encounter_snapshot.value_label.setText(plan.trial_id)
         self.strategy_snapshot.value_label.setText(f"{assigned} / {len(plan.members)} spots assigned")
         self.progress_snapshot.value_label.setText(f"{builds} builds linked")
         self._refresh_offensive_stats(plan)
+
+    def _refresh_team_schedule(self, plan) -> None:
+        if not hasattr(self, "team_schedule_label"):
+            return
+        team_name = str(getattr(plan, "team_name", "") or "").strip()
+        if not team_name:
+            self.team_schedule_label.setText("No Team Schedule")
+            self.team_schedule_focus.setText("This Raid Plan is not attached to a Team.")
+            return
+        try:
+            schedule = self.roster_service.get_team_schedule(team_name)
+        except Exception as exc:
+            self.team_schedule_label.setText("Team Schedule unavailable")
+            self.team_schedule_focus.setText(str(exc))
+            return
+        if schedule is None or not schedule.is_configured:
+            self.team_schedule_label.setText("Schedule not set")
+            self.team_schedule_focus.setText(team_name)
+            return
+        self.team_schedule_label.setText(schedule.display_text)
+        focus = str(schedule.CurrentFocus or "").strip()
+        self.team_schedule_focus.setText(
+            f"Current focus: {focus}" if focus else team_name
+        )
 
     @staticmethod
     def _offensive_stat_tooltip(row) -> str:
