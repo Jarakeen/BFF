@@ -100,11 +100,19 @@ def _candidate_matches_roster_member(candidate: CompBuildCandidate, member, *, r
     candidate_character_id = str(candidate.saved_character_id or "").strip().casefold()
 
     if member_player_id and candidate_player_id:
-        return member_player_id == candidate_player_id
+        if member_player_id == candidate_player_id:
+            return True
+        # Historical duplicate canonical Players can survive a merge while the
+        # Saved Build still carries the older PlayerId. Exact Personnel identity
+        # below is allowed to recover that same human; never accept a different
+        # named player merely because ids disagree.
     if member_character_id and candidate_character_id:
-        return member_character_id == candidate_character_id
+        if member_character_id == candidate_character_id:
+            return True
 
-    # Compatibility-only fallback for historical roster rows that predate canonical ids.
+    # Compatibility/recovery fallback for historical rows whose stable ids were
+    # split before the canonical identity model settled. This remains exact-name
+    # evidence only, never fuzzy matching.
     identities = {
         " ".join(str(value or "").strip().casefold().split())
         for value in (
@@ -113,8 +121,26 @@ def _candidate_matches_roster_member(candidate: CompBuildCandidate, member, *, r
         )
         if str(value or "").strip()
     }
-    source = " ".join(str(candidate.source_name or "").strip().casefold().split())
-    return bool(source and source in identities)
+    candidate_identities = {
+        " ".join(str(value or "").strip().casefold().split())
+        for value in (
+            candidate.source_name,
+            candidate.name,
+        )
+        if str(value or "").strip()
+    }
+    if identities & candidate_identities:
+        return True
+
+    # Build source_name is normally the saved character name. The Build name can
+    # carry the player's stable gamertag instead, so accept an exact token prefix
+    # such as "Rik — Sorcerer Tank" for Personnel "Rikbacon" only when the
+    # candidate's own saved ids are not enough to prove another player.
+    player_name = " ".join(
+        str(getattr(member, "PlayerName", "") or "").strip().casefold().split()
+    )
+    build_name = " ".join(str(candidate.name or "").strip().casefold().split())
+    return bool(player_name and build_name and build_name == player_name)
 
 
 def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
