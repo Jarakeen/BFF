@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
 from services.extreme_sustained_dps_runtime_attempt_evidence_frontier_service import (
+    ExtremeSustainedDPSRuntimeAttemptEvidenceChoice,
+    ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier,
     ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService,
 )
 
@@ -185,3 +189,29 @@ def test_fixed_attempts_are_carried_into_every_evidence_choice() -> None:
         "Fixed source-bound runtime attempts supplied: 1" in row
         for row in result.evidence
     )
+
+
+def test_runtime_attempt_frontier_rejects_candidate_count_drift() -> None:
+    choice = ExtremeSustainedDPSRuntimeAttemptEvidenceChoice(
+        choice_id="choice",
+        attempts=(),
+        evidence=(),
+    )
+
+    with pytest.raises(ValueError, match="candidate_count must equal choice count"):
+        ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier(
+            choices=(choice,),
+            candidate_count=2,
+            denominator_proven=True,
+            evidence=(),
+            unresolved=(),
+        )
+
+
+def test_runtime_attempt_choice_requires_canonical_attempts() -> None:
+    with pytest.raises(TypeError, match="RuntimeEffectEventAttempt records"):
+        ExtremeSustainedDPSRuntimeAttemptEvidenceChoice(
+            choice_id="choice",
+            attempts=(object(),),
+            evidence=(),
+        )
