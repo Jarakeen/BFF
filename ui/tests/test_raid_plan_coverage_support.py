@@ -209,3 +209,12 @@ def test_coverage_refresh_preserves_selected_plan_and_provider_persistence_contr
     assert "_coverage_selected_plan_id" in source
     assert "saved provider failed Coverage read-back verification" in page_source
     assert "removed provider survived Coverage read-back verification" in page_source
+
+
+def test_coverage_exposes_explicit_verified_save_action() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert 'QPushButton("Save Coverage")' in source
+    assert "self.save_coverage_button.clicked.connect(self._save_coverage)" in source
+    assert "def _save_coverage(self) -> None:" in source
+    assert "Coverage providers changed during persistence verification" in source
