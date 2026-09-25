@@ -1297,6 +1297,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "OptionalWeaponPoisonConsequenceAuthority",
             "OptionalWeaponPoisonDilutionSelectionAuthority",
             "SupplementalScenarioRuntimeEvidenceResolvers",
+            "OptionalGlobalOrCandidateScopedPoisonConsequenceAuthority",
         ),
         outputs=("ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService",),
         dependencies=(
@@ -1322,7 +1323,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "Pre-runtime exact damage-occurrence evidence remains caller-owned to avoid circularly deriving runtime_state from a final damage evaluator that already consumes runtime_state. "
             "Exact crafted-poison formula/dilution consequence authority is also caller-owned; omitting it preserves fail-closed poison consequence handling rather than inferring effects from an item label. "
-            "All downstream weapon-enchantment runtime authorities are wired from one shared canonical ESO repository/rule graph."
+            "All downstream weapon-enchantment runtime authorities are wired from one shared canonical ESO repository/rule graph. "
+            "Poison consequence authority may be global or candidate-scoped, but competing authority paths are rejected."
         ),
     ),
     ServiceDescriptor(
@@ -1337,6 +1339,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "RuntimeScenarioFrontierService",
             "OptionalCandidateDamageOccurrenceProvider",
             "SupplementalScenarioRuntimeEvidenceResolvers",
+            "OptionalCandidateScopedPoisonConsequenceAuthority",
         ),
         outputs=("ExtremeSustainedDPSCandidateRuntimeStateResolution",),
         dependencies=(
@@ -1349,6 +1352,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Uses the finalized-potion candidate when present, plus the final assembled build and target identity. "
+            "Candidate-scoped poison consequence authority may be resolved from the complete generated state before runtime frontier construction. "
             "The resolver is candidate-scoped so different gear/skills/rotations may produce different runtime effect/event denominators. "
             "Exact damage-occurrence evidence remains injectable to avoid circularly deriving runtime_state from a damage evaluator that itself consumes runtime_state."
         ),
