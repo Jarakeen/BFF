@@ -171,7 +171,7 @@ def test_assembly_applies_only_owned_axis_state_to_cross_axis_build() -> None:
 
     assert result.resolved is True
     assert result.coordinate.identity == (
-        "cp:7|potion:3|passive:11|skills:13|poison:0|poison_tier:0"
+        "cp:7|potion:3|passive:11|skills:13|poison:-1|poison_tier:-1"
     )
     assert result.build.Mundus == "The Thief"
     assert result.build.Food == "Existing Food"
@@ -228,7 +228,7 @@ def test_assembly_carries_only_poison_owned_bar_state() -> None:
 
     assert result.resolved is True
     assert result.coordinate.poison_index == 5
-    assert result.coordinate.identity.endswith("|poison:5|poison_tier:0")
+    assert result.coordinate.identity.endswith("|poison:5|poison_tier:-1")
     assert result.build.FrontBarPoison == "poison:front"
     assert result.build.BackBarPoison == "poison:back"
     assert result.poison_loadout is not None
@@ -280,4 +280,37 @@ def test_poison_tier_coordinate_is_part_of_generated_candidate_identity() -> Non
     assert result.coordinate.poison_index == 5
     assert result.coordinate.poison_tier_index == 17
     assert result.coordinate.identity.endswith("|poison:5|poison_tier:17")
+
+def test_absent_poison_axes_do_not_collide_with_frontier_index_zero() -> None:
+    without_poison = ExtremeSustainedDPSGeneratedCandidateAssemblyService.assemble(
+        _context(),
+        champion_points=_cp(),
+        potion=_potion(),
+        passive_ranks=_passives(),
+        skills=_skills(),
+    )
+    poison_zero = ExtremeSustainedDPSWeaponPoisonLoadoutCandidate(
+        structural_index=0,
+        front=ExtremeSustainedDPSWeaponPoisonSelection(
+            selected_label="poison:front",
+            formula=None,
+        ),
+        back=ExtremeSustainedDPSWeaponPoisonSelection(
+            selected_label="",
+            formula=None,
+        ),
+        build=PlayerBuild(FrontBarPoison="poison:front"),
+    )
+    with_poison = ExtremeSustainedDPSGeneratedCandidateAssemblyService.assemble(
+        _context(),
+        champion_points=_cp(),
+        potion=_potion(),
+        passive_ranks=_passives(),
+        skills=_skills(),
+        poison_loadout=poison_zero,
+    )
+
+    assert without_poison.coordinate.poison_index == -1
+    assert with_poison.coordinate.poison_index == 0
+    assert without_poison.coordinate.identity != with_poison.coordinate.identity
 
