@@ -15,6 +15,12 @@ class ExtremeSustainedDPSObjective32ScenarioPreflight:
 class ExtremeSustainedDPSObjective32ScenarioPreflightService:
     """Validate the search-time evidence composition cannot own statically."""
 
+    @staticmethod
+    def _strict_bool(value: object, label: str) -> bool:
+        if not isinstance(value, bool):
+            raise TypeError(f"{label} must be boolean")
+        return value
+
     @classmethod
     def assess(
         cls,
@@ -27,18 +33,33 @@ class ExtremeSustainedDPSObjective32ScenarioPreflightService:
     ) -> ExtremeSustainedDPSObjective32ScenarioPreflight:
         blockers: list[str] = []
 
-        candidate_runtime_present = bool(
+        candidate_present_flag = cls._strict_bool(
+            candidate_runtime_state_resolver_present,
+            "candidate_runtime_state_resolver_present",
+        )
+        heavy_denominator_proven = cls._strict_bool(
+            heavy_attack_channel_block_denominator_proven,
+            "heavy_attack_channel_block_denominator_proven",
+        )
+        candidate_runtime_present = (
             candidate_runtime_state_resolver is not None
-            or candidate_runtime_state_resolver_present
+            or candidate_present_flag
         )
         if runtime_state_frontier is None and not candidate_runtime_present:
             blockers.append(
                 "Objective #32 theoretical closure requires an explicit runtime-state frontier or candidate-resolved runtime-state authority"
             )
         elif runtime_state_frontier is not None:
-            if not bool(
-                getattr(runtime_state_frontier, "denominator_proven", False)
-            ):
+            runtime_denominator = getattr(
+                runtime_state_frontier,
+                "denominator_proven",
+                None,
+            )
+            if not isinstance(runtime_denominator, bool):
+                raise TypeError(
+                    "runtime_state_frontier.denominator_proven must be boolean"
+                )
+            if runtime_denominator is not True:
                 blockers.append(
                     "Objective #32 runtime-state denominator is not proven complete"
                 )
@@ -69,23 +90,30 @@ class ExtremeSustainedDPSObjective32ScenarioPreflightService:
                 "Objective #32 candidate-resolved runtime-state authority is present but its closure evidence is not inspectable"
             )
         else:
-            if not bool(
-                getattr(
-                    candidate_runtime_state_resolver,
-                    "supplemental_event_denominator_proven",
-                    False,
+            event_denominator = getattr(
+                candidate_runtime_state_resolver,
+                "supplemental_event_denominator_proven",
+                None,
+            )
+            if not isinstance(event_denominator, bool):
+                raise TypeError(
+                    "candidate runtime supplemental_event_denominator_proven must be boolean"
                 )
-            ):
+            if event_denominator is not True:
                 blockers.append(
                     "Objective #32 candidate runtime-event denominator is not proven complete"
                 )
-            if not bool(
-                getattr(
-                    candidate_runtime_state_resolver,
-                    "supplemental_history_denominator_proven",
-                    False,
+
+            history_denominator = getattr(
+                candidate_runtime_state_resolver,
+                "supplemental_history_denominator_proven",
+                None,
+            )
+            if not isinstance(history_denominator, bool):
+                raise TypeError(
+                    "candidate runtime supplemental_history_denominator_proven must be boolean"
                 )
-            ):
+            if history_denominator is not True:
                 blockers.append(
                     "Objective #32 candidate runtime-history denominator is not proven complete"
                 )
@@ -124,7 +152,7 @@ class ExtremeSustainedDPSObjective32ScenarioPreflightService:
                         "Objective #32 candidate runtime-state authority is missing explicit weapon-poison consequence authority"
                     )
 
-        if not bool(heavy_attack_channel_block_denominator_proven):
+        if heavy_denominator_proven is not True:
             blockers.append(
                 "Objective #32 Heavy Attack encounter channel-block denominator is not proven complete"
             )
@@ -149,7 +177,7 @@ class ExtremeSustainedDPSObjective32ScenarioPreflightService:
                 ),
                 (
                     "Heavy Attack encounter channel-block denominator is proven complete"
-                    if heavy_attack_channel_block_denominator_proven
+                    if heavy_denominator_proven
                     else "Heavy Attack encounter channel-block denominator is open"
                 ),
                 (
