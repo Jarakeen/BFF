@@ -59,7 +59,22 @@ def delete_team_everywhere(roster_service, build_service: BuildService, team_nam
     connection.execute("SAVEPOINT bff_team_delete")
     try:
         if removed_build_assignments:
-            catalog_service.save(updated_catalog)
+            # Use the roster service's live SQLite connection so catalog and team
+            # changes participate in the same savepoint. BuildCatalogService.save()
+            # opens a separate connection in database mode and therefore cannot
+            # be rolled back by this transaction.
+            payload = catalog_service._normalize(updated_catalog)
+            import json
+            connection.execute(
+                """
+                INSERT INTO build_catalog(singleton_id, payload_json, updated_at)
+                VALUES (1, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(singleton_id) DO UPDATE SET
+                    payload_json=excluded.payload_json,
+                    updated_at=CURRENT_TIMESTAMP
+                """,
+                (json.dumps(payload, ensure_ascii=False, separators=(",", ":")),),
+            )
         connection.execute("DELETE FROM team_member WHERE team_id = ?", (team_id,))
         connection.execute("DELETE FROM team WHERE id = ?", (team_id,))
         connection.execute("RELEASE SAVEPOINT bff_team_delete")
