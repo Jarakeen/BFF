@@ -24,6 +24,10 @@ from services.extreme_sustained_dps_skill_bar_frontier_service import (
     ExtremeSustainedDPSSkillBarState,
     ExtremeSustainedDPSTwoBarSkillCandidate,
 )
+from services.extreme_sustained_dps_weapon_poison_frontier_service import (
+    ExtremeSustainedDPSWeaponPoisonLoadoutCandidate,
+    ExtremeSustainedDPSWeaponPoisonSelection,
+)
 from services.extreme_gear_bar_access_service import ExtremeGearBarAccess
 
 
@@ -117,6 +121,26 @@ def _passives(*, erase_owned=False):
     )
 
 
+def _poisons(*, back=True):
+    front = ExtremeSustainedDPSWeaponPoisonSelection(
+        selected_label="poison:front",
+        formula=None,
+    )
+    back_selection = ExtremeSustainedDPSWeaponPoisonSelection(
+        selected_label="poison:back" if back else "",
+        formula=None,
+    )
+    return ExtremeSustainedDPSWeaponPoisonLoadoutCandidate(
+        structural_index=5,
+        front=front,
+        back=back_selection,
+        build=PlayerBuild(
+            FrontBarPoison=front.selected_label,
+            BackBarPoison=back_selection.selected_label,
+        ),
+    )
+
+
 def _skills(*, back=True):
     front = ExtremeSustainedDPSSkillBarState((_skill("Skill A", 100),), None)
     back_state = (
@@ -142,7 +166,7 @@ def test_assembly_applies_only_owned_axis_state_to_cross_axis_build() -> None:
     )
 
     assert result.resolved is True
-    assert result.coordinate.identity == "cp:7|potion:3|passive:11|skills:13"
+    assert result.coordinate.identity == "cp:7|potion:3|passive:11|skills:13|poison:0"
     assert result.build.Mundus == "The Thief"
     assert result.build.Food == "Existing Food"
     assert result.build.FrontBarWeapon.Set == "Gear A"
@@ -181,3 +205,40 @@ def test_passive_candidate_cannot_erase_explicit_ownership() -> None:
 
     assert result.resolved is False
     assert any("erased explicit owned skill line" in row for row in result.unresolved)
+
+def test_assembly_carries_only_poison_owned_bar_state() -> None:
+    context = _context()
+    context.build.FrontBarPoison = "baseline-front"
+    context.build.BackBarPoison = "baseline-back"
+
+    result = ExtremeSustainedDPSGeneratedCandidateAssemblyService.assemble(
+        context,
+        champion_points=_cp(),
+        potion=_potion(),
+        passive_ranks=_passives(),
+        skills=_skills(),
+        poison_loadout=_poisons(),
+    )
+
+    assert result.resolved is True
+    assert result.coordinate.poison_index == 5
+    assert result.coordinate.identity.endswith("|poison:5")
+    assert result.build.FrontBarPoison == "poison:front"
+    assert result.build.BackBarPoison == "poison:back"
+    assert result.build.FrontBarWeapon.Set == "Gear A"
+    assert result.build.BackBarWeapon.Set == "Gear B"
+
+
+def test_one_bar_context_rejects_nonempty_generated_back_bar_poison() -> None:
+    result = ExtremeSustainedDPSGeneratedCandidateAssemblyService.assemble(
+        _context(one_bar=True),
+        champion_points=_cp(),
+        potion=_potion(),
+        passive_ranks=_passives(),
+        skills=_skills(back=False),
+        poison_loadout=_poisons(back=True),
+    )
+
+    assert result.resolved is False
+    assert any("back-bar poison" in row for row in result.unresolved)
+
