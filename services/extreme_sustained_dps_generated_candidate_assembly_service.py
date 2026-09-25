@@ -44,6 +44,34 @@ class ExtremeSustainedDPSGeneratedCandidateCoordinate:
     poison_index: int = -1
     poison_tier_index: int = -1
 
+    def __post_init__(self) -> None:
+        required = {
+            "champion_point_index": self.champion_point_index,
+            "potion_index": self.potion_index,
+            "passive_rank_index": self.passive_rank_index,
+            "skill_bar_index": self.skill_bar_index,
+        }
+        for label, value in required.items():
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(
+                    f"generated candidate coordinate {label} must be a non-negative integer"
+                )
+
+        optional = {
+            "poison_index": self.poison_index,
+            "poison_tier_index": self.poison_tier_index,
+        }
+        for label, value in optional.items():
+            if isinstance(value, bool) or not isinstance(value, int) or value < -1:
+                raise ValueError(
+                    f"generated candidate coordinate {label} must be -1 or a non-negative integer"
+                )
+
+        if self.poison_tier_index >= 0 and self.poison_index < 0:
+            raise ValueError(
+                "generated candidate coordinate cannot select a poison tier without a poison formula"
+            )
+
     @property
     def identity(self) -> str:
         return (
