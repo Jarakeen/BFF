@@ -31,6 +31,7 @@ CANONICAL_SUSTAINED_DPS_MUTATION_AXES = (
     "mundus",
     "food",
     "potion_selection",
+    "weapon_poisons",
     "champion_points",
     "passive_ranks",
     "skill_bars",
