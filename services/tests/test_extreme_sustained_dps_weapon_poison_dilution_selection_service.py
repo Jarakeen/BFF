@@ -109,3 +109,61 @@ def test_generated_formula_can_override_runtime_poison_identity_without_losing_t
         "Runtime poison identity override: alchemy_formula:u50:a+b:breach" in row
         for row in result.evidence
     )
+
+
+def test_per_effect_dilution_supports_mixed_base_and_triple_durations() -> None:
+    result = ExtremeSustainedDPSWeaponPoisonDilutionSelectionService.resolve_per_effect(
+        formula_selection=_selection(
+            _source("Breach", base=10.0, triple=5.0),
+            _source("Protection", base=5.8, triple=2.5),
+        ),
+        effect_modes=(
+            ("Breach", "triple"),
+            ("Protection", "base"),
+        ),
+        poison_id_override="alchemy_formula:u50:mixed",
+    )
+
+    assert result.resolved is True
+    assert result.mode is None
+    assert result.poison_id == "alchemy_formula:u50:mixed"
+    assert [(row.effect_name, row.duration_seconds) for row in result.effects] == [
+        ("Breach", 5.0),
+        ("Protection", 5.8),
+    ]
+    assert [(name, mode.value) for name, mode in result.effect_modes] == [
+        ("Breach", "triple"),
+        ("Protection", "base"),
+    ]
+
+
+def test_per_effect_dilution_requires_mode_for_every_formula_effect() -> None:
+    result = ExtremeSustainedDPSWeaponPoisonDilutionSelectionService.resolve_per_effect(
+        formula_selection=_selection(
+            _source("Breach"),
+            _source("Protection"),
+        ),
+        effect_modes=(("Breach", "triple"),),
+    )
+
+    assert result.resolved is False
+    assert any(
+        "Protection has no explicit per-effect dilution witness" in row
+        for row in result.unresolved
+    )
+
+
+def test_per_effect_dilution_rejects_effect_outside_proven_formula() -> None:
+    result = ExtremeSustainedDPSWeaponPoisonDilutionSelectionService.resolve_per_effect(
+        formula_selection=_selection(_source("Breach")),
+        effect_modes=(
+            ("Breach", "base"),
+            ("Defile", "base"),
+        ),
+    )
+
+    assert result.resolved is False
+    assert any(
+        "outside the proven formula" in row
+        for row in result.unresolved
+    )
