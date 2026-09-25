@@ -21,6 +21,52 @@ class ExtremeSustainedDPSRuntimeExternalHistoryAssemblyResult:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if any(
+            not isinstance(row, ExtremeSustainedDPSRuntimeExternalHistoryChoice)
+            for row in self.choices
+        ):
+            raise TypeError(
+                "runtime external-history assembly choices must contain canonical histories"
+            )
+        if (
+            isinstance(self.candidate_count, bool)
+            or not isinstance(self.candidate_count, int)
+            or self.candidate_count < 0
+        ):
+            raise ValueError(
+                "runtime external-history assembly candidate_count must be a non-negative integer"
+            )
+        if self.candidate_count != len(self.choices):
+            raise ValueError(
+                "runtime external-history assembly candidate_count must equal choice count"
+            )
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError(
+                "runtime external-history assembly denominator_proven must be boolean"
+            )
+        evidence = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.evidence
+                if str(item).strip()
+            )
+        )
+        unresolved = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.unresolved
+                if str(item).strip()
+            )
+        )
+        if self.denominator_proven and (not self.choices or unresolved):
+            raise ValueError(
+                "runtime external-history assembly denominator cannot be proven with no choices or unresolved evidence"
+            )
+        object.__setattr__(self, "choices", tuple(self.choices))
+        object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "unresolved", unresolved)
+
 
 class ExtremeSustainedDPSRuntimeExternalHistoryAssemblyService:
     """Cross finite attempt evidence with finite supplemental history choices."""
