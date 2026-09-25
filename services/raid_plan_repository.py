@@ -331,9 +331,9 @@ class RaidPlanRepository:
             members_raw = raw.get("members", [])
             triggered_raw = raw.get("triggered_responsibilities", [])
             coverage_raw = raw.get("coverage_providers", [])
-            if not isinstance(members_raw, list) or not isinstance(triggered_raw, list) or not isinstance(coverage_raw, list):
+            if not isinstance(members_raw, (list, tuple)) or not isinstance(triggered_raw, (list, tuple)) or not isinstance(coverage_raw, (list, tuple)):
                 raise RaidPlanRepositoryError(
-                    "persisted Raid Plan members, triggered responsibilities, and coverage providers must be lists"
+                    "persisted Raid Plan members, triggered responsibilities, and coverage providers must be sequences"
                 )
             members = tuple(
                 RaidPlanMember(
