@@ -152,14 +152,14 @@ class BrittleUptimePage(FoundryPage):
         hero_grid.setHorizontalSpacing(12)
         hero_grid.setVerticalSpacing(7)
 
-        title = QLabel("MAJOR BRITTLE UPTIME")
+        title = QLabel("SUPPORT UPTIME · BRITTLE / HEROISM / BOSS IMMUNITY")
         title.setFont(Fonts.section_title())
         title.setStyleSheet(f"color: {_chart_palette()['gold']};")
         hero_grid.addWidget(title, 0, 0, 1, 4)
 
         subtitle = QLabel(
-            "Primary measurement: Major Brittle applied by the selected ESO Logs actor. "
-            "Raid-wide uptime is shown only as encounter context."
+            "Tracks Major Brittle applied by the selected actor, Major Heroism delivered "
+            "to the group, and boss immunity windows that should not count against debuff uptime."
         )
         subtitle.setWordWrap(True)
         subtitle.setStyleSheet(f"color: {_chart_palette()['muted']};")
@@ -201,10 +201,10 @@ class BrittleUptimePage(FoundryPage):
         hero_grid.addWidget(self.actor_note, 3, 2, 1, 2)
 
         self.immunity_input = QLineEdit()
-        self.immunity_input.setPlaceholderText("Z'Maja immunity aura name (exact ESO Logs name)")
+        self.immunity_input.setPlaceholderText("Boss immunity aura override (optional — auto-detected)")
         self.immunity_input.setToolTip(
-            "Optional exact boss immunity aura marker. When supplied, FoundryDock subtracts "
-            "that observed immune time and plots it beside Brittle/Heroism."
+            "Leave blank for automatic enemy-side immunity/invulnerability aura discovery. "
+            "Enter an exact ESO Logs aura name only when a boss uses a nonstandard marker."
         )
         self.immunity_input.returnPressed.connect(self.load_report)
         hero_grid.addWidget(self.immunity_input, 4, 0, 1, 4)
@@ -266,8 +266,9 @@ class BrittleUptimePage(FoundryPage):
         brief_card.addWidget(self.copy_brief_button)
 
         proof_note = QLabel(
-            "FIELD NOTE\nDuplicate Major Brittle IDs are de-duplicated by effect name. "
-            "Provider rows may overlap, so they are not summed into raid uptime."
+            "FIELD NOTE\nDuplicate Major Brittle IDs are de-duplicated by semantic effect. "
+            "Boss immunity is discovered from explicit enemy-side immunity/invulnerability auras; "
+            "no downtime is invented from an arbitrary damage gap."
         )
         proof_note.setWordWrap(True)
         proof_note.setProperty("muted", True)
