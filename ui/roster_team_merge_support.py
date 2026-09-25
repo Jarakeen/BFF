@@ -11,7 +11,6 @@ team record is retired.
 
 from copy import deepcopy
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 from PySide6.QtWidgets import (
@@ -312,9 +311,6 @@ def merge_teams(
         raise RuntimeError("Team state changed before the merge could start. Refresh and try again.")
 
     catalog_service = build_service.canonical.catalog_service
-    catalog_path = Path(catalog_service.catalog_path)
-    catalog_existed = catalog_path.exists()
-    catalog_backup = catalog_path.read_text(encoding="utf-8") if catalog_existed else ""
     catalog = catalog_service.load_strict()
     updated_catalog, moved_assignments, collapsed_assignments = _merge_assignment_rows(
         catalog,
@@ -326,8 +322,8 @@ def merge_teams(
     connection = roster_service.db.connection
     connection.execute("SAVEPOINT bff_team_merge")
     try:
-        # Save canonical build-assignment movement first. If SQLite fails, the
-        # exact prior catalog file is restored below so the merge is retryable.
+        # Build assignments and team state share this SQLite transaction, so a
+        # failure rolls both back together.
         if updated_catalog != catalog:
             catalog_service.save(updated_catalog)
 
@@ -364,11 +360,8 @@ def merge_teams(
     except Exception:
         connection.execute("ROLLBACK TO SAVEPOINT bff_team_merge")
         connection.execute("RELEASE SAVEPOINT bff_team_merge")
-        if catalog_existed:
-            catalog_path.parent.mkdir(parents=True, exist_ok=True)
-            catalog_path.write_text(catalog_backup, encoding="utf-8")
-        elif catalog_path.exists():
-            catalog_path.unlink()
+        # build_catalog and team state share the same SQLite database. The
+        # savepoint rollback restores both; never rewrite the database file as text.
         raise
 
     return TeamMergeResult(
