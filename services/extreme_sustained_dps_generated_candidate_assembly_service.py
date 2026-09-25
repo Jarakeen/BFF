@@ -27,6 +27,9 @@ from services.extreme_sustained_dps_potion_frontier_service import (
 from services.extreme_sustained_dps_weapon_poison_frontier_service import (
     ExtremeSustainedDPSWeaponPoisonLoadoutCandidate,
 )
+from services.extreme_sustained_dps_generated_weapon_poison_tier_loadout_frontier_service import (
+    ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate,
+)
 from services.extreme_sustained_dps_skill_bar_frontier_service import (
     ExtremeSustainedDPSTwoBarSkillCandidate,
 )
@@ -59,6 +62,9 @@ class ExtremeSustainedDPSAssembledCandidate:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
     poison_loadout: ExtremeSustainedDPSWeaponPoisonLoadoutCandidate | None = None
+    poison_tier_loadout: (
+        ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate | None
+    ) = None
 
     @property
     def resolved(self) -> bool:
@@ -86,6 +92,9 @@ class ExtremeSustainedDPSGeneratedCandidateAssemblyService:
         passive_ranks: ExtremeSustainedDPSPassiveRankCandidate,
         skills: ExtremeSustainedDPSTwoBarSkillCandidate,
         poison_loadout: ExtremeSustainedDPSWeaponPoisonLoadoutCandidate | None = None,
+        poison_tier_loadout: (
+            ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate | None
+        ) = None,
     ) -> ExtremeSustainedDPSAssembledCandidate:
         coordinate = ExtremeSustainedDPSGeneratedCandidateCoordinate(
             champion_point_index=int(champion_points.structural_index),
@@ -123,6 +132,25 @@ class ExtremeSustainedDPSGeneratedCandidateAssemblyService:
                 unresolved.append(
                     "One-bar gear context received non-empty generated back-bar poison"
                 )
+
+        if poison_tier_loadout is not None:
+            if poison_loadout is None:
+                unresolved.append(
+                    "Generated poison tier loadout exists without poison formula loadout"
+                )
+            else:
+                for bar in ("front", "back"):
+                    tier_bar = getattr(poison_tier_loadout, bar)
+                    selected_bar = getattr(poison_loadout, bar)
+                    tier_poison_id = str(tier_bar.poison_id or "").strip()
+                    selected_poison_id = str(
+                        selected_bar.selected_label or ""
+                    ).strip()
+                    if tier_poison_id != selected_poison_id:
+                        unresolved.append(
+                            f"{bar} generated poison tier identity does not match "
+                            "selected poison formula identity"
+                        )
 
         # Skill frontier owns only the two six-slot skill bars.
         build.FrontBarSkills = list(skills.front.names)
@@ -167,6 +195,14 @@ class ExtremeSustainedDPSGeneratedCandidateAssemblyService:
                 f"Potion selection: {build.Potion or '(none)'}",
                 f"Front weapon poison: {build.FrontBarPoison or '(none)'}",
                 f"Back weapon poison: {build.BackBarPoison or '(none)'}",
+                (
+                    "Poison tier loadout: "
+                    + (
+                        str(poison_tier_loadout.structural_index)
+                        if poison_tier_loadout is not None
+                        else "(not selected)"
+                    )
+                ),
                 f"Front skill slots populated: {len(cls._nonempty(build.FrontBarSkills))}",
                 f"Back skill slots populated: {len(cls._nonempty(build.BackBarSkills))}",
                 f"Passive ranks carried: {len(progression.passive_ranks)}",
@@ -174,6 +210,7 @@ class ExtremeSustainedDPSGeneratedCandidateAssemblyService:
             ),
             unresolved=final_unresolved,
             poison_loadout=poison_loadout,
+            poison_tier_loadout=poison_tier_loadout,
         )
 
 
