@@ -301,8 +301,10 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "landed Light/Heavy/qualifying weapon-ability activation, source-weapon persistence across bar swaps, "
                 "poison suppression, one-hit exclusivity, and the normal 4-second direct-damage cooldown example. "
                 "Selected CP160 Legendary Decrease Health procs can now resolve exact target-Max-Health Oblivion damage "
-                "through the sequential target-Health ledger. Cooldown topology, buff/debuff-family cadence, and ordinary "
-                "non-Oblivion glyph damage policy remain separately fail-closed."
+                "through the sequential target-Health ledger. Candidate-scoped cadence proof allows a single authoritative "
+                "direct-damage identity to use its reviewed 4-second cadence without unrelated multi-identity topology; "
+                "duplicate same-identity sources use the official shared timer. Distinct-identity topology, buff/debuff-family "
+                "cadence, and ordinary non-Oblivion glyph damage policy remain separately fail-closed."
             ),
             evidence_source=(
                 "minmax/weapon_enchantment_repository.py; "
@@ -317,8 +319,8 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             ),
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
-                "Exact cadence still needs an authoritative buff/debuff enchant base cooldown, authoritative proof "
-                "that distinct enchant identities retain independent cooldowns, and the remaining ordinary elemental/"
+                "Multi-identity exact cadence still needs an authoritative buff/debuff enchant base cooldown, authoritative "
+                "proof that distinct enchant identities retain independent cooldowns, and the remaining ordinary elemental/"
                 "absorb direct-damage consequence rules needed for exact damage application. Official ESO Support now "
                 "establishes that duplicate enchant identities share one cooldown, so that specific topology field is "
                 "authoritative. Decrease Health/Oblivion is exact for the reviewed CP160 Legendary path. Distinct-identity "
