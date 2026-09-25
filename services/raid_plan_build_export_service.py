@@ -347,6 +347,7 @@ def export_raid_plan_builds_xlsx(
         )
         for col, value in enumerate(vals, 1):
             c = index.cell(row_no, col, safe(value))
+            c.data_type = "s"
             c.font = Font(size=10, color=dark)
             c.border = Border(bottom=hair)
         index.cell(row_no, 7).hyperlink = f"#'{sheet_name}'!A1"
@@ -376,9 +377,9 @@ def export_raid_plan_builds_xlsx(
         )
         for left_label, left_value, right_label, right_value in summary:
             ws.cell(row, 1, left_label).font = Font(bold=True, color=teal)
-            ws.cell(row, 2, left_value)
+            ws.cell(row, 2, left_value).data_type = "s"
             ws.cell(row, 4, right_label).font = Font(bold=True, color=teal)
-            ws.cell(row, 5, right_value)
+            ws.cell(row, 5, right_value).data_type = "s"
             row += 1
         row += 1
 
@@ -391,6 +392,7 @@ def export_raid_plan_builds_xlsx(
         for gear_row in _gear_rows(build):
             for col, value in enumerate(gear_row, 1):
                 c = ws.cell(row, col, safe(value))
+                c.data_type = "s"
                 c.border = Border(bottom=hair)
                 c.alignment = Alignment(vertical="top", wrap_text=True)
             row += 1
@@ -403,7 +405,9 @@ def export_raid_plan_builds_xlsx(
         row += 1
         for skill_row in _skill_rows(build):
             for col, value in enumerate(skill_row, 1):
-                ws.cell(row, col, safe(value)).border = Border(bottom=hair)
+                c = ws.cell(row, col, safe(value))
+                c.data_type = "s"
+                c.border = Border(bottom=hair)
             row += 1
         row += 1
 
