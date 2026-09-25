@@ -2068,6 +2068,25 @@ def test_generated_weapon_poison_formula_authority_is_cataloged() -> None:
     assert "formula identity only" in service.notes
 
 
+def test_weapon_poison_formula_dilution_witness_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_weapon_poison_formula_dilution_witness"
+    )
+
+    assert service is not None
+    assert service.service_id == (
+        "extreme.sustained_dps.weapon_poison_formula_dilution_witness"
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_poison_formula_selection",
+    )
+    assert "unmarked cells" in service.purpose
+    assert "never promoted into mechanics" in service.notes
+
+
 def test_generated_weapon_poison_dilution_authority_is_cataloged() -> None:
     service = canonical_service_for(
         "extreme_sustained_dps_generated_weapon_poison_dilution_authority"
