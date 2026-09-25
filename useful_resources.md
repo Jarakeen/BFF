@@ -378,6 +378,15 @@ https://forums.elderscrollsonline.com/en/discussion/443598/adjustments-to-how-we
 **Notes:** This is the authority for classifying exact weapon-skill damage occurrences by component shape instead of treating every tick owned by a weapon ability as enchant-eligible. It does not establish current cooldown duration or duplicate-enchantment cooldown scope.
 
 
+### ESO Support — Do weapon enchantments share cooldowns?
+https://help.elderscrollsonline.com/app/answers/detail/a_id/23047/~/do-weapon-enchantments-share-cooldowns
+
+**Use for:** Primary/current ZOS support evidence that identical weapon enchantments share a cooldown. ESO Support explicitly states that when Dual Wielding two weapons with the same enchantment, only one can activate until the first enchantment's cooldown cycle ends.
+
+**Confidence:** Primary / reference-grade for same-identity cooldown sharing.
+
+**Notes:** This closes `same_effect_identity_shares_cooldown` as authoritative. It does **not** establish that different enchant identities have independent timers, nor does it establish the base cooldown duration for buff/debuff enchantments.
+
 ### ESO forum community testing: duplicate weapon-enchantment cooldown sharing
 https://forums.elderscrollsonline.com/en/discussion/460533/clarification-on-enchants-unnecessarily-over-complicated
 
@@ -385,7 +394,7 @@ https://forums.elderscrollsonline.com/en/discussion/460533/clarification-on-ench
 
 **Confidence:** Community / corroborative only. Useful for shaping the research hypothesis, not sufficient to promote exact combat math.
 
-**Notes:** Keep `same_effect_identity_shares_cooldown` provisional until a ZOS-authored or equivalent current authoritative source directly establishes the shared-timer rule.
+**Notes:** Retained as corroboration only. Official ESO Support now supplies the authoritative same-identity shared-cooldown rule; this forum thread is no longer the promotion authority.
 
 ### ESO forum community testing: distinct enchant identities use independent cooldowns
 https://forums.elderscrollsonline.com/en/discussion/363984/glyphs-cooldown-sharing
