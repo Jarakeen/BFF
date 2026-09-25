@@ -14,6 +14,7 @@ def _payload():
                     {
                         "ingredients": ["Corn Flower", "Lady's Smock", "Water Hyacinth"],
                         "effects": ["Restore Magicka", "Increase Spell Power", "Spell Critical"],
+                        "section": "three_effects",
                     }
                 ],
             },
@@ -24,6 +25,7 @@ def _payload():
                     {
                         "ingredients": ["Water Hyacinth", "Corn Flower", "Lady's Smock"],
                         "effects": ["Spell Critical", "Restore Magicka", "Increase Spell Power"],
+                        "section": "three_effects",
                     }
                 ],
             },
@@ -41,6 +43,42 @@ def test_u50_catalog_deduplicates_formula_evidence():
     assert set(formula.traits) == {"Restore Magicka", "Increase Spell Power", "Spell Critical"}
     assert formula.source_effects == ("Increase Spell Power", "Spell Critical")
     assert formula.source_files == ("spell_power.html", "spell_critical.html")
+    assert formula.source_sections == ("three_effects",)
+
+
+def test_formula_catalog_preserves_distinct_source_sections_as_provenance_only():
+    payload = {
+        "effects": [
+            {
+                "effect_name": "Timidity",
+                "source_files": ["timidity.html"],
+                "formulas": [
+                    {
+                        "ingredients": ["A", "B"],
+                        "effects": [],
+                        "section": "single_effect",
+                    },
+                    {
+                        "ingredients": ["A", "B"],
+                        "effects": [],
+                        "section": "triple_effect",
+                    },
+                ],
+            }
+        ]
+    }
+
+    catalog = AlchemyFormulaCatalog.from_processed_payload(
+        payload,
+        game_update=GameUpdate.U50,
+    )
+
+    assert catalog.unresolved == ()
+    assert len(catalog.formulas) == 1
+    assert catalog.formulas[0].source_sections == (
+        "single_effect",
+        "triple_effect",
+    )
 
 
 def test_effect_page_name_is_primary_formula_evidence():
