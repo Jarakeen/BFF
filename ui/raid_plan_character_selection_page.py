@@ -67,6 +67,7 @@ def matching_saved_build_indices(
         return ()
 
     matches: list[int] = []
+    player_matches: list[int] = []
     for index, build in enumerate(tuple(saved_builds or ())):
         build_player_id = _clean(getattr(build, "PlayerId", "")).casefold()
         build_character_id = _clean(getattr(build, "CharacterId", "")).casefold()
@@ -77,6 +78,8 @@ def matching_saved_build_indices(
         elif _clean(getattr(build, "Gamertag", "")).casefold() != player_key:
             continue
 
+        player_matches.append(index)
+
         if canonical_character_id:
             if build_character_id != canonical_character_id:
                 continue
@@ -84,6 +87,16 @@ def matching_saved_build_indices(
             continue
 
         matches.append(index)
+
+    # Legacy Personnel and freshly saved Builds can temporarily disagree about
+    # which canonical CharacterId represents the selected player's character.
+    # Do not make that disagreement look like the player's Builds vanished.
+    # Stable PlayerId ownership is still required, and an exact CharacterId match
+    # always wins. If there is no exact character match, expose only Builds owned
+    # by the same canonical player so the user can explicitly choose the intended
+    # character/build and let that selection repair the chair identity.
+    if canonical_player_id and canonical_character_id and not matches:
+        return tuple(player_matches)
     return tuple(matches)
 
 
