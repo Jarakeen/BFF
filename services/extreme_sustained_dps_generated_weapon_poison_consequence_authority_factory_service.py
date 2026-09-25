@@ -6,10 +6,15 @@ This service composes retained generated formula provenance with the selected ge
 tier loadout and caller-owned dilution-mode proof, then wraps the result through the
 reviewed named-effect and finite consequence-frontier services used by Objective #32
 runtime. An explicit item/tier resolver remains available for non-pipeline callers.
+When no stronger dilution resolver is supplied, literal per-trait source annotations are
+used through the fail-closed formula dilution witness service.
 """
 
 from services.extreme_sustained_dps_generated_weapon_poison_dilution_authority_service import (
     ExtremeSustainedDPSGeneratedWeaponPoisonDilutionAuthorityService,
+)
+from services.extreme_sustained_dps_weapon_poison_formula_dilution_witness_service import (
+    ExtremeSustainedDPSWeaponPoisonFormulaDilutionWitnessService,
 )
 from services.extreme_sustained_dps_generated_weapon_poison_formula_authority_service import (
     ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthorityService,
@@ -29,14 +34,14 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonConsequenceAuthorityFactoryService
         self,
         *,
         item_evidence_resolver: object | None = None,
-        dilution_mode_resolver: object,
+        dilution_mode_resolver: object | None = None,
     ) -> None:
-        if dilution_mode_resolver is None:
-            raise ValueError(
-                "generated poison consequence authority requires dilution-mode resolver"
-            )
         self.item_evidence_resolver = item_evidence_resolver
-        self.dilution_mode_resolver = dilution_mode_resolver
+        self.dilution_mode_resolver = (
+            dilution_mode_resolver
+            if dilution_mode_resolver is not None
+            else ExtremeSustainedDPSWeaponPoisonFormulaDilutionWitnessService
+        )
 
     @staticmethod
     def _retained_tier_evidence(
