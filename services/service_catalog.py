@@ -1553,6 +1553,33 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_weapon_poison_formula_authority",
+        domain="extreme",
+        purpose=(
+            "Validate retained generated front/back poison formula provenance against "
+            "the assembled candidate build before downstream poison consequence authority."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_weapon_poison_formula_authority_service",
+        inputs=("CompleteGeneratedCandidateState",),
+        outputs=("ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthority",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_poison_frontier",
+            "extreme.sustained_dps.generated_candidate_assembly",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_generated_weapon_poison_formula_authority",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.DATA,
+        notes=(
+            "Generated formula IDs are validated against the retained poison-loadout object "
+            "and flattened PlayerBuild bar fields. This proves formula identity only; crafted "
+            "tier, dilution duration, magnitude, and runtime consequence semantics remain separate."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_poison_activation_events",
         domain="extreme",
         purpose=(
