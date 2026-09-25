@@ -337,7 +337,8 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "evidence now covers 20% proc chance, qualifying damaging Light/Heavy/weapon "
                 "abilities, one global 10-second poison cooldown, and single-target DoT exclusion. "
                 "Imported UESP Alchemy Poison tier evidence can also resolve one saved crafted "
-                "poison item name to every underlying effect identity and each effect-specific duration."
+                "poison item name to every underlying effect identity while preserving base/triple "
+                "duration alternatives without choosing dilution from the item label alone."
             ),
             evidence_source=(
                 "minmax/character_build/saved_build_adapter.py; "
@@ -351,8 +352,8 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             missing_evidence=(
                 "Verify weapon-specific light/heavy timing, bash cost/damage modifiers, "
                 "interrupt legality/timing, remaining enchant cooldown topology, poison effect "
-                "magnitude/dilution, target semantics and runtime application after imported identity/"
-                "duration resolution, dual-wield/two-hand legacy representation, arena weapon "
+                "exact dilution selection, magnitude, target semantics and runtime application after "
+                "imported identity/duration-alternative resolution, dual-wield/two-hand legacy representation, arena weapon "
                 "conditional rules and weapon/passive interactions."
             ),
         ),
