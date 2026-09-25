@@ -323,3 +323,24 @@ def test_repository_pydantic_rejects_extra_manual_coverage_fields(tmp_path) -> N
 
     with pytest.raises(RaidPlanRepositoryError, match="surprise"):
         repository.get("extra-field")
+
+
+def test_repository_pydantic_rejects_manual_coverage_control_characters(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "raid_plans.json")
+    plan = RaidPlan(
+        plan_id="plan-coverage-safe-text",
+        trial_id="sunspire",
+        name="Coverage Safe Text",
+        members=(RaidPlanMember(seat_id="healer-1", gamertag="Healer"),),
+        coverage_providers=(
+            RaidPlanCoverageProvider(
+                effect_name="Minor Berserk",
+                seat_id="healer-1",
+                source="Combat Prayer\nInjected",
+            ),
+        ),
+    )
+
+    import pytest
+    with pytest.raises(Exception, match="control characters"):
+        repository.save(plan)
