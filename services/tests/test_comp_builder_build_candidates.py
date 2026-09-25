@@ -190,3 +190,39 @@ def test_five_piece_projection_excludes_monster_and_mythic_sets(tmp_path) -> Non
     )
 
     assert projected == ("Spell Power Cure", "Pillager's Profit")
+
+
+def test_comp_plan_build_artifacts_do_not_hide_reusable_saved_builds(tmp_path) -> None:
+    planned = _saved_build("Core Team • Tank 1", "Sorcerer", "Tank")
+    planned["BuildKind"] = "comp"
+    planned["Gamertag"] = "Rikbacon"
+    planned["Name"] = "Rik"
+
+    saved = _saved_build("Rik — Sorcerer Tank", "Sorcerer", "Tank")
+    saved["Gamertag"] = "Rikbacon"
+    saved["Name"] = "Bacon"
+
+    (tmp_path / "builds.json").write_text(
+        json.dumps({"Members": [planned, saved]}),
+        encoding="utf-8",
+    )
+    (tmp_path / "team_prescription_templates.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "catalog_version": "test-u50",
+                "game_update": "Update 50",
+                "templates": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    candidates = CompBuilderBuildCandidateService(tmp_path).candidates_for_chair(
+        goal="Godslayer",
+        slot_name="Tank 1",
+        role="Tank",
+        preferred_class="Sorcerer",
+    )
+
+    assert [candidate.name for candidate in candidates] == ["Rik — Sorcerer Tank"]
