@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-"""Persist accepted Comp Maker chair plans as canonical builds.
+"""Persist accepted Comp Maker chair assignments without manufacturing Builds.
 
-Comp Maker owns draft planning state. Once the user saves, every real occupied chair
-with a planned build receives a stable canonical build ID before Raid Plan persistence.
-Normal saved builds are never overwritten; Comp Maker writes/updates build_kind="comp"
-records in the same canonical build catalog.
+Comp Maker owns Raid Plan assignment and override state. Reusable Saved Builds remain
+canonical Character-owned records referenced by BuildId. Planned chair configuration
+stays on the Raid Plan and is never promoted merely because the Comp is saved.
+Legacy build_kind="comp" records remain readable for recovery compatibility only.
 """
 
 from copy import deepcopy
