@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from minmax.character_build.effect_instance import EffectVariant
+from minmax.character_build.effect_layer import EffectLayer
+
 from services.extreme_sustained_dps_generated_axis_pipeline_leaf_evaluation_service import (
     ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService,
 )
@@ -175,7 +178,13 @@ def test_selected_generated_runtime_state_overrides_fixed_search_snapshot() -> N
         "runtime:selected",
         "selected-snapshot",
         evidence=("selected runtime evidence",),
-        effects=("runtime-effect-metadata",),
+        effects=(
+            EffectVariant(
+                name="runtime_effect_metadata",
+                layer=EffectLayer.CAST,
+                source="runtime-state test",
+            ),
+        ),
     )
     node = ExtremeSustainedDPSGeneratedFrontierNode(
         candidate_key="candidate:runtime",
@@ -197,7 +206,7 @@ def test_selected_generated_runtime_state_overrides_fixed_search_snapshot() -> N
 
     assert exact.mechanic_complete is True
     assert runtime.calls[0][1]["runtime_snapshot"] == "selected-snapshot"
-    assert runtime.calls[0][1]["runtime_effects"] == ("runtime-effect-metadata",)
+    assert runtime.calls[0][1]["runtime_effects"][0].name == "runtime_effect_metadata"
     assert "selected runtime evidence" in exact.evidence
 
 
