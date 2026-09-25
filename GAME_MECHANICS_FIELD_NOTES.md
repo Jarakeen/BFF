@@ -1917,3 +1917,11 @@ Objective #32 can now model poison activation, chance, cooldown, and selected co
 **Layman's version:** the engine can answer “what happens if this build uses this poison?” but the global optimizer still does not ask “which poison should this build use?” Those are different jobs. A calculator that understands a choice is not automatically an optimizer that searched the choice.
 
 **For BFF:** theoretical sustained-DPS closure must remain blocked until front/back poison selection is a finite proven search axis. Poison cannot be folded into the potion axis because poison ownership is weapon-bar-specific, suppresses that bar's enchantments, and participates in one shared poison cooldown.
+
+## 2026-09-24 — A finite poison proc history still does not prove what the poison did
+
+The engine can completely enumerate whether a weapon poison procs or misses under the reviewed 20% chance and shared 10-second cooldown, while still lacking proof of the exact crafted formula and dilution on the equipped bottle.
+
+**Layman's version:** knowing exactly *when* the poison fired does not tell us what was in the bottle. ESO crafting has managed to make causality and ingredient labels separate paperwork.
+
+**For BFF:** poison cadence and poison consequences remain separate authorities. The production runtime factory now accepts an explicit consequence resolver; when formula/dilution proof is absent, Objective #32 stays fail-closed instead of guessing from the saved item name.
