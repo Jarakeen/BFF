@@ -151,13 +151,15 @@ def _editable_combo(values) -> QComboBox:
     return combo
 
 
-def _persist(page, message: str) -> None:
-    page._save()
+def _persist(page, message: str) -> bool:
+    if not page._save():
+        return False
     page._refresh_roster()
     page._refresh_detail()
     status = getattr(page, "status", None)
     if status is not None:
         status.success(message)
+    return True
 
 
 class _FocusedDialog(QDialog):
@@ -949,15 +951,23 @@ def _class_masteries_tab(page, build) -> QWidget:
             status.setText("A selected Class Mastery does not belong to this Build class.")
             return
 
-        recent = validate_build_recent_state_payload({
-            "eso_class": eso_class,
-            "vampire": bool(getattr(build, "Vampire", False)),
-            "werewolf": bool(getattr(build, "Werewolf", False)),
-            "class_skill_lines": tuple(getattr(build, "ClassSkillLines", ()) or ()),
-            "class_mastery_ability_ids": tuple(wanted),
-        })
+        previous = list(getattr(build, "ClassMasteryAbilityIds", ()) or ())
+        try:
+            recent = validate_build_recent_state_payload({
+                "eso_class": eso_class,
+                "vampire": bool(getattr(build, "Vampire", False)),
+                "werewolf": bool(getattr(build, "Werewolf", False)),
+                "class_skill_lines": tuple(getattr(build, "ClassSkillLines", ()) or ()),
+                "class_mastery_ability_ids": tuple(wanted),
+            })
+        except Exception as exc:
+            status.setText(f"Class Mastery validation failed. Nothing was saved: {exc}")
+            return
+
         build.ClassMasteryAbilityIds = list(recent["class_mastery_ability_ids"])
-        _persist(page, "Class Masteries updated.")
+        if not _persist(page, "Class Masteries updated."):
+            build.ClassMasteryAbilityIds = previous
+            status.setText("Class Mastery save failed. The previous selection was restored.")
 
     save.clicked.connect(persist_masteries)
     card.addWidget(save)
