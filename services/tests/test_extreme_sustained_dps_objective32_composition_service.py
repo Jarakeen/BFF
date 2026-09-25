@@ -174,13 +174,13 @@ def test_composition_refuses_missing_production_authority(field, message) -> Non
 
 
 
-def test_composition_refuses_legacy_heavy_attack_window_mode() -> None:
+def test_composition_refuses_runtime_policy_without_heavy_attack_proof_contract() -> None:
     kwargs = _kwargs()
     kwargs["runtime_policy_adapter"] = object()
 
     with pytest.raises(
-        ValueError,
-        match="complete Heavy Attack discovery mode",
+        TypeError,
+        match="require_complete_heavy_attack_discovery must be boolean",
     ):
         ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
 
@@ -304,4 +304,22 @@ def test_composition_requires_late_adapter_to_physically_publish_poison_axes(
         ValueError,
         match=f"physically publish canonical axis: {missing_axis}",
     ):
+        ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("owner_field", "attribute"),
+    (
+        ("runtime_policy_adapter", "require_complete_heavy_attack_discovery"),
+        ("finalized_potion_evidence_resolver", "additional_resource_event_denominator_proven"),
+        ("runtime_state_frontier_resolver", "supplemental_event_denominator_proven"),
+        ("runtime_state_frontier_resolver", "supplemental_history_denominator_proven"),
+    ),
+)
+def test_composition_rejects_truthy_non_boolean_proof_flags(owner_field, attribute) -> None:
+    kwargs = _kwargs()
+    owner = kwargs[owner_field]
+    setattr(owner, attribute, "true")
+
+    with pytest.raises(TypeError, match="must be boolean"):
         ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
