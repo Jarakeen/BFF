@@ -10,6 +10,9 @@ from minmax.weapon_enchantment_repository import WeaponEnchantmentRepository
 from services.extreme_sustained_dps_candidate_runtime_state_frontier_resolver_service import (
     ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService,
 )
+from services.extreme_sustained_dps_generated_weapon_poison_consequence_authority_factory_service import (
+    ExtremeSustainedDPSGeneratedWeaponPoisonConsequenceAuthorityFactoryService,
+)
 from services.extreme_sustained_dps_runtime_effect_scaling_service import (
     ExtremeSustainedDPSRuntimeEffectScalingService,
 )
@@ -72,6 +75,8 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
         weapon_poison_consequence_resolver: object | None = None,
         weapon_poison_dilution_selection_resolver: object | None = None,
         weapon_poison_consequence_resolver_resolver=None,
+        generated_weapon_poison_item_evidence_resolver: object | None = None,
+        generated_weapon_poison_dilution_mode_resolver: object | None = None,
         source: str = "Objective #32 candidate runtime scenario",
     ) -> ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
         if capability_service is None:
@@ -82,19 +87,42 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
             raise ValueError(
                 "candidate runtime-state factory requires pre-runtime exact damage-occurrence authority"
             )
+        generated_poison_pair = (
+            generated_weapon_poison_item_evidence_resolver is not None,
+            generated_weapon_poison_dilution_mode_resolver is not None,
+        )
+        if any(generated_poison_pair) and not all(generated_poison_pair):
+            raise ValueError(
+                "generated poison authority requires both candidate tier/item evidence "
+                "and candidate dilution-mode resolvers"
+            )
+
+        generated_poison_authority_requested = all(generated_poison_pair)
         configured_poison_authorities = sum(
-            int(value is not None)
-            for value in (
-                weapon_poison_consequence_resolver,
-                weapon_poison_dilution_selection_resolver,
-                weapon_poison_consequence_resolver_resolver,
+            (
+                int(weapon_poison_consequence_resolver is not None),
+                int(weapon_poison_dilution_selection_resolver is not None),
+                int(weapon_poison_consequence_resolver_resolver is not None),
+                int(generated_poison_authority_requested),
             )
         )
         if configured_poison_authorities > 1:
             raise ValueError(
                 "candidate runtime-state factory requires exactly one poison consequence "
                 "authority path: global consequence resolver, dilution-selection authority, "
-                "or candidate-scoped consequence resolver"
+                "candidate-scoped consequence resolver, or generated formula/tier/dilution authority"
+            )
+
+        if generated_poison_authority_requested:
+            weapon_poison_consequence_resolver_resolver = (
+                ExtremeSustainedDPSGeneratedWeaponPoisonConsequenceAuthorityFactoryService(
+                    item_evidence_resolver=(
+                        generated_weapon_poison_item_evidence_resolver
+                    ),
+                    dilution_mode_resolver=(
+                        generated_weapon_poison_dilution_mode_resolver
+                    ),
+                ).resolve
             )
 
         if (
