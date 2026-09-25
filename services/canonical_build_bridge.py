@@ -82,8 +82,30 @@ class CanonicalBuildBridge:
 
         This is the supported boundary for workflows that need to preserve stable
         build IDs while adding or updating canonical build records directly.
+        Live application callers may add/update records, but absence from a
+        projection is never permission to delete an existing Saved Build.
         """
         normalized = self.catalog_service._normalize(catalog)
+        if self._application_user_database:
+            existing = self._load_catalog_strict()
+            existing_builds = {
+                str(row.get("build_id") or "").strip(): row
+                for row in existing.get("builds", [])
+                if isinstance(row, dict) and str(row.get("build_id") or "").strip()
+            }
+            incoming_ids = {
+                str(row.get("build_id") or "").strip()
+                for row in normalized.get("builds", [])
+                if isinstance(row, dict) and str(row.get("build_id") or "").strip()
+            }
+            missing = [build_id for build_id in existing_builds if build_id not in incoming_ids]
+            if missing:
+                raise RuntimeError(
+                    "Canonical catalog save would implicitly delete Saved Build(s): "
+                    + ", ".join(missing[:5])
+                    + ("..." if len(missing) > 5 else "")
+                    + ". Use an explicit Build deletion operation."
+                )
         self.catalog_service.save(normalized)
         mirror = self.enchantment_compatibility.normalize_roster(
             self._roster_from_catalog(normalized)
