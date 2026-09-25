@@ -144,6 +144,10 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires canonical generated runtime evaluation"
             )
+        if potion_cooldown_resolver is None:
+            raise ValueError(
+                "Objective #32 composition requires a canonical potion cooldown resolver"
+            )
         cls._require_true_boolean_attribute(
             runtime_policy_adapter,
             "require_complete_heavy_attack_discovery",
