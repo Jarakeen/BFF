@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-"""Resolve saved crafted weapon-poison names to canonical alchemy effect identities.
+"""Resolve saved crafted weapon-poison labels to source-backed possibility evidence.
 
-UESP alchemy Poison variants are imported into effect_variant.raw_json. Each effect
-page retains poison tier rows containing the crafted item name and that effect's
-duration. Matching the saved poison item name across all Poison variants therefore
-recovers the complete effect-identity set for multi-effect poisons without a manual
-name map. Magnitude/application math remains downstream.
+UESP Alchemy Poison variants are imported into effect_variant.raw_json. Each per-effect
+page retains Poison tier rows containing crafted item names plus base/triple duration
+alternatives. The same displayed poison item name can be produced by multiple formulas
+with different secondary effects, so a saved item label proves a possibility universe,
+not the exact effect set on the selected bottle.
+
+This service is intentionally read-only and fail-closed for exact Objective #32 use.
 """
 
 from dataclasses import dataclass
@@ -16,7 +18,7 @@ import sqlite3
 
 
 @dataclass(frozen=True)
-class ExtremeSustainedDPSWeaponPoisonAlchemyEffectIdentity:
+class ExtremeSustainedDPSWeaponPoisonPossibleEffect:
     effect_name: str
     base_duration_seconds: float
     triple_duration_seconds: float | None = None
@@ -25,19 +27,26 @@ class ExtremeSustainedDPSWeaponPoisonAlchemyEffectIdentity:
 
 
 @dataclass(frozen=True)
-class ExtremeSustainedDPSWeaponPoisonIdentityResolution:
+class ExtremeSustainedDPSWeaponPoisonItemEvidence:
     poison_id: str
-    effects: tuple[ExtremeSustainedDPSWeaponPoisonAlchemyEffectIdentity, ...]
+    possible_effects: tuple[ExtremeSustainedDPSWeaponPoisonPossibleEffect, ...]
+    source_evidence_complete: bool
+    exact_selection_proven: bool
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
     @property
     def resolved(self) -> bool:
-        return bool(self.effects) and not self.unresolved
+        return bool(
+            self.possible_effects
+            and self.source_evidence_complete
+            and self.exact_selection_proven
+            and not self.unresolved
+        )
 
 
-class ExtremeSustainedDPSWeaponPoisonIdentityService:
-    """Read canonical Poison effect identity and duration alternatives from imported alchemy evidence."""
+class ExtremeSustainedDPSWeaponPoisonItemEvidenceService:
+    """Read possible Poison effects/duration alternatives from imported Alchemy evidence."""
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
@@ -64,21 +73,22 @@ class ExtremeSustainedDPSWeaponPoisonIdentityService:
         except (TypeError, ValueError):
             return None
 
-    def resolve(
-        self,
-        poison_id: str,
-    ) -> ExtremeSustainedDPSWeaponPoisonIdentityResolution:
+    def resolve(self, poison_id: str) -> ExtremeSustainedDPSWeaponPoisonItemEvidence:
         selected = " ".join(str(poison_id or "").strip().split())
         if not selected:
-            return ExtremeSustainedDPSWeaponPoisonIdentityResolution(
+            return ExtremeSustainedDPSWeaponPoisonItemEvidence(
                 poison_id="",
-                effects=(),
-                unresolved=("weapon-poison identity resolution requires a poison item name",),
+                possible_effects=(),
+                source_evidence_complete=False,
+                exact_selection_proven=False,
+                unresolved=("weapon-poison item evidence requires a poison item name",),
             )
         if not self.database_path.exists():
-            return ExtremeSustainedDPSWeaponPoisonIdentityResolution(
+            return ExtremeSustainedDPSWeaponPoisonItemEvidence(
                 poison_id=selected,
-                effects=(),
+                possible_effects=(),
+                source_evidence_complete=False,
+                exact_selection_proven=False,
                 unresolved=(f"Alchemy database missing: {self.database_path}",),
             )
 
@@ -91,9 +101,11 @@ class ExtremeSustainedDPSWeaponPoisonIdentityService:
                     ).fetchall()
                 }
                 if not {"effect", "effect_variant"}.issubset(tables):
-                    return ExtremeSustainedDPSWeaponPoisonIdentityResolution(
+                    return ExtremeSustainedDPSWeaponPoisonItemEvidence(
                         poison_id=selected,
-                        effects=(),
+                        possible_effects=(),
+                        source_evidence_complete=False,
+                        exact_selection_proven=False,
                         unresolved=(
                             "Alchemy database is missing effect/effect_variant tables",
                         ),
@@ -105,9 +117,11 @@ class ExtremeSustainedDPSWeaponPoisonIdentityService:
                     ).fetchall()
                 }
                 if "raw_json" not in columns:
-                    return ExtremeSustainedDPSWeaponPoisonIdentityResolution(
+                    return ExtremeSustainedDPSWeaponPoisonItemEvidence(
                         poison_id=selected,
-                        effects=(),
+                        possible_effects=(),
+                        source_evidence_complete=False,
+                        exact_selection_proven=False,
                         unresolved=(
                             "Alchemy database effect_variant table has no raw_json source payload",
                         ),
@@ -124,14 +138,16 @@ class ExtremeSustainedDPSWeaponPoisonIdentityService:
                     """
                 ).fetchall()
         except sqlite3.Error as exc:
-            return ExtremeSustainedDPSWeaponPoisonIdentityResolution(
+            return ExtremeSustainedDPSWeaponPoisonItemEvidence(
                 poison_id=selected,
-                effects=(),
+                possible_effects=(),
+                source_evidence_complete=False,
+                exact_selection_proven=False,
                 unresolved=(f"Alchemy poison catalog unreadable: {exc}",),
             )
 
-        matches: dict[str, ExtremeSustainedDPSWeaponPoisonAlchemyEffectIdentity] = {}
-        unresolved: list[str] = []
+        matches: dict[str, ExtremeSustainedDPSWeaponPoisonPossibleEffect] = {}
+        source_errors: list[str] = []
         malformed_payloads = 0
         matched_rows = 0
 
@@ -160,12 +176,12 @@ class ExtremeSustainedDPSWeaponPoisonIdentityService:
                 matched_rows += 1
                 duration = self._float(tier.get("duration"))
                 if duration is None or duration < 0.0:
-                    unresolved.append(
-                        f"{selected}: {effect_name} poison tier has no valid duration"
+                    source_errors.append(
+                        f"{selected}: {effect_name} poison tier has no valid base duration"
                     )
                     continue
 
-                identity = ExtremeSustainedDPSWeaponPoisonAlchemyEffectIdentity(
+                identity = ExtremeSustainedDPSWeaponPoisonPossibleEffect(
                     effect_name=effect_name,
                     base_duration_seconds=duration,
                     triple_duration_seconds=self._float(
@@ -179,37 +195,47 @@ class ExtremeSustainedDPSWeaponPoisonIdentityService:
                 key = self._norm(effect_name)
                 existing = matches.get(key)
                 if existing is not None and existing != identity:
-                    unresolved.append(
+                    source_errors.append(
                         f"{selected}: conflicting imported poison tier evidence "
                         f"for {effect_name}"
                     )
                     continue
                 matches[key] = identity
 
-        effects = tuple(
+        possible_effects = tuple(
             sorted(
                 matches.values(),
                 key=lambda row: self._norm(row.effect_name),
             )
         )
-        if not effects and not unresolved:
-            unresolved.append(
-                f"Crafted weapon poison not found in canonical alchemy Poison tiers: {selected}"
+        if not possible_effects and not source_errors:
+            source_errors.append(
+                f"Crafted weapon poison not found in canonical Alchemy Poison tiers: {selected}"
             )
 
-        return ExtremeSustainedDPSWeaponPoisonIdentityResolution(
+        source_complete = bool(possible_effects) and not source_errors
+        unresolved = list(source_errors)
+        if source_complete:
+            unresolved.append(
+                f"{selected}: saved poison item label proves possible effects but not "
+                "the exact crafted formula/effect set or dilution duration"
+            )
+
+        return ExtremeSustainedDPSWeaponPoisonItemEvidence(
             poison_id=selected,
-            effects=effects,
+            possible_effects=possible_effects,
+            source_evidence_complete=source_complete,
+            exact_selection_proven=False,
             evidence=(
-                f"Canonical alchemy Poison variants inspected: {len(rows)}",
+                f"Canonical Alchemy Poison variants inspected: {len(rows)}",
                 f"Poison tier rows matching {selected}: {matched_rows}",
-                f"Distinct poison effect identities resolved: {len(effects)}",
+                f"Distinct possible poison effect identities: {len(possible_effects)}",
                 (
-                    f"Malformed alchemy Poison payloads ignored: {malformed_payloads}"
+                    f"Malformed Alchemy Poison payloads ignored: {malformed_payloads}"
                     if malformed_payloads
-                    else "Malformed alchemy Poison payloads ignored: 0"
+                    else "Malformed Alchemy Poison payloads ignored: 0"
                 ),
-                "Effect identity plus base/triple duration alternatives come from imported UESP Poison tier rows; exact selected dilution, magnitude, and application remain downstream.",
+                "Imported Poison tier rows establish an item-label possibility universe only; exact formula/effect-set and base-versus-triple dilution require separate provenance.",
             ),
             unresolved=tuple(
                 dict.fromkeys(row for row in unresolved if str(row).strip())
@@ -217,7 +243,23 @@ class ExtremeSustainedDPSWeaponPoisonIdentityService:
         )
 
 
+# Transitional aliases keep any very recent callers from breaking while making the
+# corrected possibility semantics explicit to new code.
+ExtremeSustainedDPSWeaponPoisonAlchemyEffectIdentity = (
+    ExtremeSustainedDPSWeaponPoisonPossibleEffect
+)
+ExtremeSustainedDPSWeaponPoisonIdentityResolution = (
+    ExtremeSustainedDPSWeaponPoisonItemEvidence
+)
+ExtremeSustainedDPSWeaponPoisonIdentityService = (
+    ExtremeSustainedDPSWeaponPoisonItemEvidenceService
+)
+
+
 __all__ = [
+    "ExtremeSustainedDPSWeaponPoisonPossibleEffect",
+    "ExtremeSustainedDPSWeaponPoisonItemEvidence",
+    "ExtremeSustainedDPSWeaponPoisonItemEvidenceService",
     "ExtremeSustainedDPSWeaponPoisonAlchemyEffectIdentity",
     "ExtremeSustainedDPSWeaponPoisonIdentityResolution",
     "ExtremeSustainedDPSWeaponPoisonIdentityService",
