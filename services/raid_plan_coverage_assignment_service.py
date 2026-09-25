@@ -112,7 +112,9 @@ class RaidPlanCoverageAssignmentService:
         return tuple(matched)
 
     def review(self, *, effect_name: str, scope: RaidPlanCoverageScope, snapshot) -> RaidPlanCoverageAssignmentReview:
-        primary = tuple(scope.primary_for(effect_name))
+        manual_rows = tuple(scope.manual_for(effect_name))
+        manual_labels = tuple(row[1] for row in manual_rows)
+        primary = tuple(dict.fromkeys((*scope.primary_for(effect_name), *manual_labels)))
         backup = tuple(scope.secondary_for(effect_name))
         static_evidence = list(snapshot.providers.get(effect_name, ()) or ())
         conditional_evidence = list(snapshot.conditional_providers.get(effect_name, ()) or ())
@@ -138,7 +140,10 @@ class RaidPlanCoverageAssignmentService:
         duplicate_primary = len(primary) > 1
         any_evidence = bool(static_evidence or conditional_evidence)
 
-        if supported_primary:
+        if manual_rows:
+            state = "assigned_manual"
+            label = "Covered • Raid Lead Assigned"
+        elif supported_primary:
             state = "assigned_supported"
             label = "Covered • Supported"
         elif conditional_primary:
