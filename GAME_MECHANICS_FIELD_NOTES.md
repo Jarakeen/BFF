@@ -1890,3 +1890,12 @@ The imported UESP Alchemy data is organized by effect page, while a saved build 
 **Layman's version:** “Damage Health Poison IX” is the label on the bottle, not the ingredient list. Two bottles can have the same big label while carrying different extra nastiness. Knowing the label tells us which effects might be in there; it does not tell us which recipe made this particular stack or which dilution duration applies. ESO has concealed a small provenance problem inside a dropdown, because apparently inventory strings needed epistemology.
 
 **For BFF:** item-label evidence may enumerate possible effect identities and base/triple duration alternatives, but Objective #32 must not promote that union as the selected poison's actual effect set. Exact poison consequences require formula/ingredient/effect-set provenance (or another authoritative witness) in addition to the displayed item name.
+
+
+## 2026-09-24 — A poison relationship source is not automatically the numeric authority for the named effect
+
+The current U50 alchemy cross-check is useful for proving relationships such as **Breach poison -> Minor Breach** or **Protection poison -> Minor Vulnerability + Minor Protection**. Its displayed percentages are not promoted directly into BFF combat math when a separately reviewed canonical named-effect authority already owns the value. During review, the alchemy guide's displayed Minor Defile percentage did not agree with FoundryDock's reviewed current Minor Defile semantics.
+
+**Layman's version:** the poison page can tell us which debuff the bottle applies without getting to redefine that debuff's rulebook. “This applies Minor Defile” and “Minor Defile is X%” are two separate facts from two separate authorities. Letting the recipe page win both arguments would make whichever tooltip we read last the combat engine.
+
+**For BFF:** poison relationship evidence supplies named-effect identity and target side. Canonical named-effect services supply the live numeric semantics. When the two sources disagree numerically, preserve the relationship, keep the canonical named-effect value, and flag the source mismatch for review rather than copying the recipe-page number.
