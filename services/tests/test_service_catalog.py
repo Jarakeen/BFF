@@ -1935,3 +1935,20 @@ def test_weapon_poison_item_evidence_authority_is_cataloged() -> None:
     assert "possibility universe" in service.purpose
     assert "does not choose the exact formula" in service.notes
     assert "Magnitude" in service.notes
+
+
+def test_weapon_poison_formula_selection_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_weapon_poison_formula_effect_set_selection"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.weapon_poison_formula_selection"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_poison_item_evidence",
+    )
+    assert "prove the selected effect set" in service.purpose
+    assert "does not infer base-versus-triple duration" in service.notes
