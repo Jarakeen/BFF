@@ -343,8 +343,7 @@ class CanonicalBuildBridge:
         }
         return cls._has_meaningful_legacy_data(build_state)
 
-    @classmethod
-    def _roster_from_catalog(cls, catalog: dict[str, Any]) -> BuildRoster:
+    def _roster_from_catalog(self, catalog: dict[str, Any]) -> BuildRoster:
         members: list[PlayerBuild] = []
         characters_by_id = {
             str(character.get("character_id") or "").strip(): character
@@ -368,7 +367,11 @@ class CanonicalBuildBridge:
             snapshot = payload if isinstance(payload, dict) else legacy
             build_id = str(entry.get("build_id") or "").strip()
             character_id = str(entry.get("character_id") or "").strip()
-            if build_kind != "comp" and not cls._is_valid_legacy_build(snapshot):
+            if (
+                build_kind != "comp"
+                and not self._is_valid_legacy_build(snapshot)
+                and not self._application_user_database
+            ):
                 continue
             if not isinstance(snapshot, dict):
                 snapshot = {}
