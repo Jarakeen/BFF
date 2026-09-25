@@ -146,6 +146,29 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         )
 
     @staticmethod
+    def _invoke_weapon_poison_consequence_resolver(
+        resolver: object,
+        *,
+        sequence_frontier,
+        source: str,
+    ):
+        if callable(resolver):
+            return resolver(
+                sequence_frontier=sequence_frontier,
+                source=source,
+            )
+        for method_name in ("build", "resolve"):
+            method = getattr(resolver, method_name, None)
+            if method is not None:
+                return method(
+                    sequence_frontier=sequence_frontier,
+                    source=source,
+                )
+        raise TypeError(
+            "weapon-poison consequence resolver must be callable or expose build()/resolve()"
+        )
+
+    @staticmethod
     def _invoke_weapon_enchantment_cooldown_policy_resolver(
         resolver: object,
         *,
@@ -406,14 +429,21 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         occurrence_provider: object | None,
         target_identity: str | None,
         source: str,
-    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    ) -> tuple[
+        ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier | None,
+        tuple[EffectVariant, ...],
+        tuple[str, ...],
+        tuple[str, ...],
+    ]:
         front_poison = str(getattr(player_build, "FrontBarPoison", "") or "").strip()
         back_poison = str(getattr(player_build, "BackBarPoison", "") or "").strip()
         if not front_poison and not back_poison:
-            return (), ()
+            return None, (), (), ()
 
         if self.weapon_poison_activation_service is None:
             return (
+                None,
+                (),
                 (),
                 (
                     "equipped weapon poison requires canonical poison activation-event authority",
@@ -421,6 +451,8 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             )
         if occurrence_provider is None:
             return (
+                None,
+                (),
                 (),
                 (
                     "equipped weapon poison requires canonical exact-time damage occurrence evidence",
@@ -448,13 +480,65 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             tuple(getattr(choice, "procs", ()) or ())
             for choice in tuple(frontier.choices)
         )
-        if possible_procs and self.weapon_poison_consequence_resolver is None:
+        if not possible_procs:
+            return (
+                None,
+                (),
+                tuple(dict.fromkeys(row for row in evidence if str(row).strip())),
+                tuple(dict.fromkeys(row for row in unresolved if str(row).strip())),
+            )
+
+        if self.weapon_poison_consequence_resolver is None:
             unresolved.append(
                 "weapon-poison proc histories are finite, but selected poison effect "
                 "identity/magnitude/dilution has no authoritative runtime consequence consumer"
             )
+            return (
+                None,
+                (),
+                tuple(dict.fromkeys(row for row in evidence if str(row).strip())),
+                tuple(dict.fromkeys(row for row in unresolved if str(row).strip())),
+            )
+
+        try:
+            consequence = self._invoke_weapon_poison_consequence_resolver(
+                self.weapon_poison_consequence_resolver,
+                sequence_frontier=frontier,
+                source=f"{source}: weapon-poison consequences",
+            )
+        except (TypeError, ValueError) as exc:
+            unresolved.append(
+                "weapon-poison consequence resolution failed closed: "
+                + str(exc)
+            )
+            return (
+                None,
+                (),
+                tuple(dict.fromkeys(row for row in evidence if str(row).strip())),
+                tuple(dict.fromkeys(row for row in unresolved if str(row).strip())),
+            )
+
+        evidence.extend(tuple(getattr(consequence, "evidence", ()) or ()))
+        unresolved.extend(tuple(getattr(consequence, "unresolved", ()) or ()))
+        consequence_frontier = getattr(consequence, "attempt_frontier", None)
+        consequence_effects = tuple(getattr(consequence, "effects", ()) or ())
+
+        if consequence_frontier is None:
+            unresolved.append(
+                "weapon-poison consequence resolver returned no finite runtime attempt frontier"
+            )
+        elif not bool(getattr(consequence_frontier, "denominator_proven", False)):
+            unresolved.append(
+                "weapon-poison consequence runtime attempt denominator is not proven complete"
+            )
+        if not consequence_effects:
+            unresolved.append(
+                "weapon-poison consequence resolver returned no runtime effects"
+            )
 
         return (
+            consequence_frontier,
+            consequence_effects,
             tuple(dict.fromkeys(row for row in evidence if str(row).strip())),
             tuple(dict.fromkeys(row for row in unresolved if str(row).strip())),
         )
@@ -576,18 +660,27 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                 if effect not in weapon_enchantment_control_effects
             )
 
-        consequence_effects = tuple(effects)
+        base_consequence_effects = tuple(effects)
         event_effects = (
-            *consequence_effects,
+            *base_consequence_effects,
             *weapon_enchantment_control_effects,
         )
 
-        poison_evidence, poison_unresolved = self._weapon_poison_runtime_frontier(
+        (
+            poison_attempt_frontier,
+            poison_effects,
+            poison_evidence,
+            poison_unresolved,
+        ) = self._weapon_poison_runtime_frontier(
             candidate=candidate,
             player_build=player_build,
             occurrence_provider=occurrence_provider,
             target_identity=target_identity,
             source=source,
+        )
+        consequence_effects = (
+            *base_consequence_effects,
+            *tuple(poison_effects),
         )
 
         skeleton = ExtremeSustainedDPSRuntimeEventSkeletonService.build(
@@ -636,6 +729,25 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                 effects=tuple(event_effects),
             )
 
+        fixed_frontiers = tuple(
+            frontier
+            for frontier in (
+                enchantment_attempt_frontier,
+                poison_attempt_frontier,
+            )
+            if frontier is not None
+        )
+        fixed_attempt_frontier = None
+        if len(fixed_frontiers) == 1:
+            fixed_attempt_frontier = fixed_frontiers[0]
+        elif len(fixed_frontiers) > 1:
+            fixed_attempt_frontier = (
+                ExtremeSustainedDPSRuntimeAttemptFrontierCompositionService.compose(
+                    fixed_frontiers,
+                    source=f"{source}: fixed runtime attempt composition",
+                )
+            )
+
         result = self.build(
             plan=candidate.plan,
             player_build=player_build,
@@ -647,7 +759,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                 and not enchantment_binding_unresolved
             ),
             fixed_attempts=fixed_attempts,
-            fixed_attempt_frontier=enchantment_attempt_frontier,
+            fixed_attempt_frontier=fixed_attempt_frontier,
             supplemental_histories=tuple(supplemental_histories),
             supplemental_denominator_proven=bool(
                 supplemental_denominator_proven
