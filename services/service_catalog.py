@@ -1555,6 +1555,58 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_weapon_poison_tier_frontier",
+        domain="extreme",
+        purpose=(
+            "Enumerate every imported Poison solvent/level tier coordinate shared by all "
+            "traits in one exact generated Alchemy formula, preserving ordinary and "
+            "triple-duration evidence without inventing a crafted item label."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_weapon_poison_tier_frontier_service",
+        inputs=("CanonicalEsoDatabase", "AlchemyFormula"),
+        outputs=("ExtremeSustainedDPSGeneratedWeaponPoisonTierFrontier",),
+        dependencies=("extreme.sustained_dps.weapon_poison_frontier",),
+        responsibilities=(
+            "extreme_sustained_dps_generated_weapon_poison_tier_frontier",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
+        notes=(
+            "Tier candidates are matched by canonical trait + solvent + level and intersected "
+            "across the complete formula trait set. Every common tier remains searchable; "
+            "no highest-tier or preferred-solvent assumption is made."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_weapon_poison_tier_loadout_frontier",
+        domain="extreme",
+        purpose=(
+            "Cross independently legal front/back generated poison tier coordinates after "
+            "formula selection, with explicit no-poison bars contributing one no-op choice."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_weapon_poison_tier_loadout_frontier_service",
+        inputs=("WeaponPoisonLoadoutCandidate", "OneBarAccessPolicy"),
+        outputs=("ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutFrontier",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_poison_frontier",
+            "extreme.sustained_dps.generated_weapon_poison_tier_frontier",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_generated_weapon_poison_tier_loadout_frontier",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Front and back bars may select different source-backed tier coordinates. "
+            "Changing formula selection invalidates the downstream tier coordinate; one-bar "
+            "candidates cannot carry a back-bar tier."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_weapon_poison_formula_authority",
         domain="extreme",
         purpose=(
@@ -3299,8 +3351,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.generated_late_axis_adapter",
         domain="extreme",
         purpose=(
-            "Adapt canonical Champion Point, potion-family, optional weapon-poison, passive-rank, "
-            "and two-bar skill frontiers into ordered indexed search axes and assemble their final state."
+            "Adapt canonical Champion Point, potion-family, optional weapon-poison formula, "
+            "optional poison-tier loadout, passive-rank, and two-bar skill frontiers into "
+            "ordered indexed search axes and assemble their final state."
         ),
         implementation_path="services.extreme_sustained_dps_generated_late_axis_adapter_service",
         inputs=("ExtremeSustainedDPSCrossAxisContext",),
@@ -3309,6 +3362,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.champion_point_frontier",
             "extreme.sustained_dps.potion_frontier",
             "extreme.sustained_dps.weapon_poison_frontier",
+            "extreme.sustained_dps.generated_weapon_poison_tier_loadout_frontier",
             "extreme.sustained_dps.passive_rank_frontier",
             "extreme.sustained_dps.skill_bar_frontier",
             "extreme.sustained_dps.generated_candidate_assembly",
@@ -3320,8 +3374,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=False,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Generic callers may omit the poison frontier and retain the historical four-axis shape; "
-            "canonical Objective #32 composition requires the fifth weapon-poison axis. Selections remain "
+            "Generic callers may omit poison refinement and retain the historical four-axis shape; "
+            "canonical Objective #32 composition can include weapon-poison formula and source-backed tier axes. Selections remain "
             "separate until all configured coordinates exist, then candidate assembly copies only axis-owned "
             "state. Unresolved or empty frontier denominators fail closed before materialization."
         ),
