@@ -1615,6 +1615,7 @@ def test_sustained_dps_objective32_scenario_preflight_guards_theoretical_runs() 
     assert "Heavy Attack encounter channel-block denominator" in service.notes
     assert "generic finite-denominator search wrappers" in service.notes.casefold()
     assert "cannot prove search completion" in service.notes
+    assert "weapon-poison activation/consequence authorities" in service.notes
 
 
 def test_sustained_dps_objective32_composition_is_canonical_production_root() -> None:
