@@ -36,6 +36,7 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
         supplemental_event_denominator_proven: bool = False,
         supplemental_history_resolver: CandidateEvidenceResolver | None = None,
         supplemental_history_denominator_proven: bool = False,
+        weapon_poison_consequence_resolver_resolver: CandidateEvidenceResolver | None = None,
         source: str = "Objective #32 candidate runtime scenario",
     ) -> None:
         if scenario_frontier is None:
@@ -51,6 +52,9 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
         self.supplemental_history_resolver = supplemental_history_resolver
         self.supplemental_history_denominator_proven = bool(
             supplemental_history_denominator_proven
+        )
+        self.weapon_poison_consequence_resolver_resolver = (
+            weapon_poison_consequence_resolver_resolver
         )
         self.source = str(source or "").strip() or "Objective #32 candidate runtime scenario"
 
@@ -125,6 +129,12 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
                 "candidate runtime-state supplemental history resolver returned invalid choice type"
             )
 
+        weapon_poison_consequence_resolver = self._resolve_optional(
+            self.weapon_poison_consequence_resolver_resolver,
+            state,
+            None,
+        )
+
         result: ExtremeSustainedDPSRuntimeScenarioFrontierResult = (
             self.scenario_frontier.build_from_candidate(
                 candidate=candidate,
@@ -141,6 +151,9 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
                     self.supplemental_history_denominator_proven
                 ),
                 source=self.source,
+                weapon_poison_consequence_resolver=(
+                    weapon_poison_consequence_resolver
+                ),
             )
         )
         return ExtremeSustainedDPSCandidateRuntimeStateResolution(
