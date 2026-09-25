@@ -1903,3 +1903,22 @@ def test_candidate_runtime_factory_depends_on_poison_runtime_frontier() -> None:
     assert factory is not None
     assert "extreme.sustained_dps.weapon_poison_activation_events" in factory.dependencies
     assert "extreme.sustained_dps.weapon_poison_sequence_frontier" in factory.dependencies
+
+
+def test_weapon_poison_consequence_frontier_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_weapon_poison_consequence_runtime_frontier"
+    )
+
+    assert service is not None
+    assert service.service_id == (
+        "extreme.sustained_dps.weapon_poison_consequence_frontier"
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_poison_sequence_frontier",
+    )
+    assert "without rerolling poison chance or cooldown" in service.purpose
+    assert "second proc roll" in service.notes
