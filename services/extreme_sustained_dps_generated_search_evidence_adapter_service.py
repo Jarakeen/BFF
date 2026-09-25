@@ -30,10 +30,14 @@ class ExtremeSustainedDPSGeneratedSearchEvidenceAdapterService:
         if not key:
             raise ValueError("generated search bound adapter requires candidate_key")
 
+        if not isinstance(rotation_bound.proven_safe, bool):
+            raise TypeError(
+                "generated search bound adapter requires boolean proven_safe"
+            )
         return ExtremeSustainedDPSBoundEvidence(
             candidate_key=key,
             upper_bound_dps=rotation_bound.upper_bound_dps,
-            proven_safe=bool(rotation_bound.proven_safe),
+            proven_safe=rotation_bound.proven_safe,
             source=str(source or "").strip(),
             unresolved=tuple(rotation_bound.unresolved),
         )
@@ -47,6 +51,10 @@ class ExtremeSustainedDPSGeneratedSearchEvidenceAdapterService:
         if not key:
             raise ValueError("generated search exact-leaf adapter requires candidate_key")
 
+        if not isinstance(result.mechanic_complete, bool):
+            raise TypeError(
+                "generated search exact-leaf adapter requires boolean mechanic_complete"
+            )
         record = result.record
         return ExtremeSustainedDPSExactLeafEvaluation(
             candidate_key=key,
@@ -54,7 +62,7 @@ class ExtremeSustainedDPSGeneratedSearchEvidenceAdapterService:
             duration_seconds=(
                 None if record is None else float(record.duration_seconds)
             ),
-            mechanic_complete=bool(result.mechanic_complete),
+            mechanic_complete=result.mechanic_complete,
             evidence=tuple(result.evidence),
             unresolved=tuple(result.unresolved),
         )
