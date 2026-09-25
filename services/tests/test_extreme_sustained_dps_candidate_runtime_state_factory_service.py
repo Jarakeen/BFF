@@ -93,3 +93,34 @@ def test_factory_leaves_poison_consequence_authority_unset_when_not_supplied(tmp
 
     assert resolver.scenario_frontier.weapon_poison_consequence_resolver is None
 
+def test_factory_builds_poison_consequence_frontier_from_dilution_authority(tmp_path):
+    dilution_resolver = object()
+    resolver = ExtremeSustainedDPSCandidateRuntimeStateFactoryService.build(
+        database_path=tmp_path / "eso.db",
+        capability_service=_CapabilityService(),
+        occurrence_provider_resolver=_occurrence_provider,
+        supplemental_event_denominator_proven=True,
+        supplemental_history_denominator_proven=True,
+        weapon_poison_dilution_selection_resolver=dilution_resolver,
+    )
+
+    consequence = resolver.scenario_frontier.weapon_poison_consequence_resolver
+    assert consequence is not None
+    assert consequence.consequence_resolver.dilution_selection_resolver is dilution_resolver
+
+
+def test_factory_rejects_competing_poison_consequence_authorities(tmp_path):
+    with pytest.raises(
+        ValueError,
+        match="cannot combine explicit weapon-poison consequence resolver",
+    ):
+        ExtremeSustainedDPSCandidateRuntimeStateFactoryService.build(
+            database_path=tmp_path / "eso.db",
+            capability_service=_CapabilityService(),
+            occurrence_provider_resolver=_occurrence_provider,
+            supplemental_event_denominator_proven=True,
+            supplemental_history_denominator_proven=True,
+            weapon_poison_consequence_resolver=object(),
+            weapon_poison_dilution_selection_resolver=object(),
+        )
+
