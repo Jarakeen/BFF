@@ -755,3 +755,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Builds **Endgame baseline** now also supports optional whole-build defaults for Armor Trait, Armor Weight, Armor Enchant, Jewelry Trait, and Jewelry Enchant. Blank equipped slots inherit the selected defaults for calculation/readiness paths while explicit per-slot values remain authoritative; leaving a new dropdown blank preserves per-slot control.
 
 - Builds baseline materialization now writes selected defaults into blank fields on equipped Saved Build gear when the baseline is saved, while preserving every explicit per-slot value. Build-profile JSON is validated through a strict Pydantic v2 boundary before persistence/readback; known armor/jewelry traits and armor weights are validated and unexpected profile fields are rejected.
+
+- Raid Plan PDF/XLSX build field packets now use an ink-aware FoundryDock visual hierarchy: teal/gold accents, pale field-journal section bands, restrained alternating row shading, stronger title treatment, print margins/footers, and dedicated wrapped Assignment/Utility treatment in PDF rather than squeezing raid instructions into the summary grid.
