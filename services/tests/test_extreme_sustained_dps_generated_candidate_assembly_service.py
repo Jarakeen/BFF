@@ -24,9 +24,15 @@ from services.extreme_sustained_dps_skill_bar_frontier_service import (
     ExtremeSustainedDPSSkillBarState,
     ExtremeSustainedDPSTwoBarSkillCandidate,
 )
+from services.extreme_sustained_dps_generated_weapon_poison_tier_frontier_service import (
+    ExtremeSustainedDPSGeneratedWeaponPoisonTierCandidate,
+)
 from services.extreme_sustained_dps_generated_weapon_poison_tier_loadout_frontier_service import (
     ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection,
     ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate,
+)
+from services.extreme_sustained_dps_weapon_poison_identity_service import (
+    ExtremeSustainedDPSWeaponPoisonItemEvidence,
 )
 from services.extreme_sustained_dps_weapon_poison_frontier_service import (
     ExtremeSustainedDPSWeaponPoisonLoadoutCandidate,
@@ -254,15 +260,27 @@ def test_one_bar_context_rejects_nonempty_generated_back_bar_poison() -> None:
 
 def test_poison_tier_coordinate_is_part_of_generated_candidate_identity() -> None:
     poison_loadout = _poisons()
+    def _tier(poison_id: str, index: int):
+        return ExtremeSustainedDPSGeneratedWeaponPoisonTierCandidate(
+            structural_index=index,
+            solvent="Alkahest",
+            level=50,
+            item_evidence=ExtremeSustainedDPSWeaponPoisonItemEvidence(
+                poison_id=poison_id,
+                possible_effects=(),
+                source_evidence_complete=True,
+            ),
+        )
+
     tier_loadout = ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate(
         structural_index=17,
         front=ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection(
             poison_id="poison:front",
-            tier=None,
+            tier=_tier("poison:front", 0),
         ),
         back=ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection(
             poison_id="poison:back",
-            tier=None,
+            tier=_tier("poison:back", 1),
         ),
     )
 
