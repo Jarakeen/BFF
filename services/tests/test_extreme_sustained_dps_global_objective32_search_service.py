@@ -590,3 +590,11 @@ def test_global_objective32_defaults_to_canonical_mechanics_closure_inventory() 
         row.category == "mechanics"
         for row in result.blockers.blockers
     )
+
+
+def test_global_objective32_requires_strict_closure_ready_flag() -> None:
+    with pytest.raises(TypeError, match="require_closure_ready_scenario must be boolean"):
+        ExtremeSustainedDPSGlobalObjective32SearchService(
+            global_search=_GlobalSearch(_search_result()),
+            require_closure_ready_scenario="true",
+        )
