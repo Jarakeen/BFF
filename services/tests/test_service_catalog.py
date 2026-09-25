@@ -844,7 +844,7 @@ def test_sustained_dps_late_axis_adapter_preserves_frontier_authority() -> None:
         "extreme.sustained_dps.generated_frontier_wiring",
     )
     assert "axis-owned state" in service.notes
-    assert "source-backed tier axes" in service.notes
+    assert "requires both weapon-poison formula and source-backed tier axes" in service.notes
     assert "fail closed" in service.notes
 
 
@@ -1643,7 +1643,7 @@ def test_sustained_dps_objective32_composition_is_canonical_production_root() ->
     )
     assert "canonical generated Objective #32 production service graph" in service.purpose
     assert "canonical production composition root" in service.notes
-    assert "canonical Mundus/food and encounter-policy axes" in service.notes
+    assert "canonical Mundus/food, weapon-poison formula, weapon-poison tier, and encounter-policy axes" in service.notes
     assert "additional resource-event denominator" in service.notes
     assert "complete scheduler-derived Heavy Attack discovery" in service.notes
     assert "candidate-resolved runtime_state" in service.notes
