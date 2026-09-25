@@ -157,3 +157,87 @@ def test_generated_poison_consequence_factory_projects_reviewed_named_effect_end
     assert effect.duration == 10.0
     assert effect.target == "Boss"
     assert effect.source == poison_id
+
+
+def test_generated_poison_consequence_factory_uses_source_bar_tier_for_same_formula():
+    state = _state()
+    formula = state.late.poison_loadout.front.formula
+    poison_id = formula.canonical_id
+    same_formula_loadout = ExtremeSustainedDPSWeaponPoisonLoadoutCandidate(
+        structural_index=2,
+        front=ExtremeSustainedDPSWeaponPoisonSelection(
+            selected_label=poison_id,
+            formula=formula,
+        ),
+        back=ExtremeSustainedDPSWeaponPoisonSelection(
+            selected_label=poison_id,
+            formula=formula,
+        ),
+        build=PlayerBuild(
+            FrontBarPoison=poison_id,
+            BackBarPoison=poison_id,
+        ),
+    )
+    state.late.poison_loadout = same_formula_loadout
+    state.late.assembled.poison_loadout = same_formula_loadout
+    state.late.assembled.build = PlayerBuild(
+        FrontBarPoison=poison_id,
+        BackBarPoison=poison_id,
+    )
+
+    def tier_evidence(duration):
+        return ExtremeSustainedDPSWeaponPoisonItemEvidence(
+            poison_id=poison_id,
+            possible_effects=(
+                ExtremeSustainedDPSWeaponPoisonPossibleEffect(
+                    effect_name="Breach",
+                    base_duration_seconds=duration,
+                    triple_duration_seconds=duration / 2.0,
+                    solvent="Alkahest",
+                    level=50,
+                ),
+            ),
+            source_evidence_complete=True,
+        )
+
+    state.late.assembled.poison_tier_loadout = SimpleNamespace(
+        front=SimpleNamespace(
+            poison_id=poison_id,
+            tier=SimpleNamespace(item_evidence=tier_evidence(10.0)),
+        ),
+        back=SimpleNamespace(
+            poison_id=poison_id,
+            tier=SimpleNamespace(item_evidence=tier_evidence(6.0)),
+        ),
+    )
+    service = ExtremeSustainedDPSGeneratedWeaponPoisonConsequenceAuthorityFactoryService(
+        dilution_mode_resolver=lambda **_kwargs: "base",
+    )
+    frontier = service.resolve(state)
+
+    def occurrence(bar):
+        return ExtremeSustainedDPSWeaponPoisonProcOccurrence(
+            event=RuntimeEvent(
+                time_seconds=1.0,
+                sequence=0,
+                trigger="weapon_poison_activation",
+                source="Weapon Hit",
+                target="Boss",
+                source_bar=bar,
+            ),
+            poison_id=poison_id,
+        )
+
+    front = frontier.consequence_resolver.resolve(
+        poison_id=poison_id,
+        occurrence=occurrence("front"),
+    )
+    back = frontier.consequence_resolver.resolve(
+        poison_id=poison_id,
+        occurrence=occurrence("back"),
+    )
+
+    assert front.resolved is True
+    assert back.resolved is True
+    assert front.effects[0].duration == 10.0
+    assert back.effects[0].duration == 6.0
