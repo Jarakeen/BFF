@@ -55,7 +55,7 @@ def test_tiny_float_noise_does_not_prune_equal_ceiling() -> None:
 
 def test_missing_bound_forces_branch_open() -> None:
     result = ExtremeSustainedDPSPruningService.prune(
-        (_bound("Unknown", None, unresolved=("bound unavailable",)),),
+        (_bound("Unknown", None, safe=False, unresolved=("bound unavailable",)),),
         incumbent_dps=120000.0,
     )
 
@@ -83,7 +83,7 @@ def test_mixed_frontier_reports_disposition_counts() -> None:
             _bound("Prune", 100000.0),
             _bound("Tie", 120000.0),
             _bound("Beat", 130000.0),
-            _bound("Unknown", None),
+            _bound("Unknown", None, safe=False),
             _bound("Unproven", 90000.0, safe=False),
         ),
         incumbent_dps=120000.0,
@@ -103,15 +103,26 @@ def test_duplicate_candidate_keys_fail_closed() -> None:
         )
 
 
-@pytest.mark.parametrize("value", (-1.0, -0.001))
-def test_negative_upper_bounds_fail_closed(value: float) -> None:
-    with pytest.raises(ValueError, match="upper bound cannot be negative"):
-        ExtremeSustainedDPSPruningService.prune(
-            (_bound("A", value),),
-            incumbent_dps=0.0,
-        )
+@pytest.mark.parametrize("value", (-1.0, -0.001, float("nan"), float("inf")))
+def test_invalid_upper_bounds_fail_closed(value: float) -> None:
+    with pytest.raises(ValueError, match="upper bound must be finite and non-negative"):
+        _bound("A", value)
 
 
-def test_negative_incumbent_fails_closed() -> None:
-    with pytest.raises(ValueError, match="incumbent cannot be negative"):
-        ExtremeSustainedDPSPruningService.prune((), incumbent_dps=-1.0)
+@pytest.mark.parametrize("value", (-1.0, float("nan"), float("inf")))
+def test_invalid_incumbent_fails_closed(value) -> None:
+    with pytest.raises(ValueError, match="incumbent must be finite and non-negative"):
+        ExtremeSustainedDPSPruningService.prune((), incumbent_dps=value)
+
+
+def test_missing_bound_cannot_claim_proven_safe() -> None:
+    with pytest.raises(
+        ValueError,
+        match="cannot be proven safe when no upper bound is available",
+    ):
+        _bound("A", None, safe=True)
+
+
+def test_bound_proof_flag_is_strict_boolean() -> None:
+    with pytest.raises(TypeError, match="proven_safe must be boolean"):
+        _bound("A", 100.0, safe="true")
