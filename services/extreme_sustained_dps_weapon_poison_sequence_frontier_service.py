@@ -18,6 +18,14 @@ class ExtremeSustainedDPSWeaponPoisonProcOccurrence:
     event: RuntimeEvent
     poison_id: str
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.event, RuntimeEvent):
+            raise TypeError("weapon-poison proc occurrence requires RuntimeEvent")
+        poison_id = str(self.poison_id or "").strip()
+        if not poison_id:
+            raise ValueError("weapon-poison proc occurrence requires poison_id")
+        object.__setattr__(self, "poison_id", poison_id)
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSWeaponPoisonSequenceChoice:
@@ -29,6 +37,71 @@ class ExtremeSustainedDPSWeaponPoisonSequenceChoice:
     branch_probability: float
     evidence: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        choice_id = str(self.choice_id or "").strip()
+        if not choice_id:
+            raise ValueError("weapon-poison sequence choice requires choice_id")
+        if any(
+            not isinstance(row, ExtremeSustainedDPSWeaponPoisonProcOccurrence)
+            for row in self.procs
+        ):
+            raise TypeError(
+                "weapon-poison sequence procs must contain canonical proc occurrences"
+            )
+        if any(not isinstance(row, RuntimeEvent) for row in self.chance_misses):
+            raise TypeError(
+                "weapon-poison chance_misses must contain RuntimeEvent records"
+            )
+        if any(not isinstance(row, RuntimeEvent) for row in self.cooldown_blocked):
+            raise TypeError(
+                "weapon-poison cooldown_blocked must contain RuntimeEvent records"
+            )
+
+        last_proc = self.last_proc_time_seconds
+        if last_proc is not None:
+            if isinstance(last_proc, bool):
+                raise TypeError("weapon-poison last proc time must be numeric")
+            try:
+                last_proc = float(last_proc)
+            except (TypeError, ValueError):
+                raise TypeError("weapon-poison last proc time must be numeric") from None
+            if not math.isfinite(last_proc) or last_proc < 0.0:
+                raise ValueError(
+                    "weapon-poison last proc time must be finite and non-negative"
+                )
+
+        probability = self.branch_probability
+        if isinstance(probability, bool):
+            raise TypeError("weapon-poison branch probability must be numeric")
+        try:
+            probability = float(probability)
+        except (TypeError, ValueError):
+            raise TypeError(
+                "weapon-poison branch probability must be numeric"
+            ) from None
+        if not math.isfinite(probability) or not 0.0 <= probability <= 1.0:
+            raise ValueError(
+                "weapon-poison branch probability must be finite and between 0 and 1"
+            )
+
+        object.__setattr__(self, "choice_id", choice_id)
+        object.__setattr__(self, "procs", tuple(self.procs))
+        object.__setattr__(self, "chance_misses", tuple(self.chance_misses))
+        object.__setattr__(self, "cooldown_blocked", tuple(self.cooldown_blocked))
+        object.__setattr__(self, "last_proc_time_seconds", last_proc)
+        object.__setattr__(self, "branch_probability", probability)
+        object.__setattr__(
+            self,
+            "evidence",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.evidence
+                    if str(item).strip()
+                )
+            ),
+        )
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSWeaponPoisonSequenceFrontier:
@@ -37,6 +110,52 @@ class ExtremeSustainedDPSWeaponPoisonSequenceFrontier:
     denominator_proven: bool
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if any(
+            not isinstance(row, ExtremeSustainedDPSWeaponPoisonSequenceChoice)
+            for row in self.choices
+        ):
+            raise TypeError(
+                "weapon-poison sequence choices must contain canonical sequence choices"
+            )
+        if (
+            isinstance(self.candidate_count, bool)
+            or not isinstance(self.candidate_count, int)
+            or self.candidate_count < 0
+        ):
+            raise ValueError(
+                "weapon-poison sequence candidate_count must be a non-negative integer"
+            )
+        if self.candidate_count != len(self.choices):
+            raise ValueError(
+                "weapon-poison sequence candidate_count must equal choice count"
+            )
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError(
+                "weapon-poison sequence denominator_proven must be boolean"
+            )
+        evidence = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.evidence
+                if str(item).strip()
+            )
+        )
+        unresolved = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.unresolved
+                if str(item).strip()
+            )
+        )
+        if self.denominator_proven and (not self.choices or unresolved):
+            raise ValueError(
+                "weapon-poison sequence denominator cannot be proven with no choices or unresolved evidence"
+            )
+        object.__setattr__(self, "choices", tuple(self.choices))
+        object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "unresolved", unresolved)
 
 
 @dataclass(frozen=True)
