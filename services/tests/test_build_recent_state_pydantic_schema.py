@@ -48,3 +48,32 @@ def test_recent_build_state_forbids_unexpected_fields_and_coercion() -> None:
         validate_build_recent_state_payload({**_payload(), "mystery": "vibes"})
     with pytest.raises(ValidationError):
         validate_build_recent_state_payload(_payload(vampire="yes"))
+
+
+def test_recent_build_state_accepts_native_class_lines_with_masteries() -> None:
+    result = validate_build_recent_state_payload(
+        _payload(
+            class_skill_lines=(
+                "Herald of the Tome",
+                "Soldier of Apocrypha",
+                "Curative Runeforms",
+            ),
+            class_mastery_ability_ids=(101, 202),
+        )
+    )
+
+    assert result["class_mastery_ability_ids"] == (101, 202)
+
+
+def test_recent_build_state_rejects_foreign_class_line_with_masteries() -> None:
+    with pytest.raises(ValidationError):
+        validate_build_recent_state_payload(
+            _payload(
+                class_skill_lines=(
+                    "Herald of the Tome",
+                    "Soldier of Apocrypha",
+                    "Green Balance",
+                ),
+                class_mastery_ability_ids=(101,),
+            )
+        )
