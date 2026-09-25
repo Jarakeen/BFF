@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from minmax.mundus_repository import MundusRepository
+from minmax.effects import EffectOperation, EffectUnit
 from minmax.stat_ids import StatId
 
 
@@ -15,6 +16,18 @@ def test_u50_warrior_remains_weapon_damage_only(tmp_path):
 
     assert unresolved == []
     assert _values(effects) == {StatId.WEAPON_DAMAGE: 238.0}
+
+
+def test_thief_rating_is_a_flat_effect_for_critical_chance_conversion(tmp_path):
+    repository = MundusRepository(tmp_path / "eso.db", game_update=50)
+    effects, unresolved = repository.get_effects("The Thief")
+
+    assert unresolved == []
+    assert len(effects) == 1
+    assert effects[0].stat is StatId.CRITICAL_CHANCE
+    assert effects[0].operation is EffectOperation.ADD
+    assert effects[0].unit is EffectUnit.FLAT
+    assert effects[0].value == 1333.0
 
 
 def test_u51_pts_warrior_grants_both_weapon_and_spell_damage(tmp_path):

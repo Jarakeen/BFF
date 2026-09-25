@@ -15,6 +15,7 @@ from minmax.combat_effect_classifier import (
 from minmax.champion_point_effect_variant_resolver import ChampionPointEffectVariantResolver
 from minmax.gear_set_effect_variant_resolver import GearSetEffectVariantResolver
 from minmax.gear_set_repository import GearSetRepository
+from minmax.race_repository import RaceRepository
 from minmax.gear_stat_inputs import GearStatInputResolver
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
 from minmax.potion_availability_repository import PotionAvailabilityRepository
@@ -158,7 +159,10 @@ class SavedBuildCapabilityService:
     ) -> None:
         self.builds = builds
         self.database_path = Path(database_path)
-        self.context_factory = context_factory or Phase5BuildCalculationContextFactory(self.database_path)
+        self.context_factory = context_factory or Phase5BuildCalculationContextFactory(
+            race_repository=RaceRepository(self.database_path),
+            gear_set_repository=GearSetRepository(self.database_path),
+        )
         self.progression = progression or MinmaxCharacterProgressionAdapter(
             builds.canonical.catalog_service
         )

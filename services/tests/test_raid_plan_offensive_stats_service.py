@@ -3,6 +3,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
+from minmax.gear_set_repository import GearSetRepository
+from minmax.race_repository import RaceRepository
 
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
@@ -118,6 +120,17 @@ def _service(builds: tuple[PlayerBuild, ...]) -> RaidPlanOffensiveStatsService:
     )
     service.progression = _Progression()
     return service
+
+
+def test_default_offensive_context_uses_repositories_instead_of_a_path(tmp_path) -> None:
+    service = RaidPlanOffensiveStatsService(
+        database_path=tmp_path / "eso.db",
+        build_service=_BuildService(()),
+        capability_service=_CapabilityService(),
+    )
+
+    assert isinstance(service.context_factory.race_repository, RaceRepository)
+    assert isinstance(service.context_factory.gear_resolver.repository, GearSetRepository)
 
 
 def test_raid_plan_crit_and_pen_layers_group_effects_without_double_owning_them() -> None:

@@ -433,7 +433,9 @@ class MundusRepository:
                         stat=stat,
                         operation=EffectOperation.ADD,
                         value=value,
-                        unit=EffectUnit.RATING,
+                        # Ratings are flat numeric inputs; the downstream stat
+                        # resolver converts critical rating to a chance ratio.
+                        unit=EffectUnit.FLAT,
                         source=f"Mundus: {record.name}",
                     )
                 )

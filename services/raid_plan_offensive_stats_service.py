@@ -13,7 +13,9 @@ from pathlib import Path
 from typing import Iterable
 
 from engine.config import DEFAULT_DATABASE, get_data_dir
+from minmax.gear_set_repository import GearSetRepository
 from minmax.phase5_context_factory import Phase5BuildCalculationContextFactory
+from minmax.race_repository import RaceRepository
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 from models.raid_plan import RaidPlan
@@ -108,7 +110,8 @@ class RaidPlanOffensiveStatsService:
         self.database_path = Path(database_path or DEFAULT_DATABASE)
         self.build_service = build_service or BuildService(get_data_dir() / "builds.json")
         self.context_factory = context_factory or Phase5BuildCalculationContextFactory(
-            self.database_path
+            race_repository=RaceRepository(self.database_path),
+            gear_set_repository=GearSetRepository(self.database_path),
         )
         self.progression = MinmaxCharacterProgressionAdapter(
             self.build_service.canonical.catalog_service

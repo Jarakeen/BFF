@@ -2004,3 +2004,13 @@ While tightening Objective #32 weapon-enchantment cadence, the runtime gate was 
 **What it means in actual play:** a single direct-damage enchant can now use its authoritative cadence without being rejected because distinct-enchant timer independence is still unresolved. Two copies of the same enchant still need the shared-cooldown rule, and two different enchant identities still need authoritative proof of their timer relationship.
 
 **For BFF:** cadence proof is now candidate-scoped. The engine asks only for mechanics that can actually affect the current enchantment topology, while preserving fail-closed behavior as soon as duplicate or distinct competing sources exist.
+
+---
+
+## 2026-09-25 — Thief critical rating is a flat input, not a percent
+
+The Raid Plan Crit/Pen card exposed an unused Mundus path: The Thief's 1,333 Critical Chance rating was being tagged with a unit that the calculation model does not define. Critical rating must enter as a flat number and be converted to a chance ratio by the existing stat resolver.
+
+**Layman's version:** 1,333 points of critical rating is not 1,333% critical chance. The card should let the stat calculator do that conversion, then display the resulting raid values.
+
+**For BFF:** keep the imported Mundus record's `rating` provenance, emit a flat numeric effect, and let `StaticBuildInputResolver.critical_rating_to_ratio` own the conversion. This avoids a silent blank Crit/Pen row for a build using The Thief.
