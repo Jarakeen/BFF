@@ -30,3 +30,20 @@ def test_raid_plan_save_has_prewrite_snapshot_and_bulk_identity_guard() -> None:
     assert "Save blocked: this edit would replace player identity" in method
     assert "duplicate_occupied_player_seats(plan)" in method
     assert "persisted != plan" in method
+
+
+def test_raid_plan_save_repairs_build_that_belongs_to_different_character() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+
+    assert "def _repair_selected_build_identity(self, member, catalog):" in source
+    repair = source.split(
+        "def _repair_selected_build_identity(self, member, catalog):", 1
+    )[1].split("    def current_plan", 1)[0]
+    assert 'build_character_id == character_id' in repair
+    assert "self._replacement_build_for_stale_member(member)" in repair
+    assert "selected_build_id=replacement_id or None" in repair
+
+    current = source.split("def current_plan(self) -> RaidPlan:", 1)[1].split(
+        "    def has_pending_changes", 1
+    )[0]
+    assert current.count("self._repair_selected_build_identity(") >= 2
