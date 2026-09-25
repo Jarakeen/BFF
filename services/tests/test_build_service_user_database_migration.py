@@ -4,7 +4,7 @@ import json
 import sqlite3
 from pathlib import Path
 
-from models.build_model import BuildRoster
+from models.build_model import BuildRoster, PlayerBuild
 from services import canonical_build_bridge as bridge_module
 from services import user_data_migration_service as migration_module
 from services.build_service import BuildService
