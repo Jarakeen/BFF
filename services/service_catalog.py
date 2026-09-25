@@ -1630,6 +1630,70 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_poison_dilution_selection",
+        domain="extreme",
+        purpose=(
+            "Apply one explicit caller-proven base/triple poison dilution witness to a "
+            "proven formula effect set and select exact effect durations without inferring "
+            "dilution from item name or effect count."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_poison_dilution_selection_service",
+        inputs=(
+            "ExtremeSustainedDPSWeaponPoisonFormulaSelection",
+            "ExplicitWeaponPoisonDilutionWitness",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponPoisonDilutionSelection",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_poison_formula_selection",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_poison_exact_duration_selection",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.DATA,
+        notes=(
+            "Base and triple durations come from imported Poison tier evidence. The service "
+            "requires the dilution mode explicitly and never infers it from three traits, the "
+            "displayed poison name, or any other structural shortcut."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_poison_named_effect_consequences",
+        domain="extreme",
+        purpose=(
+            "Project reviewed exact-duration crafted-poison named effects into canonical "
+            "Objective #32 runtime EffectVariants while reusing shared target combat math."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_poison_named_effect_consequence_service",
+        inputs=(
+            "ExtremeSustainedDPSWeaponPoisonDilutionSelection",
+            "WeaponPoisonProcOccurrence",
+            "VersionedAlchemyPoisonRelationshipSemantics",
+        ),
+        outputs=(
+            "ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceResolution",
+        ),
+        dependencies=(
+            "extreme.sustained_dps.weapon_poison_dilution_selection",
+            "extreme.sustained_dps.runtime_target_combat_state",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_poison_named_effect_runtime_projection",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Current reviewed U50 target-side projection includes Breach -> Minor Breach and "
+            "Protection -> Minor Vulnerability. Protection's self Minor Protection consequence "
+            "is explicitly collapsed as defensive-only for sustained outgoing DPS. Unreviewed "
+            "poison traits remain blockers rather than receiving guessed named-effect semantics."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_poison_consequence_frontier",
         domain="extreme",
         purpose=(
