@@ -56,19 +56,19 @@ class ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService:
         *,
         occurrence: ExtremeSustainedDPSWeaponPoisonProcOccurrence,
     ):
+        method = getattr(resolver, "resolve", None)
+        if callable(method):
+            return method(
+                poison_id=occurrence.poison_id,
+                occurrence=occurrence,
+            )
         if callable(resolver):
             return resolver(
                 poison_id=occurrence.poison_id,
                 occurrence=occurrence,
             )
-        method = getattr(resolver, "resolve", None)
-        if method is None:
-            raise TypeError(
-                "weapon-poison consequence resolver must be callable or expose resolve()"
-            )
-        return method(
-            poison_id=occurrence.poison_id,
-            occurrence=occurrence,
+        raise TypeError(
+            "weapon-poison consequence resolver must be callable or expose callable resolve()"
         )
 
     @staticmethod
