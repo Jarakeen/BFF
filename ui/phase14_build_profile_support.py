@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (
 )
 
 from engine.config import get_data_dir
+from models.build_model import ARMOR_TRAITS, JEWELRY_TRAITS
+from widgets.build_editor import ENCHANT_CHOICES
 from services.build_profile_service import (
     BuildProfile,
     BuildProfileService,
@@ -166,16 +168,39 @@ class _BaselineDialog(QDialog):
         self.tier = QComboBox()
         self.tier.setEditable(True)
         self.tier.addItems(["Truly Superb", "Superb", "Greater", "Major", "Minor"])
+        self.armor_trait = QComboBox()
+        self.armor_trait.addItems(["", *[value for value in ARMOR_TRAITS if value]])
+        self.armor_weight = QComboBox()
+        self.armor_weight.addItems(["", "Light", "Medium", "Heavy"])
+        self.armor_enchant = QComboBox()
+        self.armor_enchant.setEditable(True)
+        self.armor_enchant.addItems(["", *[value for value in ENCHANT_CHOICES if value in {"Max Magicka", "Max Health", "Max Stamina", "Prismatic Defense"}]])
+        self.jewelry_trait = QComboBox()
+        self.jewelry_trait.addItems(["", *[value for value in JEWELRY_TRAITS if value]])
+        self.jewelry_enchant = QComboBox()
+        self.jewelry_enchant.setEditable(True)
+        self.jewelry_enchant.addItems(["", *[value for value in ENCHANT_CHOICES if value in {"Magicka Recovery", "Health Recovery", "Stamina Recovery", "Weapon Damage", "Spell Damage", "Decrease Physical Harm"}]])
+
         self.quality.setCurrentText(profile.quality)
         self.level.setCurrentText(profile.item_level)
         self.tier.setCurrentText(profile.enchantment_tier)
+        self.armor_trait.setCurrentText(profile.armor_trait)
+        self.armor_weight.setCurrentText(profile.armor_weight)
+        self.armor_enchant.setCurrentText(profile.armor_enchant)
+        self.jewelry_trait.setCurrentText(profile.jewelry_trait)
+        self.jewelry_enchant.setCurrentText(profile.jewelry_enchant)
 
         form = QFormLayout()
         form.addRow("Quality", self.quality)
         form.addRow("Item level", self.level)
         form.addRow("Enchantment tier", self.tier)
+        form.addRow("Armor trait", self.armor_trait)
+        form.addRow("Armor weight", self.armor_weight)
+        form.addRow("Armor enchant", self.armor_enchant)
+        form.addRow("Jewelry trait", self.jewelry_trait)
+        form.addRow("Jewelry enchant", self.jewelry_enchant)
         hint = QLabel(
-            "Blank item fields inherit these values. Existing explicit item values are preserved; values that differ remain visible exceptions."
+            "Blank equipped-item fields inherit these values. Leave a trait, weight, or enchant blank for per-slot choices. Existing explicit item values are always preserved."
         )
         hint.setWordWrap(True)
         hint.setProperty("muted", True)
@@ -202,6 +227,11 @@ def _edit_baseline(page, build) -> None:
         quality=dialog.quality.currentText().strip(),
         item_level=dialog.level.currentText().strip(),
         enchantment_tier=dialog.tier.currentText().strip(),
+        armor_trait=dialog.armor_trait.currentText().strip(),
+        armor_weight=dialog.armor_weight.currentText().strip(),
+        armor_enchant=dialog.armor_enchant.currentText().strip(),
+        jewelry_trait=dialog.jewelry_trait.currentText().strip(),
+        jewelry_enchant=dialog.jewelry_enchant.currentText().strip(),
     )
     page._refresh_detail()
     page.status.success("Build baseline updated. Existing item values were preserved.")
@@ -323,6 +353,14 @@ def _baseline_card(page, build) -> FoundryCard:
     card = FoundryCard(title, "◆")
     row = QHBoxLayout()
     summary = QLabel(f"{profile.quality}  •  {profile.item_level}  •  {profile.enchantment_tier}")
+    defaults = [
+        value for value in (
+            profile.armor_trait, profile.armor_weight, profile.armor_enchant,
+            profile.jewelry_trait, profile.jewelry_enchant,
+        ) if value
+    ]
+    if defaults:
+        summary.setToolTip("Additional defaults: " + " • ".join(defaults))
     summary.setProperty("cardBadge", True)
     row.addWidget(summary)
     row.addStretch(1)
