@@ -64,6 +64,7 @@ class RaidPlanCoverageScope:
     primary_providers: tuple[tuple[str, tuple[str, ...]], ...]
     secondary_providers: tuple[tuple[str, tuple[str, ...]], ...]
     provider_source_notes: tuple[tuple[str, str, str], ...]
+    manual_providers: tuple[tuple[str, str, str, str, str], ...]
 
     @property
     def resolved_builds(self) -> tuple[PlayerBuild, ...]:
@@ -77,6 +78,14 @@ class RaidPlanCoverageScope:
         wanted = _key(effect_name)
         return next((values for key, values in self.secondary_providers if key == wanted), ())
 
+
+    def manual_for(self, effect_name: str) -> tuple[tuple[str, str, str, str], ...]:
+        wanted = _key(effect_name)
+        return tuple(
+            (seat_id, provider, source, note)
+            for key, seat_id, provider, source, note in self.manual_providers
+            if key == wanted
+        )
 
     def source_note_for(self, effect_name: str, provider_label: str) -> str:
         effect_key = _key(effect_name)
@@ -121,6 +130,7 @@ class RaidPlanCoverageScopeService:
         primary: dict[str, list[str]] = {key: [] for key in effect_labels}
         secondary: dict[str, list[str]] = {key: [] for key in effect_labels}
         source_notes: list[tuple[str, str, str]] = []
+        manual: list[tuple[str, str, str, str, str]] = []
 
         for member in raid_plan.members:
             player_label = member.character_name or member.gamertag or member.seat_id
@@ -202,6 +212,17 @@ class RaidPlanCoverageScopeService:
                         (secondary_key, player_label, _clean(member.assignment_source))
                     )
 
+        member_labels = {
+            member.seat_id.casefold(): (member.character_name or member.gamertag or member.seat_id)
+            for member in raid_plan.members
+        }
+        for provider in raid_plan.coverage_providers:
+            effect_key = _key(provider.effect_name)
+            if effect_key not in effect_labels:
+                continue
+            label = member_labels.get(provider.seat_id.casefold(), provider.seat_id)
+            manual.append((effect_key, provider.seat_id, label, provider.source, provider.note or ""))
+
         return RaidPlanCoverageScope(
             plan_id=raid_plan.plan_id,
             plan_name=raid_plan.name,
@@ -219,6 +240,7 @@ class RaidPlanCoverageScopeService:
                 (key, tuple(values)) for key, values in secondary.items() if values
             ),
             provider_source_notes=tuple(dict.fromkeys(source_notes)),
+            manual_providers=tuple(dict.fromkeys(manual)),
         )
 
 
