@@ -67,11 +67,13 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         require_closure_ready_scenario: bool = False,
         potion_cooldown_resolver: object | None = None,
     ) -> None:
+        if not isinstance(require_closure_ready_scenario, bool):
+            raise TypeError(
+                "require_closure_ready_scenario must be boolean"
+            )
         self.global_search = global_search
         self.structural_families = structural_families
-        self.require_closure_ready_scenario = bool(
-            require_closure_ready_scenario
-        )
+        self.require_closure_ready_scenario = require_closure_ready_scenario
         self.potion_cooldown_resolver = potion_cooldown_resolver
 
     def search(
@@ -122,14 +124,12 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             ExtremeSustainedDPSObjective32ScenarioPreflightService.require_ready(
                 runtime_state_frontier=runtime_state_frontier,
                 candidate_runtime_state_resolver=candidate_runtime_state_resolver,
-                candidate_runtime_state_resolver_present=bool(
+                candidate_runtime_state_resolver_present=(
                     candidate_runtime_state_resolver is not None
                 ),
-                heavy_attack_channel_block_denominator_proven=bool(
-                    search_kwargs.get(
-                        "heavy_attack_channel_block_denominator_proven",
-                        False,
-                    )
+                heavy_attack_channel_block_denominator_proven=search_kwargs.get(
+                    "heavy_attack_channel_block_denominator_proven",
+                    False,
                 ),
                 encounter_policy_adapter=encounter_policy_adapter,
             )
