@@ -122,6 +122,7 @@ def test_generated_poison_consequence_factory_projects_reviewed_named_effect_end
             ),
             source_evidence_complete=True,
             exact_selection_proven=False,
+            exact_selection_proven=False,
             evidence=("reviewed Poison IX tier witness",),
             unresolved=(
                 "saved poison item label proves possible effects but not exact formula",
@@ -199,6 +200,7 @@ def test_generated_poison_consequence_factory_uses_source_bar_tier_for_same_form
                 ),
             ),
             source_evidence_complete=True,
+            exact_selection_proven=False,
         )
 
     state.late.assembled.poison_tier_loadout = SimpleNamespace(
@@ -263,6 +265,7 @@ def test_generated_poison_consequence_factory_defaults_to_literal_formula_diluti
                         ),
                     ),
                     source_evidence_complete=True,
+                    exact_selection_proven=False,
                 )
             ),
         ),
@@ -312,6 +315,7 @@ def test_generated_poison_consequence_does_not_fall_back_to_stale_late_tier_prov
                         ),
                     ),
                     source_evidence_complete=True,
+                    exact_selection_proven=False,
                 )
             ),
         ),
