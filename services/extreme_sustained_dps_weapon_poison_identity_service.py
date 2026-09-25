@@ -77,6 +77,19 @@ class ExtremeSustainedDPSWeaponPoisonItemEvidenceService:
         selected = " ".join(str(poison_id or "").strip().split())
         if not selected:
             return ExtremeSustainedDPSWeaponPoisonItemEvidence(
+        if self._norm(selected).startswith("alchemy_formula:"):
+            return ExtremeSustainedDPSWeaponPoisonItemEvidence(
+                poison_id=selected,
+                possible_effects=(),
+                source_evidence_complete=False,
+                exact_selection_proven=False,
+                unresolved=(
+                    f"{selected}: generated formula identity is not a crafted poison item-label witness",
+                ),
+                evidence=(
+                    "Generated poison formula identities and saved crafted-item labels are separate authorities.",
+                ),
+            )
                 poison_id="",
                 possible_effects=(),
                 source_evidence_complete=False,
