@@ -1008,6 +1008,41 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             expected = self._persisted_plan_snapshot
             if expected is not None and expected.plan_id.casefold() != plan.plan_id.casefold():
                 expected = None
+
+            # Every overwrite gets a recoverable whole-database checkpoint before
+            # the transaction begins. New plans do not need a pre-write snapshot.
+            if expected is not None and plan != expected:
+                changed_seats = []
+                prior_by_seat = {member.seat_id.casefold(): member for member in expected.members}
+                for member in plan.members:
+                    prior = prior_by_seat.get(member.seat_id.casefold())
+                    if prior != member:
+                        changed_seats.append(member.seat_id)
+
+                # A normal single-page edit should not suddenly replace most of
+                # the roster. This catches identity-propagation failures such as
+                # one player being copied into many chairs before they reach disk.
+                prior_names = {
+                    member.seat_id.casefold(): _clean(member.gamertag).casefold()
+                    for member in expected.members
+                }
+                changed_player_seats = [
+                    member.seat_id
+                    for member in plan.members
+                    if prior_names.get(member.seat_id.casefold(), "")
+                    != _clean(member.gamertag).casefold()
+                ]
+                if len(changed_player_seats) >= 6:
+                    raise RaidPlanRepositoryError(
+                        "Save blocked: this edit would replace player identity in "
+                        f"{len(changed_player_seats)} raid seats at once. "
+                        "Review Roles or start a deliberate new Raid Plan instead."
+                    )
+
+                self._safety_snapshots.create(
+                    f"raid-plan-save-{expected.plan_id}"
+                )
+
             self.plan_repository.save(
                 plan, expected=expected, must_be_new=expected is None,
             )
