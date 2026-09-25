@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 from engine.config import DEFAULT_DATABASE
 from services.character_progression_service import CharacterProgressionService
 from services.class_mastery_repository import ClassMasteryRepository
+from services.build_recent_state_pydantic_schema import validate_build_recent_state_payload
 from ui.components.foundry_button import ButtonRole, FoundryButton
 
 
@@ -553,6 +554,7 @@ def install() -> None:
         if len(selected) > 2:
             self.status.warning("Class Mastery allows at most two selections. Nothing was saved.")
             return
+
         build = self.roster.Members[index]
         allowed = {
             int(row.base_ability_id)
@@ -561,20 +563,56 @@ def install() -> None:
         if any(value not in allowed for value in selected):
             self.status.error("Class Mastery selection does not belong to this build's class. Nothing was saved.")
             return
-        build.ClassMasteryAbilityIds = selected
+
+        previous = list(getattr(build, "ClassMasteryAbilityIds", ()) or ())
+        try:
+            recent = validate_build_recent_state_payload({
+                "eso_class": str(getattr(build, "EsoClass", "") or "").strip(),
+                "vampire": bool(getattr(build, "Vampire", False)),
+                "werewolf": bool(getattr(build, "Werewolf", False)),
+                "class_skill_lines": tuple(getattr(build, "ClassSkillLines", ()) or ()),
+                "class_mastery_ability_ids": tuple(selected),
+            })
+        except Exception as exc:
+            self.status.error(f"Class Mastery validation failed. Nothing was saved: {exc}")
+            return
+
+        build.ClassMasteryAbilityIds = list(recent["class_mastery_ability_ids"])
         self.selected_index = index
-        self._save()
-        persisted = self.build_service.load()
+        if not self._save():
+            build.ClassMasteryAbilityIds = previous
+            self.status.error("Class Mastery save failed. The previous selection was restored.")
+            return
+
+        try:
+            persisted = self.build_service.load()
+        except Exception as exc:
+            self.status.error(
+                f"Class Mastery save completed, but verification could not reload Builds: {exc}"
+            )
+            return
+
+        build_id = str(getattr(build, "BuildId", "") or "")
         matched = next(
             (
                 row for row in persisted.Members
-                if str(getattr(row, "BuildId", "") or "") == str(getattr(build, "BuildId", "") or "")
+                if str(getattr(row, "BuildId", "") or "") == build_id
             ),
             None,
         )
         if matched is None or tuple(getattr(matched, "ClassMasteryAbilityIds", ()) or ()) != tuple(selected):
+            current = next(
+                (
+                    row for row in self.roster.Members
+                    if str(getattr(row, "BuildId", "") or "") == build_id
+                ),
+                None,
+            )
+            if current is not None:
+                current.ClassMasteryAbilityIds = previous
             self.status.error("Class Mastery save failed read-back verification.")
             return
+
         names = [
             self.mastery_choices.item(i).text()
             for i in range(self.mastery_choices.count())
