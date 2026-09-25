@@ -129,8 +129,15 @@ def test_heavy_attack_inventory_omission_depends_on_runtime_adapter_mode() -> No
     assert "heavy_attack_policy" in complete_inventory.searched_canonical_axes
 
 def test_inventory_rejects_noncanonical_tree_axis_tags() -> None:
+    from types import SimpleNamespace
+
+    malformed_axis = SimpleNamespace(
+        name="Mystery",
+        canonical_axes=("alchemy_moon_phase",),
+        omitted_scope=(),
+    )
     result = ExtremeSustainedDPSGeneratedAxisInventoryService.inventory(
-        (_axis("Mystery", ("alchemy_moon_phase",)),)
+        (malformed_axis,)
     )
 
     assert result.searched_canonical_axes == ()
