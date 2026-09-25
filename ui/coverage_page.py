@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 
 from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path, get_user_database_path
 from models.build_model import BuildRoster, PlayerBuild
+from models.raid_plan import RaidPlanCoverageProvider
 from services.build_service import BuildService
 from services.finch_shared_provenance_service import format_shared_timestamp
 from services.finch_shared_coverage_service import (
@@ -35,6 +36,7 @@ from services.performance_raid_review_selection_mode_service import (
     PerformanceRaidReviewSelectionModeService,
 )
 from services.raid_coverage_profile import DEFAULT_RAID_COVERAGE_PROFILE
+from services.raid_plan_repository import RaidPlanRepository
 from ui.components.foundry_card import FoundryCard
 from ui.components.foundry_header import FoundryHeader
 from ui.components.foundry_status_bar import FoundryStatusBar
@@ -59,6 +61,8 @@ class CoveragePage(FoundryPage):
         self._team_scope: tuple[tuple[str, PlayerBuild], ...] = ()
         self._team_scope_name = ""
         self._team_total_slots = 12
+        self.raid_plan_repository = RaidPlanRepository(get_user_database_path())
+        self._selected_plan = None
         self.raid_review_runner = raid_review_runner or PerformanceRaidReviewRunnerService()
         self.raid_review_selection_mode_service = PerformanceRaidReviewSelectionModeService()
         self._raid_review_task: RaidReviewAsyncTask | None = None
@@ -260,7 +264,10 @@ class CoveragePage(FoundryPage):
         self.redundant_only = QCheckBox("Multiple Static Sources")
         self.search = QLineEdit()
         self.search.setPlaceholderText("Search effect...")
+        self.remove_provider_button = QPushButton("Remove Provider")
+        self.remove_provider_button.clicked.connect(self._remove_manual_provider)
         filters.addWidget(self.effect_filter)
+        filters.addWidget(self.remove_provider_button)
         filters.addWidget(self.missing_only)
         filters.addWidget(self.redundant_only)
         filters.addStretch(1)
@@ -271,10 +278,10 @@ class CoveragePage(FoundryPage):
         self.search.textChanged.connect(self._apply_coverage_filters)
 
         table_card = FoundryCard("Saved-Build Coverage Evidence", "◈")
-        edit_requirements = QPushButton("Edit Requirements")
-        edit_requirements.setEnabled(False)
-        edit_requirements.setToolTip("Editing the default coverage requirements is not available yet.")
-        table_card.set_header_action(edit_requirements)
+        self.add_provider_button = QPushButton("Add Provider")
+        self.add_provider_button.setToolTip("Mark the selected effect covered by raid-lead assignment. Provider and source are required.")
+        self.add_provider_button.clicked.connect(self._add_manual_provider)
+        table_card.set_header_action(self.add_provider_button)
         table_card.addLayout(filters)
         self.table = QTableWidget(0, 9)
         self.table.setHorizontalHeaderLabels([
@@ -285,6 +292,7 @@ class CoveragePage(FoundryPage):
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setMinimumHeight(390)
+        self.table.itemDoubleClicked.connect(lambda *_args: self._add_manual_provider())
         table_card.addWidget(self.table)
         root.addWidget(table_card, 4)
 
@@ -679,6 +687,99 @@ class CoveragePage(FoundryPage):
         layout.addWidget(card)
         return page
 
+    def _selected_plan_id(self) -> str:
+        data = str(self.scope_combo.currentData() or "").strip()
+        return data.split(":", 1)[1].strip() if data.startswith("raid_plan:") else ""
+
+    def _selected_effect_name(self) -> str:
+        row = self.table.currentRow()
+        item = self.table.item(row, 0) if row >= 0 else None
+        return item.text().strip() if item is not None else ""
+
+    def _add_manual_provider(self) -> None:
+        plan_id = self._selected_plan_id()
+        effect = self._selected_effect_name()
+        if not plan_id:
+            self.status.warning("Select a saved Raid Plan before assigning manual Coverage.")
+            return
+        if not effect:
+            self.status.warning("Select a Coverage effect first.")
+            return
+        plan = self.raid_plan_repository.get(plan_id)
+        if plan is None:
+            self.status.warning("That Raid Plan is no longer available. Refresh Coverage.")
+            return
+        members = tuple(plan.members)
+        if not members:
+            self.status.warning("This Raid Plan has no seats to assign as a provider.")
+            return
+        labels = [
+            f"{member.seat_id} • {member.character_name or member.gamertag or 'Open'}"
+            for member in members
+        ]
+        selected, ok = QInputDialog.getItem(self, f"Cover {effect}", "Provider / seat:", labels, 0, False)
+        if not ok:
+            return
+        member = members[labels.index(selected)]
+        source, ok = QInputDialog.getText(
+            self, f"Cover {effect}",
+            "Why is this covered? Enter the skill, set, passive, or other source:",
+        )
+        source = source.strip()
+        if not ok or not source:
+            if ok:
+                self.status.warning("Coverage needs a source. Even vibes must be documented.")
+            return
+        note, ok = QInputDialog.getText(
+            self, f"Cover {effect}",
+            "Optional note / explanation:",
+        )
+        if not ok:
+            return
+        updated = plan.with_coverage_provider(
+            RaidPlanCoverageProvider(
+                effect_name=effect,
+                seat_id=member.seat_id,
+                source=source,
+                note=note.strip() or None,
+            )
+        )
+        try:
+            self.raid_plan_repository.save(updated, expected=plan)
+        except Exception as exc:
+            self.status.error(f"Could not save manual Coverage: {exc}")
+            return
+        self.status.success(f"{effect} marked covered by {member.character_name or member.gamertag or member.seat_id} • {source}.")
+        self.refresh()
+
+    def _remove_manual_provider(self) -> None:
+        plan_id = self._selected_plan_id()
+        effect = self._selected_effect_name()
+        plan = self.raid_plan_repository.get(plan_id) if plan_id else None
+        if plan is None or not effect:
+            return
+        rows = plan.coverage_for(effect)
+        if not rows:
+            self.status.info(f"{effect} has no raid-lead Coverage assignment to remove.")
+            return
+        labels = []
+        for provider in rows:
+            member = plan.member(provider.seat_id)
+            who = (member.character_name or member.gamertag) if member else provider.seat_id
+            labels.append(f"{provider.seat_id} • {who} • {provider.source}")
+        selected, ok = QInputDialog.getItem(self, f"Remove {effect} Provider", "Manual provider:", labels, 0, False)
+        if not ok:
+            return
+        provider = rows[labels.index(selected)]
+        updated = plan.without_coverage_provider(effect, provider.seat_id)
+        try:
+            self.raid_plan_repository.save(updated, expected=plan)
+        except Exception as exc:
+            self.status.error(f"Could not remove manual Coverage: {exc}")
+            return
+        self.status.success(f"Removed raid-lead Coverage assignment for {effect}.")
+        self.refresh()
+
     def _apply_coverage_filters(self, *_args) -> None:
         effect_type = self.effect_filter.currentText()
         query = self.search.text().strip().casefold()
@@ -749,6 +850,8 @@ class CoveragePage(FoundryPage):
                 f"Checking all {len(saved_builds)} named saved builds, regardless of raid team. "
                 "To check one team, select its builds in Team Optimization, then use Send Team to Coverage on Raid Engine."
             )
+        plan_id = self._selected_plan_id()
+        self._selected_plan = self.raid_plan_repository.get(plan_id) if plan_id else None
         snapshot = self.snapshot_for_builds(builds)
         self.table.setRowCount(0)
         for effect in CORE_COVERAGE:
@@ -760,35 +863,46 @@ class CoveragePage(FoundryPage):
             source_text = ", ".join(names) if names else (
                 f"Conditional: {', '.join(conditional)}" if conditional else "—"
             )
+            manual_rows = self._selected_plan.coverage_for(effect) if self._selected_plan is not None else ()
+            manual_labels = []
+            for provider in manual_rows:
+                member = self._selected_plan.member(provider.seat_id)
+                who = (member.character_name or member.gamertag) if member else provider.seat_id
+                detail = f"{who} • {provider.source}"
+                if provider.note:
+                    detail += f" • {provider.note}"
+                manual_labels.append(detail)
+            manual_text = "; ".join(manual_labels)
             values = [
                 effect,
                 "Debuff" if effect in DEBUFFS else "Utility" if effect in UTILITY else "Buff",
                 "Yes",
                 source_text,
+                manual_text or "—",
                 "—",
                 "—",
                 "—",
-                "—",
-                {
+                ("Raid Lead Assigned ◇" if manual_rows else {
                     "available": "Available (static)",
                     "conditional": "Conditional",
                     "not_found": "Not identified",
                     "unverified": "Unverified",
-                }[state],
+                }[state]),
             ]
             for col, value in enumerate(values):
                 item = QTableWidgetItem(str(value))
                 if col == 8:
-                    item.setData(Qt.ItemDataRole.UserRole, state)
+                    item.setData(Qt.ItemDataRole.UserRole, "manual" if manual_rows else state)
                 if col == 3:
                     item.setData(Qt.ItemDataRole.UserRole, len(names))
                 item.setToolTip(
-                    "Static build evidence only. Provider assignments and uptime are not inferred."
+                    ("Raid lead assigned coverage. This counts as planned coverage but remains distinct from Build-confirmed evidence." if manual_rows and col in {4, 8} else "Static build evidence only. Provider assignments and uptime are not inferred.")
                     if col >= 3 else "Default raid coverage requirement."
                 )
                 self.table.setItem(row, col, item)
 
         self._apply_coverage_filters()
+        manual_covered = sum(bool(self._selected_plan and self._selected_plan.coverage_for(effect)) for effect in CORE_COVERAGE)
         available = sum(state == "available" for state in snapshot.status.values())
         conditional_count = sum(state == "conditional" for state in snapshot.status.values())
         not_found = sum(state == "not_found" for state in snapshot.status.values())
@@ -797,6 +911,7 @@ class CoveragePage(FoundryPage):
         self.summary_card.addWidget(QLabel(
             f"TOTAL EFFECTS   {len(CORE_COVERAGE)}\n"
             f"STATIC SOURCES  {available}\n"
+            f"RAID LEAD ASSIGNED  {manual_covered}\n"
             f"CONDITIONAL     {conditional_count}\n"
             f"NOT IDENTIFIED  {not_found}\n"
             f"UNVERIFIED      {unverified}"
