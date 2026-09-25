@@ -3475,6 +3475,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.runtime_target_combat_state",
             "extreme.sustained_dps.weapon_enchantment_runtime_source",
             "extreme.sustained_dps.weapon_enchantment_proc_consequences",
+            "extreme.sustained_dps.weapon_enchantment_oblivion_damage",
             "extreme.sustained_dps.weapon_enchantment_resistance_reduction",
             "extreme.sustained_dps.weapon_enchantment_weapon_spell_damage",
             "extreme.sustained_dps.weapon_enchantment_consequence_coverage",
