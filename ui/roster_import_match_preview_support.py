@@ -29,7 +29,7 @@ def _text_key(value: object) -> str:
 def _snapshot(parent) -> dict[str, object]:
     roster_service = getattr(parent, "roster_service", None)
     build_service = BuildService(get_data_dir() / "builds.json")
-    catalog = build_service.canonical.catalog_service.load()
+    catalog = build_service.canonical.catalog_service.load_strict()
 
     players_by_id: dict[str, str] = {}
     known_players: set[str] = set()
