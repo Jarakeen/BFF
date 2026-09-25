@@ -10,6 +10,7 @@ from minmax.character_build.effect_layer import EffectLayer
 from minmax.combat_effect_semantics import GameUpdate, normalize_game_update
 from minmax.named_combat_buffs import canonical_buff_name
 from minmax.support_effect_category import SupportEffectCategory
+from minmax.support_stacking import StackingBehavior
 from minmax.support_target_type import SupportTargetType
 from services.extreme_sustained_dps_weapon_poison_dilution_selection_service import (
     ExtremeSustainedDPSWeaponPoisonDilutionSelection,
@@ -144,6 +145,8 @@ class ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService:
                             if is_enemy
                             else SupportEffectCategory.BUFF
                         ),
+                        stacking=StackingBehavior.UNIQUE,
+                        exclusivity_group=self._effect_key(canonical),
                     )
                 )
                 evidence.append(
