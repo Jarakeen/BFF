@@ -198,6 +198,10 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService:
             policies=tuple(policies),
         )
         unresolved.extend(policy_unresolved)
+        effect_keys = {
+            effect_variant_runtime_binding_key(effect)
+            for effect in tuple(effects)
+        }
 
         ordered_events = tuple(
             sorted(
