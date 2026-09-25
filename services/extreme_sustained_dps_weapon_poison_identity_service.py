@@ -191,7 +191,7 @@ class ExtremeSustainedDPSWeaponPoisonItemEvidenceService:
                 duration = self._float(tier.get("duration"))
                 if duration is None or duration < 0.0:
                     source_errors.append(
-                        f"{selected}: {effect_name} poison tier has no valid base duration"
+                        f"{selected}: {effect_name} poison tier has no valid duration (base duration missing or invalid)"
                     )
                     continue
 
