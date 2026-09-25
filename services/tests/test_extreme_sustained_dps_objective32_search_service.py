@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from services.extreme_sustained_dps_axis_dominance_composition_service import (
     CANONICAL_SUSTAINED_DPS_MUTATION_AXES,
     ExtremeSustainedDPSAxisCoverageProof,
@@ -255,3 +257,12 @@ def test_objective32_wrapper_defaults_to_canonical_mechanics_closure_inventory()
     assert result.closure_inventory is not None
     assert result.closure.mechanics_closure_complete is False
     assert result.theoretical_maximum_proven is False
+
+
+def test_scope_proof_requires_strict_boolean_equivalence_flag() -> None:
+    with pytest.raises(TypeError, match="must be boolean"):
+        ExtremeSustainedDPSObjective32SearchScopeProof(
+            root_candidate_key="generated-root",
+            coverage_matches_search_denominator="false",
+            source="malformed proof fixture",
+        )
