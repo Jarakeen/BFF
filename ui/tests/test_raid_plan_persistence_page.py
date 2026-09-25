@@ -130,6 +130,57 @@ def test_hidden_character_identity_is_not_carried_to_changed_character() -> None
     assert member.roster_member_id is None
 
 
+def test_changing_character_does_not_restore_previous_characters_build() -> None:
+    loaded = RaidPlan(
+        plan_id="plan", trial_id="sunspire", name="Plan",
+        members=(RaidPlanMember(
+            seat_id="tank-1", gamertag="Rik", player_id="player-rik",
+            character_id="old-character", character_name="Old Toon",
+            selected_build_id="old-build", selected_build_name="Old Tank Build",
+            planned_gear_sets=("Pearlescent Ward",),
+            primary_assignment="Main tank",
+        ),),
+    )
+    visible = RaidPlan(
+        plan_id="plan", trial_id="sunspire", name="Plan",
+        members=(RaidPlanMember(
+            seat_id="tank-1", gamertag="Rik", player_id="player-rik",
+            character_id="new-character", character_name="New Toon",
+        ),),
+    )
+
+    member = merge_visible_plan_with_loaded_snapshot(visible, loaded).member("tank-1")
+
+    assert member.character_id == "new-character"
+    assert member.selected_build_id is None
+    assert member.selected_build_name is None
+    assert member.planned_gear_sets == ("Pearlescent Ward",)
+    assert member.primary_assignment == "Main tank"
+
+
+def test_clearing_build_picker_does_not_restore_loaded_build() -> None:
+    loaded = RaidPlan(
+        plan_id="plan", trial_id="sunspire", name="Plan",
+        members=(RaidPlanMember(
+            seat_id="tank-1", gamertag="Rik", player_id="player-rik",
+            character_id="character-rik", character_name="Rik",
+            selected_build_id="old-build", selected_build_name="Old Tank Build",
+        ),),
+    )
+    visible = RaidPlan(
+        plan_id="plan", trial_id="sunspire", name="Plan",
+        members=(RaidPlanMember(
+            seat_id="tank-1", gamertag="Rik", player_id="player-rik",
+            character_id="character-rik", character_name="Rik",
+        ),),
+    )
+
+    member = merge_visible_plan_with_loaded_snapshot(visible, loaded).member("tank-1")
+
+    assert member.selected_build_id is None
+    assert member.selected_build_name is None
+
+
 def test_matching_gamertag_does_not_override_conflicting_stable_player_identity() -> None:
     loaded = RaidPlan(
         plan_id="plan",

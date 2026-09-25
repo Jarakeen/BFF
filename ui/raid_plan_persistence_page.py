@@ -110,8 +110,17 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
                     member.character_id
                     or (prior.character_id if same_character else None)
                 ),
-                selected_build_id=member.selected_build_id or prior.selected_build_id,
-                selected_build_name=member.selected_build_name or prior.selected_build_name,
+                # The picker is visible and authoritative. Its empty selection
+                # must also clear a previously selected BuildId.
+                selected_build_id=member.selected_build_id,
+                selected_build_name=(
+                    member.selected_build_name
+                    or (
+                        prior.selected_build_name
+                        if same_character and not prior.selected_build_id
+                        else None
+                    )
+                ),
                 build_source_kind=prior.build_source_kind,
                 build_source_name=prior.build_source_name,
                 build_source_url=prior.build_source_url,

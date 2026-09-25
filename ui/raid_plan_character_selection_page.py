@@ -343,7 +343,9 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
                 _clean(getattr(build, "Name", "")).casefold(),
                 _clean(getattr(build, "BuildName", "")).casefold(),
             )
-            if prior_identity is not None and identity == prior_identity:
+            if prior_build_id and _clean(getattr(build, "BuildId", "")) == prior_build_id:
+                selected_combo_index = combo.count() - 1
+            elif not prior_build_id and prior_identity is not None and identity == prior_identity:
                 selected_combo_index = combo.count() - 1
         combo.setCurrentIndex(selected_combo_index)
         combo.blockSignals(False)
