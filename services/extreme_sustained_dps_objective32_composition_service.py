@@ -83,6 +83,10 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires generated gear and late adapters"
             )
+        if getattr(late_adapter, "poisons", None) is None:
+            raise ValueError(
+                "Objective #32 composition requires canonical generated weapon-poison selection frontier"
+            )
         if mundus_food_adapter is None:
             raise ValueError(
                 "Objective #32 composition requires canonical Mundus/food adapter"
@@ -250,7 +254,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
             objective32=objective32,
             evidence=(
                 "Objective #32 production graph composed from canonical generated frontier authorities",
-                "Mundus/food and encounter-policy canonical axes are required by composition",
+                "Mundus/food, weapon-poison, and encounter-policy canonical axes are required by composition",
                 "Finalized potion timing is appended after runtime-policy axes",
                 "Heavy Attack timing uses scheduler-derived complete-discovery mode",
                 "Exact leaves use canonical generated runtime evaluation",
