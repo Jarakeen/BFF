@@ -31,6 +31,8 @@ def _candidate_runtime_resolver(
         scenario_frontier=SimpleNamespace(
             runtime_effect_universe=runtime_effect_universe,
             runtime_effect_scaling=runtime_effect_scaling,
+            weapon_poison_activation_service=object(),
+            weapon_poison_consequence_resolver=object(),
         ),
     )
 
@@ -156,3 +158,20 @@ def test_presence_flag_without_inspectable_candidate_runtime_authority_fails_clo
 
     assert result.ready is False
     assert any("not inspectable" in item for item in result.blockers)
+
+def test_candidate_runtime_state_authority_requires_weapon_poison_authorities() -> None:
+    resolver = _candidate_runtime_resolver()
+    resolver.scenario_frontier.weapon_poison_activation_service = None
+    resolver.scenario_frontier.weapon_poison_consequence_resolver = None
+
+    result = ExtremeSustainedDPSObjective32ScenarioPreflightService.assess(
+        runtime_state_frontier=None,
+        candidate_runtime_state_resolver=resolver,
+        heavy_attack_channel_block_denominator_proven=True,
+        encounter_policy_adapter=object(),
+    )
+
+    assert result.ready is False
+    assert any("weapon-poison activation-event authority" in item for item in result.blockers)
+    assert any("weapon-poison consequence authority" in item for item in result.blockers)
+
