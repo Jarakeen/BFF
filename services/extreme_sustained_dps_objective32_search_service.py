@@ -38,6 +38,10 @@ class ExtremeSustainedDPSObjective32SearchScopeProof:
             raise ValueError("Objective #32 search-scope proof requires root_candidate_key")
         if not source:
             raise ValueError("Objective #32 search-scope proof requires source")
+        if not isinstance(self.coverage_matches_search_denominator, bool):
+            raise TypeError(
+                "Objective #32 search-scope coverage_matches_search_denominator must be boolean"
+            )
         object.__setattr__(self, "root_candidate_key", key)
         object.__setattr__(self, "source", source)
 
@@ -49,6 +53,16 @@ class ExtremeSustainedDPSObjective32SearchResult:
     closure: ExtremeSustainedDPSTheoreticalMaximumClosure
     scope_proof: ExtremeSustainedDPSObjective32SearchScopeProof
     closure_inventory: object | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.search, ExtremeSustainedDPSGeneratedSearchResult):
+            raise TypeError("Objective #32 search result requires canonical generated search result")
+        if not isinstance(self.axis_coverage, ExtremeSustainedDPSAxisDominanceComposition):
+            raise TypeError("Objective #32 search result requires canonical axis coverage composition")
+        if not isinstance(self.closure, ExtremeSustainedDPSTheoreticalMaximumClosure):
+            raise TypeError("Objective #32 search result requires canonical theoretical closure")
+        if not isinstance(self.scope_proof, ExtremeSustainedDPSObjective32SearchScopeProof):
+            raise TypeError("Objective #32 search result requires canonical scope proof")
 
     @property
     def best_modeled_dps(self) -> float | None:
