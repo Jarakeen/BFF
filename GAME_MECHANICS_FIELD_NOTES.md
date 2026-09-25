@@ -1872,3 +1872,12 @@ ESO Logs can return more than one aura row named **Minor Brittle** for the same 
 **Layman's version:** two log rows do not necessarily mean two separate Brittle effects. Sometimes the log has multiple IDs for the same named debuff window.
 
 **For BFF:** named Minor Brittle uptime must be de-duplicated before comparison. The Review dashboard keeps the maximum observed uptime for the name rather than summing duplicate IDs, while provider percentages remain separate attribution evidence and may legitimately overlap.
+
+
+## 2026-09-24 — A poison proc gets one chance roll, not one roll per consequence
+
+The poison sequence frontier already decides whether an eligible weapon hit wins the documented 20% poison proc check and spends the player-global poison cooldown. Once that branch says the poison fired, its damage, restore, buff, debuff, or other consequences are consequences of that one proc. They do not each get another 20% roll.
+
+**Layman's version:** the poison wins the raffle once, then everything printed on that poison happens according to its own effect rules. We do not make the damage, restore, and debuff each buy a second raffle ticket. Doing so would quietly turn a 20% proc into 4% for any consequence that got rerolled.
+
+**For BFF:** selected poison proc histories now bind to explicit source-bound runtime consequence attempts. Consequence effects must not introduce a second proc chance after the poison sequence has already resolved the 20% chance/global cooldown branch. Merely having a resolver object is also not proof that consequences reached runtime state; it must return a finite attempt frontier and explicit runtime effects.
