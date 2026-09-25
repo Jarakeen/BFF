@@ -335,13 +335,20 @@ class CompBuildPersistenceService:
                     updated_state = updated_state.with_chair(chair)
                 continue
 
-            canonical_player_id, character_id = self._ensure_canonical_identity(
-                chair=chair,
-                catalog=catalog,
-                players=players,
-                characters=characters,
-                staged_roster_bindings=staged_roster_bindings,
-            )
+            try:
+                canonical_player_id, character_id = self._ensure_canonical_identity(
+                    chair=chair,
+                    catalog=catalog,
+                    players=players,
+                    characters=characters,
+                    staged_roster_bindings=staged_roster_bindings,
+                )
+            except ValueError as exc:
+                skipped.append(chair.seat_id)
+                skipped_reasons.append((chair.seat_id, str(exc).removeprefix(f"{chair.seat_id}: ")))
+                if chair != original_chair:
+                    updated_state = updated_state.with_chair(chair)
+                continue
             if (
                 str(chair.player_id or "").strip() != canonical_player_id
                 or str(chair.character_id or "").strip() != character_id
