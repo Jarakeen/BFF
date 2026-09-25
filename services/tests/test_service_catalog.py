@@ -628,6 +628,7 @@ def test_sustained_dps_cross_axis_composition_keeps_context_and_assembly_separat
         "extreme.sustained_dps.cross_axis_context",
         "extreme.sustained_dps.champion_point_frontier",
         "extreme.sustained_dps.potion_frontier",
+        "extreme.sustained_dps.weapon_poison_frontier",
         "extreme.sustained_dps.passive_rank_frontier",
         "extreme.sustained_dps.skill_bar_frontier",
     )
@@ -840,6 +841,7 @@ def test_sustained_dps_late_axis_adapter_preserves_frontier_authority() -> None:
         "extreme.sustained_dps.generated_frontier_wiring",
     )
     assert "axis-owned state" in service.notes
+    assert "fifth weapon-poison axis" in service.notes
     assert "fail closed" in service.notes
 
 
@@ -1878,6 +1880,19 @@ def test_weapon_enchantment_oblivion_damage_consumer_is_cataloged() -> None:
         in service.responsibilities
     )
 
+
+
+def test_weapon_poison_selection_frontier_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_weapon_poison_selection_frontier"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.weapon_poison_frontier"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "front/back crafted weapon-poison formula" in service.purpose
+    assert "physical build-selection axis" in service.notes
+    assert "not base-versus-triple dilution duration" in service.notes
 
 
 def test_weapon_poison_runtime_services_are_cataloged() -> None:
