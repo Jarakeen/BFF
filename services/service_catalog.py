@@ -3392,7 +3392,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         inputs=("WeaponEnchantmentProcConsequenceResolution", "ConsumedConsequenceTypes"),
         outputs=("ExtremeSustainedDPSWeaponEnchantmentConsequenceCoverage",),
         dependencies=(
-            "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+            "extreme.sustained_dps.weapon_enchantment_proc_consequences",
         ),
         responsibilities=(
             "extreme_sustained_dps_weapon_enchantment_selected_consequence_coverage",
@@ -3416,7 +3416,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         inputs=("WeaponEnchantmentProcConsequenceResolution",),
         outputs=("ExtremeSustainedDPSWeaponEnchantmentResistanceResolution",),
         dependencies=(
-            "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+            "extreme.sustained_dps.weapon_enchantment_proc_consequences",
         ),
         responsibilities=(
             "extreme_sustained_dps_weapon_enchantment_resistance_reduction_runtime_projection",
@@ -3439,7 +3439,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         inputs=("WeaponEnchantmentProcConsequenceResolution",),
         outputs=("ExtremeSustainedDPSWeaponEnchantmentWeaponSpellDamageResolution",),
         dependencies=(
-            "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+            "extreme.sustained_dps.weapon_enchantment_proc_consequences",
             "extreme.sustained_dps.runtime_effect_projection",
         ),
         responsibilities=(
@@ -3474,7 +3474,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.gear_runtime_semantics",
             "extreme.sustained_dps.runtime_target_combat_state",
             "extreme.sustained_dps.weapon_enchantment_runtime_source",
-            "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+            "extreme.sustained_dps.weapon_enchantment_proc_consequences",
             "extreme.sustained_dps.weapon_enchantment_resistance_reduction",
             "extreme.sustained_dps.weapon_enchantment_weapon_spell_damage",
             "extreme.sustained_dps.weapon_enchantment_consequence_coverage",

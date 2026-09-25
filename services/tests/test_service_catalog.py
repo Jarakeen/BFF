@@ -549,7 +549,7 @@ def test_generated_sustained_dps_runtime_evaluation_consumes_canonical_simulatio
         "extreme.sustained_dps.gear_runtime_semantics",
         "extreme.sustained_dps.runtime_target_combat_state",
         "extreme.sustained_dps.weapon_enchantment_runtime_source",
-        "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+        "extreme.sustained_dps.weapon_enchantment_proc_consequences",
         "extreme.sustained_dps.weapon_enchantment_resistance_reduction",
         "extreme.sustained_dps.weapon_enchantment_weapon_spell_damage",
         "extreme.sustained_dps.weapon_enchantment_consequence_coverage",
@@ -1812,7 +1812,7 @@ def test_selected_weapon_enchantment_consequence_coverage_is_cataloged() -> None
         row.service_id
         for row in SERVICE_CATALOG.dependencies_of(service.service_id)
     ) == (
-        "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+        "extreme.sustained_dps.weapon_enchantment_proc_consequences",
     )
     assert "explicit downstream runtime consumer" in service.purpose
     assert "leaf blockers" in service.notes
@@ -1832,12 +1832,12 @@ def test_selected_weapon_enchantment_runtime_consequence_consumers_are_cataloged
     assert tuple(
         row.service_id
         for row in SERVICE_CATALOG.dependencies_of(resistance.service_id)
-    ) == ("extreme.sustained_dps.weapon_enchantment_proc_consequence",)
+    ) == ("extreme.sustained_dps.weapon_enchantment_proc_consequences",)
     assert tuple(
         row.service_id
         for row in SERVICE_CATALOG.dependencies_of(power.service_id)
     ) == (
-        "extreme.sustained_dps.weapon_enchantment_proc_consequence",
+        "extreme.sustained_dps.weapon_enchantment_proc_consequences",
         "extreme.sustained_dps.runtime_effect_projection",
     )
     assert "overlapping" in resistance.notes
