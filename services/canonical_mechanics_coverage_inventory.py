@@ -345,11 +345,13 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "the canonical crafted-poison formula catalog independently on legal front/back bars "
                 "before runtime-state derivation. Formula selection proves the exact generated trait set, "
                 "while dilution duration remains separate. The saved label alone still proves neither "
-                "formula nor dilution."
+                "formula nor dilution. Imported formula section headings are preserved as audit "
+                "provenance but are not promoted to dilution authority."
             ),
             evidence_source=(
                 "minmax/character_build/saved_build_adapter.py; "
                 "importers/import_uesp_alchemy_effects_db.py; "
+                "minmax/alchemy_formula_catalog.py; "
                 "services/extreme_sustained_dps_weapon_poison_frontier_service.py; "
                 "services/extreme_sustained_dps_generated_late_axis_adapter_service.py; "
                 "services/extreme_sustained_dps_weapon_poison_identity_service.py; "
@@ -366,7 +368,8 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             missing_evidence=(
                 "Verify weapon-specific light/heavy timing, bash cost/damage modifiers, "
                 "interrupt legality/timing, remaining enchant cooldown topology, production derivation "
-                "of exact per-candidate poison dilution witnesses, remaining poison-trait relationships, "
+                "of exact per-candidate poison tier + dilution witnesses from generated formula identity "
+                "without confusing formula IDs with saved item labels, remaining poison-trait relationships, "
                 "Ravage Health/resource magnitudes and periodic application, dual-wield/two-hand legacy "
                 "representation, arena weapon "
                 "conditional rules and weapon/passive interactions."
