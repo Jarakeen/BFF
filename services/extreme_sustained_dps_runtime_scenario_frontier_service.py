@@ -128,21 +128,21 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         activation_event: RuntimeEvent,
         enchantment_effects: tuple[EffectVariant, ...],
     ):
+        method = getattr(resolver, "resolve", None)
+        if callable(method):
+            return method(
+                candidate=candidate,
+                activation_event=activation_event,
+                enchantment_effects=enchantment_effects,
+            )
         if callable(resolver):
             return resolver(
                 candidate=candidate,
                 activation_event=activation_event,
                 enchantment_effects=enchantment_effects,
             )
-        method = getattr(resolver, "resolve", None)
-        if method is None:
-            raise TypeError(
-                "weapon-enchantment cooldown-state resolver must be callable or expose resolve()"
-            )
-        return method(
-            candidate=candidate,
-            activation_event=activation_event,
-            enchantment_effects=enchantment_effects,
+        raise TypeError(
+            "weapon-enchantment cooldown-state resolver must be callable or expose callable resolve()"
         )
 
     @staticmethod
@@ -152,20 +152,20 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         sequence_frontier,
         source: str,
     ):
+        for method_name in ("build", "resolve"):
+            method = getattr(resolver, method_name, None)
+            if callable(method):
+                return method(
+                    sequence_frontier=sequence_frontier,
+                    source=source,
+                )
         if callable(resolver):
             return resolver(
                 sequence_frontier=sequence_frontier,
                 source=source,
             )
-        for method_name in ("build", "resolve"):
-            method = getattr(resolver, method_name, None)
-            if method is not None:
-                return method(
-                    sequence_frontier=sequence_frontier,
-                    source=source,
-                )
         raise TypeError(
-            "weapon-poison consequence resolver must be callable or expose build()/resolve()"
+            "weapon-poison consequence resolver must be callable or expose callable build()/resolve()"
         )
 
     @staticmethod
@@ -176,21 +176,21 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         enchantment_effects: tuple[EffectVariant, ...],
         player_build: PlayerBuild,
     ):
+        method = getattr(resolver, "resolve", None)
+        if callable(method):
+            return method(
+                candidate=candidate,
+                enchantment_effects=enchantment_effects,
+                player_build=player_build,
+            )
         if callable(resolver):
             return resolver(
                 candidate=candidate,
                 enchantment_effects=enchantment_effects,
                 player_build=player_build,
             )
-        method = getattr(resolver, "resolve", None)
-        if method is None:
-            raise TypeError(
-                "weapon-enchantment cooldown-policy resolver must be callable or expose resolve()"
-            )
-        return method(
-            candidate=candidate,
-            enchantment_effects=enchantment_effects,
-            player_build=player_build,
+        raise TypeError(
+            "weapon-enchantment cooldown-policy resolver must be callable or expose callable resolve()"
         )
 
     def _weapon_enchantment_attempt_frontier(
