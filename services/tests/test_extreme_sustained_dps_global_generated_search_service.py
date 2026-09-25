@@ -253,3 +253,69 @@ def test_axis_inventory_uses_pipeline_candidate_runtime_state_without_search_inp
     inventory = service.axis_inventory()
 
     assert "runtime_state" in inventory.searched_canonical_axes
+
+
+def _valid_search_kwargs():
+    return {
+        "dual_bar_frontier": "gear-frontier",
+        "candidate_id_prefix": "objective32",
+        "required_duration_seconds": 20.0,
+        "potion_cooldown_seconds": 45.0,
+        "starting_ultimate": 0.0,
+        "priorities": "priorities",
+        "snapshot_resolver": "resolver",
+        "target_identity": "Boss",
+        "runtime_snapshot": "snapshot",
+        "target_health": 1_000_000,
+        "target_resistance": 18_200.0,
+    }
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("use_scheduled_combat_attacks_for_ultimate", "false"),
+        ("heavy_attack_channel_block_denominator_proven", 1),
+    ),
+)
+def test_global_search_requires_strict_boolean_proof_inputs(field, value) -> None:
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_Materialization(),
+        pipeline=_Pipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+    kwargs = _valid_search_kwargs()
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match="must be boolean"):
+        service.search(**kwargs)
+
+
+@pytest.mark.parametrize("duration", (0.0, -1.0))
+def test_global_search_requires_positive_duration(duration) -> None:
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_Materialization(),
+        pipeline=_Pipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+    kwargs = _valid_search_kwargs()
+    kwargs["required_duration_seconds"] = duration
+
+    with pytest.raises(ValueError, match="required_duration_seconds must be positive"):
+        service.search(**kwargs)
+
+
+def test_global_search_rejects_invalid_initial_bar() -> None:
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_Materialization(),
+        pipeline=_Pipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+    kwargs = _valid_search_kwargs()
+    kwargs["initial_bar"] = "middle"
+
+    with pytest.raises(ValueError, match="initial_bar must be 'front' or 'back'"):
+        service.search(**kwargs)
