@@ -2118,6 +2118,7 @@ def test_generated_weapon_poison_consequence_authority_factory_is_cataloged() ->
         for row in SERVICE_CATALOG.dependencies_of(service.service_id)
     ) == (
         "extreme.sustained_dps.generated_weapon_poison_formula_authority",
+        "extreme.sustained_dps.weapon_poison_formula_dilution_witness",
         "extreme.sustained_dps.generated_weapon_poison_dilution_authority",
         "extreme.sustained_dps.weapon_poison_named_effect_authority",
         "extreme.sustained_dps.weapon_poison_consequence_frontier",
