@@ -272,7 +272,7 @@ class RosterPlayerIdentityService:
         if self.build_service is None:
             return
         catalog_service = self.build_service.canonical.catalog_service
-        catalog = catalog_service.load()
+        catalog = catalog_service.load_strict()
         survivor_key = _identity_key(survivor_name)
         donor_key = _identity_key(donor_name)
         players = [row for row in catalog.get("players", []) if isinstance(row, dict)]
