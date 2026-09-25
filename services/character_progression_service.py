@@ -85,7 +85,7 @@ class CharacterProgressionService:
         passive_cp_points: dict[str, int],
     ) -> CharacterProgression | None:
         """Replace one character's known progression snapshot atomically."""
-        catalog = self.catalog_service.load()
+        catalog = self.catalog_service.load_strict()
         for index, character in enumerate(catalog["characters"]):
             if character.get("character_id") != character_id:
                 continue
@@ -111,7 +111,7 @@ class CharacterProgressionService:
         if not wanted_name:
             return None
 
-        catalog = self.catalog_service.load()
+        catalog = self.catalog_service.load_strict()
         players = {
             str(player.get("player_id") or "").strip(): str(
                 player.get("gamertag") or ""
