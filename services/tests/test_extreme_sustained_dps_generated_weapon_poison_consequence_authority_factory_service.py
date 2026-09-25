@@ -122,7 +122,6 @@ def test_generated_poison_consequence_factory_projects_reviewed_named_effect_end
             ),
             source_evidence_complete=True,
             exact_selection_proven=False,
-            exact_selection_proven=False,
             evidence=("reviewed Poison IX tier witness",),
             unresolved=(
                 "saved poison item label proves possible effects but not exact formula",
