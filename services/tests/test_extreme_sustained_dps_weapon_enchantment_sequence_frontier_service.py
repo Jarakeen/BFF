@@ -125,6 +125,36 @@ def test_cooldown_expiry_reopens_previously_used_source():
     )
 
     assert result.denominator_proven is True
+    assert result.candidate_count == 2
+    assert all(len(choice.attempts) == 3 for choice in result.choices)
+    assert all(
+        choice.attempts[0].bound_effect_key
+        == choice.attempts[2].bound_effect_key
+        for choice in result.choices
+    )
+    assert all(
+        choice.attempts[0].bound_effect_key
+        != choice.attempts[1].bound_effect_key
+        for choice in result.choices
+    )
+
+
+def test_both_sources_reopen_when_both_cooldowns_have_expired():
+    main = _effect("Main Enchant", "main_hand")
+    off = _effect("Off Enchant", "off_hand")
+
+    result = ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService().build(
+        events=(_event(1.0), _event(2.0, 1), _event(6.0, 2)),
+        effects=(main, off),
+        policies=(
+            _policy(main, "main"),
+            _policy(off, "off"),
+        ),
+        event_denominator_proven=True,
+        source="reviewed fixture",
+    )
+
+    assert result.denominator_proven is True
     assert result.candidate_count == 4
     assert all(len(choice.attempts) == 3 for choice in result.choices)
 
