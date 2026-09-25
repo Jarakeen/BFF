@@ -16,6 +16,11 @@ from typing import Any
 DEFAULT_QUALITY = "Gold"
 DEFAULT_ITEM_LEVEL = "CP160"
 DEFAULT_ENCHANTMENT_TIER = "Truly Superb"
+DEFAULT_ARMOR_TRAIT = ""
+DEFAULT_ARMOR_WEIGHT = ""
+DEFAULT_ARMOR_ENCHANT = ""
+DEFAULT_JEWELRY_TRAIT = ""
+DEFAULT_JEWELRY_ENCHANT = ""
 
 
 @dataclass(frozen=True)
@@ -23,6 +28,11 @@ class BuildProfile:
     quality: str = DEFAULT_QUALITY
     item_level: str = DEFAULT_ITEM_LEVEL
     enchantment_tier: str = DEFAULT_ENCHANTMENT_TIER
+    armor_trait: str = DEFAULT_ARMOR_TRAIT
+    armor_weight: str = DEFAULT_ARMOR_WEIGHT
+    armor_enchant: str = DEFAULT_ARMOR_ENCHANT
+    jewelry_trait: str = DEFAULT_JEWELRY_TRAIT
+    jewelry_enchant: str = DEFAULT_JEWELRY_ENCHANT
     favorite: bool = False
     archived: bool = False
     ownership: str = "mine"
@@ -37,6 +47,11 @@ class BuildProfile:
             quality=str(self.quality or DEFAULT_QUALITY).strip() or DEFAULT_QUALITY,
             item_level=str(self.item_level or DEFAULT_ITEM_LEVEL).strip() or DEFAULT_ITEM_LEVEL,
             enchantment_tier=str(self.enchantment_tier or DEFAULT_ENCHANTMENT_TIER).strip() or DEFAULT_ENCHANTMENT_TIER,
+            armor_trait=str(self.armor_trait or "").strip(),
+            armor_weight=str(self.armor_weight or "").strip(),
+            armor_enchant=str(self.armor_enchant or "").strip(),
+            jewelry_trait=str(self.jewelry_trait or "").strip(),
+            jewelry_enchant=str(self.jewelry_enchant or "").strip(),
             favorite=bool(self.favorite),
             archived=bool(self.archived),
             ownership=ownership,
@@ -86,6 +101,11 @@ class BuildProfileService:
             quality=str(row.get("quality") or DEFAULT_QUALITY),
             item_level=str(row.get("item_level") or DEFAULT_ITEM_LEVEL),
             enchantment_tier=str(row.get("enchantment_tier") or DEFAULT_ENCHANTMENT_TIER),
+            armor_trait=str(row.get("armor_trait") or ""),
+            armor_weight=str(row.get("armor_weight") or ""),
+            armor_enchant=str(row.get("armor_enchant") or ""),
+            jewelry_trait=str(row.get("jewelry_trait") or ""),
+            jewelry_enchant=str(row.get("jewelry_enchant") or ""),
             favorite=bool(row.get("favorite", False)),
             archived=bool(row.get("archived", False)),
             ownership=str(row.get("ownership") or "mine"),
@@ -170,13 +190,23 @@ def build_with_effective_item_profile(build, profile: BuildProfile):
             item.Level = str(item.Level or "").strip() or effective.item_level
             item.EnchantTier = str(item.EnchantTier or "").strip() or effective.enchantment_tier
 
+    normalized = profile.normalized()
     for item in resolved.Armor.values():
         if any(str(item.get(key) or "").strip() for key in ("Set", "Set2", "Weight", "Trait", "Enchant")):
             apply(item)
-    for name in (
-        "Necklace", "Ring1", "Ring2", "FrontBarWeapon", "FrontBarOffHand",
-        "BackBarWeapon", "BackBarOffHand",
-    ):
+            item.setdefault("Trait", "")
+            item.setdefault("Weight", "")
+            item.setdefault("Enchant", "")
+            item["Trait"] = str(item["Trait"] or "").strip() or normalized.armor_trait
+            item["Weight"] = str(item["Weight"] or "").strip() or normalized.armor_weight
+            item["Enchant"] = str(item["Enchant"] or "").strip() or normalized.armor_enchant
+    for name in ("Necklace", "Ring1", "Ring2"):
+        item = getattr(resolved, name)
+        if not item.is_empty:
+            apply(item)
+            item.Trait = str(item.Trait or "").strip() or normalized.jewelry_trait
+            item.Enchant = str(item.Enchant or "").strip() or normalized.jewelry_enchant
+    for name in ("FrontBarWeapon", "FrontBarOffHand", "BackBarWeapon", "BackBarOffHand"):
         item = getattr(resolved, name)
         if not item.is_empty:
             apply(item)
