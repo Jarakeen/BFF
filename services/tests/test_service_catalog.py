@@ -2044,3 +2044,22 @@ def test_sustained_dps_runtime_self_named_projection_is_cataloged() -> None:
     assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
     assert "SELF-target named runtime EffectVariants" in service.purpose
     assert "numeric stat semantics remain owned" in service.notes
+
+
+def test_generated_weapon_poison_formula_authority_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_generated_weapon_poison_formula_authority"
+    )
+
+    assert service is not None
+    assert service.service_id == (
+        "extreme.sustained_dps.generated_weapon_poison_formula_authority"
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_poison_frontier",
+        "extreme.sustained_dps.generated_candidate_assembly",
+    )
+    assert "formula identity only" in service.notes
