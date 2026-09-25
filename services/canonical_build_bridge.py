@@ -128,15 +128,72 @@ class CanonicalBuildBridge:
         return roster
 
     def save(self, roster: BuildRoster) -> None:
-        """Persist canonical state first.
+        """Persist canonical state first without silently deleting Saved Builds.
 
-        The running application writes only foundrydock.db. Explicit legacy/test
-        paths may still refresh their compatibility mirror.
+        In the running application a BuildRoster is a compatibility/UI projection,
+        not a complete replacement document for the canonical build catalog. An
+        empty or filtered roster must therefore never erase canonical Saved Builds.
+        Explicit legacy/test paths retain historical replacement semantics.
         """
         normalized = self.enchantment_compatibility.normalize_roster(roster)
-        self.sync_from_roster(normalized)
-        if not self._application_user_database:
+        if self._application_user_database:
+            self.merge_from_roster(normalized)
+        else:
+            self.sync_from_roster(normalized)
             self._save_legacy(normalized)
+
+    def merge_from_roster(self, roster: BuildRoster) -> dict[str, Any]:
+        """Merge UI-visible Builds into canonical state by stable BuildId.
+
+        This boundary is intentionally non-destructive. Deletion is a separate,
+        explicit operation; a page projection is not permission to replace the
+        entire catalog.
+        """
+        existing = self._load_catalog_strict()
+        incoming = self.catalog_service.import_legacy_roster(roster)
+
+        merged = self.catalog_service._normalize(existing)
+        players = {
+            str(row.get("player_id") or "").strip(): row
+            for row in merged.get("players", [])
+            if isinstance(row, dict) and str(row.get("player_id") or "").strip()
+        }
+        for row in incoming.get("players", []):
+            if not isinstance(row, dict):
+                continue
+            key = str(row.get("player_id") or "").strip()
+            if key:
+                players[key] = row
+
+        characters = {
+            str(row.get("character_id") or "").strip(): row
+            for row in merged.get("characters", [])
+            if isinstance(row, dict) and str(row.get("character_id") or "").strip()
+        }
+        for row in incoming.get("characters", []):
+            if not isinstance(row, dict):
+                continue
+            key = str(row.get("character_id") or "").strip()
+            if key:
+                characters[key] = row
+
+        builds = {
+            str(row.get("build_id") or "").strip(): row
+            for row in merged.get("builds", [])
+            if isinstance(row, dict) and str(row.get("build_id") or "").strip()
+        }
+        for row in incoming.get("builds", []):
+            if not isinstance(row, dict):
+                continue
+            key = str(row.get("build_id") or "").strip()
+            if key:
+                builds[key] = row
+
+        merged["players"] = list(players.values())
+        merged["characters"] = list(characters.values())
+        merged["builds"] = list(builds.values())
+        self.catalog_service.save(merged)
+        return merged
 
     def sync_from_roster(self, roster: BuildRoster) -> dict[str, Any]:
         """Resync builds without deleting canonical characters that have none.
