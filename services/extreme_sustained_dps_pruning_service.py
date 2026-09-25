@@ -10,6 +10,7 @@ which matters to unique-leader and global-proof semantics.
 """
 
 from dataclasses import dataclass
+import math
 from enum import Enum
 
 
@@ -26,6 +27,45 @@ class ExtremeSustainedDPSBoundEvidence:
     proven_safe: bool
     source: str
     unresolved: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        key = str(self.candidate_key or "").strip()
+        source = str(self.source or "").strip()
+        if not key:
+            raise ValueError("sustained-DPS bound evidence requires candidate_key")
+        if not source:
+            raise ValueError("sustained-DPS bound evidence requires source")
+        if not isinstance(self.proven_safe, bool):
+            raise TypeError("sustained-DPS bound proven_safe must be boolean")
+
+        upper = self.upper_bound_dps
+        if upper is not None:
+            if isinstance(upper, bool):
+                raise TypeError("sustained-DPS upper bound must be numeric")
+            try:
+                upper = float(upper)
+            except (TypeError, ValueError):
+                raise TypeError("sustained-DPS upper bound must be numeric") from None
+            if not math.isfinite(upper) or upper < 0.0:
+                raise ValueError(
+                    "sustained-DPS upper bound must be finite and non-negative"
+                )
+        elif self.proven_safe:
+            raise ValueError(
+                "sustained-DPS bound cannot be proven safe when no upper bound is available"
+            )
+
+        unresolved = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.unresolved
+                if str(item).strip()
+            )
+        )
+        object.__setattr__(self, "candidate_key", key)
+        object.__setattr__(self, "source", source)
+        object.__setattr__(self, "upper_bound_dps", upper)
+        object.__setattr__(self, "unresolved", unresolved)
 
 
 @dataclass(frozen=True)
@@ -72,9 +112,16 @@ class ExtremeSustainedDPSPruningService:
         *,
         incumbent_dps: float,
     ) -> ExtremeSustainedDPSPruningResult:
-        incumbent = float(incumbent_dps)
-        if incumbent < 0:
-            raise ValueError("sustained-DPS incumbent cannot be negative")
+        if isinstance(incumbent_dps, bool):
+            raise TypeError("sustained-DPS incumbent must be numeric")
+        try:
+            incumbent = float(incumbent_dps)
+        except (TypeError, ValueError):
+            raise TypeError("sustained-DPS incumbent must be numeric") from None
+        if not math.isfinite(incumbent) or incumbent < 0:
+            raise ValueError(
+                "sustained-DPS incumbent must be finite and non-negative"
+            )
 
         decisions: list[ExtremeSustainedDPSPruningDecision] = []
         seen: set[str] = set()
@@ -110,12 +157,8 @@ class ExtremeSustainedDPSPruningService:
                 continue
 
             upper = float(evidence.upper_bound_dps)
-            if upper < 0:
-                raise ValueError(
-                    f"sustained-DPS upper bound cannot be negative for candidate {key!r}"
-                )
 
-            if not bool(evidence.proven_safe):
+            if evidence.proven_safe is not True:
                 decisions.append(
                     ExtremeSustainedDPSPruningDecision(
                         candidate_key=key,
