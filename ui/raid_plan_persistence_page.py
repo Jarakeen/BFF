@@ -842,7 +842,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         """
         build_id = _clean(member.selected_build_id)
         character_id = _clean(member.character_id)
-        if not build_id or not character_id:
+        if not build_id:
             return member
         build = next(
             (
@@ -856,7 +856,18 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         if build is None:
             return member
         build_character_id = _clean(build.get("character_id"))
-        if not build_character_id or build_character_id == character_id:
+        if not build_character_id:
+            return member
+
+        roster_character_id = ""
+        if member.roster_member_id is not None:
+            roster_member = self.roster_service.get_member(member.roster_member_id)
+            if roster_member is not None:
+                roster_character_id = _clean(roster_member.CanonicalCharacterId)
+        if (
+            (not character_id or character_id == build_character_id)
+            and (not roster_character_id or roster_character_id == build_character_id)
+        ):
             return member
 
         build_character = next(
@@ -878,6 +889,10 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 roster_member_id=None,
             )
 
+        # A cross-player conflict remains fail-closed. A blank character with a
+        # stale Personnel row must not let that row override this Build later.
+        if not character_id:
+            return member.with_selection(roster_member_id=None)
         replacement = self._replacement_build_for_stale_member(member)
         replacement_id = (
             _clean(getattr(replacement, "BuildId", ""))

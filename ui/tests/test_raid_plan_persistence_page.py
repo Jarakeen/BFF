@@ -502,7 +502,9 @@ def test_stale_build_repair_preserves_planned_state_and_assignments() -> None:
 
 
 def test_selected_build_repairs_stale_personnel_character_for_same_player() -> None:
-    page = SimpleNamespace()
+    page = SimpleNamespace(roster_service=SimpleNamespace(
+        get_member=lambda _id: SimpleNamespace(CanonicalCharacterId="old-personnel-character"),
+    ))
     member = RaidPlanMember(
         seat_id="tank-1", gamertag="Rik", player_id="player-rik",
         roster_member_id=7, character_id="old-personnel-character",
@@ -524,6 +526,32 @@ def test_selected_build_repairs_stale_personnel_character_for_same_player() -> N
     assert repaired.roster_member_id is None
     assert repaired.character_id == "rik-character"
     assert repaired.character_name == "Rik"
+    assert repaired.selected_build_id == "rik-build"
+    assert repaired.primary_assignment == "Main tank"
+
+
+def test_selected_build_repairs_blank_character_with_stale_personnel_row() -> None:
+    page = SimpleNamespace(roster_service=SimpleNamespace(
+        get_member=lambda _id: SimpleNamespace(CanonicalCharacterId="old-personnel-character"),
+    ))
+    member = RaidPlanMember(
+        seat_id="tank-1", gamertag="Rik", player_id="player-rik",
+        roster_member_id=7, selected_build_id="rik-build",
+        selected_build_name="Rik Tank", primary_assignment="Main tank",
+    )
+    catalog = {
+        "builds": [{"build_id": "rik-build", "character_id": "rik-character"}],
+        "characters": [{
+            "character_id": "rik-character", "player_id": "player-rik", "name": "Rik",
+        }],
+    }
+
+    repaired = raid_plan_persistence_page.RaidPlanPersistencePage._repair_selected_build_identity(
+        page, member, catalog,
+    )
+
+    assert repaired.roster_member_id is None
+    assert repaired.character_id == "rik-character"
     assert repaired.selected_build_id == "rik-build"
     assert repaired.primary_assignment == "Main tank"
 

@@ -39,7 +39,7 @@ def test_raid_plan_save_repairs_build_that_belongs_to_different_character() -> N
     repair = source.split(
         "def _repair_selected_build_identity(self, member, catalog):", 1
     )[1].split("    def current_plan", 1)[0]
-    assert 'build_character_id == character_id' in repair
+    assert 'roster_character_id == build_character_id' in repair
     assert 'build_character.get("player_id")) == _clean(member.player_id)' in repair
     assert 'roster_member_id=None' in repair
     assert "self._replacement_build_for_stale_member(member)" in repair
