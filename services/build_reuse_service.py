@@ -405,18 +405,35 @@ class BuildReuseService:
     @staticmethod
     def replace_or_append(roster: BuildRoster, build: PlayerBuild) -> BuildRoster:
         members = list(roster.Members)
+        incoming_build_id = str(getattr(build, "BuildId", "") or "").strip()
+        incoming_character_id = str(getattr(build, "CharacterId", "") or "").strip()
         key = (
             build.Gamertag.strip().casefold(),
             build.Name.strip().casefold(),
             build.BuildName.strip().casefold(),
         )
         for index, existing in enumerate(members):
+            existing_build_id = str(getattr(existing, "BuildId", "") or "").strip()
+            existing_character_id = str(getattr(existing, "CharacterId", "") or "").strip()
             existing_key = (
                 existing.Gamertag.strip().casefold(),
                 existing.Name.strip().casefold(),
                 existing.BuildName.strip().casefold(),
             )
-            if existing_key == key:
+            same_stable_build = bool(
+                incoming_build_id
+                and existing_build_id
+                and incoming_build_id == existing_build_id
+            )
+            same_destination_name = (
+                existing_key == key
+                and (
+                    not incoming_character_id
+                    or not existing_character_id
+                    or incoming_character_id == existing_character_id
+                )
+            )
+            if same_stable_build or same_destination_name:
                 # Re-applying a template to the same saved Build is an edit, not a
                 # delete/recreate operation. Keep stable canonical ownership so
                 # Character Progression, Raid Plan references, favorites/readiness,
