@@ -1641,6 +1641,7 @@ def test_sustained_dps_objective32_composition_is_canonical_production_root() ->
     assert "additional resource-event denominator" in service.notes
     assert "complete scheduler-derived Heavy Attack discovery" in service.notes
     assert "candidate-resolved runtime_state" in service.notes
+    assert "weapon-poison activation plus explicit consequence authorities" in service.notes
     assert "rather than being recreated here" in service.notes
 
 
