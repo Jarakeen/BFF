@@ -25,6 +25,16 @@ class ExtremeSustainedDPSBoundEnvelopeInput:
     label: str
     evidence: ExtremeSustainedDPSBoundEvidence
 
+    def __post_init__(self) -> None:
+        label = " ".join(str(self.label or "").strip().split())
+        if not label:
+            raise ValueError("partial-branch bound input requires label")
+        if not isinstance(self.evidence, ExtremeSustainedDPSBoundEvidence):
+            raise TypeError(
+                "partial-branch bound input evidence must be canonical bound evidence"
+            )
+        object.__setattr__(self, "label", label)
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSBoundEnvelope:
@@ -34,6 +44,57 @@ class ExtremeSustainedDPSBoundEnvelope:
     rejected_sources: tuple[str, ...]
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        key = str(self.candidate_key or "").strip()
+        if not key:
+            raise ValueError("partial-branch bound envelope requires candidate_key")
+        if not isinstance(self.bound, ExtremeSustainedDPSBoundEvidence):
+            raise TypeError(
+                "partial-branch bound envelope requires canonical bound evidence"
+            )
+        if self.bound.candidate_key != key:
+            raise ValueError(
+                "partial-branch bound envelope key must match bound evidence key"
+            )
+        accepted = tuple(
+            dict.fromkeys(
+                " ".join(str(item or "").strip().split())
+                for item in self.accepted_sources
+                if str(item or "").strip()
+            )
+        )
+        rejected = tuple(
+            dict.fromkeys(
+                " ".join(str(item or "").strip().split())
+                for item in self.rejected_sources
+                if str(item or "").strip()
+            )
+        )
+        evidence = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.evidence
+                if str(item).strip()
+            )
+        )
+        unresolved = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.unresolved
+                if str(item).strip()
+            )
+        )
+        if self.bound.proven_safe and not accepted:
+            raise ValueError(
+                "proven partial-branch bound envelope requires an accepted source"
+            )
+
+        object.__setattr__(self, "candidate_key", key)
+        object.__setattr__(self, "accepted_sources", accepted)
+        object.__setattr__(self, "rejected_sources", rejected)
+        object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "unresolved", unresolved)
 
 
 class ExtremeSustainedDPSPartialBranchUpperBoundService:
@@ -83,7 +144,7 @@ class ExtremeSustainedDPSPartialBranchUpperBoundService:
                     f"{label}: sustained-DPS upper bound must be finite and non-negative"
                 )
 
-            if not bool(evidence.proven_safe):
+            if evidence.proven_safe is not True:
                 rejected.append(f"{label}: numeric bound is not proven safe")
                 unresolved.extend(
                     f"{label}: {item}"
