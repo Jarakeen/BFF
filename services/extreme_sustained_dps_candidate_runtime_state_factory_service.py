@@ -45,6 +45,10 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
     Exact pre-runtime damage-occurrence evidence stays caller-owned on purpose:
     deriving activation opportunities from the final damage evaluator would be
     circular because final damage evaluation itself consumes runtime_state.
+
+    Exact crafted-poison formula/dilution consequence authority is also caller-owned.
+    The factory exposes that authority explicitly instead of inferring a poison's
+    effect set from its saved item label.
     """
 
     @staticmethod
@@ -57,6 +61,7 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
         supplemental_event_denominator_proven: bool,
         supplemental_history_resolver=None,
         supplemental_history_denominator_proven: bool,
+        weapon_poison_consequence_resolver: object | None = None,
         source: str = "Objective #32 candidate runtime scenario",
     ) -> ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
         if capability_service is None:
@@ -117,6 +122,7 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
                     database_path
                 )
             ),
+            weapon_poison_consequence_resolver=weapon_poison_consequence_resolver,
         )
         return ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(
             scenario_frontier=scenario_frontier,
