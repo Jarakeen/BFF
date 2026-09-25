@@ -24,6 +24,10 @@ from services.extreme_sustained_dps_skill_bar_frontier_service import (
     ExtremeSustainedDPSSkillBarState,
     ExtremeSustainedDPSTwoBarSkillCandidate,
 )
+from services.extreme_sustained_dps_generated_weapon_poison_tier_loadout_frontier_service import (
+    ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection,
+    ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate,
+)
 from services.extreme_sustained_dps_weapon_poison_frontier_service import (
     ExtremeSustainedDPSWeaponPoisonLoadoutCandidate,
     ExtremeSustainedDPSWeaponPoisonSelection,
@@ -166,7 +170,9 @@ def test_assembly_applies_only_owned_axis_state_to_cross_axis_build() -> None:
     )
 
     assert result.resolved is True
-    assert result.coordinate.identity == "cp:7|potion:3|passive:11|skills:13|poison:0"
+    assert result.coordinate.identity == (
+        "cp:7|potion:3|passive:11|skills:13|poison:0|poison_tier:0"
+    )
     assert result.build.Mundus == "The Thief"
     assert result.build.Food == "Existing Food"
     assert result.build.FrontBarWeapon.Set == "Gear A"
@@ -222,7 +228,7 @@ def test_assembly_carries_only_poison_owned_bar_state() -> None:
 
     assert result.resolved is True
     assert result.coordinate.poison_index == 5
-    assert result.coordinate.identity.endswith("|poison:5")
+    assert result.coordinate.identity.endswith("|poison:5|poison_tier:0")
     assert result.build.FrontBarPoison == "poison:front"
     assert result.build.BackBarPoison == "poison:back"
     assert result.poison_loadout is not None
@@ -245,4 +251,33 @@ def test_one_bar_context_rejects_nonempty_generated_back_bar_poison() -> None:
 
     assert result.resolved is False
     assert any("back-bar poison" in row for row in result.unresolved)
+
+def test_poison_tier_coordinate_is_part_of_generated_candidate_identity() -> None:
+    poison_loadout = _poisons()
+    tier_loadout = ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate(
+        structural_index=17,
+        front=ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection(
+            poison_id="poison:front",
+            tier=None,
+        ),
+        back=ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection(
+            poison_id="poison:back",
+            tier=None,
+        ),
+    )
+
+    result = ExtremeSustainedDPSGeneratedCandidateAssemblyService.assemble(
+        _context(),
+        champion_points=_cp(),
+        potion=_potion(),
+        passive_ranks=_passives(),
+        skills=_skills(),
+        poison_loadout=poison_loadout,
+        poison_tier_loadout=tier_loadout,
+    )
+
+    assert result.resolved is True
+    assert result.coordinate.poison_index == 5
+    assert result.coordinate.poison_tier_index == 17
+    assert result.coordinate.identity.endswith("|poison:5|poison_tier:17")
 
