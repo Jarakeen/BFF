@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
+from minmax.support_target_type import SupportTargetType
 from services.extreme_sustained_dps_runtime_attempt_evidence_frontier_service import (
     ExtremeSustainedDPSRuntimeAttemptEvidenceChoice,
     ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier,
@@ -92,7 +93,11 @@ class ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService:
             sequence=int(occurrence.event.sequence),
             trigger=trigger,
             source=str(occurrence.poison_id or "").strip(),
-            target=occurrence.event.target,
+            target=(
+                None
+                if effect.target_type is SupportTargetType.SELF
+                else occurrence.event.target
+            ),
             source_bar=occurrence.event.source_bar,
         )
         return RuntimeEffectEventAttempt.for_bound_effect(
