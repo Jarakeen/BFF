@@ -196,12 +196,16 @@ class CanonicalBuildBridge:
         return merged
 
     def sync_from_roster(self, roster: BuildRoster) -> dict[str, Any]:
-        """Resync builds without deleting canonical characters that have none.
+        """Replace a compatibility catalog for explicit legacy/test workflows.
 
-        Character identity and progression are independent of build ownership.
-        Rebuilding the compatibility roster must therefore be allowed to remove
-        every build for a character while preserving that character record.
+        The running application must use merge_from_roster instead. A UI roster
+        is only a projection and is never authority to replace canonical Builds.
         """
+        if self._application_user_database:
+            raise RuntimeError(
+                "Destructive sync_from_roster is forbidden for the application "
+                "user database; use merge_from_roster or an explicit delete operation."
+            )
         normalized = self.enchantment_compatibility.normalize_roster(roster)
         existing = self._load_catalog_strict()
         # import_legacy_roster performs its own normal load after the strict gate
