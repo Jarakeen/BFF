@@ -323,7 +323,10 @@ class BuildCatalogService:
 
     def import_legacy_roster(self, roster: BuildRoster) -> dict[str, Any]:
         """Create canonical ownership records while preserving character state."""
-        existing = self.load()
+        # This method can feed a later write. Never turn a corrupt/transient
+        # canonical read into an empty catalog that a caller could save over
+        # valid user data.
+        existing = self.load_strict()
         existing_players_by_tag = {
             self._player_match_key(player.get("gamertag")): player
             for player in existing["players"]
