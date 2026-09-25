@@ -68,8 +68,6 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthorityService:
         poison_loadout = (
             None if assembled is None else getattr(assembled, "poison_loadout", None)
         )
-        if poison_loadout is None:
-            poison_loadout = getattr(late, "poison_loadout", None)
 
         if assembled is None:
             return ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthority(
