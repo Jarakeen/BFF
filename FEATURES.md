@@ -686,3 +686,11 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Crafted weapon-poison identity and duration-evidence authority** — Extreme Engine can now resolve a saved crafted poison item name against imported UESP Alchemy Poison tier evidence and recover every underlying effect identity plus the source-preserved base/triple duration alternatives for that effect. Multi-effect poisons remain multi-effect rather than being flattened into one guessed consequence. The saved item label alone does not prove which dilution duration applies; exact selected duration, magnitude, target semantics, and final runtime application remain fail-closed until separately proven.
+
+
+### Raid Plan save hardening and overview consolidation
+- Raid Plan overwrites create a recoverable whole-database safety snapshot before the transactional write.
+- Saves fail closed on stale persisted snapshots, duplicate occupied players, read-back mismatches, and suspicious bulk player-identity replacement across six or more seats.
+- Recovery drafts remain separate from durable saved state until an explicit Save.
+- The Raid Plan overview uses one plan-action card; duplicate Quick Actions and Linked Resources button cards are removed.
+- Team Schedule reads the existing Team-owned schedule from RosterService, including recurring time/timezone and current focus, instead of creating a second schedule authority.
