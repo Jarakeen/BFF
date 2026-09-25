@@ -219,6 +219,19 @@ def _skills_tab(page, build) -> QWidget:
     return tab
 
 
+def _class_masteries_tab(page, build) -> QWidget:
+    # Installed by phase14_build_focused_editors_support. This fallback keeps the
+    # inspector self-contained if extensions are intentionally not bootstrapped.
+    tab = QWidget()
+    layout = QVBoxLayout(tab)
+    layout.setContentsMargins(0, 0, 0, 0)
+    card = FoundryCard("Class Masteries", "◇")
+    card.addWidget(QLabel("Class Mastery editor is unavailable in this runtime."))
+    layout.addWidget(card)
+    layout.addStretch(1)
+    return tab
+
+
 def _cp_tab(page, build) -> QWidget:
     tab = QWidget()
     layout = QVBoxLayout(tab)
@@ -341,6 +354,7 @@ def _render_inspector(page) -> None:
     tabs.addTab(_overview_tab(page, build), "Overview")
     tabs.addTab(_gear_tab(page, build), "Gear")
     tabs.addTab(_skills_tab(page, build), "Skills")
+    tabs.addTab(_class_masteries_tab(page, build), "Class Masteries")
     tabs.addTab(_cp_tab(page, build), "CP")
     tabs.addTab(_progression_tab(page, build), "Progression")
     tabs.addTab(_consumables_tab(page, build), "Consumables")
