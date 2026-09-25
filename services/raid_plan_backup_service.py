@@ -5,7 +5,9 @@ from __future__ import annotations
 from dataclasses import asdict
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from models.raid_plan import RaidPlan
 from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
@@ -32,10 +34,30 @@ def export_raid_plan_backup(plan: RaidPlan, path: str | Path) -> Path:
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "plan": asdict(plan),
     }
-    destination.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+    temp_name: str | None = None
+    try:
+        with NamedTemporaryFile(
+            "w",
+            encoding="utf-8",
+            dir=destination.parent,
+            prefix=f".{destination.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+            temp_name = handle.name
+        os.replace(temp_name, destination)
+    except OSError as exc:
+        if temp_name:
+            try:
+                Path(temp_name).unlink(missing_ok=True)
+            except OSError:
+                pass
+        raise RaidPlanBackupError(f"could not write Raid Plan backup: {exc}") from exc
     return destination
 
 
