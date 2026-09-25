@@ -1859,6 +1859,7 @@ def test_weapon_enchantment_oblivion_damage_consumer_is_cataloged() -> None:
         row.service_id for row in SERVICE_CATALOG.dependencies_of(service.service_id)
     ) == (
         "extreme.sustained_dps.weapon_enchantment_proc_consequences",
+        "extreme.sustained_dps.weapon_enchantment_damage_policy",
     )
     assert (
         "extreme_sustained_dps_weapon_enchantment_oblivion_damage_resolution"
