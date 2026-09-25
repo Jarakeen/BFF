@@ -135,3 +135,60 @@ def test_generated_dilution_authority_requires_explicit_dilution_mode():
 
     with pytest.raises(ValueError, match="dilution-mode resolver returned no witness"):
         service.resolve(poison_id=formula.canonical_id, occurrence=object())
+
+
+def test_generated_dilution_authority_accepts_per_effect_mode_witness():
+    formula = AlchemyFormula(
+        reagents=("A", "B", "C"),
+        traits=("Breach", "Protection"),
+        game_update=GameUpdate.U50,
+    )
+    authority = ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthority(
+        entries=(
+            ExtremeSustainedDPSGeneratedWeaponPoisonFormulaEntry(
+                bar="front",
+                poison_id=formula.canonical_id,
+                formula=formula,
+            ),
+        ),
+    )
+    item_evidence = ExtremeSustainedDPSWeaponPoisonItemEvidence(
+        poison_id=formula.canonical_id,
+        possible_effects=(
+            ExtremeSustainedDPSWeaponPoisonPossibleEffect(
+                effect_name="Breach",
+                base_duration_seconds=10.0,
+                triple_duration_seconds=5.0,
+                solvent="Alkahest",
+                level=50,
+            ),
+            ExtremeSustainedDPSWeaponPoisonPossibleEffect(
+                effect_name="Protection",
+                base_duration_seconds=5.8,
+                triple_duration_seconds=2.5,
+                solvent="Alkahest",
+                level=50,
+            ),
+        ),
+        source_evidence_complete=True,
+    )
+    service = ExtremeSustainedDPSGeneratedWeaponPoisonDilutionAuthorityService(
+        formula_authority=authority,
+        item_evidence_resolver=lambda **_kwargs: item_evidence,
+        dilution_mode_resolver=lambda **_kwargs: (
+            ("Breach", "triple"),
+            ("Protection", "base"),
+        ),
+    )
+
+    result = service.resolve(
+        poison_id=formula.canonical_id,
+        occurrence=object(),
+    )
+
+    assert result.resolved is True
+    assert result.mode is None
+    assert [(row.effect_name, row.duration_seconds) for row in result.effects] == [
+        ("Breach", 5.0),
+        ("Protection", 5.8),
+    ]
