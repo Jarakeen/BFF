@@ -683,3 +683,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Finite weapon-poison consequence runtime frontier** — Objective #32 can now bind each selected poison proc branch to explicit source-bound runtime consequence attempts and carry those effects into the ordinary runtime-state frontier. Poison chance and the player-global cooldown remain owned upstream, so consequence effects cannot reroll the 20% proc decision. A configured resolver must return an actual finite attempt frontier and explicit runtime effects; resolver presence alone no longer clears the poison blocker.
+
+
+- **Crafted weapon-poison identity and duration authority** — Extreme Engine can now resolve a saved crafted poison item name against imported UESP Alchemy Poison tier evidence and recover every underlying effect identity plus each effect-specific duration. Multi-effect poisons remain multi-effect rather than being flattened into one guessed consequence. Magnitude, dilution, target semantics, and final runtime application remain fail-closed until separately proven.
