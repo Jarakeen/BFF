@@ -286,7 +286,7 @@ def export_raid_plan_builds_xlsx(
     wb = Workbook()
     index = wb.active
     index.title = "Raid Index"
-    teal, dark, gold, pale, gray = "1F3F45", "303A3C", "C8A46A", "E5ECEB", "687476"
+    teal, dark, gold, pale, gray, mist, parchment = "1F3F45", "303A3C", "C8A46A", "E5ECEB", "687476", "F3F7F6", "FBF8F0"
     hair = Side(style="hair", color="C9D1D0")
     rule = Side(style="thin", color=gold)
 
@@ -297,10 +297,12 @@ def export_raid_plan_builds_xlsx(
         last = get_column_letter(last_col)
         ws.merge_cells(f"A1:{last}1")
         ws["A1"] = title
-        ws["A1"].font = Font(name="Calibri", size=18, bold=True, color=teal)
+        ws["A1"].font = Font(name="Georgia", size=19, bold=True, color=teal)
+        ws["A1"].fill = PatternFill("solid", fgColor=parchment)
         ws.merge_cells(f"A2:{last}2")
         ws["A2"] = subtitle
         ws["A2"].font = Font(name="Calibri", size=9, italic=True, color=gray)
+        ws["A2"].fill = PatternFill("solid", fgColor=parchment)
         ws["A3"].border = Border(bottom=rule)
         for col in range(2, last_col + 1):
             ws.cell(3, col).border = Border(bottom=rule)
@@ -312,7 +314,7 @@ def export_raid_plan_builds_xlsx(
     def section(ws, row: int, label: str, last_col: int = 6) -> int:
         ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=last_col)
         cell = ws.cell(row, 1, label.upper())
-        cell.font = Font(name="Calibri", size=10, bold=True, color=teal)
+        cell.font = Font(name="Georgia", size=10, bold=True, color=teal)
         cell.fill = PatternFill("solid", fgColor=pale)
         cell.border = Border(bottom=rule)
         return row + 1
@@ -327,6 +329,7 @@ def export_raid_plan_builds_xlsx(
     for col, heading in enumerate(headers, 1):
         c = index.cell(5, col, heading)
         c.font = Font(bold=True, color=teal)
+        c.fill = PatternFill("solid", fgColor=pale)
         c.border = Border(bottom=rule)
     used_names: set[str] = {"Raid Index", "Unresolved"}
     player_sheets: list[tuple[RaidPlanMember, PlayerBuild, str]] = []
@@ -350,6 +353,8 @@ def export_raid_plan_builds_xlsx(
             c.data_type = "s"
             c.font = Font(size=10, color=dark)
             c.border = Border(bottom=hair)
+            if row_no % 2 == 0:
+                c.fill = PatternFill("solid", fgColor=mist)
         index.cell(row_no, 7).hyperlink = f"#'{sheet_name}'!A1"
         index.cell(row_no, 7).style = "Hyperlink"
     for col, width in enumerate((13, 20, 22, 18, 14, 31, 22), 1):
@@ -378,8 +383,12 @@ def export_raid_plan_builds_xlsx(
         for left_label, left_value, right_label, right_value in summary:
             ws.cell(row, 1, left_label).font = Font(bold=True, color=teal)
             ws.cell(row, 2, left_value).data_type = "s"
+            ws.cell(row, 2).alignment = Alignment(vertical="top", wrap_text=True)
             ws.cell(row, 4, right_label).font = Font(bold=True, color=teal)
             ws.cell(row, 5, right_value).data_type = "s"
+            ws.cell(row, 5).alignment = Alignment(vertical="top", wrap_text=True)
+            if left_label == "Primary Assignment":
+                ws.row_dimensions[row].height = 34
             row += 1
         row += 1
 
@@ -435,6 +444,11 @@ def export_raid_plan_builds_xlsx(
         for cells in ws.iter_rows():
             for cell in cells:
                 cell.alignment = Alignment(vertical="top", wrap_text=True)
+        ws.print_title_rows = "1:3"
+        ws.page_margins.left = 0.35
+        ws.page_margins.right = 0.35
+        ws.page_margins.top = 0.45
+        ws.page_margins.bottom = 0.45
         ws.page_setup.orientation = "portrait"
         ws.page_setup.fitToWidth = 1
         ws.sheet_properties.pageSetUpPr.fitToPage = True
@@ -477,11 +491,13 @@ def export_raid_plan_builds_pdf(
     dark = colors.HexColor("#303A3C")
     gray = colors.HexColor("#687476")
     pale = colors.HexColor("#E5ECEB")
+    mist = colors.HexColor("#F3F7F6")
+    parchment = colors.HexColor("#FBF8F0")
     hair = colors.HexColor("#D9DFDE")
 
     title = ParagraphStyle("FDTitle", fontName="Helvetica-Bold", fontSize=18, leading=21, textColor=teal, spaceAfter=2)
     subtitle = ParagraphStyle("FDSub", fontName="Helvetica", fontSize=8.5, leading=11, textColor=gray, spaceAfter=8)
-    section_style = ParagraphStyle("FDSection", fontName="Helvetica-Bold", fontSize=9, leading=11, textColor=teal, spaceBefore=5, spaceAfter=4)
+    section_style = ParagraphStyle("FDSection", fontName="Helvetica-Bold", fontSize=9, leading=11, textColor=teal, backColor=pale, borderPadding=(3,4,3,4), spaceBefore=6, spaceAfter=4)
     body = ParagraphStyle("FDBody", fontName="Helvetica", fontSize=7.7, leading=9.5, textColor=dark)
     small = ParagraphStyle("FDSmall", fontName="Helvetica", fontSize=6.8, leading=8.2, textColor=gray)
 
@@ -497,14 +513,28 @@ def export_raid_plan_builds_pdf(
             ("TOPPADDING", (0, 0), (-1, -1), 2.5),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5),
             ("LINEBELOW", (0, 0), (-1, -1), 0.2, hair),
+            ("ROWBACKGROUNDS", (0, 1 if header else 0), (-1, -1), [colors.white, mist]),
         ]
         if header:
             commands.extend([
-                ("BACKGROUND", (0, 0), (-1, 0), pale),
+                ("BACKGROUND", (0, 0), (-1, 0), parchment),
                 ("LINEBELOW", (0, 0), (-1, 0), 0.7, gold),
             ])
         t.setStyle(TableStyle(commands))
         return t
+
+    def decorate_page(canvas, document):
+        canvas.saveState()
+        width, height = LETTER
+        canvas.setFillColor(teal)
+        canvas.rect(0, height - 0.16*inch, width, 0.16*inch, fill=1, stroke=0)
+        canvas.setFillColor(gold)
+        canvas.rect(0, height - 0.20*inch, width, 0.035*inch, fill=1, stroke=0)
+        canvas.setFont("Helvetica", 6.8)
+        canvas.setFillColor(gray)
+        canvas.drawString(0.48*inch, 0.25*inch, "FoundryDock • Leave Better Records")
+        canvas.drawRightString(width - 0.48*inch, 0.25*inch, f"Page {document.page}")
+        canvas.restoreState()
 
     doc = SimpleDocTemplate(
         str(target), pagesize=LETTER, leftMargin=.48*inch, rightMargin=.48*inch,
@@ -541,11 +571,20 @@ def export_raid_plan_builds_pdf(
         story.append(Paragraph(escape(identity), subtitle))
 
         summary_rows = [
-            [P("Role", section_style), P(member.role or build.Role), P("Mundus", section_style), P(member.planned_mundus or build.Mundus)],
-            [P("Food", section_style), P(build.Food), P("Potion", section_style), P(build.Potion)],
-            [P("Assignment", section_style), P(member.primary_assignment), P("Utility", section_style), P(", ".join(member.utility_assignments))],
+            [P("ROLE", section_style), P(member.role or build.Role), P("MUNDUS", section_style), P(member.planned_mundus or build.Mundus)],
+            [P("FOOD", section_style), P(build.Food), P("POTION", section_style), P(build.Potion)],
         ]
-        story.extend([table(summary_rows, (.75*inch, 2.6*inch, .75*inch, 2.6*inch), header=False), Spacer(1, 5)])
+        story.extend([table(summary_rows, (.72*inch, 2.63*inch, .72*inch, 2.63*inch), header=False), Spacer(1, 4)])
+        assignment_rows = [
+            [P("ASSIGNMENT", section_style), P(member.primary_assignment)],
+            [P("UTILITY", section_style), P(", ".join(member.utility_assignments))],
+        ]
+        assignment_table = table(assignment_rows, (1.0*inch, 5.7*inch), header=False)
+        assignment_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (0, -1), pale),
+            ("LINEBEFORE", (0, 0), (0, -1), 1.2, gold),
+        ]))
+        story.extend([assignment_table, Spacer(1, 6)])
 
         story.append(Paragraph("GEAR BY SLOT", section_style))
         gear_rows = [[P(x, section_style) for x in ("Slot", "Set / Item", "Weight / Type", "Trait", "Enchant")]]
@@ -566,7 +605,7 @@ def export_raid_plan_builds_pdf(
         else:
             story.append(Paragraph("No scribed skills recorded.", small))
 
-    doc.build(story)
+    doc.build(story, onFirstPage=decorate_page, onLaterPages=decorate_page)
     return target
 
 
