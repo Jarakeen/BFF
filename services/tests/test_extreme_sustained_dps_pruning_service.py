@@ -4,7 +4,9 @@ import pytest
 
 from services.extreme_sustained_dps_pruning_service import (
     ExtremeSustainedDPSBoundEvidence,
+    ExtremeSustainedDPSPruningDecision,
     ExtremeSustainedDPSPruningDisposition,
+    ExtremeSustainedDPSPruningResult,
     ExtremeSustainedDPSPruningService,
 )
 
@@ -126,3 +128,41 @@ def test_missing_bound_cannot_claim_proven_safe() -> None:
 def test_bound_proof_flag_is_strict_boolean() -> None:
     with pytest.raises(TypeError, match="proven_safe must be boolean"):
         _bound("A", 100.0, safe="true")
+
+
+def test_pruning_decision_rejects_impossible_pruned_state() -> None:
+    with pytest.raises(
+        ValueError,
+        match="requires upper bound strictly below incumbent",
+    ):
+        ExtremeSustainedDPSPruningDecision(
+            candidate_key="A",
+            disposition=ExtremeSustainedDPSPruningDisposition.PRUNED,
+            upper_bound_dps=100.0,
+            incumbent_dps=100.0,
+            reason="bad",
+            source="test",
+            unresolved=(),
+        )
+
+
+def test_pruning_result_rejects_count_drift() -> None:
+    decision = ExtremeSustainedDPSPruningDecision(
+        candidate_key="A",
+        disposition=ExtremeSustainedDPSPruningDisposition.SURVIVOR,
+        upper_bound_dps=100.0,
+        incumbent_dps=50.0,
+        reason="still open",
+        source="test",
+        unresolved=(),
+    )
+
+    with pytest.raises(ValueError, match="survivor_count must match"):
+        ExtremeSustainedDPSPruningResult(
+            incumbent_dps=50.0,
+            decisions=(decision,),
+            pruned_count=0,
+            survivor_count=0,
+            forced_open_count=0,
+            evidence=(),
+        )
