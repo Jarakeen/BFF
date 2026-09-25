@@ -746,9 +746,22 @@ class CoveragePage(FoundryPage):
         )
         try:
             self.raid_plan_repository.save(updated, expected=plan)
+            persisted = self.raid_plan_repository.get(plan_id)
+            expected_provider = next(
+                (
+                    row for row in (persisted.coverage_for(effect) if persisted is not None else ())
+                    if row.seat_id.casefold() == member.seat_id.casefold()
+                    and row.source == source
+                    and (row.note or "") == (note.strip() or "")
+                ),
+                None,
+            )
+            if expected_provider is None:
+                raise RuntimeError("saved provider failed Coverage read-back verification")
         except Exception as exc:
             self.status.error(f"Could not save manual Coverage: {exc}")
             return
+        self._coverage_selected_plan_id = plan_id
         self.status.success(f"{effect} marked covered by {member.character_name or member.gamertag or member.seat_id} • {source}.")
         self.refresh()
 
@@ -774,9 +787,18 @@ class CoveragePage(FoundryPage):
         updated = plan.without_coverage_provider(effect, provider.seat_id)
         try:
             self.raid_plan_repository.save(updated, expected=plan)
+            persisted = self.raid_plan_repository.get(plan_id)
+            if persisted is None:
+                raise RuntimeError("saved Raid Plan failed Coverage read-back verification")
+            if any(
+                row.seat_id.casefold() == provider.seat_id.casefold()
+                for row in persisted.coverage_for(effect)
+            ):
+                raise RuntimeError("removed provider survived Coverage read-back verification")
         except Exception as exc:
             self.status.error(f"Could not remove manual Coverage: {exc}")
             return
+        self._coverage_selected_plan_id = plan_id
         self.status.success(f"Removed raid-lead Coverage assignment for {effect}.")
         self.refresh()
 
