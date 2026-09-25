@@ -78,6 +78,40 @@ class ExtremeSustainedDPSRuntimeEffectRelevance:
     math_unresolved: tuple[str, ...]
     evidence: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if any(not isinstance(row, EffectVariant) for row in self.relevant):
+            raise TypeError("runtime relevance relevant must contain EffectVariant records")
+        if any(not isinstance(row, EffectVariant) for row in self.irrelevant):
+            raise TypeError("runtime relevance irrelevant must contain EffectVariant records")
+        if set(self.relevant).intersection(self.irrelevant):
+            raise ValueError(
+                "runtime relevance effect cannot be both relevant and irrelevant"
+            )
+
+        def _strings(values: tuple[str, ...]) -> tuple[str, ...]:
+            return tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in values
+                    if str(item).strip()
+                )
+            )
+
+        unresolved = _strings(self.unresolved)
+        source_data = _strings(self.source_data_unresolved)
+        math_rows = _strings(self.math_unresolved)
+        typed = set(source_data).union(math_rows)
+        if not typed.issubset(set(unresolved)):
+            raise ValueError(
+                "runtime relevance typed blockers must also appear in unresolved"
+            )
+        object.__setattr__(self, "relevant", tuple(self.relevant))
+        object.__setattr__(self, "irrelevant", tuple(self.irrelevant))
+        object.__setattr__(self, "unresolved", unresolved)
+        object.__setattr__(self, "source_data_unresolved", source_data)
+        object.__setattr__(self, "math_unresolved", math_rows)
+        object.__setattr__(self, "evidence", _strings(self.evidence))
+
 
 class ExtremeSustainedDPSRuntimeEffectRelevanceService:
     """Keep only runtime effects proven capable of changing modeled sustained DPS.
