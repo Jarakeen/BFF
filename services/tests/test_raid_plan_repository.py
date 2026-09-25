@@ -4,6 +4,7 @@ import pytest
 
 from models.raid_plan import (
     RaidPlan,
+    RaidPlanCoverageProvider,
     RaidPlanMember,
     RaidPlanTriggeredResponsibility,
 )
@@ -227,3 +228,98 @@ def test_repository_round_trips_sqlite_user_database(tmp_path) -> None:
 
     assert repository.delete(plan.plan_id) is True
     assert repository.get(plan.plan_id) is None
+
+
+def test_repository_pydantic_round_trips_explained_manual_coverage(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "foundrydock.db")
+    plan = _plan()
+    plan = plan.with_coverage_provider(
+        RaidPlanCoverageProvider(
+            effect_name="Minor Berserk",
+            seat_id="healer-1",
+            source="Combat Prayer",
+            note="Raid lead assigned; verify uptime on review.",
+        )
+    )
+
+    repository.save(plan)
+    restored = repository.get(plan.plan_id)
+
+    assert restored == plan
+    provider = restored.coverage_for("Minor Berserk")[0]
+    assert provider.source == "Combat Prayer"
+    assert provider.note == "Raid lead assigned; verify uptime on review."
+
+
+def test_repository_pydantic_rejects_blank_manual_coverage_source(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "foundrydock.db")
+    raw = {
+        "plan_id": "bad-coverage",
+        "trial_id": "sunspire",
+        "name": "Bad Coverage",
+        "members": [{"seat_id": "healer-1", "gamertag": "Jarakeen"}],
+        "triggered_responsibilities": [],
+        "coverage_providers": [{
+            "effect_name": "Minor Berserk",
+            "seat_id": "healer-1",
+            "source": "   ",
+            "note": "vibes require at least a label",
+        }],
+    }
+    with repository._connect() as db:
+        db.execute(
+            "INSERT INTO raid_plan(plan_id, payload_json) VALUES (?, ?)",
+            ("bad-coverage", json.dumps(raw)),
+        )
+
+    with pytest.raises(RaidPlanRepositoryError, match="source"):
+        repository.get("bad-coverage")
+
+
+def test_repository_pydantic_rejects_unknown_manual_coverage_seat(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "foundrydock.db")
+    raw = {
+        "plan_id": "bad-seat",
+        "trial_id": "sunspire",
+        "name": "Bad Seat",
+        "members": [{"seat_id": "healer-1", "gamertag": "Jarakeen"}],
+        "triggered_responsibilities": [],
+        "coverage_providers": [{
+            "effect_name": "Minor Berserk",
+            "seat_id": "dd-99",
+            "source": "vibes",
+        }],
+    }
+    with repository._connect() as db:
+        db.execute(
+            "INSERT INTO raid_plan(plan_id, payload_json) VALUES (?, ?)",
+            ("bad-seat", json.dumps(raw)),
+        )
+
+    with pytest.raises(RaidPlanRepositoryError, match="unknown seat_id"):
+        repository.get("bad-seat")
+
+
+def test_repository_pydantic_rejects_extra_manual_coverage_fields(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "foundrydock.db")
+    raw = {
+        "plan_id": "extra-field",
+        "trial_id": "sunspire",
+        "name": "Extra Field",
+        "members": [{"seat_id": "healer-1", "gamertag": "Jarakeen"}],
+        "triggered_responsibilities": [],
+        "coverage_providers": [{
+            "effect_name": "Minor Berserk",
+            "seat_id": "healer-1",
+            "source": "Combat Prayer",
+            "surprise": "silently accepting schema drift is how civilization ends",
+        }],
+    }
+    with repository._connect() as db:
+        db.execute(
+            "INSERT INTO raid_plan(plan_id, payload_json) VALUES (?, ?)",
+            ("extra-field", json.dumps(raw)),
+        )
+
+    with pytest.raises(RaidPlanRepositoryError, match="surprise"):
+        repository.get("extra-field")
