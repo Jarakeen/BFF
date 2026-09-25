@@ -24,6 +24,9 @@ from services.extreme_sustained_dps_passive_rank_frontier_service import (
 from services.extreme_sustained_dps_potion_frontier_service import (
     ExtremeSustainedDPSPotionCandidate,
 )
+from services.extreme_sustained_dps_weapon_poison_frontier_service import (
+    ExtremeSustainedDPSWeaponPoisonLoadoutCandidate,
+)
 from services.extreme_sustained_dps_skill_bar_frontier_service import (
     ExtremeSustainedDPSTwoBarSkillCandidate,
 )
@@ -35,6 +38,7 @@ class ExtremeSustainedDPSGeneratedCandidateCoordinate:
     potion_index: int
     passive_rank_index: int
     skill_bar_index: int
+    poison_index: int = 0
 
     @property
     def identity(self) -> str:
@@ -42,7 +46,8 @@ class ExtremeSustainedDPSGeneratedCandidateCoordinate:
             f"cp:{self.champion_point_index}|"
             f"potion:{self.potion_index}|"
             f"passive:{self.passive_rank_index}|"
-            f"skills:{self.skill_bar_index}"
+            f"skills:{self.skill_bar_index}|"
+            f"poison:{self.poison_index}"
         )
 
 
@@ -79,12 +84,18 @@ class ExtremeSustainedDPSGeneratedCandidateAssemblyService:
         potion: ExtremeSustainedDPSPotionCandidate,
         passive_ranks: ExtremeSustainedDPSPassiveRankCandidate,
         skills: ExtremeSustainedDPSTwoBarSkillCandidate,
+        poison_loadout: ExtremeSustainedDPSWeaponPoisonLoadoutCandidate | None = None,
     ) -> ExtremeSustainedDPSAssembledCandidate:
         coordinate = ExtremeSustainedDPSGeneratedCandidateCoordinate(
             champion_point_index=int(champion_points.structural_index),
             potion_index=int(potion.structural_index),
             passive_rank_index=int(passive_ranks.structural_index),
             skill_bar_index=int(skills.structural_index),
+            poison_index=(
+                0
+                if poison_loadout is None
+                else int(poison_loadout.structural_index)
+            ),
         )
 
         unresolved = list(context.unresolved)
@@ -98,6 +109,19 @@ class ExtremeSustainedDPSGeneratedCandidateAssemblyService:
 
         # Potion frontier owns selection availability, never activation/uptime.
         build.Potion = str(potion.family.selected_label or "").strip()
+
+        # Poison frontier owns only front/back equipped poison identity.
+        if poison_loadout is not None:
+            build.FrontBarPoison = str(
+                poison_loadout.build.FrontBarPoison or ""
+            ).strip()
+            build.BackBarPoison = str(
+                poison_loadout.build.BackBarPoison or ""
+            ).strip()
+            if context.one_bar_only and build.BackBarPoison:
+                unresolved.append(
+                    "One-bar gear context received non-empty generated back-bar poison"
+                )
 
         # Skill frontier owns only the two six-slot skill bars.
         build.FrontBarSkills = list(skills.front.names)
@@ -140,6 +164,8 @@ class ExtremeSustainedDPSGeneratedCandidateAssemblyService:
                 f"Generated refinement coordinate: {coordinate.identity}",
                 f"Champion Points selected: {len(build.ChampionPoints)}",
                 f"Potion selection: {build.Potion or '(none)'}",
+                f"Front weapon poison: {build.FrontBarPoison or '(none)'}",
+                f"Back weapon poison: {build.BackBarPoison or '(none)'}",
                 f"Front skill slots populated: {len(cls._nonempty(build.FrontBarSkills))}",
                 f"Back skill slots populated: {len(cls._nonempty(build.BackBarSkills))}",
                 f"Passive ranks carried: {len(progression.passive_ranks)}",
