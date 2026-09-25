@@ -1817,7 +1817,9 @@ def test_sustained_dps_candidate_runtime_state_factory_is_cataloged() -> None:
     )
     assert "caller-owned weapon-poison consequence authority seam" in factory.purpose
     assert "avoid circularly deriving runtime_state" in factory.notes
-    assert "tier/dilution witnesses remain caller-owned" in factory.notes
+    assert "tier evidence remains candidate/caller-owned" in factory.notes
+    assert "triple-duration witnesses automatically" in factory.notes
+    assert "do not prove base dilution" in factory.notes
 
 
 
