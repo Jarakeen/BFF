@@ -19,10 +19,9 @@ def test_raid_plan_overview_has_one_action_surface_and_team_schedule() -> None:
 
 def test_raid_plan_save_has_prewrite_snapshot_and_bulk_identity_guard() -> None:
     source = _source("ui/raid_plan_persistence_page.py")
-    method = source[
-        source.index("    def save_current_plan(self)"):
-        source.index("    def _open_assignments", source.index("    def save_current_plan(self)")),
-    ]
+    start = source.index("    def save_current_plan(self)")
+    end = source.index("    def _open_assignments", start)
+    method = source[start:end]
 
     snapshot = method.index("self._safety_snapshots.create(")
     write = method.index("self.plan_repository.save(")
