@@ -145,7 +145,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
 
         plan_context_bar = rehome_plan_header_controls(
             self,
-            trailing_widgets=(self.share_builds_button,),
+            trailing_widgets=(),
             show_plan_editor=False,
             show_team_editor=False,
             show_saved_plan_selector=False,
@@ -276,6 +276,12 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.save_plan_button.setText("Save")
         self.save_plan_button.setProperty("primary", True)
         left.addWidget(self.save_plan_button)
+
+        self.backup_plan_button.setParent(left)
+        left.addWidget(self.backup_plan_button)
+
+        self.share_builds_button.setParent(left)
+        left.addWidget(self.share_builds_button)
 
         self.open_raid_map_button.setParent(left)
         left.addWidget(self.open_raid_map_button)
