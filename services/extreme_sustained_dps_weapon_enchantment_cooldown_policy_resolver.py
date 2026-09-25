@@ -16,6 +16,7 @@ from minmax.character_build.effect_instance import EffectVariant
 from minmax.support_effect_category import SupportEffectCategory
 from minmax.runtime_effect_sequence import effect_variant_runtime_binding_key
 from minmax.weapon_enchantment_runtime_cadence import (
+    WeaponEnchantmentCadenceAuthority,
     WeaponEnchantmentCadenceEvidence,
     WeaponEnchantmentEffectFamily,
     provisional_weapon_enchantment_cadence,
@@ -181,6 +182,58 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
         return final, (detail,), ()
 
     @staticmethod
+    def _candidate_runtime_blockers(
+        cadence: WeaponEnchantmentCadenceEvidence,
+        *,
+        identity_source_count: int,
+        distinct_identity_count: int,
+    ) -> tuple[str, ...]:
+        """Require only cadence facts that can affect this concrete candidate universe."""
+
+        blockers: list[str] = []
+        authoritative = WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+
+        if cadence.base_cooldown_seconds is None:
+            blockers.append("base cooldown value is unavailable")
+        if cadence.cooldown_authority is not authoritative:
+            blockers.append("base cooldown is not authoritative")
+        if not cadence.activation_causes:
+            blockers.append("activation causes are unavailable")
+        if cadence.activation_authority is not authoritative:
+            blockers.append("activation causes are not authoritative")
+        if cadence.off_bar_source_persists is None:
+            blockers.append("off-bar source persistence is unavailable")
+        if cadence.off_bar_authority is not authoritative:
+            blockers.append("off-bar source persistence is not authoritative")
+        if cadence.poison_replaces_enchantment is None:
+            blockers.append("poison suppression/replacement rule is unavailable")
+        if cadence.poison_replacement_authority is not authoritative:
+            blockers.append("poison suppression/replacement rule is not authoritative")
+
+        # Timer-sharing topology is candidate-relative. One physical source has no
+        # competing timer. Duplicate copies of one identity require only the explicit
+        # same-identity sharing rule. Multiple distinct identities additionally require
+        # proof that cooldown identity is scoped per effect identity and that those
+        # identities retain independent timers.
+        if identity_source_count > 1:
+            if cadence.same_effect_identity_shares_cooldown is None:
+                blockers.append("same-identity cooldown sharing is unavailable")
+            if cadence.same_identity_cooldown_authority is not authoritative:
+                blockers.append("same-identity cooldown sharing is not authoritative")
+
+        if distinct_identity_count > 1:
+            if not str(cadence.cooldown_scope or "").strip():
+                blockers.append("cooldown scope is unavailable")
+            if cadence.cooldown_scope_authority is not authoritative:
+                blockers.append("cooldown scope is not authoritative")
+            if cadence.distinct_effect_identities_have_independent_cooldowns is None:
+                blockers.append("distinct-identity cooldown independence is unavailable")
+            if cadence.distinct_identity_cooldown_authority is not authoritative:
+                blockers.append("distinct-identity cooldown independence is not authoritative")
+
+        return tuple(dict.fromkeys(blockers))
+
+    @staticmethod
     def _effect_label(effect: EffectVariant) -> str:
         slot = str(effect.source_slot or "").strip()
         bar = str(
@@ -203,6 +256,13 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
         policies: list[ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy] = []
         evidence: list[str] = []
         unresolved: list[str] = []
+        identity_counts: dict[str, int] = {}
+        for effect in tuple(enchantment_effects):
+            identity_key = str(effect.name or "").strip().casefold()
+            if identity_key:
+                identity_counts[identity_key] = identity_counts.get(identity_key, 0) + 1
+        distinct_identity_count = len(identity_counts)
+
         family_by_binding_key: dict[
             tuple[str, str, str, str],
             WeaponEnchantmentEffectFamily,
@@ -263,7 +323,12 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
                 )
             )
 
-            blockers = tuple(cadence.runtime_blockers)
+            identity_key = str(effect.name or "").strip().casefold()
+            blockers = self._candidate_runtime_blockers(
+                cadence,
+                identity_source_count=identity_counts.get(identity_key, 0),
+                distinct_identity_count=distinct_identity_count,
+            )
             if blockers:
                 unresolved.extend(
                     f"{label}: {blocker}"
@@ -271,11 +336,11 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver:
                 )
                 continue
 
-            # runtime_ready proves base cooldown, topology, same-identity sharing,
-            # distinct-identity independence, activation semantics, source persistence,
-            # and poison replacement.
-            # EffectVariant.name is the model's canonical logical identity, so it
-            # becomes the cooldown key only after those mechanics are authoritative.
+            # The candidate-scoped gate proves every cadence fact that can actually
+            # influence this concrete enchantment universe. It does not require
+            # unrelated multi-identity topology for a one-identity candidate.
+            # EffectVariant.name is the canonical logical cooldown identity once the
+            # relevant sharing/independence rules are authoritative.
             cooldown_seconds = float(cadence.base_cooldown_seconds)
             cooldown_evidence: tuple[str, ...] = ()
             if self.runtime_source_service is not None:
