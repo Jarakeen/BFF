@@ -43,14 +43,42 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
             raise ValueError(
                 "candidate runtime-state resolver requires scenario frontier service"
             )
+        if not callable(getattr(scenario_frontier, "build_from_candidate", None)):
+            raise TypeError(
+                "candidate runtime-state resolver requires scenario frontier build_from_candidate()"
+            )
+
+        resolvers = {
+            "occurrence_provider_resolver": occurrence_provider_resolver,
+            "supplemental_event_resolver": supplemental_event_resolver,
+            "supplemental_history_resolver": supplemental_history_resolver,
+            "weapon_poison_consequence_resolver_resolver": (
+                weapon_poison_consequence_resolver_resolver
+            ),
+        }
+        for label, resolver in resolvers.items():
+            if resolver is not None and not callable(resolver):
+                raise TypeError(
+                    f"candidate runtime-state {label} must be callable when provided"
+                )
+
+        if not isinstance(supplemental_event_denominator_proven, bool):
+            raise TypeError(
+                "candidate runtime-state supplemental_event_denominator_proven must be boolean"
+            )
+        if not isinstance(supplemental_history_denominator_proven, bool):
+            raise TypeError(
+                "candidate runtime-state supplemental_history_denominator_proven must be boolean"
+            )
+
         self.scenario_frontier = scenario_frontier
         self.occurrence_provider_resolver = occurrence_provider_resolver
         self.supplemental_event_resolver = supplemental_event_resolver
-        self.supplemental_event_denominator_proven = bool(
+        self.supplemental_event_denominator_proven = (
             supplemental_event_denominator_proven
         )
         self.supplemental_history_resolver = supplemental_history_resolver
-        self.supplemental_history_denominator_proven = bool(
+        self.supplemental_history_denominator_proven = (
             supplemental_history_denominator_proven
         )
         self.weapon_poison_consequence_resolver_resolver = (
