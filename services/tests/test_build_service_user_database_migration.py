@@ -186,3 +186,59 @@ def test_application_forbids_destructive_sync_from_roster(
 
     with pytest.raises(RuntimeError, match="Destructive sync_from_roster is forbidden"):
         service.canonical.sync_from_roster(BuildRoster())
+
+
+def test_application_save_catalog_cannot_implicitly_delete_saved_build(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    data_dir = tmp_path / "data"
+    user_dir = tmp_path / "user_data"
+    data_dir.mkdir()
+    user_dir.mkdir()
+    user_db = user_dir / "foundrydock.db"
+    builds_path = data_dir / "builds.json"
+    characters_path = data_dir / "characters.json"
+    builds_path.write_text('{"Members": []}', encoding="utf-8")
+    characters_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 4,
+                "players": [],
+                "characters": [],
+                "builds": [],
+                "team_assignments": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(bridge_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(bridge_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(migration_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "ensure_user_database", lambda: user_db)
+
+    service = BuildService(builds_path)
+    service.save(
+        BuildRoster(
+            Members=[
+                PlayerBuild(
+                    Name="Bacon",
+                    Gamertag="Rikbacon",
+                    BuildName="Rik Sorcerer Tank",
+                )
+            ]
+        )
+    )
+    catalog = service.canonical.load_catalog()
+    assert len(catalog["builds"]) == 1
+
+    import pytest
+
+    projected = dict(catalog)
+    projected["builds"] = []
+    with pytest.raises(RuntimeError, match="implicitly delete Saved Build"):
+        service.canonical.save_catalog(projected)
+
+    assert len(service.canonical.load_catalog()["builds"]) == 1
