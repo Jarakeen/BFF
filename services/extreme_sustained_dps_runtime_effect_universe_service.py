@@ -20,6 +20,41 @@ class ExtremeSustainedDPSRuntimeEffectUniverse:
     unresolved: tuple[str, ...]
     weapon_enchantment_sources: tuple[object, ...] = ()
 
+    def __post_init__(self) -> None:
+        if any(not isinstance(row, EffectVariant) for row in self.effects):
+            raise TypeError("runtime effect universe effects must contain EffectVariant records")
+        if any(
+            not isinstance(row, EffectVariant)
+            for row in self.excluded_plan_owned
+        ):
+            raise TypeError(
+                "runtime effect universe excluded_plan_owned must contain EffectVariant records"
+            )
+        if set(self.effects).intersection(self.excluded_plan_owned):
+            raise ValueError(
+                "runtime effect universe effect cannot be both active and plan-owned excluded"
+            )
+
+        def _strings(values: tuple[str, ...]) -> tuple[str, ...]:
+            return tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in values
+                    if str(item).strip()
+                )
+            )
+
+        object.__setattr__(self, "effects", tuple(self.effects))
+        object.__setattr__(self, "excluded_plan_owned", tuple(self.excluded_plan_owned))
+        object.__setattr__(self, "boundaries", _strings(self.boundaries))
+        object.__setattr__(self, "evidence", _strings(self.evidence))
+        object.__setattr__(self, "unresolved", _strings(self.unresolved))
+        object.__setattr__(
+            self,
+            "weapon_enchantment_sources",
+            tuple(self.weapon_enchantment_sources),
+        )
+
     @property
     def resolved(self) -> bool:
         return not self.unresolved
