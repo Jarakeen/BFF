@@ -1704,12 +1704,13 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         implementation_path="services.extreme_sustained_dps_generated_weapon_poison_consequence_authority_factory_service",
         inputs=(
             "CompleteGeneratedCandidateState",
-            "CandidateWeaponPoisonTierItemEvidenceResolver",
-            "CandidateWeaponPoisonDilutionModeResolver",
+            "OptionalCandidateWeaponPoisonTierItemEvidenceResolver",
+            "OptionalCandidateWeaponPoisonDilutionModeResolver",
         ),
         outputs=("ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService",),
         dependencies=(
             "extreme.sustained_dps.generated_weapon_poison_formula_authority",
+            "extreme.sustained_dps.weapon_poison_formula_dilution_witness",
             "extreme.sustained_dps.generated_weapon_poison_dilution_authority",
             "extreme.sustained_dps.weapon_poison_named_effect_authority",
             "extreme.sustained_dps.weapon_poison_consequence_frontier",
