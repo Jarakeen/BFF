@@ -13,6 +13,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from services.build_profile_pydantic_schema import validate_build_profile_payload
+
 DEFAULT_QUALITY = "Gold"
 DEFAULT_ITEM_LEVEL = "CP160"
 DEFAULT_ENCHANTMENT_TIER = "Truly Superb"
@@ -97,6 +99,10 @@ class BuildProfileService:
         row = self._load_payload()["profiles"].get(key)
         if not isinstance(row, dict):
             return BuildProfile()
+        try:
+            row = validate_build_profile_payload(row)
+        except ValueError:
+            return BuildProfile()
         return BuildProfile(
             quality=str(row.get("quality") or DEFAULT_QUALITY),
             item_level=str(row.get("item_level") or DEFAULT_ITEM_LEVEL),
@@ -119,7 +125,7 @@ class BuildProfileService:
             raise ValueError("build_id is required")
         payload = self._load_payload()
         profiles = dict(payload["profiles"])
-        profiles[key] = asdict(profile.normalized())
+        profiles[key] = validate_build_profile_payload(asdict(profile.normalized()))
         temporary = self.path.with_suffix(self.path.suffix + ".tmp")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         temporary.write_text(json.dumps({"version": 1, "profiles": profiles}, indent=2, sort_keys=True), encoding="utf-8")
