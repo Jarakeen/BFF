@@ -89,6 +89,8 @@ def _candidate_runtime_resolver(
         scenario_frontier=SimpleNamespace(
             runtime_effect_universe=object(),
             runtime_effect_scaling=object(),
+            weapon_poison_activation_service=object(),
+            weapon_poison_consequence_resolver=object(),
         ),
     )
 
