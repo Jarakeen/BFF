@@ -193,3 +193,36 @@ def test_named_poison_consequence_frontier_reaches_target_combat_math() -> None:
     assert projected.unresolved == ()
     assert "Minor Breach" in projected.combat_state.active_buffs
     assert resistance_reduction_from_target_state(projected.combat_state) == 2974.0
+
+
+def test_poison_consequence_dispatch_prefers_resolve_method_on_callable_class() -> None:
+    class _CallableResolverClass:
+        def __new__(cls, **_kwargs):
+            raise AssertionError("resolver class should not be instantiated")
+
+        @classmethod
+        def resolve(cls, *, poison_id, occurrence):
+            return SimpleNamespace(
+                effects=(),
+                evidence=(f"resolved {poison_id}",),
+                unresolved=(),
+            )
+
+    occurrence = ExtremeSustainedDPSWeaponPoisonProcOccurrence(
+        event=RuntimeEvent(
+            time_seconds=1.0,
+            sequence=0,
+            trigger="weapon_poison_activation",
+            source="Light Attack",
+            target="Boss",
+            source_bar="front",
+        ),
+        poison_id="poison:test",
+    )
+
+    result = ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService._invoke(
+        _CallableResolverClass,
+        occurrence=occurrence,
+    )
+
+    assert result.evidence == ("resolved poison:test",)
