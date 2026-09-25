@@ -1053,7 +1053,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=True,
         evidence_class=EvidenceClass.MIXED,
         notes=(
-            "Requires either a complete explicit runtime-state frontier or an inspectable canonical candidate-resolved runtime-state authority with proven supplemental event/history denominators and canonical effect discovery/scaling, plus a proven-complete Heavy Attack encounter channel-block denominator. "
+            "Requires either a complete explicit runtime-state frontier or an inspectable canonical candidate-resolved runtime-state authority with proven supplemental event/history denominators, canonical effect discovery/scaling, and weapon-poison activation/consequence authorities, plus a proven-complete Heavy Attack encounter channel-block denominator. "
             "The canonical Objective #32 composition enables candidate-resolved runtime state and this guard; a presence-only resolver flag cannot satisfy closure preflight. Generic finite-denominator search wrappers may leave the guard disabled. "
             "Preflight prevents an obviously non-closure-ready scenario from entering branch-and-bound but cannot prove search completion or exact simulation completeness."
         ),
