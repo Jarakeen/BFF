@@ -68,7 +68,8 @@ def matching_saved_build_indices(
 
     matches: list[int] = []
     player_matches: list[int] = []
-    for index, build in enumerate(tuple(saved_builds or ())):
+    saved = tuple(saved_builds or ())
+    for index, build in enumerate(saved):
         build_player_id = _clean(getattr(build, "PlayerId", "")).casefold()
         build_character_id = _clean(getattr(build, "CharacterId", "")).casefold()
 
@@ -87,6 +88,38 @@ def matching_saved_build_indices(
             continue
 
         matches.append(index)
+
+    # Older Saved Builds can retain a pre-merge canonical PlayerId even though
+    # their exact gamertag still names the Personnel player selected in Roles.
+    # If the stable-id lookup found nothing, recover only exact gamertag-owned
+    # Builds. This is deliberately not fuzzy matching and cannot cross to a
+    # differently named player.
+    if canonical_player_id and not player_matches and player_key:
+        player_matches = [
+            index
+            for index, build in enumerate(saved)
+            if _clean(getattr(build, "Gamertag", "")).casefold() == player_key
+        ]
+        if player_matches:
+            exact_character_matches = [
+                index
+                for index in player_matches
+                if canonical_character_id
+                and _clean(getattr(saved[index], "CharacterId", "")).casefold()
+                == canonical_character_id
+            ]
+            if exact_character_matches:
+                matches = exact_character_matches
+            elif character_key:
+                text_character_matches = [
+                    index
+                    for index in player_matches
+                    if _clean(getattr(saved[index], "Name", "")).casefold()
+                    == character_key
+                ]
+                matches = text_character_matches or player_matches
+            else:
+                matches = list(player_matches)
 
     # Legacy Personnel and freshly saved Builds can temporarily disagree about
     # which canonical CharacterId represents the selected player's character.
