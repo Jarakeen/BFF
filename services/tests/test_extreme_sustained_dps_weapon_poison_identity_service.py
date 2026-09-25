@@ -80,17 +80,19 @@ def test_poison_name_resolves_every_matching_effect_and_its_duration(tmp_path) -
         "Test Poison IX"
     )
 
-    assert result.resolved is True
-    assert result.unresolved == ()
+    assert result.resolved is False
+    assert result.source_evidence_complete is True
+    assert result.exact_selection_proven is False
+    assert any("possible effects but not the exact crafted formula" in row for row in result.unresolved)
     assert [
         (row.effect_name, row.base_duration_seconds)
-        for row in result.effects
+        for row in result.possible_effects
     ] == [
         ("Maim", 3.5),
         ("Ravage Health", 6.4),
     ]
-    assert all(row.solvent == "Alkahest" for row in result.effects)
-    assert all(row.level == 50 for row in result.effects)
+    assert all(row.solvent == "Alkahest" for row in result.possible_effects)
+    assert all(row.level == 50 for row in result.possible_effects)
 
 
 def test_poison_identity_matching_is_case_and_whitespace_insensitive(tmp_path) -> None:
@@ -108,9 +110,10 @@ def test_poison_identity_matching_is_case_and_whitespace_insensitive(tmp_path) -
         "  damage   health poison IX "
     )
 
-    assert result.resolved is True
+    assert result.resolved is False
+    assert result.source_evidence_complete is True
     assert result.poison_id == "damage health poison IX"
-    assert result.effects[0].effect_name == "Ravage Health"
+    assert result.possible_effects[0].effect_name == "Ravage Health"
 
 
 def test_missing_poison_name_fails_closed(tmp_path) -> None:
@@ -124,7 +127,7 @@ def test_missing_poison_name_fails_closed(tmp_path) -> None:
     )
 
     assert result.resolved is False
-    assert result.effects == ()
+    assert result.possible_effects == ()
     assert any(
         "not found in canonical alchemy Poison tiers" in row
         for row in result.unresolved
