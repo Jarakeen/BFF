@@ -141,3 +141,37 @@ def test_resolver_can_supply_candidate_scoped_poison_consequence_authority() -> 
 
     assert seen == [state]
     assert scenario.calls[-1]["weapon_poison_consequence_resolver"] is authority
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "supplemental_event_denominator_proven",
+        "supplemental_history_denominator_proven",
+    ),
+)
+def test_resolver_requires_strict_boolean_denominator_flags(field) -> None:
+    kwargs = {
+        "scenario_frontier": _Scenario(),
+        "supplemental_event_denominator_proven": False,
+        "supplemental_history_denominator_proven": False,
+    }
+    kwargs[field] = "false"
+
+    with pytest.raises(TypeError, match="must be boolean"):
+        ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(**kwargs)
+
+
+def test_resolver_requires_callable_optional_hooks() -> None:
+    with pytest.raises(TypeError, match="occurrence_provider_resolver must be callable"):
+        ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(
+            scenario_frontier=_Scenario(),
+            occurrence_provider_resolver=object(),
+        )
+
+
+def test_resolver_requires_scenario_build_from_candidate_contract() -> None:
+    with pytest.raises(TypeError, match="build_from_candidate"):
+        ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(
+            scenario_frontier=object(),
+        )
