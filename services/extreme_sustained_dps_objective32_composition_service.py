@@ -55,6 +55,26 @@ class ExtremeSustainedDPSObjective32CompositionService:
                 "with a proven-complete additional resource-event denominator"
             )
 
+    @staticmethod
+    def _require_late_axis(late_adapter: object, canonical_axis: str) -> None:
+        axes_method = getattr(late_adapter, "axes", None)
+        if axes_method is None:
+            raise ValueError(
+                "Objective #32 composition requires generated late adapter axes() authority"
+            )
+        axes = tuple(axes_method() or ())
+        published = {
+            str(axis).strip()
+            for row in axes
+            for axis in tuple(getattr(row, "canonical_axes", ()) or ())
+            if str(axis).strip()
+        }
+        if canonical_axis not in published:
+            raise ValueError(
+                "Objective #32 composition requires generated late adapter to physically publish "
+                f"canonical axis: {canonical_axis}"
+            )
+
     @classmethod
     def compose(
         cls,
@@ -91,6 +111,8 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires canonical generated weapon-poison tier frontier"
             )
+        cls._require_late_axis(late_adapter, "weapon_poisons")
+        cls._require_late_axis(late_adapter, "weapon_poison_tiers")
         if mundus_food_adapter is None:
             raise ValueError(
                 "Objective #32 composition requires canonical Mundus/food adapter"
