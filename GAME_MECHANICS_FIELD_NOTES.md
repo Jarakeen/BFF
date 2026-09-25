@@ -1881,3 +1881,12 @@ The poison sequence frontier already decides whether an eligible weapon hit wins
 **Layman's version:** the poison wins the raffle once, then everything printed on that poison happens according to its own effect rules. We do not make the damage, restore, and debuff each buy a second raffle ticket. Doing so would quietly turn a 20% proc into 4% for any consequence that got rerolled.
 
 **For BFF:** selected poison proc histories now bind to explicit source-bound runtime consequence attempts. Consequence effects must not introduce a second proc chance after the poison sequence has already resolved the 20% chance/global cooldown branch. Merely having a resolver object is also not proof that consequences reached runtime state; it must return a finite attempt frontier and explicit runtime effects.
+
+
+## 2026-09-24 — One crafted poison item can carry several effects with different durations
+
+The imported UESP Alchemy data is organized by effect page, while a saved build stores the crafted poison's item name. The same poison item name can appear on several effect pages, and each matching row carries that effect's own duration.
+
+**Layman's version:** “Damage Health Poison IX” is the bottle label, not necessarily the whole list of things inside it. One bottle can hurt, weaken, drain, or otherwise inconvenience the target in several different ways, and those effects do not have to last the same amount of time. ESO has put a small ingredients panel inside a string join.
+
+**For BFF:** the exact saved poison item name is now used as the join key across canonical imported Poison tier rows. Every matched effect identity and duration is preserved independently. Do not collapse a multi-effect poison into one effect, borrow one effect's duration for the others, or treat identity/duration proof as proof of magnitude or application math.
