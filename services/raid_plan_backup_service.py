@@ -70,13 +70,29 @@ def load_raid_plan_backup(path: str | Path) -> RaidPlan:
 
     if not isinstance(payload, dict):
         raise RaidPlanBackupError("Raid Plan backup root must be an object")
-    if payload.get("kind") != BACKUP_KIND:
-        raise RaidPlanBackupError("file is not a FoundryDock Raid Plan backup")
-    if payload.get("schema_version") != BACKUP_SCHEMA_VERSION:
-        raise RaidPlanBackupError(
-            f"unsupported Raid Plan backup schema: {payload.get('schema_version')!r}"
-        )
-    raw_plan = payload.get("plan")
+
+    # Current portable backups use the explicit FoundryDock backup envelope.
+    # Early Phase 14 safety exports used the UI-draft-shaped envelope
+    # {"payload": {"kind": "raid_plan", "plan": {...}}, "saved_at": ...}.
+    # Accept that older *read-only file shape* so a safety file created during
+    # the persistence incident remains recoverable. The decoded RaidPlan still
+    # passes through the same canonical repository validation on restore.
+    if payload.get("kind") == BACKUP_KIND:
+        if payload.get("schema_version") != BACKUP_SCHEMA_VERSION:
+            raise RaidPlanBackupError(
+                f"unsupported Raid Plan backup schema: {payload.get('schema_version')!r}"
+            )
+        raw_plan = payload.get("plan")
+    else:
+        legacy_payload = payload.get("payload")
+        if (
+            isinstance(legacy_payload, dict)
+            and legacy_payload.get("kind") == "raid_plan"
+        ):
+            raw_plan = legacy_payload.get("plan")
+        else:
+            raise RaidPlanBackupError("file is not a FoundryDock Raid Plan backup")
+
     if not isinstance(raw_plan, dict):
         raise RaidPlanBackupError("Raid Plan backup does not contain a plan")
 
