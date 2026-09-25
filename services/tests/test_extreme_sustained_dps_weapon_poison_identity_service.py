@@ -133,7 +133,7 @@ def test_missing_poison_name_fails_closed(tmp_path) -> None:
     assert result.resolved is False
     assert result.possible_effects == ()
     assert any(
-        "not found in canonical alchemy Poison tiers" in row
+        "not found in canonical alchemy poison tiers" in row.casefold()
         for row in result.unresolved
     )
 
