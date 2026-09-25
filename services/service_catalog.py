@@ -1575,7 +1575,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
-        service_id="extreme.sustained_dps.weapon_poison_identity",
+        service_id="extreme.sustained_dps.weapon_poison_item_evidence",
         domain="extreme",
         purpose=(
             "Resolve a saved crafted weapon-poison item name to every imported UESP "
@@ -1584,10 +1584,10 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
         implementation_path="services.extreme_sustained_dps_weapon_poison_identity_service",
         inputs=("CanonicalEsoDatabase", "SavedWeaponPoisonItemName"),
-        outputs=("ExtremeSustainedDPSWeaponPoisonIdentityResolution",),
+        outputs=("ExtremeSustainedDPSWeaponPoisonItemEvidence",),
         dependencies=(),
         responsibilities=(
-            "extreme_sustained_dps_weapon_poison_identity_duration_resolution",
+            "extreme_sustained_dps_weapon_poison_item_evidence_resolution",
         ),
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
