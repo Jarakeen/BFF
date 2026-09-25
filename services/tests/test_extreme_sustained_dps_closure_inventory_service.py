@@ -1,7 +1,10 @@
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.support_target_type import SupportTargetType
 from services.extreme_sustained_dps_closure_inventory_service import (
+    ExtremeSustainedDPSClosureInventory,
     ExtremeSustainedDPSClosureInventoryService,
 )
 from services.extreme_sustained_dps_runtime_effect_relevance_service import (
@@ -113,3 +116,14 @@ def test_closure_inventory_includes_typed_runtime_scaling_blockers() -> None:
     )
     assert inventory.blocking_count == 2
     assert inventory.closure_ready is False
+
+
+def test_closure_inventory_rejects_non_gap_mechanics_records() -> None:
+    with pytest.raises(TypeError, match="CanonicalKnowledgeGap"):
+        ExtremeSustainedDPSClosureInventory(
+            source_data_blockers=(),
+            math_review_blockers=(),
+            mechanics_blockers=(object(),),
+            mechanics_advisories=(),
+            evidence=(),
+        )
