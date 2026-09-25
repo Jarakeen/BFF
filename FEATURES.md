@@ -647,6 +647,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Selected weapon-enchantment damage-policy bridge** — Exact source-selected glyph proc consequences can now project reviewed damage-policy semantics without pretending to own final damage math. Oblivion weapon-enchantment damage resolves as non-critical from primary ZOS evidence; ordinary elemental/absorb glyph critical eligibility remains explicitly unresolved rather than inheriting normal skill rules. Raw canonical magnitude is preserved for later target-side application.
 - **Canonical Oblivion damage-policy gate** — Exact CP160 Legendary Decrease Health application now passes through the shared weapon-enchantment damage-policy proof before entering the sequential target-Health ledger, so the reviewed non-critical Oblivion exception has one canonical authority. Ordinary elemental and absorb glyph damage still fail closed until their critical rules are proven.
 
+- **Caller-owned poison consequence authority seam** — The canonical Objective #32 runtime-state factory can now accept an explicit weapon-poison consequence resolver and forwards it into the runtime scenario graph. Exact crafted formula/dilution evidence can therefore reach finite poison proc histories without inferring effect identity from a saved poison label; omitting the authority remains fail-closed.
+
 - **Finch stale-identity repair** — Sync Finch now checks the current little Discord username against Personnel before trusting an older Discord-ID binding. A unique exact username match can repair a previously misbound account, rebind the Discord ID locally, and push the corrected canonical player name back to Finch. Fuzzy matching remains disabled.
 
 
