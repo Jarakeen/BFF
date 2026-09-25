@@ -2022,3 +2022,14 @@ The Raid Plan Crit/Pen card exposed an unused Mundus path: The Thief's 1,333 Cri
 The Builds page shows a Gold / CP160 / Truly Superb baseline for blank equipped-item fields. The Raid Plan calculator previously read only the raw saved item fields, so its tooltip said “level unset, quality unset” even when that baseline was visible.
 
 **Layman's version:** the item was using the build's default in one view, while the calculator was looking at the empty box underneath. The calculation now inherits the default on a temporary copy. An explicit lower-level or lower-quality item still stays that way, and an empty equipment slot stays empty.
+
+
+---
+
+## 2026-09-25 — An unreadable poison tier row is not evidence that the tier does not exist
+
+For generated crafted poisons, the Extreme Engine proves the solvent/level tier denominator by intersecting imported Poison rows for every trait in the exact formula.
+
+If a source row for one of those required traits is malformed, skipping it would make the visible tier set look smaller and could falsely certify a maximum over an incomplete search space. The tier frontier now fails closed instead.
+
+**For BFF:** bad source data is a blocker, not a zero. If a required mechanics row cannot be read, Objective #32 does not get to pretend that coordinate is absent.
