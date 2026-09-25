@@ -259,6 +259,9 @@ def test_weapon_enchantment_runtime_cadence_is_decision_critical_until_timing_is
     assert "Official ESO Support" in row.missing_evidence
     assert "distinct enchant identities retain independent cooldowns" in row.missing_evidence
     assert "source-weapon persistence across bar swaps" in row.capability
+    assert "Candidate-scoped cadence proof" in row.capability
+    assert "single authoritative" in row.capability
+    assert "Multi-identity exact cadence" in row.missing_evidence
 
     rotation_gaps = report.dependency_gaps_for(
         "rotation_maker",
