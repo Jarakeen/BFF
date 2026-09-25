@@ -1808,13 +1808,14 @@ def test_sustained_dps_candidate_runtime_state_factory_is_cataloged() -> None:
         "extreme.sustained_dps.weapon_enchantment_cooldown_policy",
         "extreme.sustained_dps.weapon_poison_activation_events",
         "extreme.sustained_dps.weapon_poison_sequence_frontier",
+        "extreme.sustained_dps.generated_weapon_poison_consequence_authority_factory",
         "extreme.sustained_dps.weapon_poison_named_effect_authority",
         "extreme.sustained_dps.weapon_poison_consequence_frontier",
         "extreme.sustained_dps.runtime_scenario_frontier",
     )
     assert "caller-owned weapon-poison consequence authority seam" in factory.purpose
     assert "avoid circularly deriving runtime_state" in factory.notes
-    assert "formula/dilution consequence authority is also caller-owned" in factory.notes
+    assert "tier/dilution witnesses remain caller-owned" in factory.notes
 
 
 
@@ -2083,3 +2084,22 @@ def test_generated_weapon_poison_dilution_authority_is_cataloged() -> None:
         "extreme.sustained_dps.weapon_poison_dilution_selection",
     )
     assert "three separate proof layers" in service.notes
+
+
+def test_generated_weapon_poison_consequence_authority_factory_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_generated_weapon_poison_consequence_authority_factory"
+    )
+
+    assert service is not None
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.generated_weapon_poison_formula_authority",
+        "extreme.sustained_dps.generated_weapon_poison_dilution_authority",
+        "extreme.sustained_dps.weapon_poison_named_effect_authority",
+        "extreme.sustained_dps.weapon_poison_consequence_frontier",
+    )
+    assert "candidate-scoped finite weapon-poison consequence authority" in service.purpose
+    assert "No-poison candidates return no consequence authority" in service.notes
