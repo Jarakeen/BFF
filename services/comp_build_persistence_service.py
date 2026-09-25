@@ -11,7 +11,7 @@ records in the same canonical build catalog.
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-from uuid import NAMESPACE_URL, uuid4, uuid5
+from uuid import NAMESPACE_URL, uuid5
 
 from models.build_model import PlayerBuild
 from engine.config import get_user_database_path
@@ -266,50 +266,11 @@ class CompBuildPersistenceService:
         return PlayerBuild.from_dict(source if isinstance(source, dict) else {})
 
     @staticmethod
-    def _existing_comp_record(
-        builds: list[dict],
-        chair: CompChairState,
-    ) -> dict | None:
-        selected_id = str(chair.selected_build_id or "").strip()
-        if selected_id:
-            selected = next(
-                (
-                    row
-                    for row in builds
-                    if isinstance(row, dict)
-                    and str(row.get("build_id") or "").strip() == selected_id
-                ),
-                None,
-            )
-            if (
-                isinstance(selected, dict)
-                and str(selected.get("build_kind") or "").strip().casefold() == "comp"
-                and str(selected.get("character_id") or "").strip()
-                == str(chair.character_id or "").strip()
-            ):
-                return selected
-
-        return next(
-            (
-                row
-                for row in builds
-                if isinstance(row, dict)
-                and str(row.get("build_kind") or "").strip().casefold() == "comp"
-                and str(row.get("character_id") or "").strip()
-                == str(chair.character_id or "").strip()
-                and str((row.get("source") or {}).get("seat_id") or "").strip().casefold()
-                == chair.seat_id.casefold()
-                and str((row.get("source") or {}).get("plan_id") or "").strip()
-                == str(getattr(chair, "_source_plan_id", "") or "").strip()
-            ),
-            None,
-        )
-
-    @staticmethod
     def _source_baseline(
         builds: list[dict],
         chair: CompChairState,
     ) -> dict | None:
+        """Return the explicitly selected reusable saved Build, never a Comp artifact."""
         selected_id = str(chair.selected_build_id or "").strip()
         if not selected_id:
             return None
@@ -321,18 +282,20 @@ class CompBuildPersistenceService:
                 and str(row.get("build_id") or "").strip() == selected_id
                 and str(row.get("character_id") or "").strip()
                 == str(chair.character_id or "").strip()
+                and str(row.get("build_kind") or "saved").strip().casefold() != "comp"
             ),
             None,
         )
 
-    @staticmethod
-    def _build_name(state: CompPlanState, chair: CompChairState) -> str:
-        explicit = str(chair.selected_build_name or "").strip()
-        if explicit and str(chair.build_source_kind or "").strip().casefold() == "comp_build":
-            return explicit
-        return f"{state.raid_plan_name} • {chair.seat_id}"
 
     def persist(self, state: CompPlanState) -> CompBuildPersistenceResult:
+        """Validate Comp chair identity without manufacturing another Build flavor.
+
+        Comp Maker owns Raid Plan assignment/override state. A reusable saved Build
+        remains a reference by BuildId; planned gear/skills/mundus remain on the
+        chair. Legacy build_kind="comp" rows stay readable for history/recovery but
+        no new Comp Build rows are created here.
+        """
         catalog = self.bridge.load_catalog()
         builds = [
             deepcopy(row)
@@ -356,24 +319,20 @@ class CompBuildPersistenceService:
         skipped_reasons: list[tuple[str, str]] = []
         staged_roster_bindings: list[tuple[int, str, str]] = []
 
-        for chair in state.chairs:
-            repaired_chair, identity_issue = self._repair_personnel_identity(chair)
-            if repaired_chair != chair:
-                chair = repaired_chair
-                updated_state = updated_state.with_chair(chair)
+        for original_chair in state.chairs:
+            chair, identity_issue = self._repair_personnel_identity(original_chair)
 
             if not self._is_real_player(chair):
                 skipped.append(chair.seat_id)
                 reason = (
                     "open/recruit chair"
                     if chair.is_open_player or not chair.player_name
-                    else identity_issue or "player is not linked to a Personnel record; load the saved player list"
+                    else identity_issue
+                    or "player is not linked to a Personnel record; load the saved player list"
                 )
                 skipped_reasons.append((chair.seat_id, reason))
-                continue
-            if not self._has_build_plan(chair):
-                skipped.append(chair.seat_id)
-                skipped_reasons.append((chair.seat_id, "no saved or planned build package"))
+                if chair != original_chair:
+                    updated_state = updated_state.with_chair(chair)
                 continue
 
             canonical_player_id, character_id = self._ensure_canonical_identity(
@@ -383,8 +342,6 @@ class CompBuildPersistenceService:
                 characters=characters,
                 staged_roster_bindings=staged_roster_bindings,
             )
-            character = characters[character_id]
-
             if (
                 str(chair.player_id or "").strip() != canonical_player_id
                 or str(chair.character_id or "").strip() != character_id
@@ -392,101 +349,76 @@ class CompBuildPersistenceService:
                 chair = chair.with_changes(
                     player_id=canonical_player_id,
                     character_id=character_id,
-                    roster_member_id=chair.roster_member_id,
                 )
+
+            selected_id = str(chair.selected_build_id or "").strip()
+            selected_record = self._source_baseline(builds, chair) if selected_id else None
+            if selected_id and selected_record is None:
+                legacy_comp = next(
+                    (
+                        row
+                        for row in builds
+                        if str(row.get("build_id") or "").strip() == selected_id
+                        and str(row.get("build_kind") or "").strip().casefold() == "comp"
+                    ),
+                    None,
+                )
+                if legacy_comp is not None:
+                    # Old Comp Builds are historical snapshots, not reusable Build
+                    # assignments. Keep their planned chair data, but detach the
+                    # pseudo-Build reference so it cannot masquerade as Saved.
+                    chair = chair.with_changes(
+                        selected_build_id=None,
+                        selected_build_name=None,
+                        build_source_kind="planned",
+                        build_source_name="Raid Plan",
+                    )
+                    selected_id = ""
+                else:
+                    raise ValueError(
+                        f"{chair.seat_id}: selected Build does not belong to this character"
+                    )
+
+            if selected_record is not None:
+                build_name = str(selected_record.get("name") or chair.selected_build_name or "").strip()
+                chair = chair.with_changes(
+                    selected_build_name=build_name or chair.selected_build_name,
+                    build_source_kind="saved_build",
+                    build_source_name=build_name or "Saved Build",
+                )
+            elif chair.planned_gear_sets or chair.planned_skills or chair.planned_mundus:
+                chair = chair.with_changes(
+                    selected_build_id=None,
+                    selected_build_name=None,
+                    build_source_kind="planned",
+                    build_source_name="Raid Plan",
+                )
+            elif not self._has_build_plan(chair):
+                skipped.append(chair.seat_id)
+                skipped_reasons.append((chair.seat_id, "no saved or planned build assignment"))
                 updated_state = updated_state.with_chair(chair)
+                continue
 
-            existing_comp = self._existing_comp_record(builds, chair)
-            baseline_record = existing_comp or self._source_baseline(builds, chair)
-            snapshot = self._record_snapshot(baseline_record)
-
-            player = players.get(canonical_player_id, {})
-            snapshot.PlayerId = canonical_player_id
-            snapshot.CharacterId = character_id
-            snapshot.Name = str(character.get("name") or chair.character_name or "").strip()
-            snapshot.Gamertag = str(
-                player.get("gamertag")
-                or character.get("gamertag")
-                or chair.player_name
-                or ""
-            ).strip()
-            snapshot.EsoClass = str(chair.eso_class or character.get("eso_class") or snapshot.EsoClass or "").strip()
-            snapshot.Role = str(chair.role or character.get("role") or snapshot.Role or "").strip()
-            snapshot.BuildKind = "comp"
-            snapshot.BuildName = self._build_name(state, chair)
-            snapshot.PlannedGearSets = list(chair.planned_gear_sets)
-            snapshot.PlannedSkills = list(chair.planned_skills)
-            if chair.planned_mundus:
-                snapshot.Mundus = chair.planned_mundus
-            snapshot.SourcePlanId = str(state.raid_plan_id or "").strip()
-            snapshot.SourcePlanName = state.raid_plan_name
-            snapshot.SourceSeatId = chair.seat_id
-
-            build_id = (
-                str(existing_comp.get("build_id") or "").strip()
-                if isinstance(existing_comp, dict)
-                else ""
-            ) or str(uuid4())
-            snapshot.BuildId = build_id
-            legacy = snapshot.to_dict()
-            payload = deepcopy(legacy)
-            payload["PlayerId"] = canonical_player_id
-            payload["CharacterId"] = character_id
-            payload["BuildId"] = build_id
-
-            record = {
-                "build_id": build_id,
-                "character_id": character_id,
-                "name": snapshot.BuildName,
-                "build_kind": "comp",
-                "source": {
-                    "kind": "comp_maker",
-                    "plan_id": str(state.raid_plan_id or "").strip(),
-                    "plan_name": state.raid_plan_name,
-                    "seat_id": chair.seat_id,
-                    "candidate_id": str(chair.candidate_id or "").strip(),
-                    "source_kind": str(chair.build_source_kind or "").strip(),
-                    "source_name": str(chair.build_source_name or "").strip(),
-                    "source_url": str(chair.build_source_url or "").strip(),
-                },
-                "legacy": legacy,
-                "payload": payload,
-            }
-
-            replaced = False
-            for index, current in enumerate(builds):
-                if str(current.get("build_id") or "").strip() == build_id:
-                    builds[index] = record
-                    replaced = True
-                    break
-            if not replaced:
-                builds.append(record)
-
-            updated_chair = chair.with_changes(
-                selected_build_id=build_id,
-                selected_build_name=snapshot.BuildName,
-                build_source_kind="comp_build",
-                build_source_name="Comp Maker",
-            )
-            updated_state = updated_state.with_chair(updated_chair)
+            updated_state = updated_state.with_chair(chair)
             saved.append(chair.seat_id)
 
-        if saved:
-            catalog["builds"] = builds
+        # Canonical identity promotion may add Players/Characters. Persist those
+        # additions, but never add/update a Build merely because Comp Maker saved.
+        if catalog.get("players") != list(players.values()) or staged_roster_bindings:
             self.bridge.save_catalog(catalog)
-            for roster_member_id, player_id, character_id in dict.fromkeys(
-                staged_roster_bindings
-            ):
-                self.database.execute(
-                    """
-                    UPDATE roster_member
-                    SET canonical_player_id = ?, canonical_character_id = ?
-                    WHERE id = ?
-                    """,
-                    (player_id, character_id, roster_member_id),
-                )
-            if staged_roster_bindings:
-                self.database.commit()
+        for roster_member_id, player_id, character_id in dict.fromkeys(
+            staged_roster_bindings
+        ):
+            self.database.execute(
+                """
+                UPDATE roster_member
+                SET canonical_player_id = ?, canonical_character_id = ?
+                WHERE id = ?
+                """,
+                (player_id, character_id, roster_member_id),
+            )
+        if staged_roster_bindings:
+            self.database.commit()
 
         return CompBuildPersistenceResult(
             state=updated_state,
@@ -494,6 +426,7 @@ class CompBuildPersistenceService:
             skipped_seats=tuple(skipped),
             skipped_reasons=tuple(skipped_reasons),
         )
+
 
 
 __all__ = ["CompBuildPersistenceResult", "CompBuildPersistenceService"]
