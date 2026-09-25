@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from services.extreme_sustained_dps_objective32_blocker_service import (
+    ExtremeSustainedDPSObjective32BlockerReport,
     ExtremeSustainedDPSObjective32BlockerService,
 )
 
@@ -199,3 +202,33 @@ def test_theoretical_gate_unresolved_is_visible_without_inventory() -> None:
     assert tuple(row.code for row in result.blockers) == (
         "theoretical_closure_unresolved",
     )
+
+
+def test_blocker_assessment_requires_strict_global_proof_flag() -> None:
+    with pytest.raises(TypeError, match="boolean global_maximum_proven"):
+        ExtremeSustainedDPSObjective32BlockerService.assess(
+            search_result=SimpleNamespace(
+                global_maximum_proven="false",
+                unresolved=(),
+            ),
+            axis_inventory=SimpleNamespace(
+                missing_canonical_axes=(),
+                duplicate_canonical_axes=(),
+                unresolved=(),
+            ),
+            axis_coverage=SimpleNamespace(
+                missing_axes=(),
+                unresolved=(),
+            ),
+            closure=SimpleNamespace(
+                omitted_scope=(),
+            ),
+        )
+
+
+def test_blocker_report_requires_canonical_blocker_records() -> None:
+    with pytest.raises(TypeError, match="canonical blocker records"):
+        ExtremeSustainedDPSObjective32BlockerReport(
+            blockers=(object(),),
+            evidence=(),
+        )
