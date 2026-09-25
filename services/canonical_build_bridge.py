@@ -214,8 +214,26 @@ class CanonicalBuildBridge:
         merged["players"] = list(players.values())
         merged["characters"] = list(characters.values())
         merged["builds"] = list(builds.values())
+        existing_build_ids = {
+            str(row.get("build_id") or "").strip()
+            for row in existing.get("builds", [])
+            if isinstance(row, dict) and str(row.get("build_id") or "").strip()
+        }
         self.catalog_service.save(merged)
-        return merged
+        verified = self._load_catalog_strict()
+        verified_build_ids = {
+            str(row.get("build_id") or "").strip()
+            for row in verified.get("builds", [])
+            if isinstance(row, dict) and str(row.get("build_id") or "").strip()
+        }
+        lost = sorted(existing_build_ids - verified_build_ids)
+        if lost:
+            raise RuntimeError(
+                "Non-destructive Build merge lost existing BuildId(s): "
+                + ", ".join(lost[:5])
+                + ("..." if len(lost) > 5 else "")
+            )
+        return verified
 
     def sync_from_roster(self, roster: BuildRoster) -> dict[str, Any]:
         """Replace a compatibility catalog for explicit legacy/test workflows.
