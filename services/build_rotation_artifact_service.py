@@ -87,7 +87,7 @@ def resolve_canonical_build_id(catalog_service, build) -> str | None:
     A stale explicit id fails closed rather than silently rebinding the build to
     another record that happens to share its labels.
     """
-    catalog = catalog_service.load()
+    catalog = catalog_service.load_strict()
     explicit_build_id = str(getattr(build, "BuildId", "") or "").strip()
     if explicit_build_id:
         matches = [
