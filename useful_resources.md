@@ -451,3 +451,13 @@ https://forums.elderscrollsonline.com/en/discussion/310623/update-13-sneak-peak-
 **Use for:** Primary developer evidence from ESO Creative Director Rich Lambert that all poisons share one global cooldown, no longer have individual cooldowns, and cannot proc more than once every 10 seconds.
 
 **Confidence:** Primary / reference-grade for the introduced global 10-second poison cooldown rule. Later poison fixes found during review do not document a replacement cadence; future contrary ZOS evidence should supersede this field rather than being blended with it.
+
+
+### ESO Forums — Official Feedback Thread for Poison-Making (ZOS Systems Team)
+https://forums.elderscrollsonline.com/en/discussion/261818/official-feedback-thread-for-poison-making/p5
+
+**Use for:** Primary-source design intent for crafted poison cadence and consequence shape. ZOS Systems Team staff explicitly described the move to a 10-second poison cooldown, converting instant poison effects into over-time effects, and drain poisons carrying paired positive/negative effects.
+
+**Confidence:** High for the documented mechanic shape and historical design change because the relevant post is from ZOS staff. Do **not** use the 2016-era numeric tooltip values as current hardcoded magnitudes without a modern canonical data source or current in-game/log validation.
+
+**BFF rule:** Safe evidence for poison runtime topology and consequence structure. Not sufficient by itself for 2026 poison damage/healing/resource magnitudes, dilution, tick interval, or current named-effect values.
