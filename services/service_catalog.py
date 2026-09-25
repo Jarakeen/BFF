@@ -1094,7 +1094,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "This is the canonical production composition root for the generated Objective #32 graph. "
-            "It refuses construction unless the canonical Mundus/food and encounter-policy axes are present, finalized potion timing is wired after runtime policy, candidate-resolved runtime_state is wired after the finalized witness, weapon-poison activation plus explicit consequence authorities are present, the additional resource-event denominator plus supplemental runtime-event/history denominators are explicitly proven complete, and the runtime-policy adapter is configured for complete scheduler-derived Heavy Attack discovery. "
+            "It refuses construction unless the canonical Mundus/food, weapon-poison formula, weapon-poison tier, and encounter-policy axes are present, finalized potion timing is wired after runtime policy, candidate-resolved runtime_state is wired after the finalized witness, weapon-poison activation plus explicit consequence authorities are present, the additional resource-event denominator plus supplemental runtime-event/history denominators are explicitly proven complete, and the runtime-policy adapter is configured for complete scheduler-derived Heavy Attack discovery. "
             "Low-level frontier repositories and mechanics remain owned by their existing services rather than being recreated here."
         ),
     ),
