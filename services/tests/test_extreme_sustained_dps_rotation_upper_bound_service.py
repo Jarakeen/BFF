@@ -160,3 +160,45 @@ def test_invalid_plan_duration_fails_closed() -> None:
             plan,
             action_bounds=(),
         )
+
+
+def test_action_upper_bound_requires_strict_proof_flags() -> None:
+    with pytest.raises(TypeError, match="proven_safe must be boolean"):
+        _bound(0.0, 0, 100.0, safe="true")
+
+    with pytest.raises(TypeError, match="covers_periodic_and_triggered must be boolean"):
+        _bound(0.0, 0, 100.0, covers=1)
+
+
+def test_action_upper_bound_cannot_claim_safe_without_damage_ceiling() -> None:
+    with pytest.raises(
+        ValueError,
+        match="cannot be proven safe without numeric damage ceiling",
+    ):
+        _bound(0.0, 0, None, safe=True)
+
+
+def test_action_upper_bound_rejects_boolean_sequence() -> None:
+    with pytest.raises(TypeError, match="sequence must be an integer"):
+        _bound(0.0, True, 100.0)
+
+
+def test_rotation_upper_bound_rejects_inconsistent_direct_summary() -> None:
+    from services.extreme_sustained_dps_rotation_upper_bound_service import (
+        ExtremeSustainedDPSRotationUpperBound,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="covered_action_count cannot exceed damage_action_count",
+    ):
+        ExtremeSustainedDPSRotationUpperBound(
+            duration_seconds=10.0,
+            upper_bound_damage=None,
+            upper_bound_dps=None,
+            damage_action_count=1,
+            covered_action_count=2,
+            proven_safe=False,
+            evidence=(),
+            unresolved=("open",),
+        )
