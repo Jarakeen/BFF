@@ -396,3 +396,14 @@ def test_load_players_uses_saved_team_picker() -> None:
     assert "roster_service.list_team_names()" in intake
     assert "roster_service.list_team_members(selected)" in intake
     assert "def list_team_members(self, team_name: str)" in roster
+
+
+def test_saved_raid_plan_legacy_name_uses_canonical_personnel_resolver() -> None:
+    source = Path("ui/comp_builder_page.py").read_text(encoding="utf-8")
+
+    load_block = source.split("def _legacy_personnel_match(member):", 1)[1].split(
+        "        members = []", 1
+    )[0]
+    assert "RosterPlayerIdentityService" in load_block
+    assert ".matching_members(gamertag)" in load_block
+    assert "return matches[0] if len(matches) == 1 else None" in load_block
