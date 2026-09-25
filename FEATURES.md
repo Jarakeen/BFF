@@ -41,6 +41,7 @@
 - **Consistent Collectibles progress cards**: every dashboard category now uses the same artwork → horizontal progress bar → count → status anatomy, eliminating mixed ring/shield/vial layouts across neighboring cards.
 
 - **Raid Plan compact context bar**: Raid Plan and Assignments share one full-width Trial / Difficulty / Plan / Saved Plan control strip with grouped plan actions, keeping page titles uncluttered and page-specific actions such as Share Builds or Save Assignments in the same predictable place.
+- **Portable Raid Plan backups**: Raid Plan can export the current plan to a small versioned `.raidplan.json` file containing only the complete Raid Plan payload. Restore previews the plan identity, requires explicit confirmation, creates a full `foundrydock.db` safety snapshot first, restores only that one Raid Plan through the canonical repository, verifies exact read-back, and leaves Personnel, Teams, Characters, Builds, other Raid Plans, and `data/eso.db` untouched.
 - **Raid Review journal** — Live Raid notes are stored per Raid Plan attempt and indexed by date → trial on a dedicated Review page, with the full saved note shown in a large reading pane plus attempt number, pull start/end time, and duration.
 - **Top Gear naming** — the former Capabilities surface is presented as Top Gear; Raid Plan Review now opens the run-note journal instead of Top Gear.
 # BFF / FoundryDock Feature Index
