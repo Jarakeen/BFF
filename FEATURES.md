@@ -710,3 +710,11 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 ### Comp Maker saved-Build source separation
 - Comp-generated `BuildKind=comp` chair packages remain Raid Plan planning/recovery evidence, but are no longer fed back into Comp Maker as reusable saved-Build candidates.
 - User-created canonical Builds remain eligible by role/class/player identity after restart, preventing a plan's own `Planned` package from hiding the player's reusable Build.
+
+
+### Saved Build / Template / Raid Plan assignment boundary
+- Reusable user Builds remain canonical Saved Builds owned by a Character; Build Templates remain reusable reference material.
+- Comp Maker no longer creates new `build_kind=comp` records when a Raid Plan is saved.
+- Raid Plan chairs now persist a Saved Build reference when one is explicitly selected, plus Raid Plan-owned planned gear/skills/Mundus as overrides.
+- A chair with planned configuration but no reusable Saved Build is represented as Planned Raid Plan state, not as another Build.
+- Legacy `build_kind=comp` records remain readable for revision/recovery compatibility and are detached from active chair Build assignment when encountered; they are not deleted automatically.
