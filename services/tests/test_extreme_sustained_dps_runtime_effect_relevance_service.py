@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.support_target_type import SupportTargetType
 from services.extreme_sustained_dps_runtime_effect_relevance_service import (
+    ExtremeSustainedDPSRuntimeEffectRelevance,
     ExtremeSustainedDPSRuntimeEffectRelevanceService,
 )
 
@@ -226,3 +229,29 @@ def test_unresolved_master_architect_duration_scaling_is_source_gap() -> None:
         "requires canonical Ultimate spend resolution" in row
         for row in result.unresolved
     )
+
+
+def test_runtime_relevance_rejects_overlap_between_relevant_and_irrelevant() -> None:
+    effect = _effect("weapon_spell_damage")
+
+    with pytest.raises(ValueError, match="both relevant and irrelevant"):
+        ExtremeSustainedDPSRuntimeEffectRelevance(
+            relevant=(effect,),
+            irrelevant=(effect,),
+            unresolved=(),
+            source_data_unresolved=(),
+            math_unresolved=(),
+            evidence=(),
+        )
+
+
+def test_runtime_relevance_requires_typed_blockers_in_unresolved() -> None:
+    with pytest.raises(ValueError, match="typed blockers must also appear in unresolved"):
+        ExtremeSustainedDPSRuntimeEffectRelevance(
+            relevant=(),
+            irrelevant=(),
+            unresolved=(),
+            source_data_unresolved=("source gap",),
+            math_unresolved=(),
+            evidence=(),
+        )
