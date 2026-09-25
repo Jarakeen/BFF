@@ -5,7 +5,8 @@ from types import SimpleNamespace
 from openpyxl import load_workbook
 from pypdf import PdfReader
 
-from models.build_model import PlayerBuild
+from models.build_model import GearSlot, PlayerBuild
+from models.scribing_recipe import ScribedSkillRecipe
 from models.raid_plan import RaidPlan, RaidPlanMember
 from services.raid_plan_build_export_service import (
     export_raid_plan_builds_pdf,
@@ -26,7 +27,9 @@ def test_linked_build_exports_include_saved_bars_planned_skills_and_unresolved_s
         FrontBarSkills=["Combat Prayer", "", "", "", "", ""],
         BackBarSkills=["Energy Orb", "", "", "", "", ""],
     )
-    build.Armor["Head"]["Set"] = "Ozezan the Inferno"
+    build.Armor["Head"].update({"Set": "Ozezan the Inferno", "Weight": "Light", "Trait": "Divines", "Enchant": "Maximum Magicka"})
+    build.FrontBarWeapon = GearSlot(Set="Master Architect", WeaponType="Restoration Staff", Trait="Powered", Enchant="Absorb Magicka")
+    build.ScribedSkillRecipes = [ScribedSkillRecipe(ResultName="Healing Soul", Grimoire="Wield Soul", Focus="Healing", Signature="Druid Resurgence", Affix="Heroism")]
     plan = RaidPlan(
         plan_id="plan-1",
         trial_id="vDSR",
@@ -51,16 +54,21 @@ def test_linked_build_exports_include_saved_bars_planned_skills_and_unresolved_s
 
     xlsx = export_raid_plan_builds_xlsx(plan, export, tmp_path / "builds.xlsx")
     workbook = load_workbook(xlsx)
-    sheet = workbook["Raid Builds"]
+    sheet = workbook["Raid Index"]
     assert sheet["A1"].value == plan.name
-    assert sheet["F5"].value == "=SUM(1,2)"
-    assert sheet["F5"].data_type == "s"
-    assert sheet["H5"].value == "Combat Prayer"
-    assert sheet["I5"].value == "Energy Orb"
-    assert sheet["J5"].value == "Aggressive Horn"
-    assert "Ozezan the Inferno" in sheet["G5"].value
-    assert sheet.freeze_panes == "D5"
-    assert sheet.sheet_view.showGridLines is False
+    assert sheet["F6"].value == "=SUM(1,2)"
+    assert sheet["F6"].data_type == "s"
+    player_sheet = workbook[sheet["G6"].value]
+    values = [cell.value for row in player_sheet.iter_rows() for cell in row]
+    assert "Ozezan the Inferno" in values
+    assert "Light" in values
+    assert "Maximum Magicka" in values
+    assert "Combat Prayer" in values
+    assert "Energy Orb" in values
+    assert "Healing Soul" in values
+    assert "Wield Soul" in values
+    assert "Druid Resurgence" in values
+    assert player_sheet.sheet_view.showGridLines is False
     assert workbook["Unresolved"]["A2"].value == "tank-1"
     workbook.close()
 
@@ -70,4 +78,8 @@ def test_linked_build_exports_include_saved_bars_planned_skills_and_unresolved_s
     assert "Combat Prayer" in extracted
     assert "Energy Orb" in extracted
     assert "Aggressive Horn" in extracted
+    assert "Ozezan the Inferno" in extracted
+    assert "Maximum Magicka" in extracted
+    assert "Healing Soul" in extracted
+    assert "Wield Soul" in extracted
     assert "tank-1" in extracted
