@@ -1,3 +1,5 @@
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import BarId, EffectLayer
 from minmax.runtime_event import RuntimeEvent
@@ -216,3 +218,15 @@ def test_conflicting_policies_for_one_binding_source_fail_closed():
     assert result.denominator_proven is False
     assert any("conflicting" in row for row in result.unresolved)
 
+
+
+def test_enchantment_cooldown_policy_requires_strict_authority_flag():
+    effect = _effect("Main Enchant", "main_hand")
+
+    with pytest.raises(TypeError, match="authoritative must be boolean"):
+        ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy(
+            effect=effect,
+            cooldown_identity="main",
+            cooldown_seconds=4.0,
+            authoritative="true",
+        )
