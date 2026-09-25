@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.character_progression import CharacterProgression
 from models.build_model import ChampionPointEntry, PlayerBuild
 from services.extreme_sustained_dps_champion_point_frontier_service import (
@@ -10,6 +12,7 @@ from services.extreme_sustained_dps_cross_axis_context_service import (
 )
 from services.extreme_sustained_dps_generated_candidate_assembly_service import (
     ExtremeSustainedDPSGeneratedCandidateAssemblyService,
+    ExtremeSustainedDPSGeneratedCandidateCoordinate,
 )
 from services.extreme_sustained_dps_passive_rank_frontier_service import (
     ExtremeSustainedDPSPassiveRankCandidate,
@@ -332,3 +335,40 @@ def test_absent_poison_axes_do_not_collide_with_frontier_index_zero() -> None:
     assert with_poison.coordinate.poison_index == 0
     assert without_poison.coordinate.identity != with_poison.coordinate.identity
 
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "champion_point_index",
+        "potion_index",
+        "passive_rank_index",
+        "skill_bar_index",
+    ),
+)
+def test_generated_candidate_coordinate_rejects_negative_required_indexes(field) -> None:
+    values = {
+        "champion_point_index": 0,
+        "potion_index": 0,
+        "passive_rank_index": 0,
+        "skill_bar_index": 0,
+    }
+    values[field] = -1
+
+    with pytest.raises(ValueError, match="must be a non-negative integer"):
+        ExtremeSustainedDPSGeneratedCandidateCoordinate(**values)
+
+
+def test_generated_candidate_coordinate_rejects_poison_tier_without_formula() -> None:
+    with pytest.raises(
+        ValueError,
+        match="cannot select a poison tier without a poison formula",
+    ):
+        ExtremeSustainedDPSGeneratedCandidateCoordinate(
+            champion_point_index=0,
+            potion_index=0,
+            passive_rank_index=0,
+            skill_bar_index=0,
+            poison_index=-1,
+            poison_tier_index=0,
+        )
