@@ -1972,3 +1972,15 @@ While closing the Extreme Engine crafted-poison path, the imported Alchemy formu
 **What it means in actual play:** two crafted poisons with the same visible effect names can require different source evidence before BFF can safely reproduce their exact durations. The engine can now use literal triple annotations, but it refuses to turn an unmarked source cell or a heading such as “triple effect” into invented base-duration math.
 
 **For BFF:** crafted-poison dilution remains fail-closed. Literal trait annotations may become mechanics; unmarked cells, implicit primary effects, section headings, and effect count remain provenance until a source explicitly proves their duration mode.
+
+---
+
+## 2026-09-25 — The same weapon enchantment really does share one timer
+
+Official ESO Support explicitly confirms that weapon enchantments share cooldowns when the same enchantment is equipped on both Dual Wield weapons: once one copy fires, the other cannot activate until that cooldown cycle ends.
+
+**Layman's version:** two identical glyphs do not buy you two stopwatches. They are both standing around waiting on the same one. Naturally, the game leaves this detail somewhere other than the tooltip.
+
+**What it means in actual play:** duplicating the same enchantment across Dual Wield weapons does not let those two copies alternate around the cooldown. The second copy remains locked out while the shared timer is active.
+
+**For BFF:** `same_effect_identity_shares_cooldown` is now authoritative and can leave the runtime blocker list. This does **not** prove that different enchant identities have independent timers, so the broader `per_effect_identity` cooldown scope remains fail-closed until that separate claim has authoritative support.
