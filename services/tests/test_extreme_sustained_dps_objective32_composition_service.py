@@ -46,7 +46,7 @@ def _kwargs():
         "structural_families": object(),
         "structural_materialization": object(),
         "gear_adapter": object(),
-        "late_adapter": object(),
+        "late_adapter": SimpleNamespace(poisons=object()),
         "rotation_adapter": object(),
         "runtime_policy_adapter": _RuntimePolicyAdapter(),
         "runtime_evaluation": object(),
@@ -80,6 +80,10 @@ def test_composition_wires_finalized_potion_axis_into_global_objective_graph() -
     assert result.pipeline.runtime_state_frontier_resolver is not None
     assert any(
         "Finalized potion timing is appended after runtime-policy axes" in row
+        for row in result.evidence
+    )
+    assert any(
+        "weapon-poison" in row
         for row in result.evidence
     )
 
@@ -231,3 +235,14 @@ def test_composition_requires_dedicated_weapon_enchantment_runtime_universe(attr
         match="dedicated canonical weapon-enchantment runtime source and variant projection",
     ):
         ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
+
+def test_composition_requires_generated_weapon_poison_selection_frontier() -> None:
+    kwargs = _kwargs()
+    kwargs["late_adapter"] = SimpleNamespace(poisons=None)
+
+    with pytest.raises(
+        ValueError,
+        match="canonical generated weapon-poison selection frontier",
+    ):
+        ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
+
