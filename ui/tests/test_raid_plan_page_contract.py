@@ -233,8 +233,10 @@ def test_main_window_refreshes_raid_plan_builds_and_personnel_on_entry() -> None
 def test_raid_plan_exposes_portable_backup_and_restore_controls() -> None:
     source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
 
-    assert 'self.backup_plan_button = QPushButton("Backup…")' in source
-    assert 'self.restore_plan_backup_button = QPushButton("Restore Backup…")' in source
+    assert 'self.backup_plan_button = QPushButton("Backup ▾")' in source
+    assert 'backup_menu.addAction("Export Backup…")' in source
+    assert 'backup_menu.addAction("Restore Backup…")' in source
+    assert "self.backup_plan_button.setMenu(backup_menu)" in source
     assert "export_raid_plan_backup(plan, filename)" in source
     assert "load_raid_plan_backup(filename)" in source
 
