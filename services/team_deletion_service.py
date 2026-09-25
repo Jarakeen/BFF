@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
-
 from services.build_service import BuildService
 
 
@@ -39,9 +37,6 @@ def delete_team_everywhere(roster_service, build_service: BuildService, team_nam
     removed_memberships = int(membership_row["count"] if membership_row else 0)
 
     catalog_service = build_service.canonical.catalog_service
-    catalog_path = Path(catalog_service.catalog_path)
-    catalog_existed = catalog_path.exists()
-    catalog_backup = catalog_path.read_text(encoding="utf-8") if catalog_existed else ""
     catalog = catalog_service.load_strict()
     team_key = canonical_name.casefold()
     assignments = [
@@ -71,11 +66,9 @@ def delete_team_everywhere(roster_service, build_service: BuildService, team_nam
     except Exception:
         connection.execute("ROLLBACK TO SAVEPOINT bff_team_delete")
         connection.execute("RELEASE SAVEPOINT bff_team_delete")
-        if catalog_existed:
-            catalog_path.parent.mkdir(parents=True, exist_ok=True)
-            catalog_path.write_text(catalog_backup, encoding="utf-8")
-        elif catalog_path.exists():
-            catalog_path.unlink()
+        # build_catalog lives in the same SQLite database as roster/team state.
+        # Rolling back the savepoint restores both the team rows and catalog row;
+        # never treat the database file itself as UTF-8 text.
         raise
 
     return TeamDeletionResult(
