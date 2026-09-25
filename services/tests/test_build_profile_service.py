@@ -198,3 +198,19 @@ def test_calculation_copy_applies_armor_and_jewelry_defaults_only_to_blank_equip
     assert calculated.Ring1.Enchant == "Magicka Recovery"
     assert build.Armor["Head"]["Trait"] == ""
     assert build.Necklace.Trait == ""
+
+
+def test_build_profile_pydantic_rejects_unknown_trait(tmp_path) -> None:
+    service = BuildProfileService(tmp_path / "build_profiles.json")
+
+    import pytest
+    with pytest.raises(ValueError, match="unknown armor trait"):
+        service.update("build-1", armor_trait="Extremely Fashionable")
+
+
+def test_build_profile_pydantic_rejects_unknown_weight(tmp_path) -> None:
+    service = BuildProfileService(tmp_path / "build_profiles.json")
+
+    import pytest
+    with pytest.raises(ValueError, match="unknown armor weight"):
+        service.update("build-1", armor_weight="Cardboard")
