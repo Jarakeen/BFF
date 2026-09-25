@@ -199,3 +199,13 @@ def test_coverage_can_display_generic_assignment_source_annotation() -> None:
     assert "def source_note_for(" in scope
     assert "member.assignment_source" in scope
     assert 'f"{provider} • {scope.source_note_for(effect, provider)}"' in coverage
+
+
+def test_coverage_refresh_preserves_selected_plan_and_provider_persistence_contract() -> None:
+    source = Path("ui/coverage_raid_plan_scope_support.py").read_text(encoding="utf-8")
+    page_source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert "preferred_plan_id" in source
+    assert "_coverage_selected_plan_id" in source
+    assert "saved provider failed Coverage read-back verification" in page_source
+    assert "removed provider survived Coverage read-back verification" in page_source
