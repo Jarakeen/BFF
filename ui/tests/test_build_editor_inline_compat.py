@@ -117,3 +117,11 @@ def test_class_mastery_save_is_guarded_and_rolls_back_on_failure() -> None:
     assert "if not self._save():" in source
     assert "build.ClassMasteryAbilityIds = previous" in source
     assert "verification could not reload Builds" in source
+
+
+def test_build_save_exposes_verified_boolean_result() -> None:
+    source = Path("ui/builds_page.py").read_text(encoding="utf-8")
+
+    assert "def _save(self) -> bool:" in source
+    assert "return False" in source
+    assert "return True" in source
