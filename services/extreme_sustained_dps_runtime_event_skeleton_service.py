@@ -35,6 +35,54 @@ class ExtremeSustainedDPSRuntimeEventSkeletonResult:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if any(not isinstance(row, RuntimeEvent) for row in self.events):
+            raise TypeError("runtime event skeleton events must contain RuntimeEvent records")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("runtime event skeleton denominator_proven must be boolean")
+
+        def _strings(values: tuple[str, ...], label: str) -> tuple[str, ...]:
+            rows = tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in values
+                    if str(item).strip()
+                )
+            )
+            if any(not row for row in rows):
+                raise ValueError(f"runtime event skeleton {label} cannot contain blanks")
+            return rows
+
+        derived = _strings(self.derived_triggers, "derived_triggers")
+        scenario = _strings(self.scenario_triggers, "scenario_triggers")
+        excluded = _strings(
+            self.excluded_plan_owned_triggers,
+            "excluded_plan_owned_triggers",
+        )
+        overlap = (
+            set(derived).intersection(scenario)
+            | set(derived).intersection(excluded)
+            | set(scenario).intersection(excluded)
+        )
+        if overlap:
+            raise ValueError(
+                "runtime event skeleton trigger families must be mutually exclusive: "
+                + ", ".join(sorted(overlap))
+            )
+        evidence = _strings(self.evidence, "evidence")
+        unresolved = _strings(self.unresolved, "unresolved")
+        if self.denominator_proven and unresolved:
+            raise ValueError(
+                "runtime event skeleton denominator cannot be proven with unresolved evidence"
+            )
+
+        object.__setattr__(self, "events", tuple(self.events))
+        object.__setattr__(self, "derived_triggers", derived)
+        object.__setattr__(self, "scenario_triggers", scenario)
+        object.__setattr__(self, "excluded_plan_owned_triggers", excluded)
+        object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "unresolved", unresolved)
+
 
 class ExtremeSustainedDPSRuntimeEventSkeletonService:
     """Compose plan/damage-derived runtime events with proven scenario events."""
@@ -160,6 +208,10 @@ class ExtremeSustainedDPSRuntimeEventSkeletonService:
         weapon_enchantment_activation_service: object | None = None,
         source: str = "",
     ) -> ExtremeSustainedDPSRuntimeEventSkeletonResult:
+        if not isinstance(supplemental_denominator_proven, bool):
+            raise TypeError(
+                "runtime event skeleton supplemental_denominator_proven must be boolean"
+            )
         required = cls._required_triggers(tuple(effects))
         unresolved: list[str] = []
         events: list[RuntimeEvent] = []
