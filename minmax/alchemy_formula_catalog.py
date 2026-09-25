@@ -65,6 +65,8 @@ class AlchemyFormula:
     source_effects: tuple[str, ...] = ()
     source_files: tuple[str, ...] = ()
     source_sections: tuple[str, ...] = ()
+    source_triple_traits: tuple[str, ...] = ()
+    source_unmarked_traits: tuple[str, ...] = ()
 
     @property
     def canonical_id(self) -> str:
@@ -129,9 +131,20 @@ class AlchemyFormulaCatalog:
                     continue
 
                 canonical_traits: list[str] = []
+                explicit_triple_traits: list[str] = []
+                explicit_unmarked_traits: list[str] = []
                 removed_traits: list[str] = []
                 unknown_traits: list[str] = []
+                explicit_trait_keys = {
+                    _norm(value): value for value in explicit_traits
+                }
                 for source_trait in raw_traits:
+                    source_clean = _clean(source_trait)
+                    is_explicit_cell = _norm(source_trait) in explicit_trait_keys
+                    is_triple_annotation = (
+                        is_explicit_cell
+                        and source_clean.casefold().endswith(" (triple)")
+                    )
                     raw_trait = _normalize_source_trait_cell(source_trait, game_update=update)
                     resolved = resolve_alchemy_trait_name(
                         raw_trait,
@@ -145,6 +158,11 @@ class AlchemyFormulaCatalog:
                         unknown_traits.append(source_trait)
                         continue
                     canonical_traits.append(resolved)
+                    if is_explicit_cell:
+                        if is_triple_annotation:
+                            explicit_triple_traits.append(resolved)
+                        else:
+                            explicit_unmarked_traits.append(resolved)
 
                 if unknown_traits:
                     unresolved.append(
@@ -176,6 +194,8 @@ class AlchemyFormulaCatalog:
                         "source_effects": [],
                         "source_files": [],
                         "source_sections": [],
+                        "source_triple_traits": [],
+                        "source_unmarked_traits": [],
                     },
                 )
                 if effect_name and effect_name not in bucket["source_effects"]:
@@ -185,6 +205,12 @@ class AlchemyFormulaCatalog:
                         bucket["source_files"].append(source_file)
                 if source_section and source_section not in bucket["source_sections"]:
                     bucket["source_sections"].append(source_section)
+                for trait in _unique(explicit_triple_traits):
+                    if trait not in bucket["source_triple_traits"]:
+                        bucket["source_triple_traits"].append(trait)
+                for trait in _unique(explicit_unmarked_traits):
+                    if trait not in bucket["source_unmarked_traits"]:
+                        bucket["source_unmarked_traits"].append(trait)
 
         formulas_out = tuple(
             sorted(
@@ -196,6 +222,8 @@ class AlchemyFormulaCatalog:
                         source_effects=tuple(bucket["source_effects"]),
                         source_files=tuple(bucket["source_files"]),
                         source_sections=tuple(bucket["source_sections"]),
+                        source_triple_traits=tuple(bucket["source_triple_traits"]),
+                        source_unmarked_traits=tuple(bucket["source_unmarked_traits"]),
                     )
                     for bucket in merged.values()
                 ),
