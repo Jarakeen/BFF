@@ -38,9 +38,16 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy:
             raise ValueError(
                 "weapon-enchantment cooldown policy requires finite non-negative cooldown_seconds"
             )
+        if not isinstance(self.authoritative, bool):
+            raise TypeError(
+                "weapon-enchantment cooldown policy authoritative must be boolean"
+            )
+        if not isinstance(self.effect, EffectVariant):
+            raise TypeError(
+                "weapon-enchantment cooldown policy effect must be canonical EffectVariant"
+            )
         object.__setattr__(self, "cooldown_identity", identity)
         object.__setattr__(self, "cooldown_seconds", cooldown)
-        object.__setattr__(self, "authoritative", bool(self.authoritative))
 
 
 @dataclass(frozen=True)
