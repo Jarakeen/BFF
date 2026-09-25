@@ -2270,17 +2270,6 @@ def _save_to_originating_raid_plan(page) -> bool:
             return False
         plan = persist_state(navigate=False)
 
-        # A brand-new Comp session must create BuildIds before its Raid Plan can be
-        # persisted, but the new Raid Plan id does not exist until that first save.
-        # Re-persist the same Comp Builds once after binding so their source metadata
-        # records the real plan id. Stable BuildIds keep this as an update, never a
-        # duplicate build. The Raid Plan already points at those exact BuildIds.
-        if was_unbound and plan is not None:
-            rebound_result = build_service.persist(page._comp_plan_state)
-            page._comp_plan_state = rebound_result.state.mark_saved()
-            state = page._comp_plan_state
-            build_result = rebound_result
-
         if plan is not None:
             from services.raid_plan_repository import RaidPlanRepository
             verified_plan = RaidPlanRepository(get_user_database_path()).get(plan.plan_id)
@@ -2325,14 +2314,14 @@ def _save_to_originating_raid_plan(page) -> bool:
             for chair in getattr(state, "chairs", ())
         ):
             page.status.warning(
-                f"Raid Plan saved, but no canonical Comp Builds were created for {plan.name}. "
+                f"Raid Plan saved, but no occupied build assignments were validated for {plan.name}. "
                 "The occupied chairs are missing resolvable Personnel/build planning identity. "
                 "Reload the team from Roster/Assignments, then save the Comp again."
             )
             return True
 
         build_detail = (
-            f" Saved {len(saved_builds)} canonical Comp Build(s)."
+            f" Validated {len(saved_builds)} occupied build assignment(s)."
             if saved_builds
             else ""
         )
@@ -2357,7 +2346,7 @@ def _save_to_originating_raid_plan(page) -> bool:
                     QMessageBox.warning(
                         page,
                         "Comp Save Needs Review",
-                        "The Raid Plan was saved. These occupied chairs still need a Comp Build:\n\n"
+                        "The Raid Plan was saved. These occupied chairs still need a saved Build assignment or Raid Plan build plan:\n\n"
                         + "\n".join(f"• {seat}: {reason}" for seat, reason in review_reasons)
                         + "\n\nCheck this player in Players, then use Load Players in Comp Maker and Save Plan again. For a missing build package, choose a saved build or planned gear. Open Recruit chairs need no action.",
                     )
