@@ -5,6 +5,8 @@ from minmax.character_build.effect_layer import BarId, EffectLayer
 from minmax.runtime_event import RuntimeEvent
 from services.extreme_sustained_dps_weapon_enchantment_sequence_frontier_service import (
     ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy,
+    ExtremeSustainedDPSWeaponEnchantmentSequenceChoice,
+    ExtremeSustainedDPSWeaponEnchantmentSequenceFrontier,
     ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService,
 )
 
@@ -259,4 +261,43 @@ def test_enchantment_cooldown_policy_requires_strict_authority_flag():
             cooldown_identity="main",
             cooldown_seconds=4.0,
             authoritative="true",
+        )
+
+
+def test_enchantment_sequence_frontier_rejects_candidate_count_drift():
+    choice = ExtremeSustainedDPSWeaponEnchantmentSequenceChoice(
+        choice_id="choice",
+        attempts=(),
+        no_proc_events=(),
+        last_activation_times=(),
+    )
+
+    with pytest.raises(ValueError, match="candidate_count must equal choice count"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceFrontier(
+            choices=(choice,),
+            candidate_count=2,
+            denominator_proven=True,
+            evidence=(),
+            unresolved=(),
+        )
+
+
+def test_enchantment_sequence_choice_rejects_duplicate_cooldown_identities():
+    with pytest.raises(ValueError, match="identities must be unique"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceChoice(
+            choice_id="choice",
+            attempts=(),
+            no_proc_events=(),
+            last_activation_times=(("main", 1.0), ("main", 2.0)),
+        )
+
+
+def test_enchantment_sequence_frontier_requires_strict_denominator_flag():
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceFrontier(
+            choices=(),
+            candidate_count=0,
+            denominator_proven="true",
+            evidence=(),
+            unresolved=(),
         )
