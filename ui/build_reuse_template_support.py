@@ -16,8 +16,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from services.build_reuse_service import BuildReuseService, BuildTemplateRecord
+from services.eso_database import EsoDatabase
+from services.roster_service import RosterService
 from services.user_safety_snapshot_service import UserSafetySnapshotService
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
@@ -37,13 +39,12 @@ def _reuse_service() -> BuildReuseService:
 
 def _catalog_snapshot(page):
     catalog = page.build_service.canonical.catalog_service.load()
-    players = {
-        str(player.get("player_id") or "").strip(): player
-        for player in catalog.get("players", [])
-        if isinstance(player, dict)
-    }
-    characters = [row for row in catalog.get("characters", []) if isinstance(row, dict)]
-    return players, characters
+    personnel = tuple(
+        RosterService(EsoDatabase(get_user_database_path())).list_members(
+            include_archived=True
+        )
+    )
+    return BuildReuseService.destination_catalog(catalog, personnel)
 
 
 class _DestinationDialog(QDialog):
@@ -51,7 +52,7 @@ class _DestinationDialog(QDialog):
         super().__init__(page)
         self.setWindowTitle(title)
         self.setMinimumWidth(520)
-        self.players, self.characters = _catalog_snapshot(page)
+        self.players, self.characters, ambiguous = _catalog_snapshot(page)
         self.player_combo = QComboBox()
         self.character_combo = QComboBox()
         self.build_name = QLineEdit(default_build_name)
@@ -84,7 +85,20 @@ class _DestinationDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addLayout(form)
+        if not self.players:
+            empty = QLabel("No eligible player is available. Add or restore a player in Players first.")
+            empty.setWordWrap(True)
+            layout.addWidget(empty)
+        if ambiguous:
+            note = QLabel(
+                "Duplicate player names need review in Players before a template can be assigned: "
+                + ", ".join(ambiguous)
+            )
+            note.setWordWrap(True)
+            layout.addWidget(note)
         layout.addWidget(buttons)
+        if not self.players:
+            buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         self.player_combo.currentIndexChanged.connect(self._refresh_characters)
         self._refresh_characters()
 
@@ -214,22 +228,6 @@ def _copy_selected_build(page):
     if existing is not None:
         UserSafetySnapshotService().create(
             f"replace-build-{existing.BuildId or existing.BuildName}"
-        )
-    existing = _existing_build_for(page, result.build)
-    if existing is not None and not confirm_replacement(
-        page,
-        title="Replace Existing Build",
-        object_label=f'Replace "{existing.BuildName or "build"}" for {existing.Name or existing.Gamertag}?',
-        impact=(
-            "Applying this template will replace the saved Build with the same player, "
-            "character, and Build name. Other Builds and character progression are kept."
-        ),
-        confirm_text="Apply and Replace",
-    ):
-        return
-    if existing is not None:
-        UserSafetySnapshotService().create(
-            f"apply-template-replace-build-{existing.BuildId or existing.BuildName}"
         )
     page.roster = _reuse_service().replace_or_append(page.roster, result.build)
     page.build_service.save(page.roster)

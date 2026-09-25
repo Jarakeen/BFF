@@ -86,6 +86,60 @@ class BuildReuseService:
         self.template_path = Path(template_path)
 
     @staticmethod
+    def destination_catalog(
+        catalog: dict[str, Any], personnel: tuple[object, ...]
+    ) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]], tuple[str, ...]]:
+        """Offer active, unambiguous build destinations without merging identities."""
+        active_ids: set[str] = set()
+        archived_ids: set[str] = set()
+        active_names: set[str] = set()
+        archived_names: set[str] = set()
+        for member in personnel:
+            player_id = str(getattr(member, "CanonicalPlayerId", "") or "").strip()
+            name = str(getattr(member, "PlayerName", "") or "").strip().casefold()
+            if str(getattr(member, "Status", "") or "").strip().casefold() == "archived":
+                if player_id:
+                    archived_ids.add(player_id)
+                if name:
+                    archived_names.add(name)
+            else:
+                if player_id:
+                    active_ids.add(player_id)
+                if name:
+                    active_names.add(name)
+
+        by_name: dict[str, list[dict[str, Any]]] = {}
+        for player in catalog.get("players", ()):
+            if not isinstance(player, dict):
+                continue
+            player_id = str(player.get("player_id") or "").strip()
+            if not player_id or str(player.get("status") or "").strip().casefold() == "archived":
+                continue
+            if player_id in archived_ids and player_id not in active_ids:
+                continue
+            name = str(player.get("gamertag") or player.get("display_name") or "").strip()
+            if name.casefold() in archived_names and name.casefold() not in active_names and player_id not in active_ids:
+                continue
+            by_name.setdefault(name.casefold() or player_id.casefold(), []).append(player)
+
+        selected: dict[str, dict[str, Any]] = {}
+        ambiguous: list[str] = []
+        for rows in by_name.values():
+            linked = [row for row in rows if str(row.get("player_id") or "").strip() in active_ids]
+            candidates = linked if len(linked) == 1 else rows
+            if len(candidates) != 1:
+                ambiguous.append(str(rows[0].get("gamertag") or rows[0].get("display_name") or "Unnamed"))
+                continue
+            row = candidates[0]
+            selected[str(row["player_id"]).strip()] = row
+
+        characters = [
+            row for row in catalog.get("characters", ())
+            if isinstance(row, dict) and str(row.get("player_id") or "").strip() in selected
+        ]
+        return selected, characters, tuple(sorted(ambiguous, key=str.casefold))
+
+    @staticmethod
     def _stable_id(name: str) -> str:
         return str(uuid5(NAMESPACE_URL, f"bff:build-template:{name.strip().casefold()}"))
 

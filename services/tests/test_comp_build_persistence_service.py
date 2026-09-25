@@ -440,3 +440,26 @@ def test_new_roster_player_without_canonical_ids_creates_comp_build(tmp_path: Pa
     assert chair is not None
     assert chair.roster_member_id == member_id
     assert chair.player_id and chair.character_id and chair.selected_build_id
+
+
+def test_unmatched_comp_player_reports_name_without_creating_duplicate_identity(tmp_path: Path) -> None:
+    state = CompPlanState(
+        raid_plan_id="pm",
+        raid_plan_name="Core Team",
+        trial_id="sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="dd-8",
+                player_name="New Player",
+                planned_gear_sets=("Aegis Caller",),
+            ),
+        ),
+    )
+
+    result = _service(tmp_path).persist(state)
+
+    assert result.saved_seats == ()
+    assert result.skipped_reasons == (
+        ("dd-8", "no active Personnel record matches 'New Player'; check the saved player name"),
+    )
+    assert BuildCatalogService(tmp_path / "foundrydock.db").load()["players"] == []

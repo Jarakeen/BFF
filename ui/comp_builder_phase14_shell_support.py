@@ -717,11 +717,12 @@ def _refresh_plan_table(page) -> None:
                 table.setItem(display_row, column, item)
             display_row += 1
 
-    table.blockSignals(False)
     if selected_display < 0:
         selected_display = next(iter(page._comp_phase14_display_to_backend), -1)
     if selected_display >= 0:
         table.selectRow(selected_display)
+    # Programmatic selection must not trigger another full Why/Health pass.
+    table.blockSignals(False)
 
 
 def _selected_backend_row(page) -> int:
@@ -1468,11 +1469,26 @@ def _refresh_health(page) -> None:
 
 
 def _refresh_shell(page) -> None:
+    pending = getattr(page, "_comp_phase14_refresh_timer", None)
+    if pending is not None and pending.isActive():
+        pending.stop()
     if not hasattr(page, "comp_phase14_plan_table"):
         return
     _refresh_plan_table(page)
     _refresh_why(page)
     _refresh_health(page)
+
+
+def _schedule_refresh_shell(page) -> None:
+    """Collapse duplicate Qt signals from one edit into one visible refresh."""
+    timer = getattr(page, "_comp_phase14_refresh_timer", None)
+    if timer is None:
+        timer = QTimer(page)
+        timer.setSingleShot(True)
+        timer.timeout.connect(lambda: _refresh_shell(page))
+        page._comp_phase14_refresh_timer = timer
+    if not timer.isActive():
+        timer.start(0)
 
 
 def _apply_plan_geometry(page, size: int) -> None:
@@ -2025,13 +2041,16 @@ def _sync_context_into_comp_state(page) -> None:
     trial = str(GOAL_TRIALS.get(goal, state.trial_id) or state.trial_id).strip()
     name = str(page.plan_name_input.text() or "").strip() or state.raid_plan_name
     difficulty = str(page.difficulty_combo.currentText() or "").strip() or state.difficulty
-    page._comp_plan_state = replace(
-        state,
+    context = dict(
         raid_plan_name=name,
         trial_id=trial,
         difficulty=difficulty,
         achievement_goal=goal or state.achievement_goal,
-        dirty=True,
+    )
+    page._comp_plan_state = replace(
+        state,
+        **context,
+        dirty=state.dirty or any(getattr(state, key) != value for key, value in context.items()),
     )
 
 
@@ -2111,13 +2130,17 @@ def _comp_state_from_payload(raw):
 
 def _save_comp_recovery_draft(page) -> None:
     state = getattr(page, "_comp_plan_state", None)
-    if state is None or not getattr(state, "dirty", False):
+    if not page.isVisible() or state is None or not getattr(state, "dirty", False):
+        return
+    key = _comp_draft_key(state)
+    if getattr(page, "_comp_ui_last_draft", None) == (key, state):
         return
     try:
         _comp_draft_service(page).save(
-            _comp_draft_key(state),
+            key,
             {"kind": "comp_plan", "state": asdict(state)},
         )
+        page._comp_ui_last_draft = (key, state)
     except Exception:
         return
 
@@ -2125,6 +2148,7 @@ def _save_comp_recovery_draft(page) -> None:
 def _discard_comp_recovery_draft(page, state=None) -> None:
     state = state if state is not None else getattr(page, "_comp_plan_state", None)
     _comp_draft_service(page).discard(_comp_draft_key(state))
+    page._comp_ui_last_draft = None
 
 
 def _offer_comp_recovery(page) -> None:
@@ -2176,7 +2200,7 @@ def _install_comp_draft_timer(page) -> None:
     if getattr(page, "_comp_ui_draft_timer", None) is not None:
         return
     timer = QTimer(page)
-    timer.setInterval(2000)
+    timer.setInterval(5000)
     timer.timeout.connect(lambda: _save_comp_recovery_draft(page))
     timer.start()
     page._comp_ui_draft_timer = timer
@@ -2210,6 +2234,9 @@ def _save_to_originating_raid_plan(page) -> bool:
                     "Raid Plan changed since Comp Maker loaded it. Your Comp edits remain here; "
                     "reload the plan before saving."
                 )
+        if state == getattr(page, "_comp_last_saved_state", None):
+            page.status.info("Comp Maker has no new changes to save.")
+            return True
         checkpoint = UserSafetySnapshotService().create(
             f"save-comp-plan-{state.raid_plan_id or state.raid_plan_name or 'new'}"
         )
@@ -2267,6 +2294,16 @@ def _save_to_originating_raid_plan(page) -> bool:
         saved_builds = tuple(getattr(build_result, "saved_seats", ()) or ())
         skipped_builds = tuple(getattr(build_result, "skipped_seats", ()) or ())
         skipped_reasons = tuple(getattr(build_result, "skipped_reasons", ()) or ())
+        if not any(
+            str(reason or "").strip().casefold() != "open/recruit chair"
+            for _seat, reason in skipped_reasons
+        ):
+            current_state = getattr(page, "_comp_plan_state", None)
+            page._comp_last_saved_state = (
+                current_state.mark_saved() if current_state is not None else None
+            )
+        else:
+            page._comp_last_saved_state = None
         if not saved_builds and any(
             getattr(chair, "player_name", None)
             and not getattr(chair, "is_open_player", False)
@@ -2307,7 +2344,7 @@ def _save_to_originating_raid_plan(page) -> bool:
                         "Comp Save Needs Review",
                         "The Raid Plan was saved. These occupied chairs still need a Comp Build:\n\n"
                         + "\n".join(f"• {seat}: {reason}" for seat, reason in review_reasons)
-                        + "\n\nFor a missing player/character link, select the correct Personnel player and Character for that chair. For a missing build package, choose a saved build or planned gear. Then Save Plan again. Open Recruit chairs need no action.",
+                        + "\n\nCheck this player in Players, then use Load Players in Comp Maker and Save Plan again. For a missing build package, choose a saved build or planned gear. Open Recruit chairs need no action.",
                     )
         page.status.success(
             f"Saved Comp Builder changes to Raid Plan: {plan.name}." + build_detail
@@ -2515,10 +2552,10 @@ def _install_shell(page) -> None:
     _refresh_shell(page)
 
     page.goal_combo.currentTextChanged.connect(
-        lambda *_: (_mark_comp_state_dirty(page), _refresh_shell(page))
+        lambda *_: (_mark_comp_state_dirty(page), _schedule_refresh_shell(page))
     )
     page.difficulty_combo.currentTextChanged.connect(
-        lambda *_: (_mark_comp_state_dirty(page), _refresh_shell(page))
+        lambda *_: (_mark_comp_state_dirty(page), _schedule_refresh_shell(page))
     )
     plan_name = getattr(page, "plan_name_input", None)
     if plan_name is not None:
@@ -2527,7 +2564,7 @@ def _install_shell(page) -> None:
             edit_signal.connect(lambda *_: _mark_comp_state_dirty(page))
     picker = getattr(page, "comp_candidate_choice_combo", None)
     if picker is not None:
-        picker.currentIndexChanged.connect(lambda *_: _refresh_shell(page))
+        picker.currentIndexChanged.connect(lambda *_: _schedule_refresh_shell(page))
 
 
 def _init_with_phase14_shell(self, parent=None) -> None:
@@ -2552,7 +2589,7 @@ def _render_slots_with_phase14_shell(self, slots) -> None:
         hasattr(self, "comp_phase14_plan_table")
         and not getattr(self, "_comp_loading_plan", False)
     ):
-        _refresh_shell(self)
+        _schedule_refresh_shell(self)
 
 
 def _send_to_raid_plan_method(self, *_args) -> None:
@@ -2583,7 +2620,7 @@ def install() -> None:
         assert _ORIGINAL_REFRESH_CANDIDATES is not None
         _ORIGINAL_REFRESH_CANDIDATES(page)
         if hasattr(page, "comp_phase14_plan_table"):
-            _refresh_shell(page)
+            _schedule_refresh_shell(page)
 
     candidate_support._refresh_candidates = refresh_candidates_with_shell
 
@@ -2599,7 +2636,7 @@ def install() -> None:
             except (AttributeError, TypeError, ValueError):
                 pass
             if not getattr(self, "_comp_loading_plan", False):
-                _refresh_shell(self)
+                _schedule_refresh_shell(self)
 
         CompBuilderPage.apply_roster_team_context = apply_roster_context_with_shell
 

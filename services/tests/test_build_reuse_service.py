@@ -1,9 +1,59 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from models.build_model import BuildContextVariant, BuildRoster, PlayerBuild
 from services.build_reuse_service import BuildReuseService
+
+
+def test_template_destinations_filter_archived_and_prefer_active_personnel_identity() -> None:
+    catalog = {
+        "players": [
+            {"player_id": "old", "gamertag": "Pippin", "status": "Active"},
+            {"player_id": "current", "gamertag": "Pippin", "status": "Active"},
+            {"player_id": "archived", "gamertag": "AAA Aces", "status": "Archived"},
+            {"player_id": "archived-name-only", "gamertag": "Old Alias", "status": "Active"},
+            {"player_id": "unique", "gamertag": "Jarakeen", "status": "Active"},
+        ],
+        "characters": [
+            {"character_id": "c-old", "player_id": "old"},
+            {"character_id": "c-current", "player_id": "current"},
+            {"character_id": "c-archived", "player_id": "archived"},
+            {"character_id": "c-archived-name-only", "player_id": "archived-name-only"},
+            {"character_id": "c-unique", "player_id": "unique"},
+        ],
+    }
+    personnel = (
+        SimpleNamespace(CanonicalPlayerId="old", Status="Archived"),
+        SimpleNamespace(CanonicalPlayerId="current", Status="Active"),
+        SimpleNamespace(CanonicalPlayerId="", PlayerName="Old Alias", Status="Archived"),
+    )
+
+    players, characters, ambiguous = BuildReuseService.destination_catalog(catalog, personnel)
+
+    assert set(players) == {"current", "unique"}
+    assert {row["character_id"] for row in characters} == {"c-current", "c-unique"}
+    assert ambiguous == ()
+
+
+def test_template_destinations_hide_unresolved_duplicate_names() -> None:
+    catalog = {
+        "players": [
+            {"player_id": "one", "gamertag": "Same"},
+            {"player_id": "two", "gamertag": "same"},
+        ],
+        "characters": [
+            {"character_id": "c-one", "player_id": "one"},
+            {"character_id": "c-two", "player_id": "two"},
+        ],
+    }
+
+    players, characters, ambiguous = BuildReuseService.destination_catalog(catalog, ())
+
+    assert players == {}
+    assert characters == []
+    assert ambiguous == ("Same",)
 
 
 def _healer() -> PlayerBuild:

@@ -54,7 +54,7 @@ class CompBuildPersistenceService:
         self.database = EsoDatabase(self.user_database_path)
         self.roster = RosterService(self.database)
 
-    def _repair_personnel_identity(self, chair: CompChairState) -> CompChairState:
+    def _repair_personnel_identity(self, chair: CompChairState) -> tuple[CompChairState, str]:
         """Recover an exact merged/current Personnel identity by player name.
 
         Comp state can legitimately lag Personnel after a duplicate-player merge:
@@ -63,11 +63,11 @@ class CompBuildPersistenceService:
         is safe evidence; fuzzy matching remains forbidden.
         """
         if chair.is_open_player or not chair.player_name:
-            return chair
+            return chair, ""
         if chair.roster_member_id is not None and (
             chair.player_id or chair.character_id
         ):
-            return chair
+            return chair, ""
 
         identity = RosterPlayerIdentityService(self.database, None)
         # A selected Personnel row is stronger evidence than its display name.
@@ -75,6 +75,7 @@ class CompBuildPersistenceService:
         if chair.roster_member_id is not None:
             selected = self.roster.get_member(int(chair.roster_member_id))
             matches = [selected] if selected is not None else []
+            issue = "selected Personnel record no longer exists" if selected is None else ""
         else:
             matches = identity.matching_members(chair.player_name)
             if len(matches) > 1 and chair.character_name:
@@ -83,8 +84,15 @@ class CompBuildPersistenceService:
                     if str(member.CharacterName or "").strip().casefold()
                     == str(chair.character_name).strip().casefold()
                 ]
+            issue = ""
         if len(matches) != 1:
-            return chair
+            if not issue:
+                issue = (
+                    f"{len(matches)} active Personnel records match {chair.player_name!r}; merge duplicates in Players"
+                    if matches
+                    else f"no active Personnel record matches {chair.player_name!r}; check the saved player name"
+                )
+            return chair, issue
 
         member = matches[0]
         return chair.with_changes(
@@ -95,7 +103,7 @@ class CompBuildPersistenceService:
             character_name=str(member.CharacterName or chair.character_name or "").strip() or chair.character_name,
             eso_class=str(member.EsoClass or chair.eso_class or "").strip() or chair.eso_class,
             role=str(member.PrimaryRole or chair.role or "").strip() or chair.role,
-        )
+        ), ""
 
     @staticmethod
     def _is_real_player(chair: CompChairState) -> bool:
@@ -344,7 +352,7 @@ class CompBuildPersistenceService:
         staged_roster_bindings: list[tuple[int, str, str]] = []
 
         for chair in state.chairs:
-            repaired_chair = self._repair_personnel_identity(chair)
+            repaired_chair, identity_issue = self._repair_personnel_identity(chair)
             if repaired_chair != chair:
                 chair = repaired_chair
                 updated_state = updated_state.with_chair(chair)
@@ -354,7 +362,7 @@ class CompBuildPersistenceService:
                 reason = (
                     "open/recruit chair"
                     if chair.is_open_player or not chair.player_name
-                    else "player is not linked to a unique Personnel record; select the roster player for this chair"
+                    else identity_issue or "player is not linked to a Personnel record; load the saved player list"
                 )
                 skipped_reasons.append((chair.seat_id, reason))
                 continue

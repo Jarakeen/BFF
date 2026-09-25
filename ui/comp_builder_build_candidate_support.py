@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QComboBox, QLabel, QScrollArea
 
-from engine.config import get_data_dir
+from engine.config import get_data_dir, get_user_database_path
 from services.comp_builder_build_candidates import (
     CompBuildCandidate,
     CompBuilderBuildCandidateService,
@@ -140,9 +140,25 @@ def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
     member = _roster_member_for_row(page, row)
     recruit = _row_is_recruit(page, row)
     member_key = (
-        str(getattr(member, "Gamertag", "") or "").strip().casefold(),
-        str(getattr(member, "Name", "") or "").strip().casefold(),
-        str(getattr(member, "CharacterId", "") or "").strip().casefold(),
+        getattr(member, "Id", None),
+        str(getattr(member, "CanonicalPlayerId", "") or "").strip().casefold(),
+        str(getattr(member, "CanonicalCharacterId", "") or "").strip().casefold(),
+        str(getattr(member, "PlayerName", "") or "").strip().casefold(),
+        str(getattr(member, "CharacterName", "") or "").strip().casefold(),
+    )
+    # The page lives across Builds/Personnel edits. SQLite may be in WAL mode,
+    # so either the database or its WAL can contain the latest saved catalog.
+    database_path = get_user_database_path()
+    def file_stamp(path):
+        try:
+            stat = path.stat()
+        except FileNotFoundError:
+            return None
+        return stat.st_mtime_ns, stat.st_size
+
+    catalog_stamp = tuple(
+        file_stamp(path)
+        for path in (database_path, database_path.with_name(database_path.name + "-wal"))
     )
     cache_key = (
         goal,
@@ -153,6 +169,7 @@ def _chair_candidates(page, row: int) -> tuple[CompBuildCandidate, ...]:
         observed_skills,
         member_key,
         recruit,
+        catalog_stamp,
     )
     cache = getattr(page, "_comp_chair_candidate_cache", None)
     if cache is None:
