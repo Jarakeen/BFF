@@ -4,7 +4,7 @@ from __future__ import annotations
 
 Update 23 gives one narrow weapon-enchantment damage family enough primary-source
 evidence for deterministic target-side application: CP160 Legendary Decrease Health.
-Other weapon-enchantment damage families remain fail-closed in their own policy path.
+Other weapon-enchantment damage families remain fail-closed through the shared critical-policy path.
 """
 
 from dataclasses import dataclass
@@ -13,6 +13,9 @@ from math import isclose
 from models.combat_simulation import (
     CombatSimulationOutgoingDamage,
     CombatSimulationTargetState,
+)
+from services.extreme_sustained_dps_weapon_enchantment_damage_policy_service import (
+    ExtremeSustainedDPSWeaponEnchantmentDamagePolicyService,
 )
 from services.extreme_sustained_dps_weapon_enchantment_proc_consequence_service import (
     ExtremeSustainedDPSWeaponEnchantmentProcOccurrence,
@@ -57,10 +60,13 @@ class ExtremeSustainedDPSWeaponEnchantmentOblivionDamageService:
     ) -> ExtremeSustainedDPSWeaponEnchantmentOblivionDamageResolution:
         target = str(target_identity or "").strip()
         combatant = target_state.combatant(target) if target else None
+        damage_policy = ExtremeSustainedDPSWeaponEnchantmentDamagePolicyService.resolve(
+            tuple(occurrences)
+        )
 
         rows: list[CombatSimulationOutgoingDamage] = []
-        evidence: list[str] = []
-        unresolved: list[str] = []
+        evidence: list[str] = list(damage_policy.evidence)
+        unresolved: list[str] = list(damage_policy.unresolved)
         inspected = 0
 
         for occurrence in tuple(occurrences):
