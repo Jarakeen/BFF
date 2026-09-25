@@ -245,12 +245,23 @@ def test_application_save_catalog_cannot_implicitly_delete_saved_build(
     assert len(service.canonical.load_catalog()["builds"]) == 1
 
 
-def test_copy_build_persists_with_new_id_and_preserves_source(tmp_path: Path) -> None:
+def test_copy_build_persists_with_new_id_and_preserves_source(tmp_path: Path, monkeypatch) -> None:
     from models.build_model import BuildRoster, PlayerBuild
     from services.build_reuse_service import BuildReuseService
     from services.build_service import BuildService
 
-    builds_path = tmp_path / "data" / "builds.json"
+    data_dir = tmp_path / "data"
+    user_dir = tmp_path / "user_data"
+    data_dir.mkdir()
+    user_dir.mkdir()
+    builds_path = data_dir / "builds.json"
+    user_db = user_dir / "foundrydock.db"
+    builds_path.write_text('{"Members": []}', encoding="utf-8")
+    monkeypatch.setattr(bridge_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(bridge_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(migration_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "ensure_user_database", lambda: user_db)
     service = BuildService(builds_path)
     catalog_service = service.canonical.catalog_service
     catalog = catalog_service.new_catalog()
