@@ -1575,6 +1575,32 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_poison_identity",
+        domain="extreme",
+        purpose=(
+            "Resolve a saved crafted weapon-poison item name to every imported UESP "
+            "Alchemy Poison effect identity and its effect-specific duration without "
+            "inventing magnitude or application semantics."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_poison_identity_service",
+        inputs=("CanonicalEsoDatabase", "SavedWeaponPoisonItemName"),
+        outputs=("ExtremeSustainedDPSWeaponPoisonIdentityResolution",),
+        dependencies=(),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_poison_identity_duration_resolution",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.DATA,
+        notes=(
+            "The exact crafted item name is matched across imported Poison tier rows in "
+            "effect_variant.raw_json, so one multi-effect poison may resolve several "
+            "independent effect identities and durations. Magnitude, dilution, target "
+            "semantics, and final runtime application remain separate proof obligations."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_poison_consequence_frontier",
         domain="extreme",
         purpose=(
