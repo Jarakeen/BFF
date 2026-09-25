@@ -88,3 +88,45 @@ def test_restoring_backup_through_repository_changes_only_raid_plan(tmp_path: Pa
     assert repository.get(restored.plan_id) == restored
     with sqlite3.connect(database) as db:
         assert db.execute("SELECT value FROM marker").fetchone() == ("leave this alone",)
+
+
+def test_raid_plan_backup_accepts_early_phase14_safety_export(tmp_path: Path) -> None:
+    plan = _plan()
+    path = tmp_path / "raid-plan-sunspire-performance-mode-gs.json"
+    path.write_text(
+        json.dumps(
+            {
+                "payload": {
+                    "kind": "raid_plan",
+                    "plan": {
+                        "plan_id": plan.plan_id,
+                        "trial_id": plan.trial_id,
+                        "name": plan.name,
+                        "team_name": plan.team_name,
+                        "difficulty": plan.difficulty,
+                        "plan_note": plan.plan_note,
+                        "status": plan.status,
+                        "members": [
+                            {
+                                "seat_id": row.seat_id,
+                                "gamertag": row.gamertag,
+                                "character_name": row.character_name,
+                                "eso_class": row.eso_class,
+                                "role": row.role,
+                            }
+                            for row in plan.members
+                        ],
+                        "triggered_responsibilities": [],
+                    },
+                },
+                "saved_at": "2026-09-25T01:55:17+00:00",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    restored = load_raid_plan_backup(path)
+
+    assert restored.plan_id == plan.plan_id
+    assert restored.team_name == "Performance Mode"
+    assert tuple(member.gamertag for member in restored.members) == ("Rik", "AAA Aces")
