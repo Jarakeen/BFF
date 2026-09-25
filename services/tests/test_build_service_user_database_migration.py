@@ -242,3 +242,51 @@ def test_application_save_catalog_cannot_implicitly_delete_saved_build(
         service.canonical.save_catalog(projected)
 
     assert len(service.canonical.load_catalog()["builds"]) == 1
+
+
+def test_copy_build_persists_with_new_id_and_preserves_source(tmp_path: Path) -> None:
+    from models.build_model import BuildRoster, PlayerBuild
+    from services.build_reuse_service import BuildReuseService
+    from services.build_service import BuildService
+
+    builds_path = tmp_path / "data" / "builds.json"
+    service = BuildService(builds_path)
+    catalog_service = service.canonical.catalog_service
+    catalog = catalog_service.new_catalog()
+    catalog["players"] = [
+        {"player_id": "source-player", "gamertag": "Jarakeen"},
+        {"player_id": "dest-player", "gamertag": "OtherPlayer"},
+    ]
+    catalog["characters"] = [
+        {"character_id": "source-character", "player_id": "source-player", "name": "Magrat", "gamertag": "Jarakeen", "eso_class": "Warden"},
+        {"character_id": "dest-character", "player_id": "dest-player", "name": "Maeve", "gamertag": "OtherPlayer", "eso_class": "Warden"},
+    ]
+    source = PlayerBuild(
+        Name="Magrat", Gamertag="Jarakeen", BuildName="SW Healer",
+        EsoClass="Warden", Role="Healer", PlayerId="source-player",
+        CharacterId="source-character", BuildId="source-build",
+        FrontBarSkills=["Combat Prayer", "", "", "", "", ""],
+    )
+    service.save(BuildRoster(Members=[source]))
+    before = catalog_service.load_strict()
+    source_before = next(row for row in before["builds"] if row["build_id"] == "source-build")
+
+    copied = BuildReuseService.copy_build(
+        source,
+        destination_name="Maeve",
+        destination_gamertag="OtherPlayer",
+        destination_class="Warden",
+        destination_player_id="dest-player",
+        destination_character_id="dest-character",
+        new_build_name="SW Healer Copy",
+    ).build
+    service.save(BuildRoster(Members=[copied]))
+
+    after = catalog_service.load_strict()
+    assert len(after["builds"]) == 2
+    assert next(row for row in after["builds"] if row["build_id"] == "source-build") == source_before
+    copied_rows = [row for row in after["builds"] if row["build_id"] != "source-build"]
+    assert len(copied_rows) == 1
+    assert copied_rows[0]["build_id"]
+    assert copied_rows[0]["build_id"] != "source-build"
+    assert copied_rows[0]["character_id"] == "dest-character"
