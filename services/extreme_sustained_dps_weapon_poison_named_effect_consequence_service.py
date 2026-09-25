@@ -33,7 +33,17 @@ class ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceResolution:
 class ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService:
     """Resolve only reviewed target-side named poison effects for sustained DPS."""
 
-    _REVIEWED_SELF_DPS_IRRELEVANT = frozenset({"minor protection"})
+    _REVIEWED_DPS_IRRELEVANT = frozenset(
+        {
+            "minor protection",
+            "minor vitality",
+            "minor maim",
+            "minor cowardice",
+            "minor uncertainty",
+            "minor enervation",
+            "minor defile",
+        }
+    )
 
     def __init__(
         self,
@@ -93,6 +103,14 @@ class ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService:
                 continue
 
             for relationship in relationships:
+                relationship_key = self._norm(relationship.effect_name)
+                if relationship_key in self._REVIEWED_DPS_IRRELEVANT:
+                    evidence.append(
+                        f"{selected.effect_name}: {relationship.target_type.value}-side "
+                        f"{relationship.effect_name} is irrelevant to sustained outgoing DPS"
+                    )
+                    continue
+
                 canonical = canonical_buff_name(relationship.effect_name)
                 if canonical is None:
                     unresolved.append(
@@ -101,26 +119,17 @@ class ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService:
                     )
                     continue
 
-                if relationship.target_type is SupportTargetType.SELF:
-                    if self._norm(canonical) in self._REVIEWED_SELF_DPS_IRRELEVANT:
-                        evidence.append(
-                            f"{selected.effect_name}: self-side {canonical} is defensive-only "
-                            "and irrelevant to sustained outgoing DPS"
-                        )
-                        continue
-                    unresolved.append(
-                        f"{selected_poison}: self-side poison named effect {canonical} needs "
-                        "an attacker runtime projection before it can affect Objective #32"
-                    )
-                    continue
-
-                if relationship.target_type is not SupportTargetType.ENEMY:
+                if relationship.target_type not in {
+                    SupportTargetType.SELF,
+                    SupportTargetType.ENEMY,
+                }:
                     unresolved.append(
                         f"{selected_poison}: poison named effect {canonical} has unsupported "
                         f"target type {relationship.target_type}"
                     )
                     continue
 
+                is_enemy = relationship.target_type is SupportTargetType.ENEMY
                 effects.append(
                     EffectVariant(
                         name=self._effect_key(canonical),
@@ -128,13 +137,18 @@ class ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService:
                         source=selected_poison,
                         duration=float(selected.duration_seconds),
                         trigger="weapon_poison_proc",
-                        target=target,
-                        target_type=SupportTargetType.ENEMY,
-                        category=SupportEffectCategory.DEBUFF,
+                        target=target if is_enemy else None,
+                        target_type=relationship.target_type,
+                        category=(
+                            SupportEffectCategory.DEBUFF
+                            if is_enemy
+                            else SupportEffectCategory.BUFF
+                        ),
                     )
                 )
                 evidence.append(
-                    f"{selected.effect_name}: projected target-side {canonical} for "
+                    f"{selected.effect_name}: projected "
+                    f"{'target' if is_enemy else 'self'}-side {canonical} for "
                     f"{float(selected.duration_seconds):g}s"
                 )
 
