@@ -46,7 +46,7 @@ def _kwargs():
         "structural_families": object(),
         "structural_materialization": object(),
         "gear_adapter": object(),
-        "late_adapter": SimpleNamespace(poisons=object()),
+        "late_adapter": SimpleNamespace(poisons=object(), poison_tiers=object()),
         "rotation_adapter": object(),
         "runtime_policy_adapter": _RuntimePolicyAdapter(),
         "runtime_evaluation": object(),
@@ -246,3 +246,14 @@ def test_composition_requires_generated_weapon_poison_selection_frontier() -> No
     ):
         ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
 
+
+
+def test_composition_requires_generated_weapon_poison_tier_frontier() -> None:
+    kwargs = _kwargs()
+    kwargs["late_adapter"] = SimpleNamespace(poisons=object(), poison_tiers=None)
+
+    with pytest.raises(
+        ValueError,
+        match="canonical generated weapon-poison tier frontier",
+    ):
+        ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
