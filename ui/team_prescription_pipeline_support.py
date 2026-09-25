@@ -163,7 +163,7 @@ def _suggested_promoted_build_name(page, assignment) -> str:
 
 
 def _character_rows(page) -> tuple[dict, ...]:
-    catalog = page.build_service.canonical.catalog_service.load()
+    catalog = page.build_service.canonical.catalog_service.load_strict()
     return tuple(
         row for row in catalog.get("characters", ()) if isinstance(row, dict)
     )
@@ -271,11 +271,10 @@ def _promote_current_prescription(page, *_args) -> None:
             character_id=character_id,
             build_name=build_name,
         )
-        # Canonical catalog is authoritative. Reload it and explicitly sync the
-        # compatibility builds.json mirror so every existing page/tool sees the
-        # new build through the same BuildService boundary.
+        # Canonical catalog is authoritative. Reload the verified result for the
+        # page. A read must not perform a second catalog write merely to refresh
+        # a legacy compatibility mirror.
         page.roster = page.build_service.load()
-        page.build_service.save(page.roster)
     except Exception as exc:
         page.status.error(f"Could not save prescribed build: {exc}")
         return
