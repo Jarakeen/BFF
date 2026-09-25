@@ -115,7 +115,7 @@ def _team_names(page) -> list[str]:
 
     build_library = getattr(page, "build_library", None)
     if build_library is not None:
-        catalog = build_library.canonical.catalog_service.load()
+        catalog = build_library.canonical.catalog_service.load_strict()
         for assignment in catalog.get("team_assignments", []):
             if not isinstance(assignment, dict):
                 continue
