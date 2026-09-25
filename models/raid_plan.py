@@ -138,6 +138,24 @@ class RaidPlanMember:
 
 
 @dataclass(frozen=True)
+class RaidPlanCoverageProvider:
+    """Raid-lead asserted coverage with explicit provider and explanation."""
+
+    effect_name: str
+    seat_id: str
+    source: str
+    note: str | None = None
+
+    def __post_init__(self) -> None:
+        for name in ("effect_name", "seat_id", "source"):
+            value = _clean(getattr(self, name))
+            if not value:
+                raise ValueError(f"raid plan coverage provider {name} must be non-empty")
+            object.__setattr__(self, name, value)
+        object.__setattr__(self, "note", _optional(self.note))
+
+
+@dataclass(frozen=True)
 class RaidPlanTriggeredResponsibility:
     """One seat-owned response activated by an opaque reviewed runtime condition.
 
@@ -199,6 +217,7 @@ class RaidPlan:
     triggered_responsibilities: tuple[RaidPlanTriggeredResponsibility, ...] = field(
         default_factory=tuple
     )
+    coverage_providers: tuple[RaidPlanCoverageProvider, ...] = field(default_factory=tuple)
     plan_note: str | None = None
 
     def __post_init__(self) -> None:
@@ -236,6 +255,14 @@ class RaidPlan:
                     f"{row.seat_id!r}"
                 )
 
+        coverage_providers = tuple(self.coverage_providers)
+        for row in coverage_providers:
+            if row.seat_id.casefold() not in member_seat_ids:
+                raise ValueError(
+                    "raid plan coverage provider references unknown seat_id: "
+                    f"{row.seat_id!r}"
+                )
+
         object.__setattr__(self, "plan_id", plan_id)
         object.__setattr__(self, "trial_id", trial_id)
         object.__setattr__(self, "name", name)
@@ -249,6 +276,7 @@ class RaidPlan:
             "triggered_responsibilities",
             triggered_responsibilities,
         )
+        object.__setattr__(self, "coverage_providers", coverage_providers)
 
     def member(self, seat_id: str) -> RaidPlanMember | None:
         key = _clean(seat_id).casefold()
@@ -277,6 +305,30 @@ class RaidPlan:
             )
         )
 
+    def coverage_for(self, effect_name: str) -> tuple[RaidPlanCoverageProvider, ...]:
+        key = _clean(effect_name).casefold()
+        return tuple(row for row in self.coverage_providers if row.effect_name.casefold() == key)
+
+    def with_coverage_provider(self, provider: RaidPlanCoverageProvider) -> "RaidPlan":
+        if not isinstance(provider, RaidPlanCoverageProvider):
+            raise TypeError("coverage provider must be a RaidPlanCoverageProvider")
+        key = (provider.effect_name.casefold(), provider.seat_id.casefold())
+        kept = tuple(
+            row for row in self.coverage_providers
+            if (row.effect_name.casefold(), row.seat_id.casefold()) != key
+        )
+        return replace(self, coverage_providers=(*kept, provider))
+
+    def without_coverage_provider(self, effect_name: str, seat_id: str) -> "RaidPlan":
+        effect_key, seat_key = _clean(effect_name).casefold(), _clean(seat_id).casefold()
+        return replace(
+            self,
+            coverage_providers=tuple(
+                row for row in self.coverage_providers
+                if not (row.effect_name.casefold() == effect_key and row.seat_id.casefold() == seat_key)
+            ),
+        )
+
     def with_member(self, member: RaidPlanMember) -> "RaidPlan":
         """Add or replace one chair by seat identity."""
         if not isinstance(member, RaidPlanMember):
@@ -296,6 +348,9 @@ class RaidPlan:
 
     def without_member(self, seat_id: str) -> "RaidPlan":
         key = _clean(seat_id).casefold()
+        coverage_owned = tuple(row for row in self.coverage_providers if row.seat_id.casefold() == key)
+        if coverage_owned:
+            raise ValueError("cannot remove raid plan member while coverage providers still reference the seat")
         owned = tuple(
             row
             for row in self.triggered_responsibilities
@@ -316,5 +371,6 @@ class RaidPlan:
 __all__ = [
     "RaidPlan",
     "RaidPlanMember",
+    "RaidPlanCoverageProvider",
     "RaidPlanTriggeredResponsibility",
 ]
