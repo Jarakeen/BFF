@@ -272,7 +272,7 @@ def test_poison_tier_coordinate_is_part_of_generated_candidate_identity() -> Non
                 poison_id=poison_id,
                 possible_effects=(),
                 source_evidence_complete=True,
-            exact_selection_proven=False,
+                exact_selection_proven=False,
             ),
         )
 
