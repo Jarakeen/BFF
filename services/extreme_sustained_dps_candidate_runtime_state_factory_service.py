@@ -71,6 +71,7 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
         supplemental_history_denominator_proven: bool,
         weapon_poison_consequence_resolver: object | None = None,
         weapon_poison_dilution_selection_resolver: object | None = None,
+        weapon_poison_consequence_resolver_resolver=None,
         source: str = "Objective #32 candidate runtime scenario",
     ) -> ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
         if capability_service is None:
@@ -81,13 +82,19 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
             raise ValueError(
                 "candidate runtime-state factory requires pre-runtime exact damage-occurrence authority"
             )
-        if (
-            weapon_poison_consequence_resolver is not None
-            and weapon_poison_dilution_selection_resolver is not None
-        ):
+        configured_poison_authorities = sum(
+            int(value is not None)
+            for value in (
+                weapon_poison_consequence_resolver,
+                weapon_poison_dilution_selection_resolver,
+                weapon_poison_consequence_resolver_resolver,
+            )
+        )
+        if configured_poison_authorities > 1:
             raise ValueError(
-                "candidate runtime-state factory cannot combine explicit weapon-poison "
-                "consequence resolver with dilution-selection authority"
+                "candidate runtime-state factory requires exactly one poison consequence "
+                "authority path: global consequence resolver, dilution-selection authority, "
+                "or candidate-scoped consequence resolver"
             )
 
         if (
@@ -167,6 +174,9 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
             supplemental_history_resolver=supplemental_history_resolver,
             supplemental_history_denominator_proven=bool(
                 supplemental_history_denominator_proven
+            ),
+            weapon_poison_consequence_resolver_resolver=(
+                weapon_poison_consequence_resolver_resolver
             ),
             source=source,
         )
