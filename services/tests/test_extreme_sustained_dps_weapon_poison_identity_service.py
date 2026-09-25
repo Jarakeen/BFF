@@ -83,7 +83,7 @@ def test_poison_name_resolves_every_matching_effect_and_its_duration(tmp_path) -
     assert result.resolved is True
     assert result.unresolved == ()
     assert [
-        (row.effect_name, row.duration_seconds)
+        (row.effect_name, row.base_duration_seconds)
         for row in result.effects
     ] == [
         ("Maim", 3.5),
