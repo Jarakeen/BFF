@@ -23,7 +23,7 @@ from services.roster_service import RosterService
 def test_phase14_comp_to_raid_plan_build_coverage_readiness_round_trip(
     tmp_path: Path,
 ) -> None:
-    """One real-player plan must survive the Phase 14 planning loop by stable identity."""
+    """Planned Comp state stays Raid Plan-owned and never manufactures a Build."""
     database_path = tmp_path / "foundrydock.db"
     roster = RosterService(EsoDatabase(database_path))
     roster_member_id = roster.create_member(
@@ -48,10 +48,7 @@ def test_phase14_comp_to_raid_plan_build_coverage_readiness_round_trip(
                 character_name="Magrat",
                 role="Healer",
                 eso_class="Warden",
-                planned_gear_sets=(
-                    "Perfected Grand Rejuvenation",
-                    "Spell Power Cure",
-                ),
+                planned_gear_sets=("Perfected Grand Rejuvenation", "Spell Power Cure"),
                 planned_skills=("Combat Prayer",),
                 planned_mundus="The Ritual",
                 primary_assignment="Major Courage",
@@ -67,20 +64,20 @@ def test_phase14_comp_to_raid_plan_build_coverage_readiness_round_trip(
         ),
     )
 
-    build_persistence = CompBuildPersistenceService(
-        tmp_path,
-        database_path=database_path,
-    )
+    build_persistence = CompBuildPersistenceService(tmp_path, database_path=database_path)
+    assert BuildCatalogService(database_path).load_strict()["builds"] == []
 
-    # First pass creates the stable BuildId. A new Raid Plan id does not exist yet.
     first = build_persistence.persist(state)
     first_healer = first.state.chair("Healer1")
     assert first_healer is not None
     assert first_healer.player_id
     assert first_healer.character_id
-    assert first_healer.selected_build_id
+    assert first_healer.selected_build_id is None
+    assert first_healer.build_source_kind == "planned"
     assert "Healer1" in first.saved_seats
     assert "DD1" in first.skipped_seats
+    assert BuildCatalogService(database_path).load_strict()["builds"] == []
+    assert not (tmp_path / "characters.json").exists()
 
     plan_id = CompPlanStateService.unique_raid_plan_id(first.state)
     plan = CompPlanStateService.to_new_raid_plan(first.state, plan_id=plan_id)
@@ -91,42 +88,25 @@ def test_phase14_comp_to_raid_plan_build_coverage_readiness_round_trip(
     assert persisted is not None
     persisted_healer = persisted.member("Healer1")
     assert persisted_healer is not None
-    assert persisted_healer.selected_build_id == first_healer.selected_build_id
+    assert persisted_healer.selected_build_id is None
+    assert persisted_healer.planned_gear_sets == first_healer.planned_gear_sets
 
-    # Rebinding is the first moment the new plan has a durable id. The second Comp
-    # persistence pass must update the same BuildId with that provenance, not clone it.
     rebound = CompPlanStateService.from_raid_plan(persisted)
     second = build_persistence.persist(rebound)
     second_healer = second.state.chair("Healer1")
     assert second_healer is not None
-    assert second_healer.selected_build_id == first_healer.selected_build_id
+    assert second_healer.selected_build_id is None
+    assert BuildCatalogService(database_path).load_strict()["builds"] == []
 
-    catalog = BuildCatalogService(database_path).load()
-    comp_builds = [
-        row
-        for row in catalog["builds"]
-        if row.get("build_kind") == "comp"
-    ]
-    assert len(comp_builds) == 1
-    assert not (tmp_path / "characters.json").exists()
-    comp_record = comp_builds[0]
-    assert comp_record["build_id"] == first_healer.selected_build_id
-    assert comp_record["source"]["plan_id"] == plan_id
-    assert comp_record["source"]["seat_id"] == "Healer1"
-    assert comp_record["legacy"]["SourcePlanId"] == plan_id
-
-    # Persist/reload once more to prove the plan itself remains the durable scope.
-    final_plan = CompPlanStateService.to_raid_plan(
-        second.state,
-        base_plan=persisted,
-    )
+    final_plan = CompPlanStateService.to_raid_plan(second.state, base_plan=persisted)
     repository.save(final_plan)
     reloaded_plan = repository.get(plan_id)
     assert reloaded_plan == final_plan
 
-    saved_builds = tuple(CanonicalBuildBridge(tmp_path / "builds.json", catalog_path=database_path).load().Members)
-    assert len(saved_builds) == 1
-    assert saved_builds[0].BuildId == first_healer.selected_build_id
+    saved_builds = tuple(
+        CanonicalBuildBridge(tmp_path / "builds.json", catalog_path=database_path).load().Members
+    )
+    assert saved_builds == ()
 
     scope = RaidPlanCoverageScopeService().compose(
         raid_plan=reloaded_plan,
@@ -136,7 +116,7 @@ def test_phase14_comp_to_raid_plan_build_coverage_readiness_round_trip(
     )
     assert len(scope.members) == 1
     assert scope.members[0].seat_id == "Healer1"
-    assert scope.members[0].build.BuildId == first_healer.selected_build_id
+    assert scope.members[0].build is None
     assert scope.primary_for("Major Courage") == ("Magrat",)
     assert any("DD1" in message for message in scope.unresolved)
 
@@ -152,20 +132,9 @@ def test_phase14_comp_to_raid_plan_build_coverage_readiness_round_trip(
     assert coverage.state == "assigned_unproven"
     assert coverage.label == "Covered • Planned"
 
-    readiness = RaidReadinessEvidenceService(
-        data_dir=tmp_path,
-        database_path=database_path,
+    catalog = BuildCatalogService(database_path).load_strict()
+    assert all(
+        str(player.get("gamertag") or "").casefold() != "recruit"
+        for player in catalog["players"]
     )
-    readiness._snapshot = lambda _scope: SimpleNamespace(
-        providers={"Major Courage": []},
-        conditional_providers={"Major Courage": []},
-    )
-
-    evidence = readiness.evaluate(reloaded_plan)
-    healer_evidence = evidence.seat("Healer1")
-    assert healer_evidence is not None
-    assert healer_evidence.build_state == "ready"
-    assert healer_evidence.coverage_state == "covered"
-
-    # The recruit remains planning state only. It must never become a saved Player/Build.
-    assert all(build.Gamertag.casefold() != "recruit" for build in saved_builds)
+    assert catalog["builds"] == []
