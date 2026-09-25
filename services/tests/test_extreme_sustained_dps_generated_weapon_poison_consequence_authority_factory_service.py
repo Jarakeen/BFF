@@ -290,3 +290,57 @@ def test_generated_poison_consequence_factory_defaults_to_literal_formula_diluti
     assert result.resolved is True
     assert result.effects[0].duration == 5.0
 
+
+
+def test_generated_poison_consequence_does_not_fall_back_to_stale_late_tier_provenance():
+    state = _state()
+    formula = state.late.assembled.poison_loadout.front.formula
+    poison_id = formula.canonical_id
+    stale_tier = SimpleNamespace(
+        front=SimpleNamespace(
+            poison_id=poison_id,
+            tier=SimpleNamespace(
+                item_evidence=ExtremeSustainedDPSWeaponPoisonItemEvidence(
+                    poison_id=poison_id,
+                    possible_effects=(
+                        ExtremeSustainedDPSWeaponPoisonPossibleEffect(
+                            effect_name="Breach",
+                            base_duration_seconds=10.0,
+                            triple_duration_seconds=5.0,
+                            solvent="Alkahest",
+                            level=50,
+                        ),
+                    ),
+                    source_evidence_complete=True,
+                )
+            ),
+        ),
+        back=SimpleNamespace(poison_id="", tier=None),
+    )
+    state.late.poison_tier_loadout = stale_tier
+    state.late.assembled.poison_tier_loadout = None
+
+    service = ExtremeSustainedDPSGeneratedWeaponPoisonConsequenceAuthorityFactoryService(
+        dilution_mode_resolver=lambda **_kwargs: "base",
+    )
+    frontier = service.resolve(state)
+    occurrence = ExtremeSustainedDPSWeaponPoisonProcOccurrence(
+        event=RuntimeEvent(
+            time_seconds=1.0,
+            sequence=0,
+            trigger="weapon_poison_activation",
+            source="Light Attack",
+            target="Boss",
+            source_bar="front",
+        ),
+        poison_id=poison_id,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="requires retained poison tier loadout",
+    ):
+        frontier.consequence_resolver.resolve(
+            poison_id=poison_id,
+            occurrence=occurrence,
+        )
