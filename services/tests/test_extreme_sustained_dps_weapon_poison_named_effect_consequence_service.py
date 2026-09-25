@@ -81,7 +81,7 @@ def test_protection_projects_enemy_vulnerability_and_skips_defensive_self_side()
     assert result.resolved is True
     assert [effect.name for effect in result.effects] == ["minor_vulnerability"]
     assert any(
-        "self-side Minor Protection is defensive-only" in row
+        "self-side Minor Protection is irrelevant to sustained outgoing DPS" in row
         for row in result.evidence
     )
 
@@ -182,3 +182,67 @@ def test_poison_minor_vulnerability_reaches_canonical_damage_taken_math() -> Non
     assert projected.unresolved == ()
     assert "Minor Vulnerability" in projected.combat_state.active_buffs
     assert damage_taken_from_target_state(projected.combat_state).generic == 0.05
+
+
+def test_weapon_power_poison_projects_self_minor_brutality_and_collapses_enemy_maim() -> None:
+    result = ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService(
+        dilution_selection=_selection(
+            ExtremeSustainedDPSWeaponPoisonSelectedEffect(
+                "Increase Weapon Power",
+                5.5,
+            ),
+        )
+    ).resolve(
+        poison_id="Test Poison IX",
+        occurrence=_occurrence(),
+    )
+
+    assert result.resolved is True
+    assert [effect.name for effect in result.effects] == ["minor_brutality"]
+    assert result.effects[0].target_type.value == "self"
+    assert result.effects[0].target is None
+    assert any(
+        "enemy-side Minor Maim is irrelevant to sustained outgoing DPS" in row
+        for row in result.evidence
+    )
+
+
+def test_poison_self_minor_brutality_reaches_canonical_self_combat_state() -> None:
+    consequence = ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService(
+        dilution_selection=_selection(
+            ExtremeSustainedDPSWeaponPoisonSelectedEffect(
+                "Increase Weapon Power",
+                5.5,
+            ),
+        )
+    ).resolve(
+        poison_id="Test Poison IX",
+        occurrence=_occurrence(),
+    )
+    effect = consequence.effects[0]
+    attempt = RuntimeEffectEventAttempt.for_bound_effect(
+        event=RuntimeEvent(
+            time_seconds=1.0,
+            sequence=0,
+            trigger="weapon_poison_proc",
+            source="Test Poison IX",
+            source_bar="front",
+        ),
+        effect=effect,
+        chance_roll=0.0,
+    )
+
+    from services.extreme_sustained_dps_runtime_self_combat_state_service import (
+        ExtremeSustainedDPSRuntimeSelfCombatStateService,
+    )
+
+    projected = ExtremeSustainedDPSRuntimeSelfCombatStateService.resolve(
+        snapshot=ExtremeRuntimeSnapshot(
+            attempts=(attempt,),
+            snapshot_time_seconds=2.0,
+        ),
+        effects=(effect,),
+    )
+
+    assert projected.unresolved == ()
+    assert projected.combat_state.active_buffs == ("Minor Brutality",)
