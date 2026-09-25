@@ -5,6 +5,7 @@ from services.build_profile_service import (
     BuildProfile,
     BuildProfileService,
     build_profile_exception_count,
+    build_with_effective_item_profile,
     effective_item_profile,
 )
 
@@ -73,6 +74,27 @@ def test_custom_baseline_changes_effective_resolution_without_mutating_item() ->
     assert effective.has_override is False
     assert item.Level == ""
     assert item.EnchantTier == ""
+
+
+def test_calculation_copy_inherits_baseline_only_on_equipped_items() -> None:
+    build = PlayerBuild(BuildId="build-1")
+    build.Armor["Head"].update(Set="Ozezan the Inferno", Weight="Light")
+    build.Armor["Chest"].update(Set="Trial Set", Weight="Medium", Quality="Purple")
+    build.Necklace = GearSlot(Set="Jewelry Set", Trait="Bloodthirsty")
+    build.FrontBarWeapon = GearSlot(Set="Weapon Set", WeaponType="Restoration Staff")
+    profile = BuildProfile(quality="Gold", item_level="CP160", enchantment_tier="Truly Superb")
+
+    calculated = build_with_effective_item_profile(build, profile)
+
+    assert calculated.Armor["Head"]["Quality"] == "Gold"
+    assert calculated.Armor["Head"]["Level"] == "CP160"
+    assert calculated.Armor["Chest"]["Quality"] == "Purple"
+    assert calculated.Necklace.EnchantTier == "Truly Superb"
+    assert calculated.FrontBarWeapon.Level == "CP160"
+    assert calculated.BackBarWeapon.is_empty
+    assert not any(calculated.Armor["Feet"].values())
+    assert build.Armor["Head"]["Quality"] == ""
+    assert build.Necklace.Level == ""
 
 
 def test_build_profiles_are_isolated_by_canonical_build_id(tmp_path) -> None:

@@ -20,6 +20,7 @@ from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 from models.raid_plan import RaidPlan
 from services.build_service import BuildService
+from services.build_profile_service import BuildProfileService, build_with_effective_item_profile
 from services.minmax_character_progression_adapter import MinmaxCharacterProgressionAdapter
 from services.raid_plan_saved_build_resolution_service import RaidPlanSavedBuildResolutionService
 from services.saved_build_capability_service import SavedBuildCapabilityService
@@ -106,6 +107,7 @@ class RaidPlanOffensiveStatsService:
         context_factory=None,
         capability_service: SavedBuildCapabilityService | None = None,
         resolver: RaidPlanSavedBuildResolutionService | None = None,
+        profile_service: BuildProfileService | None = None,
     ) -> None:
         self.database_path = Path(database_path or DEFAULT_DATABASE)
         self.build_service = build_service or BuildService(get_data_dir() / "builds.json")
@@ -121,6 +123,7 @@ class RaidPlanOffensiveStatsService:
             self.database_path,
         )
         self.resolver = resolver or RaidPlanSavedBuildResolutionService()
+        self.profile_service = profile_service or BuildProfileService(get_data_dir() / "build_profiles.json")
 
     @staticmethod
     def _trace_contributions(trace, kind: str) -> tuple[RaidOffensiveStatContribution, ...]:
@@ -370,10 +373,14 @@ class RaidPlanOffensiveStatsService:
             progression = self.progression.resolve(build)
             unresolved.extend(progression.unresolved)
             try:
+                calculation_build = build_with_effective_item_profile(
+                    build,
+                    self.profile_service.get(_clean(getattr(build, "BuildId", ""))),
+                )
                 context = self.context_factory.build(
                     character_id=progression.character_id or member.character_id or member.seat_id,
                     build_id=_clean(getattr(build, "BuildId", "")) or build.BuildName or member.seat_id,
-                    build=build,
+                    build=calculation_build,
                     progression=progression.progression,
                     active_bar=active_bar,
                 )

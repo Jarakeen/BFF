@@ -9,6 +9,7 @@ from minmax.race_repository import RaceRepository
 from minmax.stat_ids import StatId
 from models.build_model import PlayerBuild
 from models.raid_plan import RaidPlan, RaidPlanMember
+from services.build_profile_service import BuildProfileService
 from services.raid_plan_offensive_stats_service import (
     CRITICAL_DAMAGE_CAP,
     PVE_TARGET_RESISTANCE,
@@ -131,6 +132,39 @@ def test_default_offensive_context_uses_repositories_instead_of_a_path(tmp_path)
 
     assert isinstance(service.context_factory.race_repository, RaceRepository)
     assert isinstance(service.context_factory.gear_resolver.repository, GearSetRepository)
+
+
+def test_offensive_calculation_uses_build_baseline_without_rewriting_saved_gear(tmp_path) -> None:
+    build = _build(build_id="dd", name="DD", eso_class="Necromancer", set_name="Trial Set")
+    profile_service = BuildProfileService(tmp_path / "build_profiles.json")
+    profile_service.update("dd", quality="Gold", item_level="CP160")
+
+    class CapturingContext(_ContextFactory):
+        calculated_build = None
+
+        def build(self, *, build, **kwargs):
+            self.calculated_build = build
+            return super().build(build=build, **kwargs)
+
+    context = CapturingContext({"dd": (0.5, 1600.0, 1600.0)})
+    service = RaidPlanOffensiveStatsService(
+        build_service=_BuildService((build,)),
+        context_factory=context,
+        capability_service=_CapabilityService(),
+        resolver=_Resolver({"dd-1": build}),
+        profile_service=profile_service,
+    )
+    service.progression = _Progression()
+    plan = RaidPlan(
+        plan_id="plan", trial_id="sunspire", name="Stats",
+        members=(RaidPlanMember(seat_id="dd-1", selected_build_id="dd"),),
+    )
+
+    assert service.calculate(plan).rows[0].resolved
+    assert context.calculated_build.Armor["Head"]["Quality"] == "Gold"
+    assert context.calculated_build.Armor["Head"]["Level"] == "CP160"
+    assert build.Armor["Head"]["Quality"] == ""
+    assert build.Armor["Head"]["Level"] == ""
 
 
 def test_raid_plan_crit_and_pen_layers_group_effects_without_double_owning_them() -> None:

@@ -2014,3 +2014,11 @@ The Raid Plan Crit/Pen card exposed an unused Mundus path: The Thief's 1,333 Cri
 **Layman's version:** 1,333 points of critical rating is not 1,333% critical chance. The card should let the stat calculator do that conversion, then display the resulting raid values.
 
 **For BFF:** keep the imported Mundus record's `rating` provenance, emit a flat numeric effect, and let `StaticBuildInputResolver.critical_rating_to_ratio` own the conversion. This avoids a silent blank Crit/Pen row for a build using The Thief.
+
+---
+
+## 2026-09-25 — Build baseline must reach the Crit/Pen calculator
+
+The Builds page shows a Gold / CP160 / Truly Superb baseline for blank equipped-item fields. The Raid Plan calculator previously read only the raw saved item fields, so its tooltip said “level unset, quality unset” even when that baseline was visible.
+
+**Layman's version:** the item was using the build's default in one view, while the calculator was looking at the empty box underneath. The calculation now inherits the default on a temporary copy. An explicit lower-level or lower-quality item still stays that way, and an empty equipment slot stays empty.

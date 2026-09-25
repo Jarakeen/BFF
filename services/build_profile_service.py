@@ -7,6 +7,7 @@ explicit gear values remain authoritative overrides; no saved build or database 
 is normalized or deleted merely because a default exists.
 """
 
+from copy import deepcopy
 from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
@@ -147,4 +148,39 @@ def build_profile_exception_count(build, profile: BuildProfile) -> int:
     return sum(1 for item in items if item is not None and effective_item_profile(item, profile).has_override)
 
 
-__all__ = ["BuildProfile", "BuildProfileService", "EffectiveItemProfile", "DEFAULT_QUALITY", "DEFAULT_ITEM_LEVEL", "DEFAULT_ENCHANTMENT_TIER", "effective_item_profile", "build_profile_exception_count"]
+def build_with_effective_item_profile(build, profile: BuildProfile):
+    """Return a calculation copy with the baseline on equipped, blank item fields.
+
+    This does not write the Saved Build. Explicit item values retain authority,
+    and an empty slot must not become equipped merely because a baseline exists.
+    """
+    resolved = deepcopy(build)
+
+    def apply(item) -> None:
+        effective = effective_item_profile(item, profile)
+        if isinstance(item, dict):
+            item.setdefault("Quality", "")
+            item.setdefault("Level", "")
+            item.setdefault("EnchantTier", "")
+            item["Quality"] = str(item["Quality"] or "").strip() or effective.quality
+            item["Level"] = str(item["Level"] or "").strip() or effective.item_level
+            item["EnchantTier"] = str(item["EnchantTier"] or "").strip() or effective.enchantment_tier
+        else:
+            item.Quality = str(item.Quality or "").strip() or effective.quality
+            item.Level = str(item.Level or "").strip() or effective.item_level
+            item.EnchantTier = str(item.EnchantTier or "").strip() or effective.enchantment_tier
+
+    for item in resolved.Armor.values():
+        if any(str(item.get(key) or "").strip() for key in ("Set", "Set2", "Weight", "Trait", "Enchant")):
+            apply(item)
+    for name in (
+        "Necklace", "Ring1", "Ring2", "FrontBarWeapon", "FrontBarOffHand",
+        "BackBarWeapon", "BackBarOffHand",
+    ):
+        item = getattr(resolved, name)
+        if not item.is_empty:
+            apply(item)
+    return resolved
+
+
+__all__ = ["BuildProfile", "BuildProfileService", "EffectiveItemProfile", "DEFAULT_QUALITY", "DEFAULT_ITEM_LEVEL", "DEFAULT_ENCHANTMENT_TIER", "effective_item_profile", "build_profile_exception_count", "build_with_effective_item_profile"]
