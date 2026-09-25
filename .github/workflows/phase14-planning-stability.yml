@@ -12,6 +12,10 @@ on:
       - "services/raid_plan_offensive_stats_service.py"
       - "services/comp_plan_state_service.py"
       - "services/comp_build_persistence_service.py"
+      - "services/build_service.py"
+      - "services/build_catalog_service.py"
+      - "services/canonical_build_bridge.py"
+      - "services/team_deletion_service.py"
       - "services/comp_builder_build_candidates.py"
       - "services/comp_builder_provider_evidence.py"
       - "services/comp_builder_authoritative_prescription.py"
@@ -21,6 +25,9 @@ on:
       - "services/raid_group_effect_catalog.py"
       - "services/raid_unique_support_set_catalog.py"
       - "ui/raid_plan_persistence_page.py"
+      - "ui/roster_team_merge_support.py"
+      - "ui/roster_import_context_variant_support.py"
+      - "ui/team_prescription_pipeline_support.py"
       - "ui/raid_plan_assignment_page.py"
       - "ui/city_raid_assignments_page.py"
       - "ui/comp_builder_page.py"
@@ -69,6 +76,8 @@ jobs:
             services/tests/test_raid_plan_repository_revisions.py `
             services/tests/test_raid_plan_offensive_stats_service.py `
             services/tests/test_comp_build_persistence_service.py `
+            services/tests/test_build_service_user_database_migration.py `
+            minmax/tests/test_build_catalog_service.py `
             services/tests/test_phase14_planning_workflow_roundtrip.py `
             services/tests/test_raid_coverage_catalog_expansion.py `
             ui/tests/test_assignment_save_stability.py `
