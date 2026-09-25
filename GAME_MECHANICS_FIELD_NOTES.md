@@ -1908,3 +1908,12 @@ A weapon hit targets the enemy and may trigger one poison proc, but that poison 
 **Layman's version:** the boss is who got stabbed; that does not mean the boss also receives the buff printed on the other half of the poison tooltip. One proc can point in two directions.
 
 **For BFF:** poison activation provenance and consequence recipient are separate facts. ENEMY consequences keep the hit target; SELF consequences must not inherit that enemy target. Runtime attempts therefore bind the same selected proc to separate effect variants whose target side is preserved independently.
+
+
+## 2026-09-24 — Modeling an equipped poison is not the same as searching poison choices
+
+Objective #32 can now model poison activation, chance, cooldown, and selected consequences for a candidate that already has a front/back poison choice. The generated structural search, however, currently has no poison-selection axis; its late refinement axes are CP, potion, passive ranks, and skill bars.
+
+**Layman's version:** the engine can answer “what happens if this build uses this poison?” but the global optimizer still does not ask “which poison should this build use?” Those are different jobs. A calculator that understands a choice is not automatically an optimizer that searched the choice.
+
+**For BFF:** theoretical sustained-DPS closure must remain blocked until front/back poison selection is a finite proven search axis. Poison cannot be folded into the potion axis because poison ownership is weapon-bar-specific, suppresses that bar's enchantments, and participates in one shared poison cooldown.
