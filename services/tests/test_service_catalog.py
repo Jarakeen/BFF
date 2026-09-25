@@ -602,9 +602,13 @@ def test_sustained_dps_skill_bar_frontier_preserves_morph_and_ownership_denomina
 
 def test_sustained_dps_cross_axis_composition_keeps_context_and_assembly_separate() -> None:
     context = canonical_service_for("extreme_sustained_dps_cross_axis_context")
+    composition = canonical_service_for(
+        "extreme_sustained_dps_runtime_attempt_frontier_composition"
+    )
     assembly = canonical_service_for("extreme_sustained_dps_generated_candidate_assembly")
 
     assert context is not None
+    assert composition is not None
     assert assembly is not None
     assert tuple(
         row.service_id
@@ -1797,6 +1801,8 @@ def test_sustained_dps_candidate_runtime_state_factory_is_cataloged() -> None:
         "extreme.sustained_dps.weapon_enchantment_runtime_variant",
         "extreme.sustained_dps.weapon_enchantment_activation_events",
         "extreme.sustained_dps.weapon_enchantment_cooldown_policy",
+        "extreme.sustained_dps.weapon_poison_activation_events",
+        "extreme.sustained_dps.weapon_poison_sequence_frontier",
         "extreme.sustained_dps.runtime_scenario_frontier",
     )
     assert "shared weapon-enchantment repository" in factory.purpose
