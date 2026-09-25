@@ -1806,8 +1806,9 @@ def test_sustained_dps_candidate_runtime_state_factory_is_cataloged() -> None:
         "extreme.sustained_dps.weapon_poison_sequence_frontier",
         "extreme.sustained_dps.runtime_scenario_frontier",
     )
-    assert "shared weapon-enchantment repository" in factory.purpose
+    assert "caller-owned weapon-poison consequence authority seam" in factory.purpose
     assert "avoid circularly deriving runtime_state" in factory.notes
+    assert "formula/dilution consequence authority is also caller-owned" in factory.notes
 
 
 
