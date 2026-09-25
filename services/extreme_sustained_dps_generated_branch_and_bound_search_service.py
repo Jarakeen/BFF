@@ -157,6 +157,24 @@ class ExtremeSustainedDPSGeneratedSearchResult:
             raise ValueError(
                 "generated search result evaluated_leaf_count must equal evaluated_leaves length"
             )
+        if any(
+            not isinstance(row, ExtremeSustainedDPSExactLeafEvaluation)
+            for row in self.evaluated_leaves
+        ):
+            raise TypeError(
+                "generated search result evaluated_leaves must contain exact leaf evaluations"
+            )
+        if any(
+            not isinstance(row, ExtremeSustainedDPSExactLeafEvaluation)
+            for row in self.best_candidates
+        ):
+            raise TypeError(
+                "generated search result best_candidates must contain exact leaf evaluations"
+            )
+        if any(row not in self.evaluated_leaves for row in self.best_candidates):
+            raise ValueError(
+                "generated search result best_candidates must come from evaluated_leaves"
+            )
         if not isinstance(self.global_maximum_proven, bool):
             raise TypeError("generated search result global_maximum_proven must be boolean")
         if not isinstance(self.unique_leader_proven, bool):
@@ -189,6 +207,22 @@ class ExtremeSustainedDPSGeneratedSearchResult:
         if self.best_candidates and best is None:
             raise ValueError(
                 "generated search result best_candidates require best_modeled_dps"
+            )
+        if best is not None and not self.best_candidates:
+            raise ValueError(
+                "generated search result best_modeled_dps requires retained best_candidates"
+            )
+        if best is not None:
+            for row in self.best_candidates:
+                if row.modeled_dps is None or abs(float(row.modeled_dps) - best) > 1e-9:
+                    raise ValueError(
+                        "generated search result best candidate DPS must match best_modeled_dps"
+                    )
+        if self.global_maximum_proven and (
+            best is None or not self.best_candidates or self.unresolved
+        ):
+            raise ValueError(
+                "generated search result global maximum proof requires retained best candidate evidence and no unresolved gaps"
             )
 
         object.__setattr__(self, "best_modeled_dps", best)
