@@ -167,6 +167,22 @@ class ExtremeSustainedDPSObjective32CompositionService:
             raise ValueError(
                 "Objective #32 composition requires canonical weapon-enchantment cooldown-policy authority"
             )
+        if getattr(
+            scenario_frontier,
+            "weapon_poison_activation_service",
+            None,
+        ) is None:
+            raise ValueError(
+                "Objective #32 composition requires canonical weapon-poison activation-event authority"
+            )
+        if getattr(
+            scenario_frontier,
+            "weapon_poison_consequence_resolver",
+            None,
+        ) is None:
+            raise ValueError(
+                "Objective #32 composition requires explicit weapon-poison consequence authority"
+            )
         if not bool(
             getattr(
                 runtime_state_frontier_resolver,
@@ -243,6 +259,7 @@ class ExtremeSustainedDPSObjective32CompositionService:
                 "Runtime state is resolved per finalized candidate inside the generated tree",
                 "Candidate runtime state is backed by canonical EffectVariant discovery and candidate-specific scaling",
                 "Canonical weapon-enchantment source projection, activation events, and cooldown-policy authority are required in the production runtime-state graph",
+                "Weapon-poison activation and explicit consequence authorities are required in the closure-ready production runtime-state graph",
                 "Supplemental runtime-event and runtime-history denominators are proven complete before global traversal",
                 "Canonical Objective #32 search requires closure-ready Heavy Attack channel-block scenario evidence before traversal",
             ),
