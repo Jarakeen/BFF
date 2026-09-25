@@ -1643,6 +1643,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         outputs=("CombatSimulationOutgoingDamage",),
         dependencies=(
             "extreme.sustained_dps.weapon_enchantment_proc_consequences",
+            "extreme.sustained_dps.weapon_enchantment_damage_policy",
         ),
         responsibilities=(
             "extreme_sustained_dps_weapon_enchantment_oblivion_damage_resolution",
