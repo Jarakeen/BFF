@@ -4,6 +4,7 @@ import pytest
 
 from minmax.alchemy_formula_catalog import AlchemyFormula
 from minmax.combat_effect_semantics import GameUpdate
+from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_generated_weapon_poison_consequence_authority_factory_service import (
     ExtremeSustainedDPSGeneratedWeaponPoisonConsequenceAuthorityFactoryService,
@@ -11,6 +12,13 @@ from services.extreme_sustained_dps_generated_weapon_poison_consequence_authorit
 from services.extreme_sustained_dps_weapon_poison_frontier_service import (
     ExtremeSustainedDPSWeaponPoisonLoadoutCandidate,
     ExtremeSustainedDPSWeaponPoisonSelection,
+)
+from services.extreme_sustained_dps_weapon_poison_identity_service import (
+    ExtremeSustainedDPSWeaponPoisonItemEvidence,
+    ExtremeSustainedDPSWeaponPoisonPossibleEffect,
+)
+from services.extreme_sustained_dps_weapon_poison_sequence_frontier_service import (
+    ExtremeSustainedDPSWeaponPoisonProcOccurrence,
 )
 
 
@@ -93,3 +101,59 @@ def test_generated_poison_consequence_factory_fails_closed_on_identity_mismatch(
 
     with pytest.raises(ValueError, match="formula authority is unresolved"):
         service.resolve(state)
+
+
+def test_generated_poison_consequence_factory_projects_reviewed_named_effect_end_to_end():
+    state = _state()
+    poison_id = state.late.assembled.build.FrontBarPoison
+
+    def item_evidence(*, poison_id, formula, occurrence):
+        return ExtremeSustainedDPSWeaponPoisonItemEvidence(
+            poison_id="Damage Health Poison IX",
+            possible_effects=(
+                ExtremeSustainedDPSWeaponPoisonPossibleEffect(
+                    effect_name="Breach",
+                    base_duration_seconds=10.0,
+                    triple_duration_seconds=5.0,
+                    solvent="Alkahest",
+                    level=50,
+                ),
+            ),
+            source_evidence_complete=True,
+            exact_selection_proven=False,
+            evidence=("reviewed Poison IX tier witness",),
+            unresolved=(
+                "saved poison item label proves possible effects but not exact formula",
+            ),
+        )
+
+    service = ExtremeSustainedDPSGeneratedWeaponPoisonConsequenceAuthorityFactoryService(
+        item_evidence_resolver=item_evidence,
+        dilution_mode_resolver=lambda **_kwargs: "base",
+    )
+    frontier = service.resolve(state)
+    occurrence = ExtremeSustainedDPSWeaponPoisonProcOccurrence(
+        event=RuntimeEvent(
+            time_seconds=1.0,
+            sequence=0,
+            trigger="weapon_poison_activation",
+            source="Light Attack",
+            target="Boss",
+            source_bar="front",
+        ),
+        poison_id=poison_id,
+    )
+
+    result = frontier.consequence_resolver.resolve(
+        poison_id=poison_id,
+        occurrence=occurrence,
+    )
+
+    assert result.resolved is True
+    assert result.unresolved == ()
+    assert len(result.effects) == 1
+    effect = result.effects[0]
+    assert effect.name == "minor_breach"
+    assert effect.duration == 10.0
+    assert effect.target == "Boss"
+    assert effect.source == poison_id
