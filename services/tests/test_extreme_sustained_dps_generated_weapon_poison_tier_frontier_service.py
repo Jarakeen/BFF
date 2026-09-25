@@ -213,7 +213,7 @@ def test_generated_poison_tier_candidate_normalizes_solvent_and_rejects_invalid_
         poison_id="alchemy_formula:u50:test",
         possible_effects=(),
         source_evidence_complete=True,
-                exact_selection_proven=False,
+        exact_selection_proven=False,
     )
 
     candidate = ExtremeSustainedDPSGeneratedWeaponPoisonTierCandidate(
@@ -238,7 +238,7 @@ def test_generated_poison_tier_frontier_rejects_candidate_count_drift():
         poison_id="alchemy_formula:u50:test",
         possible_effects=(),
         source_evidence_complete=True,
-                exact_selection_proven=False,
+        exact_selection_proven=False,
     )
     candidate = ExtremeSustainedDPSGeneratedWeaponPoisonTierCandidate(
         structural_index=0,
