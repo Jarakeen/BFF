@@ -201,3 +201,48 @@ def test_generated_poison_tier_frontier_fails_closed_on_malformed_wanted_trait_s
         "Protection has malformed imported Poison source payload" in row
         for row in result.unresolved
     )
+
+
+def test_generated_poison_tier_candidate_normalizes_solvent_and_rejects_invalid_index():
+    evidence = ExtremeSustainedDPSWeaponPoisonItemEvidence(
+        poison_id="alchemy_formula:u50:test",
+        possible_effects=(),
+        source_evidence_complete=True,
+    )
+
+    candidate = ExtremeSustainedDPSGeneratedWeaponPoisonTierCandidate(
+        structural_index=0,
+        solvent="  Alkahest   ",
+        level=50,
+        item_evidence=evidence,
+    )
+    assert candidate.solvent == "Alkahest"
+
+    with pytest.raises(ValueError, match="structural_index must be a non-negative integer"):
+        ExtremeSustainedDPSGeneratedWeaponPoisonTierCandidate(
+            structural_index=-1,
+            solvent="Alkahest",
+            level=50,
+            item_evidence=evidence,
+        )
+
+
+def test_generated_poison_tier_frontier_rejects_candidate_count_drift():
+    evidence = ExtremeSustainedDPSWeaponPoisonItemEvidence(
+        poison_id="alchemy_formula:u50:test",
+        possible_effects=(),
+        source_evidence_complete=True,
+    )
+    candidate = ExtremeSustainedDPSGeneratedWeaponPoisonTierCandidate(
+        structural_index=0,
+        solvent="Alkahest",
+        level=50,
+        item_evidence=evidence,
+    )
+
+    with pytest.raises(ValueError, match="candidate_count must equal candidate tuple length"):
+        ExtremeSustainedDPSGeneratedWeaponPoisonTierFrontier(
+            candidates=(candidate,),
+            candidate_count=2,
+            denominator_proven=True,
+        )
