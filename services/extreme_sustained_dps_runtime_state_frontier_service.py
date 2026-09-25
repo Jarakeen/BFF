@@ -27,7 +27,22 @@ class ExtremeSustainedDPSRuntimeStateChoice:
         if not value:
             raise ValueError("runtime-state choice requires runtime_state_id")
         object.__setattr__(self, "runtime_state_id", value)
+        if any(not isinstance(effect, EffectVariant) for effect in self.effects):
+            raise TypeError(
+                "runtime-state effects must contain canonical EffectVariant records"
+            )
         object.__setattr__(self, "effects", tuple(self.effects))
+        object.__setattr__(
+            self,
+            "evidence",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.evidence
+                    if str(item).strip()
+                )
+            ),
+        )
         object.__setattr__(
             self,
             "unresolved",
@@ -49,6 +64,56 @@ class ExtremeSustainedDPSRuntimeStateFrontier:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
     omitted_scope: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if any(
+            not isinstance(choice, ExtremeSustainedDPSRuntimeStateChoice)
+            for choice in self.choices
+        ):
+            raise TypeError(
+                "runtime-state frontier choices must contain canonical runtime-state choices"
+            )
+        if isinstance(self.candidate_count, bool) or not isinstance(self.candidate_count, int) or self.candidate_count < 0:
+            raise ValueError(
+                "runtime-state frontier candidate_count must be a non-negative integer"
+            )
+        if self.candidate_count != len(self.choices):
+            raise ValueError(
+                "runtime-state frontier candidate_count must equal retained choice count"
+            )
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("runtime-state frontier denominator_proven must be boolean")
+
+        evidence = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.evidence
+                if str(item).strip()
+            )
+        )
+        unresolved = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.unresolved
+                if str(item).strip()
+            )
+        )
+        omitted_scope = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.omitted_scope
+                if str(item).strip()
+            )
+        )
+        if self.denominator_proven and (not self.choices or unresolved):
+            raise ValueError(
+                "runtime-state frontier denominator cannot be proven with no choices or unresolved evidence"
+            )
+
+        object.__setattr__(self, "choices", tuple(self.choices))
+        object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "unresolved", unresolved)
+        object.__setattr__(self, "omitted_scope", omitted_scope)
 
 
 class ExtremeSustainedDPSRuntimeStateFrontierService:
