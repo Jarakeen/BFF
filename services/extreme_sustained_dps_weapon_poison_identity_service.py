@@ -18,7 +18,7 @@ import sqlite3
 @dataclass(frozen=True)
 class ExtremeSustainedDPSWeaponPoisonAlchemyEffectIdentity:
     effect_name: str
-    duration_seconds: float
+    base_duration_seconds: float
     triple_duration_seconds: float | None = None
     solvent: str | None = None
     level: int | None = None
@@ -37,7 +37,7 @@ class ExtremeSustainedDPSWeaponPoisonIdentityResolution:
 
 
 class ExtremeSustainedDPSWeaponPoisonIdentityService:
-    """Read canonical Poison effect identity/duration from imported alchemy evidence."""
+    """Read canonical Poison effect identity and duration alternatives from imported alchemy evidence."""
 
     def __init__(self, database_path: str | Path) -> None:
         self.database_path = Path(database_path)
@@ -167,7 +167,7 @@ class ExtremeSustainedDPSWeaponPoisonIdentityService:
 
                 identity = ExtremeSustainedDPSWeaponPoisonAlchemyEffectIdentity(
                     effect_name=effect_name,
-                    duration_seconds=duration,
+                    base_duration_seconds=duration,
                     triple_duration_seconds=self._float(
                         tier.get("triple_duration")
                     ),
@@ -209,7 +209,7 @@ class ExtremeSustainedDPSWeaponPoisonIdentityService:
                     if malformed_payloads
                     else "Malformed alchemy Poison payloads ignored: 0"
                 ),
-                "Effect identity and duration come from imported UESP Poison tier rows; magnitude/application remain downstream.",
+                "Effect identity plus base/triple duration alternatives come from imported UESP Poison tier rows; exact selected dilution, magnitude, and application remain downstream.",
             ),
             unresolved=tuple(
                 dict.fromkeys(row for row in unresolved if str(row).strip())
