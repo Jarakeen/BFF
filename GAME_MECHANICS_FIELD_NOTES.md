@@ -1942,3 +1942,12 @@ The imported UESP Alchemy formula tables can identify source sections such as si
 **Layman's version:** the heading above a recipe tells us where the recipe was documented; it is not, by itself, permission to hardcode the poison's duration mode. One recipe can show up in multiple parts of the source corpus, because apparently even poison tables wanted footnotes.
 
 **For BFF:** canonical Alchemy formulas now retain all source-section labels as provenance. Formula selection may surface them for audit, but base-versus-triple dilution remains a separate proof requirement until the section-to-runtime-duration relationship itself is reviewed and unambiguous.
+
+
+## 2026-09-25 — A generated poison formula ID is not a Poison IX item label
+
+Generated Objective #32 poison search uses stable `alchemy_formula:...` identities to represent exact reagent/trait formulas. Saved-build poison evidence, by contrast, starts from the displayed crafted item label such as a Poison IX name and uses that label to recover tier duration possibilities.
+
+**Layman's version:** the recipe's database ID and the bottle's inventory name are not interchangeable. One tells us what was mixed; the other tells us which tier label the game displayed. Feeding the recipe ID into the bottle-label lookup is asking the right database the wrong question.
+
+**For BFF:** saved poison item evidence now rejects generated formula IDs explicitly. Formula provenance, crafted-item tier/level evidence, and dilution duration remain separate authorities until a production bridge proves how they belong together.
