@@ -318,11 +318,11 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             consumers=ROTATION_OPTIMIZER,
             missing_evidence=(
                 "Exact cadence still needs an authoritative buff/debuff enchant base cooldown, authoritative proof "
-                "that duplicate enchant identities share one cooldown, authoritative proof that distinct enchant "
-                "identities retain independent cooldowns, and the remaining ordinary elemental/absorb direct-damage "
-                "consequence rules needed for exact damage application. Decrease Health/Oblivion is now exact for the "
-                "reviewed CP160 Legendary path. Community testing supports both cooldown-topology claims, but they "
-                "remain provisional and must not be promoted into Objective #32 combat math."
+                "that distinct enchant identities retain independent cooldowns, and the remaining ordinary elemental/"
+                "absorb direct-damage consequence rules needed for exact damage application. Official ESO Support now "
+                "establishes that duplicate enchant identities share one cooldown, so that specific topology field is "
+                "authoritative. Decrease Health/Oblivion is exact for the reviewed CP160 Legendary path. Distinct-identity "
+                "independence remains community-supported but provisional and must not be promoted into Objective #32 combat math."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
