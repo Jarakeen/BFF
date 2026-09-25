@@ -118,3 +118,26 @@ def test_resolver_requires_complete_final_pipeline_state() -> None:
         resolver.resolve(SimpleNamespace(complete=False))
 
 
+
+
+def test_resolver_can_supply_candidate_scoped_poison_consequence_authority() -> None:
+    scenario = _Scenario()
+    authority = object()
+    seen = []
+
+    def authority_for(state):
+        seen.append(state)
+        return authority
+
+    resolver = ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(
+        scenario_frontier=scenario,
+        supplemental_event_denominator_proven=True,
+        supplemental_history_denominator_proven=True,
+        weapon_poison_consequence_resolver_resolver=authority_for,
+    )
+    state = _state("poison-candidate")
+
+    resolver.resolve(state)
+
+    assert seen == [state]
+    assert scenario.calls[-1]["weapon_poison_consequence_resolver"] is authority
