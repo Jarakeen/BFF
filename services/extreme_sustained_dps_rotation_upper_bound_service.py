@@ -27,23 +27,48 @@ class ExtremeSustainedDPSActionUpperBound:
     unresolved: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        time_seconds = float(self.time_seconds)
+        if isinstance(self.time_seconds, bool):
+            raise TypeError("action upper-bound time must be numeric")
+        try:
+            time_seconds = float(self.time_seconds)
+        except (TypeError, ValueError):
+            raise TypeError("action upper-bound time must be numeric") from None
         if not isfinite(time_seconds) or time_seconds < 0.0:
             raise ValueError("action upper-bound time must be finite and non-negative")
-        if int(self.sequence) < 0:
+        if isinstance(self.sequence, bool) or not isinstance(self.sequence, int):
+            raise TypeError("action upper-bound sequence must be an integer")
+        if self.sequence < 0:
             raise ValueError("action upper-bound sequence cannot be negative")
+        if not isinstance(self.proven_safe, bool):
+            raise TypeError("action upper-bound proven_safe must be boolean")
+        if not isinstance(self.covers_periodic_and_triggered, bool):
+            raise TypeError(
+                "action upper-bound covers_periodic_and_triggered must be boolean"
+            )
+
         object.__setattr__(self, "time_seconds", time_seconds)
-        object.__setattr__(self, "sequence", int(self.sequence))
 
         if self.upper_bound_damage is not None:
-            value = float(self.upper_bound_damage)
+            if isinstance(self.upper_bound_damage, bool):
+                raise TypeError("action upper-bound damage must be numeric")
+            try:
+                value = float(self.upper_bound_damage)
+            except (TypeError, ValueError):
+                raise TypeError("action upper-bound damage must be numeric") from None
             if not isfinite(value) or value < 0.0:
                 raise ValueError(
                     "action upper-bound damage must be finite and non-negative"
                 )
             object.__setattr__(self, "upper_bound_damage", value)
+        elif self.proven_safe:
+            raise ValueError(
+                "action upper-bound cannot be proven safe without numeric damage ceiling"
+            )
 
-        object.__setattr__(self, "source", str(self.source or "").strip())
+        source = str(self.source or "").strip()
+        if not source:
+            raise ValueError("action upper-bound requires source")
+        object.__setattr__(self, "source", source)
         object.__setattr__(
             self,
             "unresolved",
@@ -71,6 +96,95 @@ class ExtremeSustainedDPSRotationUpperBound:
     proven_safe: bool
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if isinstance(self.duration_seconds, bool):
+            raise TypeError("rotation upper-bound duration must be numeric")
+        try:
+            duration = float(self.duration_seconds)
+        except (TypeError, ValueError):
+            raise TypeError("rotation upper-bound duration must be numeric") from None
+        if not isfinite(duration) or duration <= 0.0:
+            raise ValueError("rotation upper-bound duration must be finite and positive")
+        if not isinstance(self.proven_safe, bool):
+            raise TypeError("rotation upper-bound proven_safe must be boolean")
+
+        for label, value in (
+            ("damage_action_count", self.damage_action_count),
+            ("covered_action_count", self.covered_action_count),
+        ):
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(
+                    f"rotation upper-bound {label} must be a non-negative integer"
+                )
+        if self.covered_action_count > self.damage_action_count:
+            raise ValueError(
+                "rotation upper-bound covered_action_count cannot exceed damage_action_count"
+            )
+
+        upper_damage = self.upper_bound_damage
+        upper_dps = self.upper_bound_dps
+        for label, value in (
+            ("upper_bound_damage", upper_damage),
+            ("upper_bound_dps", upper_dps),
+        ):
+            if value is None:
+                continue
+            if isinstance(value, bool):
+                raise TypeError(f"rotation upper-bound {label} must be numeric")
+            try:
+                numeric = float(value)
+            except (TypeError, ValueError):
+                raise TypeError(
+                    f"rotation upper-bound {label} must be numeric"
+                ) from None
+            if not isfinite(numeric) or numeric < 0.0:
+                raise ValueError(
+                    f"rotation upper-bound {label} must be finite and non-negative"
+                )
+            if label == "upper_bound_damage":
+                upper_damage = numeric
+            else:
+                upper_dps = numeric
+
+        unresolved = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.unresolved
+                if str(item).strip()
+            )
+        )
+        evidence = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.evidence
+                if str(item).strip()
+            )
+        )
+        if self.proven_safe:
+            if upper_damage is None or upper_dps is None:
+                raise ValueError(
+                    "proven rotation upper bound requires numeric damage and DPS ceilings"
+                )
+            if self.covered_action_count != self.damage_action_count:
+                raise ValueError(
+                    "proven rotation upper bound requires every damage action covered"
+                )
+            if unresolved:
+                raise ValueError(
+                    "proven rotation upper bound cannot retain unresolved evidence"
+                )
+        else:
+            if upper_damage is not None or upper_dps is not None:
+                raise ValueError(
+                    "unproven rotation upper bound must not publish numeric whole-plan ceilings"
+                )
+
+        object.__setattr__(self, "duration_seconds", duration)
+        object.__setattr__(self, "upper_bound_damage", upper_damage)
+        object.__setattr__(self, "upper_bound_dps", upper_dps)
+        object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "unresolved", unresolved)
 
 
 class ExtremeSustainedDPSRotationUpperBoundService:
