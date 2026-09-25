@@ -629,6 +629,7 @@ def test_sustained_dps_cross_axis_composition_keeps_context_and_assembly_separat
         "extreme.sustained_dps.champion_point_frontier",
         "extreme.sustained_dps.potion_frontier",
         "extreme.sustained_dps.weapon_poison_frontier",
+        "extreme.sustained_dps.generated_weapon_poison_tier_loadout_frontier",
         "extreme.sustained_dps.passive_rank_frontier",
         "extreme.sustained_dps.skill_bar_frontier",
     )
