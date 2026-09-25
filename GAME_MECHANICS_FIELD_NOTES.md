@@ -1899,3 +1899,12 @@ The current U50 alchemy cross-check is useful for proving relationships such as 
 **Layman's version:** the poison page can tell us which debuff the bottle applies without getting to redefine that debuff's rulebook. “This applies Minor Defile” and “Minor Defile is X%” are two separate facts from two separate authorities. Letting the recipe page win both arguments would make whichever tooltip we read last the combat engine.
 
 **For BFF:** poison relationship evidence supplies named-effect identity and target side. Canonical named-effect services supply the live numeric semantics. When the two sources disagree numerically, preserve the relationship, keep the canonical named-effect value, and flag the source mismatch for review rather than copying the recipe-page number.
+
+
+## 2026-09-24 — The thing a poison hit is not necessarily the recipient of every poison consequence
+
+A weapon hit targets the enemy and may trigger one poison proc, but that poison can produce both enemy-side and self-side consequences at the same instant. For example, a reviewed U50 poison relationship can inflict a debuff on the target while granting a named buff to the wielder.
+
+**Layman's version:** the boss is who got stabbed; that does not mean the boss also receives the buff printed on the other half of the poison tooltip. One proc can point in two directions.
+
+**For BFF:** poison activation provenance and consequence recipient are separate facts. ENEMY consequences keep the hit target; SELF consequences must not inherit that enemy target. Runtime attempts therefore bind the same selected proc to separate effect variants whose target side is preserved independently.
