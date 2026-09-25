@@ -191,3 +191,71 @@ def test_migration_is_idempotent_and_existing_user_rows_win(tmp_path: Path) -> N
         assert db.execute("SELECT player_name FROM roster_member WHERE id=1").fetchone()[0] == "User Edited"
     finally:
         db.close()
+
+
+def test_migration_never_replaces_existing_build_catalog_with_empty_legacy_files(
+    tmp_path: Path,
+) -> None:
+    target = tmp_path / "foundrydock.db"
+    characters = tmp_path / "characters.json"
+    builds = tmp_path / "builds.json"
+
+    with sqlite3.connect(target) as db:
+        db.execute(
+            """
+            CREATE TABLE build_catalog (
+                singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
+                payload_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        payload = {
+            "schema_version": 4,
+            "players": [{"player_id": "p1", "gamertag": "Rikbacon"}],
+            "characters": [
+                {
+                    "character_id": "c1",
+                    "player_id": "p1",
+                    "name": "Bacon",
+                    "gamertag": "Rikbacon",
+                }
+            ],
+            "builds": [
+                {
+                    "build_id": "b1",
+                    "character_id": "c1",
+                    "name": "Rik Sorcerer Tank",
+                    "payload": {
+                        "Name": "Bacon",
+                        "Gamertag": "Rikbacon",
+                        "BuildName": "Rik Sorcerer Tank",
+                    },
+                }
+            ],
+            "team_assignments": [],
+        }
+        raw = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+        db.execute(
+            "INSERT INTO build_catalog(singleton_id, payload_json) VALUES (1, ?)",
+            (raw,),
+        )
+        db.commit()
+
+    characters.write_text(
+        '{"schema_version":4,"players":[],"characters":[],"builds":[],"team_assignments":[]}',
+        encoding="utf-8",
+    )
+    builds.write_text('{"Members":[]}', encoding="utf-8")
+
+    migrate_legacy_user_data(
+        user_database=target,
+        characters=characters,
+        builds=builds,
+    )
+
+    with sqlite3.connect(target) as db:
+        after = db.execute(
+            "SELECT payload_json FROM build_catalog WHERE singleton_id=1"
+        ).fetchone()[0]
+    assert after == raw
