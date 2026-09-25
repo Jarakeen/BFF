@@ -429,6 +429,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         occurrence_provider: object | None,
         target_identity: str | None,
         source: str,
+        weapon_poison_consequence_resolver: object | None = None,
     ) -> tuple[
         ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier | None,
         tuple[EffectVariant, ...],
@@ -488,7 +489,12 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                 tuple(dict.fromkeys(row for row in unresolved if str(row).strip())),
             )
 
-        if self.weapon_poison_consequence_resolver is None:
+        consequence_resolver = (
+            weapon_poison_consequence_resolver
+            if weapon_poison_consequence_resolver is not None
+            else self.weapon_poison_consequence_resolver
+        )
+        if consequence_resolver is None:
             unresolved.append(
                 "weapon-poison proc histories are finite, but selected poison effect "
                 "identity/magnitude/dilution has no authoritative runtime consequence consumer"
@@ -502,7 +508,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
 
         try:
             consequence = self._invoke_weapon_poison_consequence_resolver(
-                self.weapon_poison_consequence_resolver,
+                consequence_resolver,
                 sequence_frontier=frontier,
                 source=f"{source}: weapon-poison consequences",
             )
@@ -561,6 +567,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         source: str,
         initial_bar: str = "front",
         omitted_scope: tuple[str, ...] = (),
+        weapon_poison_consequence_resolver: object | None = None,
     ) -> ExtremeSustainedDPSRuntimeScenarioFrontierResult:
         universe_evidence: tuple[str, ...] = ()
         universe_unresolved: tuple[str, ...] = ()
@@ -677,6 +684,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             occurrence_provider=occurrence_provider,
             target_identity=target_identity,
             source=source,
+            weapon_poison_consequence_resolver=weapon_poison_consequence_resolver,
         )
         consequence_effects = (
             *base_consequence_effects,
