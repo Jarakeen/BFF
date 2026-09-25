@@ -42,13 +42,23 @@ def _delete_selected(page) -> None:
     ):
         return
 
-    build_id = str(getattr(build, "BuildId", "") or label).strip()
+    build_id = str(getattr(build, "BuildId", "") or "").strip()
+    if not build_id:
+        page.status.warning(
+            "This Build has no canonical BuildId, so it was not deleted. "
+            "Reload Builds and review its identity."
+        )
+        return
     UserSafetySnapshotService().create(f"delete-build-{build_id}")
-    members.pop(index)
-    page.selected_index = min(index, max(0, len(members) - 1))
-    page._save()
+    deleted = page.build_service.canonical.catalog_service.delete_build(build_id)
+    if not deleted:
+        page.status.warning(
+            f"Build {build_id!r} no longer exists in canonical storage. Reloading Builds."
+        )
+    page.roster = page.build_service.load()
+    page.selected_index = min(index, max(0, len(page.roster.Members) - 1))
     page._refresh_roster()
-    if not members:
+    if not page.roster.Members:
         page._clear_detail()
     page.status.success(f"Deleted build: {label}. Character progression was preserved.")
 
