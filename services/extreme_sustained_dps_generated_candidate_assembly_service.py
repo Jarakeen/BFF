@@ -41,8 +41,8 @@ class ExtremeSustainedDPSGeneratedCandidateCoordinate:
     potion_index: int
     passive_rank_index: int
     skill_bar_index: int
-    poison_index: int = 0
-    poison_tier_index: int = 0
+    poison_index: int = -1
+    poison_tier_index: int = -1
 
     @property
     def identity(self) -> str:
@@ -104,12 +104,12 @@ class ExtremeSustainedDPSGeneratedCandidateAssemblyService:
             passive_rank_index=int(passive_ranks.structural_index),
             skill_bar_index=int(skills.structural_index),
             poison_index=(
-                0
+                -1
                 if poison_loadout is None
                 else int(poison_loadout.structural_index)
             ),
             poison_tier_index=(
-                0
+                -1
                 if poison_tier_loadout is None
                 else int(poison_tier_loadout.structural_index)
             ),
