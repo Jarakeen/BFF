@@ -92,3 +92,20 @@ def test_dilution_does_not_infer_mode_from_effect_count() -> None:
             ),
             mode="",
         )
+
+
+def test_generated_formula_can_override_runtime_poison_identity_without_losing_tier_evidence() -> None:
+    result = ExtremeSustainedDPSWeaponPoisonDilutionSelectionService.resolve(
+        formula_selection=_selection(
+            _source("Breach", base=10.0, triple=5.0),
+        ),
+        mode="base",
+        poison_id_override="alchemy_formula:u50:a+b:breach",
+    )
+
+    assert result.resolved is True
+    assert result.poison_id == "alchemy_formula:u50:a+b:breach"
+    assert any(
+        "Runtime poison identity override: alchemy_formula:u50:a+b:breach" in row
+        for row in result.evidence
+    )
