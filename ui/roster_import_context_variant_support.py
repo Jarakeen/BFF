@@ -108,7 +108,7 @@ def _replaceable_prior_import_keys(
     team_name: str,
     selected_players: set[str],
 ) -> tuple[set[tuple[str, str, str]], tuple[str, ...], set[str]]:
-    catalog = build_service.canonical.catalog_service.load()
+    catalog = build_service.canonical.catalog_service.load_strict()
     assignments = [row for row in catalog.get("team_assignments", []) if isinstance(row, dict)]
     team_key = str(team_name or "").strip().casefold()
     target_ids = {
@@ -163,7 +163,7 @@ def _prune_empty_replaced_characters(
         return 0
 
     catalog_service = build_service.canonical.catalog_service
-    catalog = catalog_service.load()
+    catalog = catalog_service.load_strict()
     remaining_character_ids = {
         str(build.get("character_id") or "").strip()
         for build in catalog.get("builds", [])
