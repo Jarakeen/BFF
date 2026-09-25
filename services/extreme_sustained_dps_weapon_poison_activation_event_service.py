@@ -26,6 +26,35 @@ class ExtremeSustainedDPSWeaponPoisonActivationEventResult:
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        if any(not isinstance(row, RuntimeEvent) for row in self.events):
+            raise TypeError(
+                "weapon-poison activation events must contain RuntimeEvent records"
+            )
+        object.__setattr__(self, "events", tuple(self.events))
+        object.__setattr__(
+            self,
+            "evidence",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.evidence
+                    if str(item).strip()
+                )
+            ),
+        )
+        object.__setattr__(
+            self,
+            "unresolved",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.unresolved
+                    if str(item).strip()
+                )
+            ),
+        )
+
     @property
     def resolved(self) -> bool:
         return not self.unresolved
