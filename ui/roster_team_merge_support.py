@@ -10,6 +10,7 @@ team record is retired.
 """
 
 from copy import deepcopy
+import json
 from dataclasses import dataclass
 from typing import Any
 
@@ -322,10 +323,21 @@ def merge_teams(
     connection = roster_service.db.connection
     connection.execute("SAVEPOINT bff_team_merge")
     try:
-        # Build assignments and team state share this SQLite transaction, so a
-        # failure rolls both back together.
+        # Persist the catalog row through the same live SQLite connection as
+        # the team edits. A separate BuildCatalogService connection would commit
+        # independently and escape this savepoint on a later failure.
         if updated_catalog != catalog:
-            catalog_service.save(updated_catalog)
+            payload = catalog_service._normalize(updated_catalog)
+            connection.execute(
+                """
+                INSERT INTO build_catalog(singleton_id, payload_json, updated_at)
+                VALUES (1, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(singleton_id) DO UPDATE SET
+                    payload_json=excluded.payload_json,
+                    updated_at=CURRENT_TIMESTAMP
+                """,
+                (json.dumps(payload, ensure_ascii=False, separators=(",", ":")),),
+            )
 
         connection.execute(
             """
