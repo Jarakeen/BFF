@@ -2128,6 +2128,7 @@ def test_generated_weapon_poison_consequence_authority_factory_is_cataloged() ->
     )
     assert "candidate-scoped finite weapon-poison consequence authority" in service.purpose
     assert "No-poison candidates return no consequence authority" in service.notes
+    assert "assembled candidate provenance only" in service.notes
 
 
 def test_generated_weapon_poison_tier_frontiers_are_cataloged() -> None:
