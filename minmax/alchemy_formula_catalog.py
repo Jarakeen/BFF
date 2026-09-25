@@ -212,6 +212,18 @@ class AlchemyFormulaCatalog:
                     if trait not in bucket["source_unmarked_traits"]:
                         bucket["source_unmarked_traits"].append(trait)
 
+        for bucket in merged.values():
+            triple_keys = {_norm(value) for value in bucket["source_triple_traits"]}
+            unmarked_keys = {
+                _norm(value) for value in bucket["source_unmarked_traits"]
+            }
+            conflicts = sorted(triple_keys.intersection(unmarked_keys))
+            if conflicts:
+                unresolved.append(
+                    "Alchemy formula has conflicting explicit triple/unmarked trait "
+                    "annotations: " + ", ".join(conflicts)
+                )
+
         formulas_out = tuple(
             sorted(
                 (
