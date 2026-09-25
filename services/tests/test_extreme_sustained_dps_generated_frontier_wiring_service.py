@@ -6,6 +6,7 @@ from services.extreme_sustained_dps_generated_branch_and_bound_search_service im
     ExtremeSustainedDPSExactLeafEvaluation,
 )
 from services.extreme_sustained_dps_generated_frontier_wiring_service import (
+    ExtremeSustainedDPSGeneratedFrontierNode,
     ExtremeSustainedDPSGeneratedFrontierWiringService,
     ExtremeSustainedDPSIndexedFrontierAxis,
 )
@@ -214,3 +215,45 @@ def test_indexed_axis_normalizes_omitted_scope_metadata() -> None:
     )
 
     assert axis.omitted_scope == ("delayed timing open",)
+
+
+@pytest.mark.parametrize("count", ("2", True, 2.0))
+def test_generated_frontier_rejects_non_integer_candidate_counts(count) -> None:
+    axis = ExtremeSustainedDPSIndexedFrontierAxis(
+        "Bad Count",
+        candidate_count=lambda _state: count,
+        candidate_at=lambda state, _index: state,
+    )
+
+    with pytest.raises(TypeError, match="candidate count must be an integer"):
+        ExtremeSustainedDPSGeneratedFrontierWiringService.search(
+            {},
+            axes=(axis,),
+            evaluate_leaf=_evaluate,
+            required_duration_seconds=10.0,
+        )
+
+
+def test_generated_frontier_node_normalizes_coordinates_and_evidence() -> None:
+    node = ExtremeSustainedDPSGeneratedFrontierNode(
+        candidate_key="  candidate:1 ",
+        state={},
+        coordinates=(("  Skill   Bars ", 0),),
+        evidence=(" source ", "source", ""),
+    )
+
+    assert node.candidate_key == "candidate:1"
+    assert node.coordinates == (("Skill Bars", 0),)
+    assert node.evidence == ("source",)
+
+
+def test_generated_frontier_node_rejects_boolean_coordinate_index() -> None:
+    with pytest.raises(
+        ValueError,
+        match="coordinate index must be a non-negative integer",
+    ):
+        ExtremeSustainedDPSGeneratedFrontierNode(
+            candidate_key="candidate:bad",
+            state={},
+            coordinates=(("Skill Bars", True),),
+        )
