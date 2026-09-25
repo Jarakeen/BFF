@@ -817,6 +817,41 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
                 members=tuple(repaired_members),
             )
 
+    def _repair_selected_build_identity(self, member, catalog):
+        """Drop only a contradictory BuildId when chair identity is otherwise stable.
+
+        Comp Maker can replace/rebind a Comp Build while a loaded Raid Plan still
+        carries the older selected BuildId. The player's Personnel/character ids
+        remain authoritative. A mismatched build must never rewrite that identity;
+        preserve the planned package and let the user select/save the replacement.
+        """
+        build_id = _clean(member.selected_build_id)
+        character_id = _clean(member.character_id)
+        if not build_id or not character_id:
+            return member
+        build = next(
+            (
+                row
+                for row in catalog["builds"]
+                if isinstance(row, dict)
+                and _clean(row.get("build_id")) == build_id
+            ),
+            None,
+        )
+        if build is None:
+            return member
+        build_character_id = _clean(build.get("character_id"))
+        if not build_character_id or build_character_id == character_id:
+            return member
+
+        replacement = self._replacement_build_for_stale_member(member)
+        replacement_id = (
+            _clean(getattr(replacement, "BuildId", ""))
+            if replacement is not None
+            else ""
+        )
+        return member.with_selection(selected_build_id=replacement_id or None)
+
     def current_plan(self) -> RaidPlan:
         catalog = self.build_service.canonical.catalog_service.load_strict()
         self._repair_loaded_snapshot_after_player_merges(catalog)
@@ -830,6 +865,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             candidate = member.with_selection(
                 selected_build_id=selected_ids.get(member.seat_id.casefold())
             )
+            candidate = self._repair_selected_build_identity(candidate, catalog)
             members.append(self._resolved_member(candidate, resolver.resolve(candidate)))
         visible = replace(visible, members=tuple(members))
 
@@ -838,8 +874,12 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             self._loaded_plan_snapshot,
         )
         validated = tuple(
-            self._resolved_member(member, resolver.resolve(member))
+            self._resolved_member(
+                repaired,
+                resolver.resolve(repaired),
+            )
             for member in merged.members
+            for repaired in (self._repair_selected_build_identity(member, catalog),)
         )
         return replace(merged, members=validated)
 
