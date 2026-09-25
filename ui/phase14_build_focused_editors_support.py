@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QMenu,
     QPushButton,
     QScrollArea,
@@ -41,6 +43,7 @@ from models.build_model import (
 )
 from models.roster_model import ESO_CLASSES
 from services.skill_choice_service import load_skill_choices
+from services.class_mastery_repository import ClassMasteryRepository
 from ui.components.eligible_build_editor import EligibleSkillBarRow
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
@@ -865,6 +868,89 @@ def _skills_tab(page, build) -> QWidget:
     return tab
 
 
+def _class_masteries_tab(page, build) -> QWidget:
+    """Build-owned, class-aware Class Mastery selection for the Phase 14 inspector."""
+    tab = QWidget()
+    layout = QVBoxLayout(tab)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(8)
+
+    card = FoundryCard("Class Masteries", "progression")
+    note = QLabel(
+        "Choose up to two Class Masteries for this Saved Build. "
+        "Choices are limited to the build's class and are stored on the Build itself."
+    )
+    note.setWordWrap(True)
+    note.setProperty("muted", True)
+    card.addWidget(note)
+
+    eso_class = str(getattr(build, "EsoClass", "") or "").strip()
+    repository = ClassMasteryRepository(page.data_dir / "eso.db")
+    choices = repository.for_class(eso_class)
+    selected = {
+        int(value)
+        for value in (getattr(build, "ClassMasteryAbilityIds", ()) or ())
+        if str(value).strip()
+    }
+
+    mastery_list = QListWidget()
+    mastery_list.setSelectionMode(QListWidget.SelectionMode.NoSelection)
+    for mastery in choices:
+        item = QListWidgetItem(mastery.name)
+        item.setData(Qt.ItemDataRole.UserRole, int(mastery.base_ability_id))
+        item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+        item.setCheckState(
+            Qt.CheckState.Checked
+            if int(mastery.base_ability_id) in selected
+            else Qt.CheckState.Unchecked
+        )
+        if mastery.description:
+            item.setToolTip(mastery.description)
+        mastery_list.addItem(item)
+
+    if choices:
+        card.addWidget(mastery_list)
+    else:
+        missing = QLabel(
+            "No Class Masteries are available for this Build class."
+            if eso_class
+            else "Set the Build class before choosing Class Masteries."
+        )
+        missing.setWordWrap(True)
+        card.addWidget(missing)
+
+    status = QLabel("")
+    status.setProperty("muted", True)
+    status.setWordWrap(True)
+    card.addWidget(status)
+
+    save = FoundryButton("Save Class Masteries", role=ButtonRole.PRIMARY, compact=True)
+    save.setEnabled(bool(choices))
+
+    def persist_masteries() -> None:
+        wanted = [
+            int(mastery_list.item(index).data(Qt.ItemDataRole.UserRole))
+            for index in range(mastery_list.count())
+            if mastery_list.item(index).checkState() == Qt.CheckState.Checked
+        ]
+        if len(wanted) > 2:
+            status.setText("Choose no more than two Class Masteries.")
+            return
+        allowed = {int(row.base_ability_id) for row in choices}
+        if any(value not in allowed for value in wanted):
+            status.setText("A selected Class Mastery does not belong to this Build class.")
+            return
+
+        build.ClassMasteryAbilityIds = wanted
+        _persist(page, "Class Masteries updated.")
+
+    save.clicked.connect(persist_masteries)
+    card.addWidget(save)
+    layout.addWidget(card)
+    layout.addStretch(1)
+    return tab
+
+
 def _cp_tab(page, build) -> QWidget:
     tab = QWidget()
     layout = QVBoxLayout(tab)
@@ -1140,6 +1226,7 @@ def _install_overrides() -> None:
     inspector._overview_tab = overview_with_context_variants
     inspector._gear_card = _gear_card
     inspector._skills_tab = _skills_tab
+    inspector._class_masteries_tab = _class_masteries_tab
     inspector._cp_tab = _cp_tab
     inspector._progression_tab = _progression_tab
     inspector._consumables_tab = _consumables_tab
