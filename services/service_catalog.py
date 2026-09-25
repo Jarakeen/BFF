@@ -3405,7 +3405,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Generic callers may omit poison refinement and retain the historical four-axis shape; "
-            "canonical Objective #32 composition can include weapon-poison formula and source-backed tier axes. Selections remain "
+            "canonical Objective #32 composition requires both weapon-poison formula and source-backed tier axes. Selections remain "
             "separate until all configured coordinates exist, then candidate assembly copies only axis-owned "
             "state. Unresolved or empty frontier denominators fail closed before materialization."
         ),
