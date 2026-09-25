@@ -33,6 +33,25 @@ class ExtremeSustainedDPSObjective32BlockerReport:
     blockers: tuple[ExtremeSustainedDPSObjective32Blocker, ...]
     evidence: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if any(
+            not isinstance(row, ExtremeSustainedDPSObjective32Blocker)
+            for row in self.blockers
+        ):
+            raise TypeError("Objective #32 blocker report requires canonical blocker records")
+        object.__setattr__(self, "blockers", tuple(self.blockers))
+        object.__setattr__(
+            self,
+            "evidence",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.evidence
+                    if str(item).strip()
+                )
+            ),
+        )
+
     @property
     def closed(self) -> bool:
         return not self.blockers
@@ -53,7 +72,12 @@ class ExtremeSustainedDPSObjective32BlockerService:
     ) -> ExtremeSustainedDPSObjective32BlockerReport:
         blockers: list[ExtremeSustainedDPSObjective32Blocker] = []
 
-        if not bool(getattr(search_result, "global_maximum_proven", False)):
+        global_maximum_proven = getattr(search_result, "global_maximum_proven", None)
+        if not isinstance(global_maximum_proven, bool):
+            raise TypeError(
+                "Objective #32 blocker assessment requires boolean global_maximum_proven"
+            )
+        if not global_maximum_proven:
             blockers.append(
                 ExtremeSustainedDPSObjective32Blocker(
                     code="finite_denominator_open",
