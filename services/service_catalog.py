@@ -3517,6 +3517,30 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.runtime_self_combat_state",
+        domain="extreme",
+        purpose=(
+            "Project reviewed active SELF-target named runtime EffectVariants into canonical "
+            "attacker CombatState at exact timestamps without redefining named-effect math."
+        ),
+        implementation_path="services.extreme_sustained_dps_runtime_self_combat_state_service",
+        inputs=("ExtremeRuntimeSnapshot", "RuntimeEffectVariants"),
+        outputs=("ExtremeSustainedDPSRuntimeSelfCombatStateResult",),
+        dependencies=(),
+        responsibilities=(
+            "extreme_sustained_dps_runtime_self_named_combat_state",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Only SELF-target EffectVariants with canonical named-effect identities are "
+            "projected. Timing and activation remain owned by the runtime attempt stream; "
+            "numeric stat semantics remain owned by canonical named combat buffs."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.runtime_target_combat_state",
         domain="extreme",
         purpose=(
@@ -3626,6 +3650,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         outputs=("ExtremeGeneratedSustainedDPSRuntimeResult",),
         dependencies=(
             "extreme.sustained_dps.gear_runtime_semantics",
+            "extreme.sustained_dps.runtime_self_combat_state",
             "extreme.sustained_dps.runtime_target_combat_state",
             "extreme.sustained_dps.weapon_enchantment_runtime_source",
             "extreme.sustained_dps.weapon_enchantment_proc_consequences",
