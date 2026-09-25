@@ -13,6 +13,7 @@ This service is intentionally read-only and fail-closed for exact Objective #32 
 
 from dataclasses import dataclass
 import json
+import math
 from pathlib import Path
 import sqlite3
 
@@ -25,6 +26,40 @@ class ExtremeSustainedDPSWeaponPoisonPossibleEffect:
     solvent: str | None = None
     level: int | None = None
 
+    def __post_init__(self) -> None:
+        effect_name = " ".join(str(self.effect_name or "").strip().split())
+        if not effect_name:
+            raise ValueError("weapon-poison possible effect requires effect_name")
+
+        try:
+            base_duration = float(self.base_duration_seconds)
+        except (TypeError, ValueError):
+            raise ValueError("weapon-poison base duration must be numeric") from None
+        if not math.isfinite(base_duration) or base_duration < 0.0:
+            raise ValueError("weapon-poison base duration must be finite and non-negative")
+
+        triple_duration = self.triple_duration_seconds
+        if triple_duration is not None:
+            try:
+                triple_duration = float(triple_duration)
+            except (TypeError, ValueError):
+                raise ValueError("weapon-poison triple duration must be numeric") from None
+            if not math.isfinite(triple_duration) or triple_duration < 0.0:
+                raise ValueError(
+                    "weapon-poison triple duration must be finite and non-negative"
+                )
+
+        solvent = " ".join(str(self.solvent or "").strip().split()) or None
+        level = self.level
+        if level is not None:
+            if isinstance(level, bool) or not isinstance(level, int) or level < 0:
+                raise ValueError("weapon-poison tier level must be a non-negative integer")
+
+        object.__setattr__(self, "effect_name", effect_name)
+        object.__setattr__(self, "base_duration_seconds", base_duration)
+        object.__setattr__(self, "triple_duration_seconds", triple_duration)
+        object.__setattr__(self, "solvent", solvent)
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSWeaponPoisonItemEvidence:
@@ -34,6 +69,43 @@ class ExtremeSustainedDPSWeaponPoisonItemEvidence:
     exact_selection_proven: bool
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        poison_id = " ".join(str(self.poison_id or "").strip().split())
+        if not isinstance(self.source_evidence_complete, bool):
+            raise TypeError("weapon-poison source_evidence_complete must be boolean")
+        if not isinstance(self.exact_selection_proven, bool):
+            raise TypeError("weapon-poison exact_selection_proven must be boolean")
+        if self.exact_selection_proven and not self.source_evidence_complete:
+            raise ValueError(
+                "weapon-poison exact selection cannot be proven without complete source evidence"
+            )
+        if any(
+            not isinstance(row, ExtremeSustainedDPSWeaponPoisonPossibleEffect)
+            for row in self.possible_effects
+        ):
+            raise TypeError(
+                "weapon-poison possible_effects must contain canonical possible-effect records"
+            )
+
+        evidence = tuple(
+            dict.fromkeys(
+                str(row).strip()
+                for row in tuple(self.evidence)
+                if str(row).strip()
+            )
+        )
+        unresolved = tuple(
+            dict.fromkeys(
+                str(row).strip()
+                for row in tuple(self.unresolved)
+                if str(row).strip()
+            )
+        )
+        object.__setattr__(self, "poison_id", poison_id)
+        object.__setattr__(self, "possible_effects", tuple(self.possible_effects))
+        object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "unresolved", unresolved)
 
     @property
     def resolved(self) -> bool:
