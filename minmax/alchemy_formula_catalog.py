@@ -64,6 +64,7 @@ class AlchemyFormula:
     game_update: GameUpdate
     source_effects: tuple[str, ...] = ()
     source_files: tuple[str, ...] = ()
+    source_sections: tuple[str, ...] = ()
 
     @property
     def canonical_id(self) -> str:
@@ -110,6 +111,7 @@ class AlchemyFormulaCatalog:
 
                 reagents = _unique(formula.get("ingredients", []) or ())
                 explicit_traits = _unique(formula.get("effects", []) or ())
+                source_section = _clean(formula.get("section"))
                 if len(reagents) < 2:
                     unresolved.append(
                         f"{effect_name or 'Alchemy effect'} formula #{index}: fewer than two reagents"
@@ -173,6 +175,7 @@ class AlchemyFormulaCatalog:
                         "traits": traits,
                         "source_effects": [],
                         "source_files": [],
+                        "source_sections": [],
                     },
                 )
                 if effect_name and effect_name not in bucket["source_effects"]:
@@ -180,6 +183,8 @@ class AlchemyFormulaCatalog:
                 for source_file in source_files:
                     if source_file not in bucket["source_files"]:
                         bucket["source_files"].append(source_file)
+                if source_section and source_section not in bucket["source_sections"]:
+                    bucket["source_sections"].append(source_section)
 
         formulas_out = tuple(
             sorted(
@@ -190,6 +195,7 @@ class AlchemyFormulaCatalog:
                         game_update=update,
                         source_effects=tuple(bucket["source_effects"]),
                         source_files=tuple(bucket["source_files"]),
+                        source_sections=tuple(bucket["source_sections"]),
                     )
                     for bucket in merged.values()
                 ),
