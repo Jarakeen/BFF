@@ -191,15 +191,16 @@ def test_raid_plan_auto_promotion_skips_seat_placeholders() -> None:
     assert "Raid Plan seat placeholders cannot be saved as players." in source
 
 
-def test_city_raid_plan_exposes_build_share_menu() -> None:
+def test_city_raid_plan_exposes_build_exports_beside_backup_and_discord_on_crit_card() -> None:
     source = Path("ui/city_raid_plan_workspace_page.py").read_text(encoding="utf-8")
 
-    assert 'self.share_builds_button = QPushButton("Share Builds ▾")' in source
-    assert 'share_menu.addAction("Export Ink-Light PDF")' in source
-    assert 'share_menu.addAction("Export CSV")' in source
-    assert 'share_menu.addAction("Copy for Discord")' in source
+    assert 'self.export_builds_xlsx_button = QPushButton("Export XLSX")' in source
+    assert 'self.export_builds_pdf_button = QPushButton("Export PDF")' in source
+    assert 'self.copy_discord_builds_button = QPushButton("Copy Builds for Discord")' in source
+    assert source.index('left.addWidget(self.backup_plan_button)') < source.index('left.addLayout(export_row)')
+    assert 'offensive.set_header_action(self.copy_discord_builds_button)' in source
     assert "export_raid_plan_builds_pdf" in source
-    assert "export_raid_plan_builds_csv" in source
+    assert "export_raid_plan_builds_xlsx" in source
     assert "raid_plan_discord_builds_text" in source
 
 

@@ -9,6 +9,7 @@ This module joins them for sharing without inventing another persistence store.
 import csv
 from dataclasses import dataclass
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 from models.build_model import BuildRoster, PlayerBuild
 from models.raid_plan import RaidPlan, RaidPlanMember
@@ -198,6 +199,101 @@ def export_raid_plan_builds_csv(
     return target
 
 
+def export_raid_plan_builds_xlsx(
+    plan: RaidPlan,
+    export: RaidPlanBuildExport,
+    path: str | Path,
+) -> Path:
+    """Write a readable, low-ink workbook from the plan's linked Builds."""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Border, Font, Side
+        from openpyxl.utils import get_column_letter
+    except ImportError as exc:
+        raise RuntimeError("XLSX export requires openpyxl.") from exc
+
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Raid Builds"
+    headings = (
+        "Seat", "Player", "Character", "Class", "Role", "Build", "Sets",
+        "Front Bar Skills", "Back Bar Skills", "Planned Skills", "Mundus", "Food", "Potion",
+        "Primary Assignment", "Utility Assignments",
+    )
+    last_column = get_column_letter(len(headings))
+    sheet.merge_cells(f"A1:{last_column}1")
+    sheet["A1"] = _clean(plan.name) or "Raid Plan"
+    sheet["A1"].font = Font(name="Calibri", size=16, bold=True, color="1F3F45")
+    sheet.merge_cells(f"A2:{last_column}2")
+    sheet["A2"] = f"{_clean(plan.trial_id)}  •  {_clean(plan.difficulty) or 'Difficulty not set'}  •  {len(export.seats)} linked Builds"
+    sheet["A2"].font = Font(name="Calibri", size=10, color="595959")
+    sheet.row_dimensions[1].height = 25
+    sheet.row_dimensions[2].height = 19
+    for column, heading in enumerate(headings, 1):
+        cell = sheet.cell(4, column, heading)
+        cell.font = Font(name="Calibri", size=10, bold=True, color="1F3F45")
+        cell.border = Border(bottom=Side(style="thin", color="C8A46A"))
+        cell.alignment = Alignment(vertical="center", wrap_text=True)
+    sheet.row_dimensions[4].height = 28
+
+    def cell_text(value: object) -> str:
+        # A user-chosen name or skill must stay text, never become an Excel formula.
+        return _clean(value)
+
+    for row_number, (member, build) in enumerate(export.seats, 5):
+        values = (
+            member.seat_id,
+            member.gamertag or build.Gamertag,
+            member.character_name or build.Name,
+            member.eso_class or build.EsoClass,
+            member.role or build.Role,
+            build.BuildName or member.selected_build_name,
+            " + ".join(_planned_or_saved_sets(member, build)),
+            ", ".join(_clean(skill) for skill in build.FrontBarSkills if _clean(skill)),
+            ", ".join(_clean(skill) for skill in build.BackBarSkills if _clean(skill)),
+            ", ".join(_clean(skill) for skill in member.planned_skills if _clean(skill)),
+            member.planned_mundus or build.Mundus,
+            build.Food,
+            build.Potion,
+            member.primary_assignment,
+            ", ".join(member.utility_assignments),
+        )
+        for column, value in enumerate(values, 1):
+            cell = sheet.cell(row_number, column, cell_text(value))
+            cell.data_type = "s"
+            cell.font = Font(name="Calibri", size=10, color="303A3C")
+            cell.alignment = Alignment(vertical="top", wrap_text=True)
+            cell.border = Border(bottom=Side(style="hair", color="D9DFDE"))
+        sheet.row_dimensions[row_number].height = 34
+
+    for column, width in enumerate((13, 19, 22, 17, 13, 25, 42, 53, 53, 44, 20, 25, 22, 29, 35), 1):
+        sheet.column_dimensions[get_column_letter(column)].width = width
+    sheet.freeze_panes = "D5"
+    sheet.auto_filter.ref = f"A4:{last_column}{max(4, sheet.max_row)}"
+    sheet.sheet_view.showGridLines = False
+    sheet.print_options.horizontalCentered = True
+    sheet.page_setup.orientation = "landscape"
+    sheet.page_setup.fitToWidth = 2
+    sheet.sheet_properties.pageSetUpPr.fitToPage = True
+    sheet.print_title_rows = "1:4"
+    sheet.print_area = f"A1:{last_column}{max(4, sheet.max_row)}"
+    sheet.oddFooter.center.text = "FoundryDock • Raid Builds"
+
+    if export.unresolved_seats:
+        gaps = workbook.create_sheet("Unresolved")
+        gaps.append(("Seat", "Reason"))
+        for seat in export.unresolved_seats:
+            gaps.append((seat, "No exact linked Saved Build; review this chair in Roles."))
+        gaps.column_dimensions["A"].width = 18
+        gaps.column_dimensions["B"].width = 65
+
+    workbook.save(target)
+    workbook.close()
+    return target
+
+
 def export_raid_plan_builds_pdf(
     plan: RaidPlan,
     export: RaidPlanBuildExport,
@@ -205,7 +301,7 @@ def export_raid_plan_builds_pdf(
 ) -> Path:
     """Write an intentionally ink-light Raid Plan build sheet.
 
-    The export uses a white page, black/gray text, hairline rules, and no filled
+    The export uses a white page, restrained accent text, hairline rules, and no filled
     panels, background art, textures, or decorative blocks.
     """
 
@@ -223,7 +319,8 @@ def export_raid_plan_builds_pdf(
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
 
-    black = colors.black
+    black = colors.HexColor("#1F3F45")
+    gold = colors.HexColor("#C8A46A")
     dark_gray = colors.HexColor("#333333")
     mid_gray = colors.HexColor("#777777")
     light_gray = colors.HexColor("#C8C8C8")
@@ -269,9 +366,9 @@ def export_raid_plan_builds_pdf(
         title=f"{_clean(plan.name)} Raid Plan Builds",
     )
     story = [
-        Paragraph(_clean(plan.name) or "Raid Plan", title_style),
+        Paragraph(escape(_clean(plan.name) or "Raid Plan"), title_style),
         Paragraph(
-            f"{_clean(plan.trial_id)} · {_clean(plan.difficulty) or 'Difficulty not set'} · "
+            f"{escape(_clean(plan.trial_id))} · {escape(_clean(plan.difficulty) or 'Difficulty not set')} · "
             f"{len(export.seats)} resolved build(s)",
             subtitle_style,
         ),
@@ -291,29 +388,37 @@ def export_raid_plan_builds_pdf(
         identity = _clean(member.gamertag) or _clean(build.Gamertag) or "Open"
         character = _clean(member.character_name) or _clean(build.Name)
         if character:
-            identity = f"{identity}<br/><font size='6'>{character}</font>"
+            identity = f"{escape(identity)}<br/><font size='6'>{escape(character)}</font>"
+        else:
+            identity = escape(identity)
 
         build_name = _clean(build.BuildName) or _clean(member.selected_build_name) or "Build"
         sets = _planned_or_saved_sets(member, build)
         skills = tuple(_clean(value) for value in member.planned_skills if _clean(value))
         setup_lines = []
         if sets:
-            setup_lines.append(" + ".join(sets))
+            setup_lines.append(escape(" + ".join(sets)))
         if skills:
-            setup_lines.append("Skills: " + ", ".join(skills))
+            setup_lines.append("Planned: " + escape(", ".join(skills)))
+        front_skills = tuple(_clean(value) for value in build.FrontBarSkills if _clean(value))
+        back_skills = tuple(_clean(value) for value in build.BackBarSkills if _clean(value))
+        if front_skills:
+            setup_lines.append("Front: " + escape(", ".join(front_skills)))
+        if back_skills:
+            setup_lines.append("Back: " + escape(", ".join(back_skills)))
         if member.planned_mundus:
-            setup_lines.append("Mundus: " + _clean(member.planned_mundus))
+            setup_lines.append("Mundus: " + escape(_clean(member.planned_mundus)))
 
         assignments = [_clean(member.primary_assignment)]
         assignments.extend(_clean(value) for value in member.utility_assignments)
-        assignment_text = "<br/>".join(value for value in assignments if value) or "—"
+        assignment_text = "<br/>".join(escape(value) for value in assignments if value) or "—"
 
         rows.append(
             [
-                Paragraph(_clean(member.seat_id), body_style),
+                Paragraph(escape(_clean(member.seat_id)), body_style),
                 Paragraph(identity, body_style),
-                Paragraph(_clean(member.eso_class) or _clean(build.EsoClass) or "—", body_style),
-                Paragraph(build_name, body_style),
+                Paragraph(escape(_clean(member.eso_class) or _clean(build.EsoClass) or "—"), body_style),
+                Paragraph(escape(build_name), body_style),
                 Paragraph("<br/>".join(setup_lines) or "—", body_style),
                 Paragraph(assignment_text, body_style),
             ]
@@ -328,7 +433,7 @@ def export_raid_plan_builds_pdf(
     table.setStyle(
         TableStyle(
             [
-                ("LINEBELOW", (0, 0), (-1, 0), 0.7, black),
+                ("LINEBELOW", (0, 0), (-1, 0), 0.7, gold),
                 ("LINEBELOW", (0, 1), (-1, -1), 0.25, light_gray),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ("LEFTPADDING", (0, 0), (-1, -1), 2),
@@ -345,18 +450,11 @@ def export_raid_plan_builds_pdf(
         story.append(Spacer(1, 8))
         story.append(
             Paragraph(
-                "Unresolved build seats: " + ", ".join(export.unresolved_seats),
+                "Unresolved build seats: " + escape(", ".join(export.unresolved_seats)),
                 subtitle_style,
             )
         )
 
-    story.append(Spacer(1, 8))
-    story.append(
-        Paragraph(
-            "Printer-friendly export · white background · no decorative fills",
-            subtitle_style,
-        )
-    )
     doc.build(story)
     return target
 
@@ -365,6 +463,7 @@ __all__ = [
     "RaidPlanBuildExport",
     "export_raid_plan_builds_csv",
     "export_raid_plan_builds_pdf",
+    "export_raid_plan_builds_xlsx",
     "raid_plan_build_export",
     "raid_plan_discord_builds_text",
 ]

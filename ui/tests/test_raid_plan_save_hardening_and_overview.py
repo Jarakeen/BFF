@@ -13,7 +13,7 @@ def test_raid_plan_overview_has_one_action_surface_and_team_schedule() -> None:
     assert 'FoundryCard("Team Schedule", "stopwatch")' in source
     assert 'self.roster_service.get_team_schedule(team_name)' in source
     assert 'self.backup_plan_button.setParent(left)' in source
-    assert 'self.share_builds_button.setParent(left)' in source
+    assert 'left.addLayout(export_row)' in source
     assert 'QPushButton("Save Current Plan")' not in source
 
 

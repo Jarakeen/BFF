@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (
     QLayout,
     QListWidget,
     QListWidgetItem,
-    QMenu,
     QMessageBox,
     QPushButton,
     QPlainTextEdit,
@@ -34,6 +33,7 @@ from PySide6.QtWidgets import (
 from services.raid_plan_build_export_service import (
     export_raid_plan_builds_csv,
     export_raid_plan_builds_pdf,
+    export_raid_plan_builds_xlsx,
     raid_plan_build_export,
     raid_plan_discord_builds_text,
 )
@@ -113,19 +113,15 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.header.subtitle.setText("Turn a group of good players into a great run.")
         self.header.department.setText("RAID • PLAN")
 
-        self.share_builds_button = QPushButton("Share Builds ▾")
-        self.share_builds_button.setToolTip(
-            "Share this Raid Plan's resolved builds as an ink-light PDF, CSV, or Discord text."
-        )
-        share_menu = QMenu(self.share_builds_button)
-        pdf_action = share_menu.addAction("Export Ink-Light PDF")
-        csv_action = share_menu.addAction("Export CSV")
-        share_menu.addSeparator()
-        discord_action = share_menu.addAction("Copy for Discord")
-        pdf_action.triggered.connect(self._export_plan_builds_pdf)
-        csv_action.triggered.connect(self._export_plan_builds_csv)
-        discord_action.triggered.connect(self._copy_plan_builds_discord)
-        self.share_builds_button.setMenu(share_menu)
+        self.export_builds_xlsx_button = QPushButton("Export XLSX")
+        self.export_builds_xlsx_button.setToolTip("Save this Raid Plan's linked Builds as a formatted Excel workbook.")
+        self.export_builds_xlsx_button.clicked.connect(self._export_plan_builds_xlsx)
+        self.export_builds_pdf_button = QPushButton("Export PDF")
+        self.export_builds_pdf_button.setToolTip("Save an ink-light, printer-friendly Raid Plan Build sheet.")
+        self.export_builds_pdf_button.clicked.connect(self._export_plan_builds_pdf)
+        self.copy_discord_builds_button = QPushButton("Copy Builds for Discord")
+        self.copy_discord_builds_button.setToolTip("Copy the linked Builds to the clipboard, ready to paste into Discord.")
+        self.copy_discord_builds_button.clicked.connect(self._copy_plan_builds_discord)
 
         # Preserve canonical role/spot controls without adding another decorative
         # field-note card above them. Duties live on the dedicated Assignments page.
@@ -280,8 +276,10 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.backup_plan_button.setParent(left)
         left.addWidget(self.backup_plan_button)
 
-        self.share_builds_button.setParent(left)
-        left.addWidget(self.share_builds_button)
+        export_row = QHBoxLayout()
+        export_row.addWidget(self.export_builds_xlsx_button)
+        export_row.addWidget(self.export_builds_pdf_button)
+        left.addLayout(export_row)
 
         self.open_raid_map_button.setParent(left)
         left.addWidget(self.open_raid_map_button)
@@ -338,6 +336,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         center_layout.addLayout(snapshot)
 
         offensive = FoundryCard("Critical Damage & Penetration", "crosshair")
+        offensive.set_header_action(self.copy_discord_builds_button)
         offensive_note = QLabel(
             "Current planned raid values. Crit Damage includes personal standing stats, "
             "planned Force/Lucent/Brittle layers, and the 125% cap. Pen shows personal "
@@ -810,6 +809,27 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             self.status.success(f"Exported Raid Plan builds to {path}.")
         except Exception as exc:
             self.status.error(f"Raid Plan CSV export failed: {exc}")
+
+    def _export_plan_builds_xlsx(self, *_args) -> None:
+        plan, export = self._resolved_plan_build_export()
+        if export is None:
+            return
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Raid Plan Builds",
+            f"{plan.name}_builds.xlsx",
+            "Excel Workbook (*.xlsx)",
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.casefold() != ".xlsx":
+            path = path.with_suffix(".xlsx")
+        try:
+            export_raid_plan_builds_xlsx(plan, export, path)
+            self.status.success(f"Exported Raid Plan Builds workbook to {path}.")
+        except Exception as exc:
+            self.status.error(f"Raid Plan XLSX export failed: {exc}")
 
     def _copy_plan_builds_discord(self, *_args) -> None:
         plan, export = self._resolved_plan_build_export()
