@@ -52,6 +52,87 @@ U50_POISON_NAMED_EFFECT_RELATIONSHIPS: dict[
             target_type=SupportTargetType.SELF,
         ),
     ),
+    "Increase Weapon Power": (
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Increase Weapon Power",
+            effect_name="Minor Maim",
+            target_type=SupportTargetType.ENEMY,
+        ),
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Increase Weapon Power",
+            effect_name="Minor Brutality",
+            target_type=SupportTargetType.SELF,
+        ),
+    ),
+    "Increase Spell Power": (
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Increase Spell Power",
+            effect_name="Minor Cowardice",
+            target_type=SupportTargetType.ENEMY,
+        ),
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Increase Spell Power",
+            effect_name="Minor Sorcery",
+            target_type=SupportTargetType.SELF,
+        ),
+    ),
+    "Weapon Critical": (
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Weapon Critical",
+            effect_name="Minor Enervation",
+            target_type=SupportTargetType.ENEMY,
+        ),
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Weapon Critical",
+            effect_name="Minor Savagery",
+            target_type=SupportTargetType.SELF,
+        ),
+    ),
+    "Spell Critical": (
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Spell Critical",
+            effect_name="Minor Uncertainty",
+            target_type=SupportTargetType.ENEMY,
+        ),
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Spell Critical",
+            effect_name="Minor Prophecy",
+            target_type=SupportTargetType.SELF,
+        ),
+    ),
+    "Defile": (
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Defile",
+            effect_name="Minor Defile",
+            target_type=SupportTargetType.ENEMY,
+        ),
+    ),
+    "Vitality": (
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Vitality",
+            effect_name="Minor Defile",
+            target_type=SupportTargetType.ENEMY,
+        ),
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Vitality",
+            effect_name="Minor Vitality",
+            target_type=SupportTargetType.SELF,
+        ),
+    ),
+    "Maim": (
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Maim",
+            effect_name="Minor Maim",
+            target_type=SupportTargetType.ENEMY,
+        ),
+    ),
+    "Cowardice": (
+        AlchemyPoisonNamedEffectRelationship(
+            source_trait="Cowardice",
+            effect_name="Minor Cowardice",
+            target_type=SupportTargetType.ENEMY,
+        ),
+    ),
 }
 
 
