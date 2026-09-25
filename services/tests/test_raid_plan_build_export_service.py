@@ -24,6 +24,7 @@ def test_linked_build_exports_include_saved_bars_planned_skills_and_unresolved_s
         BuildName="=SUM(1,2)",
         EsoClass="Templar",
         Role="Healer",
+        Werewolf=True,
         FrontBarSkills=["Combat Prayer", "", "", "", "", ""],
         BackBarSkills=["Energy Orb", "", "", "", "", ""],
     )
@@ -65,6 +66,11 @@ def test_linked_build_exports_include_saved_bars_planned_skills_and_unresolved_s
     assert "Maximum Magicka" in values
     assert "Combat Prayer" in values
     assert "Energy Orb" in values
+    assert "WW / Vampire" in values
+    assert "Werewolf" in values
+    assert "Class Masteries" in values
+    assert "Front Slot" in values
+    assert "Back Slot" in values
     assert "Healing Soul" in values
     assert "Wield Soul" in values
     assert "Druid Resurgence" in values
@@ -77,6 +83,11 @@ def test_linked_build_exports_include_saved_bars_planned_skills_and_unresolved_s
     assert "Friends & Family <Friday>" in extracted
     assert "Combat Prayer" in extracted
     assert "Energy Orb" in extracted
+    assert "WW / VAMP" in extracted
+    assert "Werewolf" in extracted
+    assert "CLASS MASTERIES" in extracted
+    assert "Front" in extracted
+    assert "Back" in extracted
     assert "Aggressive Horn" in extracted
     assert "Ozezan the Inferno" in extracted
     assert "Maximum Magicka" in extracted
