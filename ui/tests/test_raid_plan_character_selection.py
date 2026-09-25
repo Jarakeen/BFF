@@ -145,3 +145,30 @@ def test_matching_saved_builds_can_use_canonical_player_before_character_is_sele
         "Current Display Name",
         player_id="player-1",
     ) == (0, 1)
+
+
+def test_matching_saved_builds_falls_back_to_same_player_when_character_binding_is_stale() -> None:
+    saved_builds = [
+        _build(
+            gamertag="Rikbacon",
+            character="Bacon",
+            build_name="Rik — Sorcerer Tank",
+            player_id="player-rik",
+            character_id="character-bacon",
+        ),
+        _build(
+            gamertag="Someone Else",
+            character="Other",
+            build_name="Other Build",
+            player_id="player-other",
+            character_id="character-other",
+        ),
+    ]
+
+    assert matching_saved_build_indices(
+        saved_builds,
+        "Rikbacon",
+        "Rik",
+        player_id="player-rik",
+        character_id="stale-personnel-character",
+    ) == (0,)
