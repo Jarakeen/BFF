@@ -60,7 +60,7 @@ def _selected_plan_id(page) -> str:
     return data.split(":", 1)[1] if data.startswith("raid_plan:") else ""
 
 
-def _refresh_scope_plan_choices(page) -> None:
+def _refresh_scope_plan_choices(page, *, preferred_plan_id: str = "") -> None:
     """Coverage exposes saved Raid Plans only.
 
     Roster teams may seed plans elsewhere, and library-wide build audits remain useful
@@ -71,7 +71,7 @@ def _refresh_scope_plan_choices(page) -> None:
         return
 
     current_data = str(combo.currentData() or "")
-    current_plan_id = (
+    current_plan_id = str(preferred_plan_id or "").strip() or (
         current_data.split(":", 1)[1]
         if current_data.startswith("raid_plan:")
         else ""
@@ -100,6 +100,12 @@ def _refresh_scope_plan_choices(page) -> None:
             if current_plan_id and plan.plan_id.casefold() == current_plan_id.casefold():
                 selected_index = combo.count() - 1
         combo.setCurrentIndex(selected_index)
+        selected_data = str(combo.currentData() or "")
+        page._coverage_selected_plan_id = (
+            selected_data.split(":", 1)[1]
+            if selected_data.startswith("raid_plan:")
+            else ""
+        )
     finally:
         combo.blockSignals(False)
 
@@ -489,12 +495,21 @@ def install() -> None:
 
     def init_with_raid_plan_picker(self, *args, **kwargs) -> None:
         _ORIGINAL_INIT(self, *args, **kwargs)
+        self._coverage_selected_plan_id = ""
         _refresh_scope_plan_choices(self)
 
     def refresh_with_raid_plan(self, *args, **kwargs):
-        _refresh_scope_plan_choices(self)
+        # Preserve the active Raid Plan across every refresh. Provider edits call
+        # refresh immediately after persistence; rebuilding the combo must not
+        # silently jump back to the first plan and make the saved Coverage appear lost.
+        preferred_plan_id = (
+            _selected_plan_id(self)
+            or str(getattr(self, "_coverage_selected_plan_id", "") or "").strip()
+        )
+        _refresh_scope_plan_choices(self, preferred_plan_id=preferred_plan_id)
         data = str(self.scope_combo.currentData() or "")
         plan_id = _selected_plan_id(self)
+        self._coverage_selected_plan_id = plan_id
         if plan_id:
             try:
                 scope = _load_selected_plan_scope(self)
@@ -514,7 +529,7 @@ def install() -> None:
         """Compatibility helper: choose the plan in Coverage's own scope menu."""
         if not isinstance(raid_plan, RaidPlan):
             raise TypeError("Coverage Raid Plan scope requires RaidPlan")
-        _refresh_scope_plan_choices(self)
+        _refresh_scope_plan_choices(self, preferred_plan_id=raid_plan.plan_id)
         data = _plan_item_data(raid_plan.plan_id)
         index = self.scope_combo.findData(data)
         if index < 0:
