@@ -87,17 +87,17 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
             raise ValueError(
                 "candidate runtime-state factory requires pre-runtime exact damage-occurrence authority"
             )
-        generated_poison_pair = (
-            generated_weapon_poison_item_evidence_resolver is not None,
-            generated_weapon_poison_dilution_mode_resolver is not None,
-        )
-        if any(generated_poison_pair) and not all(generated_poison_pair):
+        if (
+            generated_weapon_poison_item_evidence_resolver is not None
+            and generated_weapon_poison_dilution_mode_resolver is None
+        ):
             raise ValueError(
-                "generated poison authority requires both candidate tier/item evidence "
-                "and candidate dilution-mode resolvers"
+                "generated poison item-evidence override requires candidate dilution-mode resolver"
             )
 
-        generated_poison_authority_requested = all(generated_poison_pair)
+        generated_poison_authority_requested = (
+            generated_weapon_poison_dilution_mode_resolver is not None
+        )
         configured_poison_authorities = sum(
             (
                 int(weapon_poison_consequence_resolver is not None),
