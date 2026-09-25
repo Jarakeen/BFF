@@ -1324,7 +1324,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Pre-runtime exact damage-occurrence evidence remains caller-owned to avoid circularly deriving runtime_state from a final damage evaluator that already consumes runtime_state. "
-            "Exact crafted-poison tier/dilution witnesses remain caller-owned; generated formula provenance can now be composed with those witnesses into candidate-scoped consequence authority without inferring either fact from an item label or formula ID. "
+            "Exact crafted-poison tier evidence remains candidate/caller-owned. Literal per-trait '(triple)' formula annotations can now supply fail-closed triple-duration witnesses automatically; unmarked cells, section headings, effect count, and formula IDs still do not prove base dilution. "
             "All downstream weapon-enchantment runtime authorities are wired from one shared canonical ESO repository/rule graph. "
             "Poison consequence authority may be global or candidate-scoped, but competing authority paths are rejected."
         ),
