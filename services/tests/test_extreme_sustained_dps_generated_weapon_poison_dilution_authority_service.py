@@ -174,6 +174,7 @@ def test_generated_dilution_authority_accepts_per_effect_mode_witness():
             ),
         ),
         source_evidence_complete=True,
+        exact_selection_proven=False,
     )
     service = ExtremeSustainedDPSGeneratedWeaponPoisonDilutionAuthorityService(
         formula_authority=authority,
@@ -231,3 +232,36 @@ def test_generated_dilution_authority_accepts_formula_literal_triple_witness():
         ("Breach", 5.0),
     ]
 
+
+
+def test_generated_dilution_authority_prefers_resolve_method_on_callable_class():
+    formula = AlchemyFormula(
+        reagents=("A", "B"),
+        traits=("Breach",),
+        game_update=GameUpdate.U50,
+        source_triple_traits=("Breach",),
+    )
+    authority = ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthority(
+        entries=(
+            ExtremeSustainedDPSGeneratedWeaponPoisonFormulaEntry(
+                bar="front",
+                poison_id=formula.canonical_id,
+                formula=formula,
+            ),
+        ),
+    )
+    service = ExtremeSustainedDPSGeneratedWeaponPoisonDilutionAuthorityService(
+        formula_authority=authority,
+        item_evidence_resolver=lambda **_kwargs: _item_evidence(),
+        dilution_mode_resolver=(
+            ExtremeSustainedDPSWeaponPoisonFormulaDilutionWitnessService
+        ),
+    )
+
+    result = service.resolve(
+        poison_id=formula.canonical_id,
+        occurrence=object(),
+    )
+
+    assert result.resolved is True
+    assert result.effects[0].duration_seconds == 5.0
