@@ -39,21 +39,21 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonDilutionAuthorityService:
         occurrence: object,
         label: str,
     ):
+        method = getattr(resolver, "resolve", None)
+        if callable(method):
+            return method(
+                poison_id=poison_id,
+                formula=formula,
+                occurrence=occurrence,
+            )
         if callable(resolver):
             return resolver(
                 poison_id=poison_id,
                 formula=formula,
                 occurrence=occurrence,
             )
-        method = getattr(resolver, "resolve", None)
-        if method is None:
-            raise TypeError(
-                f"generated poison {label} resolver must be callable or expose resolve()"
-            )
-        return method(
-            poison_id=poison_id,
-            formula=formula,
-            occurrence=occurrence,
+        raise TypeError(
+            f"generated poison {label} resolver must be callable or expose callable resolve()"
         )
 
     def resolve(self, *, poison_id: str, occurrence: object):
