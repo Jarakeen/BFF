@@ -22,6 +22,33 @@ class ExtremeSustainedDPSRuntimeEffectScalingResult:
     source_data_unresolved: tuple[str, ...] = ()
     math_unresolved: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        if any(not isinstance(row, EffectVariant) for row in self.effects):
+            raise TypeError("runtime scaling effects must contain EffectVariant records")
+
+        def _strings(values: tuple[str, ...]) -> tuple[str, ...]:
+            return tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in values
+                    if str(item).strip()
+                )
+            )
+
+        unresolved = _strings(self.unresolved)
+        source_data = _strings(self.source_data_unresolved)
+        math_rows = _strings(self.math_unresolved)
+        typed = set(source_data).union(math_rows)
+        if not typed.issubset(set(unresolved)):
+            raise ValueError(
+                "runtime scaling typed blockers must also appear in unresolved"
+            )
+        object.__setattr__(self, "effects", tuple(self.effects))
+        object.__setattr__(self, "evidence", _strings(self.evidence))
+        object.__setattr__(self, "unresolved", unresolved)
+        object.__setattr__(self, "source_data_unresolved", source_data)
+        object.__setattr__(self, "math_unresolved", math_rows)
+
     @property
     def resolved(self) -> bool:
         return not self.unresolved
