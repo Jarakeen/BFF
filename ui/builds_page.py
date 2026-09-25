@@ -609,7 +609,7 @@ class BuildsPage(FoundryPage):
             self._save()
             self._refresh_roster()
 
-    def _save(self):
+    def _save(self) -> bool:
         catalog_path = self.build_service.canonical.catalog_path.resolve()
         mirror_path = self.build_service.builds_path.resolve()
         try:
@@ -618,14 +618,14 @@ class BuildsPage(FoundryPage):
             self.status.error(
                 f"Save failed for canonical build catalog {catalog_path}: {exc}"
             )
-            return
+            return False
         try:
             reloaded = self.build_service.load()
         except Exception as exc:
             self.status.error(
                 f"Saved canonical build catalog {catalog_path}, but re-reading it failed: {exc}"
             )
-            return
+            return False
         # The page roster can be a filtered/projection view. Canonical save is
         # merge-based, so verification must prove every submitted Build survived
         # without requiring unrelated canonical Builds to disappear.
@@ -649,7 +649,7 @@ class BuildsPage(FoundryPage):
                 f"Canonical build save to {catalog_path} did not verify for "
                 f"{len(missing_or_changed)} submitted Build(s)."
             )
-            return
+            return False
         # Reload the authoritative projection after a verified merge so later
         # edits cannot continue from a stale/filtered roster snapshot.
         self.roster = reloaded
@@ -657,6 +657,7 @@ class BuildsPage(FoundryPage):
             f"Builds saved to canonical catalog {catalog_path}. "
             f"Compatibility mirror refreshed at {mirror_path}."
         )
+        return True
 
     def _export_csv(self):
         folder = ""
