@@ -1925,3 +1925,11 @@ The engine can completely enumerate whether a weapon poison procs or misses unde
 **Layman's version:** knowing exactly *when* the poison fired does not tell us what was in the bottle. ESO crafting has managed to make causality and ingredient labels separate paperwork.
 
 **For BFF:** poison cadence and poison consequences remain separate authorities. The production runtime factory now accepts an explicit consequence resolver; when formula/dilution proof is absent, Objective #32 stays fail-closed instead of guessing from the saved item name.
+
+## 2026-09-24 — Poison selection has to happen before enchantment runtime
+
+A poison is equipped on a specific weapon set, and that poison suppresses the enchantment on the same set. That means front/back poison choice is not merely another proc effect that can be bolted onto an already-resolved runtime history.
+
+**Layman's version:** choosing poison changes which glyph is allowed to exist on that bar. You cannot finish deciding what the glyph did and then decide afterward that a poison had turned it off.
+
+**For BFF:** generated front/back poison formula selection is now a physical build axis upstream of runtime-state derivation. Changing that axis invalidates downstream enchantment/runtime choices. Exact formula selection still does not prove dilution duration or poison consequence magnitude.
