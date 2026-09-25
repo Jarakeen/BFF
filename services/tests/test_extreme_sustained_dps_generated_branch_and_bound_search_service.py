@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import pytest
+
 from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
     ExtremeSustainedDPSExactLeafEvaluation,
     ExtremeSustainedDPSGeneratedBranchAndBoundSearchService,
     ExtremeSustainedDPSGeneratedSearchBranch,
+    ExtremeSustainedDPSGeneratedSearchResult,
 )
 from services.extreme_sustained_dps_pruning_service import (
     ExtremeSustainedDPSBoundEvidence,
@@ -179,3 +182,78 @@ def test_forced_open_bound_diagnostic_does_not_poison_exact_leaf_proof() -> None
     assert result.global_maximum_proven is True
     assert result.unresolved == ()
 
+
+
+def test_generated_branch_requires_strict_depth_and_leaf_flag() -> None:
+    bound = ExtremeSustainedDPSBoundEvidence(
+        candidate_key="branch",
+        upper_bound_dps=100.0,
+        proven_safe=True,
+        source="test",
+    )
+
+    with pytest.raises(TypeError, match="depth must be an integer"):
+        ExtremeSustainedDPSGeneratedSearchBranch(
+            candidate_key="branch",
+            depth=True,
+            is_leaf=False,
+            upper_bound=bound,
+        )
+
+    with pytest.raises(TypeError, match="is_leaf must be boolean"):
+        ExtremeSustainedDPSGeneratedSearchBranch(
+            candidate_key="branch",
+            depth=0,
+            is_leaf=1,
+            upper_bound=bound,
+        )
+
+
+@pytest.mark.parametrize("value", (float("nan"), float("inf"), -1.0))
+def test_exact_leaf_rejects_invalid_modeled_dps(value) -> None:
+    with pytest.raises(ValueError, match="finite and non-negative"):
+        ExtremeSustainedDPSExactLeafEvaluation(
+            candidate_key="leaf",
+            modeled_dps=value,
+            duration_seconds=10.0,
+            mechanic_complete=True,
+        )
+
+
+def test_generated_search_result_rejects_leaf_count_drift() -> None:
+    leaf = ExtremeSustainedDPSExactLeafEvaluation(
+        candidate_key="leaf",
+        modeled_dps=10.0,
+        duration_seconds=10.0,
+        mechanic_complete=True,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="evaluated_leaf_count must equal evaluated_leaves length",
+    ):
+        ExtremeSustainedDPSGeneratedSearchResult(
+            best_modeled_dps=10.0,
+            best_candidates=(leaf,),
+            unique_leader=leaf,
+            evaluated_leaves=(leaf,),
+            visited_branch_count=1,
+            expanded_branch_count=0,
+            evaluated_leaf_count=2,
+            pruned_branch_count=0,
+            forced_open_branch_count=0,
+            global_maximum_proven=True,
+            unique_leader_proven=True,
+            evidence=(),
+            unresolved=(),
+        )
+
+
+def test_generated_search_rejects_nonfinite_duration_input() -> None:
+    with pytest.raises(ValueError, match="duration must be finite and positive"):
+        ExtremeSustainedDPSGeneratedBranchAndBoundSearchService.search(
+            (_branch("leaf", 10.0, leaf=True),),
+            expand_branch=lambda _branch: (),
+            evaluate_leaf=_leaf_eval({"leaf": 10.0}),
+            required_duration_seconds=float("nan"),
+        )
