@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 from models.raid_plan import RaidPlan, RaidPlanMember, RaidPlanTriggeredResponsibility
 from services.raid_plan_repository import RaidPlanRepository
@@ -498,6 +499,54 @@ def test_stale_build_repair_preserves_planned_state_and_assignments() -> None:
     assert "planned_gear_sets=" not in repair
     assert "planned_skills=" not in repair
     assert "primary_assignment=" not in repair
+
+
+def test_selected_build_repairs_stale_personnel_character_for_same_player() -> None:
+    page = SimpleNamespace()
+    member = RaidPlanMember(
+        seat_id="tank-1", gamertag="Rik", player_id="player-rik",
+        roster_member_id=7, character_id="old-personnel-character",
+        character_name="Old Toon", selected_build_id="rik-build",
+        selected_build_name="Rik Tank", primary_assignment="Main tank",
+    )
+    catalog = {
+        "builds": [{"build_id": "rik-build", "character_id": "rik-character"}],
+        "characters": [{
+            "character_id": "rik-character", "player_id": "player-rik", "name": "Rik",
+        }],
+    }
+
+    repaired = raid_plan_persistence_page.RaidPlanPersistencePage._repair_selected_build_identity(
+        page, member, catalog,
+    )
+
+    assert repaired.player_id == "player-rik"
+    assert repaired.roster_member_id is None
+    assert repaired.character_id == "rik-character"
+    assert repaired.character_name == "Rik"
+    assert repaired.selected_build_id == "rik-build"
+    assert repaired.primary_assignment == "Main tank"
+
+
+def test_stale_build_replacement_rejects_same_mismatched_build() -> None:
+    page = SimpleNamespace(
+        saved_builds=(SimpleNamespace(
+            BuildId="rik-build", BuildName="Rik Tank", Gamertag="Rik",
+            Name="Rik", PlayerId="player-rik", CharacterId="other-character",
+        ),),
+        _personnel_match=lambda _name: None,
+    )
+    member = RaidPlanMember(
+        seat_id="tank-1", gamertag="Rik", player_id="player-rik",
+        character_id="rik-character", character_name="Rik",
+        selected_build_id="rik-build", selected_build_name="Rik Tank",
+    )
+
+    replacement = raid_plan_persistence_page.RaidPlanPersistencePage._replacement_build_for_stale_member(
+        page, member,
+    )
+
+    assert replacement is None
 
 
 def test_roles_exact_build_id_can_bypass_display_identity_filters() -> None:

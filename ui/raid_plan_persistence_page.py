@@ -713,6 +713,10 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             build_id = _clean(getattr(build, "BuildId", ""))
             if not build_id:
                 continue
+            if member.character_id and _clean(getattr(build, "CharacterId", "")) != _clean(member.character_id):
+                continue
+            if member.player_id and _clean(getattr(build, "PlayerId", "")) != _clean(member.player_id):
+                continue
             if wanted_name and _clean(getattr(build, "BuildName", "")).casefold() != wanted_name:
                 continue
             build_player = _clean(getattr(build, "Gamertag", "")).casefold()
@@ -827,12 +831,14 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             )
 
     def _repair_selected_build_identity(self, member, catalog):
-        """Drop only a contradictory BuildId when chair identity is otherwise stable.
+        """Reconcile an explicitly selected Build with the same player's character.
 
         Comp Maker can replace/rebind a Comp Build while a loaded Raid Plan still
-        carries the older selected BuildId. The player's Personnel/character ids
-        remain authoritative. A mismatched build must never rewrite that identity;
-        preserve the planned package and let the user select/save the replacement.
+        carries the older selected BuildId. A selected canonical Build can also
+        expose a stale Personnel character binding for the same player. In that
+        case the Build's canonical character is authoritative; detach the stale
+        Personnel row and let the resolver rejoin an exact matching row, if any.
+        Never use a Build owned by a different player to rewrite this chair.
         """
         build_id = _clean(member.selected_build_id)
         character_id = _clean(member.character_id)
@@ -852,6 +858,25 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         build_character_id = _clean(build.get("character_id"))
         if not build_character_id or build_character_id == character_id:
             return member
+
+        build_character = next(
+            (
+                row for row in catalog["characters"]
+                if isinstance(row, dict)
+                and _clean(row.get("character_id")) == build_character_id
+            ),
+            None,
+        )
+        if (
+            build_character is not None
+            and _clean(member.player_id)
+            and _clean(build_character.get("player_id")) == _clean(member.player_id)
+        ):
+            return member.with_selection(
+                character_id=build_character_id,
+                character_name=_clean(build_character.get("name")) or member.character_name,
+                roster_member_id=None,
+            )
 
         replacement = self._replacement_build_for_stale_member(member)
         replacement_id = (
