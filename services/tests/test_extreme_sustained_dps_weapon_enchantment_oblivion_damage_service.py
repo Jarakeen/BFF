@@ -82,6 +82,10 @@ def test_legendary_cp160_oblivion_damage_caps_at_4875():
     assert row.amount == 4875.0
     assert row.damage_type == "oblivion"
     assert row.recipient == "Boss"
+    assert any(
+        "reviewed non-critical proc exception" in evidence
+        for evidence in result.evidence
+    )
 
 
 def test_legendary_cp160_oblivion_damage_uses_target_max_health_below_cap():
