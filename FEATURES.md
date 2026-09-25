@@ -718,3 +718,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Raid Plan chairs now persist a Saved Build reference when one is explicitly selected, plus Raid Plan-owned planned gear/skills/Mundus as overrides.
 - A chair with planned configuration but no reusable Saved Build is represented as Planned Raid Plan state, not as another Build.
 - Legacy `build_kind=comp` records remain readable for revision/recovery compatibility and are detached from active chair Build assignment when encountered; they are not deleted automatically.
+
+- **Alchemy formula source-section provenance** — The canonical Alchemy formula catalog now preserves reviewed UESP formula-section provenance when duplicate formula evidence is merged. Poison formula selection exposes those sections as evidence without treating a heading as automatic base/triple dilution proof, keeping the remaining duration witness fail-closed instead of guessing from recipe layout.
