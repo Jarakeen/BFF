@@ -175,3 +175,51 @@ def test_candidate_runtime_state_authority_requires_weapon_poison_authorities() 
     assert any("weapon-poison activation-event authority" in item for item in result.blockers)
     assert any("weapon-poison consequence authority" in item for item in result.blockers)
 
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("candidate_runtime_state_resolver_present", "true"),
+        ("heavy_attack_channel_block_denominator_proven", 1),
+    ),
+)
+def test_preflight_requires_strict_boolean_top_level_flags(field, value) -> None:
+    kwargs = {
+        "runtime_state_frontier": _runtime(),
+        "candidate_runtime_state_resolver_present": False,
+        "heavy_attack_channel_block_denominator_proven": True,
+        "encounter_policy_adapter": object(),
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match="must be boolean"):
+        ExtremeSustainedDPSObjective32ScenarioPreflightService.assess(**kwargs)
+
+
+def test_preflight_rejects_truthy_non_boolean_runtime_frontier_proof() -> None:
+    with pytest.raises(
+        TypeError,
+        match="runtime_state_frontier.denominator_proven must be boolean",
+    ):
+        ExtremeSustainedDPSObjective32ScenarioPreflightService.assess(
+            runtime_state_frontier=_runtime(proven="true"),
+            heavy_attack_channel_block_denominator_proven=True,
+            encounter_policy_adapter=object(),
+        )
+
+
+def test_preflight_rejects_truthy_non_boolean_candidate_runtime_proofs() -> None:
+    resolver = _candidate_runtime_resolver()
+    resolver.supplemental_event_denominator_proven = "true"
+
+    with pytest.raises(
+        TypeError,
+        match="supplemental_event_denominator_proven must be boolean",
+    ):
+        ExtremeSustainedDPSObjective32ScenarioPreflightService.assess(
+            runtime_state_frontier=None,
+            candidate_runtime_state_resolver=resolver,
+            heavy_attack_channel_block_denominator_proven=True,
+            encounter_policy_adapter=object(),
+        )
