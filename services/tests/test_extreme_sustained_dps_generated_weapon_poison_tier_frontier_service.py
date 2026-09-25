@@ -176,3 +176,28 @@ def test_generated_poison_tier_candidate_at_requires_proven_denominator(tmp_path
 
     with pytest.raises(ValueError, match="denominator is unresolved"):
         service.candidate_at(_formula("Breach"), 0)
+
+
+def test_generated_poison_tier_frontier_fails_closed_on_malformed_wanted_trait_source(tmp_path):
+    path = _database(
+        tmp_path,
+        (
+            ("Breach", (_tier("Alkahest", 50, 10.0, 5.0),)),
+            ("Protection", (_tier("Alkahest", 50, 5.8, 2.5),)),
+        ),
+    )
+    with sqlite3.connect(path) as db:
+        db.execute(
+            "UPDATE effect_variant SET raw_json = ? WHERE effect_id = ?",
+            ("{malformed", 2),
+        )
+
+    result = ExtremeSustainedDPSGeneratedWeaponPoisonTierFrontierService(
+        path
+    ).frontier(_formula("Breach", "Protection"))
+
+    assert result.denominator_proven is False
+    assert any(
+        "Protection has malformed imported Poison source payload" in row
+        for row in result.unresolved
+    )
