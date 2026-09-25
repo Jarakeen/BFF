@@ -20,12 +20,37 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection:
     poison_id: str
     tier: ExtremeSustainedDPSGeneratedWeaponPoisonTierCandidate | None
 
+    def __post_init__(self) -> None:
+        poison_id = " ".join(str(self.poison_id or "").strip().split())
+        object.__setattr__(self, "poison_id", poison_id)
+        if self.tier is None:
+            if poison_id:
+                raise ValueError(
+                    "generated poison bar tier selection cannot name poison without tier evidence"
+                )
+            return
+        if not poison_id:
+            raise ValueError(
+                "generated poison bar tier selection with tier evidence requires poison identity"
+            )
+        evidence_id = str(self.tier.item_evidence.poison_id or "").strip()
+        if evidence_id != poison_id:
+            raise ValueError(
+                "generated poison bar tier selection identity must match tier item evidence"
+            )
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate:
     structural_index: int
     front: ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection
     back: ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection
+
+    def __post_init__(self) -> None:
+        if isinstance(self.structural_index, bool) or not isinstance(self.structural_index, int) or self.structural_index < 0:
+            raise ValueError(
+                "generated poison tier loadout structural_index must be a non-negative integer"
+            )
 
 
 @dataclass(frozen=True)
@@ -38,6 +63,20 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutFrontier:
     denominator_proven: bool
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if isinstance(self.candidate_count, bool) or not isinstance(self.candidate_count, int) or self.candidate_count < 0:
+            raise ValueError(
+                "generated poison tier loadout candidate_count must be a non-negative integer"
+            )
+        if self.candidate_count != len(self.candidates):
+            raise ValueError(
+                "generated poison tier loadout candidate_count must equal candidate tuple length"
+            )
+        if self.denominator_proven and (not self.candidates or self.unresolved):
+            raise ValueError(
+                "generated poison tier loadout denominator cannot be proven with no candidates or unresolved evidence"
+            )
 
 
 class ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutFrontierService:
