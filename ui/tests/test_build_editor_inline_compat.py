@@ -95,3 +95,15 @@ def test_full_build_editor_surfaces_comp_planning_state() -> None:
     assert 'getattr(model, "SourcePlanName", "")' in source
     assert 'getattr(model, "SourceSeatId", "")' in source
     assert 'self.comp_plan_card.setVisible(bool(is_comp or planned_sets or planned_skills))' in source
+
+
+def test_builds_exposes_class_aware_mastery_workspace() -> None:
+    source = Path(build_editor_inline_compat.__file__).read_text(encoding="utf-8")
+
+    assert 'tabs.addTab(mastery_tab, "Class Masteries")' in source
+    assert "ClassMasteryRepository(DEFAULT_DATABASE)" in source
+    assert "for_class(eso_class)" in source
+    assert "ClassMasteryAbilityIds = selected" in source
+    assert "if len(selected) > 2:" in source
+    assert "Class Mastery save failed read-back verification." in source
+    assert "ESO does not allow Class Mastery while subclassed." in source
