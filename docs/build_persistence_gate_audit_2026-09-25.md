@@ -69,3 +69,21 @@ Do not call the recovery complete until all of these pass:
 ## Rule for future code
 
 If a function has only a projection, it may merge explicit records but may not infer deletion from absence. If deletion is intended, use an explicit deletion API with a named target identity and user-visible action.
+
+
+## Hardened gates added during audit
+
+- Application Build roster saves merge by stable identity; an empty or filtered UI projection cannot imply deletion.
+- Destructive `sync_from_roster` is forbidden for the live application user database.
+- Full-catalog application saves refuse to omit an existing Saved BuildId.
+- Explicit Build deletion is isolated behind `BuildCatalogService.delete_build(build_id)`.
+- Roster re-import replacement deletes only exact prior imported BuildIds; a matching record without a canonical BuildId fails closed.
+- Team deletion and team merge update `build_catalog` through the same SQLite connection/savepoint as team rows.
+- Canonical mutation-adjacent reads use strict loading so malformed state cannot degrade into an empty catalog.
+- Read-only regression coverage compares raw `payload_json` before and after repeated `BuildService.load()` calls.
+- Malformed-catalog regression coverage requires load failure while preserving the malformed payload byte-for-byte for diagnosis/recovery.
+- Copy Build regression coverage requires a new nonblank BuildId at the exact destination Character and an unchanged source Build record.
+
+## Recovery gate
+
+Do not perform the final 12-Build recovery until the focused persistence suite containing these gates passes. After recovery, verify the exact recovered BuildIds through a strict catalog read, then through `BuildService.load()`, then open the Builds and Roles pages without saving and confirm the raw catalog payload is unchanged. Only after the save/navigation/close/reopen round trip succeeds should a fresh safety snapshot become the new recovery baseline.
