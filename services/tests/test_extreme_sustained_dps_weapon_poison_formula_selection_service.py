@@ -32,11 +32,12 @@ def _evidence(*effects):
     )
 
 
-def _formula(*traits):
+def _formula(*traits, source_sections=()):
     return AlchemyFormula(
         reagents=("A", "B", "C"),
         traits=tuple(traits),
         game_update=GameUpdate.U50,
+        source_sections=tuple(source_sections),
     )
 
 
@@ -91,4 +92,24 @@ def test_incomplete_item_source_evidence_blocks_formula_promotion() -> None:
     assert any(
         "requires complete item-label source evidence" in row
         for row in result.unresolved
+    )
+
+
+def test_formula_selection_surfaces_source_sections_without_promoting_dilution() -> None:
+    result = ExtremeSustainedDPSWeaponPoisonFormulaSelectionService.resolve(
+        item_evidence=_evidence(_effect("Ravage Health")),
+        formula=_formula(
+            "Ravage Health",
+            source_sections=("single_effect", "triple_effect"),
+        ),
+    )
+
+    assert result.exact_effect_set_proven is True
+    assert any(
+        "Formula source sections: ('single_effect', 'triple_effect')" in row
+        for row in result.evidence
+    )
+    assert any(
+        "do not independently prove base-versus-triple dilution" in row
+        for row in result.evidence
     )
