@@ -49,6 +49,30 @@ class ExtremeSustainedDPSClosureInventory:
     mechanics_advisories: tuple[CanonicalKnowledgeGap, ...]
     evidence: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        def _strings(values: tuple[str, ...]) -> tuple[str, ...]:
+            return tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in values
+                    if str(item).strip()
+                )
+            )
+
+        if any(not isinstance(row, CanonicalKnowledgeGap) for row in self.mechanics_blockers):
+            raise TypeError("closure inventory mechanics_blockers must contain CanonicalKnowledgeGap records")
+        if any(not isinstance(row, CanonicalKnowledgeGap) for row in self.mechanics_advisories):
+            raise TypeError("closure inventory mechanics_advisories must contain CanonicalKnowledgeGap records")
+        overlap = set(self.mechanics_blockers).intersection(self.mechanics_advisories)
+        if overlap:
+            raise ValueError("closure inventory mechanics gap cannot be both blocker and advisory")
+
+        object.__setattr__(self, "source_data_blockers", _strings(self.source_data_blockers))
+        object.__setattr__(self, "math_review_blockers", _strings(self.math_review_blockers))
+        object.__setattr__(self, "mechanics_blockers", tuple(self.mechanics_blockers))
+        object.__setattr__(self, "mechanics_advisories", tuple(self.mechanics_advisories))
+        object.__setattr__(self, "evidence", _strings(self.evidence))
+
     @property
     def blocking_count(self) -> int:
         return (
