@@ -21,6 +21,7 @@ from models.raid_plan import (
     RaidPlanTriggeredResponsibility,
 )
 from services.roster_placeholder_identity import is_personnel_placeholder
+from services.raid_plan_pydantic_schema import ValidationError, validate_raid_plan_payload
 
 
 _SCHEMA_VERSION = 1
@@ -314,6 +315,19 @@ class RaidPlanRepository:
         if not isinstance(raw, dict):
             raise RaidPlanRepositoryError("persisted Raid Plan must be an object")
         try:
+            normalized_input = dict(raw)
+            for collection_name in ("members", "triggered_responsibilities", "coverage_providers"):
+                rows = normalized_input.get(collection_name, [])
+                if isinstance(rows, list):
+                    normalized_input[collection_name] = [
+                        {
+                            **dict(row),
+                            "seat_id": _canonical_seat_id(dict(row).get("seat_id", "")),
+                        }
+                        if isinstance(row, dict) else row
+                        for row in rows
+                    ]
+            raw = validate_raid_plan_payload(normalized_input)
             members_raw = raw.get("members", [])
             triggered_raw = raw.get("triggered_responsibilities", [])
             coverage_raw = raw.get("coverage_providers", [])
@@ -360,14 +374,17 @@ class RaidPlanRepository:
                 triggered_responsibilities=triggered,
                 coverage_providers=coverage_providers,
             )
-        except (TypeError, ValueError) as exc:
+        except (TypeError, ValueError, ValidationError) as exc:
             if isinstance(exc, RaidPlanRepositoryError):
                 raise
             raise RaidPlanRepositoryError(f"invalid persisted Raid Plan: {exc}") from exc
 
     @staticmethod
     def _encode_plan(plan: RaidPlan) -> dict:
-        return asdict(plan)
+        try:
+            return validate_raid_plan_payload(asdict(plan))
+        except ValidationError as exc:
+            raise RaidPlanRepositoryError(f"Raid Plan failed Pydantic save validation: {exc}") from exc
 
     def _write_plans(self, plans: tuple[RaidPlan, ...]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
