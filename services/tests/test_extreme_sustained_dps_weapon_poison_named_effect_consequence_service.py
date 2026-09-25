@@ -1,4 +1,11 @@
 from minmax.runtime_event import RuntimeEvent
+from minmax.combat_damage_modifiers import damage_taken_from_target_state
+from minmax.combat_target_resistance import resistance_reduction_from_target_state
+from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
+from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
+from services.extreme_sustained_dps_runtime_target_combat_state_service import (
+    ExtremeSustainedDPSRuntimeTargetCombatStateService,
+)
 from services.extreme_sustained_dps_weapon_poison_dilution_selection_service import (
     ExtremeSustainedDPSWeaponPoisonDilutionMode,
     ExtremeSustainedDPSWeaponPoisonDilutionSelection,
@@ -118,3 +125,60 @@ def test_consequence_selection_cannot_be_reused_for_different_poison() -> None:
         "consequence selection belongs to Test Poison IX" in row
         for row in result.unresolved
     )
+
+
+def _project_target_effect(effect):
+    attempt = RuntimeEffectEventAttempt.for_bound_effect(
+        event=RuntimeEvent(
+            time_seconds=1.0,
+            sequence=0,
+            trigger="weapon_poison_proc",
+            source="Test Poison IX",
+            target="Boss",
+            source_bar="front",
+        ),
+        effect=effect,
+        chance_roll=0.0,
+    )
+    return ExtremeSustainedDPSRuntimeTargetCombatStateService.resolve(
+        snapshot=ExtremeRuntimeSnapshot(
+            attempts=(attempt,),
+            snapshot_time_seconds=2.0,
+        ),
+        effects=(effect,),
+        target_identity="Boss",
+    )
+
+
+def test_poison_minor_breach_reaches_canonical_target_resistance_math() -> None:
+    consequence = ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService(
+        dilution_selection=_selection(
+            ExtremeSustainedDPSWeaponPoisonSelectedEffect("Breach", 10.0),
+        )
+    ).resolve(
+        poison_id="Test Poison IX",
+        occurrence=_occurrence(),
+    )
+
+    projected = _project_target_effect(consequence.effects[0])
+
+    assert projected.unresolved == ()
+    assert "Minor Breach" in projected.combat_state.active_buffs
+    assert resistance_reduction_from_target_state(projected.combat_state) == 2974.0
+
+
+def test_poison_minor_vulnerability_reaches_canonical_damage_taken_math() -> None:
+    consequence = ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService(
+        dilution_selection=_selection(
+            ExtremeSustainedDPSWeaponPoisonSelectedEffect("Protection", 2.5),
+        )
+    ).resolve(
+        poison_id="Test Poison IX",
+        occurrence=_occurrence(),
+    )
+
+    projected = _project_target_effect(consequence.effects[0])
+
+    assert projected.unresolved == ()
+    assert "Minor Vulnerability" in projected.combat_state.active_buffs
+    assert damage_taken_from_target_state(projected.combat_state).generic == 0.05
