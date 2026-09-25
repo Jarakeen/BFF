@@ -335,6 +335,7 @@ def test_persist_reports_exact_skip_reasons_for_open_and_unplanned_chairs(tmp_pa
     state = CompPlanState(
         raid_plan_id="pm",
         raid_plan_name="Core Team",
+        trial_id="sunspire",
         chairs=(
             CompChairState(
                 seat_id="dd-8",
