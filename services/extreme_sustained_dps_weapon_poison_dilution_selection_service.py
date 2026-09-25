@@ -44,6 +44,7 @@ class ExtremeSustainedDPSWeaponPoisonDilutionSelectionService:
         *,
         formula_selection: ExtremeSustainedDPSWeaponPoisonFormulaSelection,
         mode: ExtremeSustainedDPSWeaponPoisonDilutionMode | str,
+        poison_id_override: str | None = None,
     ) -> ExtremeSustainedDPSWeaponPoisonDilutionSelection:
         try:
             selected_mode = (
@@ -89,14 +90,23 @@ class ExtremeSustainedDPSWeaponPoisonDilutionSelectionService:
             )
 
         deduped = tuple(dict.fromkeys(row for row in unresolved if row))
+        selected_poison_id = (
+            str(poison_id_override or "").strip()
+            or str(formula_selection.poison_id or "").strip()
+        )
         return ExtremeSustainedDPSWeaponPoisonDilutionSelection(
-            poison_id=str(formula_selection.poison_id or "").strip(),
+            poison_id=selected_poison_id,
             formula_id=str(formula_selection.formula_id or "").strip(),
             mode=selected_mode,
             effects=tuple(effects),
             evidence=(
                 *tuple(formula_selection.evidence),
                 f"Explicit weapon-poison dilution witness: {selected_mode.value}",
+                (
+                    f"Runtime poison identity override: {selected_poison_id}"
+                    if poison_id_override
+                    else "Runtime poison identity preserved from formula selection"
+                ),
                 f"Exact poison effect durations selected: {len(effects)}",
                 "Dilution mode is caller-proven; this service never infers base/triple from effect count or item name.",
             ),
