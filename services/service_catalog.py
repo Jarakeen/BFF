@@ -1287,13 +1287,14 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.candidate_runtime_state_factory",
         domain="extreme",
         purpose=(
-            "Assemble the canonical production Objective #32 candidate runtime-state graph with shared weapon-enchantment repository, rule, source, variant, cadence, activation, scaling, and cooldown-policy authorities."
+            "Assemble the canonical production Objective #32 candidate runtime-state graph with shared weapon-enchantment authorities and an explicit caller-owned weapon-poison consequence authority seam."
         ),
         implementation_path="services.extreme_sustained_dps_candidate_runtime_state_factory_service",
         inputs=(
             "CanonicalEsoDatabase",
             "SavedBuildCapabilityService",
             "PreRuntimeExactDamageOccurrenceAuthority",
+            "OptionalWeaponPoisonConsequenceAuthority",
             "SupplementalScenarioRuntimeEvidenceResolvers",
         ),
         outputs=("ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService",),
@@ -1317,6 +1318,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Pre-runtime exact damage-occurrence evidence remains caller-owned to avoid circularly deriving runtime_state from a final damage evaluator that already consumes runtime_state. "
+            "Exact crafted-poison formula/dilution consequence authority is also caller-owned; omitting it preserves fail-closed poison consequence handling rather than inferring effects from an item label. "
             "All downstream weapon-enchantment runtime authorities are wired from one shared canonical ESO repository/rule graph."
         ),
     ),
