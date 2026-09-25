@@ -626,12 +626,33 @@ class BuildsPage(FoundryPage):
                 f"Saved canonical build catalog {catalog_path}, but re-reading it failed: {exc}"
             )
             return
-        if reloaded != self.roster:
+        # The page roster can be a filtered/projection view. Canonical save is
+        # merge-based, so verification must prove every submitted Build survived
+        # without requiring unrelated canonical Builds to disappear.
+        expected_by_id = {
+            str(getattr(build, "BuildId", "") or "").strip(): build
+            for build in self.roster.Members
+            if str(getattr(build, "BuildId", "") or "").strip()
+        }
+        reloaded_by_id = {
+            str(getattr(build, "BuildId", "") or "").strip(): build
+            for build in reloaded.Members
+            if str(getattr(build, "BuildId", "") or "").strip()
+        }
+        missing_or_changed = [
+            build_id
+            for build_id, expected in expected_by_id.items()
+            if build_id not in reloaded_by_id or reloaded_by_id[build_id] != expected
+        ]
+        if missing_or_changed:
             self.status.error(
-                f"Canonical build save to {catalog_path} did not verify: "
-                "reloaded data does not match what was saved."
+                f"Canonical build save to {catalog_path} did not verify for "
+                f"{len(missing_or_changed)} submitted Build(s)."
             )
             return
+        # Reload the authoritative projection after a verified merge so later
+        # edits cannot continue from a stale/filtered roster snapshot.
+        self.roster = reloaded
         self.status.success(
             f"Builds saved to canonical catalog {catalog_path}. "
             f"Compatibility mirror refreshed at {mirror_path}."
