@@ -359,16 +359,18 @@ class CanonicalBuildBridge:
             build_kind = str(entry.get("build_kind") or "saved").strip().casefold() or "saved"
             source = entry.get("source") if isinstance(entry.get("source"), dict) else {}
 
-            # A canonical ID does not turn an identity-only placeholder into
-            # a real Saved Build. Canonical Saved Builds recovered from the user's
-            # catalog still pass this gate because their payload contains actual
-            # build state. Keeping the legacy/test placeholder distinction intact
-            # also prevents blank audit artifacts from appearing as user Builds.
-            snapshot = payload if isinstance(payload, dict) else legacy
+            # Explicit canonical payload records are authoritative Saved Builds even
+            # when they are incomplete; incompleteness must stay visible to the UI
+            # rather than making the Build disappear. The historical placeholder gate
+            # applies only to legacy snapshots, where identity-only rows may be stale
+            # migration artifacts and a populated builds.json recovery source can exist.
+            payload_is_canonical = isinstance(payload, dict)
+            snapshot = payload if payload_is_canonical else legacy
             build_id = str(entry.get("build_id") or "").strip()
             character_id = str(entry.get("character_id") or "").strip()
             if (
                 build_kind != "comp"
+                and not payload_is_canonical
                 and not self._is_valid_legacy_build(snapshot)
                 and not self._application_user_database
             ):
