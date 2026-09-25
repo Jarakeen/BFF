@@ -3,6 +3,7 @@ from __future__ import annotations
 """Run generated sustained-DPS search across the validated structural family denominator."""
 
 from dataclasses import dataclass
+import math
 
 from services.extreme_sustained_dps_generated_axis_inventory_service import (
     ExtremeSustainedDPSGeneratedAxisInventoryService,
@@ -131,6 +132,24 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
             additional_canonical_axes=("race", "class_route", "attributes"),
         )
 
+    @staticmethod
+    def _strict_bool(value: object, label: str) -> bool:
+        if not isinstance(value, bool):
+            raise TypeError(f"{label} must be boolean")
+        return value
+
+    @staticmethod
+    def _finite_float(value: object, label: str) -> float:
+        if isinstance(value, bool):
+            raise TypeError(f"{label} must be numeric")
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            raise TypeError(f"{label} must be numeric") from None
+        if not math.isfinite(numeric):
+            raise ValueError(f"{label} must be finite")
+        return numeric
+
     def search(
         self,
         *,
@@ -167,10 +186,35 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
                 "global generated sustained-DPS search candidate_id_prefix is required"
             )
 
+        duration = self._finite_float(
+            required_duration_seconds,
+            "required_duration_seconds",
+        )
+        if duration <= 0.0:
+            raise ValueError("required_duration_seconds must be positive")
+
+        if isinstance(target_health, bool) or not isinstance(target_health, int):
+            raise TypeError("target_health must be an integer")
+        if target_health <= 0:
+            raise ValueError("target_health must be positive")
+
+        resistance = self._finite_float(target_resistance, "target_resistance")
+        scheduled_attacks = self._strict_bool(
+            use_scheduled_combat_attacks_for_ultimate,
+            "use_scheduled_combat_attacks_for_ultimate",
+        )
+        heavy_denominator_proven = self._strict_bool(
+            heavy_attack_channel_block_denominator_proven,
+            "heavy_attack_channel_block_denominator_proven",
+        )
+        normalized_bar = str(initial_bar or "").strip().casefold()
+        if normalized_bar not in {"front", "back"}:
+            raise ValueError("initial_bar must be 'front' or 'back'")
+
         structural_axis = self._structural_axis(
             dual_bar_frontier=dual_bar_frontier,
             candidate_id_prefix=prefix,
-            duration_seconds=float(required_duration_seconds),
+            duration_seconds=duration,
             potion_cooldown_seconds=potion_cooldown_seconds,
             starting_ultimate=float(starting_ultimate),
             priorities=priorities,
@@ -178,15 +222,11 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
             target_identity=target_identity,
             ultimate_generation_events=tuple(ultimate_generation_events),
             heroism_windows=tuple(heroism_windows),
-            use_scheduled_combat_attacks_for_ultimate=bool(
-                use_scheduled_combat_attacks_for_ultimate
-            ),
+            use_scheduled_combat_attacks_for_ultimate=scheduled_attacks,
             duration_rules=tuple(duration_rules),
             heavy_attack_windows=tuple(heavy_attack_windows),
             heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
-            heavy_attack_channel_block_denominator_proven=bool(
-                heavy_attack_channel_block_denominator_proven
-            ),
+            heavy_attack_channel_block_denominator_proven=heavy_denominator_proven,
             potion_cooldown_resolver=potion_cooldown_resolver,
             potion_cooldown_scenario=potion_cooldown_scenario,
         )
@@ -206,17 +246,17 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
 
         evaluate_leaf = self.leaf_evaluation.evaluator(
             runtime_snapshot=runtime_snapshot,
-            target_health=int(target_health),
-            target_resistance=float(target_resistance),
+            target_health=target_health,
+            target_resistance=resistance,
             target_name=target_name,
-            initial_bar=initial_bar,
+            initial_bar=normalized_bar,
         )
 
         return ExtremeSustainedDPSGeneratedFrontierWiringService.search(
             ExtremeSustainedDPSGlobalGeneratedSearchRoot(),
             axes=axes,
             evaluate_leaf=evaluate_leaf,
-            required_duration_seconds=float(required_duration_seconds),
+            required_duration_seconds=duration,
             root_key=root_key,
             root_bound_inputs=root_bound_inputs,
             branch_bound_inputs=branch_bound_inputs,
