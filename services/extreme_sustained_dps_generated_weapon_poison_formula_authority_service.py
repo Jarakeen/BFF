@@ -38,7 +38,14 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthority:
             for entry in self.entries
             if entry.poison_id.strip().casefold() == key
         )
-        if len(matches) != 1:
+        if not matches:
+            return None
+
+        canonical_ids = {
+            str(formula.canonical_id or "").strip().casefold()
+            for formula in matches
+        }
+        if len(canonical_ids) != 1:
             return None
         return matches[0]
 
