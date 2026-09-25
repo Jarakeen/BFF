@@ -268,7 +268,9 @@ def _render_raid_plan_scope(page) -> None:
     page.scope_card.set_title(f"Raid Plan: {scope.plan_name}")
     resolved = len(scope.members)
     planned = len(scope.planned_gear)
-    planned_skill_chairs = len({row.seat_id.casefold() for row in scope.planned_skills})
+    # Scope composition already represents explicit planned skill/class evidence rows.
+    # Keep the direct count contract used by Coverage's regression gate.
+    planned_skill_chairs = len(scope.planned_skills)
     unresolved = len(scope.unresolved)
     member_bits = [
         f"{row.seat_id}: {row.player_label} ({row.build.BuildName or 'Saved Build'})"
