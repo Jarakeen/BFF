@@ -50,6 +50,7 @@ def _tier(formula, index, solvent, level):
                 ),
             ),
             source_evidence_complete=True,
+            exact_selection_proven=False,
         ),
     )
 
