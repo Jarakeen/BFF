@@ -313,7 +313,7 @@ def test_comp_maker_navigation_refreshes_plan_picker_without_route_based_binding
     assert "refresh_phase14_presentation(comp)" in block
 
 
-def test_new_comp_plan_repairs_comp_build_provenance_after_first_raid_plan_binding() -> None:
+def test_new_comp_plan_does_not_create_second_comp_build_save_after_binding() -> None:
     source = Path("ui/comp_builder_phase14_shell_support.py").read_text(encoding="utf-8")
 
     save_block = source.split("def _save_to_originating_raid_plan(page)", 1)[1].split(
@@ -321,9 +321,9 @@ def test_new_comp_plan_repairs_comp_build_provenance_after_first_raid_plan_bindi
     )[0]
     assert "was_unbound = not state.is_raid_plan_bound" in save_block
     assert "build_service = CompBuildPersistenceService(get_data_dir())" in save_block
-    assert "if was_unbound and plan is not None:" in save_block
-    assert "rebound_result = build_service.persist(page._comp_plan_state)" in save_block
-    assert "rebound_result.state.mark_saved()" in save_block
+    assert "rebound_result = build_service.persist" not in save_block
+    assert "canonical Comp Build(s)" not in save_block
+    assert "occupied build assignment(s)" in save_block
 
 
 def test_comp_maker_plan_picker_guards_unsaved_state_before_switching_saved_plans() -> None:
