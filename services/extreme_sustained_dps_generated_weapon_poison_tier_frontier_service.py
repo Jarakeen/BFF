@@ -124,11 +124,20 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonTierFrontierService:
         inspected = 0
 
         for db_effect_name, raw_json in rows:
+            db_effect_key = self._norm(db_effect_name)
             try:
                 payload = json.loads(str(raw_json))
             except (TypeError, ValueError, json.JSONDecodeError):
+                if db_effect_key in wanted:
+                    unresolved.append(
+                        f"{wanted[db_effect_key]} has malformed imported Poison source payload"
+                    )
                 continue
             if not isinstance(payload, dict):
+                if db_effect_key in wanted:
+                    unresolved.append(
+                        f"{wanted[db_effect_key]} has non-object imported Poison source payload"
+                    )
                 continue
 
             effect_name = str(
