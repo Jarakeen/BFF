@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from pathlib import Path
 
 from models.build_model import BuildRoster
@@ -290,3 +291,112 @@ def test_copy_build_persists_with_new_id_and_preserves_source(tmp_path: Path) ->
     assert copied_rows[0]["build_id"]
     assert copied_rows[0]["build_id"] != "source-build"
     assert copied_rows[0]["character_id"] == "dest-character"
+
+
+def _raw_catalog_payload(database_path: Path) -> str:
+    with sqlite3.connect(database_path) as db:
+        row = db.execute(
+            "SELECT payload_json FROM build_catalog WHERE singleton_id = 1"
+        ).fetchone()
+    assert row is not None
+    return str(row[0])
+
+
+def test_repeated_application_load_is_byte_read_only_for_catalog(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    data_dir = tmp_path / "data"
+    user_dir = tmp_path / "user_data"
+    data_dir.mkdir()
+    user_dir.mkdir()
+    user_db = user_dir / "foundrydock.db"
+    builds_path = data_dir / "builds.json"
+    characters_path = data_dir / "characters.json"
+    builds_path.write_text('{"Members": []}', encoding="utf-8")
+    characters_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 4,
+                "players": [{"player_id": "p1", "gamertag": "Jarakeen"}],
+                "characters": [
+                    {
+                        "character_id": "c1",
+                        "player_id": "p1",
+                        "name": "Magrat",
+                        "gamertag": "Jarakeen",
+                        "eso_class": "Warden",
+                    }
+                ],
+                "builds": [
+                    {
+                        "build_id": "b1",
+                        "character_id": "c1",
+                        "name": "Jarakeen — Warden Healer",
+                        "payload": {
+                            "Name": "Magrat",
+                            "Gamertag": "Jarakeen",
+                            "BuildName": "Jarakeen — Warden Healer",
+                        },
+                    }
+                ],
+                "team_assignments": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(bridge_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(bridge_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(migration_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "ensure_user_database", lambda: user_db)
+
+    service = BuildService(builds_path)
+    assert len(service.load().Members) == 1
+    before = _raw_catalog_payload(user_db)
+
+    for _ in range(5):
+        loaded = service.load()
+        assert [build.BuildId for build in loaded.Members] == ["b1"]
+
+    assert _raw_catalog_payload(user_db) == before
+
+
+def test_malformed_application_catalog_load_fails_without_rewrite(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    import pytest
+
+    data_dir = tmp_path / "data"
+    user_dir = tmp_path / "user_data"
+    data_dir.mkdir()
+    user_dir.mkdir()
+    user_db = user_dir / "foundrydock.db"
+    builds_path = data_dir / "builds.json"
+    characters_path = data_dir / "characters.json"
+    builds_path.write_text('{"Members": []}', encoding="utf-8")
+    characters_path.write_text(
+        '{"schema_version":4,"players":[],"characters":[],"builds":[],"team_assignments":[]}',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(bridge_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(bridge_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(migration_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "ensure_user_database", lambda: user_db)
+
+    service = BuildService(builds_path)
+    service.load()
+    with sqlite3.connect(user_db) as db:
+        db.execute(
+            "UPDATE build_catalog SET payload_json = ? WHERE singleton_id = 1",
+            ('{"schema_version":',),
+        )
+        db.commit()
+    corrupt = _raw_catalog_payload(user_db)
+
+    with pytest.raises(Exception):
+        service.load()
+
+    assert _raw_catalog_payload(user_db) == corrupt
