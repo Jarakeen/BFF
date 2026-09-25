@@ -58,6 +58,7 @@ class ExtremeSustainedDPSAssembledCandidate:
     progression: CharacterProgression
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+    poison_loadout: ExtremeSustainedDPSWeaponPoisonLoadoutCandidate | None = None
 
     @property
     def resolved(self) -> bool:
@@ -172,6 +173,7 @@ class ExtremeSustainedDPSGeneratedCandidateAssemblyService:
                 "Axis candidates contribute only the state they own; gear/class/identity state remains cross-axis-context authoritative",
             ),
             unresolved=final_unresolved,
+            poison_loadout=poison_loadout,
         )
 
 
