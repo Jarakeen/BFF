@@ -12,7 +12,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtWidgets import QFileDialog, QComboBox, QHBoxLayout, QInputDialog, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFileDialog, QComboBox, QHBoxLayout, QInputDialog, QLabel, QMenu, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
 from engine.config import get_data_dir, get_user_data_dir, get_user_database_path, get_settings_path
 from models.raid_plan import RaidPlan
@@ -294,19 +294,17 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.save_plan_button.clicked.connect(self.save_current_plan)
         row.addWidget(self.save_plan_button)
 
-        self.backup_plan_button = QPushButton("Backup…")
+        self.backup_plan_button = QPushButton("Backup ▾")
         self.backup_plan_button.setToolTip(
-            "Write this Raid Plan to a small portable JSON backup file."
+            "Export or restore a small portable Raid Plan JSON backup."
         )
-        self.backup_plan_button.clicked.connect(self.export_raid_plan_backup)
+        backup_menu = QMenu(self.backup_plan_button)
+        export_backup_action = backup_menu.addAction("Export Backup…")
+        restore_backup_action = backup_menu.addAction("Restore Backup…")
+        export_backup_action.triggered.connect(self.export_raid_plan_backup)
+        restore_backup_action.triggered.connect(self.restore_raid_plan_backup)
+        self.backup_plan_button.setMenu(backup_menu)
         row.addWidget(self.backup_plan_button)
-
-        self.restore_plan_backup_button = QPushButton("Restore Backup…")
-        self.restore_plan_backup_button.setToolTip(
-            "Restore one Raid Plan from a portable JSON backup. Other user data is untouched."
-        )
-        self.restore_plan_backup_button.clicked.connect(self.restore_raid_plan_backup)
-        row.addWidget(self.restore_plan_backup_button)
 
         self.open_raid_map_button = QPushButton("Open Raid Map")
         self.open_raid_map_button.setToolTip("Open the Raid Map editor scoped to this saved Raid Plan.")
