@@ -780,29 +780,49 @@ class CoveragePage(FoundryPage):
     def _save_coverage(self) -> None:
         plan_id = self._selected_plan_id()
         if not plan_id:
+            QMessageBox.warning(self, "Save Coverage", "Select a saved Raid Plan before saving Coverage.")
             self.status.warning("Select a saved Raid Plan before saving Coverage.")
             return
         plan = self.raid_plan_repository.get(plan_id)
         if plan is None:
+            QMessageBox.critical(self, "Save Coverage", "Selected Raid Plan is no longer available. Coverage was not saved.")
             self.status.error("Selected Raid Plan is no longer available; Coverage was not saved.")
             return
+
+        self.save_coverage_button.setEnabled(False)
+        self.save_coverage_button.setText("Saving…")
+        self.status.info(f"Saving Coverage for {plan.name}…")
         try:
+            # Manual provider edits are persisted at edit time. This explicit Save
+            # is a durable checkpoint: rewrite the complete Pydantic-validated Raid
+            # Plan snapshot, then prove the exact Coverage payload survived read-back.
+            expected_providers = tuple(plan.coverage_providers)
             saved = self.raid_plan_repository.save(plan, expected=plan)
             persisted = self.raid_plan_repository.get(plan_id)
             if persisted is None:
                 raise RuntimeError("saved Raid Plan failed Coverage read-back verification")
-            if persisted.coverage_providers != saved.coverage_providers:
+            if tuple(saved.coverage_providers) != expected_providers:
+                raise RuntimeError("saved Coverage payload differs from the requested checkpoint")
+            if tuple(persisted.coverage_providers) != expected_providers:
                 raise RuntimeError("Coverage providers changed during persistence verification")
         except Exception as exc:
+            self.save_coverage_button.setEnabled(True)
+            self.save_coverage_button.setText("Save Coverage")
+            QMessageBox.critical(self, "Coverage Save Failed", str(exc))
             self.status.error(f"Could not save Coverage: {exc}")
             return
+
         self._coverage_selected_plan_id = plan_id
         count = len(persisted.coverage_providers)
-        self.status.success(
-            f"Coverage saved and verified for {persisted.name} • {count} manual provider"
-            + ("" if count == 1 else "s")
-            + "."
+        self.save_coverage_button.setEnabled(True)
+        self.save_coverage_button.setText("Saved ✓")
+        QTimer.singleShot(1800, lambda: self.save_coverage_button.setText("Save Coverage"))
+        message = (
+            f"Coverage saved and verified for {persisted.name}. "
+            f"{count} manual provider" + ("" if count == 1 else "s") + " persisted."
         )
+        QMessageBox.information(self, "Coverage Saved", message)
+        self.status.success(message)
         self.refresh()
 
     def _remove_manual_provider(self) -> None:
