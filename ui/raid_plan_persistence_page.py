@@ -268,15 +268,23 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         """
         super().showEvent(event)
         loaded = getattr(self, "_loaded_plan_snapshot", None)
-        if loaded is None:
-            return
         try:
-            if self.has_pending_changes():
+            if loaded is not None and self.has_pending_changes():
                 return
-            latest = self.plan_repository.get(loaded.plan_id)
-            if latest is not None and latest != loaded:
+            # Refreshing editable combo models temporarily selects their first
+            # item. Reapply the complete saved plan before that transient choice
+            # can become the visible roster or the next page's save input.
+            self.refresh_personnel()
+            self.refresh_saved_builds()
+            if loaded is not None:
+                latest = self.plan_repository.get(loaded.plan_id)
+                if latest is None:
+                    raise RaidPlanRepositoryError(
+                        f"saved Raid Plan {loaded.plan_id!r} no longer exists"
+                    )
                 self.apply_plan(latest)
-                self.status.info(f"Reloaded latest saved Raid Plan: {latest.name}")
+                if latest != loaded:
+                    self.status.info(f"Reloaded latest saved Raid Plan: {latest.name}")
         except Exception as exc:
             self.status.warning(
                 f"Could not refresh the latest Raid Plan on page entry: {type(exc).__name__}: {exc}"
@@ -330,14 +338,14 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.open_raid_map_button.clicked.connect(self._open_saved_plan_raid_map)
         row.addWidget(self.open_raid_map_button)
 
-        self.publish_plan_finch_button = QPushButton("Publish")
+        self.publish_plan_finch_button = QPushButton("To FD.my")
         self.publish_plan_finch_button.setToolTip(
-            "Publish this saved Raid Plan outline to Finch. Unsaved edits must be saved first."
+            "Send this saved Raid Plan through Finch for FD.my and shared FoundryDock installs. Save edits first."
         )
         self.publish_plan_finch_button.clicked.connect(self._publish_saved_plan_to_finch)
         row.addWidget(self.publish_plan_finch_button)
 
-        self.get_shared_plans_button = QPushButton("Get Shared Plans")
+        self.get_shared_plans_button = QPushButton("Check Mail")
         self.get_shared_plans_button.setToolTip(
             "Browse Raid Plans published to Finch. Copy to Local creates a new local Raid Plan outline with shared assignments and build summaries, and never replaces an existing plan."
         )

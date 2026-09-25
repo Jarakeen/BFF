@@ -156,10 +156,11 @@ class CityRaidReadinessPage(FoundryPage):
         refresh.clicked.connect(self.refresh_plans)
         self.header.add_context_widget(refresh)
 
-        self.publish_finch = QPushButton("Publish Readiness")
+        self.publish_finch = QPushButton("To Bff")
+        self.publish_finch.setToolTip("Share this Readiness snapshot with the other FoundryDock install through Finch.")
         self.publish_finch.clicked.connect(self._publish_readiness_to_finch)
         self.header.add_context_widget(self.publish_finch)
-        self.get_shared_finch = QPushButton("Get Shared Readiness")
+        self.get_shared_finch = QPushButton("Check Mail")
         self.get_shared_finch.clicked.connect(self._get_shared_readiness_from_finch)
         self.header.add_context_widget(self.get_shared_finch)
 

@@ -316,14 +316,14 @@ class RosterPage(BaseRosterPage):
         self.save_team_schedule_button.clicked.connect(self._save_team_schedule)
         preview_row.addWidget(self.save_team_schedule_button)
 
-        self.publish_team_finch_button = QPushButton("Publish Team to Finch")
+        self.publish_team_finch_button = QPushButton("To FD.my")
         self.publish_team_finch_button.setToolTip(
-            "Publish the selected Team's saved schedule and basic active roster identity to Finch."
+            "Send the selected Team's schedule and roster summary through Finch for FD.my and shared FoundryDock installs."
         )
         self.publish_team_finch_button.clicked.connect(self._publish_selected_team_to_finch)
         preview_row.addWidget(self.publish_team_finch_button)
 
-        self.get_shared_teams_button = QPushButton("Get Shared Teams")
+        self.get_shared_teams_button = QPushButton("Check Mail")
         self.get_shared_teams_button.setToolTip(
             "Browse Teams published to Finch. Copy to Local creates a new local Team with schedule/focus only; Personnel is never imported."
         )

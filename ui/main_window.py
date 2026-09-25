@@ -517,16 +517,6 @@ class MainWindow(QMainWindow):
             if callable(clear_filter):
                 clear_filter()
 
-        if page_name == "raid_plans":
-            raid_plans = self.pages.get("raid_plans")
-            if raid_plans is not None:
-                refresh_personnel = getattr(raid_plans, "refresh_personnel", None)
-                if callable(refresh_personnel):
-                    refresh_personnel()
-                refresh_builds = getattr(raid_plans, "refresh_saved_builds", None)
-                if callable(refresh_builds):
-                    refresh_builds()
-
         if page_name.startswith("collectibles:"):
             category = page_name.split(":", 1)[1]
             collectibles_page = self.pages["collectibles_browser"]

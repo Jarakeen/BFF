@@ -8,7 +8,7 @@ def _source(path: str) -> str:
 def test_roster_shared_team_action_is_explicit_copy_to_local() -> None:
     source = _source("ui/themed_roster_page.py")
 
-    assert 'QPushButton("Get Shared Teams")' in source
+    assert 'QPushButton("Check Mail")' in source
     assert '"Copy shared Team to Local:"' in source
     assert '"Copy Shared Team to Local"' in source
     assert "never overwrites an existing Team" in source
@@ -18,7 +18,7 @@ def test_roster_shared_team_action_is_explicit_copy_to_local() -> None:
 def test_raid_plan_shared_action_is_explicit_copy_to_local_without_replace_warning() -> None:
     source = _source("ui/raid_plan_persistence_page.py")
 
-    assert 'QPushButton("Get Shared Plans")' in source
+    assert 'QPushButton("Check Mail")' in source
     assert '"Copy shared Raid Plan to Local:"' in source
     assert '"Copy Shared Raid Plan to Local"' in source
     assert "never replaces an existing plan" in source

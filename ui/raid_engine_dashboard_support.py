@@ -44,7 +44,7 @@ def _install_canonical_sidebar_routes() -> None:
                 ("Coverage", "console:7"),
                 ("Comp Builder", "comp_builder"),
                 ("Optimizer Adviser", "console:6"),
-                ("Finch Collaboration", "finch_collaboration"),
+                ("To Finch", "finch_collaboration"),
             ],
         },
         {

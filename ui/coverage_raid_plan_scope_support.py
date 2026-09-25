@@ -173,6 +173,7 @@ def _overlay_planned_skills(snapshot, scope):
             provider_label=row.player_label,
             eso_class=row.eso_class,
             skills=row.skills,
+            source_kind=row.source_kind,
         )
         for row in scope.planned_skills
     )
@@ -246,7 +247,7 @@ def _render_raid_plan_scope(page) -> None:
     page.scope_card.set_title(f"Raid Plan: {scope.plan_name}")
     resolved = len(scope.members)
     planned = len(scope.planned_gear)
-    planned_skill_chairs = len(scope.planned_skills)
+    planned_skill_chairs = len({row.seat_id.casefold() for row in scope.planned_skills})
     unresolved = len(scope.unresolved)
     member_bits = [
         f"{row.seat_id}: {row.player_label} ({row.build.BuildName or 'Saved Build'})"
@@ -267,7 +268,7 @@ def _render_raid_plan_scope(page) -> None:
     page.scope_note.setText(
         f"{scope.named_members}/{scope.total_chairs} planned chair(s) • "
         f"{resolved} saved build(s) resolved • {planned} chair(s) with planned gear • "
-        f"{planned_skill_chairs} chair(s) with planned skill/class evidence • "
+        f"{planned_skill_chairs} chair(s) with skill/class evidence • "
         f"{unresolved} unresolved full-build chair(s)\n"
         f"{member_text}{unresolved_text}\n"
         "Raid Plan snapshot. Coverage answers whether the planned group has a source. "

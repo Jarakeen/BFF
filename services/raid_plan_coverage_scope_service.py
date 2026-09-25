@@ -47,6 +47,7 @@ class RaidPlanPlannedSkills:
     player_label: str
     eso_class: str | None
     skills: tuple[str, ...]
+    source_kind: str = "planned"
 
 
 @dataclass(frozen=True)
@@ -165,6 +166,24 @@ class RaidPlanCoverageScopeService:
                         build=result.build,
                     )
                 )
+                saved_skills = tuple(dict.fromkeys(
+                    _clean(skill)
+                    for skill in (
+                        *result.build.FrontBarSkills,
+                        *result.build.BackBarSkills,
+                    )
+                    if _clean(skill)
+                ))
+                if saved_skills:
+                    planned_skills.append(
+                        RaidPlanPlannedSkills(
+                            seat_id=member.seat_id,
+                            player_label=player_label,
+                            eso_class=_clean(result.build.EsoClass) or member.eso_class,
+                            skills=saved_skills,
+                            source_kind="saved build",
+                        )
+                    )
             else:
                 unresolved.extend(result.unresolved)
 

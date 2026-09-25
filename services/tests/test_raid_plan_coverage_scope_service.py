@@ -1,6 +1,9 @@
 from models.build_model import PlayerBuild
 from models.raid_plan import RaidPlan, RaidPlanMember
-from services.raid_plan_coverage_scope_service import RaidPlanCoverageScopeService
+from services.raid_plan_coverage_scope_service import (
+    RaidPlanCoverageScopeService,
+    RaidPlanPlannedSkills,
+)
 
 
 def _build(*, player: str, character: str, build_name: str) -> PlayerBuild:
@@ -136,3 +139,30 @@ def test_scope_carries_planned_gear_without_saved_build() -> None:
     assert len(scope.planned_gear) == 1
     assert scope.planned_gear[0].seat_id == "tank-1"
     assert scope.planned_gear[0].gear_sets == ("Powerful Assault", "Turning Tide")
+
+
+def test_scope_passes_selected_saved_build_bars_to_skill_coverage() -> None:
+    build = PlayerBuild(
+        Gamertag="Jarakeen", Name="Magrat", BuildName="Healer",
+        EsoClass="Warden", FrontBarSkills=["Budding Seeds"],
+        BackBarSkills=["Combat Prayer", "Budding Seeds"],
+    )
+    plan = RaidPlan(
+        plan_id="plan", trial_id="sunspire", name="Plan",
+        members=(RaidPlanMember(
+            seat_id="healer-1", gamertag="Jarakeen", character_name="Magrat",
+            selected_build_name="Healer",
+        ),),
+    )
+
+    scope = RaidPlanCoverageScopeService().compose(
+        raid_plan=plan, saved_builds=(build,), coverage_effect_names=("Minor Toughness",),
+    )
+
+    assert len(scope.members) == 1
+    assert scope.planned_skills == (
+        RaidPlanPlannedSkills(
+            seat_id="healer-1", player_label="Magrat", eso_class="Warden",
+            skills=("Budding Seeds", "Combat Prayer"), source_kind="saved build",
+        ),
+    )

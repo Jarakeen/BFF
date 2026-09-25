@@ -53,7 +53,7 @@ class FinchCollaborationPage(FoundryPage):
             "TEAM OPERATIONS",
             "team",
         )
-        self.refresh_button = QPushButton("Refresh Finch")
+        self.refresh_button = QPushButton("Check Mail")
         self.refresh_button.clicked.connect(self.refresh_from_finch)
         header.add_context_widget(self.refresh_button)
 

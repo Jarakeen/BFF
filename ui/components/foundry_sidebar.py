@@ -50,7 +50,7 @@ CORE_NAV_SECTIONS = [
         ("Coverage", "console:7"),
         ("Comp Builder", "comp_builder"),
         ("Optimizer Adviser", "console:6"),
-        ("Finch Collaboration", "finch_collaboration"),
+        ("To Finch", "finch_collaboration"),
     ]},
     {"label": "Build", "children": [
         ("Builds", "console:2"),

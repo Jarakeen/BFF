@@ -4,7 +4,7 @@ from pathlib import Path
 def test_team_schedule_has_one_explicit_finch_publish_action() -> None:
     source = Path("ui/themed_roster_page.py").read_text(encoding="utf-8")
 
-    assert source.count('QPushButton("Publish Team to Finch")') == 1
+    assert source.count('QPushButton("To FD.my")') == 1
     assert source.count("publish_team_to_finch,") == 1
     assert "clicked.connect(self._publish_selected_team_to_finch)" in source
     assert "timeout.connect(self._poll_team_publish)" in source
@@ -18,7 +18,7 @@ def test_team_schedule_has_one_explicit_finch_publish_action() -> None:
 def test_raid_plan_has_one_explicit_finch_publish_action() -> None:
     source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
 
-    assert source.count('QPushButton("Publish")') == 1
+    assert source.count('QPushButton("To FD.my")') == 1
     assert source.count("publish_raid_plan_to_finch,") == 1
     assert "clicked.connect(self._publish_saved_plan_to_finch)" in source
     assert "timeout.connect(self._poll_raid_plan_publish)" in source

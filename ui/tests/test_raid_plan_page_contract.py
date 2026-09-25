@@ -221,13 +221,23 @@ def test_raid_plan_refresh_preserves_build_selection_by_stable_id() -> None:
     assert 'getattr(self.saved_builds[saved_index], "BuildId", "")' in refresh
 
 
-def test_main_window_refreshes_raid_plan_builds_and_personnel_on_entry() -> None:
-    source = Path("ui/main_window.py").read_text(encoding="utf-8")
-    show_page = source.split("def show_page(self, page_name: str):", 1)[1]
+def test_roles_reentry_restores_saved_chairs_after_picker_refresh() -> None:
+    show_page = Path("ui/main_window.py").read_text(encoding="utf-8").split(
+        "def show_page(self, page_name: str):", 1
+    )[1]
+    show_event = Path("ui/raid_plan_persistence_page.py").read_text(
+        encoding="utf-8"
+    ).split("    def showEvent(self, event) -> None:", 1)[1].split(
+        "    def _build_ui", 1
+    )[0]
 
-    assert 'if page_name == "raid_plans":' in show_page
-    assert 'getattr(raid_plans, "refresh_personnel", None)' in show_page
-    assert 'getattr(raid_plans, "refresh_saved_builds", None)' in show_page
+    assert 'if page_name == "raid_plans":' not in show_page
+    assert show_event.index("if loaded is not None and self.has_pending_changes():") < show_event.index(
+        "self.refresh_personnel()"
+    )
+    assert show_event.index("self.refresh_saved_builds()") < show_event.index(
+        "self.apply_plan(latest)"
+    )
 
 
 def test_raid_plan_exposes_portable_backup_and_restore_controls() -> None:

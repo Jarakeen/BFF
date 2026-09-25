@@ -91,10 +91,11 @@ class CoveragePage(FoundryPage):
         self.scope_combo.addItem("All Saved Builds", "all")
         self.scope_combo.currentIndexChanged.connect(self.refresh)
         self.header.add_context_widget(self._context_field("BUILD SCOPE", self.scope_combo))
-        self.publish_finch = QPushButton("Publish Coverage")
+        self.publish_finch = QPushButton("To Bff")
+        self.publish_finch.setToolTip("Share this Coverage snapshot with the other FoundryDock install through Finch.")
         self.publish_finch.clicked.connect(self._publish_coverage_to_finch)
         self.header.add_context_widget(self.publish_finch)
-        self.get_shared_finch = QPushButton("Get Shared Coverage")
+        self.get_shared_finch = QPushButton("Check Mail")
         self.get_shared_finch.clicked.connect(self._get_shared_coverage_from_finch)
         self.header.add_context_widget(self.get_shared_finch)
 

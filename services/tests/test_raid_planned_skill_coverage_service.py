@@ -184,3 +184,32 @@ def test_class_alone_does_not_claim_passive_coverage(tmp_path) -> None:
 
     assert result.status["Minor Sorcery"] == "unverified"
     assert result.conditional_providers["Minor Sorcery"] == []
+
+
+def test_saved_build_skill_line_can_prove_conditional_class_passive(tmp_path) -> None:
+    path = _database(tmp_path)
+    with sqlite3.connect(path) as db:
+        db.execute(
+            "INSERT INTO ability VALUES (?, ?, ?, ?, ?, ?)",
+            (102, "Radiant Oppression", "Templar", "Dawn's Wrath", 1, 1),
+        )
+    service = RaidPlannedSkillCoverageService(path)
+    service.skills = _Repo((), ability_id=102)
+    service.passives = SimpleNamespace(all=lambda: (SimpleNamespace(
+        eso_class="Templar", skill_line="Dawn's Wrath", target="Self and group",
+        effect_name="Minor Sorcery", passive_name="Illuminate",
+    ),))
+
+    result = service.overlay(
+        _snapshot("Minor Sorcery"),
+        (PlannedSkillCoverageProvider(
+            seat_id="dd-1", provider_label="Templar DD", eso_class="Templar",
+            skills=("Radiant Oppression",), source_kind="saved build",
+        ),),
+        effect_names=("Minor Sorcery",),
+    )
+
+    assert result.status["Minor Sorcery"] == "conditional"
+    assert result.conditional_providers["Minor Sorcery"] == [
+        "Templar DD [saved build: class passive: Illuminate]"
+    ]

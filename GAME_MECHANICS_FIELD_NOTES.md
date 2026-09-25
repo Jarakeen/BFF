@@ -1975,12 +1975,10 @@ While closing the Extreme Engine crafted-poison path, the imported Alchemy formu
 
 ---
 
-## 2026-09-25 — The same weapon enchantment really does share one timer
+## 2026-09-25 — Assigned skills can supply conditional group coverage
 
-Official ESO Support explicitly confirms that weapon enchantments share cooldowns when the same enchantment is equipped on both Dual Wield weapons: once one copy fires, the other cannot activate until that cooldown cycle ends.
+A selected Saved Build's front and back bar skills can provide reviewed buffs or debuffs for its Raid Plan group. A class passive is relevant only when a skill from its matching class skill line is slotted, and its reviewed target includes allies, the group, or enemies. A class name by itself is insufficient evidence.
 
-**Layman's version:** two identical glyphs do not buy you two stopwatches. They are both standing around waiting on the same one. Naturally, the game leaves this detail somewhere other than the tooltip.
+**Layman's version:** Coverage can recognize a buff supplied by a slotted skill or a related class passive. It marks that source as conditional because having it on a build does not prove it will be active at every moment.
 
-**What it means in actual play:** duplicating the same enchantment across Dual Wield weapons does not let those two copies alternate around the cooldown. The second copy remains locked out while the shared timer is active.
-
-**For BFF:** `same_effect_identity_shares_cooldown` is now authoritative and can leave the runtime blocker list. This does **not** prove that different enchant identities have independent timers, so the broader `per_effect_identity` cooldown scope remains fail-closed until that separate claim has authoritative support.
+**For BFF:** use the exact assigned Saved Build and canonical skill/passive effect records; do not infer uptime or grant self-only effects to the group.

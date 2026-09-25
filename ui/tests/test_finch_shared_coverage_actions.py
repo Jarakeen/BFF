@@ -8,8 +8,8 @@ def _source(path: str) -> str:
 def test_coverage_page_exposes_explicit_finch_actions() -> None:
     source = _source("ui/coverage_page.py")
 
-    assert 'QPushButton("Publish Coverage")' in source
-    assert 'QPushButton("Get Shared Coverage")' in source
+    assert 'QPushButton("To Bff")' in source
+    assert 'QPushButton("Check Mail")' in source
     assert "publish_coverage_to_finch" in source
     assert "list_shared_coverage_from_finch" in source
     assert "This is a read-only Finch snapshot. Local Coverage was not changed." in source

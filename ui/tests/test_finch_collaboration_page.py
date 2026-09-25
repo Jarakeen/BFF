@@ -8,7 +8,7 @@ def _source(path: str) -> str:
 def test_finch_collaboration_page_is_explicit_read_only_overview() -> None:
     source = _source("ui/finch_collaboration_page.py")
 
-    assert 'QPushButton("Refresh Finch")' in source
+    assert 'QPushButton("Check Mail")' in source
     assert 'QPushButton("Open Workspace")' in source
     assert "load_finch_collaboration_overview" in source
     assert "Publish and Copy to Local" in source
@@ -32,8 +32,8 @@ def test_finch_collaboration_route_is_registered_in_phase14_team_navigation() ->
     sidebar = _source("ui/components/foundry_sidebar.py")
     support = _source("ui/raid_engine_dashboard_support.py")
 
-    assert '("Finch Collaboration", "finch_collaboration")' in sidebar
-    assert '("Finch Collaboration", "finch_collaboration")' in support
+    assert '("To Finch", "finch_collaboration")' in sidebar
+    assert '("To Finch", "finch_collaboration")' in support
     assert 'from ui.finch_collaboration_page import FinchCollaborationPage' in support
     assert '_register_page(window, "finch_collaboration", finch_collaboration)' in support
     assert "finch_collaboration.pageRequested.connect(window.show_page)" in support

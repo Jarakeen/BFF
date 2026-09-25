@@ -8,8 +8,8 @@ def _source(path: str) -> str:
 def test_readiness_page_exposes_explicit_finch_actions() -> None:
     source = _source("ui/city_raid_readiness_page.py")
 
-    assert 'QPushButton("Publish Readiness")' in source
-    assert 'QPushButton("Get Shared Readiness")' in source
+    assert 'QPushButton("To Bff")' in source
+    assert 'QPushButton("Check Mail")' in source
     assert "publish_readiness_to_finch" in source
     assert "list_shared_readiness_from_finch" in source
     assert "This is a read-only Finch snapshot. Local Readiness was not changed." in source

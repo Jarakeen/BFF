@@ -44,6 +44,7 @@ class PlannedSkillCoverageProvider:
     provider_label: str
     eso_class: str | None = None
     skills: tuple[str, ...] = ()
+    source_kind: str = "planned"
 
 
 class RaidPlannedSkillCoverageService:
@@ -204,7 +205,8 @@ class RaidPlannedSkillCoverageService:
                 provider,
                 effect_names=effect_names,
             ):
-                evidence = f"{label} [planned: {source}]"
+                origin = _clean(provider.source_kind) or "planned"
+                evidence = f"{label} [{origin}: {source}]"
                 if evidence not in conditional[effect_name]:
                     conditional[effect_name].append(evidence)
 

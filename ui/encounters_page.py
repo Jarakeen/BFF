@@ -383,7 +383,7 @@ class EncountersPage(FoundryPage):
         self.save_raid_map_to_plan_button = button
         row.addWidget(button)
 
-        self.save_raid_map_to_finch_button = QPushButton("Save Plan Map + Finch")
+        self.save_raid_map_to_finch_button = QPushButton("Save Map + To FD.my")
         self.save_raid_map_to_finch_button.setObjectName("saveRaidMapToFinchWebpButton")
         self.save_raid_map_to_finch_button.setProperty("primary", True)
         self.save_raid_map_to_finch_button.setToolTip(
@@ -392,7 +392,7 @@ class EncountersPage(FoundryPage):
         self.save_raid_map_to_finch_button.clicked.connect(self._save_raid_map_to_finch)
         row.addWidget(self.save_raid_map_to_finch_button)
 
-        self.remove_raid_map_from_finch_button = QPushButton("Remove Map from Finch")
+        self.remove_raid_map_from_finch_button = QPushButton("Remove Map from FD.my")
         self.remove_raid_map_from_finch_button.setToolTip(
             "Remove the selected encounter's published Raid Map preview from this Raid Plan and republish the plan. The local editable map is kept."
         )
