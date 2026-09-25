@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from services.extreme_sustained_dps_runtime_state_frontier_service import (
     ExtremeSustainedDPSRuntimeStateChoice,
+    ExtremeSustainedDPSRuntimeStateFrontier,
     ExtremeSustainedDPSRuntimeStateFrontierService,
 )
 
@@ -60,3 +63,50 @@ def test_choice_unresolved_blocks_runtime_family_closure() -> None:
 
     assert frontier.denominator_proven is False
     assert any("proc timing unresolved" in row for row in frontier.unresolved)
+
+
+def test_runtime_state_choice_normalizes_diagnostics() -> None:
+    choice = ExtremeSustainedDPSRuntimeStateChoice(
+        runtime_state_id="  runtime:test ",
+        snapshot=object(),
+        evidence=(" source ", "source", ""),
+        unresolved=(" gap ", "gap", ""),
+    )
+
+    assert choice.runtime_state_id == "runtime:test"
+    assert choice.evidence == ("source",)
+    assert choice.unresolved == ("gap",)
+
+
+def test_runtime_state_frontier_rejects_candidate_count_drift() -> None:
+    choice = _choice("base")
+
+    with pytest.raises(
+        ValueError,
+        match="candidate_count must equal retained choice count",
+    ):
+        ExtremeSustainedDPSRuntimeStateFrontier(
+            choices=(choice,),
+            candidate_count=2,
+            denominator_proven=True,
+            evidence=(),
+            unresolved=(),
+            omitted_scope=(),
+        )
+
+
+def test_runtime_state_frontier_rejects_proven_state_with_unresolved_evidence() -> None:
+    choice = _choice("base")
+
+    with pytest.raises(
+        ValueError,
+        match="denominator cannot be proven",
+    ):
+        ExtremeSustainedDPSRuntimeStateFrontier(
+            choices=(choice,),
+            candidate_count=1,
+            denominator_proven=True,
+            evidence=(),
+            unresolved=("gap",),
+            omitted_scope=(),
+        )
