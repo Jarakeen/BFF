@@ -37,6 +37,12 @@ from services.extreme_sustained_dps_weapon_enchantment_runtime_variant_service i
 from services.extreme_sustained_dps_weapon_poison_activation_event_service import (
     ExtremeSustainedDPSWeaponPoisonActivationEventService,
 )
+from services.extreme_sustained_dps_weapon_poison_consequence_frontier_service import (
+    ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService,
+)
+from services.extreme_sustained_dps_weapon_poison_named_effect_authority_service import (
+    ExtremeSustainedDPSWeaponPoisonNamedEffectAuthorityService,
+)
 
 
 class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
@@ -47,7 +53,9 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
     circular because final damage evaluation itself consumes runtime_state.
 
     Exact crafted-poison formula/dilution consequence authority is also caller-owned.
-    The factory exposes that authority explicitly instead of inferring a poison's
+    Callers may provide either a complete consequence-frontier resolver or explicit
+    per-poison dilution-selection authority; the latter is wrapped through the
+    canonical named-effect consequence path. The factory never infers a poison's
     effect set from its saved item label.
     """
 
@@ -62,6 +70,7 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
         supplemental_history_resolver=None,
         supplemental_history_denominator_proven: bool,
         weapon_poison_consequence_resolver: object | None = None,
+        weapon_poison_dilution_selection_resolver: object | None = None,
         source: str = "Objective #32 candidate runtime scenario",
     ) -> ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
         if capability_service is None:
@@ -71,6 +80,30 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
         if occurrence_provider_resolver is None:
             raise ValueError(
                 "candidate runtime-state factory requires pre-runtime exact damage-occurrence authority"
+            )
+        if (
+            weapon_poison_consequence_resolver is not None
+            and weapon_poison_dilution_selection_resolver is not None
+        ):
+            raise ValueError(
+                "candidate runtime-state factory cannot combine explicit weapon-poison "
+                "consequence resolver with dilution-selection authority"
+            )
+
+        if (
+            weapon_poison_consequence_resolver is None
+            and weapon_poison_dilution_selection_resolver is not None
+        ):
+            weapon_poison_consequence_resolver = (
+                ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService(
+                    consequence_resolver=(
+                        ExtremeSustainedDPSWeaponPoisonNamedEffectAuthorityService(
+                            dilution_selection_resolver=(
+                                weapon_poison_dilution_selection_resolver
+                            )
+                        )
+                    )
+                )
             )
 
         database_path = Path(database_path)
