@@ -835,13 +835,15 @@ def test_sustained_dps_late_axis_adapter_preserves_frontier_authority() -> None:
     ) == (
         "extreme.sustained_dps.champion_point_frontier",
         "extreme.sustained_dps.potion_frontier",
+        "extreme.sustained_dps.weapon_poison_frontier",
+        "extreme.sustained_dps.generated_weapon_poison_tier_loadout_frontier",
         "extreme.sustained_dps.passive_rank_frontier",
         "extreme.sustained_dps.skill_bar_frontier",
         "extreme.sustained_dps.generated_candidate_assembly",
         "extreme.sustained_dps.generated_frontier_wiring",
     )
     assert "axis-owned state" in service.notes
-    assert "fifth weapon-poison axis" in service.notes
+    assert "source-backed tier axes" in service.notes
     assert "fail closed" in service.notes
 
 
@@ -2103,3 +2105,28 @@ def test_generated_weapon_poison_consequence_authority_factory_is_cataloged() ->
     )
     assert "candidate-scoped finite weapon-poison consequence authority" in service.purpose
     assert "No-poison candidates return no consequence authority" in service.notes
+
+
+def test_generated_weapon_poison_tier_frontiers_are_cataloged() -> None:
+    tier = canonical_service_for(
+        "extreme_sustained_dps_generated_weapon_poison_tier_frontier"
+    )
+    loadout = canonical_service_for(
+        "extreme_sustained_dps_generated_weapon_poison_tier_loadout_frontier"
+    )
+
+    assert tier is not None
+    assert loadout is not None
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(tier.service_id)
+    ) == ("extreme.sustained_dps.weapon_poison_frontier",)
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(loadout.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_poison_frontier",
+        "extreme.sustained_dps.generated_weapon_poison_tier_frontier",
+    )
+    assert "no highest-tier" in tier.notes
+    assert "different source-backed tier coordinates" in loadout.notes
