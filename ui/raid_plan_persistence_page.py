@@ -12,9 +12,9 @@ from dataclasses import asdict, replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QInputDialog, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFileDialog, QComboBox, QHBoxLayout, QInputDialog, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
-from engine.config import get_data_dir, get_user_database_path, get_settings_path
+from engine.config import get_data_dir, get_user_data_dir, get_user_database_path, get_settings_path
 from models.raid_plan import RaidPlan
 from services.comp_builder_trial_scope import COMP_MAKER_TRIALS
 from services.finch_shared_provenance_service import format_shared_timestamp
@@ -25,6 +25,11 @@ from services.finch_shared_import_service import (
 from services.finch_shared_publish_service import publish_raid_plan_to_finch
 from services.raid_plan_member_identity_resolution_service import (
     RaidPlanMemberIdentityResolutionService,
+)
+from services.raid_plan_backup_service import (
+    RaidPlanBackupError,
+    export_raid_plan_backup,
+    load_raid_plan_backup,
 )
 from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
 from services.ui_draft_recovery_service import UiDraftRecoveryService
@@ -289,6 +294,20 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.save_plan_button.clicked.connect(self.save_current_plan)
         row.addWidget(self.save_plan_button)
 
+        self.backup_plan_button = QPushButton("Backup…")
+        self.backup_plan_button.setToolTip(
+            "Write this Raid Plan to a small portable JSON backup file."
+        )
+        self.backup_plan_button.clicked.connect(self.export_raid_plan_backup)
+        row.addWidget(self.backup_plan_button)
+
+        self.restore_plan_backup_button = QPushButton("Restore Backup…")
+        self.restore_plan_backup_button.setToolTip(
+            "Restore one Raid Plan from a portable JSON backup. Other user data is untouched."
+        )
+        self.restore_plan_backup_button.clicked.connect(self.restore_raid_plan_backup)
+        row.addWidget(self.restore_plan_backup_button)
+
         self.open_raid_map_button = QPushButton("Open Raid Map")
         self.open_raid_map_button.setToolTip("Open the Raid Map editor scoped to this saved Raid Plan.")
         self.open_raid_map_button.clicked.connect(self._open_saved_plan_raid_map)
@@ -350,6 +369,115 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.plan_name_edit.setFocus()
         self.plan_name_edit.selectAll()
         self.status.info("New Raid Plan: name it, choose the trial, then save when ready.")
+
+    @staticmethod
+    def _backup_filename(plan: RaidPlan) -> str:
+        stem = _slug(plan.name or plan.plan_id or "raid-plan") or "raid-plan"
+        return f"{stem}.raidplan.json"
+
+    def export_raid_plan_backup(self) -> None:
+        try:
+            plan = self.current_plan()
+        except Exception as exc:
+            self.status.error(f"Could not assemble Raid Plan backup: {exc}")
+            return
+
+        backup_dir = get_user_data_dir() / "raid_plan_backups"
+        default_path = backup_dir / self._backup_filename(plan)
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Raid Plan Backup",
+            str(default_path),
+            "FoundryDock Raid Plan Backup (*.raidplan.json *.json)",
+        )
+        if not filename:
+            return
+        try:
+            destination = export_raid_plan_backup(plan, filename)
+        except (OSError, TypeError, ValueError) as exc:
+            self.status.error(f"Raid Plan backup failed: {exc}")
+            return
+        self.status.success(f"Raid Plan backup written: {destination}")
+
+    def restore_raid_plan_backup(self) -> None:
+        backup_dir = get_user_data_dir() / "raid_plan_backups"
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            "Restore Raid Plan Backup",
+            str(backup_dir),
+            "FoundryDock Raid Plan Backup (*.raidplan.json *.json)",
+        )
+        if not filename:
+            return
+        try:
+            plan = load_raid_plan_backup(filename)
+        except RaidPlanBackupError as exc:
+            self.status.error(f"Could not open Raid Plan backup: {exc}")
+            return
+
+        if self.has_pending_changes() and not confirm_unsaved_changes(
+            self,
+            self,
+            action_text="restore a Raid Plan backup",
+        ):
+            return
+
+        occupied = sum(
+            1
+            for member in plan.members
+            if _clean(member.gamertag) or _clean(member.character_name)
+        )
+        existing = self.plan_repository.get(plan.plan_id)
+        impact = (
+            f'Backup: "{plan.name}" • {self._trial_display_for(plan)} • '
+            f"{occupied} occupied seat(s). "
+        )
+        if existing is not None:
+            impact += (
+                "This will replace the currently saved version of this Raid Plan only. "
+            )
+        else:
+            impact += "This will create this Raid Plan from the backup. "
+        impact += (
+            "Personnel, Teams, Characters, Builds, other Raid Plans, and ESO reference data "
+            "will not be changed. A full database safety snapshot is created first."
+        )
+        if not confirm_destructive_action(
+            self,
+            title="Restore Raid Plan Backup",
+            object_label=f'Restore "{plan.name}" from this backup?',
+            impact=impact,
+            confirm_text="Restore Backup",
+        ):
+            return
+
+        checkpoint = self._safety_snapshots.create(
+            f"before-raid-plan-backup-restore-{plan.plan_id}"
+        )
+        if checkpoint is None and get_user_database_path().is_file():
+            self.status.error(
+                "Raid Plan backup was not restored because the pre-restore safety snapshot failed."
+            )
+            return
+
+        try:
+            self.plan_repository.save(plan)
+            persisted = self.plan_repository.get(plan.plan_id)
+            if persisted is None or persisted != plan:
+                raise RaidPlanRepositoryError(
+                    "restored Raid Plan did not round-trip exactly"
+                )
+        except Exception as exc:
+            self.status.error(f"Could not restore Raid Plan backup: {exc}")
+            return
+
+        self._discard_recovery_draft(plan.plan_id)
+        self.apply_plan(persisted)
+        self.refresh_saved_plan_picker(select_plan_id=persisted.plan_id)
+        mark_saved(self)
+        self.status.success(
+            f"Restored Raid Plan backup: {persisted.name} • {occupied} occupied seat(s)."
+        )
 
     def _open_saved_plan_raid_map(self) -> None:
         plan_id = self.saved_plan_combo.currentData()
