@@ -1922,3 +1922,16 @@ def test_weapon_poison_consequence_frontier_is_cataloged() -> None:
     )
     assert "without rerolling poison chance or cooldown" in service.purpose
     assert "second proc roll" in service.notes
+
+
+def test_weapon_poison_identity_authority_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_weapon_poison_identity_duration_resolution"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.weapon_poison_identity"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "every imported UESP Alchemy Poison effect identity" in service.purpose
+    assert "multi-effect poison" in service.notes
+    assert "Magnitude, dilution" in service.notes
