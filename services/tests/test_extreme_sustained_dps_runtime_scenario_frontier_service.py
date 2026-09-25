@@ -25,6 +25,9 @@ from services.extreme_sustained_dps_weapon_enchantment_cooldown_readiness_servic
 from services.extreme_sustained_dps_weapon_enchantment_sequence_frontier_service import (
     ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy,
 )
+from services.extreme_sustained_dps_weapon_poison_consequence_frontier_service import (
+    ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService,
+)
 
 
 def _plan():
@@ -858,4 +861,102 @@ def test_candidate_builder_fails_closed_when_poison_proc_consequences_are_unmode
     assert any(
         "Weapon-poison chance/cooldown denominator is proven finite" in row
         for row in result.evidence
+    )
+
+
+class _PoisonConsequenceEffects:
+    def resolve(self, *, poison_id, occurrence):
+        return SimpleNamespace(
+            effects=(
+                EffectVariant(
+                    name="weapon_spell_damage",
+                    layer=EffectLayer.PROC,
+                    source=poison_id,
+                    magnitude=100.0,
+                    duration=4.0,
+                    trigger="weapon_poison_proc",
+                ),
+            ),
+            evidence=("reviewed poison consequence",),
+            unresolved=(),
+        )
+
+
+def test_candidate_builder_composes_resolved_poison_consequences_into_runtime_state() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="poison-resolved-candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    consequence_frontier = (
+        ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService(
+            consequence_resolver=_PoisonConsequenceEffects()
+        )
+    )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        weapon_poison_activation_service=_PoisonActivationService(),
+        weapon_poison_consequence_resolver=consequence_frontier,
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(
+            Name="Generated",
+            BuildName="Candidate",
+            Role="DD",
+            FrontBarPoison="Damage Health Poison IX",
+        ),
+        effects=(),
+        occurrence_provider=object(),
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed resolved poison scenario",
+    )
+
+    assert result.unresolved == ()
+    assert result.frontier.denominator_proven is True
+    assert result.frontier.candidate_count == 2
+    assert all(
+        tuple(choice.effects)
+        for choice in result.frontier.choices
+    )
+    assert any(
+        "Weapon-poison consequence denominator is explicitly bound to runtime effects"
+        in row
+        for row in result.evidence
+    )
+
+
+def test_candidate_builder_does_not_accept_resolver_presence_without_consequence_output() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="poison-empty-resolver",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        weapon_poison_activation_service=_PoisonActivationService(),
+        weapon_poison_consequence_resolver=object(),
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(
+            Name="Generated",
+            BuildName="Candidate",
+            Role="DD",
+            FrontBarPoison="Damage Health Poison IX",
+        ),
+        effects=(),
+        occurrence_provider=object(),
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="invalid poison consequence resolver",
+    )
+
+    assert result.frontier.denominator_proven is False
+    assert any(
+        "consequence resolution failed closed" in row
+        for row in result.unresolved
     )
