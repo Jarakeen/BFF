@@ -28,6 +28,18 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonTierCandidate:
     level: int
     item_evidence: ExtremeSustainedDPSWeaponPoisonItemEvidence
 
+    def __post_init__(self) -> None:
+        if isinstance(self.structural_index, bool) or not isinstance(self.structural_index, int) or self.structural_index < 0:
+            raise ValueError("generated poison tier structural_index must be a non-negative integer")
+        solvent = " ".join(str(self.solvent or "").strip().split())
+        if not solvent:
+            raise ValueError("generated poison tier requires solvent identity")
+        if isinstance(self.level, bool) or not isinstance(self.level, int) or self.level < 0:
+            raise ValueError("generated poison tier level must be a non-negative integer")
+        if not isinstance(self.item_evidence, ExtremeSustainedDPSWeaponPoisonItemEvidence):
+            raise TypeError("generated poison tier requires canonical item evidence")
+        object.__setattr__(self, "solvent", solvent)
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSGeneratedWeaponPoisonTierFrontier:
@@ -36,6 +48,16 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonTierFrontier:
     denominator_proven: bool
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if isinstance(self.candidate_count, bool) or not isinstance(self.candidate_count, int) or self.candidate_count < 0:
+            raise ValueError("generated poison tier candidate_count must be a non-negative integer")
+        if self.candidate_count != len(self.candidates):
+            raise ValueError("generated poison tier candidate_count must equal candidate tuple length")
+        if self.denominator_proven and (not self.candidates or self.unresolved):
+            raise ValueError(
+                "generated poison tier denominator cannot be proven with no candidates or unresolved evidence"
+            )
 
 
 class ExtremeSustainedDPSGeneratedWeaponPoisonTierFrontierService:
