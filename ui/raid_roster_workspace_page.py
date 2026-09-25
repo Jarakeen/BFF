@@ -716,7 +716,7 @@ class RaidRosterWorkspacePage(FoundryPage):
     def _refresh_metrics(self) -> None:
         active = [member for member in self.members if member.Status.casefold() == "active"]
         teams = self.roster_service.list_team_names()
-        catalog = self.build_library.canonical.catalog_service.load()
+        catalog = self.build_library.canonical.catalog_service.load_strict()
         characters = [row for row in catalog.get("characters", []) if isinstance(row, dict)]
         availability = [
             self.workspace_state.availability_for(member.Id)
@@ -772,7 +772,7 @@ class RaidRosterWorkspacePage(FoundryPage):
     # ------------------------------------------------------------------
 
     def _refresh_characters(self) -> None:
-        catalog = self.build_library.canonical.catalog_service.load()
+        catalog = self.build_library.canonical.catalog_service.load_strict()
         players = {
             _clean(row.get("player_id")): row
             for row in catalog.get("players", [])
