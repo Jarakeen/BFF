@@ -69,7 +69,8 @@ def test_field_level_authority_preserves_remaining_runtime_blockers() -> None:
     assert evidence.poison_replacement_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
     assert evidence.off_bar_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
     assert evidence.cooldown_scope_authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
-    assert evidence.same_identity_cooldown_authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
+    assert evidence.same_identity_cooldown_authority is WeaponEnchantmentCadenceAuthority.AUTHORITATIVE
+    assert "Official ESO Support" in evidence.same_identity_cooldown_evidence_note
     assert evidence.distinct_identity_cooldown_authority is WeaponEnchantmentCadenceAuthority.PROVISIONAL
     assert evidence.runtime_ready is False
 
@@ -81,7 +82,6 @@ def test_direct_damage_cadence_names_only_remaining_proof_holes() -> None:
 
     assert evidence.runtime_blockers == (
         "cooldown scope is not authoritative",
-        "same-identity cooldown sharing is not authoritative",
         "distinct-identity cooldown independence is not authoritative",
         "effect-family cadence has not been promoted to authoritative",
     )
@@ -95,7 +95,6 @@ def test_buff_debuff_cadence_also_names_open_base_cooldown() -> None:
     assert evidence.runtime_blockers == (
         "base cooldown is not authoritative",
         "cooldown scope is not authoritative",
-        "same-identity cooldown sharing is not authoritative",
         "distinct-identity cooldown independence is not authoritative",
         "effect-family cadence has not been promoted to authoritative",
     )
@@ -113,5 +112,5 @@ def test_runtime_ready_error_lists_exact_cadence_blockers() -> None:
 
     message = str(exc_info.value)
     assert "base cooldown is not authoritative" in message
-    assert "same-identity cooldown sharing is not authoritative" in message
+    assert "same-identity cooldown sharing is not authoritative" not in message
     assert "distinct-identity cooldown independence is not authoritative" in message
