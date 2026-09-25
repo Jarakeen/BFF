@@ -272,6 +272,23 @@ def main() -> int:
         help="Prefer the matching revision closest to this many minutes ago.",
     )
     parser.add_argument(
+        "--list",
+        action="store_true",
+        help="List recent matching revisions with seat summaries instead of choosing one.",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Maximum revisions to show with --list. Default: 10",
+    )
+    parser.add_argument(
+        "--revision-id",
+        type=int,
+        default=None,
+        help="Preview or restore one exact raid_plan_revision revision_id.",
+    )
+    parser.add_argument(
         "--apply",
         action="store_true",
         help="Actually restore the matched revision. Without this flag, only preview it.",
@@ -279,19 +296,57 @@ def main() -> int:
     args = parser.parse_args()
 
     database = args.database.expanduser().resolve()
-    candidate = find_recovery_candidate(
-        database,
-        plan_hint=args.plan,
-        tank_name=args.tank,
-        unique_player=args.unique_player,
-        target_age_minutes=args.target_age_minutes,
-    )
-    if candidate is None:
-        print(
-            "No Raid Plan revision matched: "
-            f"plan~{args.plan!r}, Tank~{args.tank!r}, "
-            f"{args.unique_player!r} in <= 1 seat."
+
+    matches = list(
+        find_recovery_candidates(
+            database,
+            plan_hint=args.plan,
+            tank_name=args.tank,
+            unique_player=args.unique_player,
         )
+    )
+
+    if args.list:
+        if not matches:
+            print(
+                "No Raid Plan revisions matched: "
+                f"plan~{args.plan!r}, Tank~{args.tank!r}, "
+                f"{args.unique_player!r} in <= 1 seat."
+            )
+            return 2
+        for row in matches[: max(1, int(args.limit))]:
+            print("=" * 72)
+            print(
+                f"revision {row.ordinal} | {row.timestamp} | "
+                f"{row.name} [{row.plan_id}]"
+            )
+            print(_seat_summary(row))
+        return 0
+
+    if args.revision_id is not None:
+        candidate = next(
+            (row for row in matches if row.ordinal == int(args.revision_id)),
+            None,
+        )
+    else:
+        candidate = find_recovery_candidate(
+            database,
+            plan_hint=args.plan,
+            tank_name=args.tank,
+            unique_player=args.unique_player,
+            target_age_minutes=args.target_age_minutes,
+        )
+
+    if candidate is None:
+        label = (
+            f"revision_id={args.revision_id}"
+            if args.revision_id is not None
+            else (
+                f"plan~{args.plan!r}, Tank~{args.tank!r}, "
+                f"{args.unique_player!r} in <= 1 seat"
+            )
+        )
+        print(f"No Raid Plan revision matched: {label}.")
         return 2
 
     print(
