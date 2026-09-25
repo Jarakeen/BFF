@@ -144,7 +144,7 @@ def _repair_team_assignments(plan, build_service) -> set[str]:
         return set()
 
     catalog_service = build_service.canonical.catalog_service
-    catalog = catalog_service.load()
+    catalog = catalog_service.load_strict()
     repaired_build_names: set[str] = set()
 
     for member in getattr(plan, "members", ()):
