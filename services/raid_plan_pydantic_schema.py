@@ -33,6 +33,22 @@ class RaidPlanCoverageProviderPayload(_StrictPayload):
             raise ValueError("must not be blank")
         return text
 
+    @field_validator("effect_name")
+    @classmethod
+    def canonical_effect_name(cls, value: str) -> str:
+        # Keep the human-facing catalog label stable while rejecting control
+        # characters that can corrupt exports/logging.
+        if any(ord(ch) < 32 and ch not in {"\t"} for ch in value):
+            raise ValueError("effect_name contains control characters")
+        return " ".join(value.split())
+
+    @field_validator("source")
+    @classmethod
+    def safe_source(cls, value: str) -> str:
+        if any(ord(ch) < 32 and ch not in {"\t"} for ch in value):
+            raise ValueError("source contains control characters")
+        return " ".join(value.split())
+
     @field_validator("note", mode="before")
     @classmethod
     def optional_text(cls, value: object) -> str | None:
