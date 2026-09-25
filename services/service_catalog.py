@@ -1790,9 +1790,10 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.weapon_poison_item_evidence",
         domain="extreme",
         purpose=(
-            "Resolve a saved crafted weapon-poison item name to every imported UESP "
-            "Alchemy Poison effect identity and its effect-specific duration without "
-            "inventing magnitude or application semantics."
+            "Resolve a saved crafted weapon-poison item name into the source-backed "
+            "possibility universe of imported UESP Alchemy Poison effect identities and "
+            "effect-specific durations without inventing exact formula, magnitude, or "
+            "application semantics."
         ),
         implementation_path="services.extreme_sustained_dps_weapon_poison_identity_service",
         inputs=("CanonicalEsoDatabase", "SavedWeaponPoisonItemName"),
@@ -1808,8 +1809,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         notes=(
             "The exact crafted item name is matched across imported Poison tier rows in "
             "effect_variant.raw_json, so one multi-effect poison may resolve several "
-            "independent effect identities and durations. Magnitude, dilution, target "
-            "semantics, and final runtime application remain separate proof obligations."
+            "independent effect identities and durations. This possibility universe does "
+            "not choose the exact formula. Magnitude, dilution, target semantics, and final "
+            "runtime application remain separate proof obligations."
         ),
     ),
     ServiceDescriptor(
@@ -1876,7 +1878,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         domain="extreme",
         purpose=(
             "Project reviewed exact-duration crafted-poison named effects into canonical "
-            "Objective #32 runtime EffectVariants while reusing shared target combat math."
+            "Objective #32 runtime EffectVariants and reuse shared target combat math."
         ),
         implementation_path="services.extreme_sustained_dps_weapon_poison_named_effect_consequence_service",
         inputs=(
@@ -3652,6 +3654,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "ExtremeSustainedDPSCrossAxisContext",
             "ChampionPointCandidate",
             "PotionCandidate",
+            "WeaponPoisonLoadoutCandidate",
             "PassiveRankCandidate",
             "SkillBarCandidate",
         ),
@@ -3660,6 +3663,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.cross_axis_context",
             "extreme.sustained_dps.champion_point_frontier",
             "extreme.sustained_dps.potion_frontier",
+            "extreme.sustained_dps.weapon_poison_frontier",
             "extreme.sustained_dps.passive_rank_frontier",
             "extreme.sustained_dps.skill_bar_frontier",
         ),
