@@ -1952,3 +1952,41 @@ def test_weapon_poison_formula_selection_is_cataloged() -> None:
     )
     assert "prove the selected effect set" in service.purpose
     assert "does not infer base-versus-triple duration" in service.notes
+
+
+def test_weapon_poison_dilution_selection_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_weapon_poison_exact_duration_selection"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.weapon_poison_dilution_selection"
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_poison_formula_selection",
+    )
+    assert "explicit caller-proven base/triple" in service.purpose
+    assert "never infers it from three traits" in service.notes
+
+
+def test_weapon_poison_named_effect_consequences_are_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_weapon_poison_named_effect_runtime_projection"
+    )
+
+    assert service is not None
+    assert service.service_id == (
+        "extreme.sustained_dps.weapon_poison_named_effect_consequences"
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_poison_dilution_selection",
+        "extreme.sustained_dps.runtime_target_combat_state",
+    )
+    assert "reuse" in service.purpose
+    assert "Breach -> Minor Breach" in service.notes
+    assert "Unreviewed poison traits remain blockers" in service.notes
