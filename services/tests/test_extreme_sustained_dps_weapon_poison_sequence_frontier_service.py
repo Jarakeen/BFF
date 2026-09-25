@@ -3,6 +3,9 @@ import pytest
 from minmax.runtime_event import RuntimeEvent
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_weapon_poison_sequence_frontier_service import (
+    ExtremeSustainedDPSWeaponPoisonProcOccurrence,
+    ExtremeSustainedDPSWeaponPoisonSequenceChoice,
+    ExtremeSustainedDPSWeaponPoisonSequenceFrontier,
     ExtremeSustainedDPSWeaponPoisonSequenceFrontierService,
 )
 
@@ -107,3 +110,43 @@ def test_event_without_poison_source_bar_fails_closed() -> None:
 
     assert result.denominator_proven is False
     assert any("has no equipped poison" in row for row in result.unresolved)
+
+
+def test_poison_sequence_choice_rejects_invalid_probability() -> None:
+    with pytest.raises(ValueError, match="between 0 and 1"):
+        ExtremeSustainedDPSWeaponPoisonSequenceChoice(
+            choice_id="choice",
+            procs=(),
+            chance_misses=(),
+            cooldown_blocked=(),
+            last_proc_time_seconds=None,
+            branch_probability=1.1,
+        )
+
+
+def test_poison_proc_occurrence_requires_poison_identity() -> None:
+    with pytest.raises(ValueError, match="requires poison_id"):
+        ExtremeSustainedDPSWeaponPoisonProcOccurrence(
+            event=_event(1.0, 0),
+            poison_id="   ",
+        )
+
+
+def test_poison_sequence_frontier_rejects_candidate_count_drift() -> None:
+    choice = ExtremeSustainedDPSWeaponPoisonSequenceChoice(
+        choice_id="choice",
+        procs=(),
+        chance_misses=(),
+        cooldown_blocked=(),
+        last_proc_time_seconds=None,
+        branch_probability=1.0,
+    )
+
+    with pytest.raises(ValueError, match="candidate_count must equal choice count"):
+        ExtremeSustainedDPSWeaponPoisonSequenceFrontier(
+            choices=(choice,),
+            candidate_count=2,
+            denominator_proven=True,
+            evidence=(),
+            unresolved=(),
+        )
