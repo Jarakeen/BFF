@@ -42,7 +42,7 @@ def delete_team_everywhere(roster_service, build_service: BuildService, team_nam
     catalog_path = Path(catalog_service.catalog_path)
     catalog_existed = catalog_path.exists()
     catalog_backup = catalog_path.read_text(encoding="utf-8") if catalog_existed else ""
-    catalog = catalog_service.load()
+    catalog = catalog_service.load_strict()
     team_key = canonical_name.casefold()
     assignments = [
         row
