@@ -168,7 +168,7 @@ def install() -> None:
             selected_kind = _text(current.data(0, _KIND_ROLE))
             selected_id = _text(current.data(0, _ID_ROLE))
 
-        catalog = self.build_library.canonical.catalog_service.load()
+        catalog = self.build_library.canonical.catalog_service.load_strict()
         players = {
             _text(player.get("player_id")): player
             for player in catalog.get("players", [])
