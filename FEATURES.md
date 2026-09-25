@@ -705,3 +705,8 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Exact-time SELF named runtime projection** — Generated sustained-DPS evaluation now projects reviewed SELF-target named runtime effects into the attacker CombatState at each exact action timestamp. This gives source-bound effects such as poison-granted Minor Brutality/Sorcery/Savagery/Prophecy a canonical path into attacker stats without duplicating named-buff arithmetic; ENEMY-target effects remain owned by the separate target combat-state projector.
 
 - **Comp Maker legacy-chair identity repair** — Saved Raid Plans whose older/typed chairs have a player name but no stable Personnel ids now resolve that name through the canonical exact-name/learned-alias identity service when loaded into Comp Maker. A unique Personnel match carries its roster/player/character ids into the chair so Comp Builds and later Raid Plan saves retain the real player identity; ambiguous or missing matches remain unresolved rather than guessing or borrowing another chair's identity.
+
+
+### Comp Maker saved-Build source separation
+- Comp-generated `BuildKind=comp` chair packages remain Raid Plan planning/recovery evidence, but are no longer fed back into Comp Maker as reusable saved-Build candidates.
+- User-created canonical Builds remain eligible by role/class/player identity after restart, preventing a plan's own `Planned` package from hiding the player's reusable Build.
