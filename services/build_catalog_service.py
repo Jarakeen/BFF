@@ -296,6 +296,38 @@ class BuildCatalogService:
         except (OSError, sqlite3.Error, json.JSONDecodeError):
             return self._normalize(None)
 
+    def delete_build(self, build_id: str) -> bool:
+        """Delete exactly one canonical Build by stable id.
+
+        Absence from a UI projection is never deletion authority. Callers must name
+        the Build explicitly; Players, Characters, progression, and unrelated Builds
+        are preserved.
+        """
+        wanted = str(build_id or "").strip()
+        if not wanted:
+            raise ValueError("build_id is required")
+        catalog = self.load_strict()
+        builds = [
+            row for row in catalog.get("builds", [])
+            if isinstance(row, dict)
+        ]
+        kept = [
+            row for row in builds
+            if str(row.get("build_id") or "").strip() != wanted
+        ]
+        if len(kept) == len(builds):
+            return False
+        catalog["builds"] = kept
+        self.save(catalog)
+        verified = self.load_strict()
+        if any(
+            str(row.get("build_id") or "").strip() == wanted
+            for row in verified.get("builds", [])
+            if isinstance(row, dict)
+        ):
+            raise RuntimeError(f"Build deletion readback failed for {wanted!r}")
+        return True
+
     def save(self, catalog: dict[str, Any]) -> None:
         normalized = self._normalize(catalog)
         if self._database_mode:
