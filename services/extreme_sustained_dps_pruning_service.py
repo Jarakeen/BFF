@@ -78,6 +78,68 @@ class ExtremeSustainedDPSPruningDecision:
     source: str
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        key = str(self.candidate_key or "").strip()
+        reason = str(self.reason or "").strip()
+        source = str(self.source or "").strip()
+        if not key:
+            raise ValueError("pruning decision requires candidate_key")
+        if not isinstance(self.disposition, ExtremeSustainedDPSPruningDisposition):
+            raise TypeError("pruning decision disposition must be canonical pruning disposition")
+        if not reason:
+            raise ValueError("pruning decision requires reason")
+        if not source:
+            raise ValueError("pruning decision requires source")
+
+        incumbent = self.incumbent_dps
+        if isinstance(incumbent, bool):
+            raise TypeError("pruning decision incumbent_dps must be numeric")
+        try:
+            incumbent = float(incumbent)
+        except (TypeError, ValueError):
+            raise TypeError("pruning decision incumbent_dps must be numeric") from None
+        if not math.isfinite(incumbent) or incumbent < 0.0:
+            raise ValueError("pruning decision incumbent_dps must be finite and non-negative")
+
+        upper = self.upper_bound_dps
+        if upper is not None:
+            if isinstance(upper, bool):
+                raise TypeError("pruning decision upper_bound_dps must be numeric")
+            try:
+                upper = float(upper)
+            except (TypeError, ValueError):
+                raise TypeError("pruning decision upper_bound_dps must be numeric") from None
+            if not math.isfinite(upper) or upper < 0.0:
+                raise ValueError(
+                    "pruning decision upper_bound_dps must be finite and non-negative"
+                )
+
+        if self.disposition is ExtremeSustainedDPSPruningDisposition.PRUNED:
+            if upper is None or upper >= incumbent - 1e-9:
+                raise ValueError(
+                    "pruned decision requires upper bound strictly below incumbent"
+                )
+        elif self.disposition is ExtremeSustainedDPSPruningDisposition.SURVIVOR:
+            if upper is None:
+                raise ValueError("survivor pruning decision requires numeric upper bound")
+
+        object.__setattr__(self, "candidate_key", key)
+        object.__setattr__(self, "reason", reason)
+        object.__setattr__(self, "source", source)
+        object.__setattr__(self, "incumbent_dps", incumbent)
+        object.__setattr__(self, "upper_bound_dps", upper)
+        object.__setattr__(
+            self,
+            "unresolved",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.unresolved
+                    if str(item).strip()
+                )
+            ),
+        )
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSPruningResult:
@@ -87,6 +149,62 @@ class ExtremeSustainedDPSPruningResult:
     survivor_count: int
     forced_open_count: int
     evidence: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if isinstance(self.incumbent_dps, bool):
+            raise TypeError("pruning result incumbent_dps must be numeric")
+        incumbent = float(self.incumbent_dps)
+        if not math.isfinite(incumbent) or incumbent < 0.0:
+            raise ValueError("pruning result incumbent_dps must be finite and non-negative")
+        if any(
+            not isinstance(row, ExtremeSustainedDPSPruningDecision)
+            for row in self.decisions
+        ):
+            raise TypeError(
+                "pruning result decisions must contain canonical pruning decisions"
+            )
+        counts = {
+            "pruned_count": self.pruned_count,
+            "survivor_count": self.survivor_count,
+            "forced_open_count": self.forced_open_count,
+        }
+        for label, value in counts.items():
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"pruning result {label} must be a non-negative integer")
+
+        expected = {
+            "pruned_count": sum(
+                row.disposition is ExtremeSustainedDPSPruningDisposition.PRUNED
+                for row in self.decisions
+            ),
+            "survivor_count": sum(
+                row.disposition is ExtremeSustainedDPSPruningDisposition.SURVIVOR
+                for row in self.decisions
+            ),
+            "forced_open_count": sum(
+                row.disposition is ExtremeSustainedDPSPruningDisposition.FORCED_OPEN
+                for row in self.decisions
+            ),
+        }
+        for label, expected_value in expected.items():
+            if counts[label] != expected_value:
+                raise ValueError(
+                    f"pruning result {label} must match decision dispositions"
+                )
+
+        object.__setattr__(self, "incumbent_dps", incumbent)
+        object.__setattr__(self, "decisions", tuple(self.decisions))
+        object.__setattr__(
+            self,
+            "evidence",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.evidence
+                    if str(item).strip()
+                )
+            ),
+        )
 
     @property
     def proof_safe(self) -> bool:
