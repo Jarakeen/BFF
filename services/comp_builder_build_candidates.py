@@ -169,6 +169,13 @@ class CompBuilderBuildCandidateService:
         ).load()
         results: list[CompBuildCandidate] = []
         for index, build in enumerate(roster.Members):
+            # Comp Maker persists its own planned chair packages as BuildKind=comp.
+            # Those records are recovery/planning artifacts, not reusable saved
+            # Builds. Feeding them back into the candidate picker makes the plan
+            # recommend itself and can hide the user's real saved Builds behind
+            # "Planned" packages after restart.
+            if _clean(getattr(build, "BuildKind", "")).casefold() == "comp":
+                continue
             if not _role_matches(build.Role, role):
                 continue
             if not _class_matches(build.EsoClass, preferred_class):
