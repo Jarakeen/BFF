@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from models.raid_plan import RaidPlan
-from engine.config import get_settings_path
+from engine.config import get_data_dir, get_settings_path
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.finch_api_client import FinchApiClient, FinchSharedSnapshot

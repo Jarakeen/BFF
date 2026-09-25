@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from models.build_model import GearSlot, PlayerBuild
 from models.raid_plan import RaidPlan, RaidPlanMember
@@ -10,6 +12,7 @@ from services.eso_database import EsoDatabase
 from services.finch_api_client import FinchSharedSnapshot
 from services.finch_shared_publish_service import (
     FinchSharedPublishService,
+    publish_raid_plan_to_finch,
     shared_raid_plan_payload,
     shared_team_payload,
 )
@@ -43,6 +46,44 @@ class FakeClient:
             updated_at="2026-09-20T00:00:00+00:00",
         )
 
+
+def test_raid_plan_publish_entrypoint_loads_builds_before_sending(tmp_path: Path) -> None:
+    plan = RaidPlan(plan_id="saved-plan", trial_id="sunspire", name="Saved Plan")
+    fake_database = SimpleNamespace(close=lambda: None)
+    fake_state = SimpleNamespace(
+        raid_map_links=lambda plan_id: {},
+        finch_raid_map_previews=lambda plan_id: {},
+    )
+    sent = []
+
+    class FakePublisher:
+        def __init__(self, *, client, roster, build_service):
+            assert build_service is fake_build_service
+
+        def publish_raid_plan(self, selected, *, raid_maps, raid_map_previews):
+            sent.append((selected, raid_maps, raid_map_previews))
+            return "sent"
+
+    fake_build_service = object()
+    with (
+        patch("services.finch_shared_publish_service.RaidPlanRepository") as repository,
+        patch("services.finch_shared_publish_service.EsoDatabase", return_value=fake_database),
+        patch("services.finch_shared_publish_service.RosterService"),
+        patch("services.finch_shared_publish_service.RaidSectionStateService", return_value=fake_state),
+        patch("services.finch_shared_publish_service._configured_client"),
+        patch("services.finch_shared_publish_service.BuildService", return_value=fake_build_service) as builds,
+        patch("services.finch_shared_publish_service.FinchSharedPublishService", FakePublisher),
+    ):
+        repository.return_value.get.return_value = plan
+        result = publish_raid_plan_to_finch(
+            database_path=tmp_path / "eso.db",
+            raid_plans_path=tmp_path / "foundrydock.db",
+            plan_id="saved-plan",
+        )
+
+    assert result == "sent"
+    assert sent == [(plan, {}, {})]
+    assert builds.call_args.args[0].name == "builds.json"
 
 def _roster(tmp_path: Path) -> RosterService:
     roster = RosterService(EsoDatabase(tmp_path / "eso.db"))
