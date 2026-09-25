@@ -49,3 +49,33 @@ def test_unreviewed_poison_trait_remains_unmapped() -> None:
         "Ravage Health",
         game_update=GameUpdate.U50,
     ) == ()
+
+
+def test_u50_weapon_power_poison_preserves_enemy_and_self_relationships() -> None:
+    rows = poison_named_effects_for_trait(
+        "Increase Weapon Power",
+        game_update=GameUpdate.U50,
+    )
+
+    assert [
+        (row.effect_name, row.target_type)
+        for row in rows
+    ] == [
+        ("Minor Maim", SupportTargetType.ENEMY),
+        ("Minor Brutality", SupportTargetType.SELF),
+    ]
+
+
+def test_u50_spell_critical_poison_preserves_enemy_and_self_relationships() -> None:
+    rows = poison_named_effects_for_trait(
+        "Spell Critical",
+        game_update=GameUpdate.U50,
+    )
+
+    assert [
+        (row.effect_name, row.target_type)
+        for row in rows
+    ] == [
+        ("Minor Uncertainty", SupportTargetType.ENEMY),
+        ("Minor Prophecy", SupportTargetType.SELF),
+    ]
