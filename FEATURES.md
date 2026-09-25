@@ -694,3 +694,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - Recovery drafts remain separate from durable saved state until an explicit Save.
 - The Raid Plan overview uses one plan-action card; duplicate Quick Actions and Linked Resources button cards are removed.
 - Team Schedule reads the existing Team-owned schedule from RosterService, including recurring time/timezone and current focus, instead of creating a second schedule authority.
+
+
+- **Objective #32 poison provenance ladder and first exact target consequences** — Weapon-poison modeling now keeps item-label possibility evidence, explicit canonical formula/effect-set proof, and explicit base/triple dilution proof as separate authorities. With those witnesses supplied, reviewed U50 Breach poison consequences project Minor Breach through the shared target-resistance path and Protection poison consequences project Minor Vulnerability through the shared Damage Taken path; Protection's self Minor Protection side is explicitly collapsed as defensive-only for sustained outgoing DPS. Saved bottle labels alone still cannot satisfy formula/dilution provenance, and unreviewed traits such as Ravage Health remain fail-closed.
