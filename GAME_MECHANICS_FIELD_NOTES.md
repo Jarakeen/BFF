@@ -1951,3 +1951,12 @@ Generated Objective #32 poison search uses stable `alchemy_formula:...` identiti
 **Layman's version:** the recipe's database ID and the bottle's inventory name are not interchangeable. One tells us what was mixed; the other tells us which tier label the game displayed. Feeding the recipe ID into the bottle-label lookup is asking the right database the wrong question.
 
 **For BFF:** saved poison item evidence now rejects generated formula IDs explicitly. Formula provenance, crafted-item tier/level evidence, and dilution duration remain separate authorities until a production bridge proves how they belong together.
+
+
+## 2026-09-25 — Poison triple duration is an effect-level fact, not safely a whole-bottle switch
+
+The recovered Alchemy formula evidence can explicitly mark individual trait cells with `(triple)` while other cells in the same formula are unmarked. That means one global BASE/TRIPLE switch for an entire crafted poison is too coarse for formulas whose consequences do not all share the same source annotation.
+
+**Layman's version:** one consequence on a poison can use the triple-duration column while another consequence on that same poison may use ordinary timing. The bottle does not necessarily have one master “triple” switch. ESO has hidden a per-effect timing problem inside what looks like one consumable, because apparently the glyph stopwatches were not enough.
+
+**For BFF:** canonical formulas now retain per-trait explicit `(triple)` provenance, mixed per-effect dilution witnesses are supported, and conflicting annotations fail closed. Unmarked cells and formula-section headings remain provenance only until source semantics prove that they mean ordinary/base duration.
