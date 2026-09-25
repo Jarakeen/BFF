@@ -547,6 +547,7 @@ def test_generated_sustained_dps_runtime_evaluation_consumes_canonical_simulatio
         for row in SERVICE_CATALOG.dependencies_of(service.service_id)
     ) == (
         "extreme.sustained_dps.gear_runtime_semantics",
+        "extreme.sustained_dps.runtime_self_combat_state",
         "extreme.sustained_dps.runtime_target_combat_state",
         "extreme.sustained_dps.weapon_enchantment_runtime_source",
         "extreme.sustained_dps.weapon_enchantment_proc_consequences",
@@ -1990,3 +1991,15 @@ def test_weapon_poison_named_effect_consequences_are_cataloged() -> None:
     assert "reuse" in service.purpose
     assert "Breach -> Minor Breach" in service.notes
     assert "Unreviewed poison traits remain blockers" in service.notes
+
+
+def test_sustained_dps_runtime_self_named_projection_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_runtime_self_named_combat_state"
+    )
+
+    assert service is not None
+    assert service.service_id == "extreme.sustained_dps.runtime_self_combat_state"
+    assert SERVICE_CATALOG.dependencies_of(service.service_id) == ()
+    assert "SELF-target named runtime EffectVariants" in service.purpose
+    assert "numeric stat semantics remain owned" in service.notes
