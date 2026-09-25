@@ -281,7 +281,19 @@ class CoveragePage(FoundryPage):
         self.add_provider_button = QPushButton("Add Provider")
         self.add_provider_button.setToolTip("Mark the selected effect covered by raid-lead assignment. Provider and source are required.")
         self.add_provider_button.clicked.connect(self._add_manual_provider)
-        table_card.set_header_action(self.add_provider_button)
+        self.save_coverage_button = QPushButton("Save Coverage")
+        self.save_coverage_button.setProperty("primary", True)
+        self.save_coverage_button.setToolTip(
+            "Verify the selected Raid Plan's Coverage assignments are persisted in the canonical Raid Plan."
+        )
+        self.save_coverage_button.clicked.connect(self._save_coverage)
+        header_actions = QWidget()
+        header_actions_layout = QHBoxLayout(header_actions)
+        header_actions_layout.setContentsMargins(0, 0, 0, 0)
+        header_actions_layout.setSpacing(6)
+        header_actions_layout.addWidget(self.add_provider_button)
+        header_actions_layout.addWidget(self.save_coverage_button)
+        table_card.set_header_action(header_actions)
         table_card.addLayout(filters)
         self.table = QTableWidget(0, 9)
         self.table.setHorizontalHeaderLabels([
@@ -763,6 +775,34 @@ class CoveragePage(FoundryPage):
             return
         self._coverage_selected_plan_id = plan_id
         self.status.success(f"{effect} marked covered by {member.character_name or member.gamertag or member.seat_id} • {source}.")
+        self.refresh()
+
+    def _save_coverage(self) -> None:
+        plan_id = self._selected_plan_id()
+        if not plan_id:
+            self.status.warning("Select a saved Raid Plan before saving Coverage.")
+            return
+        plan = self.raid_plan_repository.get(plan_id)
+        if plan is None:
+            self.status.error("Selected Raid Plan is no longer available; Coverage was not saved.")
+            return
+        try:
+            saved = self.raid_plan_repository.save(plan, expected=plan)
+            persisted = self.raid_plan_repository.get(plan_id)
+            if persisted is None:
+                raise RuntimeError("saved Raid Plan failed Coverage read-back verification")
+            if persisted.coverage_providers != saved.coverage_providers:
+                raise RuntimeError("Coverage providers changed during persistence verification")
+        except Exception as exc:
+            self.status.error(f"Could not save Coverage: {exc}")
+            return
+        self._coverage_selected_plan_id = plan_id
+        count = len(persisted.coverage_providers)
+        self.status.success(
+            f"Coverage saved and verified for {persisted.name} • {count} manual provider"
+            + ("" if count == 1 else "s")
+            + "."
+        )
         self.refresh()
 
     def _remove_manual_provider(self) -> None:
