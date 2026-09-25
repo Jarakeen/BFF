@@ -259,11 +259,20 @@ class CanonicalBuildBridge:
             build_kind = str(entry.get("build_kind") or "saved").strip().casefold() or "saved"
             source = entry.get("source") if isinstance(entry.get("source"), dict) else {}
 
-            # Ordinary historical placeholder rows remain hidden. Comp Builds are
-            # different: they are intentionally planning artifacts and may contain
-            # only planned gear/skills plus canonical source metadata.
+            # Canonical Saved Builds exist because the catalog says they exist.
+            # Do not make their visibility depend on the old JSON-era
+            # "meaningful legacy data" heuristic: an incomplete Saved Build is
+            # still a Saved Build and may be completed later.  The legacy gate is
+            # retained only for records that do not carry canonical build identity.
             snapshot = payload if isinstance(payload, dict) else legacy
-            if build_kind != "comp" and not cls._is_valid_legacy_build(snapshot):
+            build_id = str(entry.get("build_id") or "").strip()
+            character_id = str(entry.get("character_id") or "").strip()
+            has_canonical_identity = bool(build_id and character_id)
+            if (
+                build_kind != "comp"
+                and not has_canonical_identity
+                and not cls._is_valid_legacy_build(snapshot)
+            ):
                 continue
             if not isinstance(snapshot, dict):
                 snapshot = {}
