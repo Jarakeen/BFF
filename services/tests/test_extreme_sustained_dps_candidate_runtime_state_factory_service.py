@@ -112,7 +112,7 @@ def test_factory_builds_poison_consequence_frontier_from_dilution_authority(tmp_
 def test_factory_rejects_competing_poison_consequence_authorities(tmp_path):
     with pytest.raises(
         ValueError,
-        match="cannot combine explicit weapon-poison consequence resolver",
+        match="requires exactly one poison consequence authority path",
     ):
         ExtremeSustainedDPSCandidateRuntimeStateFactoryService.build(
             database_path=tmp_path / "eso.db",
@@ -124,3 +124,37 @@ def test_factory_rejects_competing_poison_consequence_authorities(tmp_path):
             weapon_poison_dilution_selection_resolver=object(),
         )
 
+
+
+def test_factory_can_forward_candidate_scoped_poison_consequence_authority(tmp_path):
+    authority_resolver = lambda state: object()
+    resolver = ExtremeSustainedDPSCandidateRuntimeStateFactoryService.build(
+        database_path=tmp_path / "eso.db",
+        capability_service=_CapabilityService(),
+        occurrence_provider_resolver=_occurrence_provider,
+        supplemental_event_denominator_proven=True,
+        supplemental_history_denominator_proven=True,
+        weapon_poison_consequence_resolver_resolver=authority_resolver,
+    )
+
+    assert (
+        resolver.weapon_poison_consequence_resolver_resolver
+        is authority_resolver
+    )
+    assert resolver.scenario_frontier.weapon_poison_consequence_resolver is None
+
+
+def test_factory_rejects_candidate_scoped_and_global_poison_authorities(tmp_path):
+    with pytest.raises(
+        ValueError,
+        match="requires exactly one poison consequence authority path",
+    ):
+        ExtremeSustainedDPSCandidateRuntimeStateFactoryService.build(
+            database_path=tmp_path / "eso.db",
+            capability_service=_CapabilityService(),
+            occurrence_provider_resolver=_occurrence_provider,
+            supplemental_event_denominator_proven=True,
+            supplemental_history_denominator_proven=True,
+            weapon_poison_consequence_resolver=object(),
+            weapon_poison_consequence_resolver_resolver=lambda state: object(),
+        )
