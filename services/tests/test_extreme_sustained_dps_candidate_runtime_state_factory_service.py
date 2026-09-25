@@ -160,8 +160,7 @@ def test_factory_rejects_candidate_scoped_and_global_poison_authorities(tmp_path
         )
 
 
-def test_factory_builds_generated_candidate_poison_authority_path(tmp_path):
-    item_resolver = object()
+def test_factory_builds_generated_candidate_poison_authority_from_retained_tier_path(tmp_path):
     mode_resolver = object()
     resolver = ExtremeSustainedDPSCandidateRuntimeStateFactoryService.build(
         database_path=tmp_path / "eso.db",
@@ -169,22 +168,21 @@ def test_factory_builds_generated_candidate_poison_authority_path(tmp_path):
         occurrence_provider_resolver=_occurrence_provider,
         supplemental_event_denominator_proven=True,
         supplemental_history_denominator_proven=True,
-        generated_weapon_poison_item_evidence_resolver=item_resolver,
         generated_weapon_poison_dilution_mode_resolver=mode_resolver,
     )
 
     candidate_resolver = resolver.weapon_poison_consequence_resolver_resolver
     assert candidate_resolver is not None
     owner = candidate_resolver.__self__
-    assert owner.item_evidence_resolver is item_resolver
+    assert owner.item_evidence_resolver is None
     assert owner.dilution_mode_resolver is mode_resolver
     assert resolver.scenario_frontier.weapon_poison_consequence_resolver is None
 
 
-def test_factory_requires_both_generated_poison_witness_resolvers(tmp_path):
+def test_factory_generated_poison_item_override_still_requires_dilution_mode(tmp_path):
     with pytest.raises(
         ValueError,
-        match="requires both candidate tier/item evidence and candidate dilution-mode resolvers",
+        match="item-evidence override requires candidate dilution-mode resolver",
     ):
         ExtremeSustainedDPSCandidateRuntimeStateFactoryService.build(
             database_path=tmp_path / "eso.db",
