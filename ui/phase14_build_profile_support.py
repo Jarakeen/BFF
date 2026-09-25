@@ -7,6 +7,8 @@ build-level gear baseline. It persists only additive profile metadata in
 ``build_profiles.json``; it never rewrites the saved build or canonical ESO database.
 """
 
+from copy import deepcopy
+
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -213,6 +215,57 @@ class _BaselineDialog(QDialog):
         layout.addWidget(buttons)
 
 
+def _fill_blank_profile_fields(build, profile: BuildProfile) -> int:
+    """Materialize selected baseline defaults into blank equipped gear fields."""
+    changed = 0
+    normalized = profile.normalized()
+
+    for item in build.Armor.values():
+        equipped = any(str(item.get(key) or "").strip() for key in ("Set", "Set2"))
+        if not equipped:
+            continue
+        for key, value in (
+            ("Quality", normalized.quality),
+            ("Level", normalized.item_level),
+            ("EnchantTier", normalized.enchantment_tier),
+            ("Trait", normalized.armor_trait),
+            ("Weight", normalized.armor_weight),
+            ("Enchant", normalized.armor_enchant),
+        ):
+            if value and not str(item.get(key) or "").strip():
+                item[key] = value
+                changed += 1
+
+    for name in ("Necklace", "Ring1", "Ring2"):
+        item = getattr(build, name)
+        if item.is_empty:
+            continue
+        for field, value in (
+            ("Quality", normalized.quality),
+            ("Level", normalized.item_level),
+            ("EnchantTier", normalized.enchantment_tier),
+            ("Trait", normalized.jewelry_trait),
+            ("Enchant", normalized.jewelry_enchant),
+        ):
+            if value and not str(getattr(item, field, "") or "").strip():
+                setattr(item, field, value)
+                changed += 1
+
+    for name in ("FrontBarWeapon", "FrontBarOffHand", "BackBarWeapon", "BackBarOffHand"):
+        item = getattr(build, name)
+        if item.is_empty:
+            continue
+        for field, value in (
+            ("Quality", normalized.quality),
+            ("Level", normalized.item_level),
+            ("EnchantTier", normalized.enchantment_tier),
+        ):
+            if value and not str(getattr(item, field, "") or "").strip():
+                setattr(item, field, value)
+                changed += 1
+    return changed
+
+
 def _edit_baseline(page, build) -> None:
     build_id = _build_id(page, build)
     if not build_id:
@@ -222,19 +275,51 @@ def _edit_baseline(page, build) -> None:
     dialog = _BaselineDialog(page, service.get(build_id))
     if dialog.exec() != QDialog.DialogCode.Accepted:
         return
-    service.update(
-        build_id,
-        quality=dialog.quality.currentText().strip(),
-        item_level=dialog.level.currentText().strip(),
-        enchantment_tier=dialog.tier.currentText().strip(),
-        armor_trait=dialog.armor_trait.currentText().strip(),
-        armor_weight=dialog.armor_weight.currentText().strip(),
-        armor_enchant=dialog.armor_enchant.currentText().strip(),
-        jewelry_trait=dialog.jewelry_trait.currentText().strip(),
-        jewelry_enchant=dialog.jewelry_enchant.currentText().strip(),
-    )
+    try:
+        profile = service.update(
+            build_id,
+            quality=dialog.quality.currentText().strip(),
+            item_level=dialog.level.currentText().strip(),
+            enchantment_tier=dialog.tier.currentText().strip(),
+            armor_trait=dialog.armor_trait.currentText().strip(),
+            armor_weight=dialog.armor_weight.currentText().strip(),
+            armor_enchant=dialog.armor_enchant.currentText().strip(),
+            jewelry_trait=dialog.jewelry_trait.currentText().strip(),
+            jewelry_enchant=dialog.jewelry_enchant.currentText().strip(),
+        )
+    except ValueError as exc:
+        page.status.error(f"Build baseline rejected: {exc}")
+        return
+
+    original = deepcopy(build)
+    filled = _fill_blank_profile_fields(build, profile)
+    if filled:
+        page._save()
+        # _save reports verification failures without raising. Confirm the selected
+        # canonical Build survived before claiming the materialization succeeded.
+        persisted = next(
+            (
+                candidate for candidate in page.roster.Members
+                if str(getattr(candidate, "BuildId", "") or "").strip() == build_id
+            ),
+            None,
+        )
+        if persisted is None:
+            index = int(getattr(page, "selected_index", -1))
+            if 0 <= index < len(page.roster.Members):
+                page.roster.Members[index] = original
+            page.status.error("Baseline defaults could not be verified in the Saved Build.")
+            return
+
     page._refresh_detail()
-    page.status.success("Build baseline updated. Existing item values were preserved.")
+    if filled:
+        page.status.success(
+            f"Build baseline updated and filled {filled} blank equipped gear field"
+            + ("" if filled == 1 else "s")
+            + ". Existing values were preserved."
+        )
+    else:
+        page.status.success("Build baseline updated. No equipped blank fields needed filling.")
 
 
 class _OwnershipDialog(QDialog):
