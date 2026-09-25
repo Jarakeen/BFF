@@ -169,3 +169,21 @@ def test_conflicting_duplicate_effect_rows_fail_closed(tmp_path) -> None:
         "conflicting imported poison tier evidence" in row
         for row in result.unresolved
     )
+
+
+def test_generated_formula_identity_is_not_treated_as_saved_item_label(tmp_path) -> None:
+    path = _database(
+        tmp_path,
+        (("Ravage Health", (_tier("Damage Health Poison IX", duration=6.4),)),),
+    )
+
+    formula_id = "alchemy_formula:u50:a+b:ravage_health"
+    result = ExtremeSustainedDPSWeaponPoisonIdentityService(path).resolve(formula_id)
+
+    assert result.resolved is False
+    assert result.possible_effects == ()
+    assert result.source_evidence_complete is False
+    assert any(
+        "generated formula identity is not a crafted poison item-label witness" in row
+        for row in result.unresolved
+    )
