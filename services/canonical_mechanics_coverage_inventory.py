@@ -360,9 +360,9 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             missing_evidence=(
                 "Verify weapon-specific light/heavy timing, bash cost/damage modifiers, "
                 "interrupt legality/timing, remaining enchant cooldown topology, poison effect "
-                "production ownership of exact crafted formula/effect-set and dilution witnesses, "
-                "remaining poison-trait relationships, Ravage Health/resource magnitudes and periodic "
-                "application, attacker-side offensive poison buffs, dual-wield/two-hand legacy "
+                "a generated front/back poison-selection denominator, production ownership of exact "
+                "crafted formula/effect-set and dilution witnesses, remaining poison-trait relationships, "
+                "Ravage Health/resource magnitudes and periodic application, dual-wield/two-hand legacy "
                 "representation, arena weapon "
                 "conditional rules and weapon/passive interactions."
             ),
