@@ -95,6 +95,11 @@ class CompBuildPersistenceService:
             return chair, issue
 
         member = matches[0]
+        # Never let a legacy display-name repair bind a chair to Personnel whose
+        # canonical player is already owned by a different chair in this Comp
+        # state. Duplicate-seat validation runs again after repair at the UI save
+        # boundary; keeping the repaired stable ids here makes that guard reliable.
+
         return chair.with_changes(
             player_name=str(member.PlayerName or chair.player_name).strip(),
             roster_member_id=int(member.Id) if member.Id is not None else chair.roster_member_id,
