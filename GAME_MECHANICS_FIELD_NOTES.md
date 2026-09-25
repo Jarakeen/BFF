@@ -1960,3 +1960,15 @@ The recovered Alchemy formula evidence can explicitly mark individual trait cell
 **Layman's version:** one consequence on a poison can use the triple-duration column while another consequence on that same poison may use ordinary timing. The bottle does not necessarily have one master “triple” switch. ESO has hidden a per-effect timing problem inside what looks like one consumable, because apparently the glyph stopwatches were not enough.
 
 **For BFF:** canonical formulas now retain per-trait explicit `(triple)` provenance, mixed per-effect dilution witnesses are supported, and conflicting annotations fail closed. Unmarked cells and formula-section headings remain provenance only until source semantics prove that they mean ordinary/base duration.
+
+---
+
+## 2026-09-25 — A missing “triple” marker is not proof of normal poison duration
+
+While closing the Extreme Engine crafted-poison path, the imported Alchemy formula evidence exposed a useful asymmetry: a literal per-trait **“(triple)”** annotation is direct evidence that the trait belongs on the shortened triple-effect duration, but an unmarked cell does **not** prove that the trait uses the ordinary base duration. Some formula effects are also implicit because they come from the effect page itself rather than a marked table cell.
+
+**Layman’s version:** seeing “triple” written next to an effect tells us something real. Not seeing the word tells us much less. Silence is not a duration rule.
+
+**What it means in actual play:** two crafted poisons with the same visible effect names can require different source evidence before BFF can safely reproduce their exact durations. The engine can now use literal triple annotations, but it refuses to turn an unmarked source cell or a heading such as “triple effect” into invented base-duration math.
+
+**For BFF:** crafted-poison dilution remains fail-closed. Literal trait annotations may become mechanics; unmarked cells, implicit primary effects, section headings, and effect count remain provenance until a source explicitly proves their duration mode.
