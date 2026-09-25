@@ -266,26 +266,45 @@ class CompBuildPersistenceService:
         return PlayerBuild.from_dict(source if isinstance(source, dict) else {})
 
     @staticmethod
-    def _source_baseline(
+    def _selected_reusable_build(
         builds: list[dict],
+        characters: dict[str, dict],
         chair: CompChairState,
-    ) -> dict | None:
-        """Return the explicitly selected reusable saved Build, never a Comp artifact."""
+    ) -> tuple[dict | None, str | None]:
+        """Resolve an explicit Saved Build without ever crossing canonical players.
+
+        A stale chair CharacterId is repairable when the selected Build belongs to
+        another Character owned by the same canonical Player. Selecting that Build
+        is explicit evidence for the intended Character binding.
+        """
         selected_id = str(chair.selected_build_id or "").strip()
         if not selected_id:
-            return None
-        return next(
+            return None, None
+        record = next(
             (
-                row
-                for row in builds
+                row for row in builds
                 if isinstance(row, dict)
                 and str(row.get("build_id") or "").strip() == selected_id
-                and str(row.get("character_id") or "").strip()
-                == str(chair.character_id or "").strip()
                 and str(row.get("build_kind") or "saved").strip().casefold() != "comp"
             ),
             None,
         )
+        if record is None:
+            return None, None
+
+        build_character_id = str(record.get("character_id") or "").strip()
+        build_character = characters.get(build_character_id)
+        if build_character is None:
+            raise ValueError(
+                f"{chair.seat_id}: selected Build references missing canonical character"
+            )
+        build_player_id = str(build_character.get("player_id") or "").strip()
+        chair_player_id = str(chair.player_id or "").strip()
+        if not chair_player_id or build_player_id != chair_player_id:
+            raise ValueError(
+                f"{chair.seat_id}: selected Build belongs to a different player"
+            )
+        return record, build_character_id
 
 
     def persist(self, state: CompPlanState) -> CompBuildPersistenceResult:
@@ -359,7 +378,30 @@ class CompBuildPersistenceService:
                 )
 
             selected_id = str(chair.selected_build_id or "").strip()
-            selected_record = self._source_baseline(builds, chair) if selected_id else None
+            selected_record = None
+            selected_character_id = None
+            if selected_id:
+                try:
+                    selected_record, selected_character_id = self._selected_reusable_build(
+                        builds, characters, chair
+                    )
+                except ValueError as exc:
+                    skipped.append(chair.seat_id)
+                    skipped_reasons.append(
+                        (chair.seat_id, str(exc).removeprefix(f"{chair.seat_id}: "))
+                    )
+                    updated_state = updated_state.with_chair(chair)
+                    continue
+                if selected_record is not None and selected_character_id != character_id:
+                    selected_character = characters[selected_character_id]
+                    chair = chair.with_changes(
+                        character_id=selected_character_id,
+                        character_name=str(selected_character.get("name") or "").strip()
+                        or chair.character_name,
+                        eso_class=str(selected_character.get("eso_class") or "").strip()
+                        or chair.eso_class,
+                    )
+                    character_id = selected_character_id
             if selected_id and selected_record is None:
                 legacy_comp = next(
                     (
@@ -382,9 +424,12 @@ class CompBuildPersistenceService:
                     )
                     selected_id = ""
                 else:
-                    raise ValueError(
-                        f"{chair.seat_id}: selected Build does not belong to this character"
+                    skipped.append(chair.seat_id)
+                    skipped_reasons.append(
+                        (chair.seat_id, "selected Build does not exist")
                     )
+                    updated_state = updated_state.with_chair(chair)
+                    continue
 
             if selected_record is not None:
                 build_name = str(selected_record.get("name") or chair.selected_build_name or "").strip()
