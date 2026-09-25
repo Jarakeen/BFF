@@ -1634,6 +1634,33 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_poison_formula_dilution_witness",
+        domain="extreme",
+        purpose=(
+            "Promote only literal per-trait '(triple)' Alchemy formula annotations into "
+            "candidate poison dilution witnesses while keeping unmarked cells, implicit "
+            "page effects, section headings, and effect count as provenance only."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_poison_formula_dilution_witness_service",
+        inputs=("AlchemyFormula", "WeaponPoisonIdentity"),
+        outputs=("ExtremeSustainedDPSWeaponPoisonFormulaDilutionWitness",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_poison_formula_selection",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_poison_formula_dilution_witness",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.GAME_MECHANIC,
+        notes=(
+            "Literal '(triple)' annotations are direct source evidence for triple-duration "
+            "selection. Unmarked source cells do not prove base dilution, and imported "
+            "formula section headings are never promoted into mechanics."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.generated_weapon_poison_dilution_authority",
         domain="extreme",
         purpose=(
