@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.runtime_event import RuntimeEvent
 from services.extreme_sustained_dps_runtime_event_skeleton_service import (
+    ExtremeSustainedDPSRuntimeEventSkeletonResult,
     ExtremeSustainedDPSRuntimeEventSkeletonService,
 )
 from services.extreme_sustained_dps_weapon_enchantment_activation_event_service import (
@@ -232,3 +235,25 @@ def test_weapon_enchantment_activation_trigger_fails_without_canonical_resolver(
         "requires canonical weapon-enchantment activation service" in row
         for row in result.unresolved
     )
+
+
+def test_runtime_event_skeleton_requires_strict_supplemental_proof_flag() -> None:
+    with pytest.raises(TypeError, match="supplemental_denominator_proven must be boolean"):
+        ExtremeSustainedDPSRuntimeEventSkeletonService.build(
+            candidate=_candidate(),
+            effects=(),
+            supplemental_denominator_proven="true",
+        )
+
+
+def test_runtime_event_skeleton_rejects_overlapping_trigger_families() -> None:
+    with pytest.raises(ValueError, match="trigger families must be mutually exclusive"):
+        ExtremeSustainedDPSRuntimeEventSkeletonResult(
+            events=(),
+            denominator_proven=True,
+            derived_triggers=("damage_dealt",),
+            scenario_triggers=("damage_dealt",),
+            excluded_plan_owned_triggers=(),
+            evidence=(),
+            unresolved=(),
+        )
