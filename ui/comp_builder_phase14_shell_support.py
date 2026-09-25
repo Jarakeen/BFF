@@ -2220,6 +2220,8 @@ def _save_to_originating_raid_plan(page) -> bool:
         if state is None:
             page.status.error("Canonical Comp planning state is unavailable.")
             return False
+        if not state.is_raid_plan_bound and not str(page.plan_name_input.text() or "").strip():
+            raise RuntimeError("Enter a plan name before saving this new Comp plan.")
         from engine.config import get_data_dir
         from services.comp_build_persistence_service import CompBuildPersistenceService
         from services.comp_plan_state_service import CompPlanStateService

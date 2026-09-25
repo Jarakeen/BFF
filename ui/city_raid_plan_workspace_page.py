@@ -202,6 +202,23 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.overview_surface = self._build_overview_surface()
         self.local_stack.addWidget(self.overview_surface)
         self.local_stack.addWidget(roles_surface)
+
+        # Reuse the canonical saved-plan selector. Loading from Roles follows
+        # the same guarded path as selecting a plan on the overview.
+        roles_plan_picker = QWidget(roles_surface)
+        roles_plan_row = QHBoxLayout(roles_plan_picker)
+        roles_plan_row.setContentsMargins(0, 0, 0, 0)
+        roles_plan_row.setSpacing(8)
+        roles_plan_row.addWidget(QLabel("SAVED RAID PLAN"))
+        self.saved_plan_combo.setParent(roles_plan_picker)
+        self.saved_plan_combo.setToolTip("Choose a saved Raid Plan, then click Load.")
+        self.saved_plan_combo.show()
+        roles_plan_row.addWidget(self.saved_plan_combo, 1)
+        self.load_plan_button.setParent(roles_plan_picker)
+        self.load_plan_button.show()
+        roles_plan_row.addWidget(self.load_plan_button)
+        roles_layout.insertWidget(0, roles_plan_picker)
+
         self.workspace_layout.addWidget(self.local_stack, 1)
         self._show_local_view(0)
         self.trial_combo.currentTextChanged.connect(self._trial_selection_changed)

@@ -90,7 +90,11 @@ class CompBuilderPage(FoundryPage):
         self.current_template: TeamCompositionTemplate | None = None
         self.current_slots: tuple[CompositionSlot, ...] = ()
         self._build_ui()
+        self.goal_combo.blockSignals(True)
+        self.goal_combo.setCurrentText("Custom Goal")
+        self.goal_combo.blockSignals(False)
         self._load_for_goal()
+        self.plan_name_input.setText("")
         self._refresh_raid_plan_name_choices()
 
     @staticmethod
