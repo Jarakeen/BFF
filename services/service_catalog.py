@@ -1545,7 +1545,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
         encounter_aware=False,
-        evidence_class=EvidenceClass.DATA,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
         notes=(
             "Front/back poison ownership is a physical build-selection axis because poison "
             "suppresses the enchantment on the weapon set carrying it. Formula identity proves "
@@ -1572,7 +1572,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
         encounter_aware=False,
-        evidence_class=EvidenceClass.DATA,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
         notes=(
             "Generated formula IDs are validated against the retained poison-loadout object "
             "and flattened PlayerBuild bar fields. This proves formula identity only; crafted "
@@ -1715,7 +1715,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
         encounter_aware=False,
-        evidence_class=EvidenceClass.DATA,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
         notes=(
             "Base and triple durations come from imported Poison tier evidence. The service "
             "requires the dilution mode explicitly and never infers it from three traits, the "
