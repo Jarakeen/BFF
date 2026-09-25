@@ -340,7 +340,6 @@ def test_persist_reports_exact_skip_reasons_for_open_and_unplanned_chairs(tmp_pa
                 seat_id="dd-8",
                 role="DD",
                 player_name="Recruit",
-                is_open_player=True,
             ),
             CompChairState(
                 seat_id="dd-7",
