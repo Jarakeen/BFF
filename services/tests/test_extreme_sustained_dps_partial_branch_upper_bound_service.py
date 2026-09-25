@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from services.extreme_sustained_dps_partial_branch_upper_bound_service import (
     ExtremeSustainedDPSBoundEnvelopeInput,
     ExtremeSustainedDPSPartialBranchUpperBoundService,
@@ -111,3 +113,33 @@ def test_equal_safe_bounds_remain_safe_and_deterministic() -> None:
     assert result.bound.proven_safe is True
     assert result.bound.upper_bound_dps == 100.0
     assert "A source" in result.bound.source
+
+
+def test_bound_envelope_input_requires_canonical_evidence() -> None:
+    with pytest.raises(TypeError, match="canonical bound evidence"):
+        ExtremeSustainedDPSBoundEnvelopeInput(
+            "bad",
+            object(),
+        )
+
+
+def test_bound_envelope_input_requires_nonempty_label() -> None:
+    with pytest.raises(ValueError, match="requires label"):
+        ExtremeSustainedDPSBoundEnvelopeInput(
+            "   ",
+            _bound("candidate", 100.0),
+        )
+
+
+def test_bound_envelope_normalizes_source_lists() -> None:
+    result = ExtremeSustainedDPSPartialBranchUpperBoundService.compose(
+        "branch:normalized",
+        (
+            ExtremeSustainedDPSBoundEnvelopeInput(
+                "  reviewed   ceiling ",
+                _bound("source", 100.0),
+            ),
+        ),
+    )
+
+    assert result.accepted_sources == ("reviewed ceiling",)
