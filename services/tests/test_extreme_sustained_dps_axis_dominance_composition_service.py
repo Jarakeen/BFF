@@ -110,6 +110,7 @@ def test_canonical_axis_vocabulary_contains_current_generated_search_dimensions(
         "mundus",
         "food",
         "potion_selection",
+        "weapon_poisons",
         "champion_points",
         "passive_ranks",
         "skill_bars",
