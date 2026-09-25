@@ -1982,3 +1982,15 @@ A selected Saved Build's front and back bar skills can provide reviewed buffs or
 **Layman's version:** Coverage can recognize a buff supplied by a slotted skill or a related class passive. It marks that source as conditional because having it on a build does not prove it will be active at every moment.
 
 **For BFF:** use the exact assigned Saved Build and canonical skill/passive effect records; do not infer uptime or grant self-only effects to the group.
+
+---
+
+## 2026-09-25 — An unanswered two-enchant rule should not block a one-enchant build
+
+While tightening Objective #32 weapon-enchantment cadence, the runtime gate was requiring proof about how **different enchant identities interact** even for a candidate that only carried one enchant identity. That was safe, but unnecessarily pessimistic: a rule about competition between two different timers cannot change a branch in which that competition never exists.
+
+**Layman's version:** if the build owns one stopwatch, we do not need a dissertation about what would happen if it owned two different stopwatches.
+
+**What it means in actual play:** a single direct-damage enchant can now use its authoritative cadence without being rejected because distinct-enchant timer independence is still unresolved. Two copies of the same enchant still need the shared-cooldown rule, and two different enchant identities still need authoritative proof of their timer relationship.
+
+**For BFF:** cadence proof is now candidate-scoped. The engine asks only for mechanics that can actually affect the current enchantment topology, while preserving fail-closed behavior as soon as duplicate or distinct competing sources exist.
