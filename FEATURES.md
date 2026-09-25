@@ -697,3 +697,6 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 
 
 - **Objective #32 poison provenance ladder and first exact target consequences** — Weapon-poison modeling now keeps item-label possibility evidence, explicit canonical formula/effect-set proof, and explicit base/triple dilution proof as separate authorities. With those witnesses supplied, reviewed U50 Breach poison consequences project Minor Breach through the shared target-resistance path and Protection poison consequences project Minor Vulnerability through the shared Damage Taken path; Protection's self Minor Protection side is explicitly collapsed as defensive-only for sustained outgoing DPS. Saved bottle labels alone still cannot satisfy formula/dilution provenance, and unreviewed traits such as Ravage Health remain fail-closed.
+
+
+- **Exact-time SELF named runtime projection** — Generated sustained-DPS evaluation now projects reviewed SELF-target named runtime effects into the attacker CombatState at each exact action timestamp. This gives source-bound effects such as poison-granted Minor Brutality/Sorcery/Savagery/Prophecy a canonical path into attacker stats without duplicating named-buff arithmetic; ENEMY-target effects remain owned by the separate target combat-state projector.
