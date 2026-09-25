@@ -295,6 +295,7 @@ def _bind_plan_comp_builder(window, source_page) -> bool:
         plan,
         achievement_goal=str(comp.goal_combo.currentText() or "").strip() or None,
     )
+    comp._raid_plan_origin_snapshot = plan
 
     comp._raid_plan_origin_id = str(getattr(plan, "plan_id", "") or "").strip()
     comp._raid_plan_origin_trial_id = str(getattr(plan, "trial_id", "") or "").strip()

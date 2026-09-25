@@ -39,6 +39,10 @@ class RaidPlanRepositoryError(ValueError):
     """Raised when persisted Raid Plan data cannot be trusted."""
 
 
+class RaidPlanConflictError(RaidPlanRepositoryError):
+    """The plan changed since the editor loaded its saved snapshot."""
+
+
 class RaidPlanRepository:
     """Versioned JSON repository keyed by stable RaidPlan.plan_id."""
 
@@ -106,18 +110,52 @@ class RaidPlanRepository:
         wanted = str(plan_id or "").strip().casefold()
         if not wanted:
             return None
+        if self._database_mode:
+            with self._connect() as db:
+                row = db.execute(
+                    "SELECT payload_json FROM raid_plan WHERE plan_id = ? COLLATE NOCASE",
+                    (wanted,),
+                ).fetchone()
+            if row is None:
+                return None
+            try:
+                return self._decode_plan(json.loads(str(row["payload_json"])))
+            except (json.JSONDecodeError, TypeError, ValueError) as exc:
+                raise RaidPlanRepositoryError(f"could not read Raid Plan payload: {exc}") from exc
         return next((row for row in self.list_plans() if row.plan_id.casefold() == wanted), None)
 
-    def save(self, plan: RaidPlan) -> RaidPlan:
+    def save(
+        self, plan: RaidPlan, *, expected: RaidPlan | None = None,
+        must_be_new: bool = False,
+    ) -> RaidPlan:
         if not isinstance(plan, RaidPlan):
             raise TypeError("plan must be a RaidPlan")
         if self._database_mode:
             payload = json.dumps(self._encode_plan(plan), sort_keys=True)
             with self._connect() as db:
+                # Acquire the writer lock before checking the expected snapshot.
+                # A second screen cannot slip a write between the check and save.
+                db.execute("BEGIN IMMEDIATE")
                 existing = db.execute(
                     "SELECT payload_json FROM raid_plan WHERE plan_id = ? COLLATE NOCASE",
                     (plan.plan_id,),
                 ).fetchone()
+                if must_be_new and existing is not None:
+                    raise RaidPlanConflictError(
+                        "A Raid Plan with this identity already exists. Reload it or use another plan name."
+                    )
+                if expected is not None:
+                    if expected.plan_id.casefold() != plan.plan_id.casefold():
+                        raise RaidPlanConflictError("saved Raid Plan identity changed")
+                    if existing is None or self._decode_plan(
+                        json.loads(str(existing["payload_json"]))
+                    ) != expected:
+                        raise RaidPlanConflictError(
+                            "This Raid Plan changed on another screen. Your edits remain here; "
+                            "reload or export a backup before saving again."
+                        )
+                if existing is not None and str(existing["payload_json"]) == payload:
+                    return plan
                 if existing is not None:
                     previous = str(existing["payload_json"] or "")
                     if previous and previous != payload:
@@ -173,6 +211,22 @@ class RaidPlanRepository:
                 )
             return plan
         plans = list(self.list_plans())
+        if must_be_new and any(
+            row.plan_id.casefold() == plan.plan_id.casefold() for row in plans
+        ):
+            raise RaidPlanConflictError(
+                "A Raid Plan with this identity already exists. Reload it or use another plan name."
+            )
+        if expected is not None:
+            prior = next(
+                (row for row in plans if row.plan_id.casefold() == plan.plan_id.casefold()),
+                None,
+            )
+            if expected.plan_id.casefold() != plan.plan_id.casefold() or prior != expected:
+                raise RaidPlanConflictError(
+                    "This Raid Plan changed on another screen. Your edits remain here; "
+                    "reload or export a backup before saving again."
+                )
         wanted = plan.plan_id.casefold()
         replaced = False
         updated: list[RaidPlan] = []
@@ -306,4 +360,4 @@ class RaidPlanRepository:
             raise RaidPlanRepositoryError(f"could not write Raid Plan repository: {exc}") from exc
 
 
-__all__ = ["RaidPlanRepository", "RaidPlanRepositoryError"]
+__all__ = ["RaidPlanRepository", "RaidPlanRepositoryError", "RaidPlanConflictError"]

@@ -242,6 +242,9 @@ class MainWindow(QMainWindow):
                     f'Could not reload originating Raid Plan "{state.raid_plan_name}".'
                 )
                 return None
+            expected = getattr(comp, "_raid_plan_origin_snapshot", None)
+            if expected is None or expected.plan_id != base_plan.plan_id:
+                raise RuntimeError("Comp Maker lost its saved Raid Plan baseline. Reload the plan before saving.")
             plan = CompPlanStateService.to_raid_plan(state, base_plan=base_plan)
         else:
             existing_ids = tuple(
@@ -256,7 +259,10 @@ class MainWindow(QMainWindow):
                 state,
                 plan_id=plan_id,
             )
-        raid_plans.plan_repository.save(plan)
+            expected = None
+        raid_plans.plan_repository.save(
+            plan, expected=expected, must_be_new=expected is None,
+        )
         persisted = raid_plans.plan_repository.get(plan.plan_id)
         if persisted is None or persisted != plan:
             raid_plans.status.error(
@@ -270,6 +276,7 @@ class MainWindow(QMainWindow):
             achievement_goal=state.achievement_goal,
         )
         comp._raid_plan_origin_id = persisted.plan_id
+        comp._raid_plan_origin_snapshot = persisted
         raid_plans.apply_plan(persisted)
         raid_plans._refresh_overview()
         raid_plans.status.success(

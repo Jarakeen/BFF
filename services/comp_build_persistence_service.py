@@ -70,7 +70,19 @@ class CompBuildPersistenceService:
             return chair
 
         identity = RosterPlayerIdentityService(self.database, None)
-        matches = identity.matching_members(chair.player_name)
+        # A selected Personnel row is stronger evidence than its display name.
+        # Newly added roster players may not yet have canonical catalog IDs.
+        if chair.roster_member_id is not None:
+            selected = self.roster.get_member(int(chair.roster_member_id))
+            matches = [selected] if selected is not None else []
+        else:
+            matches = identity.matching_members(chair.player_name)
+            if len(matches) > 1 and chair.character_name:
+                matches = [
+                    member for member in matches
+                    if str(member.CharacterName or "").strip().casefold()
+                    == str(chair.character_name).strip().casefold()
+                ]
         if len(matches) != 1:
             return chair
 
@@ -342,7 +354,7 @@ class CompBuildPersistenceService:
                 reason = (
                     "open/recruit chair"
                     if chair.is_open_player or not chair.player_name
-                    else "player is not linked to canonical Personnel/character identity"
+                    else "player is not linked to a unique Personnel record; select the roster player for this chair"
                 )
                 skipped_reasons.append((chair.seat_id, reason))
                 continue

@@ -273,6 +273,7 @@ class CompBuilderPage(FoundryPage):
             plan,
             achievement_goal=self.goal_combo.currentText().strip() or None,
         )
+        self._raid_plan_origin_snapshot = plan
 
         roster_service = RosterService(EsoDatabase(get_user_database_path()))
         personnel = tuple(roster_service.list_members())

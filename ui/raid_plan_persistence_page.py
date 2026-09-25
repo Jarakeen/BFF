@@ -159,6 +159,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self.plan_repository = RaidPlanRepository(get_user_database_path())
         self._loading_plan = False
         self._loaded_plan_snapshot: RaidPlan | None = None
+        self._persisted_plan_snapshot: RaidPlan | None = None
         self._finch_plan_publish_future: Future | None = None
         super().__init__(parent)
         self._finch_plan_publish_timer = QTimer(self)
@@ -172,7 +173,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self._draft_service = UiDraftRecoveryService()
         self._safety_snapshots = UserSafetySnapshotService()
         self._draft_timer = QTimer(self)
-        self._draft_timer.setInterval(2000)
+        self._draft_timer.setInterval(5000)
         self._draft_timer.timeout.connect(self._autosave_recovery_draft)
         self._draft_timer.start()
         lower_save = getattr(self, "lower_save_plan_button", None)
@@ -191,6 +192,8 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         return f"raid-plan-{loaded_id or 'new'}"
 
     def _autosave_recovery_draft(self) -> None:
+        if not self.isVisible():
+            return
         if not self.has_pending_changes():
             return
         try:
@@ -360,7 +363,12 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
     def _saved_plan_activated(self, index: int) -> None:
         if self.saved_plan_combo.itemData(index) != "__new_plan__":
             return
+        if not confirm_unsaved_changes(self, self, action_text="start a new Raid Plan"):
+            loaded = getattr(self, "_loaded_plan_snapshot", None)
+            self.refresh_saved_plan_picker(select_plan_id=loaded.plan_id if loaded else None)
+            return
         self._loaded_plan_snapshot = None
+        self._persisted_plan_snapshot = None
         super().clear_plan()
         self.plan_name_edit.setText("New Raid Plan")
         self._set_plan_name_visible(True)
@@ -975,15 +983,12 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             # action through Save Player to Personnel and must never be a hidden
             # side effect of saving Assignments or a shared Finch copy.
             plan = self.current_plan()
-            checkpoint = self._safety_snapshots.create(
-                f"save-raid-plan-{plan.plan_id}"
+            expected = self._persisted_plan_snapshot
+            if expected is not None and expected.plan_id.casefold() != plan.plan_id.casefold():
+                expected = None
+            self.plan_repository.save(
+                plan, expected=expected, must_be_new=expected is None,
             )
-            if checkpoint is None and get_user_database_path().is_file():
-                raise RaidPlanRepositoryError(
-                    "could not create the pre-save database checkpoint"
-                )
-
-            self.plan_repository.save(plan)
             persisted = self.plan_repository.get(plan.plan_id)
             if persisted is None:
                 raise RaidPlanRepositoryError(
@@ -999,6 +1004,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             return None
 
         self._loaded_plan_snapshot = persisted
+        self._persisted_plan_snapshot = persisted
         self._navigation_baseline_plan = persisted
         self._discard_recovery_draft(persisted.plan_id)
         mark_saved(self)
@@ -1065,16 +1071,10 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             self.status.warning("Choose a saved Raid Plan to load.")
             return
         loaded = getattr(self, "_loaded_plan_snapshot", None)
-        if (
-            loaded is not None
-            and loaded.plan_id.casefold() != plan_id.casefold()
-            and not confirm_unsaved_changes(
-                self,
-                self,
-                action_text="load another Raid Plan",
-            )
+        if self.has_pending_changes() and not confirm_unsaved_changes(
+            self, self, action_text="reload a Raid Plan"
         ):
-            self.refresh_saved_plan_picker(select_plan_id=loaded.plan_id)
+            self.refresh_saved_plan_picker(select_plan_id=loaded.plan_id if loaded else None)
             return
         try:
             saved_plan = self.plan_repository.get(plan_id)
@@ -1092,6 +1092,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             self.refresh_saved_plan_picker()
             return
         self.apply_plan(plan)
+        self._persisted_plan_snapshot = saved_plan
         if saved_plan is not None and plan != saved_plan:
             # A recovered draft is reviewable unsaved state, never the new clean
             # authority. Keep its full snapshot for merge/current-plan behavior,
@@ -1176,6 +1177,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             and self._loaded_plan_snapshot.plan_id.casefold() == plan_id.casefold()
         ):
             self._loaded_plan_snapshot = None
+            self._persisted_plan_snapshot = None
         self.refresh_saved_plan_picker()
         if deleted:
             self.status.info("Saved Raid Plan deleted. Personnel and saved builds were unchanged.")
@@ -1190,6 +1192,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         ):
             return
         self._loaded_plan_snapshot = None
+        self._persisted_plan_snapshot = None
         super().clear_plan()
         self._set_plan_name_visible(True)
         self.refresh_saved_plan_picker(select_plan_id=None)
@@ -1318,6 +1321,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             self._loading_plan = False
 
         self._loaded_plan_snapshot = plan
+        self._persisted_plan_snapshot = plan
         self.refresh_saved_plan_picker(select_plan_id=plan.plan_id)
         self._update_summary()
         self._navigation_baseline_plan = self.current_plan()

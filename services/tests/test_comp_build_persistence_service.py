@@ -9,6 +9,7 @@ from services.build_service import BuildService
 from services.canonical_build_bridge import CanonicalBuildBridge
 from services.comp_build_persistence_service import CompBuildPersistenceService
 from services.eso_database import EsoDatabase
+from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.roster_service import RosterService
 
 
@@ -405,3 +406,37 @@ def test_persist_repairs_exact_personnel_alias_before_skipping_comp_build(tmp_pa
     assert repaired.player_name == "Pippin Feux"
     assert repaired.roster_member_id == survivor_id
     assert repaired.selected_build_id
+
+
+def test_new_roster_player_without_canonical_ids_creates_comp_build(tmp_path: Path) -> None:
+    database_path = tmp_path / "foundrydock.db"
+    roster = RosterService(EsoDatabase(database_path))
+    member_id = roster.create_member(
+        RosterMember(
+            PlayerName="New DD",
+            CharacterName="New DD Character",
+            EsoClass="Nightblade",
+            PrimaryRole="DD",
+        )
+    )
+    state = CompPlanState(
+        raid_plan_id="pm",
+        raid_plan_name="Core Team",
+        trial_id="sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="dd-5",
+                player_name="New DD",
+                planned_gear_sets=("Aegis Caller",),
+            ),
+        ),
+    )
+
+    result = _service(tmp_path).persist(state)
+
+    assert result.saved_seats == ("dd-5",)
+    assert result.skipped_seats == ()
+    chair = result.state.chair("dd-5")
+    assert chair is not None
+    assert chair.roster_member_id == member_id
+    assert chair.player_id and chair.character_id and chair.selected_build_id

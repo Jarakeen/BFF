@@ -655,7 +655,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             return
         updated = replace(plan, name=new_name)
         try:
-            self.plan_repository.save(updated)
+            self.plan_repository.save(updated, expected=plan)
         except Exception as exc:
             self.status.error(f"Could not rename Raid Plan: {exc}")
             return
@@ -714,7 +714,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
 
         updated = replace(plan, team_name=new_team or None)
         try:
-            self.plan_repository.save(updated)
+            self.plan_repository.save(updated, expected=plan)
         except Exception as exc:
             self.status.error(f"Could not change Raid Plan Team: {exc}")
             return

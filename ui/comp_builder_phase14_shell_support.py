@@ -2200,6 +2200,16 @@ def _save_to_originating_raid_plan(page) -> bool:
         from services.comp_build_persistence_service import CompBuildPersistenceService
 
         was_unbound = not state.is_raid_plan_bound
+        if not was_unbound:
+            from services.raid_plan_repository import RaidPlanRepository
+            from engine.config import get_user_database_path
+            origin = getattr(page, "_raid_plan_origin_snapshot", None)
+            latest = RaidPlanRepository(get_user_database_path()).get(state.raid_plan_id)
+            if origin is None or latest != origin:
+                raise RuntimeError(
+                    "Raid Plan changed since Comp Maker loaded it. Your Comp edits remain here; "
+                    "reload the plan before saving."
+                )
         checkpoint = UserSafetySnapshotService().create(
             f"save-comp-plan-{state.raid_plan_id or state.raid_plan_name or 'new'}"
         )
@@ -2275,7 +2285,12 @@ def _save_to_originating_raid_plan(page) -> bool:
             else ""
         )
         if skipped_builds:
-            build_detail += f" Skipped {len(skipped_builds)} unresolved/open chair(s)."
+            open_chairs = tuple(
+                seat for seat, reason in skipped_reasons
+                if str(reason or "").strip().casefold() == "open/recruit chair"
+            )
+            if open_chairs:
+                build_detail += f" {len(open_chairs)} open Recruit chair(s) remain planned."
             if skipped_reasons:
                 reason_text = "; ".join(
                     f"{seat}: {reason}" for seat, reason in skipped_reasons
@@ -2290,9 +2305,9 @@ def _save_to_originating_raid_plan(page) -> bool:
                     QMessageBox.warning(
                         page,
                         "Comp Save Needs Review",
-                        "The Raid Plan was saved, but these occupied chairs did not become canonical Comp Builds:\n\n"
+                        "The Raid Plan was saved. These occupied chairs still need a Comp Build:\n\n"
                         + "\n".join(f"• {seat}: {reason}" for seat, reason in review_reasons)
-                        + "\n\nResolve those occupied chairs in Personnel/Builds or give them a planned build package, then Save Plan again.",
+                        + "\n\nFor a missing player/character link, select the correct Personnel player and Character for that chair. For a missing build package, choose a saved build or planned gear. Then Save Plan again. Open Recruit chairs need no action.",
                     )
         page.status.success(
             f"Saved Comp Builder changes to Raid Plan: {plan.name}." + build_detail
