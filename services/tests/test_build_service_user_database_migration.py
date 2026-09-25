@@ -147,3 +147,42 @@ def test_application_empty_projection_cannot_erase_canonical_saved_builds(
     assert [row["build_id"] for row in catalog["builds"]] == ["b1"]
     assert len(service.load().Members) == 1
     assert service.load().Members[0].BuildName == "Rik — Sorcerer Tank"
+
+
+def test_application_forbids_destructive_sync_from_roster(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    data_dir = tmp_path / "data"
+    user_dir = tmp_path / "user_data"
+    data_dir.mkdir()
+    user_dir.mkdir()
+    user_db = user_dir / "foundrydock.db"
+    builds_path = data_dir / "builds.json"
+    characters_path = data_dir / "characters.json"
+    builds_path.write_text('{"Members": []}', encoding="utf-8")
+    characters_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 4,
+                "players": [],
+                "characters": [],
+                "builds": [],
+                "team_assignments": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(bridge_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(bridge_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "get_data_dir", lambda: data_dir)
+    monkeypatch.setattr(migration_module, "get_user_database_path", lambda: user_db)
+    monkeypatch.setattr(migration_module, "ensure_user_database", lambda: user_db)
+
+    service = BuildService(builds_path)
+
+    import pytest
+
+    with pytest.raises(RuntimeError, match="Destructive sync_from_roster is forbidden"):
+        service.canonical.sync_from_roster(BuildRoster())
