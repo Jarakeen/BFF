@@ -44,6 +44,7 @@ class BrittleFightUptime:
     heroism_percent: float = 0.0
     immunity_seconds: float = 0.0
     immunity_percent: float = 0.0
+    immunity_windows: tuple[tuple[float, float], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -333,19 +334,36 @@ class BrittleUptimeService:
             )
 
             immunity_seconds = 0.0
-            if str(immunity_name or "").strip():
-                try:
-                    from services.capability_service import CapabilityService
-                    active_seconds = CapabilityService(self.client, reference=None).compute_boss_active_seconds(
-                        code,
-                        fight_id,
-                        str(immunity_name).strip(),
-                        immunity_kind,
+            immunity_windows: tuple[tuple[float, float], ...] = ()
+            try:
+                from services.performance_boss_activity import PerformanceBossActivityService
+                active_windows = PerformanceBossActivityService(self.client).fetch_active_windows(
+                    code,
+                    fight_id,
+                    start,
+                    end,
+                    str(immunity_name or "").strip(),
+                    immunity_kind,
+                )
+                if active_windows:
+                    active_intervals = sorted(
+                        (float(row.StartSeconds), float(row.EndSeconds))
+                        for row in active_windows
+                        if float(row.EndSeconds) > float(row.StartSeconds)
                     )
-                    if active_seconds is not None:
-                        immunity_seconds = max(0.0, duration_seconds - float(active_seconds))
-                except Exception:
-                    immunity_seconds = 0.0
+                    immune: list[tuple[float, float]] = []
+                    cursor = 0.0
+                    for left, right in active_intervals:
+                        if left > cursor:
+                            immune.append((cursor, left))
+                        cursor = max(cursor, right)
+                    if cursor < duration_seconds:
+                        immune.append((cursor, duration_seconds))
+                    immunity_windows = tuple(immune)
+                    immunity_seconds = sum(right - left for left, right in immunity_windows)
+            except Exception:
+                immunity_seconds = 0.0
+                immunity_windows = ()
 
             providers.sort(key=lambda row: (-row.uptime_seconds, row.actor_label.casefold()))
             results.append(
@@ -365,6 +383,7 @@ class BrittleUptimeService:
                         min(100.0, max(0.0, immunity_seconds / duration_seconds * 100.0)),
                         1,
                     ) if duration_seconds > 0 else 0.0,
+                    immunity_windows=immunity_windows,
                     providers=tuple(providers),
                 )
             )
