@@ -107,6 +107,22 @@ class ExtremeSustainedDPSObjective32ScenarioPreflightService:
                     blockers.append(
                         "Objective #32 candidate runtime-state authority is missing canonical runtime effect scaling"
                     )
+                if getattr(
+                    scenario_frontier,
+                    "weapon_poison_activation_service",
+                    None,
+                ) is None:
+                    blockers.append(
+                        "Objective #32 candidate runtime-state authority is missing canonical weapon-poison activation-event authority"
+                    )
+                if getattr(
+                    scenario_frontier,
+                    "weapon_poison_consequence_resolver",
+                    None,
+                ) is None:
+                    blockers.append(
+                        "Objective #32 candidate runtime-state authority is missing explicit weapon-poison consequence authority"
+                    )
 
         if not bool(heavy_attack_channel_block_denominator_proven):
             blockers.append(
