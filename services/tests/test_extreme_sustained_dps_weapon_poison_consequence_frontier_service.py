@@ -21,6 +21,7 @@ from services.extreme_sustained_dps_runtime_target_combat_state_service import (
     ExtremeSustainedDPSRuntimeTargetCombatStateService,
 )
 from services.extreme_sustained_dps_weapon_poison_sequence_frontier_service import (
+    ExtremeSustainedDPSWeaponPoisonProcOccurrence,
     ExtremeSustainedDPSWeaponPoisonSequenceFrontierService,
 )
 
