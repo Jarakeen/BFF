@@ -285,16 +285,30 @@ class CompBuilderPage(FoundryPage):
         def _legacy_personnel_match(member):
             if member.roster_member_id is not None:
                 return roster_service.get_member(int(member.roster_member_id))
-            gamertag = str(member.gamertag or "").strip().casefold()
+            gamertag = str(member.gamertag or "").strip()
             if not gamertag:
                 return None
-            matches = tuple(
-                row
-                for row in personnel
-                if str(getattr(row, "PlayerName", "") or "").strip().casefold()
-                == gamertag
-                and getattr(row, "Id", None) is not None
-            )
+
+            # Legacy/typed Raid Plan chairs can predate stable Personnel ids. Use
+            # the same exact-name + learned-alias resolver as the rest of planning
+            # instead of leaving those chairs as display-text-only identities.
+            try:
+                from services.roster_player_identity_service import RosterPlayerIdentityService
+                matches = tuple(
+                    RosterPlayerIdentityService(
+                        roster_service.db,
+                        None,
+                    ).matching_members(gamertag)
+                )
+            except Exception:
+                key = gamertag.casefold()
+                matches = tuple(
+                    row
+                    for row in personnel
+                    if str(getattr(row, "PlayerName", "") or "").strip().casefold()
+                    == key
+                    and getattr(row, "Id", None) is not None
+                )
             return matches[0] if len(matches) == 1 else None
 
         members = []
