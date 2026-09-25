@@ -127,3 +127,24 @@ def test_heavy_attack_inventory_omission_depends_on_runtime_adapter_mode() -> No
         for item in complete_inventory.omitted_scope
     )
     assert "heavy_attack_policy" in complete_inventory.searched_canonical_axes
+
+def test_inventory_rejects_noncanonical_tree_axis_tags() -> None:
+    result = ExtremeSustainedDPSGeneratedAxisInventoryService.inventory(
+        (_axis("Mystery", ("alchemy_moon_phase",)),)
+    )
+
+    assert result.searched_canonical_axes == ()
+    assert any(
+        "declares non-canonical mutation axis" in row
+        for row in result.unresolved
+    )
+
+
+def test_weapon_poison_formula_axis_does_not_imply_poison_tier_coverage() -> None:
+    result = ExtremeSustainedDPSGeneratedAxisInventoryService.inventory(
+        (_axis("Weapon Poisons", ("weapon_poisons",)),)
+    )
+
+    assert "weapon_poisons" in result.searched_canonical_axes
+    assert "weapon_poison_tiers" in result.missing_canonical_axes
+
