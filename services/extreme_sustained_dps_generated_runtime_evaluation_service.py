@@ -59,6 +59,9 @@ from services.extreme_saved_rotation_combat_record_service import (
 from services.extreme_sustained_dps_runtime_effect_projection_service import (
     ExtremeSustainedDPSRuntimeEffectProjectionService,
 )
+from services.extreme_sustained_dps_runtime_self_combat_state_service import (
+    ExtremeSustainedDPSRuntimeSelfCombatStateService,
+)
 from services.extreme_sustained_dps_weapon_enchantment_consequence_coverage_service import (
     ExtremeSustainedDPSWeaponEnchantmentConsequenceCoverageService,
 )
@@ -359,6 +362,8 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 ),
             )
 
+        self_runtime_unresolved: list[str] = []
+
         def runtime_combat_state_resolver(time_seconds: float, sequence: int | None = None):
             resolved = runtime_combat_state.resolve(
                 candidate_build,
@@ -371,17 +376,47 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             )
             if not resolved.resolved:
                 return resolved
+
+            projected_snapshot = runtime_snapshot.snapshot_at(
+                time_seconds,
+                sequence=sequence,
+            )
+            self_projection = ExtremeSustainedDPSRuntimeSelfCombatStateService.resolve(
+                snapshot=projected_snapshot,
+                effects=tuple(runtime_effects),
+            )
+            self_runtime_unresolved.extend(self_projection.unresolved)
+            merged_combat_state = replace(
+                resolved.combat_state,
+                in_combat=bool(
+                    resolved.combat_state.in_combat
+                    or self_projection.combat_state.in_combat
+                ),
+                active_buffs=tuple(
+                    dict.fromkeys(
+                        (
+                            *tuple(resolved.combat_state.active_buffs),
+                            *tuple(self_projection.combat_state.active_buffs),
+                        )
+                    )
+                ),
+            )
             enchantment_active_effects = (
                 enchantment_weapon_spell_damage.active_effects_at(time_seconds)
             )
-            if not enchantment_active_effects:
-                return resolved
             return replace(
                 resolved,
+                combat_state=merged_combat_state,
                 active_effects=tuple(
                     (
                         *tuple(resolved.active_effects),
                         *tuple(enchantment_active_effects),
+                    )
+                ),
+                unresolved=self._dedupe(
+                    (
+                        *tuple(resolved.unresolved),
+                        *tuple(self_projection.unresolved),
                     )
                 ),
             )
@@ -478,6 +513,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                 *summary.unresolved,
                 *summary.damage_unresolved,
                 *tuple(target_runtime_unresolved),
+                *tuple(self_runtime_unresolved),
                 *tuple(getattr(enchantment_sources, "unresolved", ()) or ()),
                 *tuple(enchantment_resistance.unresolved),
                 *tuple(enchantment_weapon_spell_damage.unresolved),
@@ -491,6 +527,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             f"Explicit target resistance: {float(target_resistance):g}",
             "Dual-bar named-set activation bound into shared runtime snapshot truth",
             "Named buffs and reviewed timed non-named runtime stat effects may alter exact runtime build contexts",
+            "Reviewed SELF-target named runtime effects are projected into attacker CombatState at exact action timestamps",
             "Reviewed enemy-target named and explicit numeric Damage Taken effects are projected through canonical target_combat_state at exact damage timestamps",
             "Reviewed enemy-target named and explicit numeric resistance reductions are applied through exact-time target resistance before mitigation",
             "Damage evaluated through Phase 14 Combat Simulation using candidate_build provenance",
