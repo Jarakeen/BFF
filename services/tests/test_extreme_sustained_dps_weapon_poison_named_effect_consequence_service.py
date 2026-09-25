@@ -1,4 +1,5 @@
 from minmax.runtime_event import RuntimeEvent
+from minmax.support_stacking import StackingBehavior
 from minmax.combat_damage_modifiers import damage_taken_from_target_state
 from minmax.combat_target_resistance import resistance_reduction_from_target_state
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
@@ -62,6 +63,8 @@ def test_breach_projects_minor_breach_to_enemy_runtime() -> None:
     assert effect.duration == 10.0
     assert effect.target == "Boss"
     assert effect.target_type.value == "enemy"
+    assert effect.stacking is StackingBehavior.UNIQUE
+    assert effect.exclusivity_group == "minor_breach"
     assert effect.chance is None
 
 
