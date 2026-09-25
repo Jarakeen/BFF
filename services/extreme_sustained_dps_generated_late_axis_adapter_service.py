@@ -41,6 +41,10 @@ from services.extreme_sustained_dps_weapon_poison_frontier_service import (
     ExtremeSustainedDPSWeaponPoisonFrontierService,
     ExtremeSustainedDPSWeaponPoisonLoadoutCandidate,
 )
+from services.extreme_sustained_dps_generated_weapon_poison_tier_loadout_frontier_service import (
+    ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate,
+    ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutFrontierService,
+)
 
 
 @dataclass(frozen=True)
@@ -49,6 +53,9 @@ class ExtremeSustainedDPSGeneratedLateAxisState:
     champion_points: ExtremeSustainedDPSChampionPointCandidate | None = None
     potion: ExtremeSustainedDPSPotionCandidate | None = None
     poison_loadout: ExtremeSustainedDPSWeaponPoisonLoadoutCandidate | None = None
+    poison_tier_loadout: (
+        ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate | None
+    ) = None
     passive_ranks: ExtremeSustainedDPSPassiveRankCandidate | None = None
     skills: ExtremeSustainedDPSTwoBarSkillCandidate | None = None
     assembled: ExtremeSustainedDPSAssembledCandidate | None = None
@@ -59,7 +66,7 @@ class ExtremeSustainedDPSGeneratedLateAxisState:
 
 
 class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
-    """Adapt CP → potion → poison → passives → skills into indexed search-tree axes."""
+    """Adapt CP → potion → poison → poison tier → passives → skills into indexed search-tree axes."""
 
     def __init__(
         self,
@@ -69,6 +76,11 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
         passive_ranks: ExtremeSustainedDPSPassiveRankFrontierService | object,
         skill_bars: ExtremeSustainedDPSSkillBarFrontierService | object,
         poisons: ExtremeSustainedDPSWeaponPoisonFrontierService | object | None = None,
+        poison_tiers: (
+            ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutFrontierService
+            | object
+            | None
+        ) = None,
         assembly: ExtremeSustainedDPSGeneratedCandidateAssemblyService | object = (
             ExtremeSustainedDPSGeneratedCandidateAssemblyService
         ),
@@ -76,6 +88,11 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
         self.champion_points = champion_points
         self.potions = potions
         self.poisons = poisons
+        self.poison_tiers = poison_tiers
+        if self.poison_tiers is not None and self.poisons is None:
+            raise ValueError(
+                "generated poison tier axis requires weapon-poison formula frontier"
+            )
         self.passive_ranks = passive_ranks
         self.skill_bars = skill_bars
         self.assembly = assembly
@@ -145,7 +162,45 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
             index=index,
             one_bar_only=state.context.one_bar_only,
         )
-        return replace(state, poison_loadout=candidate)
+        return replace(
+            state,
+            poison_loadout=candidate,
+            poison_tier_loadout=None,
+        )
+
+    def _poison_tier_count(
+        self,
+        state: ExtremeSustainedDPSGeneratedLateAxisState,
+    ) -> int:
+        if self.poison_tiers is None:
+            raise ValueError("generated late-axis adapter has no poison tier frontier")
+        if state.poison_loadout is None:
+            raise ValueError(
+                "generated poison tier axis requires poison formula selection first"
+            )
+        frontier = self.poison_tiers.frontier(
+            state.poison_loadout,
+            one_bar_only=state.context.one_bar_only,
+        )
+        return self._proven_count(frontier, "weapon-poison tier frontier")
+
+    def _poison_tier_at(
+        self,
+        state: ExtremeSustainedDPSGeneratedLateAxisState,
+        index: int,
+    ) -> ExtremeSustainedDPSGeneratedLateAxisState:
+        if self.poison_tiers is None:
+            raise ValueError("generated late-axis adapter has no poison tier frontier")
+        if state.poison_loadout is None:
+            raise ValueError(
+                "generated poison tier axis requires poison formula selection first"
+            )
+        candidate = self.poison_tiers.candidate_at(
+            state.poison_loadout,
+            index=index,
+            one_bar_only=state.context.one_bar_only,
+        )
+        return replace(state, poison_tier_loadout=candidate)
 
     def _passive_count(
         self,
@@ -190,9 +245,13 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
             or state.potion is None
             or state.passive_ranks is None
             or (self.poisons is not None and state.poison_loadout is None)
+            or (
+                self.poison_tiers is not None
+                and state.poison_tier_loadout is None
+            )
         ):
             raise ValueError(
-                "generated late-axis assembly requires CP, potion, optional poison, and passive selections before skills"
+                "generated late-axis assembly requires CP, potion, optional poison/tier, and passive selections before skills"
             )
         skills = self.skill_bars.candidate_at(
             state.context.build,
@@ -208,6 +267,7 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
             passive_ranks=state.passive_ranks,
             skills=skills,
             poison_loadout=state.poison_loadout,
+            poison_tier_loadout=state.poison_tier_loadout,
         )
         return replace(state, skills=skills, assembled=assembled)
 
@@ -239,6 +299,15 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
                     candidate_count=self._poison_count,
                     candidate_at=self._poison_at,
                     canonical_axes=("weapon_poisons",),
+                )
+            )
+        if self.poison_tiers is not None:
+            axes.append(
+                ExtremeSustainedDPSIndexedFrontierAxis(
+                    "Weapon Poison Tiers",
+                    candidate_count=self._poison_tier_count,
+                    candidate_at=self._poison_tier_at,
+                    canonical_axes=("weapon_poison_tiers",),
                 )
             )
         axes.extend(
