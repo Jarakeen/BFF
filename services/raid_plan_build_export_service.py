@@ -13,7 +13,9 @@ from xml.sax.saxutils import escape
 
 from models.build_model import BuildRoster, PlayerBuild
 from models.raid_plan import RaidPlan, RaidPlanMember
+from engine.config import DEFAULT_DATABASE
 from services.build_service import BuildService
+from services.class_mastery_repository import ClassMasteryRepository
 
 
 def _clean(value: object) -> str:
@@ -250,6 +252,48 @@ def _skill_rows(build: PlayerBuild) -> tuple[tuple[str, str, str], ...]:
     return tuple(rows)
 
 
+def _affiliation_text(build: PlayerBuild) -> str:
+    forms: list[str] = []
+    if bool(getattr(build, "Werewolf", False)):
+        forms.append("Werewolf")
+    if bool(getattr(build, "Vampire", False)):
+        forms.append("Vampire")
+    transformed = _clean(getattr(build, "TransformedForm", "")).casefold()
+    if transformed == "werewolf" and "Werewolf" not in forms:
+        forms.append("Werewolf")
+    elif transformed == "vampire" and "Vampire" not in forms:
+        forms.append("Vampire")
+    return " / ".join(forms) or "—"
+
+
+def _class_mastery_names(build: PlayerBuild) -> tuple[str, ...]:
+    selected = {
+        int(value)
+        for value in (getattr(build, "ClassMasteryAbilityIds", ()) or ())
+        if str(value).strip()
+    }
+    if not selected:
+        return ()
+    repository = ClassMasteryRepository(DEFAULT_DATABASE)
+    names = [
+        row.name
+        for row in repository.for_class(_clean(getattr(build, "EsoClass", "")))
+        if int(row.base_ability_id) in selected or int(row.skill_id) in selected
+    ]
+    return tuple(dict.fromkeys(_clean(name) for name in names if _clean(name)))
+
+
+def _skill_bar_columns(build: PlayerBuild) -> tuple[tuple[str, str, str, str], ...]:
+    front = [(str(i + 1) if i < 5 else "Ultimate", _clean(skill)) for i, skill in enumerate(build.FrontBarSkills) if _clean(skill)]
+    back = [(str(i + 1) if i < 5 else "Ultimate", _clean(skill)) for i, skill in enumerate(build.BackBarSkills) if _clean(skill)]
+    rows: list[tuple[str, str, str, str]] = []
+    for index in range(max(len(front), len(back), 1)):
+        fslot, fskill = front[index] if index < len(front) else ("", "")
+        bslot, bskill = back[index] if index < len(back) else ("", "")
+        rows.append((fslot, fskill, bslot, bskill))
+    return tuple(rows)
+
+
 def _scribed_rows(build: PlayerBuild) -> tuple[tuple[str, str, str, str, str], ...]:
     recipes = tuple(
         recipe for recipe in build.ScribedSkillRecipes if _clean(getattr(recipe, "ResultName", ""))
@@ -378,6 +422,7 @@ def export_raid_plan_builds_xlsx(
         summary = (
             ("Role", safe(member.role) or safe(build.Role) or "—", "Mundus", safe(member.planned_mundus) or safe(build.Mundus) or "—"),
             ("Food", safe(build.Food) or "—", "Potion", safe(build.Potion) or "—"),
+            ("WW / Vampire", _affiliation_text(build), "Class Masteries", ", ".join(_class_mastery_names(build)) or "—"),
             ("Primary Assignment", safe(member.primary_assignment) or "—", "Utility", ", ".join(member.utility_assignments) or "—"),
         )
         for left_label, left_value, right_label, right_value in summary:
@@ -408,15 +453,17 @@ def export_raid_plan_builds_xlsx(
         row += 1
 
         row = section(ws, row, "Skill Bars")
-        for col, heading in enumerate(("Bar", "Slot", "Skill"), 1):
+        for col, heading in enumerate(("Front Slot", "Front Bar", "", "Back Slot", "Back Bar"), 1):
             ws.cell(row, col, heading).font = Font(bold=True, color=teal)
             ws.cell(row, col).border = Border(bottom=rule)
         row += 1
-        for skill_row in _skill_rows(build):
-            for col, value in enumerate(skill_row, 1):
+        for front_slot, front_skill, back_slot, back_skill in _skill_bar_columns(build):
+            values = (front_slot, front_skill, "", back_slot, back_skill)
+            for col, value in enumerate(values, 1):
                 c = ws.cell(row, col, safe(value))
                 c.data_type = "s"
                 c.border = Border(bottom=hair)
+                c.alignment = Alignment(vertical="top", wrap_text=True)
             row += 1
         row += 1
 
@@ -573,6 +620,7 @@ def export_raid_plan_builds_pdf(
         summary_rows = [
             [P("ROLE", section_style), P(member.role or build.Role), P("MUNDUS", section_style), P(member.planned_mundus or build.Mundus)],
             [P("FOOD", section_style), P(build.Food), P("POTION", section_style), P(build.Potion)],
+            [P("WW / VAMP", section_style), P(_affiliation_text(build)), P("CLASS MASTERIES", section_style), P(", ".join(_class_mastery_names(build)) or "—")],
         ]
         story.extend([table(summary_rows, (.72*inch, 2.63*inch, .72*inch, 2.63*inch), header=False), Spacer(1, 4)])
         assignment_rows = [
@@ -592,9 +640,15 @@ def export_raid_plan_builds_pdf(
         story.append(table(gear_rows, (.85*inch, 2.15*inch, 1.05*inch, 1.15*inch, 1.55*inch)))
 
         story.append(Paragraph("SKILL BARS", section_style))
-        skill_rows = [[P(x, section_style) for x in ("Bar", "Slot", "Skill")]]
-        skill_rows.extend([[P(value) for value in row] for row in _skill_rows(build)])
-        story.append(table(skill_rows, (.75*inch, .7*inch, 5.3*inch)))
+        skill_rows = [[
+            P("Front", section_style), P("Skill", section_style),
+            P("Back", section_style), P("Skill", section_style),
+        ]]
+        skill_rows.extend([
+            [P(front_slot), P(front_skill), P(back_slot), P(back_skill)]
+            for front_slot, front_skill, back_slot, back_skill in _skill_bar_columns(build)
+        ])
+        story.append(table(skill_rows, (.55*inch, 2.82*inch, .55*inch, 2.82*inch)))
 
         story.append(Paragraph("SCRIBED SKILL FORMULAS", section_style))
         recipes = _scribed_rows(build)
