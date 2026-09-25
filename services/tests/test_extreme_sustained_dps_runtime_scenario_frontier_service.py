@@ -960,3 +960,46 @@ def test_candidate_builder_does_not_accept_resolver_presence_without_consequence
         "consequence resolution failed closed" in row
         for row in result.unresolved
     )
+
+
+def test_runtime_scenario_dispatch_prefers_resolve_method_on_callable_class() -> None:
+    class _PolicyResolverClass:
+        def __new__(cls, **_kwargs):
+            raise AssertionError("resolver class should not be instantiated")
+
+        @classmethod
+        def resolve(cls, **_kwargs):
+            return ("resolved",)
+
+    result = (
+        ExtremeSustainedDPSRuntimeScenarioFrontierService
+        ._invoke_weapon_enchantment_cooldown_policy_resolver(
+            _PolicyResolverClass,
+            candidate=object(),
+            enchantment_effects=(),
+            player_build=PlayerBuild(),
+        )
+    )
+
+    assert result == ("resolved",)
+
+
+def test_runtime_scenario_poison_dispatch_prefers_build_method_on_callable_class() -> None:
+    class _ConsequenceResolverClass:
+        def __new__(cls, **_kwargs):
+            raise AssertionError("resolver class should not be instantiated")
+
+        @classmethod
+        def build(cls, **_kwargs):
+            return SimpleNamespace(marker="built")
+
+    result = (
+        ExtremeSustainedDPSRuntimeScenarioFrontierService
+        ._invoke_weapon_poison_consequence_resolver(
+            _ConsequenceResolverClass,
+            sequence_frontier=object(),
+            source="test",
+        )
+    )
+
+    assert result.marker == "built"
