@@ -125,3 +125,19 @@ def test_formula_authority_allows_same_canonical_formula_on_both_bars():
     )
 
     assert authority.formula_for(formula.canonical_id) is formula
+
+
+def test_generated_formula_authority_does_not_fall_back_to_stale_late_axis_provenance():
+    state = _state()
+    state.late.assembled.poison_loadout = None
+
+    result = ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthorityService.resolve(
+        state
+    )
+
+    assert result.resolved is False
+    assert result.entries == ()
+    assert any(
+        "without retained poison-loadout provenance" in row
+        for row in result.unresolved
+    )
