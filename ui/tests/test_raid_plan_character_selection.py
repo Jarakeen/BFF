@@ -172,3 +172,50 @@ def test_matching_saved_builds_falls_back_to_same_player_when_character_binding_
         player_id="player-rik",
         character_id="stale-personnel-character",
     ) == (0,)
+
+
+def test_matching_saved_builds_recovers_exact_gamertag_when_player_binding_is_stale() -> None:
+    saved_builds = [
+        _build(
+            gamertag="Rikbacon",
+            character="Bacon",
+            build_name="Rik — Sorcerer Tank",
+            player_id="old-player-rik",
+            character_id="character-bacon",
+        ),
+        _build(
+            gamertag="Someone Else",
+            character="Bacon",
+            build_name="Wrong Player",
+            player_id="player-other",
+            character_id="character-other",
+        ),
+    ]
+
+    assert matching_saved_build_indices(
+        saved_builds,
+        "Rikbacon",
+        "Rik",
+        player_id="current-player-rik",
+        character_id="stale-character-rik",
+    ) == (0,)
+
+
+def test_matching_saved_builds_stale_player_recovery_never_uses_fuzzy_name() -> None:
+    saved_builds = [
+        _build(
+            gamertag="Brainiac",
+            character="V.B.",
+            build_name="Brainiac — Nightblade Werewolf DD",
+            player_id="old-player-brainiac",
+            character_id="character-vb",
+        ),
+    ]
+
+    assert matching_saved_build_indices(
+        saved_builds,
+        "V Brainiac V",
+        "Brainiac",
+        player_id="current-player-brainiac",
+        character_id="stale-character-brainiac",
+    ) == ()
