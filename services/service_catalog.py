@@ -1296,6 +1296,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "PreRuntimeExactDamageOccurrenceAuthority",
             "OptionalWeaponPoisonConsequenceAuthority",
             "OptionalWeaponPoisonDilutionSelectionAuthority",
+            "OptionalGeneratedPoisonTierAndDilutionAuthority",
             "SupplementalScenarioRuntimeEvidenceResolvers",
             "OptionalGlobalOrCandidateScopedPoisonConsequenceAuthority",
         ),
@@ -1309,6 +1310,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.weapon_enchantment_cooldown_policy",
             "extreme.sustained_dps.weapon_poison_activation_events",
             "extreme.sustained_dps.weapon_poison_sequence_frontier",
+            "extreme.sustained_dps.generated_weapon_poison_consequence_authority_factory",
             "extreme.sustained_dps.weapon_poison_named_effect_authority",
             "extreme.sustained_dps.weapon_poison_consequence_frontier",
             "extreme.sustained_dps.runtime_scenario_frontier",
@@ -1322,7 +1324,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Pre-runtime exact damage-occurrence evidence remains caller-owned to avoid circularly deriving runtime_state from a final damage evaluator that already consumes runtime_state. "
-            "Exact crafted-poison formula/dilution consequence authority is also caller-owned; omitting it preserves fail-closed poison consequence handling rather than inferring effects from an item label. "
+            "Exact crafted-poison tier/dilution witnesses remain caller-owned; generated formula provenance can now be composed with those witnesses into candidate-scoped consequence authority without inferring either fact from an item label or formula ID. "
             "All downstream weapon-enchantment runtime authorities are wired from one shared canonical ESO repository/rule graph. "
             "Poison consequence authority may be global or candidate-scoped, but competing authority paths are rejected."
         ),
@@ -1610,6 +1612,40 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Formula identity, crafted-tier/item evidence, and dilution mode remain three "
             "separate proof layers. Source-section headings, effect count, and generated "
             "formula IDs are not promoted into tier or dilution authority."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_weapon_poison_consequence_authority_factory",
+        domain="extreme",
+        purpose=(
+            "Build one candidate-scoped finite weapon-poison consequence authority from "
+            "retained generated formula provenance plus explicit candidate tier/item and "
+            "dilution-mode witnesses."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_weapon_poison_consequence_authority_factory_service",
+        inputs=(
+            "CompleteGeneratedCandidateState",
+            "CandidateWeaponPoisonTierItemEvidenceResolver",
+            "CandidateWeaponPoisonDilutionModeResolver",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService",),
+        dependencies=(
+            "extreme.sustained_dps.generated_weapon_poison_formula_authority",
+            "extreme.sustained_dps.generated_weapon_poison_dilution_authority",
+            "extreme.sustained_dps.weapon_poison_named_effect_authority",
+            "extreme.sustained_dps.weapon_poison_consequence_frontier",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_generated_weapon_poison_consequence_authority_factory",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "No-poison candidates return no consequence authority. Poisoned candidates "
+            "retain formula-specific consequence authority; unresolved formula provenance "
+            "fails closed before runtime-state construction."
         ),
     ),
     ServiceDescriptor(
