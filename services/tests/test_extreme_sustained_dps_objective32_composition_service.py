@@ -46,7 +46,14 @@ def _kwargs():
         "structural_families": object(),
         "structural_materialization": object(),
         "gear_adapter": object(),
-        "late_adapter": SimpleNamespace(poisons=object(), poison_tiers=object()),
+        "late_adapter": SimpleNamespace(
+            poisons=object(),
+            poison_tiers=object(),
+            axes=lambda: (
+                SimpleNamespace(canonical_axes=("weapon_poisons",)),
+                SimpleNamespace(canonical_axes=("weapon_poison_tiers",)),
+            ),
+        ),
         "rotation_adapter": object(),
         "runtime_policy_adapter": _RuntimePolicyAdapter(),
         "runtime_evaluation": object(),
@@ -238,7 +245,14 @@ def test_composition_requires_dedicated_weapon_enchantment_runtime_universe(attr
 
 def test_composition_requires_generated_weapon_poison_selection_frontier() -> None:
     kwargs = _kwargs()
-    kwargs["late_adapter"] = SimpleNamespace(poisons=None)
+    kwargs["late_adapter"] = SimpleNamespace(
+        poisons=None,
+        poison_tiers=object(),
+        axes=lambda: (
+            SimpleNamespace(canonical_axes=("weapon_poisons",)),
+            SimpleNamespace(canonical_axes=("weapon_poison_tiers",)),
+        ),
+    )
 
     with pytest.raises(
         ValueError,
@@ -250,10 +264,44 @@ def test_composition_requires_generated_weapon_poison_selection_frontier() -> No
 
 def test_composition_requires_generated_weapon_poison_tier_frontier() -> None:
     kwargs = _kwargs()
-    kwargs["late_adapter"] = SimpleNamespace(poisons=object(), poison_tiers=None)
+    kwargs["late_adapter"] = SimpleNamespace(
+        poisons=object(),
+        poison_tiers=None,
+        axes=lambda: (
+            SimpleNamespace(canonical_axes=("weapon_poisons",)),
+            SimpleNamespace(canonical_axes=("weapon_poison_tiers",)),
+        ),
+    )
 
     with pytest.raises(
         ValueError,
         match="canonical generated weapon-poison tier frontier",
+    ):
+        ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("missing_axis", "remaining_axis"),
+    (
+        ("weapon_poisons", "weapon_poison_tiers"),
+        ("weapon_poison_tiers", "weapon_poisons"),
+    ),
+)
+def test_composition_requires_late_adapter_to_physically_publish_poison_axes(
+    missing_axis,
+    remaining_axis,
+):
+    kwargs = _kwargs()
+    kwargs["late_adapter"] = SimpleNamespace(
+        poisons=object(),
+        poison_tiers=object(),
+        axes=lambda: (
+            SimpleNamespace(canonical_axes=(remaining_axis,)),
+        ),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=f"physically publish canonical axis: {missing_axis}",
     ):
         ExtremeSustainedDPSObjective32CompositionService.compose(**kwargs)
