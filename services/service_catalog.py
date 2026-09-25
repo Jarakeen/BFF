@@ -2128,7 +2128,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         service_id="extreme.sustained_dps.weapon_enchantment_cooldown_policy",
         domain="extreme",
         purpose=(
-            "Project canonical weapon-enchantment EffectVariants into finite-sequence cooldown policies only when every cadence and cooldown-topology denominator is authoritative."
+            "Project canonical weapon-enchantment EffectVariants into finite-sequence cooldown policies when every cadence fact relevant to the concrete candidate topology is authoritative."
         ),
         implementation_path="services.extreme_sustained_dps_weapon_enchantment_cooldown_policy_resolver",
         inputs=(
@@ -2145,8 +2145,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         encounter_aware=False,
         evidence_class=EvidenceClass.GAME_MECHANIC,
         notes=(
-            "EffectVariant.name becomes the cooldown identity only after authoritative same-identity sharing and cooldown-scope evidence exists. "
-            "Current Crusher/buff-debuff cadence therefore remains fail-closed, while the authoritative direct-damage 4-second value alone is insufficient to bypass unresolved topology."
+            "Cooldown proof is candidate-scoped: one physical enchant source does not require multi-identity topology; duplicate copies require authoritative same-identity sharing; multiple distinct identities additionally require authoritative scope and independence evidence. "
+            "Current Crusher/buff-debuff cadence remains fail-closed on its unresolved base cooldown, while a single reviewed direct-damage identity may use the authoritative 4-second cadence without unrelated topology debt."
         ),
     ),
     ServiceDescriptor(
