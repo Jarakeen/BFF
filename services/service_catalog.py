@@ -1575,6 +1575,40 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_poison_consequence_frontier",
+        domain="extreme",
+        purpose=(
+            "Bind each finite selected weapon-poison proc history to explicit source-bound "
+            "runtime consequence attempts without rerolling poison chance or cooldown."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_poison_consequence_frontier_service",
+        inputs=(
+            "ExtremeSustainedDPSWeaponPoisonSequenceFrontier",
+            "AuthoritativeWeaponPoisonConsequenceResolver",
+        ),
+        outputs=(
+            "ExtremeSustainedDPSWeaponPoisonConsequenceFrontierResult",
+            "ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier",
+            "RuntimeEffectVariants",
+        ),
+        dependencies=(
+            "extreme.sustained_dps.weapon_poison_sequence_frontier",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_poison_consequence_runtime_frontier",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The upstream poison sequence has already resolved the 20% proc decision and "
+            "global cooldown. Consequence effects therefore may not introduce a second proc "
+            "roll. Missing effect identity/magnitude/dilution remains fail-closed rather than "
+            "being treated as zero impact."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_enchantment_proc_consequences",
         domain="extreme",
         purpose=(
