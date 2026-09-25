@@ -695,7 +695,7 @@ class CoveragePage(FoundryPage):
                 (effect_type == "All Effects" or effect_type == category)
                 and (
                     not self.missing_only.isChecked()
-                    or evidence not in {"available", "assigned_supported"}
+                    or evidence in {"gap", "not_found", "unverified"}
                 )
                 and (not self.redundant_only.isChecked() or source_count > 1)
                 and (not query or query in searchable)

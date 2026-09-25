@@ -378,15 +378,6 @@ https://forums.elderscrollsonline.com/en/discussion/443598/adjustments-to-how-we
 **Notes:** This is the authority for classifying exact weapon-skill damage occurrences by component shape instead of treating every tick owned by a weapon ability as enchant-eligible. It does not establish current cooldown duration or duplicate-enchantment cooldown scope.
 
 
-### ESO Support — Do weapon enchantments share cooldowns?
-https://help.elderscrollsonline.com/app/answers/detail/a_id/23047/~/do-weapon-enchantments-share-cooldowns
-
-**Use for:** Primary/current ZOS support evidence that identical weapon enchantments share a cooldown. ESO Support explicitly states that when Dual Wielding two weapons with the same enchantment, only one can activate until the first enchantment's cooldown cycle ends.
-
-**Confidence:** Primary / reference-grade for same-identity cooldown sharing.
-
-**Notes:** This closes `same_effect_identity_shares_cooldown` as authoritative. It does **not** establish that different enchant identities have independent timers, nor does it establish the base cooldown duration for buff/debuff enchantments.
-
 ### ESO forum community testing: duplicate weapon-enchantment cooldown sharing
 https://forums.elderscrollsonline.com/en/discussion/460533/clarification-on-enchants-unnecessarily-over-complicated
 
@@ -394,7 +385,7 @@ https://forums.elderscrollsonline.com/en/discussion/460533/clarification-on-ench
 
 **Confidence:** Community / corroborative only. Useful for shaping the research hypothesis, not sufficient to promote exact combat math.
 
-**Notes:** Retained as corroboration only. Official ESO Support now supplies the authoritative same-identity shared-cooldown rule; this forum thread is no longer the promotion authority.
+**Notes:** Keep `same_effect_identity_shares_cooldown` provisional until a ZOS-authored or equivalent current authoritative source directly establishes the shared-timer rule.
 
 ### ESO forum community testing: distinct enchant identities use independent cooldowns
 https://forums.elderscrollsonline.com/en/discussion/363984/glyphs-cooldown-sharing
@@ -480,3 +471,11 @@ https://eso-pvp.com/alchemy/
 **Confidence:** Medium for trait -> named-effect relationships and recipe/item cross-checking. Do not treat its displayed named-effect percentages as BFF's numeric authority when they conflict with FoundryDock's separately reviewed canonical named-effect semantics.
 
 **BFF rule:** Safe corroboration for relationships such as Breach -> Minor Breach, Protection poison -> target Minor Vulnerability + self Minor Protection, Increase Weapon Power poison -> target Minor Maim + self Minor Brutality, and Increase Spell Power poison -> target Minor Cowardice + self Minor Sorcery under U50. Keep U51 semantics separately versioned; Update 51 lands September 28, 2026.
+
+
+### ZOS PTS Patch Notes v8.3.2 — Ozezan buff duration
+https://forums.elderscrollsonline.com/en/discussion/627533/pts-patch-notes-v8-3-2
+
+**Use for:** First-party confirmation that Ozezan the Inferno's repeatedly applied buffs were set to 1.1 seconds to avoid flicker. Cross-check this historical change against the current imported two-piece bonus before using the duration.
+
+**Confidence:** Primary for the documented 2023 change; current `data/eso.db` two-piece tooltip is the local authority for the exact Minor Vitality relationship and current displayed duration. This patch note alone does not prove present-day uptime or the separate Armor trigger.

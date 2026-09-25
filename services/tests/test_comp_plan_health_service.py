@@ -1,5 +1,6 @@
 from pathlib import Path
 from types import SimpleNamespace
+from minmax.gear_set_known_effects import known_effects_for_bonus_row
 
 from models.comp_plan_state import CompChairState, CompPlanState
 from services.comp_plan_health_service import CompPlanHealthService
@@ -8,6 +9,35 @@ from services.raid_planned_gear_coverage_service import (
     RaidPlannedGearCoverageService,
 )
 from services.saved_build_capability_service import RaidCoverageSnapshot
+
+
+def test_equipped_ozezan_two_piece_minor_vitality_requires_both_pieces(monkeypatch, tmp_path) -> None:
+    reviewed = known_effects_for_bonus_row(2000, 687, "Ozezan the Inferno", 2)
+    assert any(effect.name == "minor_vitality" for effect in reviewed)
+    monkeypatch.setattr(
+        "services.raid_planned_gear_coverage_service."
+        "NonAbilityEffectProviderReferenceService.gear",
+        lambda self: (SimpleNamespace(
+            source_name="Ozezan the Inferno", effect_key="minor_vitality", piece_count=2,
+        ),),
+    )
+    service = RaidPlannedGearCoverageService(tmp_path / "eso.db")
+    def provider(count):
+        return PlannedGearCoverageProvider(
+            seat_id="healer-1", provider_label="Jarakeen",
+            gear_sets=("Ozezan the Inferno",), source_kind="saved build",
+            equipped_piece_counts=(("Ozezan the Inferno", count),),
+        )
+
+    one_piece = service.overlay(service.empty_snapshot(("Minor Vitality",)),
+                                (provider(1),), effect_names=("Minor Vitality",))
+    two_piece = service.overlay(service.empty_snapshot(("Minor Vitality",)),
+                                (provider(2),), effect_names=("Minor Vitality",))
+    assert one_piece.conditional_providers["Minor Vitality"] == []
+    assert two_piece.status["Minor Vitality"] == "conditional"
+    assert two_piece.conditional_providers["Minor Vitality"] == [
+        "Jarakeen [saved build: Ozezan the Inferno]"
+    ]
 
 
 def test_planned_gear_overlay_resolves_perfected_set_family_name(monkeypatch, tmp_path) -> None:

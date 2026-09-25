@@ -1985,6 +1985,16 @@ A selected Saved Build's front and back bar skills can provide reviewed buffs or
 
 ---
 
+## 2026-09-25 — Combat Prayer and Ozezan have different coverage gates
+
+The imported Combat Prayer link was a generic self-targeted “berserk” entry even though its ability tooltip explicitly grants Minor Berserk to the caster and allies for 10 seconds. Ozezan the Inferno's two-piece tooltip grants Minor Vitality to a healed ally for 1.1 seconds. Its Armor effect has a separate overheal trigger; neither effect follows from wearing only one piece.
+
+**Layman's version:** putting Combat Prayer on a healer's bar brings Minor Berserk to the plan; wearing both Ozezan pieces brings Minor Vitality. Coverage should say these buffs are covered, while still admitting that casting, healing, and keeping them active happen during the fight.
+
+**For BFF:** the skill needs an exact reviewed group-target effect and the set needs an exact two-piece bonus mapping. Project equipped pieces from the assigned Saved Build, count the source as planned coverage, and leave actual uptime conditional.
+
+---
+
 ## 2026-09-25 — An unanswered two-enchant rule should not block a one-enchant build
 
 While tightening Objective #32 weapon-enchantment cadence, the runtime gate was requiring proof about how **different enchant identities interact** even for a candidate that only carried one enchant identity. That was safe, but unnecessarily pessimistic: a rule about competition between two different timers cannot change a branch in which that competition never exists.

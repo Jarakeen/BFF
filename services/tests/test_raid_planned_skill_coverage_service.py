@@ -81,6 +81,29 @@ def test_planned_group_skill_counts_as_conditional_coverage(tmp_path) -> None:
     ]
 
 
+def test_combat_prayer_reviewed_group_minor_berserk_is_conditional() -> None:
+    from pathlib import Path
+    from minmax.skill_known_effects import verified_skill_effects
+
+    effects = verified_skill_effects(37243, 2)
+    minor_berserk = next(effect for effect in effects if effect.name == "minor_berserk")
+    assert minor_berserk.target_type == SupportTargetType.GROUP
+
+    service = RaidPlannedSkillCoverageService(Path("data/eso.db"))
+    service.skills = _Repo(effects, ability_id=None)
+    service._ability_id_cache[("combat prayer", "warden")] = 41189
+    provider = PlannedSkillCoverageProvider(
+        seat_id="healer-1", provider_label="Jarakeen", eso_class="Warden",
+        skills=("Combat Prayer",), source_kind="saved build",
+    )
+    result = service.overlay(_snapshot("Minor Berserk"), (provider,), effect_names=("Minor Berserk",))
+
+    assert result.status["Minor Berserk"] == "conditional"
+    assert result.conditional_providers["Minor Berserk"] == [
+        "Jarakeen [saved build: skill: Combat Prayer]"
+    ]
+
+
 def test_self_only_planned_skill_does_not_count_as_group_coverage(tmp_path) -> None:
     service = RaidPlannedSkillCoverageService(_database(tmp_path))
     service.skills = _Repo(

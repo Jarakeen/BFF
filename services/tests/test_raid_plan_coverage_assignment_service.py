@@ -119,6 +119,21 @@ def test_planned_gear_conditional_evidence_can_confirm_assigned_provider_conditi
     assert review.conditional_primary == ("Werewolf DD",)
 
 
+def test_saved_build_conditional_skill_evidence_counts_as_covered() -> None:
+    scope = _scope(RaidPlanMember(
+        seat_id="healer-1", gamertag="Jarakeen", character_name="Healer",
+        selected_build_name="Healer Build", primary_assignment="Major Courage",
+    ))
+    review = RaidPlanCoverageAssignmentService().review(
+        effect_name="Major Courage", scope=scope,
+        snapshot=_snapshot(conditional=("Healer [saved build: Courage Source]",)),
+    )
+
+    assert review.state == "assigned_conditional"
+    assert review.coverage_state == "covered"
+    assert review.conditional_primary == ("Healer",)
+
+
 def test_unassigned_existing_source_is_not_mislabeled_as_a_gap() -> None:
     scope = _scope(
         RaidPlanMember(

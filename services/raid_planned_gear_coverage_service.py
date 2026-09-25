@@ -42,6 +42,8 @@ class PlannedGearCoverageProvider:
     seat_id: str
     provider_label: str
     gear_sets: tuple[str, ...]
+    source_kind: str = "planned"
+    equipped_piece_counts: tuple[tuple[str, int], ...] = ()
 
     def __post_init__(self) -> None:
         seat = _clean(self.seat_id)
@@ -85,7 +87,7 @@ class RaidPlannedGearCoverageService:
 
     @staticmethod
     def _provider_label(row: PlannedGearCoverageProvider, set_name: str) -> str:
-        return f"{row.provider_label} [planned: {set_name}]"
+        return f"{row.provider_label} [{row.source_kind}: {set_name}]"
 
     def _reviewed_by_set(self) -> dict[str, tuple[object, ...]]:
         cached = self._reviewed_by_set_cache
@@ -173,6 +175,15 @@ class RaidPlannedGearCoverageService:
                 keys = _set_lookup_keys(set_name)
                 if not keys:
                     continue
+                equipped = row.source_kind == "saved build"
+                piece_counts = {
+                    key: count
+                    for name, count in row.equipped_piece_counts
+                    for key in _set_lookup_keys(name)
+                }
+                count = max((piece_counts.get(key, 0) for key in keys), default=0)
+                if equipped and count == 0:
+                    continue
 
                 unique = next(
                     (
@@ -181,7 +192,7 @@ class RaidPlannedGearCoverageService:
                         if key in unique_by_set
                     ),
                     None,
-                )
+                ) if not equipped else None
                 if unique is not None:
                     effect_name = unique.name
                     if effect_name in display_by_effect_key.values():
@@ -196,6 +207,8 @@ class RaidPlannedGearCoverageService:
                     references.extend(reviewed_by_set.get(key, ()))
                 seen_reference_ids: set[tuple[str, str]] = set()
                 for reference in references:
+                    if equipped and (not reference.piece_count or count < reference.piece_count):
+                        continue
                     identity = (reference.source_name.casefold(), reference.effect_key)
                     if identity in seen_reference_ids:
                         continue

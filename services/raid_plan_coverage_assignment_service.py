@@ -22,9 +22,11 @@ def _key(value: object) -> str:
 
 def _evidence_owner(value: object) -> str:
     text = _clean(value)
-    marker = " [planned:"
-    index = text.casefold().find(marker)
-    return text[:index].strip() if index >= 0 else text
+    for marker in (" [planned:", " [saved build:"):
+        index = text.casefold().find(marker)
+        if index >= 0:
+            return text[:index].strip()
+    return text
 
 
 @dataclass(frozen=True)

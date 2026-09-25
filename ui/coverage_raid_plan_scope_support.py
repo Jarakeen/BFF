@@ -9,6 +9,7 @@ falls back to all saved builds when a plan chair cannot be resolved.
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QTableWidgetItem
+from minmax.gear_stat_inputs import GearStatInputResolver
 
 from engine.config import DEFAULT_DATABASE, get_data_dir, get_user_database_path
 from models.raid_plan import RaidPlan
@@ -151,17 +152,31 @@ def _apply_filters(page) -> None:
 
 def _overlay_planned_gear(snapshot, scope):
     """Share the canonical planned-gear evaluator with Comp Maker."""
-    providers = tuple(
+    providers = [
         PlannedGearCoverageProvider(
             seat_id=row.seat_id,
             provider_label=row.player_label,
             gear_sets=row.gear_sets,
         )
         for row in scope.planned_gear
-    )
+    ]
+    for row in scope.members:
+        front = GearStatInputResolver.equipped_set_counts(row.build, active_bar="front")
+        back = GearStatInputResolver.equipped_set_counts(row.build, active_bar="back")
+        counts = {
+            name: max(front.get(name, 0), back.get(name, 0))
+            for name in set(front) | set(back)
+        }
+        providers.append(PlannedGearCoverageProvider(
+            seat_id=row.seat_id,
+            provider_label=row.player_label,
+            gear_sets=tuple(counts),
+            source_kind="saved build",
+            equipped_piece_counts=tuple(counts.items()),
+        ))
     return RaidPlannedGearCoverageService(DEFAULT_DATABASE).overlay(
         snapshot,
-        providers,
+        tuple(providers),
         effect_names=RAID_PLAN_COVERAGE_NAMES,
     )
 
