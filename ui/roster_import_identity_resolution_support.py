@@ -99,7 +99,7 @@ def _known_characters(roster_service, build_service) -> dict[str, list[tuple[str
     from ui.roster_import_workflow import _text
 
     result: dict[str, list[tuple[str, str]]] = {}
-    catalog = build_service.canonical.catalog_service.load()
+    catalog = build_service.canonical.catalog_service.load_strict()
     players = {
         _text(player.get("player_id")): _text(player.get("gamertag"))
         for player in catalog.get("players", [])
