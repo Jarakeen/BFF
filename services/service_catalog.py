@@ -1601,6 +1601,35 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_poison_formula_selection",
+        domain="extreme",
+        purpose=(
+            "Validate one explicit canonical Alchemy formula witness against the saved "
+            "poison item's source-backed possibility universe and prove the selected effect set "
+            "without guessing dilution duration."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_poison_formula_selection_service",
+        inputs=(
+            "ExtremeSustainedDPSWeaponPoisonItemEvidence",
+            "CanonicalAlchemyFormulaWitness",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponPoisonFormulaSelection",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_poison_item_evidence",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_poison_formula_effect_set_selection",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.DATA,
+        notes=(
+            "The formula witness closes which Alchemy traits belong to the selected bottle. "
+            "It does not infer base-versus-triple duration, magnitude, or final runtime semantics."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_poison_consequence_frontier",
         domain="extreme",
         purpose=(
