@@ -21,12 +21,14 @@ def _occurrence_provider(_state):
 
 
 def test_factory_wires_canonical_weapon_enchantment_runtime_stack(tmp_path):
+    poison_consequence_resolver = object()
     resolver = ExtremeSustainedDPSCandidateRuntimeStateFactoryService.build(
         database_path=tmp_path / "eso.db",
         capability_service=_CapabilityService(),
         occurrence_provider_resolver=_occurrence_provider,
         supplemental_event_denominator_proven=True,
         supplemental_history_denominator_proven=True,
+        weapon_poison_consequence_resolver=poison_consequence_resolver,
     )
 
     scenario = resolver.scenario_frontier
@@ -40,6 +42,8 @@ def test_factory_wires_canonical_weapon_enchantment_runtime_stack(tmp_path):
     assert universe.weapon_enchantment_runtime_variant_service is not None
     assert scenario.runtime_effect_scaling is not None
     assert scenario.weapon_enchantment_activation_service is not None
+    assert scenario.weapon_poison_activation_service is not None
+    assert scenario.weapon_poison_consequence_resolver is poison_consequence_resolver
     assert cooldown is not None
     assert (
         cooldown.runtime_source_service
@@ -77,3 +81,15 @@ def test_factory_requires_pre_runtime_occurrence_authority(tmp_path):
             supplemental_event_denominator_proven=True,
             supplemental_history_denominator_proven=True,
         )
+
+def test_factory_leaves_poison_consequence_authority_unset_when_not_supplied(tmp_path):
+    resolver = ExtremeSustainedDPSCandidateRuntimeStateFactoryService.build(
+        database_path=tmp_path / "eso.db",
+        capability_service=_CapabilityService(),
+        occurrence_provider_resolver=_occurrence_provider,
+        supplemental_event_denominator_proven=True,
+        supplemental_history_denominator_proven=True,
+    )
+
+    assert resolver.scenario_frontier.weapon_poison_consequence_resolver is None
+
