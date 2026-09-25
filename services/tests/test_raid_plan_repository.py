@@ -7,7 +7,23 @@ from models.raid_plan import (
     RaidPlanMember,
     RaidPlanTriggeredResponsibility,
 )
-from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
+from services.raid_plan_repository import (
+    RaidPlanRepository, RaidPlanRepositoryError, duplicate_occupied_player_seats,
+)
+
+
+def test_duplicate_occupied_players_are_detected_without_counting_open_chairs() -> None:
+    plan = RaidPlan(
+        plan_id="sunspire-team", trial_id="sunspire", name="Team",
+        members=(
+            RaidPlanMember(seat_id="tank-1", gamertag="AAA Aces", player_id="aces"),
+            RaidPlanMember(seat_id="healer-1", gamertag="AAA Aces", player_id="aces"),
+            RaidPlanMember(seat_id="dd-1", gamertag="Recruit"),
+            RaidPlanMember(seat_id="dd-2", gamertag="Recruit"),
+        ),
+    )
+
+    assert duplicate_occupied_player_seats(plan) == ("aaa aces: tank-1, healer-1",)
 
 
 def _plan(*, plan_id: str = "performance-mode-rockgrove", name: str = "Performance Mode — Rockgrove") -> RaidPlan:

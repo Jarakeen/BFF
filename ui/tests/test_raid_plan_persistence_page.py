@@ -320,6 +320,20 @@ def test_save_current_plan_verifies_repository_round_trip() -> None:
     assert "role(s)" in source
 
 
+def test_programmatic_plan_load_cannot_apply_build_display_identity_to_chairs() -> None:
+    character_page = Path("ui/raid_plan_character_selection_page.py").read_text(encoding="utf-8")
+    persistence = Path(raid_plan_persistence_page.__file__).read_text(encoding="utf-8")
+    handler = character_page.split("    def _apply_saved_build(self, row: int)", 1)[1].split(
+        "    def refresh_personnel", 1
+    )[0]
+    assert 'if getattr(self, "_loading_plan", False):' in handler
+    assert handler.index('if getattr(self, "_loading_plan", False):') < handler.index(
+        "super()._apply_saved_build(row)"
+    )
+    apply_plan = persistence.split("    def apply_plan(self, plan: RaidPlan)", 1)[1]
+    assert "self._navigation_baseline_plan = plan" in apply_plan
+
+
 def test_save_merge_keeps_new_visible_class_instead_of_old_blank_snapshot() -> None:
     loaded = RaidPlan(
         plan_id="rg-plan",

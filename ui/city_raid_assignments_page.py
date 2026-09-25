@@ -160,6 +160,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
             trailing_widgets=(self.save_assignments_button,),
             action_button_names=(
                 "load_plan_button",
+                "backup_plan_button",
                 "publish_plan_finch_button",
                 "get_shared_plans_button",
                 "delete_plan_button",
@@ -625,7 +626,7 @@ class CityRaidAssignmentsPage(RaidPlanAssignmentPage):
                     utility.setCurrentText(value)
                     utility.blockSignals(False)
             self._refresh_city_assignment_rows()
-        self._navigation_baseline_plan = self.current_plan()
+        self._navigation_baseline_plan = plan
 
     def clear_plan(self) -> None:
         super().clear_plan()

@@ -31,7 +31,7 @@ from services.raid_plan_backup_service import (
     export_raid_plan_backup,
     load_raid_plan_backup,
 )
-from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
+from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError, duplicate_occupied_player_seats
 from services.ui_draft_recovery_service import UiDraftRecoveryService
 from services.user_safety_snapshot_service import UserSafetySnapshotService
 from ui.raid_plan_page import (
@@ -999,6 +999,12 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
             # action through Save Player to Personnel and must never be a hidden
             # side effect of saving Assignments or a shared Finch copy.
             plan = self.current_plan()
+            duplicates = duplicate_occupied_player_seats(plan)
+            if duplicates:
+                raise RaidPlanRepositoryError(
+                    "One player appears in multiple raid seats. Review Roles before saving: "
+                    + "; ".join(duplicates)
+                )
             expected = self._persisted_plan_snapshot
             if expected is not None and expected.plan_id.casefold() != plan.plan_id.casefold():
                 expected = None
@@ -1340,7 +1346,7 @@ class RaidPlanPersistencePage(RaidPlanStableIdentitySelectionPage):
         self._persisted_plan_snapshot = plan
         self.refresh_saved_plan_picker(select_plan_id=plan.plan_id)
         self._update_summary()
-        self._navigation_baseline_plan = self.current_plan()
+        self._navigation_baseline_plan = plan
 
 
 __all__ = ["RaidPlanPersistencePage", "merge_visible_plan_with_loaded_snapshot"]

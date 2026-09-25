@@ -2222,6 +2222,8 @@ def _save_to_originating_raid_plan(page) -> bool:
             return False
         from engine.config import get_data_dir
         from services.comp_build_persistence_service import CompBuildPersistenceService
+        from services.comp_plan_state_service import CompPlanStateService
+        from services.raid_plan_repository import duplicate_occupied_player_seats
 
         was_unbound = not state.is_raid_plan_bound
         if not was_unbound:
@@ -2234,6 +2236,17 @@ def _save_to_originating_raid_plan(page) -> bool:
                     "Raid Plan changed since Comp Maker loaded it. Your Comp edits remain here; "
                     "reload the plan before saving."
                 )
+        proposed = (
+            CompPlanStateService.to_new_raid_plan(state, plan_id="comp-save-preflight")
+            if was_unbound
+            else CompPlanStateService.to_raid_plan(state, base_plan=latest)
+        )
+        duplicates = duplicate_occupied_player_seats(proposed)
+        if duplicates:
+            raise RuntimeError(
+                "One player appears in multiple Comp seats. Review these chairs before saving: "
+                + "; ".join(duplicates)
+            )
         if state == getattr(page, "_comp_last_saved_state", None):
             page.status.info("Comp Maker has no new changes to save.")
             return True

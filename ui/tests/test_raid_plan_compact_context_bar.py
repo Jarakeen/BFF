@@ -56,12 +56,12 @@ def test_assignments_save_returns_persisted_plan() -> None:
     assert "return saved" in save_method
 
 
-def test_assignment_apply_rebaselines_after_visible_assignments_restore() -> None:
+def test_assignment_apply_compares_visible_assignments_to_persisted_plan() -> None:
     assignments = Path("ui/raid_plan_assignment_page.py").read_text(encoding="utf-8")
 
     apply_method = assignments[
         assignments.index("    def apply_plan(self, plan: RaidPlan) -> None:"):
         assignments.index("    def clear_plan(self) -> None:")
     ]
-    assert "self._navigation_baseline_plan = self.current_plan()" in apply_method
+    assert "self._navigation_baseline_plan = plan" in apply_method
     assert "self._refresh_action_availability()" in apply_method

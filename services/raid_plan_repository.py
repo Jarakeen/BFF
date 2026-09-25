@@ -19,6 +19,7 @@ from models.raid_plan import (
     RaidPlanMember,
     RaidPlanTriggeredResponsibility,
 )
+from services.roster_placeholder_identity import is_personnel_placeholder
 
 
 _SCHEMA_VERSION = 1
@@ -41,6 +42,33 @@ class RaidPlanRepositoryError(ValueError):
 
 class RaidPlanConflictError(RaidPlanRepositoryError):
     """The plan changed since the editor loaded its saved snapshot."""
+
+
+def duplicate_occupied_player_seats(plan: RaidPlan) -> tuple[str, ...]:
+    """Find one real player assigned to multiple raid seats before a UI save."""
+    by_name: dict[str, list[str]] = {}
+    by_id: dict[str, list[str]] = {}
+    for member in plan.members:
+        name = " ".join(str(member.gamertag or "").split())
+        if not name or name.casefold() in {"recruit", "open"} or is_personnel_placeholder(name):
+            continue
+        by_name.setdefault(name.casefold(), []).append(member.seat_id)
+        player_id = str(member.player_id or "").strip()
+        if player_id:
+            by_id.setdefault(player_id, []).append(member.seat_id)
+    repeated = [
+        (name, tuple(seats))
+        for name, seats in by_name.items() if len(set(seats)) > 1
+    ]
+    for player_id, seats in by_id.items():
+        if len(set(seats)) > 1 and not any(
+            set(seats).issubset(set(group)) for _name, group in repeated
+        ):
+            repeated.append((player_id, tuple(seats)))
+    return tuple(
+        f"{label}: {', '.join(seats)}"
+        for label, seats in sorted(repeated)
+    )
 
 
 class RaidPlanRepository:
@@ -360,4 +388,7 @@ class RaidPlanRepository:
             raise RaidPlanRepositoryError(f"could not write Raid Plan repository: {exc}") from exc
 
 
-__all__ = ["RaidPlanRepository", "RaidPlanRepositoryError", "RaidPlanConflictError"]
+__all__ = [
+    "RaidPlanRepository", "RaidPlanRepositoryError", "RaidPlanConflictError",
+    "duplicate_occupied_player_seats",
+]

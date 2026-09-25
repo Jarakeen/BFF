@@ -210,7 +210,7 @@ class RaidPlanAssignmentPage(RaidPlanPersistencePage):
         # subclass restores assignment widgets. Re-baseline only after the
         # visible assignment state has been fully applied so a freshly loaded
         # plan is not immediately treated as dirty.
-        self._navigation_baseline_plan = self.current_plan()
+        self._navigation_baseline_plan = plan
         self._refresh_action_availability()
 
     def clear_plan(self) -> None:

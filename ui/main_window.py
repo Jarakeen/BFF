@@ -260,6 +260,12 @@ class MainWindow(QMainWindow):
                 plan_id=plan_id,
             )
             expected = None
+        from services.raid_plan_repository import duplicate_occupied_player_seats
+        duplicates = duplicate_occupied_player_seats(plan)
+        if duplicates:
+            raise RuntimeError(
+                "One player appears in multiple Comp seats: " + "; ".join(duplicates)
+            )
         raid_plans.plan_repository.save(
             plan, expected=expected, must_be_new=expected is None,
         )
@@ -466,6 +472,14 @@ class MainWindow(QMainWindow):
     def show_page(self, page_name: str):
         if not self._confirm_unsaved_navigation(page_name):
             return
+
+        if page_name == "assignments":
+            assignments = self.pages.get("assignments")
+            roles = self.pages.get("raid_plans")
+            if assignments is not None and getattr(assignments, "_loaded_plan_snapshot", None) is None:
+                plan = getattr(roles, "_loaded_plan_snapshot", None)
+                if plan is not None and not assignments.load_plan_by_id(plan.plan_id):
+                    return
 
         if page_name == "comp_builder":
             comp = self.pages.get("comp_builder")

@@ -837,7 +837,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
             self._refresh_team_choices(str(getattr(plan, "team_name", "") or ""))
         if hasattr(self, "plan_notes"):
             self.plan_notes.setPlainText(str(getattr(plan, "plan_note", "") or ""))
-        self._navigation_baseline_plan = self.current_plan()
+        self._navigation_baseline_plan = plan
         self._refresh_plan_identity_ui()
 
     def clear_plan(self) -> None:
@@ -860,8 +860,8 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self._refresh_overview()
 
     def _save_from_overview(self) -> None:
-        self.save_current_plan()
-        self._refresh_overview()
+        if self.save_current_plan() is not None:
+            self._refresh_overview()
 
     @classmethod
     def _replace_legacy_role_language(cls, root: QWidget) -> None:

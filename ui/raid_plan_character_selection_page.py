@@ -348,6 +348,11 @@ class RaidPlanCharacterSelectionPage(RaidPlanPage):
             self._refresh_build_options(row)
 
     def _apply_saved_build(self, row: int) -> None:
+        # Restoring a saved plan selects its BuildIds programmatically. Those
+        # selections must never rewrite the chair's player/character from the
+        # reusable Build's display fields (which can contain old aliases).
+        if getattr(self, "_loading_plan", False):
+            return
         combo = self.team_table.cellWidget(row, 4)
         saved_index = combo.currentData() if isinstance(combo, QComboBox) else None
         selected_build = (
