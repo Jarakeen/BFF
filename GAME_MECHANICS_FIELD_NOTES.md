@@ -1933,3 +1933,12 @@ A poison is equipped on a specific weapon set, and that poison suppresses the en
 **Layman's version:** choosing poison changes which glyph is allowed to exist on that bar. You cannot finish deciding what the glyph did and then decide afterward that a poison had turned it off.
 
 **For BFF:** generated front/back poison formula selection is now a physical build axis upstream of runtime-state derivation. Changing that axis invalidates downstream enchantment/runtime choices. Exact formula selection still does not prove dilution duration or poison consequence magnitude.
+
+
+## 2026-09-25 — A recipe-table heading is provenance, not automatically a dilution rule
+
+The imported UESP Alchemy formula tables can identify source sections such as single-effect, two-effects, three-effects, or triple-effect. After deduplicating the same canonical reagent/trait formula across effect pages, one formula can preserve more than one section label.
+
+**Layman's version:** the heading above a recipe tells us where the recipe was documented; it is not, by itself, permission to hardcode the poison's duration mode. One recipe can show up in multiple parts of the source corpus, because apparently even poison tables wanted footnotes.
+
+**For BFF:** canonical Alchemy formulas now retain all source-section labels as provenance. Formula selection may surface them for audit, but base-versus-triple dilution remains a separate proof requirement until the section-to-runtime-duration relationship itself is reviewed and unambiguous.
