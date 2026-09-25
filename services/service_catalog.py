@@ -1580,6 +1580,39 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         ),
     ),
     ServiceDescriptor(
+        service_id="extreme.sustained_dps.generated_weapon_poison_dilution_authority",
+        domain="extreme",
+        purpose=(
+            "Compose exact generated poison formula provenance with separately proven "
+            "crafted-tier/item evidence and explicit base/triple dilution mode to produce "
+            "exact runtime poison durations without changing the generated formula identity."
+        ),
+        implementation_path="services.extreme_sustained_dps_generated_weapon_poison_dilution_authority_service",
+        inputs=(
+            "ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthority",
+            "CandidateWeaponPoisonTierItemEvidenceResolver",
+            "CandidateWeaponPoisonDilutionModeResolver",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponPoisonDilutionSelection",),
+        dependencies=(
+            "extreme.sustained_dps.generated_weapon_poison_formula_authority",
+            "extreme.sustained_dps.weapon_poison_formula_selection",
+            "extreme.sustained_dps.weapon_poison_dilution_selection",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_generated_weapon_poison_dilution_authority",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=False,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "Formula identity, crafted-tier/item evidence, and dilution mode remain three "
+            "separate proof layers. Source-section headings, effect count, and generated "
+            "formula IDs are not promoted into tier or dilution authority."
+        ),
+    ),
+    ServiceDescriptor(
         service_id="extreme.sustained_dps.weapon_poison_activation_events",
         domain="extreme",
         purpose=(
