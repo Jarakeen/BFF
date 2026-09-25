@@ -228,3 +228,25 @@ def test_main_window_refreshes_raid_plan_builds_and_personnel_on_entry() -> None
     assert 'if page_name == "raid_plans":' in show_page
     assert 'getattr(raid_plans, "refresh_personnel", None)' in show_page
     assert 'getattr(raid_plans, "refresh_saved_builds", None)' in show_page
+
+
+def test_raid_plan_exposes_portable_backup_and_restore_controls() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+
+    assert 'self.backup_plan_button = QPushButton("Backup…")' in source
+    assert 'self.restore_plan_backup_button = QPushButton("Restore Backup…")' in source
+    assert "export_raid_plan_backup(plan, filename)" in source
+    assert "load_raid_plan_backup(filename)" in source
+
+
+def test_raid_plan_backup_restore_is_surgical_and_snapshot_guarded() -> None:
+    source = Path("ui/raid_plan_persistence_page.py").read_text(encoding="utf-8")
+    restore = source.split("def restore_raid_plan_backup(self) -> None:", 1)[1].split(
+        "def _open_saved_plan_raid_map", 1
+    )[0]
+
+    assert "self._safety_snapshots.create(" in restore
+    assert "self.plan_repository.save(plan)" in restore
+    assert "self.plan_repository.get(plan.plan_id)" in restore
+    assert "self._discard_recovery_draft(plan.plan_id)" in restore
+    assert "Personnel, Teams, Characters, Builds, other Raid Plans" in restore
