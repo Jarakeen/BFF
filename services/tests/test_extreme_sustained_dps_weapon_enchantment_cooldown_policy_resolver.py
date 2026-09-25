@@ -79,9 +79,9 @@ def test_current_crusher_cadence_fails_closed():
     assert result.policies == ()
     assert result.resolved is False
     assert any("base cooldown is not authoritative" in row for row in result.unresolved)
-    assert any("cooldown scope is not authoritative" in row for row in result.unresolved)
-    assert any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
-    assert any("distinct-identity cooldown independence is not authoritative" in row for row in result.unresolved)
+    assert not any("cooldown scope is not authoritative" in row for row in result.unresolved)
+    assert not any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
+    assert not any("distinct-identity cooldown independence is not authoritative" in row for row in result.unresolved)
 
 
 def test_unclassified_direct_damage_variant_is_not_guessed_from_source_or_name():
@@ -102,7 +102,7 @@ def test_unclassified_direct_damage_variant_is_not_guessed_from_source_or_name()
     )
 
 
-def test_authoritative_four_second_value_alone_does_not_bypass_topology_gate():
+def test_single_direct_damage_identity_does_not_require_unrelated_multi_identity_topology():
     effect = _effect(
         name="flame_damage",
         source="Glyph of Flame",
@@ -114,11 +114,75 @@ def test_authoritative_four_second_value_alone_does_not_bypass_topology_gate():
 
     result = resolver.resolve(enchantment_effects=(effect,))
 
+    assert result.resolved is True
+    assert result.unresolved == ()
+    assert len(result.policies) == 1
+    assert result.policies[0].cooldown_identity == "flame_damage"
+    assert result.policies[0].cooldown_seconds == 4.0
+
+
+
+def test_two_distinct_direct_damage_identities_still_require_independence_topology():
+    front = _effect(
+        name="flame_damage",
+        source="Glyph of Flame",
+        category=SupportEffectCategory.OTHER,
+    )
+    back = EffectVariant(
+        name="shock_damage",
+        layer=EffectLayer.PROC,
+        source="Glyph of Shock",
+        active_bar=BarId.BACK,
+        source_slot="main_hand",
+        trigger="weapon_enchantment_activation",
+        category=SupportEffectCategory.OTHER,
+    )
+    resolver = ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver(
+        effect_family_resolver=lambda _effect: WeaponEnchantmentEffectFamily.DIRECT_DAMAGE,
+    )
+
+    result = resolver.resolve(enchantment_effects=(front, back))
+
     assert result.policies == ()
     assert any("cooldown scope is not authoritative" in row for row in result.unresolved)
-    assert any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
-    assert any("distinct-identity cooldown independence is not authoritative" in row for row in result.unresolved)
-    assert not any("base cooldown is not authoritative" in row for row in result.unresolved)
+    assert any(
+        "distinct-identity cooldown independence is not authoritative" in row
+        for row in result.unresolved
+    )
+    assert not any(
+        "same-identity cooldown sharing is not authoritative" in row
+        for row in result.unresolved
+    )
+
+
+def test_duplicate_direct_damage_identity_uses_authoritative_shared_timer_without_distinct_scope():
+    main = _effect(
+        name="flame_damage",
+        source="Glyph of Flame",
+        category=SupportEffectCategory.OTHER,
+    )
+    off = EffectVariant(
+        name="flame_damage",
+        layer=EffectLayer.PROC,
+        source="Glyph of Flame",
+        active_bar=BarId.FRONT,
+        source_slot="off_hand",
+        trigger="weapon_enchantment_activation",
+        category=SupportEffectCategory.OTHER,
+    )
+    resolver = ExtremeSustainedDPSWeaponEnchantmentCooldownPolicyResolver(
+        effect_family_resolver=lambda _effect: WeaponEnchantmentEffectFamily.DIRECT_DAMAGE,
+    )
+
+    result = resolver.resolve(enchantment_effects=(main, off))
+
+    assert result.resolved is True
+    assert result.unresolved == ()
+    assert [policy.cooldown_identity for policy in result.policies] == [
+        "flame_damage",
+        "flame_damage",
+    ]
+    assert all(policy.cooldown_seconds == 4.0 for policy in result.policies)
 
 
 def test_fully_authoritative_cadence_projects_effect_name_as_cooldown_identity():
@@ -197,7 +261,7 @@ def _runtime_source(*, identity, label, effect_type, damage_type=None, weapon_tr
     )
 
 
-def test_canonical_direct_damage_source_reaches_four_second_evidence_but_stops_at_topology():
+def test_canonical_single_direct_damage_source_reaches_exact_four_second_policy():
     source = _runtime_source(
         identity="flame",
         label="Glyph of Flame",
@@ -219,12 +283,12 @@ def test_canonical_direct_damage_source_reaches_four_second_evidence_but_stops_a
         enchantment_effects=(effect,),
     )
 
-    assert result.policies == ()
+    assert result.resolved is True
+    assert result.unresolved == ()
     assert any("cadence family=direct_damage" in row for row in result.evidence)
-    assert not any("base cooldown is not authoritative" in row for row in result.unresolved)
-    assert any("cooldown scope is not authoritative" in row for row in result.unresolved)
-    assert any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
-    assert any("distinct-identity cooldown independence is not authoritative" in row for row in result.unresolved)
+    assert len(result.policies) == 1
+    assert result.policies[0].cooldown_identity == "flame"
+    assert result.policies[0].cooldown_seconds == 4.0
 
 
 def test_canonical_crusher_source_reaches_buff_debuff_family_and_keeps_base_cooldown_open():
@@ -251,9 +315,9 @@ def test_canonical_crusher_source_reaches_buff_debuff_family_and_keeps_base_cool
     assert result.policies == ()
     assert any("cadence family=buff_or_debuff" in row for row in result.evidence)
     assert any("base cooldown is not authoritative" in row for row in result.unresolved)
-    assert any("cooldown scope is not authoritative" in row for row in result.unresolved)
-    assert any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
-    assert any("distinct-identity cooldown independence is not authoritative" in row for row in result.unresolved)
+    assert not any("cooldown scope is not authoritative" in row for row in result.unresolved)
+    assert not any("same-identity cooldown sharing is not authoritative" in row for row in result.unresolved)
+    assert not any("distinct-identity cooldown independence is not authoritative" in row for row in result.unresolved)
 
 
 def test_canonical_policy_resolution_requires_build_context():
