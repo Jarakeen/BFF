@@ -435,29 +435,29 @@ def test_loaded_comp_plan_surfaces_planned_sets_in_build_picker() -> None:
     assert "Qt.ItemDataRole.ToolTipRole" in source
 
 
-def test_save_captures_visible_chair_state_before_personnel_refresh() -> None:
+def test_save_snapshots_current_plan_without_mutating_personnel() -> None:
     source = Path(raid_plan_persistence_page.__file__).read_text(encoding="utf-8")
-
-    assert "visible_before_sync = super().current_plan()" in source
-    assert source.index("visible_before_sync = super().current_plan()") < source.index(
-        "created_players = self._ensure_named_players_in_personnel()"
-    )
-    ensure_body = source.split("def _ensure_named_players_in_personnel", 1)[1].split(
-        "def save_player_to_personnel", 1
+    save = source.split("    def save_current_plan(self)", 1)[1].split(
+        "    def _open_assignments", 1
     )[0]
-    assert "self.refresh_personnel()" not in ensure_body
-    assert "self.refresh_personnel()" in source
-    assert "self.apply_plan(persisted)" in source
+
+    assert save.index("plan = self.current_plan()") < save.index(
+        "self.plan_repository.save("
+    )
+    assert "self._ensure_named_players_in_personnel()" not in save
+    assert "self.refresh_personnel()" not in save
 
 
-def test_save_restores_captured_visible_player_character_class_and_build_name() -> None:
+def test_save_keeps_visible_controls_after_exact_round_trip() -> None:
     source = Path(raid_plan_persistence_page.__file__).read_text(encoding="utf-8")
+    save = source.split("    def save_current_plan(self)", 1)[1].split(
+        "    def _open_assignments", 1
+    )[0]
 
-    assert "gamertag=captured_by_seat.get(" in source
-    assert "character_name=captured_by_seat.get(" in source
-    assert "role=captured_by_seat.get(" in source
-    assert "eso_class=captured_by_seat.get(" in source
-    assert "selected_build_name=captured_by_seat.get(" in source
+    assert "persisted != plan" in save
+    assert "self._loaded_plan_snapshot = persisted" in save
+    assert "self._navigation_baseline_plan = persisted" in save
+    assert "self.apply_plan(persisted)" not in save
 
 def test_raid_plan_persistence_helper_binding_contract() -> None:
     source = Path(raid_plan_persistence_page.__file__).read_text(encoding="utf-8")
