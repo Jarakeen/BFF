@@ -7,7 +7,7 @@ planning snapshot; it never creates or mutates Personnel, Character, Saved Build
 or canonical encounter identity.
 """
 
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import json
 import os
 import sqlite3
@@ -174,6 +174,27 @@ class RaidPlanRepository:
                     raise RaidPlanConflictError(
                         "A Raid Plan with this identity already exists. Reload it or use another plan name."
                     )
+
+                # Coverage is a Raid-Plan-owned overlay edited on a different screen.
+                # Older/stale page models may not carry it. Never let a generic
+                # last-writer save erase that overlay merely because its local plan
+                # snapshot has an empty/default collection. An intentional Coverage
+                # removal supplies an optimistic expected snapshot and is therefore
+                # allowed to clear the collection.
+                existing_plan = None
+                if existing is not None:
+                    existing_plan = self._decode_plan(json.loads(str(existing["payload_json"])))
+                    if (
+                        expected is None
+                        and existing_plan.coverage_providers
+                        and not plan.coverage_providers
+                    ):
+                        plan = replace(
+                            plan,
+                            coverage_providers=existing_plan.coverage_providers,
+                        )
+                        payload = json.dumps(self._encode_plan(plan), sort_keys=True)
+
                 if expected is not None:
                     if expected.plan_id.casefold() != plan.plan_id.casefold():
                         raise RaidPlanConflictError("saved Raid Plan identity changed")
@@ -241,6 +262,17 @@ class RaidPlanRepository:
                 )
             return plan
         plans = list(self.list_plans())
+        prior_plan = next(
+            (row for row in plans if row.plan_id.casefold() == plan.plan_id.casefold()),
+            None,
+        )
+        if (
+            expected is None
+            and prior_plan is not None
+            and prior_plan.coverage_providers
+            and not plan.coverage_providers
+        ):
+            plan = replace(plan, coverage_providers=prior_plan.coverage_providers)
         if must_be_new and any(
             row.plan_id.casefold() == plan.plan_id.casefold() for row in plans
         ):
