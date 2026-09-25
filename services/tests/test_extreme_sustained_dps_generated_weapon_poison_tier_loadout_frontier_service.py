@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+import pytest
+
 from minmax.alchemy_formula_catalog import AlchemyFormula
 from minmax.combat_effect_semantics import GameUpdate
 from models.build_model import PlayerBuild
@@ -8,6 +10,9 @@ from services.extreme_sustained_dps_generated_weapon_poison_tier_frontier_servic
     ExtremeSustainedDPSGeneratedWeaponPoisonTierFrontier,
 )
 from services.extreme_sustained_dps_generated_weapon_poison_tier_loadout_frontier_service import (
+    ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection,
+    ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate,
+    ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutFrontier,
     ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutFrontierService,
 )
 from services.extreme_sustained_dps_weapon_poison_frontier_service import (
@@ -140,3 +145,55 @@ def test_tier_loadout_frontier_one_bar_allows_explicit_no_poison_back_bar():
     assert result.denominator_proven is True
     assert result.candidate_count == 2
     assert all(row.back.tier is None for row in result.candidates)
+
+
+def test_bar_tier_selection_rejects_named_poison_without_tier_evidence():
+    with pytest.raises(
+        ValueError,
+        match="cannot name poison without tier evidence",
+    ):
+        ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection(
+            poison_id="alchemy_formula:u50:test",
+            tier=None,
+        )
+
+
+def test_bar_tier_selection_requires_identity_to_match_tier_evidence():
+    formula = _formula("Breach")
+    tier = _tier(formula, 0, "Alkahest", 50)
+
+    with pytest.raises(
+        ValueError,
+        match="identity must match tier item evidence",
+    ):
+        ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection(
+            poison_id="alchemy_formula:u50:wrong",
+            tier=tier,
+        )
+
+
+def test_tier_loadout_frontier_rejects_candidate_count_drift():
+    formula = _formula("Breach")
+    tier = _tier(formula, 0, "Alkahest", 50)
+    selection = ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection(
+        poison_id=formula.canonical_id,
+        tier=tier,
+    )
+    candidate = ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutCandidate(
+        structural_index=0,
+        front=selection,
+        back=ExtremeSustainedDPSGeneratedWeaponPoisonBarTierSelection(
+            poison_id="",
+            tier=None,
+        ),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="candidate_count must equal candidate tuple length",
+    ):
+        ExtremeSustainedDPSGeneratedWeaponPoisonTierLoadoutFrontier(
+            candidates=(candidate,),
+            candidate_count=2,
+            denominator_proven=True,
+        )
