@@ -335,15 +335,25 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "is now persisted separately, adapted into canonical Bar state, and suppresses "
                 "only the enchantments on the poisoned weapon set. ZOS-backed poison cadence "
                 "evidence now covers 20% proc chance, qualifying damaging Light/Heavy/weapon "
-                "abilities, one global 10-second poison cooldown, and single-target DoT exclusion."
+                "abilities, one global 10-second poison cooldown, and single-target DoT exclusion. "
+                "Imported UESP Alchemy Poison tier evidence can also resolve one saved crafted "
+                "poison item name to every underlying effect identity and each effect-specific duration."
             ),
-            evidence_source="minmax/character_build/saved_build_adapter.py",
+            evidence_source=(
+                "minmax/character_build/saved_build_adapter.py; "
+                "importers/import_uesp_alchemy_effects_db.py; "
+                "services/extreme_sustained_dps_weapon_poison_identity_service.py; "
+                "services/extreme_sustained_dps_weapon_poison_activation_event_service.py; "
+                "services/extreme_sustained_dps_weapon_poison_sequence_frontier_service.py; "
+                "services/extreme_sustained_dps_weapon_poison_consequence_frontier_service.py"
+            ),
             consumers=ALL_THREE,
             missing_evidence=(
                 "Verify weapon-specific light/heavy timing, bash cost/damage modifiers, "
                 "interrupt legality/timing, remaining enchant cooldown topology, poison effect "
-                "identity/magnitude/dilution and runtime application, dual-wield/two-hand legacy "
-                "representation, arena weapon conditional rules and weapon/passive interactions."
+                "magnitude/dilution, target semantics and runtime application after imported identity/"
+                "duration resolution, dual-wield/two-hand legacy representation, arena weapon "
+                "conditional rules and weapon/passive interactions."
             ),
         ),
         CanonicalMechanicsCoverageEvidence(
