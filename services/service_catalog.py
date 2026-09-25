@@ -1592,7 +1592,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
         encounter_aware=False,
-        evidence_class=EvidenceClass.DATA,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
         notes=(
             "The exact crafted item name is matched across imported Poison tier rows in "
             "effect_variant.raw_json, so one multi-effect poison may resolve several "
@@ -1623,7 +1623,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         behavior=ServiceBehavior.DETERMINISTIC,
         roles=("DPS",),
         encounter_aware=False,
-        evidence_class=EvidenceClass.DATA,
+        evidence_class=EvidenceClass.OBSERVATIONAL,
         notes=(
             "The formula witness closes which Alchemy traits belong to the selected bottle. "
             "It does not infer base-versus-triple duration, magnitude, or final runtime semantics."
