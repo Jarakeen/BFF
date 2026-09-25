@@ -3647,7 +3647,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         domain="extreme",
         purpose=(
             "Assemble one coherent generated refinement candidate by applying CP, potion, "
-            "passive-rank, and two-bar skill states onto the cross-axis-authoritative build."
+            "weapon-poison formula/tier, passive-rank, and two-bar skill states onto the "
+            "cross-axis-authoritative build."
         ),
         implementation_path="services.extreme_sustained_dps_generated_candidate_assembly_service",
         inputs=(
@@ -3655,6 +3656,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "ChampionPointCandidate",
             "PotionCandidate",
             "WeaponPoisonLoadoutCandidate",
+            "WeaponPoisonTierLoadoutCandidate",
             "PassiveRankCandidate",
             "SkillBarCandidate",
         ),
@@ -3664,6 +3666,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.champion_point_frontier",
             "extreme.sustained_dps.potion_frontier",
             "extreme.sustained_dps.weapon_poison_frontier",
+            "extreme.sustained_dps.generated_weapon_poison_tier_loadout_frontier",
             "extreme.sustained_dps.passive_rank_frontier",
             "extreme.sustained_dps.skill_bar_frontier",
         ),
@@ -3674,8 +3677,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "Each axis contributes only the state it owns; stale convenience build snapshots "
-            "from other frontiers cannot overwrite gear/class/identity state. One-bar and "
-            "explicit ownership invariants fail closed."
+            "from other frontiers cannot overwrite gear/class/identity state. Poison tier "
+            "identity must agree with the selected formula on each bar; one-bar and explicit "
+            "ownership invariants fail closed."
         ),
     ),
     ServiceDescriptor(
