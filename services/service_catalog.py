@@ -1724,8 +1724,9 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
         evidence_class=EvidenceClass.MIXED,
         notes=(
             "No-poison candidates return no consequence authority. Poisoned candidates "
-            "retain formula-specific consequence authority; unresolved formula provenance "
-            "fails closed before runtime-state construction."
+            "retain formula-specific consequence authority from assembled candidate provenance only; "
+            "stale pre-assembly formula/tier state cannot rescue missing assembled witnesses, and "
+            "unresolved formula provenance fails closed before runtime-state construction."
         ),
     ),
     ServiceDescriptor(
