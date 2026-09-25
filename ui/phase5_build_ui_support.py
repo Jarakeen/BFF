@@ -461,8 +461,10 @@ def _character_id_for_page(page, build: PlayerBuild) -> str | None:
     if found:
         return found
 
-    page.build_service.canonical.sync_from_roster(page.roster)
-
+    # A Builds-page roster is only a UI projection. Character progression
+    # lookup must never replace the canonical build catalog as a side effect.
+    # If identity cannot be resolved from canonical state, fail closed and let
+    # the caller report the unresolved character.
     direct = _clean(getattr(build, "CharacterId", ""))
     if direct and catalog.get_character(direct) is not None:
         return direct
