@@ -90,21 +90,39 @@ class ExtremeSustainedDPSGeneratedWeaponPoisonDilutionAuthorityService:
                 formula=formula,
             )
         )
-        mode = self._invoke(
+        mode_witness = self._invoke(
             self.dilution_mode_resolver,
             poison_id=selected,
             formula=formula,
             occurrence=occurrence,
             label="dilution-mode",
         )
-        if mode is None:
+        if mode_witness is None:
             raise ValueError(
                 f"{selected}: generated poison dilution-mode resolver returned no witness"
             )
 
+        effect_modes = getattr(mode_witness, "effect_modes", None)
+        if effect_modes is None and isinstance(mode_witness, (tuple, list)):
+            rows = tuple(mode_witness)
+            if rows and all(
+                isinstance(row, (tuple, list)) and len(row) == 2
+                for row in rows
+            ):
+                effect_modes = rows
+
+        if effect_modes is not None:
+            return (
+                ExtremeSustainedDPSWeaponPoisonDilutionSelectionService.resolve_per_effect(
+                    formula_selection=formula_selection,
+                    effect_modes=tuple(effect_modes),
+                    poison_id_override=selected,
+                )
+            )
+
         return ExtremeSustainedDPSWeaponPoisonDilutionSelectionService.resolve(
             formula_selection=formula_selection,
-            mode=mode,
+            mode=mode_witness,
             poison_id_override=selected,
         )
 
