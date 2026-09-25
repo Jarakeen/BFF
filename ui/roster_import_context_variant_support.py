@@ -12,7 +12,6 @@ from pathlib import Path
 import shutil
 
 from engine.config import get_data_dir
-from models.build_model import BuildRoster
 from services.roster_import_context_variant_service import consolidate_member_builds
 
 
@@ -220,23 +219,31 @@ def _remove_prior_imported_builds(
         return 0, 0, protected_names
 
     roster = build_service.load()
-    kept = []
-    removed = 0
+    target_build_ids: list[str] = []
     for build in roster.Members:
         key = (
             _identity_key(getattr(build, "Gamertag", "")),
             str(getattr(build, "Name", "") or "").strip().casefold(),
             str(getattr(build, "BuildName", "") or "").strip().casefold(),
         )
-        if key in keys:
-            removed += 1
+        if key not in keys:
             continue
-        kept.append(build)
+        build_id = str(getattr(build, "BuildId", "") or "").strip()
+        if not build_id:
+            raise RuntimeError(
+                "Prior imported Build matched replacement criteria but has no "
+                "canonical BuildId; refusing inferred deletion."
+            )
+        target_build_ids.append(build_id)
 
+    removed = 0
     pruned_characters = 0
-    if removed:
+    if target_build_ids:
         _backup_import_state(build_service)
-        build_service.save(BuildRoster(Members=kept))
+        catalog_service = build_service.canonical.catalog_service
+        for build_id in target_build_ids:
+            if catalog_service.delete_build(build_id):
+                removed += 1
         pruned_characters = _prune_empty_replaced_characters(
             build_service,
             candidate_character_ids=candidate_character_ids,
