@@ -143,3 +143,58 @@ def test_build_profile_ownership_update_preserves_other_metadata(tmp_path) -> No
     assert updated.quality == "Purple"
     assert updated.ownership == "mine"
     assert updated.source_owner == ""
+
+
+def test_armor_and_jewelry_defaults_round_trip_without_touching_legacy_defaults(tmp_path) -> None:
+    service = BuildProfileService(tmp_path / "build_profiles.json")
+    service.update(
+        "build-1",
+        armor_trait="Divines",
+        armor_weight="Medium",
+        armor_enchant="Max Magicka",
+        jewelry_trait="Bloodthirsty",
+        jewelry_enchant="Spell Damage",
+    )
+
+    profile = BuildProfileService(tmp_path / "build_profiles.json").get("build-1")
+
+    assert profile.armor_trait == "Divines"
+    assert profile.armor_weight == "Medium"
+    assert profile.armor_enchant == "Max Magicka"
+    assert profile.jewelry_trait == "Bloodthirsty"
+    assert profile.jewelry_enchant == "Spell Damage"
+    assert profile.quality == "Gold"
+    assert profile.item_level == "CP160"
+    assert profile.enchantment_tier == "Truly Superb"
+
+
+def test_calculation_copy_applies_armor_and_jewelry_defaults_only_to_blank_equipped_fields() -> None:
+    build = PlayerBuild(BuildId="build-1")
+    build.Armor["Head"].update(Set="Monster Set")
+    build.Armor["Chest"].update(
+        Set="Trial Set", Weight="Heavy", Trait="Reinforced", Enchant="Max Health"
+    )
+    build.Necklace = GearSlot(Set="Jewelry Set")
+    build.Ring1 = GearSlot(Set="Jewelry Set", Trait="Infused", Enchant="Magicka Recovery")
+    profile = BuildProfile(
+        armor_trait="Divines",
+        armor_weight="Medium",
+        armor_enchant="Max Magicka",
+        jewelry_trait="Bloodthirsty",
+        jewelry_enchant="Spell Damage",
+    )
+
+    calculated = build_with_effective_item_profile(build, profile)
+
+    assert calculated.Armor["Head"]["Trait"] == "Divines"
+    assert calculated.Armor["Head"]["Weight"] == "Medium"
+    assert calculated.Armor["Head"]["Enchant"] == "Max Magicka"
+    assert calculated.Armor["Chest"]["Trait"] == "Reinforced"
+    assert calculated.Armor["Chest"]["Weight"] == "Heavy"
+    assert calculated.Armor["Chest"]["Enchant"] == "Max Health"
+    assert calculated.Necklace.Trait == "Bloodthirsty"
+    assert calculated.Necklace.Enchant == "Spell Damage"
+    assert calculated.Ring1.Trait == "Infused"
+    assert calculated.Ring1.Enchant == "Magicka Recovery"
+    assert build.Armor["Head"]["Trait"] == ""
+    assert build.Necklace.Trait == ""
