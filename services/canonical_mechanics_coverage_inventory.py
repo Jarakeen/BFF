@@ -338,13 +338,20 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
                 "abilities, one global 10-second poison cooldown, and single-target DoT exclusion. "
                 "Imported UESP Alchemy Poison tier evidence can also resolve one saved crafted "
                 "poison item label to a source-backed possibility universe of effect identities while "
-                "preserving base/triple duration alternatives. The label alone does not prove the "
-                "exact formula, selected effect set, or dilution duration."
+                "preserving base/triple duration alternatives. Explicit formula and dilution witnesses "
+                "can separately close the selected effect set and exact duration. Reviewed U50 Breach "
+                "and Protection target-side consequences then reuse canonical Minor Breach and Minor "
+                "Vulnerability target combat math. The saved label alone still proves neither formula "
+                "nor dilution."
             ),
             evidence_source=(
                 "minmax/character_build/saved_build_adapter.py; "
                 "importers/import_uesp_alchemy_effects_db.py; "
                 "services/extreme_sustained_dps_weapon_poison_identity_service.py; "
+                "services/extreme_sustained_dps_weapon_poison_formula_selection_service.py; "
+                "services/extreme_sustained_dps_weapon_poison_dilution_selection_service.py; "
+                "minmax/alchemy_poison_effect_semantics.py; "
+                "services/extreme_sustained_dps_weapon_poison_named_effect_consequence_service.py; "
                 "services/extreme_sustained_dps_weapon_poison_activation_event_service.py; "
                 "services/extreme_sustained_dps_weapon_poison_sequence_frontier_service.py; "
                 "services/extreme_sustained_dps_weapon_poison_consequence_frontier_service.py"
@@ -353,9 +360,10 @@ def shared_canonical_mechanics_inventory() -> tuple[CanonicalMechanicsCoverageEv
             missing_evidence=(
                 "Verify weapon-specific light/heavy timing, bash cost/damage modifiers, "
                 "interrupt legality/timing, remaining enchant cooldown topology, poison effect "
-                "exact crafted formula/effect-set selection, dilution selection, magnitude, target "
-                "semantics and runtime application after imported item-evidence resolution, dual-wield/"
-                "two-hand legacy representation, arena weapon "
+                "production ownership of exact crafted formula/effect-set and dilution witnesses, "
+                "remaining poison-trait relationships, Ravage Health/resource magnitudes and periodic "
+                "application, attacker-side offensive poison buffs, dual-wield/two-hand legacy "
+                "representation, arena weapon "
                 "conditional rules and weapon/passive interactions."
             ),
         ),
