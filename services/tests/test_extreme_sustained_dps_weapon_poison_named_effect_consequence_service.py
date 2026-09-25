@@ -1,4 +1,3 @@
-from minmax.character_build.effect_layer import BarId
 from minmax.runtime_event import RuntimeEvent
 from services.extreme_sustained_dps_weapon_poison_dilution_selection_service import (
     ExtremeSustainedDPSWeaponPoisonDilutionMode,
@@ -24,7 +23,6 @@ def _occurrence(poison_id="Test Poison IX"):
             source_bar="front",
         ),
         poison_id=poison_id,
-        source_bar=BarId.FRONT,
     )
 
 
