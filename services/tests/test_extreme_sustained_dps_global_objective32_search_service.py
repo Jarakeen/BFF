@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from services.extreme_sustained_dps_axis_dominance_composition_service import (
     CANONICAL_SUSTAINED_DPS_MUTATION_AXES,
     ExtremeSustainedDPSAxisCoverageProof,
