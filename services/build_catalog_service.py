@@ -432,9 +432,12 @@ class BuildCatalogService:
                 else existing_by_character.get(match_key)
             )
             previous_id = str(previous.get("character_id", "")).strip() if previous else ""
+            # An explicit destination CharacterId is authoritative for a new
+            # PlayerBuild too. Requiring it to pre-exist in this catalog silently
+            # remaps a legitimate Copy Build destination to a generated ID.
             character_id = (
                 explicit_character_id
-                if explicit_character_id and explicit_character_id in existing_characters_by_id
+                if explicit_character_id
                 else previous_id or self._stable_id("character", identity)
             )
             explicit_build_id = str(getattr(member, "BuildId", "") or "").strip()
