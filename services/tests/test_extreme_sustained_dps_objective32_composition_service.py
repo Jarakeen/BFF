@@ -33,6 +33,8 @@ def _runtime_state_frontier_resolver(
             runtime_effect_scaling=object(),
             weapon_enchantment_activation_service=object(),
             weapon_enchantment_cooldown_policy_resolver=object(),
+            weapon_poison_activation_service=object(),
+            weapon_poison_consequence_resolver=object(),
         ),
         supplemental_event_denominator_proven=supplemental_event_denominator_proven,
         supplemental_history_denominator_proven=supplemental_history_denominator_proven,
@@ -71,6 +73,10 @@ def test_composition_wires_finalized_potion_axis_into_global_objective_graph() -
     assert result.objective32.require_closure_ready_scenario is True
     assert result.objective32.potion_cooldown_resolver is not None
     assert any("canonical fail-closed cooldown authority" in row for row in result.evidence)
+    assert any(
+        "Weapon-poison activation and explicit consequence authorities" in row
+        for row in result.evidence
+    )
     assert result.pipeline.runtime_state_frontier_resolver is not None
     assert any(
         "Finalized potion timing is appended after runtime-policy axes" in row
@@ -188,6 +194,14 @@ def test_composition_requires_reviewed_potion_cooldown_authority() -> None:
         (
             "weapon_enchantment_cooldown_policy_resolver",
             "weapon-enchantment cooldown-policy authority",
+        ),
+        (
+            "weapon_poison_activation_service",
+            "weapon-poison activation-event authority",
+        ),
+        (
+            "weapon_poison_consequence_resolver",
+            "weapon-poison consequence authority",
         ),
     ),
 )
