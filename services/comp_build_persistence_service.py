@@ -404,7 +404,7 @@ class CompBuildPersistenceService:
 
         # Canonical identity promotion may add Players/Characters. Persist those
         # additions, but never add/update a Build merely because Comp Maker saved.
-        if catalog.get("players") != list(players.values()) or staged_roster_bindings:
+        if staged_roster_bindings:
             self.bridge.save_catalog(catalog)
         for roster_member_id, player_id, character_id in dict.fromkeys(
             staged_roster_bindings
