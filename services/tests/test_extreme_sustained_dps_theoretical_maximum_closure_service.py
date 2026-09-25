@@ -6,6 +6,7 @@ from services.extreme_sustained_dps_axis_dominance_composition_service import (
     ExtremeSustainedDPSAxisDominanceCompositionService,
 )
 from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
+    ExtremeSustainedDPSExactLeafEvaluation,
     ExtremeSustainedDPSGeneratedSearchResult,
 )
 from services.extreme_sustained_dps_theoretical_maximum_closure_service import (
@@ -14,18 +15,24 @@ from services.extreme_sustained_dps_theoretical_maximum_closure_service import (
 
 
 def _search(*, proven=True):
+    leaf = ExtremeSustainedDPSExactLeafEvaluation(
+        candidate_key="leaf:test",
+        modeled_dps=150.0,
+        duration_seconds=20.0,
+        mechanic_complete=True,
+    )
     return ExtremeSustainedDPSGeneratedSearchResult(
         best_modeled_dps=150.0,
-        best_candidates=(),
-        unique_leader=None,
-        evaluated_leaves=(),
+        best_candidates=(leaf,),
+        unique_leader=leaf if proven else None,
+        evaluated_leaves=(leaf,),
         visited_branch_count=1,
         expanded_branch_count=0,
         evaluated_leaf_count=1,
         pruned_branch_count=0,
         forced_open_branch_count=0,
         global_maximum_proven=proven,
-        unique_leader_proven=False,
+        unique_leader_proven=bool(proven),
         evidence=(),
         unresolved=(),
     )
