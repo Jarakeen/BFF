@@ -62,7 +62,14 @@ class ExtremeSustainedDPSGeneratedAxisInventoryService:
 
         for axis in axes:
             omitted_scope.extend(axis.omitted_scope)
-            for token in axis.canonical_axes:
+            for raw_token in axis.canonical_axes:
+                token = str(raw_token or "").strip()
+                if token not in canonical_set:
+                    unresolved.append(
+                        f"Generated tree axis {axis.name!r} declares non-canonical mutation axis: "
+                        f"{token or '(empty)'}"
+                    )
+                    continue
                 occurrences[token] = occurrences.get(token, 0) + 1
                 if token not in searched:
                     searched.append(token)
