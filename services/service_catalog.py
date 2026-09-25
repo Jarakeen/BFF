@@ -1295,6 +1295,7 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "SavedBuildCapabilityService",
             "PreRuntimeExactDamageOccurrenceAuthority",
             "OptionalWeaponPoisonConsequenceAuthority",
+            "OptionalWeaponPoisonDilutionSelectionAuthority",
             "SupplementalScenarioRuntimeEvidenceResolvers",
         ),
         outputs=("ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService",),
@@ -1307,6 +1308,8 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "extreme.sustained_dps.weapon_enchantment_cooldown_policy",
             "extreme.sustained_dps.weapon_poison_activation_events",
             "extreme.sustained_dps.weapon_poison_sequence_frontier",
+            "extreme.sustained_dps.weapon_poison_named_effect_authority",
+            "extreme.sustained_dps.weapon_poison_consequence_frontier",
             "extreme.sustained_dps.runtime_scenario_frontier",
         ),
         responsibilities=(
@@ -1693,6 +1696,35 @@ SERVICE_DESCRIPTORS: tuple[ServiceDescriptor, ...] = (
             "Protection -> Minor Vulnerability. Protection's self Minor Protection consequence "
             "is explicitly collapsed as defensive-only for sustained outgoing DPS. Unreviewed "
             "poison traits remain blockers rather than receiving guessed named-effect semantics."
+        ),
+    ),
+    ServiceDescriptor(
+        service_id="extreme.sustained_dps.weapon_poison_named_effect_authority",
+        domain="extreme",
+        purpose=(
+            "Resolve caller-proven per-poison dilution selections into reviewed named-effect "
+            "runtime consequences without inferring crafted formula or dilution from the saved item label."
+        ),
+        implementation_path="services.extreme_sustained_dps_weapon_poison_named_effect_authority_service",
+        inputs=(
+            "ExplicitWeaponPoisonDilutionSelectionAuthority",
+            "WeaponPoisonProcOccurrence",
+        ),
+        outputs=("ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceResolution",),
+        dependencies=(
+            "extreme.sustained_dps.weapon_poison_named_effect_consequences",
+        ),
+        responsibilities=(
+            "extreme_sustained_dps_weapon_poison_named_effect_authority",
+        ),
+        behavior=ServiceBehavior.DETERMINISTIC,
+        roles=("DPS",),
+        encounter_aware=True,
+        evidence_class=EvidenceClass.MIXED,
+        notes=(
+            "The caller owns exact crafted-poison selection provenance. This adapter only routes "
+            "that explicit witness through the reviewed named-effect consequence service; missing "
+            "selection remains fail-closed."
         ),
     ),
     ServiceDescriptor(
