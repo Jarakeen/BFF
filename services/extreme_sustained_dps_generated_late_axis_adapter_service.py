@@ -2,11 +2,11 @@ from __future__ import annotations
 
 """Concrete indexed-axis adapters for late generated sustained-DPS refinement.
 
-This adapter pack connects the existing Champion Point, potion, passive-rank, and
-two-bar skill frontiers to the generic generated-frontier tree. The selected axis
-objects remain separate until the final skill coordinate is known, then the canonical
-candidate assembly service copies only each frontier's owned state onto the shared
-cross-axis context.
+This adapter pack connects the existing Champion Point, potion, optional weapon-poison,
+passive-rank, and two-bar skill frontiers to the generic generated-frontier tree. The
+selected axis objects remain separate until the final skill coordinate is known, then
+the canonical candidate assembly service copies only each frontier's owned state onto
+the shared cross-axis context.
 """
 
 from dataclasses import dataclass, replace
@@ -37,6 +37,10 @@ from services.extreme_sustained_dps_skill_bar_frontier_service import (
     ExtremeSustainedDPSSkillBarFrontierService,
     ExtremeSustainedDPSTwoBarSkillCandidate,
 )
+from services.extreme_sustained_dps_weapon_poison_frontier_service import (
+    ExtremeSustainedDPSWeaponPoisonFrontierService,
+    ExtremeSustainedDPSWeaponPoisonLoadoutCandidate,
+)
 
 
 @dataclass(frozen=True)
@@ -44,6 +48,7 @@ class ExtremeSustainedDPSGeneratedLateAxisState:
     context: ExtremeSustainedDPSCrossAxisContext
     champion_points: ExtremeSustainedDPSChampionPointCandidate | None = None
     potion: ExtremeSustainedDPSPotionCandidate | None = None
+    poison_loadout: ExtremeSustainedDPSWeaponPoisonLoadoutCandidate | None = None
     passive_ranks: ExtremeSustainedDPSPassiveRankCandidate | None = None
     skills: ExtremeSustainedDPSTwoBarSkillCandidate | None = None
     assembled: ExtremeSustainedDPSAssembledCandidate | None = None
@@ -54,7 +59,7 @@ class ExtremeSustainedDPSGeneratedLateAxisState:
 
 
 class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
-    """Adapt CP → potion → passives → skills into indexed search-tree axes."""
+    """Adapt CP → potion → poison → passives → skills into indexed search-tree axes."""
 
     def __init__(
         self,
@@ -63,12 +68,14 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
         potions: ExtremeSustainedDPSPotionFrontierService | object,
         passive_ranks: ExtremeSustainedDPSPassiveRankFrontierService | object,
         skill_bars: ExtremeSustainedDPSSkillBarFrontierService | object,
+        poisons: ExtremeSustainedDPSWeaponPoisonFrontierService | object | None = None,
         assembly: ExtremeSustainedDPSGeneratedCandidateAssemblyService | object = (
             ExtremeSustainedDPSGeneratedCandidateAssemblyService
         ),
     ) -> None:
         self.champion_points = champion_points
         self.potions = potions
+        self.poisons = poisons
         self.passive_ranks = passive_ranks
         self.skill_bars = skill_bars
         self.assembly = assembly
@@ -115,6 +122,31 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
         candidate = self.potions.candidate_at(state.context.build, index)
         return replace(state, potion=candidate)
 
+    def _poison_count(
+        self,
+        state: ExtremeSustainedDPSGeneratedLateAxisState,
+    ) -> int:
+        if self.poisons is None:
+            raise ValueError("generated late-axis adapter has no weapon-poison frontier")
+        frontier = self.poisons.frontier(
+            one_bar_only=state.context.one_bar_only,
+        )
+        return self._proven_count(frontier, "weapon-poison frontier")
+
+    def _poison_at(
+        self,
+        state: ExtremeSustainedDPSGeneratedLateAxisState,
+        index: int,
+    ) -> ExtremeSustainedDPSGeneratedLateAxisState:
+        if self.poisons is None:
+            raise ValueError("generated late-axis adapter has no weapon-poison frontier")
+        candidate = self.poisons.candidate_at(
+            state.context.build,
+            index=index,
+            one_bar_only=state.context.one_bar_only,
+        )
+        return replace(state, poison_loadout=candidate)
+
     def _passive_count(
         self,
         state: ExtremeSustainedDPSGeneratedLateAxisState,
@@ -157,9 +189,10 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
             state.champion_points is None
             or state.potion is None
             or state.passive_ranks is None
+            or (self.poisons is not None and state.poison_loadout is None)
         ):
             raise ValueError(
-                "generated late-axis assembly requires CP, potion, and passive selections before skills"
+                "generated late-axis assembly requires CP, potion, optional poison, and passive selections before skills"
             )
         skills = self.skill_bars.candidate_at(
             state.context.build,
@@ -174,6 +207,7 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
             potion=state.potion,
             passive_ranks=state.passive_ranks,
             skills=skills,
+            poison_loadout=state.poison_loadout,
         )
         return replace(state, skills=skills, assembled=assembled)
 
@@ -184,7 +218,7 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
         return ExtremeSustainedDPSGeneratedLateAxisState(context=context)
 
     def axes(self) -> tuple[ExtremeSustainedDPSIndexedFrontierAxis, ...]:
-        return (
+        axes = [
             ExtremeSustainedDPSIndexedFrontierAxis(
                 "Champion Points",
                 candidate_count=self._cp_count,
@@ -197,19 +231,33 @@ class ExtremeSustainedDPSGeneratedLateAxisAdapterService:
                 candidate_at=self._potion_at,
                 canonical_axes=("potion_selection",),
             ),
-            ExtremeSustainedDPSIndexedFrontierAxis(
-                "Passive Ranks",
-                candidate_count=self._passive_count,
-                candidate_at=self._passive_at,
-                canonical_axes=("passive_ranks",),
-            ),
-            ExtremeSustainedDPSIndexedFrontierAxis(
-                "Skill Bars",
-                candidate_count=self._skill_count,
-                candidate_at=self._skill_at,
-                canonical_axes=("skill_bars",),
-            ),
+        ]
+        if self.poisons is not None:
+            axes.append(
+                ExtremeSustainedDPSIndexedFrontierAxis(
+                    "Weapon Poisons",
+                    candidate_count=self._poison_count,
+                    candidate_at=self._poison_at,
+                    canonical_axes=("weapon_poisons",),
+                )
+            )
+        axes.extend(
+            (
+                ExtremeSustainedDPSIndexedFrontierAxis(
+                    "Passive Ranks",
+                    candidate_count=self._passive_count,
+                    candidate_at=self._passive_at,
+                    canonical_axes=("passive_ranks",),
+                ),
+                ExtremeSustainedDPSIndexedFrontierAxis(
+                    "Skill Bars",
+                    candidate_count=self._skill_count,
+                    candidate_at=self._skill_at,
+                    canonical_axes=("skill_bars",),
+                ),
+            )
         )
+        return tuple(axes)
 
 
 __all__ = [
