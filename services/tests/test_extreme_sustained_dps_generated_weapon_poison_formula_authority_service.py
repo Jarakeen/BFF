@@ -105,3 +105,23 @@ def test_generated_formula_authority_accepts_explicit_no_poison_candidate():
     assert result.resolved is True
     assert result.entries == ()
     assert any("no weapon poison" in row for row in result.evidence)
+
+
+def test_formula_authority_allows_same_canonical_formula_on_both_bars():
+    formula = _formula()
+    authority = ExtremeSustainedDPSGeneratedWeaponPoisonFormulaAuthority(
+        entries=(
+            ExtremeSustainedDPSGeneratedWeaponPoisonFormulaEntry(
+                bar="front",
+                poison_id=formula.canonical_id,
+                formula=formula,
+            ),
+            ExtremeSustainedDPSGeneratedWeaponPoisonFormulaEntry(
+                bar="back",
+                poison_id=formula.canonical_id,
+                formula=formula,
+            ),
+        )
+    )
+
+    assert authority.formula_for(formula.canonical_id) is formula
