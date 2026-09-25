@@ -3,9 +3,22 @@ from types import SimpleNamespace
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.runtime_event import RuntimeEvent
+from minmax.combat_target_resistance import resistance_reduction_from_target_state
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_weapon_poison_consequence_frontier_service import (
     ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService,
+)
+from services.extreme_sustained_dps_weapon_poison_dilution_selection_service import (
+    ExtremeSustainedDPSWeaponPoisonDilutionMode,
+    ExtremeSustainedDPSWeaponPoisonDilutionSelection,
+    ExtremeSustainedDPSWeaponPoisonSelectedEffect,
+)
+from services.extreme_sustained_dps_weapon_poison_named_effect_consequence_service import (
+    ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService,
+)
+from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
+from services.extreme_sustained_dps_runtime_target_combat_state_service import (
+    ExtremeSustainedDPSRuntimeTargetCombatStateService,
 )
 from services.extreme_sustained_dps_weapon_poison_sequence_frontier_service import (
     ExtremeSustainedDPSWeaponPoisonSequenceFrontierService,
@@ -135,3 +148,48 @@ def test_repeated_selected_poison_procs_share_one_runtime_effect_definition() ->
         len(choice.attempts) == 2
         for choice in result.attempt_frontier.choices
     )
+
+
+def test_named_poison_consequence_frontier_reaches_target_combat_math() -> None:
+    resolver = ExtremeSustainedDPSWeaponPoisonNamedEffectConsequenceService(
+        dilution_selection=ExtremeSustainedDPSWeaponPoisonDilutionSelection(
+            poison_id="Damage Health Poison IX",
+            formula_id="alchemy_formula:u50:test",
+            mode=ExtremeSustainedDPSWeaponPoisonDilutionMode.BASE,
+            effects=(
+                ExtremeSustainedDPSWeaponPoisonSelectedEffect(
+                    effect_name="Breach",
+                    duration_seconds=10.0,
+                ),
+            ),
+        )
+    )
+    consequence = ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService(
+        consequence_resolver=resolver
+    ).build(
+        sequence_frontier=_sequence(),
+        source="reviewed exact poison consequence",
+    )
+
+    assert consequence.resolved is True
+    assert consequence.attempt_frontier is not None
+    assert consequence.attempt_frontier.denominator_proven is True
+    assert [effect.name for effect in consequence.effects] == ["minor_breach"]
+
+    proc_choice = next(
+        choice
+        for choice in consequence.attempt_frontier.choices
+        if choice.attempts
+    )
+    projected = ExtremeSustainedDPSRuntimeTargetCombatStateService.resolve(
+        snapshot=ExtremeRuntimeSnapshot(
+            attempts=proc_choice.attempts,
+            snapshot_time_seconds=2.0,
+        ),
+        effects=consequence.effects,
+        target_identity="Boss",
+    )
+
+    assert projected.unresolved == ()
+    assert "Minor Breach" in projected.combat_state.active_buffs
+    assert resistance_reduction_from_target_state(projected.combat_state) == 2974.0
