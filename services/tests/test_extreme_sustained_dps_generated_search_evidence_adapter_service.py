@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from services.extreme_sustained_dps_generated_search_evidence_adapter_service import (
     ExtremeSustainedDPSGeneratedSearchEvidenceAdapterService,
 )
@@ -92,3 +94,32 @@ def test_runtime_result_without_record_stays_unresolved_for_search() -> None:
     assert result.duration_seconds is None
     assert result.mechanic_complete is False
     assert result.unresolved == ("damage incomplete",)
+
+
+def test_bound_adapter_rejects_truthy_non_boolean_proof_flag() -> None:
+    source = SimpleNamespace(
+        upper_bound_dps=100.0,
+        proven_safe="true",
+        unresolved=(),
+    )
+
+    with pytest.raises(TypeError, match="boolean proven_safe"):
+        ExtremeSustainedDPSGeneratedSearchEvidenceAdapterService.branch_bound(
+            "candidate:bad",
+            source,
+        )
+
+
+def test_exact_leaf_adapter_rejects_truthy_non_boolean_mechanic_flag() -> None:
+    source = SimpleNamespace(
+        record=SimpleNamespace(modeled_dps=100.0, duration_seconds=10.0),
+        mechanic_complete=1,
+        evidence=(),
+        unresolved=(),
+    )
+
+    with pytest.raises(TypeError, match="boolean mechanic_complete"):
+        ExtremeSustainedDPSGeneratedSearchEvidenceAdapterService.exact_leaf(
+            "leaf:bad",
+            source,
+        )
