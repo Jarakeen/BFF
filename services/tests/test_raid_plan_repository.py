@@ -1,3 +1,4 @@
+from dataclasses import replace
 import json
 
 import pytest
@@ -344,3 +345,31 @@ def test_repository_pydantic_rejects_manual_coverage_control_characters(tmp_path
     import pytest
     with pytest.raises(Exception, match="control characters"):
         repository.save(plan)
+
+
+def test_stale_generic_save_cannot_erase_manual_coverage_overlay(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "foundrydock.db")
+    member = RaidPlanMember(seat_id="healer-1", gamertag="Healer")
+    provider = RaidPlanCoverageProvider(effect_name="Minor Berserk", seat_id="healer-1", source="Combat Prayer")
+    covered = RaidPlan(plan_id="plan-coverage-guard", trial_id="sunspire", name="Coverage Guard", members=(member,), coverage_providers=(provider,))
+    repository.save(covered, must_be_new=True)
+
+    stale_generic_copy = RaidPlan(plan_id=covered.plan_id, trial_id=covered.trial_id, name=covered.name, difficulty="Veteran Hardmode", members=(member,))
+    saved = repository.save(stale_generic_copy)
+
+    assert saved.difficulty == "Veteran Hardmode"
+    assert saved.coverage_providers == (provider,)
+    assert repository.get(covered.plan_id).coverage_providers == (provider,)
+
+
+def test_expected_coverage_save_can_intentionally_remove_last_provider(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "foundrydock.db")
+    member = RaidPlanMember(seat_id="healer-1", gamertag="Healer")
+    provider = RaidPlanCoverageProvider(effect_name="Minor Berserk", seat_id="healer-1", source="Combat Prayer")
+    covered = RaidPlan(plan_id="plan-coverage-clear", trial_id="sunspire", name="Coverage Clear", members=(member,), coverage_providers=(provider,))
+    repository.save(covered, must_be_new=True)
+
+    cleared = replace(covered, coverage_providers=())
+    repository.save(cleared, expected=covered)
+
+    assert repository.get(covered.plan_id).coverage_providers == ()
