@@ -22,7 +22,7 @@ from services.extreme_sustained_dps_weapon_poison_sequence_frontier_service impo
 )
 
 
-def _state(*, poison=True):
+def _state(*, poison=True, triple=False):
     if not poison:
         return SimpleNamespace(
             late=SimpleNamespace(
@@ -38,6 +38,7 @@ def _state(*, poison=True):
         reagents=("A", "B"),
         traits=("Breach",),
         game_update=GameUpdate.U50,
+        source_triple_traits=("Breach",) if triple else (),
     )
     front = ExtremeSustainedDPSWeaponPoisonSelection(
         selected_label=formula.canonical_id,
@@ -241,3 +242,51 @@ def test_generated_poison_consequence_factory_uses_source_bar_tier_for_same_form
     assert back.resolved is True
     assert front.effects[0].duration == 10.0
     assert back.effects[0].duration == 6.0
+
+def test_generated_poison_consequence_factory_defaults_to_literal_formula_dilution_witness():
+    state = _state(triple=True)
+    formula = state.late.poison_loadout.front.formula
+    poison_id = formula.canonical_id
+    state.late.assembled.poison_tier_loadout = SimpleNamespace(
+        front=SimpleNamespace(
+            poison_id=poison_id,
+            tier=SimpleNamespace(
+                item_evidence=ExtremeSustainedDPSWeaponPoisonItemEvidence(
+                    poison_id=poison_id,
+                    possible_effects=(
+                        ExtremeSustainedDPSWeaponPoisonPossibleEffect(
+                            effect_name="Breach",
+                            base_duration_seconds=10.0,
+                            triple_duration_seconds=5.0,
+                            solvent="Alkahest",
+                            level=50,
+                        ),
+                    ),
+                    source_evidence_complete=True,
+                )
+            ),
+        ),
+        back=SimpleNamespace(poison_id="", tier=None),
+    )
+    service = ExtremeSustainedDPSGeneratedWeaponPoisonConsequenceAuthorityFactoryService()
+    frontier = service.resolve(state)
+    occurrence = ExtremeSustainedDPSWeaponPoisonProcOccurrence(
+        event=RuntimeEvent(
+            time_seconds=1.0,
+            sequence=0,
+            trigger="weapon_poison_activation",
+            source="Light Attack",
+            target="Boss",
+            source_bar="front",
+        ),
+        poison_id=poison_id,
+    )
+
+    result = frontier.consequence_resolver.resolve(
+        poison_id=poison_id,
+        occurrence=occurrence,
+    )
+
+    assert result.resolved is True
+    assert result.effects[0].duration == 5.0
+
