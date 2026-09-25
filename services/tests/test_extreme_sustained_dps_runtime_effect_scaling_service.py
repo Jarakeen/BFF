@@ -1,3 +1,5 @@
+import pytest
+
 from types import SimpleNamespace
 
 from minmax.character_build.effect_instance import EffectVariant
@@ -6,6 +8,7 @@ from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPla
 from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_runtime_effect_scaling_service import (
+    ExtremeSustainedDPSRuntimeEffectScalingResult,
     ExtremeSustainedDPSRuntimeEffectScalingService,
 )
 
@@ -199,3 +202,22 @@ def test_unknown_runtime_scaling_is_math_review_blocker() -> None:
     assert result.source_data_unresolved == ()
     assert result.math_unresolved == result.unresolved
     assert any("runtime scaling is not reviewed" in row for row in result.unresolved)
+
+
+def test_runtime_scaling_result_requires_canonical_effects() -> None:
+    with pytest.raises(TypeError, match="effects must contain EffectVariant"):
+        ExtremeSustainedDPSRuntimeEffectScalingResult(
+            effects=(object(),),
+            evidence=(),
+            unresolved=(),
+        )
+
+
+def test_runtime_scaling_result_requires_typed_blockers_in_unresolved() -> None:
+    with pytest.raises(ValueError, match="typed blockers must also appear in unresolved"):
+        ExtremeSustainedDPSRuntimeEffectScalingResult(
+            effects=(),
+            evidence=(),
+            unresolved=(),
+            source_data_unresolved=("source gap",),
+        )
