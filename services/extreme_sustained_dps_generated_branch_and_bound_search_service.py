@@ -9,6 +9,7 @@ caller-supplied canonical authorities.
 """
 
 from dataclasses import dataclass
+import math
 from typing import Callable, Protocol
 
 from services.extreme_sustained_dps_pruning_service import (
@@ -30,14 +31,21 @@ class ExtremeSustainedDPSGeneratedSearchBranch:
         key = str(self.candidate_key or "").strip()
         if not key:
             raise ValueError("generated sustained-DPS search branch requires candidate_key")
-        if int(self.depth) < 0:
+        if isinstance(self.depth, bool) or not isinstance(self.depth, int):
+            raise TypeError("generated sustained-DPS search branch depth must be an integer")
+        if self.depth < 0:
             raise ValueError("generated sustained-DPS search branch depth cannot be negative")
+        if not isinstance(self.is_leaf, bool):
+            raise TypeError("generated sustained-DPS search branch is_leaf must be boolean")
+        if not isinstance(self.upper_bound, ExtremeSustainedDPSBoundEvidence):
+            raise TypeError(
+                "generated sustained-DPS search branch upper_bound must be canonical bound evidence"
+            )
         if str(self.upper_bound.candidate_key or "").strip() != key:
             raise ValueError(
                 "generated sustained-DPS branch key must match its upper-bound evidence key"
             )
         object.__setattr__(self, "candidate_key", key)
-        object.__setattr__(self, "depth", int(self.depth))
 
 
 @dataclass(frozen=True)
@@ -54,10 +62,53 @@ class ExtremeSustainedDPSExactLeafEvaluation:
         if not key:
             raise ValueError("exact sustained-DPS leaf evaluation requires candidate_key")
         object.__setattr__(self, "candidate_key", key)
-        if self.modeled_dps is not None and float(self.modeled_dps) < 0.0:
-            raise ValueError("exact sustained-DPS leaf modeled_dps cannot be negative")
-        if self.duration_seconds is not None and float(self.duration_seconds) <= 0.0:
-            raise ValueError("exact sustained-DPS leaf duration must be positive")
+        if not isinstance(self.mechanic_complete, bool):
+            raise TypeError("exact sustained-DPS leaf mechanic_complete must be boolean")
+
+        modeled = self.modeled_dps
+        if modeled is not None:
+            if isinstance(modeled, bool):
+                raise TypeError("exact sustained-DPS leaf modeled_dps must be numeric")
+            try:
+                modeled = float(modeled)
+            except (TypeError, ValueError):
+                raise TypeError("exact sustained-DPS leaf modeled_dps must be numeric") from None
+            if not math.isfinite(modeled) or modeled < 0.0:
+                raise ValueError(
+                    "exact sustained-DPS leaf modeled_dps must be finite and non-negative"
+                )
+
+        duration = self.duration_seconds
+        if duration is not None:
+            if isinstance(duration, bool):
+                raise TypeError("exact sustained-DPS leaf duration must be numeric")
+            try:
+                duration = float(duration)
+            except (TypeError, ValueError):
+                raise TypeError("exact sustained-DPS leaf duration must be numeric") from None
+            if not math.isfinite(duration) or duration <= 0.0:
+                raise ValueError(
+                    "exact sustained-DPS leaf duration must be finite and positive"
+                )
+
+        evidence = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.evidence
+                if str(item).strip()
+            )
+        )
+        unresolved = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.unresolved
+                if str(item).strip()
+            )
+        )
+        object.__setattr__(self, "modeled_dps", modeled)
+        object.__setattr__(self, "duration_seconds", duration)
+        object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "unresolved", unresolved)
 
 
 class ExtremeSustainedDPSBranchExpander(Protocol):
@@ -89,6 +140,82 @@ class ExtremeSustainedDPSGeneratedSearchResult:
     unique_leader_proven: bool
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("visited_branch_count", self.visited_branch_count),
+            ("expanded_branch_count", self.expanded_branch_count),
+            ("evaluated_leaf_count", self.evaluated_leaf_count),
+            ("pruned_branch_count", self.pruned_branch_count),
+            ("forced_open_branch_count", self.forced_open_branch_count),
+        ):
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(
+                    f"generated search result {label} must be a non-negative integer"
+                )
+        if self.evaluated_leaf_count != len(self.evaluated_leaves):
+            raise ValueError(
+                "generated search result evaluated_leaf_count must equal evaluated_leaves length"
+            )
+        if not isinstance(self.global_maximum_proven, bool):
+            raise TypeError("generated search result global_maximum_proven must be boolean")
+        if not isinstance(self.unique_leader_proven, bool):
+            raise TypeError("generated search result unique_leader_proven must be boolean")
+        if self.unique_leader_proven and (
+            not self.global_maximum_proven or self.unique_leader is None
+        ):
+            raise ValueError(
+                "generated search result unique leader proof requires proven global maximum and leader"
+            )
+        if self.unique_leader is not None and self.unique_leader not in self.best_candidates:
+            raise ValueError(
+                "generated search result unique_leader must be one of best_candidates"
+            )
+
+        best = self.best_modeled_dps
+        if best is not None:
+            if isinstance(best, bool):
+                raise TypeError("generated search result best_modeled_dps must be numeric")
+            try:
+                best = float(best)
+            except (TypeError, ValueError):
+                raise TypeError(
+                    "generated search result best_modeled_dps must be numeric"
+                ) from None
+            if not math.isfinite(best) or best < 0.0:
+                raise ValueError(
+                    "generated search result best_modeled_dps must be finite and non-negative"
+                )
+        if self.best_candidates and best is None:
+            raise ValueError(
+                "generated search result best_candidates require best_modeled_dps"
+            )
+
+        object.__setattr__(self, "best_modeled_dps", best)
+        object.__setattr__(self, "best_candidates", tuple(self.best_candidates))
+        object.__setattr__(self, "evaluated_leaves", tuple(self.evaluated_leaves))
+        object.__setattr__(
+            self,
+            "evidence",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.evidence
+                    if str(item).strip()
+                )
+            ),
+        )
+        object.__setattr__(
+            self,
+            "unresolved",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.unresolved
+                    if str(item).strip()
+                )
+            ),
+        )
 
 
 class ExtremeSustainedDPSGeneratedBranchAndBoundSearchService:
@@ -137,9 +264,16 @@ class ExtremeSustainedDPSGeneratedBranchAndBoundSearchService:
         evaluate_leaf: ExtremeSustainedDPSLeafEvaluator,
         required_duration_seconds: float,
     ) -> ExtremeSustainedDPSGeneratedSearchResult:
-        duration = float(required_duration_seconds)
-        if duration <= 0.0:
-            raise ValueError("generated sustained-DPS search duration must be positive")
+        if isinstance(required_duration_seconds, bool):
+            raise TypeError("generated sustained-DPS search duration must be numeric")
+        try:
+            duration = float(required_duration_seconds)
+        except (TypeError, ValueError):
+            raise TypeError("generated sustained-DPS search duration must be numeric") from None
+        if not math.isfinite(duration) or duration <= 0.0:
+            raise ValueError(
+                "generated sustained-DPS search duration must be finite and positive"
+            )
         if not roots:
             raise ValueError("generated sustained-DPS branch-and-bound search requires roots")
 
