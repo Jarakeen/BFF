@@ -1806,6 +1806,8 @@ def test_sustained_dps_candidate_runtime_state_factory_is_cataloged() -> None:
         "extreme.sustained_dps.weapon_enchantment_cooldown_policy",
         "extreme.sustained_dps.weapon_poison_activation_events",
         "extreme.sustained_dps.weapon_poison_sequence_frontier",
+        "extreme.sustained_dps.weapon_poison_named_effect_authority",
+        "extreme.sustained_dps.weapon_poison_consequence_frontier",
         "extreme.sustained_dps.runtime_scenario_frontier",
     )
     assert "caller-owned weapon-poison consequence authority seam" in factory.purpose
@@ -1907,6 +1909,27 @@ def test_candidate_runtime_factory_depends_on_poison_runtime_frontier() -> None:
     assert factory is not None
     assert "extreme.sustained_dps.weapon_poison_activation_events" in factory.dependencies
     assert "extreme.sustained_dps.weapon_poison_sequence_frontier" in factory.dependencies
+    assert "extreme.sustained_dps.weapon_poison_named_effect_authority" in factory.dependencies
+    assert "extreme.sustained_dps.weapon_poison_consequence_frontier" in factory.dependencies
+
+
+def test_weapon_poison_named_effect_authority_is_cataloged() -> None:
+    service = canonical_service_for(
+        "extreme_sustained_dps_weapon_poison_named_effect_authority"
+    )
+
+    assert service is not None
+    assert service.service_id == (
+        "extreme.sustained_dps.weapon_poison_named_effect_authority"
+    )
+    assert tuple(
+        row.service_id
+        for row in SERVICE_CATALOG.dependencies_of(service.service_id)
+    ) == (
+        "extreme.sustained_dps.weapon_poison_named_effect_consequences",
+    )
+    assert "caller-proven per-poison dilution selections" in service.purpose
+    assert "missing selection remains fail-closed" in service.notes
 
 
 def test_weapon_poison_consequence_frontier_is_cataloged() -> None:
