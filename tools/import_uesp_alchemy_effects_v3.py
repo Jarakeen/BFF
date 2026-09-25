@@ -181,6 +181,34 @@ def classify_table(rows):
         return "formula"
     return None
 
+
+_FORMULA_SECTION_ALIASES = {
+    "single_effect": "single_effect",
+    "triple_ingredient_and_second_effect": "triple_ingredient_and_second_effect",
+    "two_effects": "two_effects",
+    "three_effects": "three_effects",
+    "triple_effect": "triple_effect",
+}
+
+
+def formula_source_section(table) -> str:
+    """Return reviewed UESP formula-section provenance for one formula table."""
+
+    heading = table.find_previous(["h3", "h4"])
+    while heading is not None:
+        candidates = [
+            clean_text(heading.get("id", "")),
+            clean_text(heading.get_text(" ", strip=True)),
+        ]
+        for child in heading.find_all(id=True):
+            candidates.append(clean_text(child.get("id", "")))
+        for raw in candidates:
+            key = slugify(raw)
+            if key in _FORMULA_SECTION_ALIASES:
+                return _FORMULA_SECTION_ALIASES[key]
+        heading = heading.find_previous(["h3", "h4"])
+    return ""
+
 def extract_reagents(soup) -> list[str]:
     reagents = []
 
@@ -301,6 +329,7 @@ def parse_effect_page(path: Path) -> dict | None:
                     })
 
         elif kind == "formula":
+            source_section = formula_source_section(table)
             for row in rows:
                 if len(row) < 2:
                     continue
@@ -311,6 +340,7 @@ def parse_effect_page(path: Path) -> dict | None:
                 record["formulas"].append({
                     "ingredients": unique_preserve(row[:3]),
                     "effects": unique_preserve(row[3:]),
+                    "section": source_section,
                 })
 
     return record
@@ -362,13 +392,15 @@ def merge_records(records):
         for formula in record.get("formulas", []):
             ingredients = tuple(sorted(norm_name(x) for x in formula["ingredients"]))
             effects = tuple(sorted(norm_name(x) for x in formula["effects"]))
-            key_formula = (ingredients, effects)
+            section = norm_name(formula.get("section", ""))
+            key_formula = (ingredients, effects, section)
 
             exists = False
             for old in existing["formulas"]:
                 old_key = (
                     tuple(sorted(norm_name(x) for x in old["ingredients"])),
                     tuple(sorted(norm_name(x) for x in old["effects"])),
+                    norm_name(old.get("section", "")),
                 )
                 if old_key == key_formula:
                     exists = True
