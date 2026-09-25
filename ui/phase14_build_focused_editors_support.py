@@ -44,6 +44,7 @@ from models.build_model import (
 from models.roster_model import ESO_CLASSES
 from services.skill_choice_service import load_skill_choices
 from services.class_mastery_repository import ClassMasteryRepository
+from services.build_recent_state_pydantic_schema import validate_build_recent_state_payload
 from ui.components.eligible_build_editor import EligibleSkillBarRow
 from ui.components.foundry_button import ButtonRole, FoundryButton
 from ui.components.foundry_card import FoundryCard
@@ -472,15 +473,22 @@ class _IdentityDialog(_FocusedDialog):
         self.add_actions("Save Identity")
 
     def apply(self) -> None:
+        recent = validate_build_recent_state_payload({
+            "eso_class": self.eso_class.currentText().strip(),
+            "vampire": self.vampire.isChecked(),
+            "werewolf": self.werewolf.isChecked(),
+            "class_skill_lines": tuple(getattr(self.build, "ClassSkillLines", ()) or ()),
+            "class_mastery_ability_ids": tuple(getattr(self.build, "ClassMasteryAbilityIds", ()) or ()),
+        })
         self.build.BuildName = self.build_name.text().strip()
         self.build.Name = self.character.text().strip()
         self.build.Race = self.race.currentText().strip()
-        self.build.EsoClass = self.eso_class.currentText().strip()
+        self.build.EsoClass = recent["eso_class"]
         self.build.Role = self.role.currentText().strip()
         self.build.Alliance = self.alliance.currentText().strip()
         self.build.Mundus = self.mundus.currentText().strip()
-        self.build.Vampire = self.vampire.isChecked()
-        self.build.Werewolf = self.werewolf.isChecked()
+        self.build.Vampire = recent["vampire"]
+        self.build.Werewolf = recent["werewolf"]
 
 
 def _run_dialog(page, dialog, message: str) -> None:
@@ -941,7 +949,14 @@ def _class_masteries_tab(page, build) -> QWidget:
             status.setText("A selected Class Mastery does not belong to this Build class.")
             return
 
-        build.ClassMasteryAbilityIds = wanted
+        recent = validate_build_recent_state_payload({
+            "eso_class": eso_class,
+            "vampire": bool(getattr(build, "Vampire", False)),
+            "werewolf": bool(getattr(build, "Werewolf", False)),
+            "class_skill_lines": tuple(getattr(build, "ClassSkillLines", ()) or ()),
+            "class_mastery_ability_ids": tuple(wanted),
+        })
+        build.ClassMasteryAbilityIds = list(recent["class_mastery_ability_ids"])
         _persist(page, "Class Masteries updated.")
 
     save.clicked.connect(persist_masteries)
