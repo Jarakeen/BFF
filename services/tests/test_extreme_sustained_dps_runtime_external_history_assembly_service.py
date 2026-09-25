@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import pytest
+
 from services.extreme_sustained_dps_runtime_attempt_evidence_frontier_service import (
     ExtremeSustainedDPSRuntimeAttemptEvidenceChoice,
     ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier,
 )
 from services.extreme_sustained_dps_runtime_external_history_assembly_service import (
+    ExtremeSustainedDPSRuntimeExternalHistoryAssemblyResult,
     ExtremeSustainedDPSRuntimeExternalHistoryAssemblyService,
 )
 from services.extreme_sustained_dps_runtime_witness_composition_service import (
@@ -100,3 +103,30 @@ def test_unproven_attempt_denominator_fails_closed() -> None:
         in row
         for row in result.unresolved
     )
+
+
+def test_external_history_assembly_rejects_candidate_count_drift() -> None:
+    choice = ExtremeSustainedDPSRuntimeExternalHistoryChoice(
+        "history",
+        (),
+    )
+
+    with pytest.raises(ValueError, match="candidate_count must equal choice count"):
+        ExtremeSustainedDPSRuntimeExternalHistoryAssemblyResult(
+            choices=(choice,),
+            candidate_count=2,
+            denominator_proven=True,
+            evidence=(),
+            unresolved=(),
+        )
+
+
+def test_external_history_assembly_requires_strict_denominator_flag() -> None:
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        ExtremeSustainedDPSRuntimeExternalHistoryAssemblyResult(
+            choices=(),
+            candidate_count=0,
+            denominator_proven="true",
+            evidence=(),
+            unresolved=(),
+        )
