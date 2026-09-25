@@ -774,7 +774,7 @@ class RosterImportParser:
 
 def _existing_character_map(roster_service, build_service: BuildService) -> dict[str, list[tuple[str, str]]]:
     result: dict[str, list[tuple[str, str]]] = {}
-    catalog = build_service.canonical.catalog_service.load()
+    catalog = build_service.canonical.catalog_service.load_strict()
     players = {
         _text(player.get("player_id")): _text(player.get("gamertag"))
         for player in catalog.get("players", [])
@@ -974,7 +974,7 @@ def apply_roster_import(
         if imported_build_count:
             build_service.save(BuildRoster(Members=saved_builds))
             catalog_service = build_service.canonical.catalog_service
-            catalog = catalog_service.load()
+            catalog = catalog_service.load_strict()
             players_by_id = {
                 _text(player.get("player_id")): player
                 for player in catalog.get("players", [])
