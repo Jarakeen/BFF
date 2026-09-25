@@ -185,7 +185,7 @@ def preview_team_merge(
     source_members = _membership_ids(roster_service, int(source_row["id"]))
     destination_members = _membership_ids(roster_service, int(destination_row["id"]))
 
-    catalog = build_service.canonical.catalog_service.load()
+    catalog = build_service.canonical.catalog_service.load_strict()
     source_key = source_name.casefold()
     destination_key = destination_name.casefold()
     source_assignments = [
@@ -315,7 +315,7 @@ def merge_teams(
     catalog_path = Path(catalog_service.catalog_path)
     catalog_existed = catalog_path.exists()
     catalog_backup = catalog_path.read_text(encoding="utf-8") if catalog_existed else ""
-    catalog = catalog_service.load()
+    catalog = catalog_service.load_strict()
     updated_catalog, moved_assignments, collapsed_assignments = _merge_assignment_rows(
         catalog,
         source_name,
