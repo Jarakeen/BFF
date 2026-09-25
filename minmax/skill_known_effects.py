@@ -51,8 +51,8 @@ class VerifiedSkillEffect:
 # Audited against data/eso.db with tools/audit_phase5_skill_effect_evidence.py.
 # Exact evidence:
 # - Combat Prayer base 37243 / morph 2: Minor Resolve, 2974 resistance, 10s.
-#   The same tooltip grants Minor Berserk to the caster and allies for 10s;
-#   the imported generic "berserk" link is self-targeted and cannot prove group coverage.
+#   Combat Prayer's imported generic "berserk" link remains primary evidence here;
+#   this supplemental registry adds only the missing Minor Resolve row.
 # - Expansive Frost Cloak base 86122 / morph 1: Major Resolve, 5948 resistance, 20s.
 # - Overflowing Altar base 39489 / morph 2: Minor Lifesteal, 600 Health per second, 30s.
 #
@@ -68,17 +68,6 @@ class VerifiedSkillEffect:
 # These supplemental variants model the caster-side application used by Extreme
 # self-stat snapshots. Group/ally coverage remains owned by encounter/support layers.
 _VERIFIED: tuple[VerifiedSkillEffect, ...] = (
-    VerifiedSkillEffect(
-        base_ability_id=37243,
-        morph=2,
-        name="minor_berserk",
-        source="Combat Prayer",
-        duration=10.0,
-        target_type=SupportTargetType.GROUP,
-        category=SupportEffectCategory.BUFF,
-        stacking=StackingBehavior.UNIQUE,
-        exclusivity_group="minor_berserk",
-    ),
     VerifiedSkillEffect(
         base_ability_id=37243,
         morph=2,
