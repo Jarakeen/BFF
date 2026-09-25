@@ -17,6 +17,31 @@ class ExtremeSustainedDPSRuntimeAttemptEvidenceChoice:
     attempts: tuple[RuntimeEffectEventAttempt, ...]
     evidence: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        choice_id = str(self.choice_id or "").strip()
+        if not choice_id:
+            raise ValueError("runtime attempt evidence choice requires choice_id")
+        if any(
+            not isinstance(row, RuntimeEffectEventAttempt)
+            for row in self.attempts
+        ):
+            raise TypeError(
+                "runtime attempt evidence choice attempts must contain RuntimeEffectEventAttempt records"
+            )
+        object.__setattr__(self, "choice_id", choice_id)
+        object.__setattr__(self, "attempts", tuple(self.attempts))
+        object.__setattr__(
+            self,
+            "evidence",
+            tuple(
+                dict.fromkeys(
+                    str(item).strip()
+                    for item in self.evidence
+                    if str(item).strip()
+                )
+            ),
+        )
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier:
@@ -25,6 +50,52 @@ class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier:
     denominator_proven: bool
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if any(
+            not isinstance(row, ExtremeSustainedDPSRuntimeAttemptEvidenceChoice)
+            for row in self.choices
+        ):
+            raise TypeError(
+                "runtime attempt evidence frontier choices must contain canonical choices"
+            )
+        if (
+            isinstance(self.candidate_count, bool)
+            or not isinstance(self.candidate_count, int)
+            or self.candidate_count < 0
+        ):
+            raise ValueError(
+                "runtime attempt evidence candidate_count must be a non-negative integer"
+            )
+        if self.candidate_count != len(self.choices):
+            raise ValueError(
+                "runtime attempt evidence candidate_count must equal choice count"
+            )
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError(
+                "runtime attempt evidence denominator_proven must be boolean"
+            )
+        evidence = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.evidence
+                if str(item).strip()
+            )
+        )
+        unresolved = tuple(
+            dict.fromkeys(
+                str(item).strip()
+                for item in self.unresolved
+                if str(item).strip()
+            )
+        )
+        if self.denominator_proven and (not self.choices or unresolved):
+            raise ValueError(
+                "runtime attempt evidence denominator cannot be proven with no choices or unresolved evidence"
+            )
+        object.__setattr__(self, "choices", tuple(self.choices))
+        object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "unresolved", unresolved)
 
 
 class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService:
