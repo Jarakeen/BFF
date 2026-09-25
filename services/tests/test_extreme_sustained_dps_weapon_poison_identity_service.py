@@ -1,8 +1,12 @@
 import json
 import sqlite3
 
+import pytest
+
 from services.extreme_sustained_dps_weapon_poison_identity_service import (
     ExtremeSustainedDPSWeaponPoisonIdentityService,
+    ExtremeSustainedDPSWeaponPoisonItemEvidence,
+    ExtremeSustainedDPSWeaponPoisonPossibleEffect,
 )
 
 
@@ -187,3 +191,55 @@ def test_generated_formula_identity_is_not_treated_as_saved_item_label(tmp_path)
         "generated formula identity is not a crafted poison item-label witness" in row
         for row in result.unresolved
     )
+
+
+@pytest.mark.parametrize("duration", (-1.0, float("inf"), float("nan")))
+def test_poison_possible_effect_rejects_invalid_base_duration(duration) -> None:
+    with pytest.raises(ValueError, match="base duration must be finite and non-negative"):
+        ExtremeSustainedDPSWeaponPoisonPossibleEffect(
+            effect_name="Breach",
+            base_duration_seconds=duration,
+        )
+
+
+def test_poison_possible_effect_normalizes_text_fields() -> None:
+    effect = ExtremeSustainedDPSWeaponPoisonPossibleEffect(
+        effect_name="  Minor   Breach ",
+        base_duration_seconds=10,
+        triple_duration_seconds=5,
+        solvent="  Alkahest   ",
+        level=50,
+    )
+
+    assert effect.effect_name == "Minor Breach"
+    assert effect.solvent == "Alkahest"
+    assert effect.base_duration_seconds == 10.0
+    assert effect.triple_duration_seconds == 5.0
+
+
+def test_poison_item_evidence_rejects_exact_selection_without_complete_source() -> None:
+    with pytest.raises(
+        ValueError,
+        match="cannot be proven without complete source evidence",
+    ):
+        ExtremeSustainedDPSWeaponPoisonItemEvidence(
+            poison_id="Test Poison IX",
+            possible_effects=(),
+            source_evidence_complete=False,
+            exact_selection_proven=True,
+        )
+
+
+def test_poison_item_evidence_normalizes_and_deduplicates_diagnostics() -> None:
+    result = ExtremeSustainedDPSWeaponPoisonItemEvidence(
+        poison_id="  Test   Poison IX ",
+        possible_effects=(),
+        source_evidence_complete=False,
+        exact_selection_proven=False,
+        evidence=(" source ", "source", ""),
+        unresolved=(" missing ", "missing", ""),
+    )
+
+    assert result.poison_id == "Test Poison IX"
+    assert result.evidence == ("source",)
+    assert result.unresolved == ("missing",)
