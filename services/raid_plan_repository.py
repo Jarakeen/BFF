@@ -16,6 +16,7 @@ from tempfile import NamedTemporaryFile
 
 from models.raid_plan import (
     RaidPlan,
+    RaidPlanCoverageProvider,
     RaidPlanMember,
     RaidPlanTriggeredResponsibility,
 )
@@ -315,9 +316,10 @@ class RaidPlanRepository:
         try:
             members_raw = raw.get("members", [])
             triggered_raw = raw.get("triggered_responsibilities", [])
-            if not isinstance(members_raw, list) or not isinstance(triggered_raw, list):
+            coverage_raw = raw.get("coverage_providers", [])
+            if not isinstance(members_raw, list) or not isinstance(triggered_raw, list) or not isinstance(coverage_raw, list):
                 raise RaidPlanRepositoryError(
-                    "persisted Raid Plan members and triggered responsibilities must be lists"
+                    "persisted Raid Plan members, triggered responsibilities, and coverage providers must be lists"
                 )
             members = tuple(
                 RaidPlanMember(
@@ -337,6 +339,15 @@ class RaidPlanRepository:
                 )
                 for row in triggered_raw
             )
+            coverage_providers = tuple(
+                RaidPlanCoverageProvider(
+                    **{
+                        **dict(row),
+                        "seat_id": _canonical_seat_id(dict(row).get("seat_id", "")),
+                    }
+                )
+                for row in coverage_raw
+            )
             return RaidPlan(
                 plan_id=raw.get("plan_id", ""),
                 trial_id=raw.get("trial_id", ""),
@@ -347,6 +358,7 @@ class RaidPlanRepository:
                 status=raw.get("status", "planning"),
                 members=members,
                 triggered_responsibilities=triggered,
+                coverage_providers=coverage_providers,
             )
         except (TypeError, ValueError) as exc:
             if isinstance(exc, RaidPlanRepositoryError):
