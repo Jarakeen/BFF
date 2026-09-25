@@ -225,6 +225,10 @@ def test_assembly_carries_only_poison_owned_bar_state() -> None:
     assert result.coordinate.identity.endswith("|poison:5")
     assert result.build.FrontBarPoison == "poison:front"
     assert result.build.BackBarPoison == "poison:back"
+    assert result.poison_loadout is not None
+    assert result.poison_loadout.structural_index == 5
+    assert result.poison_loadout.front.selected_label == "poison:front"
+    assert result.poison_loadout.back.selected_label == "poison:back"
     assert result.build.FrontBarWeapon.Set == "Gear A"
     assert result.build.BackBarWeapon.Set == "Gear B"
 
