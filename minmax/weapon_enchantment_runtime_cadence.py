@@ -46,6 +46,7 @@ class WeaponEnchantmentCadenceEvidence:
         WeaponEnchantmentCadenceAuthority.PROVISIONAL
     )
     distinct_identity_cooldown_evidence_note: str = ""
+    same_identity_cooldown_evidence_note: str = ""
 
     @property
     def runtime_blockers(self) -> tuple[str, ...]:
@@ -115,8 +116,9 @@ class WeaponEnchantmentCadenceEvidence:
 # topology below is only partly provisional: Update 19 establishes that enchantments
 # remember the source weapon across a bar swap; damage enchants are observed with a
 # four-second base cooldown; an equipped alchemical poison suppresses the enchantment;
-# and duplicate enchantment identities share cooldown while different identities can
-# retain independent timers. Buff/debuff base cooldown evidence conflicts between
+# and ZOS Support explicitly confirms that duplicate enchantment identities share a
+# cooldown. Different identities retaining independent timers remains community-only.
+# Buff/debuff base cooldown evidence conflicts between
 # roughly nine and ten seconds. None of this is promoted to exact runtime math until
 # current-version authoritative evidence closes the remaining uncertainty.
 _PROVISIONAL = {
@@ -156,7 +158,12 @@ _PROVISIONAL = {
             "weapon set temporarily suppresses weapon enchantments on that set."
         ),
         same_effect_identity_shares_cooldown=True,
-        same_identity_cooldown_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
+        same_identity_cooldown_authority=WeaponEnchantmentCadenceAuthority.AUTHORITATIVE,
+        same_identity_cooldown_evidence_note=(
+            "Official ESO Support: weapon enchantments share cooldowns; while Dual "
+            "Wielding the same enchantment on both weapons, only one can activate "
+            "until that shared cooldown cycle ends."
+        ),
         distinct_effect_identities_have_independent_cooldowns=True,
         distinct_identity_cooldown_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
         distinct_identity_cooldown_evidence_note=(
@@ -164,8 +171,9 @@ _PROVISIONAL = {
             "retain independent cooldown timers, but current primary proof is still missing."
         ),
         evidence_note=(
-            "Community-observed ESO behavior; current-version authoritative source "
-            "still required before Objective #32 may consume this cadence."
+            "Direct-damage cooldown, activation family, off-bar source persistence, "
+            "poison suppression, and same-identity cooldown sharing have authoritative "
+            "support. Distinct-identity independence and full cooldown scope remain open."
         ),
     ),
     WeaponEnchantmentEffectFamily.BUFF_OR_DEBUFF: WeaponEnchantmentCadenceEvidence(
@@ -204,7 +212,12 @@ _PROVISIONAL = {
             "weapon set temporarily suppresses weapon enchantments on that set."
         ),
         same_effect_identity_shares_cooldown=True,
-        same_identity_cooldown_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
+        same_identity_cooldown_authority=WeaponEnchantmentCadenceAuthority.AUTHORITATIVE,
+        same_identity_cooldown_evidence_note=(
+            "Official ESO Support: weapon enchantments share cooldowns; while Dual "
+            "Wielding the same enchantment on both weapons, only one can activate "
+            "until that shared cooldown cycle ends."
+        ),
         distinct_effect_identities_have_independent_cooldowns=True,
         distinct_identity_cooldown_authority=WeaponEnchantmentCadenceAuthority.PROVISIONAL,
         distinct_identity_cooldown_evidence_note=(
