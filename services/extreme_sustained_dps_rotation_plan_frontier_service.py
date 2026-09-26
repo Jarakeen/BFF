@@ -12,7 +12,7 @@ RotationDurationRefinementService may then refine reviewed positive-duration rec
 """
 
 from dataclasses import dataclass
-from math import factorial
+from math import factorial, isfinite
 from pathlib import Path
 
 from minmax.rotation_definition import RotationDefinition, RotationMode, RotationStep
@@ -39,6 +39,27 @@ class ExtremeSustainedDPSRotationFamilyFrontier:
     denominator_proven: bool
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("front_skill_count", self.front_skill_count),
+            ("back_skill_count", self.back_skill_count),
+            ("front_order_count", self.front_order_count),
+            ("back_order_count", self.back_order_count),
+            ("starting_route_count", self.starting_route_count),
+            ("weave_state_count", self.weave_state_count),
+            ("candidate_count", self.candidate_count),
+        ):
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"rotation family frontier {label} must be an integer")
+            if value < 0:
+                raise ValueError(f"rotation family frontier {label} cannot be negative")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("rotation family frontier denominator_proven must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("rotation family frontier evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("rotation family frontier unresolved must be a tuple")
 
 
 @dataclass(frozen=True)
@@ -93,7 +114,9 @@ class ExtremeSustainedDPSRotationPlanFrontierService:
     def _permutation_at(values: tuple[str, ...], index: int) -> tuple[str, ...]:
         n = len(values)
         total = factorial(n)
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("rotation skill-order permutation index must be an integer")
+        target = index
         if target < 0 or target >= total:
             raise IndexError("rotation skill-order permutation index out of range")
         pool = list(values)
@@ -135,7 +158,7 @@ class ExtremeSustainedDPSRotationPlanFrontierService:
             starting_route_count=route_count,
             weave_state_count=weave_count,
             candidate_count=count,
-            denominator_proven=bool(count > 0 and not final_unresolved),
+            denominator_proven=count > 0 and not final_unresolved,
             evidence=(
                 f"Front ordinary skills: {len(front)} ({front_orders} orderings)",
                 f"Back ordinary skills: {len(back)} ({back_orders} orderings)",
@@ -207,6 +230,12 @@ class ExtremeSustainedDPSRotationPlanFrontierService:
         priorities: AbilityPriorityList | None = None,
         encounter_demands: tuple[RotationDemandWindow, ...] = (),
     ) -> ExtremeSustainedDPSRotationPlanCandidate:
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("generated rotation-plan candidate index must be an integer")
+        if isinstance(duration_seconds, bool) or not isinstance(duration_seconds, (int, float)):
+            raise TypeError("generated rotation duration must be numeric")
+        if not isinstance(encounter_demands, tuple):
+            raise TypeError("generated rotation encounter_demands must be a tuple")
         frontier = self.frontier(candidate)
         if not frontier.denominator_proven:
             raise ValueError(
@@ -214,12 +243,12 @@ class ExtremeSustainedDPSRotationPlanFrontierService:
                 + "; ".join(frontier.unresolved)
             )
 
-        target = int(index)
+        target = index
         if target < 0 or target >= frontier.candidate_count:
             raise IndexError("generated rotation-plan candidate index out of range")
         duration = float(duration_seconds)
-        if duration <= 0.0:
-            raise ValueError("generated rotation duration must be positive")
+        if not isfinite(duration) or duration <= 0.0:
+            raise ValueError("generated rotation duration must be finite and positive")
 
         build = self._normalized_build(candidate)
         front = self._ordinary_skills(build, "front")
@@ -279,14 +308,14 @@ class ExtremeSustainedDPSRotationPlanFrontierService:
             )
         )
         return ExtremeSustainedDPSRotationPlanCandidate(
-            structural_index=int(index),
+            structural_index=index,
             front_order=front_order,
             back_order=back_order,
             starting_bar=starting_bar,
             weave_light_attacks=weave,
             plan=plan,
             evidence=(
-                f"Rotation family index: {int(index)}",
+                f"Rotation family index: {index}",
                 f"Starting bar: {starting_bar}",
                 f"Light-Attack weave: {weave}",
                 f"Plan horizon: {duration:g}s",
@@ -296,7 +325,7 @@ class ExtremeSustainedDPSRotationPlanFrontierService:
                     if self.refinement_service is not None
                     else "Duration refinement not supplied to this frontier instance"
                 ),
-                f"Encounter demand windows supplied: {len(tuple(encounter_demands))}",
+                f"Encounter demand windows supplied: {len(encounter_demands)}",
             ),
             unresolved=unresolved,
         )
