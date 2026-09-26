@@ -23,6 +23,33 @@ class ExtremeSustainedDPSGeneratedAxisInventory:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        for name in (
+            "axis_names",
+            "searched_canonical_axes",
+            "missing_canonical_axes",
+            "untagged_axis_names",
+            "duplicate_canonical_axes",
+            "omitted_scope",
+            "evidence",
+            "unresolved",
+        ):
+            if not isinstance(getattr(self, name), tuple):
+                raise TypeError(f"generated axis inventory {name} must be a tuple")
+        canonical = tuple(CANONICAL_SUSTAINED_DPS_MUTATION_AXES)
+        searched = tuple(self.searched_canonical_axes)
+        if any(axis not in canonical for axis in searched):
+            raise ValueError("generated axis inventory searched axes must be canonical")
+        expected_missing = tuple(axis for axis in canonical if axis not in set(searched))
+        if self.missing_canonical_axes != expected_missing:
+            raise ValueError(
+                "generated axis inventory missing_canonical_axes must match canonical minus searched axes"
+            )
+        if any(axis not in searched for axis in self.duplicate_canonical_axes):
+            raise ValueError(
+                "generated axis inventory duplicate axes must also be searched axes"
+            )
+
 
 class ExtremeSustainedDPSGeneratedAxisInventoryService:
     """Report tree shape only; denominator proof remains owned by frontier services."""
