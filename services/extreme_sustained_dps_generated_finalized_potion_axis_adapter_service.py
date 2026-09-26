@@ -43,6 +43,20 @@ class ExtremeSustainedDPSFinalizedPotionTimingEvidence:
     additional_resource_event_denominator_proven: bool = False
     unresolved: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("periodic projections", self.periodic_projections),
+            ("Heavy Attack completion evidence", self.heavy_attack_completion_evidence),
+            ("additional resource event times", self.additional_resource_event_times),
+            ("unresolved evidence", self.unresolved),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"finalized potion {label} must be a tuple")
+        if not isinstance(self.additional_resource_event_denominator_proven, bool):
+            raise TypeError(
+                "finalized potion resource-event denominator proof flag must be boolean"
+            )
+
 
 class ExtremeSustainedDPSFinalizedPotionTimingEvidenceResolver(Protocol):
     def __call__(
@@ -223,11 +237,15 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
         evidence_resolver: ExtremeSustainedDPSFinalizedPotionTimingEvidenceResolver,
     ) -> ExtremeSustainedDPSGeneratedFinalizedPotionAxisState:
         runtime_stage = getattr(upstream_state, "runtime", None)
-        runtime_complete = bool(
-            runtime_stage is not None
-            and getattr(runtime_stage, "complete", False)
-        )
-        if not runtime_complete and not bool(getattr(upstream_state, "complete", False)):
+        runtime_complete = False
+        if runtime_stage is not None:
+            runtime_complete = getattr(runtime_stage, "complete", False)
+            if not isinstance(runtime_complete, bool):
+                raise TypeError("runtime policy complete flag must be boolean")
+        upstream_complete = getattr(upstream_state, "complete", False)
+        if not isinstance(upstream_complete, bool):
+            raise TypeError("upstream pipeline complete flag must be boolean")
+        if not runtime_complete and not upstream_complete:
             raise ValueError(
                 "finalized potion timing axis requires complete upstream runtime policy state"
             )
@@ -235,7 +253,11 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
             raise ValueError(
                 "finalized potion timing axis requires explicit timing-evidence resolver"
             )
+        if isinstance(potion_cooldown_seconds, bool):
+            raise TypeError("finalized potion cooldown must be numeric, not boolean")
         candidate = self._current_candidate(upstream_state)
+        if not isinstance(candidate, GeneratedRotationCandidate):
+            raise TypeError("finalized potion timing requires canonical generated rotation candidate")
         return ExtremeSustainedDPSGeneratedFinalizedPotionAxisState(
             upstream_state=upstream_state,
             build=build,
@@ -256,9 +278,11 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
             return None
 
         evidence = state.evidence_resolver(state.candidate)
+        if not isinstance(evidence, ExtremeSustainedDPSFinalizedPotionTimingEvidence):
+            raise TypeError("finalized potion timing requires canonical timing evidence")
         evidence_unresolved = tuple(
             str(item).strip()
-            for item in tuple(getattr(evidence, "unresolved", ()) or ())
+            for item in evidence.unresolved
             if str(item).strip()
         )
         if evidence_unresolved:
@@ -285,12 +309,8 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
                 additional_resource_event_times=tuple(
                     getattr(evidence, "additional_resource_event_times", ()) or ()
                 ),
-                additional_resource_event_denominator_proven=bool(
-                    getattr(
-                        evidence,
-                        "additional_resource_event_denominator_proven",
-                        False,
-                    )
+                additional_resource_event_denominator_proven=(
+                    evidence.additional_resource_event_denominator_proven
                 ),
             )
         )
