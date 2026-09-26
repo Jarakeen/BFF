@@ -23,6 +23,7 @@ def test_capability_member_selector_uses_real_tabs_instead_of_round_buttons():
 
     assert "self.desk_tabs = QTabBar()" in source
     assert 'self.desk_tabs.addTab("Ranked Team Builds")' in source
+    assert 'self.desk_tabs.addTab("Support Gear")' in source
     assert 'self.desk_tabs.addTab("Performance Dashboard")' in source
     assert "self.tabs_widget = QTabBar()" in source
     assert "self.tabs_widget.setUsesScrollButtons(True)" in source
