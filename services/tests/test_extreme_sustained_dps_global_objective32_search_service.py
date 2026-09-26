@@ -12,7 +12,11 @@ from services.extreme_sustained_dps_generated_branch_and_bound_search_service im
     ExtremeSustainedDPSExactLeafEvaluation,
     ExtremeSustainedDPSGeneratedSearchResult,
 )
+from services.extreme_sustained_dps_generated_axis_inventory_service import (
+    ExtremeSustainedDPSGeneratedAxisInventory,
+)
 from services.extreme_sustained_dps_global_objective32_search_service import (
+    ExtremeSustainedDPSGlobalObjective32SearchResult,
     ExtremeSustainedDPSGlobalObjective32SearchService,
 )
 from services.extreme_sustained_dps_objective32_search_service import (
@@ -633,3 +637,26 @@ def test_global_objective32_rejects_duck_typed_scope_proof_before_search() -> No
     with pytest.raises(TypeError, match="scope_proof must be canonical"):
         service.search(scope_proof=malformed)  # type: ignore[arg-type]
     assert global_search.calls == []
+
+
+
+def test_global_result_requires_canonical_axis_inventory() -> None:
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=_GlobalSearch(_search_result()),
+    )
+    with pytest.raises(TypeError, match="canonical generated axis inventory"):
+        service.search(
+            closure_inventory=_closed_closure_inventory(),
+            runtime_state_frontier=_runtime_frontier(),
+            dual_bar_frontier="gear",
+            candidate_id_prefix="objective32",
+            required_duration_seconds=20.0,
+            potion_cooldown_seconds=45.0,
+            starting_ultimate=0.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="Boss",
+            runtime_snapshot="snapshot",
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+        )
