@@ -88,14 +88,20 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceService:
         evaluator: ExtremeSustainedDPSFiniteChoiceActionEvaluator[T],
         source: str,
     ) -> ExtremeSustainedDPSFiniteAxisActionDominanceResult:
-        count = int(frontier.choice_count)
-        if count < 0:
+        if not isinstance(frontier.axes, tuple):
+            raise TypeError("indexed finite-axis axes must be a tuple")
+        raw_count = frontier.choice_count
+        if isinstance(raw_count, bool) or not isinstance(raw_count, int):
+            raise TypeError("indexed finite-axis choice_count must be an integer")
+        if raw_count < 0:
             raise ValueError("indexed finite-axis choice_count cannot be negative")
+        if not isinstance(frontier.denominator_proven, bool):
+            raise TypeError("indexed finite-axis denominator_proven must be boolean")
         return cls._evaluate_accessor(
             candidate_key=candidate_key,
-            axes=tuple(frontier.axes),
-            expected_choices=count,
-            denominator_proven=bool(frontier.denominator_proven),
+            axes=frontier.axes,
+            expected_choices=raw_count,
+            denominator_proven=frontier.denominator_proven,
             choice_at=frontier.choice_at,
             evaluator=evaluator,
             source=source,
@@ -112,12 +118,20 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceService:
         evaluator: ExtremeSustainedDPSFiniteChoiceActionEvaluator[T],
         source: str,
     ) -> ExtremeSustainedDPSFiniteAxisActionDominanceResult:
+        if not isinstance(axes, tuple):
+            raise TypeError("finite-axis dominance axes must be a tuple")
+        if not isinstance(choices, tuple):
+            raise TypeError("finite-axis dominance choices must be a tuple")
+        if any(not isinstance(row, ExtremeSustainedDPSFiniteAxisChoice) for row in choices):
+            raise TypeError("finite-axis dominance choices must contain finite-axis choice records")
+        if not isinstance(denominator_proven, bool):
+            raise TypeError("finite-axis dominance denominator_proven must be boolean")
         ordered = tuple(sorted(choices, key=lambda row: row.choice_id.casefold()))
         return cls._evaluate_accessor(
             candidate_key=candidate_key,
             axes=axes,
             expected_choices=len(ordered),
-            denominator_proven=bool(denominator_proven),
+            denominator_proven=denominator_proven,
             choice_at=lambda index: ordered[index],
             evaluator=evaluator,
             source=source,
@@ -135,6 +149,13 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceService:
         evaluator: ExtremeSustainedDPSFiniteChoiceActionEvaluator[T],
         source: str,
     ) -> ExtremeSustainedDPSFiniteAxisActionDominanceResult:
+        if not isinstance(axes, tuple):
+            raise TypeError("finite-axis dominance axes must be a tuple")
+        if isinstance(expected_choices, bool) or not isinstance(expected_choices, int):
+            raise TypeError("finite-axis dominance expected_choices must be an integer")
+        if not isinstance(denominator_proven, bool):
+            raise TypeError("finite-axis dominance denominator_proven must be boolean")
+
         key = str(candidate_key or "").strip()
         if not key:
             raise ValueError("finite-axis action dominance requires candidate_key")
@@ -161,7 +182,7 @@ class ExtremeSustainedDPSFiniteAxisActionDominanceService:
         if not denominator_proven:
             unresolved.append("Finite-axis choice denominator is not proven complete")
 
-        expected = int(expected_choices)
+        expected = expected_choices
         if expected <= 0:
             unresolved.append("Finite-axis choice denominator is empty")
 
