@@ -319,3 +319,28 @@ def test_global_search_rejects_invalid_initial_bar() -> None:
 
     with pytest.raises(ValueError, match="initial_bar must be 'front' or 'back'"):
         service.search(**kwargs)
+
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "ultimate_generation_events",
+        "heroism_windows",
+        "duration_rules",
+        "heavy_attack_windows",
+        "heavy_attack_channel_blocks",
+    ),
+)
+def test_global_search_rejects_mutable_frontier_collections(field) -> None:
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_Materialization(),
+        pipeline=_Pipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+    kwargs = _valid_search_kwargs()
+    kwargs[field] = []
+
+    with pytest.raises(TypeError, match=f"{field} must be a tuple"):
+        service.search(**kwargs)
