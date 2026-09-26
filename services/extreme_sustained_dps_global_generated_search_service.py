@@ -60,23 +60,42 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
         potion_cooldown_scenario: object | None,
     ) -> ExtremeSustainedDPSIndexedFrontierAxis:
         validated = self.structural_families.validate_denominator()
-        if not validated.denominator_proven:
-            detail = "; ".join(validated.unresolved)
+        denominator_proven = getattr(validated, "denominator_proven", None)
+        if not isinstance(denominator_proven, bool):
+            raise TypeError("structural family denominator proof must be boolean")
+        unresolved = getattr(validated, "unresolved", ())
+        if not isinstance(unresolved, tuple):
+            raise TypeError("structural family denominator unresolved evidence must be a tuple")
+        choice_count = getattr(validated, "choice_count", None)
+        if isinstance(choice_count, bool) or not isinstance(choice_count, int):
+            raise TypeError("structural family denominator choice_count must be an integer")
+        if choice_count < 0:
+            raise ValueError("structural family denominator choice_count must be non-negative")
+        if denominator_proven and choice_count == 0:
+            raise ValueError("proven structural family denominator cannot be empty")
+        if not denominator_proven:
+            detail = "; ".join(unresolved)
             raise ValueError(
                 "global generated sustained-DPS search requires a proven structural family denominator"
                 + (f": {detail}" if detail else "")
             )
 
         def candidate_count(_state: object) -> int:
-            return int(validated.choice_count)
+            return choice_count
 
         def candidate_at(_state: object, index: int):
             choice = self.structural_families.choice_at(index)
             materialized = self.structural_materialization.materialize(choice)
-            if not materialized.complete:
+            materialized_complete = getattr(materialized, "complete", None)
+            if not isinstance(materialized_complete, bool):
+                raise TypeError("structural family materialization complete flag must be boolean")
+            materialized_unresolved = getattr(materialized, "unresolved", ())
+            if not isinstance(materialized_unresolved, tuple):
+                raise TypeError("structural family materialization unresolved evidence must be a tuple")
+            if not materialized_complete:
                 raise ValueError(
                     "structural family materialization is incomplete: "
-                    + "; ".join(materialized.unresolved)
+                    + "; ".join(materialized_unresolved)
                 )
             return self.pipeline.root(
                 materialized.build,
