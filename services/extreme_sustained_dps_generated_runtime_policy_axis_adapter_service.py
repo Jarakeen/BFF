@@ -79,15 +79,22 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
             heavy_attack_window_discovery
             or ExtremeSustainedDPSHeavyAttackWindowDiscoveryService
         )
-        self.require_complete_heavy_attack_discovery = bool(
-            require_complete_heavy_attack_discovery
-        )
+        if not isinstance(require_complete_heavy_attack_discovery, bool):
+            raise TypeError("complete Heavy Attack discovery flag must be boolean")
+        self.require_complete_heavy_attack_discovery = require_complete_heavy_attack_discovery
 
     @staticmethod
     def _proven_candidates(frontier: object, label: str) -> tuple[object, ...]:
-        candidates = tuple(getattr(frontier, "candidates", ()) or ())
-        unresolved = tuple(getattr(frontier, "unresolved", ()) or ())
-        if not bool(getattr(frontier, "denominator_proven", False)):
+        candidates = getattr(frontier, "candidates", ())
+        if not isinstance(candidates, tuple):
+            raise TypeError(f"{label} candidates must be a tuple")
+        unresolved = getattr(frontier, "unresolved", ())
+        if not isinstance(unresolved, tuple):
+            raise TypeError(f"{label} unresolved evidence must be a tuple")
+        denominator_proven = getattr(frontier, "denominator_proven", False)
+        if not isinstance(denominator_proven, bool):
+            raise TypeError(f"{label} denominator proof flag must be boolean")
+        if not denominator_proven:
             detail = "; ".join(str(item) for item in unresolved if str(item))
             raise ValueError(
                 f"{label} denominator is unresolved"
