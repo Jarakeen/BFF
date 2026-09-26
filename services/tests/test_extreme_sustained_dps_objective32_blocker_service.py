@@ -92,22 +92,10 @@ def _canonical_closure(*, omitted=(), unresolved=()):
 
 def test_closed_objective_has_no_blockers() -> None:
     result = ExtremeSustainedDPSObjective32BlockerService.assess(
-        search_result=SimpleNamespace(
-            global_maximum_proven=True,
-            unresolved=(),
-        ),
-        axis_inventory=SimpleNamespace(
-            missing_canonical_axes=(),
-            duplicate_canonical_axes=(),
-            unresolved=(),
-        ),
-        axis_coverage=SimpleNamespace(
-            missing_axes=(),
-            unresolved=(),
-        ),
-        closure=SimpleNamespace(
-            omitted_scope=(),
-        ),
+        search_result=_canonical_search(),
+        axis_inventory=_canonical_inventory(),
+        axis_coverage=_canonical_coverage(),
+        closure=_canonical_closure(),
     )
 
     assert result.closed is True
@@ -116,10 +104,7 @@ def test_closed_objective_has_no_blockers() -> None:
 
 def test_reports_missing_axis_and_theoretical_omission_structurally() -> None:
     result = ExtremeSustainedDPSObjective32BlockerService.assess(
-        search_result=SimpleNamespace(
-            global_maximum_proven=True,
-            unresolved=(),
-        ),
+        search_result=_canonical_search(),
         axis_inventory=SimpleNamespace(
             missing_canonical_axes=("runtime_state",),
             duplicate_canonical_axes=(),
@@ -160,9 +145,7 @@ def test_reports_search_and_inventory_unresolved_evidence() -> None:
             missing_axes=(),
             unresolved=("coverage contributor open",),
         ),
-        closure=SimpleNamespace(
-            omitted_scope=(),
-        ),
+        closure=_canonical_closure(),
     )
 
     codes = tuple(row.code for row in result.blockers)
@@ -192,22 +175,10 @@ def test_integrates_typed_runtime_and_mechanics_closure_inventory() -> None:
     )
 
     result = ExtremeSustainedDPSObjective32BlockerService.assess(
-        search_result=SimpleNamespace(
-            global_maximum_proven=True,
-            unresolved=(),
-        ),
-        axis_inventory=SimpleNamespace(
-            missing_canonical_axes=(),
-            duplicate_canonical_axes=(),
-            unresolved=(),
-        ),
-        axis_coverage=SimpleNamespace(
-            missing_axes=(),
-            unresolved=(),
-        ),
-        closure=SimpleNamespace(
-            omitted_scope=(),
-        ),
+        search_result=_canonical_search(),
+        axis_inventory=_canonical_inventory(),
+        axis_coverage=_canonical_coverage(),
+        closure=_canonical_closure(),
         closure_inventory=inventory,
     )
 
@@ -234,22 +205,10 @@ def test_integrates_typed_runtime_and_mechanics_closure_inventory() -> None:
 
 def test_legacy_blocker_assessment_remains_closed_without_inventory() -> None:
     result = ExtremeSustainedDPSObjective32BlockerService.assess(
-        search_result=SimpleNamespace(
-            global_maximum_proven=True,
-            unresolved=(),
-        ),
-        axis_inventory=SimpleNamespace(
-            missing_canonical_axes=(),
-            duplicate_canonical_axes=(),
-            unresolved=(),
-        ),
-        axis_coverage=SimpleNamespace(
-            missing_axes=(),
-            unresolved=(),
-        ),
-        closure=SimpleNamespace(
-            omitted_scope=(),
-        ),
+        search_result=_canonical_search(),
+        axis_inventory=_canonical_inventory(),
+        axis_coverage=_canonical_coverage(),
+        closure=_canonical_closure(),
     )
 
     assert result.closed is True
@@ -259,19 +218,9 @@ def test_legacy_blocker_assessment_remains_closed_without_inventory() -> None:
 
 def test_theoretical_gate_unresolved_is_visible_without_inventory() -> None:
     result = ExtremeSustainedDPSObjective32BlockerService.assess(
-        search_result=SimpleNamespace(
-            global_maximum_proven=True,
-            unresolved=(),
-        ),
-        axis_inventory=SimpleNamespace(
-            missing_canonical_axes=(),
-            duplicate_canonical_axes=(),
-            unresolved=(),
-        ),
-        axis_coverage=SimpleNamespace(
-            missing_axes=(),
-            unresolved=(),
-        ),
+        search_result=_canonical_search(),
+        axis_inventory=_canonical_inventory(),
+        axis_coverage=_canonical_coverage(),
         closure=SimpleNamespace(
             omitted_scope=(),
             unresolved=("Objective #32 mechanics closure remains open",),
