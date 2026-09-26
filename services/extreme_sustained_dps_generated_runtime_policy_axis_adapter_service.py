@@ -173,8 +173,18 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
                 channel_blocks=state.heavy_attack_channel_blocks,
                 channel_block_denominator_proven=True,
             )
-            if not discovery.denominator_proven:
-                detail = "; ".join(discovery.unresolved)
+            discovery_proven = getattr(discovery, "denominator_proven", None)
+            if not isinstance(discovery_proven, bool):
+                raise TypeError(
+                    "Heavy Attack window discovery denominator proof flag must be boolean"
+                )
+            discovery_unresolved = getattr(discovery, "unresolved", ())
+            if not isinstance(discovery_unresolved, tuple):
+                raise TypeError(
+                    "Heavy Attack window discovery unresolved evidence must be a tuple"
+                )
+            if not discovery_proven:
+                detail = "; ".join(discovery_unresolved)
                 raise ValueError(
                     "Heavy Attack window discovery denominator is unresolved"
                     + (f": {detail}" if detail else "")
