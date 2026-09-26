@@ -155,3 +155,26 @@ def test_weapon_poison_formula_axis_does_not_imply_poison_tier_coverage() -> Non
     assert "weapon_poisons" in result.searched_canonical_axes
     assert "weapon_poison_tiers" in result.missing_canonical_axes
 
+
+
+def test_inventory_rejects_non_tuple_axis_denominator() -> None:
+    try:
+        ExtremeSustainedDPSGeneratedAxisInventoryService.inventory(
+            [_axis("Gear", ("gear_topology",))],  # type: ignore[arg-type]
+        )
+    except TypeError as exc:
+        assert "axes must be a tuple" in str(exc)
+    else:
+        raise AssertionError("mutable axis denominator must fail closed")
+
+
+def test_inventory_rejects_string_additional_axis_denominator() -> None:
+    try:
+        ExtremeSustainedDPSGeneratedAxisInventoryService.inventory(
+            (),
+            additional_canonical_axes="race",  # type: ignore[arg-type]
+        )
+    except TypeError as exc:
+        assert "additional_canonical_axes must be a tuple" in str(exc)
+    else:
+        raise AssertionError("string additional-axis denominator must fail closed")
