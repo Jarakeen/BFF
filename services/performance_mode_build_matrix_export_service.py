@@ -119,6 +119,17 @@ class BuildMatrixCard(BaseModel):
             raise ValueError("Build Matrix card text is unexpectedly long")
         return value
 
+    @field_validator("front_skills", "back_skills")
+    @classmethod
+    def bounded_skill_text(
+        cls,
+        values: tuple[str, str, str, str, str, str],
+    ) -> tuple[str, str, str, str, str, str]:
+        cleaned = tuple(value.strip() for value in values)
+        if any(len(value) > 240 for value in cleaned):
+            raise ValueError("Build Matrix skill text is unexpectedly long")
+        return cleaned  # type: ignore[return-value]
+
 
 class BuildMatrixBaseline(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -133,6 +144,14 @@ class BuildMatrixBaseline(BaseModel):
     cp_core: str = ""
     static_note: str = ""
 
+    @field_validator("*")
+    @classmethod
+    def bounded_text(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) > 1200:
+            raise ValueError("Build Matrix baseline text is unexpectedly long")
+        return value
+
 
 class BuildMatrixPage(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -146,6 +165,14 @@ class BuildMatrixPage(BaseModel):
     build_name: str = ""
     cards: tuple[BuildMatrixCard, BuildMatrixCard, BuildMatrixCard, BuildMatrixCard, BuildMatrixCard]
     baseline: BuildMatrixBaseline
+
+    @field_validator("player", "eso_class", "role", "team_trial", "patch", "date", "build_name")
+    @classmethod
+    def bounded_metadata(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) > 500:
+            raise ValueError("Build Matrix page metadata is unexpectedly long")
+        return value
 
 
 @dataclass(frozen=True)
@@ -567,14 +594,12 @@ class PerformanceModeBuildMatrixExporter:
                 for effective, label in pages:
                     if not first_page:
                         pdf.showPage()
-                    separate_request = default_export_request(effective).model_copy(
-                        update={
-                            "mode": "current",
-                            "slots": tuple(
-                                BuildMatrixSlotSelection(slot=slot, variant_index=None)
-                                for slot in _SLOT_ORDER
-                            ),
-                        }
+                    separate_request = BuildMatrixExportRequest(
+                        mode="current",
+                        slots=tuple(
+                            BuildMatrixSlotSelection(slot=slot, variant_index=None)
+                            for slot in _SLOT_ORDER
+                        ),
                     )
                     page = build_matrix_page(
                         effective,
@@ -584,7 +609,12 @@ class PerformanceModeBuildMatrixExporter:
                         date=date,
                         mastery_names=self._mastery_names(build),
                     )
-                    page = page.model_copy(update={"build_name": label})
+                    page = BuildMatrixPage.model_validate(
+                        {
+                            **page.model_dump(mode="python"),
+                            "build_name": label,
+                        }
+                    )
                     self._draw_page(pdf, pagesize, colors, page)
                     first_page = False
                 continue
