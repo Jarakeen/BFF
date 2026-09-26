@@ -46,7 +46,13 @@ class ExtremeSustainedDPSIndexedFrontierAxis:
     omitted_scope: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        name = " ".join(str(self.name or "").strip().split())
+        if not isinstance(self.name, str):
+            raise TypeError("generated sustained-DPS frontier axis name must be a string")
+        if not isinstance(self.canonical_axes, tuple):
+            raise TypeError("generated frontier axis canonical_axes must be a tuple")
+        if not isinstance(self.omitted_scope, tuple):
+            raise TypeError("generated frontier axis omitted_scope must be a tuple")
+        name = " ".join(self.name.strip().split())
         if not name:
             raise ValueError("generated sustained-DPS frontier axis requires a name")
         if not callable(self.candidate_count):
@@ -62,7 +68,9 @@ class ExtremeSustainedDPSIndexedFrontierAxis:
         normalized_axes: list[str] = []
         unknown: list[str] = []
         for raw in self.canonical_axes:
-            token = str(raw or "").strip().casefold()
+            if not isinstance(raw, str):
+                raise TypeError("generated frontier axis canonical_axes must contain strings")
+            token = raw.strip().casefold()
             if not token:
                 continue
             axis = canonical.get(token)
@@ -82,9 +90,9 @@ class ExtremeSustainedDPSIndexedFrontierAxis:
             "omitted_scope",
             tuple(
                 dict.fromkeys(
-                    str(item).strip()
+                    item.strip()
                     for item in self.omitted_scope
-                    if str(item).strip()
+                    if isinstance(item, str) and item.strip()
                 )
             ),
         )
@@ -104,11 +112,13 @@ class ExtremeSustainedDPSGeneratedFrontierNode:
 
         normalized_coordinates: list[tuple[str, int]] = []
         for row in self.coordinates:
-            if not isinstance(row, (tuple, list)) or len(row) != 2:
+            if not isinstance(row, tuple) or len(row) != 2:
                 raise TypeError(
                     "generated frontier node coordinates must contain (axis_name, index) pairs"
                 )
-            axis_name = " ".join(str(row[0] or "").strip().split())
+            if not isinstance(row[0], str):
+                raise TypeError("generated frontier node coordinate axis name must be a string")
+            axis_name = " ".join(row[0].strip().split())
             index = row[1]
             if not axis_name:
                 raise ValueError(
@@ -173,6 +183,10 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
         cls,
         axes: tuple[ExtremeSustainedDPSIndexedFrontierAxis, ...],
     ) -> None:
+        if not isinstance(axes, tuple):
+            raise TypeError("generated sustained-DPS frontier axes must be a tuple")
+        if any(not isinstance(axis, ExtremeSustainedDPSIndexedFrontierAxis) for axis in axes):
+            raise TypeError("generated sustained-DPS frontier axes must contain indexed frontier axes")
         seen: set[str] = set()
         for axis in axes:
             key = cls._axis_key(axis.name)
@@ -189,7 +203,10 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
     ) -> tuple[ExtremeSustainedDPSBoundEnvelopeInput, ...]:
         if provider is None:
             return ()
-        return tuple(provider(state))
+        result = provider(state)
+        if not isinstance(result, tuple):
+            raise TypeError("generated frontier bound provider must return a tuple")
+        return result
 
     @staticmethod
     def _node_bound_inputs(
@@ -198,7 +215,10 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
     ) -> tuple[ExtremeSustainedDPSBoundEnvelopeInput, ...]:
         if provider is None:
             return ()
-        return tuple(provider(node))
+        result = provider(node)
+        if not isinstance(result, tuple):
+            raise TypeError("generated frontier node-bound provider must return a tuple")
+        return result
 
     @classmethod
     def search(
@@ -213,7 +233,9 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
         branch_bound_inputs: NodeBoundInputProvider | None = None,
     ) -> ExtremeSustainedDPSGeneratedSearchResult:
         cls._validate_axes(axes)
-        key = str(root_key or "").strip()
+        if not isinstance(root_key, str):
+            raise TypeError("generated sustained-DPS frontier root_key must be a string")
+        key = root_key.strip()
         if not key:
             raise ValueError("generated sustained-DPS frontier root_key cannot be empty")
 
@@ -301,6 +323,8 @@ class ExtremeSustainedDPSGeneratedFrontierWiringService:
             if not isinstance(node, ExtremeSustainedDPSGeneratedFrontierNode):
                 raise TypeError("generated frontier leaf payload has wrong type")
             result = evaluate_leaf(node)
+            if not isinstance(result, ExtremeSustainedDPSExactLeafEvaluation):
+                raise TypeError("generated frontier leaf evaluator must return canonical exact evidence")
             if result.candidate_key != node.candidate_key:
                 return ExtremeSustainedDPSExactLeafEvaluation(
                     candidate_key=node.candidate_key,
