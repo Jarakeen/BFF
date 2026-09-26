@@ -169,15 +169,25 @@ class AchievementProgressService:
         if not normalized:
             raise ValueError("Profile name cannot be empty.")
         if normalized not in self._profiles:
+            before = copy.deepcopy(self._profiles)
             self._profiles[normalized] = set()
-            self._save()
+            try:
+                self._save()
+            except Exception:
+                self._profiles = before
+                raise
         return normalized
 
     def set_active_profile(self, name: str) -> str:
         normalized = self.ensure_profile(name)
         if normalized != self._active_profile:
+            before = self._active_profile
             self._active_profile = normalized
-            self._save()
+            try:
+                self._save()
+            except Exception:
+                self._active_profile = before
+                raise
         return self._active_profile
 
     def is_complete(self, achievement_id: str) -> bool:
@@ -188,11 +198,16 @@ class AchievementProgressService:
         self._ensure_loaded()
         achievement_id = str(achievement_id)
         completed = self._profiles[self._active_profile]
+        before = set(completed)
         if complete:
             completed.add(achievement_id)
         else:
             completed.discard(achievement_id)
-        self._save()
+        try:
+            self._save()
+        except Exception:
+            self._profiles[self._active_profile] = before
+            raise
 
     def completed_ids(self, profile: str | None = None) -> set[str]:
         self._ensure_loaded()
@@ -207,16 +222,26 @@ class AchievementProgressService:
     def merge_completed(self, profile: str, achievement_ids) -> int:
         profile_name = self.ensure_profile(profile)
         before = len(self._profiles[profile_name])
+        previous = set(self._profiles[profile_name])
         self._profiles[profile_name].update(str(value) for value in achievement_ids)
         added = len(self._profiles[profile_name]) - before
         if added:
-            self._save()
+            try:
+                self._save()
+            except Exception:
+                self._profiles[profile_name] = previous
+                raise
         return added
 
     def replace_completed(self, profile: str, achievement_ids) -> None:
         profile_name = self.ensure_profile(profile)
+        previous = set(self._profiles[profile_name])
         self._profiles[profile_name] = {str(value) for value in achievement_ids}
-        self._save()
+        try:
+            self._save()
+        except Exception:
+            self._profiles[profile_name] = previous
+            raise
 
     def _validated_snapshot(self) -> dict:
         self._ensure_loaded()
