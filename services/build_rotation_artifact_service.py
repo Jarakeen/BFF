@@ -9,12 +9,15 @@ character names and build names are display metadata only.
 
 import copy
 import json
+import os
 from dataclasses import asdict, is_dataclass
 from enum import Enum
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
+from services.user_artifact_pydantic_schema import validate_rotation_artifact_document
 
 SCHEMA_VERSION = 1
 
@@ -144,21 +147,34 @@ class BuildRotationArtifactService:
             return self._empty()
         try:
             raw = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return self._empty()
-        if not isinstance(raw, dict):
-            return self._empty()
-        rotations = raw.get("rotations")
-        if not isinstance(rotations, dict):
-            rotations = {}
-        return {
-            "schema_version": SCHEMA_VERSION,
-            "rotations": {
-                str(build_id): copy.deepcopy(artifact)
-                for build_id, artifact in rotations.items()
-                if str(build_id).strip() and isinstance(artifact, dict)
-            },
-        }
+            return validate_rotation_artifact_document(raw)
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
+            raise RuntimeError(f"Rotation artifacts failed to load safely: {exc}") from exc
+
+    def _write_document(self, document: dict[str, Any]) -> None:
+        validated = validate_rotation_artifact_document(document)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile(
+                "w", encoding="utf-8", dir=self.path.parent,
+                prefix=f".{self.path.name}.", suffix=".tmp", delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                json.dump(validated, handle, ensure_ascii=False, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+        read_back = validate_rotation_artifact_document(
+            json.loads(self.path.read_text(encoding="utf-8"))
+        )
+        if read_back != validated:
+            raise RuntimeError("Rotation artifacts did not round-trip exactly")
 
     def save_rotation(self, *, build_id: str, artifact: dict[str, Any]) -> dict[str, Any]:
         identity = str(build_id or "").strip()
@@ -170,13 +186,7 @@ class BuildRotationArtifactService:
         document = self.load()
         normalized = jsonable(copy.deepcopy(artifact))
         document["rotations"][identity] = normalized
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temp = self.path.with_suffix(self.path.suffix + ".tmp")
-        temp.write_text(
-            json.dumps(document, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        temp.replace(self.path)
+        self._write_document(document)
         return copy.deepcopy(normalized)
 
     def get_rotation(self, build_id: str) -> dict[str, Any] | None:
@@ -205,13 +215,7 @@ class BuildRotationArtifactService:
         if identity not in document["rotations"]:
             return False
         document["rotations"].pop(identity, None)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temp = self.path.with_suffix(self.path.suffix + ".tmp")
-        temp.write_text(
-            json.dumps(document, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        temp.replace(self.path)
+        self._write_document(document)
         return True
 
 
