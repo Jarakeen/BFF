@@ -147,3 +147,38 @@ def test_axis_composition_preserves_omitted_scope_from_contributors() -> None:
         "continuous potion first-use offset remains open",
         "deliberate Ultimate delay remains open",
     )
+
+
+def test_axis_coverage_proof_rejects_string_iterable_as_axis_denominator() -> None:
+    try:
+        ExtremeSustainedDPSAxisCoverageProof(
+            source="malformed proof",
+            dominated_axes="gear_topology",  # type: ignore[arg-type]
+        )
+    except TypeError as exc:
+        assert "dominated_axes must be a tuple" in str(exc)
+    else:
+        raise AssertionError("string iterable must not be accepted as an axis denominator")
+
+
+def test_axis_composition_rejects_noncanonical_proof_records() -> None:
+    malformed = type(
+        "Proof",
+        (),
+        {
+            "source": "duck typed proof",
+            "dominated_axes": ("gear_topology",),
+            "unresolved": (),
+            "omitted_scope": (),
+        },
+    )()
+    try:
+        ExtremeSustainedDPSAxisDominanceCompositionService.compose(
+            "candidate:malformed",
+            required_axes=("gear_topology",),
+            proofs=(malformed,),  # type: ignore[arg-type]
+        )
+    except TypeError as exc:
+        assert "canonical axis coverage proofs" in str(exc)
+    else:
+        raise AssertionError("duck-typed proof record must fail closed")
