@@ -370,6 +370,39 @@ def test_expected_coverage_save_can_intentionally_remove_last_provider(tmp_path)
     repository.save(covered, must_be_new=True)
 
     cleared = replace(covered, coverage_providers=())
-    repository.save(cleared, expected=covered)
+    repository.save(
+        cleared,
+        expected=covered,
+        allow_coverage_clear=True,
+    )
 
     assert repository.get(covered.plan_id).coverage_providers == ()
+
+
+def test_expected_generic_save_cannot_erase_manual_coverage_overlay(tmp_path) -> None:
+    repository = RaidPlanRepository(tmp_path / "foundrydock.db")
+    member = RaidPlanMember(seat_id="healer-1", gamertag="Healer")
+    provider = RaidPlanCoverageProvider(
+        effect_name="Minor Berserk",
+        seat_id="healer-1",
+        source="Combat Prayer",
+    )
+    covered = RaidPlan(
+        plan_id="plan-coverage-expected-guard",
+        trial_id="sunspire",
+        name="Coverage Guard",
+        members=(member,),
+        coverage_providers=(provider,),
+    )
+    repository.save(covered, must_be_new=True)
+
+    generic_edit = replace(
+        covered,
+        difficulty="Veteran Hardmode",
+        coverage_providers=(),
+    )
+    saved = repository.save(generic_edit, expected=covered)
+
+    assert saved.difficulty == "Veteran Hardmode"
+    assert saved.coverage_providers == (provider,)
+    assert repository.get(covered.plan_id).coverage_providers == (provider,)
