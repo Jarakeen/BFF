@@ -31,6 +31,26 @@ class ExtremeSustainedDPSWeaponPoisonConsequenceFrontierResult:
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        if (
+            self.attempt_frontier is not None
+            and not isinstance(
+                self.attempt_frontier,
+                ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier,
+            )
+        ):
+            raise TypeError("weapon-poison consequence result requires canonical attempt frontier")
+        for field in ("effects", "evidence", "unresolved"):
+            if not isinstance(getattr(self, field), tuple):
+                raise TypeError(f"weapon-poison consequence result {field} must be a tuple")
+        if any(not isinstance(row, EffectVariant) for row in self.effects):
+            raise TypeError("weapon-poison consequence effects must contain EffectVariant records")
+        if self.attempt_frontier is not None and not isinstance(
+            self.attempt_frontier.denominator_proven,
+            bool,
+        ):
+            raise TypeError("weapon-poison consequence denominator proof must be boolean")
+
     @property
     def resolved(self) -> bool:
         return (
@@ -112,8 +132,16 @@ class ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService:
         sequence_frontier: ExtremeSustainedDPSWeaponPoisonSequenceFrontier,
         source: str,
     ) -> ExtremeSustainedDPSWeaponPoisonConsequenceFrontierResult:
-        unresolved: list[str] = list(tuple(sequence_frontier.unresolved))
-        evidence: list[str] = list(tuple(sequence_frontier.evidence))
+        if not isinstance(sequence_frontier.unresolved, tuple):
+            raise TypeError("weapon-poison sequence unresolved evidence must be a tuple")
+        if not isinstance(sequence_frontier.evidence, tuple):
+            raise TypeError("weapon-poison sequence evidence must be a tuple")
+        if not isinstance(sequence_frontier.choices, tuple):
+            raise TypeError("weapon-poison sequence choices must be a tuple")
+        if not isinstance(sequence_frontier.denominator_proven, bool):
+            raise TypeError("weapon-poison sequence denominator proof must be boolean")
+        unresolved: list[str] = list(sequence_frontier.unresolved)
+        evidence: list[str] = list(sequence_frontier.evidence)
         all_effects: list[EffectVariant] = []
         choices: list[ExtremeSustainedDPSRuntimeAttemptEvidenceChoice] = []
 
@@ -144,9 +172,21 @@ class ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService:
                     )
                     continue
 
+                result_unresolved_raw = getattr(resolved, "unresolved", ())
+                result_evidence_raw = getattr(resolved, "evidence", ())
+                effects = getattr(resolved, "effects", ())
+                for field, value in (
+                    ("unresolved", result_unresolved_raw),
+                    ("evidence", result_evidence_raw),
+                    ("effects", effects),
+                ):
+                    if not isinstance(value, tuple):
+                        raise TypeError(
+                            f"weapon-poison consequence resolver {field} must be a tuple"
+                        )
                 result_unresolved = tuple(
                     str(row).strip()
-                    for row in tuple(getattr(resolved, "unresolved", ()) or ())
+                    for row in result_unresolved_raw
                     if str(row).strip()
                 )
                 choice_unresolved.extend(
@@ -155,11 +195,9 @@ class ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService:
                 )
                 choice_evidence.extend(
                     str(row).strip()
-                    for row in tuple(getattr(resolved, "evidence", ()) or ())
+                    for row in result_evidence_raw
                     if str(row).strip()
                 )
-
-                effects = tuple(getattr(resolved, "effects", ()) or ())
                 if not effects and not result_unresolved:
                     choice_unresolved.append(
                         f"{coordinate}: {occurrence.poison_id} consequence resolver "
@@ -211,11 +249,7 @@ class ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService:
         deduped_unresolved = tuple(
             dict.fromkeys(row for row in unresolved if str(row).strip())
         )
-        complete = bool(
-            choices
-            and sequence_frontier.denominator_proven
-            and not deduped_unresolved
-        )
+        complete = bool(choices) and sequence_frontier.denominator_proven and not deduped_unresolved
         attempt_frontier = ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier(
             choices=tuple(choices),
             candidate_count=len(choices),
