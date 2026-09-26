@@ -262,7 +262,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             events=enchantment_events,
             effects=enchantment_effects,
             policies=policies,
-            event_denominator_proven=bool(
+            event_denominator_proven=(
                 event_denominator_proven and not policy_unresolved
             ),
             source=f"{source}: weapon-enchantment sequence",
@@ -278,7 +278,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         frontier = ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier(
             choices=choices,
             candidate_count=len(choices),
-            denominator_proven=bool(
+            denominator_proven=(
                 sequence.denominator_proven
                 and not policy_unresolved
             ),
@@ -569,6 +569,31 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         omitted_scope: tuple[str, ...] = (),
         weapon_poison_consequence_resolver: object | None = None,
     ) -> ExtremeSustainedDPSRuntimeScenarioFrontierResult:
+        if not isinstance(supplemental_event_denominator_proven, bool):
+            raise TypeError(
+                "runtime scenario supplemental_event_denominator_proven must be boolean"
+            )
+        if not isinstance(supplemental_denominator_proven, bool):
+            raise TypeError(
+                "runtime scenario supplemental_denominator_proven must be boolean"
+            )
+        if not isinstance(supplemental_events, tuple):
+            raise TypeError("runtime scenario supplemental_events must be a tuple")
+        if any(not isinstance(row, RuntimeEvent) for row in supplemental_events):
+            raise TypeError(
+                "runtime scenario supplemental_events must contain RuntimeEvent records"
+            )
+        if not isinstance(supplemental_histories, tuple):
+            raise TypeError("runtime scenario supplemental_histories must be a tuple")
+        if any(
+            not isinstance(row, ExtremeSustainedDPSRuntimeExternalHistoryChoice)
+            for row in supplemental_histories
+        ):
+            raise TypeError(
+                "runtime scenario supplemental_histories must contain canonical history choices"
+            )
+        if not isinstance(omitted_scope, tuple):
+            raise TypeError("runtime scenario omitted_scope must be a tuple")
         universe_evidence: tuple[str, ...] = ()
         universe_unresolved: tuple[str, ...] = ()
         weapon_enchantment_control_effects: tuple[EffectVariant, ...] = ()
@@ -631,9 +656,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                     effects=(),
                     event_denominator_proven=False,
                     supplemental_histories=tuple(supplemental_histories),
-                    supplemental_denominator_proven=bool(
-                        supplemental_denominator_proven
-                    ),
+                    supplemental_denominator_proven=supplemental_denominator_proven,
                     source=source,
                     initial_bar=initial_bar,
                     omitted_scope=tuple(omitted_scope),
@@ -697,9 +720,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             occurrence_provider=occurrence_provider,
             target_identity=target_identity,
             supplemental_events=tuple(supplemental_events),
-            supplemental_denominator_proven=bool(
-                supplemental_event_denominator_proven
-            ),
+            supplemental_denominator_proven=supplemental_event_denominator_proven,
             weapon_enchantment_activation_service=(
                 self.weapon_enchantment_activation_service
             ),
@@ -714,7 +735,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             candidate=candidate,
             events=tuple(skeleton.events),
             effects=tuple(event_effects),
-            event_denominator_proven=bool(skeleton.denominator_proven),
+            event_denominator_proven=skeleton.denominator_proven,
             source=source,
             player_build=player_build,
         )
