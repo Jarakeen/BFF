@@ -43,6 +43,12 @@ class ExtremeSustainedDPSObjective32BlockerReport:
             for row in self.blockers
         ):
             raise TypeError("Objective #32 blocker report requires canonical blocker records")
+        identities = tuple(
+            (row.code, row.axis, row.detail)
+            for row in self.blockers
+        )
+        if len(set(identities)) != len(identities):
+            raise ValueError("Objective #32 blocker report cannot contain duplicate blockers")
         object.__setattr__(self, "blockers", tuple(self.blockers))
         object.__setattr__(
             self,
