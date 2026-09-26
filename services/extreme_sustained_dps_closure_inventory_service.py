@@ -99,6 +99,77 @@ class ExtremeSustainedDPSClosureInventory:
 class ExtremeSustainedDPSClosureInventoryService:
     """Compose actionable Objective #32 closure blockers without weakening gates."""
 
+
+    @classmethod
+    def build_for_best_candidates(
+        cls,
+        best_candidates: tuple[object, ...],
+        *,
+        mechanics_dependency_keys: tuple[str, ...] = OBJECTIVE32_MECHANICS_DEPENDENCIES,
+    ) -> ExtremeSustainedDPSClosureInventory:
+        if not isinstance(best_candidates, tuple):
+            raise TypeError("Objective #32 best_candidates must be a tuple")
+        if not best_candidates:
+            return ExtremeSustainedDPSClosureInventory(
+                source_data_blockers=(
+                    "Objective #32 has no retained best candidate mechanics evidence",
+                ),
+                math_review_blockers=(),
+                mechanics_blockers=(),
+                mechanics_advisories=(),
+                evidence=("Objective #32 candidate-scoped closure evidence is unavailable",),
+            )
+
+        source_data: list[str] = []
+        math_review: list[str] = []
+        evidence: list[str] = []
+        missing: list[str] = []
+        for candidate in best_candidates:
+            key = str(getattr(candidate, "candidate_key", "") or "").strip() or "(unknown)"
+            relevance = getattr(candidate, "relevance", None)
+            scaling = getattr(candidate, "scaling", None)
+            if relevance is None:
+                missing.append(
+                    f"Best candidate {key} is missing canonical runtime relevance evidence"
+                )
+                continue
+            if not isinstance(relevance, ExtremeSustainedDPSRuntimeEffectRelevance):
+                raise TypeError(
+                    "Objective #32 best candidate relevance must be canonical when supplied"
+                )
+            if scaling is not None and not isinstance(
+                scaling, ExtremeSustainedDPSRuntimeEffectScalingResult
+            ):
+                raise TypeError(
+                    "Objective #32 best candidate scaling must be canonical when supplied"
+                )
+            source_data.extend(relevance.source_data_unresolved)
+            math_review.extend(relevance.math_unresolved)
+            evidence.extend(relevance.evidence)
+            if scaling is not None:
+                source_data.extend(scaling.source_data_unresolved)
+                math_review.extend(scaling.math_unresolved)
+                evidence.extend(scaling.evidence)
+
+        base = cls.build(
+            mechanics_dependency_keys=mechanics_dependency_keys,
+        )
+        return ExtremeSustainedDPSClosureInventory(
+            source_data_blockers=tuple(dict.fromkeys((*missing, *source_data))),
+            math_review_blockers=tuple(dict.fromkeys(math_review)),
+            mechanics_blockers=base.mechanics_blockers,
+            mechanics_advisories=base.mechanics_advisories,
+            evidence=tuple(
+                dict.fromkeys(
+                    (
+                        f"Objective #32 retained best candidates audited: {len(best_candidates)}",
+                        *evidence,
+                        *base.evidence,
+                    )
+                )
+            ),
+        )
+
     @classmethod
     def build(
         cls,
