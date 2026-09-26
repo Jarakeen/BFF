@@ -1136,3 +1136,56 @@ def test_scenario_builder_rejects_truthy_non_boolean_denominator_flags() -> None
             event_denominator_proven=True,
             supplemental_denominator_proven="false",
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("unresolved", [], "cooldown policy unresolved evidence must be a tuple"),
+        ("evidence", [], "cooldown policy evidence must be a tuple"),
+        ("policies", [], "cooldown policies must be a tuple"),
+    ),
+)
+def test_candidate_builder_requires_strict_weapon_enchantment_policy_evidence(
+    field, value, message
+) -> None:
+    enchantment = _weapon_enchantment_effect("Main Enchant", "main_hand")
+
+    class _PolicyResult:
+        unresolved = ()
+        evidence = ()
+        policies = (
+            ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy(
+                effect=enchantment,
+                cooldown_identity="main",
+                cooldown_seconds=4.0,
+                authoritative=True,
+            ),
+        )
+
+    result = _PolicyResult()
+    setattr(result, field, value)
+
+    def cooldown_policies(**_kwargs):
+        return result
+
+    candidate = GeneratedRotationCandidate(
+        candidate_id="strict-policy",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+
+    with pytest.raises(TypeError, match=message):
+        ExtremeSustainedDPSRuntimeScenarioFrontierService(
+            weapon_enchantment_activation_service=_WeaponEnchantmentActivationService(),
+            weapon_enchantment_cooldown_policy_resolver=cooldown_policies,
+        ).build_from_candidate(
+            candidate=candidate,
+            player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+            effects=(enchantment,),
+            supplemental_event_denominator_proven=True,
+            supplemental_histories=(),
+            supplemental_denominator_proven=True,
+            source="strict weapon-enchantment policy evidence",
+        )
