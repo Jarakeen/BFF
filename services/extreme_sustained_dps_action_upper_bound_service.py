@@ -101,6 +101,10 @@ class ExtremeSustainedDPSActionUpperBoundService:
         occurrence_evidence: RotationActionDamageOccurrenceEvidence,
         dominance: ExtremeSustainedDPSActionDominanceProof,
     ) -> ExtremeSustainedDPSActionUpperBoundResult:
+        if not isinstance(occurrence_evidence, RotationActionDamageOccurrenceEvidence):
+            raise TypeError("action upper bound requires canonical occurrence evidence")
+        if not isinstance(dominance, ExtremeSustainedDPSActionDominanceProof):
+            raise TypeError("action upper bound requires canonical dominance proof")
         unresolved = list(occurrence_evidence.unresolved)
         unresolved.extend(dominance.unresolved)
 
