@@ -295,3 +295,48 @@ def test_delayed_ultimate_candidate_materializes_selected_cast_slot() -> None:
     assert len(casts) == 1
     assert casts[0].time_seconds == 2.0
     assert candidate.resource_legality.is_legal is True
+
+
+def test_rotation_policy_frontier_rejects_boolean_candidate_index() -> None:
+    with pytest.raises(TypeError, match="candidate index must be an integer"):
+        _service().candidate_at(
+            build=_build(),
+            seed=_seed(),
+            potion_cooldown_seconds=10.0,
+            starting_ultimate=0.0,
+            index=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("potion_cooldown_seconds", "10", "potion cooldown must be numeric"),
+        ("starting_ultimate", "0", "starting Ultimate must be numeric"),
+        ("ultimate_generation_events", [], "ultimate_generation_events must be a tuple"),
+        ("heroism_windows", [], "heroism_windows must be a tuple"),
+        (
+            "use_scheduled_combat_attacks_for_ultimate",
+            1,
+            "scheduled-combat Ultimate flag must be boolean",
+        ),
+    ),
+)
+def test_rotation_policy_frontier_rejects_coerced_runtime_inputs(
+    field,
+    value,
+    message,
+) -> None:
+    kwargs = {
+        "build": _build(),
+        "seed": _seed(),
+        "potion_cooldown_seconds": 10.0,
+        "starting_ultimate": 0.0,
+        "ultimate_generation_events": (),
+        "heroism_windows": (),
+        "use_scheduled_combat_attacks_for_ultimate": False,
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=message):
+        _service().frontier(**kwargs)
