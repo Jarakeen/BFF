@@ -63,6 +63,28 @@ class ExtremeSustainedDPSRotationPolicyFrontier:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("ultimate_options", self.ultimate_options),
+            ("ultimate_timing_policies", self.ultimate_timing_policies),
+            ("potion_policies", self.potion_policies),
+            ("evidence", self.evidence),
+            ("unresolved", self.unresolved),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"rotation policy frontier {label} must be a tuple")
+        if isinstance(self.candidate_count, bool) or not isinstance(self.candidate_count, int):
+            raise TypeError("rotation policy frontier candidate_count must be an integer")
+        if self.candidate_count < 0:
+            raise ValueError("rotation policy frontier candidate_count cannot be negative")
+        for label, value in (
+            ("anchored_policy_denominator_proven", self.anchored_policy_denominator_proven),
+            ("continuous_potion_timing_closed", self.continuous_potion_timing_closed),
+            ("delayed_ultimate_timing_closed", self.delayed_ultimate_timing_closed),
+        ):
+            if not isinstance(value, bool):
+                raise TypeError(f"rotation policy frontier {label} must be boolean")
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSRotationPolicyCandidate:
@@ -257,6 +279,19 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
         heroism_windows: tuple[HeroismWindow, ...] = (),
         use_scheduled_combat_attacks_for_ultimate: bool = False,
     ) -> ExtremeSustainedDPSRotationPolicyFrontier:
+        if isinstance(potion_cooldown_seconds, bool) or not isinstance(
+            potion_cooldown_seconds,
+            (int, float),
+        ):
+            raise TypeError("generated potion cooldown must be numeric")
+        if isinstance(starting_ultimate, bool) or not isinstance(starting_ultimate, (int, float)):
+            raise TypeError("generated starting Ultimate must be numeric")
+        if not isinstance(ultimate_generation_events, tuple):
+            raise TypeError("ultimate_generation_events must be a tuple")
+        if not isinstance(heroism_windows, tuple):
+            raise TypeError("heroism_windows must be a tuple")
+        if not isinstance(use_scheduled_combat_attacks_for_ultimate, bool):
+            raise TypeError("scheduled-combat Ultimate flag must be boolean")
         cooldown = float(potion_cooldown_seconds)
         if not math.isfinite(cooldown) or cooldown <= 0.0:
             raise ValueError("generated potion cooldown must be finite and positive")
@@ -266,11 +301,9 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
             build=build,
             seed=seed,
             starting_ultimate=float(starting_ultimate),
-            ultimate_generation_events=tuple(ultimate_generation_events),
-            heroism_windows=tuple(heroism_windows),
-            use_scheduled_combat_attacks_for_ultimate=bool(
-                use_scheduled_combat_attacks_for_ultimate
-            ),
+            ultimate_generation_events=ultimate_generation_events,
+            heroism_windows=heroism_windows,
+            use_scheduled_combat_attacks_for_ultimate=use_scheduled_combat_attacks_for_ultimate,
         )
         potion_policies = self._potion_policies(
             build,
@@ -285,11 +318,9 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
             ultimate_timing_policies=ultimate_timing_policies,
             potion_policies=potion_policies,
             candidate_count=count,
-            anchored_policy_denominator_proven=bool(count > 0 and not unresolved),
+            anchored_policy_denominator_proven=count > 0 and not unresolved,
             continuous_potion_timing_closed=False,
-            delayed_ultimate_timing_closed=bool(
-                ultimate_timing_policies and not ultimate_unresolved
-            ),
+            delayed_ultimate_timing_closed=bool(ultimate_timing_policies) and not ultimate_unresolved,
             evidence=(
                 f"Ultimate bar choices: {len(ultimate_options)}",
                 f"Legal delayed Ultimate timing policies: {len(ultimate_timing_policies)}",
@@ -421,16 +452,16 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
         heroism_windows: tuple[HeroismWindow, ...] = (),
         use_scheduled_combat_attacks_for_ultimate: bool = False,
     ) -> ExtremeSustainedDPSRotationPolicyCandidate:
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("rotation policy candidate index must be an integer")
         frontier = self.frontier(
             build=build,
             seed=seed,
             potion_cooldown_seconds=potion_cooldown_seconds,
-            starting_ultimate=float(starting_ultimate),
-            ultimate_generation_events=tuple(ultimate_generation_events),
-            heroism_windows=tuple(heroism_windows),
-            use_scheduled_combat_attacks_for_ultimate=bool(
-                use_scheduled_combat_attacks_for_ultimate
-            ),
+            starting_ultimate=starting_ultimate,
+            ultimate_generation_events=ultimate_generation_events,
+            heroism_windows=heroism_windows,
+            use_scheduled_combat_attacks_for_ultimate=use_scheduled_combat_attacks_for_ultimate,
         )
         if not frontier.anchored_policy_denominator_proven:
             raise ValueError(
@@ -438,7 +469,7 @@ class ExtremeSustainedDPSRotationPolicyFrontierService:
                 + "; ".join(frontier.unresolved)
             )
 
-        target = int(index)
+        target = index
         if target < 0 or target >= frontier.candidate_count:
             raise IndexError("rotation policy candidate index out of range")
 
