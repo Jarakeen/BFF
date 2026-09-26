@@ -10,6 +10,7 @@ bridge exists.
 """
 
 from dataclasses import dataclass, replace
+import math
 from pathlib import Path
 
 from minmax.character_build.effect_instance import EffectVariant
@@ -233,6 +234,42 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             )
         )
 
+    @staticmethod
+    def _validate_evaluation_inputs(
+        *,
+        runtime_effects: tuple[EffectVariant, ...],
+        target_health: int,
+        target_resistance: float,
+        target_name: str,
+        initial_bar: str,
+    ) -> tuple[int, float, str, str]:
+        if not isinstance(runtime_effects, tuple):
+            raise TypeError("generated sustained-DPS runtime_effects must be a tuple")
+        if any(not isinstance(effect, EffectVariant) for effect in runtime_effects):
+            raise TypeError(
+                "generated sustained-DPS runtime_effects must contain EffectVariant records"
+            )
+        if isinstance(target_health, bool) or not isinstance(target_health, int):
+            raise TypeError("generated sustained-DPS target_health must be an integer")
+        if target_health <= 0:
+            raise ValueError("generated sustained-DPS target_health must be positive")
+        if isinstance(target_resistance, bool) or not isinstance(target_resistance, (int, float)):
+            raise TypeError("generated sustained-DPS target_resistance must be numeric")
+        resistance = resistance
+        if not math.isfinite(resistance) or resistance < 0.0:
+            raise ValueError(
+                "generated sustained-DPS target_resistance must be finite and non-negative"
+            )
+        if not isinstance(target_name, str):
+            raise TypeError("generated sustained-DPS target_name must be a string")
+        target = target_name.strip() or "Boss"
+        if not isinstance(initial_bar, str):
+            raise TypeError("generated sustained-DPS initial_bar must be a string")
+        bar = initial_bar.strip().casefold()
+        if bar not in {"front", "back"}:
+            raise ValueError("generated sustained-DPS initial_bar must be front or back")
+        return target_health, resistance, target, bar
+
     def evaluate(
         self,
         build: PlayerBuild,
@@ -266,19 +303,21 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
                     "Generated sustained-DPS runtime evaluation requires authoritative runtime_history",
                 ),
             )
-        if int(target_health) <= 0:
-            raise ValueError("generated sustained-DPS target_health must be positive")
-        if float(target_resistance) < 0.0:
-            raise ValueError("generated sustained-DPS target_resistance cannot be negative")
+        target_health, resistance, target, initial_bar = self._validate_evaluation_inputs(
+            runtime_effects=runtime_effects,
+            target_health=target_health,
+            target_resistance=target_resistance,
+            target_name=target_name,
+            initial_bar=initial_bar,
+        )
 
-        target = str(target_name or "").strip() or "Boss"
         target_state = CombatSimulationTargetState(
             combatants=(
                 CombatSimulationCombatant(
                     target,
                     "enemy",
-                    current_health=int(target_health),
-                    maximum_health=int(target_health),
+                    current_health=target_health,
+                    maximum_health=target_health,
                 ),
             ),
         )
@@ -464,7 +503,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
         ) -> float:
             projection = target_projection(time_seconds, sequence)
             named_resistance = target_resistance_from_combat_state(
-                float(target_resistance),
+                resistance,
                 projection.combat_state,
             )
             return max(
@@ -492,7 +531,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             plan=plan,
             target_state=target_state,
             damage_target_identity=target,
-            target_resistance=float(target_resistance),
+            target_resistance=resistance,
             initial_bar=initial_bar,
             runtime_build_context_resolver=runtime_build_context_resolver,
             supplemental_outgoing_damage=tuple(enchantment_oblivion_damage.damage),
@@ -523,8 +562,8 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
         )
         evidence = (
             f"Generated candidate rotation horizon: {plan.duration_seconds:g}s",
-            f"Explicit target Health: {int(target_health)}",
-            f"Explicit target resistance: {float(target_resistance):g}",
+            f"Explicit target Health: {target_health}",
+            f"Explicit target resistance: {resistance:g}",
             "Dual-bar named-set activation bound into shared runtime snapshot truth",
             "Named buffs and reviewed timed non-named runtime stat effects may alter exact runtime build contexts",
             "Reviewed SELF-target named runtime effects are projected into attacker CombatState at exact action timestamps",
