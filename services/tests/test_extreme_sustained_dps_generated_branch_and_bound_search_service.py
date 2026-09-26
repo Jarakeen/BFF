@@ -257,3 +257,67 @@ def test_generated_search_rejects_nonfinite_duration_input() -> None:
             evaluate_leaf=_leaf_eval({"leaf": 10.0}),
             required_duration_seconds=float("nan"),
         )
+
+
+def test_generated_search_result_rejects_duplicate_evaluated_leaf_keys() -> None:
+    a = ExtremeSustainedDPSExactLeafEvaluation(
+        candidate_key="same",
+        modeled_dps=10.0,
+        duration_seconds=10.0,
+        mechanic_complete=True,
+    )
+    b = ExtremeSustainedDPSExactLeafEvaluation(
+        candidate_key="same",
+        modeled_dps=9.0,
+        duration_seconds=10.0,
+        mechanic_complete=True,
+    )
+
+    with pytest.raises(ValueError, match="evaluated_leaves must have unique candidate keys"):
+        ExtremeSustainedDPSGeneratedSearchResult(
+            best_modeled_dps=10.0,
+            best_candidates=(a,),
+            unique_leader=a,
+            evaluated_leaves=(a, b),
+            visited_branch_count=2,
+            expanded_branch_count=0,
+            evaluated_leaf_count=2,
+            pruned_branch_count=0,
+            forced_open_branch_count=0,
+            global_maximum_proven=True,
+            unique_leader_proven=True,
+            evidence=(),
+            unresolved=(),
+        )
+
+
+def test_generated_search_result_unique_proof_requires_exactly_one_best_candidate() -> None:
+    a = ExtremeSustainedDPSExactLeafEvaluation(
+        candidate_key="a",
+        modeled_dps=10.0,
+        duration_seconds=10.0,
+        mechanic_complete=True,
+    )
+    b = ExtremeSustainedDPSExactLeafEvaluation(
+        candidate_key="b",
+        modeled_dps=10.0,
+        duration_seconds=10.0,
+        mechanic_complete=True,
+    )
+
+    with pytest.raises(ValueError, match="exactly one best candidate"):
+        ExtremeSustainedDPSGeneratedSearchResult(
+            best_modeled_dps=10.0,
+            best_candidates=(a, b),
+            unique_leader=a,
+            evaluated_leaves=(a, b),
+            visited_branch_count=2,
+            expanded_branch_count=0,
+            evaluated_leaf_count=2,
+            pruned_branch_count=0,
+            forced_open_branch_count=0,
+            global_maximum_proven=True,
+            unique_leader_proven=True,
+            evidence=(),
+            unresolved=(),
+        )
