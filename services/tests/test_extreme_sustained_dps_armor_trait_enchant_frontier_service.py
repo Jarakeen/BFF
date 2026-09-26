@@ -122,3 +122,15 @@ def test_armor_trait_enchant_frontier_rejects_boolean_candidate_index() -> None:
             _build(),
             True,
         )
+
+
+@pytest.mark.parametrize("field,value", (("offset", False), ("limit", "4"), ("offset", 2.5)))
+def test_armor_trait_enchant_page_requires_strict_integer_bounds(field, value) -> None:
+    kwargs = {"offset": 0, "limit": 4}
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"armor trait/enchant page {field} must be an integer"):
+        ExtremeSustainedDPSArmorTraitEnchantFrontierService.page(
+            _build(),
+            **kwargs,
+        )
