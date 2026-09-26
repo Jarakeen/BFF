@@ -130,3 +130,40 @@ def test_incomplete_structural_universe_blocks_denominator_proof() -> None:
     assert result.structural_denominator_proven is False
     assert result.generated_search_complete is False
     assert result.unresolved
+
+
+def test_generated_candidate_rejects_boolean_index() -> None:
+    service = ExtremeSustainedDPSGeneratedCandidateService(
+        "unused.db",
+        universe_service=_UniverseService(_universe()),
+    )
+
+    with pytest.raises(TypeError, match="candidate index must be an integer"):
+        service.candidate_at(True)
+
+
+def test_generated_frontier_requires_canonical_universe_record() -> None:
+    class _DuckUniverseService:
+        def build(self):
+            return type(
+                "_Universe",
+                (),
+                {
+                    "races": ("Argonian",),
+                    "class_routes": (_Route("A"),),
+                    "attribute_allocations": (
+                        AttributeAllocation(health=64, magicka=0, stamina=0),
+                    ),
+                    "active_bars": ("front", "back"),
+                    "deferred_dynamic_axes": (),
+                    "structural_denominator_proven": True,
+                },
+            )()
+
+    service = ExtremeSustainedDPSGeneratedCandidateService(
+        "unused.db",
+        universe_service=_DuckUniverseService(),
+    )
+
+    with pytest.raises(TypeError, match="ExtremeGlobalSearchUniverse"):
+        service.frontier()
