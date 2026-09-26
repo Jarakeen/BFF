@@ -163,3 +163,67 @@ def test_single_owned_source_with_explicit_ready_state_proves_proc():
     assert result.exact is main
     assert result.cooldown_state_proven is True
     assert result.proc_occurs is True
+
+
+def test_activation_resolution_requires_tuple_effect_collections():
+    service = ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService()
+    main = _effect("Main Enchant", BarId.FRONT, "main_hand")
+
+    with pytest.raises(TypeError, match="enchantment_effects must be a tuple"):
+        service.resolve(
+            activation_event=_event(),
+            enchantment_effects=[main],  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="cooldown_ready must be a tuple"):
+        service.resolve(
+            activation_event=_event(),
+            enchantment_effects=(main,),
+            cooldown_ready=[main],  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="cooldown_states must be a tuple"):
+        service.resolve(
+            activation_event=_event(),
+            enchantment_effects=(main,),
+            cooldown_states=[],  # type: ignore[arg-type]
+        )
+
+
+def test_activation_resolution_requires_typed_effect_records():
+    service = ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService()
+
+    with pytest.raises(TypeError, match="must contain EffectVariant records"):
+        service.resolve(
+            activation_event=_event(),
+            enchantment_effects=(object(),),  # type: ignore[arg-type]
+        )
+
+
+def test_activation_resolution_requires_string_trigger():
+    event = _event()
+    object.__setattr__(event, "trigger", 7)
+
+    with pytest.raises(TypeError, match="event trigger must be a string"):
+        ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService().resolve(
+            activation_event=event,
+            enchantment_effects=(),
+        )
+
+
+def test_activation_resolution_requires_numeric_event_time_for_cooldown_states():
+    main = _effect("Main Enchant", BarId.FRONT, "main_hand")
+    event = _event()
+    object.__setattr__(event, "time_seconds", "2.0")
+
+    with pytest.raises(TypeError, match="time_seconds must be numeric"):
+        ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService().resolve(
+            activation_event=event,
+            enchantment_effects=(main,),
+            cooldown_states=(
+                ExtremeSustainedDPSWeaponEnchantmentCooldownState(
+                    effect=main,
+                    cooldown_seconds=4.0,
+                ),
+            ),
+        )
