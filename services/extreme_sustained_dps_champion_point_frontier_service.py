@@ -41,6 +41,20 @@ class ExtremeSustainedDPSChampionPointFrontier:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.disciplines, tuple):
+            raise TypeError("Champion Point frontier disciplines must be a tuple")
+        if isinstance(self.candidate_count, bool) or not isinstance(self.candidate_count, int):
+            raise TypeError("Champion Point frontier candidate_count must be an integer")
+        if self.candidate_count < 0:
+            raise ValueError("Champion Point frontier candidate_count cannot be negative")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("Champion Point frontier denominator_proven must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("Champion Point frontier evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("Champion Point frontier unresolved must be a tuple")
+
 
 class ExtremeSustainedDPSChampionPointFrontierService:
     """Index every structurally legal full canonical slottable CP loadout lazily."""
@@ -94,7 +108,7 @@ class ExtremeSustainedDPSChampionPointFrontierService:
         proven = bool(axes and count > 0 and not unresolved)
         return ExtremeSustainedDPSChampionPointFrontier(
             disciplines=tuple(axes),
-            candidate_count=int(count),
+            candidate_count=count,
             denominator_proven=proven,
             evidence=(
                 f"Champion Point disciplines in frontier: {len(axes)}",
@@ -118,7 +132,9 @@ class ExtremeSustainedDPSChampionPointFrontierService:
                 + "; ".join(frontier.unresolved)
             )
 
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("Champion Point candidate index must be an integer")
+        target = index
         if target < 0 or target >= frontier.candidate_count:
             raise IndexError("Champion Point candidate index out of range")
 
