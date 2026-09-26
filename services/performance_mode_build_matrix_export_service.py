@@ -134,7 +134,6 @@ class BuildMatrixCard(BaseModel):
 class BuildMatrixBaseline(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
-    race: str = ""
     mundus: str = ""
     attributes: str = ""
     curse: str = ""
@@ -391,15 +390,6 @@ def _variant_card(
     title, default_subtitle = _SLOT_TITLES[slot]
     set_changes, weapon_changes = _gear_changes(base, effective)
     cp_change = _cp_summary(effective) if _cp_summary(effective) != _cp_summary(base) else ""
-    food_change = _clean(effective.Food) if _clean(effective.Food) != _clean(base.Food) else ""
-    potion_change = _clean(effective.Potion) if _clean(effective.Potion) != _clean(base.Potion) else ""
-    consumables = " / ".join(
-        item for item in (
-            f"Food: {food_change}" if include.food and food_change else "",
-            f"Pot: {potion_change}" if include.potions and potion_change else "",
-        )
-        if item
-    )
     context = ref.label
     notes = _clean(getattr(ref.variant, "Notes", "")) if include.notes else ""
     return BuildMatrixCard(
@@ -408,7 +398,7 @@ def _variant_card(
         sets_pieces=set_changes if include.sets else "",
         weapons=weapon_changes if include.weapons else "",
         champion_points=cp_change if include.champion_points else "",
-        food_potion=consumables,
+        food_potion="",
         mastery="",
         front_skills=_bar_changes(base.FrontBarSkills, effective.FrontBarSkills) if include.skills else ("", "", "", "", "", ""),
         back_skills=_bar_changes(base.BackBarSkills, effective.BackBarSkills) if include.skills else ("", "", "", "", "", ""),
@@ -476,7 +466,6 @@ def build_matrix_page(
         )
 
     baseline = BuildMatrixBaseline(
-        race=_clean(build.Race),
         mundus=_clean(build.Mundus),
         attributes=f"H {int(build.AttributeHealth)} / M {int(build.AttributeMagicka)} / S {int(build.AttributeStamina)}",
         curse=_curse(build),
@@ -484,7 +473,7 @@ def build_matrix_page(
         food=_clean(build.Food) if include.food else "",
         potions=_clean(build.Potion) if include.potions else "",
         cp_core=_cp_summary(build) if include.champion_points else "",
-        static_note="Shared core setup. Build cards show only encounter swaps.",
+        static_note="Class Mastery, Food and Potions are shared across every encounter setup.",
     )
     return BuildMatrixPage(
         player=_clean(build.Name) or _clean(build.Gamertag) or "Unnamed Character",
@@ -654,6 +643,51 @@ class PerformanceModeBuildMatrixExporter:
             return value
         return value[: max(1, max_chars - 1)].rstrip() + "…"
 
+    @staticmethod
+    def _wrap_lines(
+        pdf,
+        text: str,
+        *,
+        font_name: str,
+        font_size: float,
+        max_width: float,
+    ) -> list[str]:
+        """Wrap without ellipsizing so gameplay names remain readable in the PDF."""
+        value = _clean(text)
+        if not value:
+            return [""]
+        words = value.split(" ")
+        lines: list[str] = []
+        current = ""
+        for word in words:
+            candidate = word if not current else f"{current} {word}"
+            if pdf.stringWidth(candidate, font_name, font_size) <= max_width:
+                current = candidate
+                continue
+            if current:
+                lines.append(current)
+                current = ""
+            if pdf.stringWidth(word, font_name, font_size) <= max_width:
+                current = word
+                continue
+
+            fragment = ""
+            for char in word:
+                candidate_fragment = fragment + char
+                if fragment and pdf.stringWidth(
+                    candidate_fragment,
+                    font_name,
+                    font_size,
+                ) > max_width:
+                    lines.append(fragment)
+                    fragment = char
+                else:
+                    fragment = candidate_fragment
+            current = fragment
+        if current:
+            lines.append(current)
+        return lines or [""]
+
     def _draw_page(self, pdf, pagesize, colors, page: BuildMatrixPage) -> None:
         width, height = pagesize
         bg = colors.HexColor("#F7F4EC")
@@ -714,7 +748,7 @@ class PerformanceModeBuildMatrixExporter:
         left = 18
         right = width - 18
         top = meta_y - meta_h - 9
-        baseline_h = 60
+        baseline_h = 76
         bottom = 16 + baseline_h + 8
         top_row_h = 210
         bottom_row_h = top - bottom - top_row_h - gap
@@ -758,65 +792,96 @@ class PerformanceModeBuildMatrixExporter:
         pdf.setFont("Helvetica-Bold", 5.8)
         pdf.drawRightString(x + w - 8, y + h - 16, self._fit(pdf, card.subtitle, 28).upper())
 
-        row_y = y + h - band_h - 13
+        row_y = y + h - band_h - 11
         label_x = x + 9
-        value_x = x + 71
-        max_chars = max(18, int((w - 82) / 3.8))
+        value_x = x + 68
+        value_width = x + w - 8 - value_x
+
+        # Food, potions and Class Mastery are static footer data. Keep the
+        # encounter cards for the things a player actually swaps.
         rows = (
             ("SETS / PIECES", card.sets_pieces),
             ("WEAPONS", card.weapons),
-            ("MYTHIC / MONSTER", card.mythic_monster),
             ("CP", card.champion_points),
-            ("FOOD / POT", card.food_potion),
-            ("MASTERY", card.mastery),
         )
         for label, value in rows:
             pdf.setFillColor(muted)
-            pdf.setFont("Helvetica-Bold", 5.5)
+            pdf.setFont("Helvetica-Bold", 5.3)
             pdf.drawString(label_x, row_y, label)
+            lines = self._wrap_lines(
+                pdf,
+                value,
+                font_name="Helvetica",
+                font_size=5.35,
+                max_width=value_width,
+            )
             pdf.setFillColor(ink)
-            pdf.setFont("Helvetica", 6.0)
-            pdf.drawString(value_x, row_y, self._fit(pdf, value, max_chars))
+            pdf.setFont("Helvetica", 5.35)
+            line_y = row_y
+            for line in lines:
+                pdf.drawString(value_x, line_y, line)
+                line_y -= 6.3
+            used_h = max(10.5, 6.3 * len(lines) + 2.5)
             pdf.setStrokeColor(colors.HexColor("#BEC7C5"))
             pdf.setLineWidth(0.35)
-            pdf.line(value_x, row_y - 2, x + w - 8, row_y - 2)
-            row_y -= 13
+            pdf.line(value_x, row_y - used_h + 1.5, x + w - 8, row_y - used_h + 1.5)
+            row_y -= used_h
 
         pdf.setFillColor(accent)
         pdf.setFont("Helvetica-Bold", 5.8)
         pdf.drawString(label_x, row_y, "SKILLS")
         pdf.setStrokeColor(accent)
         pdf.line(value_x - 6, row_y - 1, x + w - 8, row_y - 1)
-        row_y -= 14
+        row_y -= 10
 
-        for label, values in (("FRONT", card.front_skills), ("BACK", card.back_skills)):
+        skill_x = value_x - 8
+        available = x + w - 8 - skill_x
+        cell_gap = 3
+        cell_w = (available - cell_gap * 2) / 3
+        cell_h = 15.5
+        row_gap = 2.5
+        for bar_label, values in (("FRONT", card.front_skills), ("BACK", card.back_skills)):
             pdf.setFillColor(muted)
-            pdf.setFont("Helvetica-Bold", 5.4)
-            pdf.drawString(label_x, row_y + 2, label)
-            skill_x = value_x - 8
-            available = x + w - 8 - skill_x
-            cell_gap = 3
-            cell_w = (available - cell_gap * 5) / 6
+            pdf.setFont("Helvetica-Bold", 5.2)
+            pdf.drawString(label_x, row_y - 4, bar_label)
             for index, value in enumerate(values):
-                cx = skill_x + index * (cell_w + cell_gap)
+                grid_row = index // 3
+                grid_col = index % 3
+                cx = skill_x + grid_col * (cell_w + cell_gap)
+                cy = row_y - grid_row * (cell_h + row_gap) - cell_h
                 pdf.setFillColor(pale)
-                pdf.roundRect(cx, row_y - 2, cell_w, 11, 2.5, stroke=0, fill=1)
-                pdf.setFillColor(ink)
-                pdf.setFont("Helvetica", 4.7)
-                shown = self._fit(pdf, value, max(3, int(cell_w / 3.4))) if value else (str(index + 1) if index < 5 else "ULT")
-                pdf.drawCentredString(cx + cell_w / 2, row_y + 1.5, shown)
-            row_y -= 15
+                pdf.roundRect(cx, cy, cell_w, cell_h, 2.5, stroke=0, fill=1)
+                slot_label = str(index + 1) if index < 5 else "ULT"
+                shown = _clean(value)
+                pdf.setFillColor(muted if not shown else ink)
+                pdf.setFont("Helvetica-Bold" if not shown else "Helvetica", 4.25)
+                if not shown:
+                    pdf.drawCentredString(cx + cell_w / 2, cy + 5.4, slot_label)
+                    continue
+                skill_lines = self._wrap_lines(
+                    pdf,
+                    f"{slot_label}. {shown}",
+                    font_name="Helvetica",
+                    font_size=4.25,
+                    max_width=cell_w - 4,
+                )
+                text_y = cy + cell_h - 5.0
+                for line in skill_lines:
+                    pdf.drawString(cx + 2, text_y, line)
+                    text_y -= 4.6
+            row_y -= 2 * (cell_h + row_gap) + 4
 
+        max_chars = max(18, int((w - 82) / 3.8))
         for label, value in (("SWAPS / TRIGGERS", card.swaps_triggers), ("WHY THIS BUILD", card.why_this_build)):
             pdf.setFillColor(muted)
-            pdf.setFont("Helvetica-Bold", 5.4)
+            pdf.setFont("Helvetica-Bold", 5.2)
             pdf.drawString(label_x, row_y, label)
             pdf.setFillColor(ink)
-            pdf.setFont("Helvetica", 5.6)
+            pdf.setFont("Helvetica", 5.35)
             pdf.drawString(value_x, row_y, self._fit(pdf, value, max_chars))
             pdf.setStrokeColor(colors.HexColor("#BEC7C5"))
             pdf.line(value_x, row_y - 2, x + w - 8, row_y - 2)
-            row_y -= 13
+            row_y -= 11.5
 
     def _draw_baseline(self, pdf, colors, ink, muted, gold, baseline: BuildMatrixBaseline, rect) -> None:
         x, y, w, h = rect
@@ -835,7 +900,6 @@ class PerformanceModeBuildMatrixExporter:
         pdf.drawString(x + 110, y + h - 15.5, "Only write a value in a build card if it changes from this baseline.")
 
         fields = [
-            ("RACE", baseline.race),
             ("MUNDUS", baseline.mundus),
             ("ATTR", baseline.attributes),
             ("CURSE", baseline.curse),
@@ -845,21 +909,31 @@ class PerformanceModeBuildMatrixExporter:
             ("CP CORE", baseline.cp_core),
             ("STATIC NOTE", baseline.static_note),
         ]
-        columns = 5
+        columns = 4
         cell_w = (w - 18) / columns
         for index, (label, value) in enumerate(fields):
             row = index // columns
             col = index % columns
             fx = x + 9 + col * cell_w
-            fy = y + h - 34 - row * 19
+            fy = y + h - 34 - row * 26
             pdf.setFillColor(muted)
             pdf.setFont("Helvetica-Bold", 4.9)
             pdf.drawString(fx, fy, label)
+            lines = self._wrap_lines(
+                pdf,
+                value,
+                font_name="Helvetica",
+                font_size=5.2,
+                max_width=cell_w - 7,
+            )
             pdf.setFillColor(ink)
-            pdf.setFont("Helvetica", 5.3)
-            pdf.drawString(fx, fy - 8, self._fit(pdf, value, max(8, int(cell_w / 3.5))))
+            pdf.setFont("Helvetica", 5.2)
+            line_y = fy - 7
+            for line in lines:
+                pdf.drawString(fx, line_y, line)
+                line_y -= 5.8
             pdf.setStrokeColor(colors.HexColor("#C9D0CE"))
-            pdf.line(fx, fy - 10, fx + cell_w - 7, fy - 10)
+            pdf.line(fx, fy - 21, fx + cell_w - 7, fy - 21)
 
         pdf.setStrokeColor(colors.HexColor("#B8BDBA"))
         pdf.setFillColor(colors.HexColor("#DDD4BF"))
