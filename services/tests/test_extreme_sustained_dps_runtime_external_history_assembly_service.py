@@ -130,3 +130,23 @@ def test_external_history_assembly_requires_strict_denominator_flag() -> None:
             evidence=(),
             unresolved=(),
         )
+
+
+def test_external_history_builder_requires_strict_supplemental_flag() -> None:
+    with pytest.raises(TypeError, match="supplemental_denominator_proven must be boolean"):
+        ExtremeSustainedDPSRuntimeExternalHistoryAssemblyService.build(
+            attempt_frontier=_attempt_frontier(1),
+            supplemental_histories=(),
+            supplemental_denominator_proven="false",
+            source="malformed",
+        )
+
+
+def test_external_history_builder_requires_canonical_attempt_frontier() -> None:
+    with pytest.raises(TypeError, match="canonical attempt_frontier"):
+        ExtremeSustainedDPSRuntimeExternalHistoryAssemblyService.build(
+            attempt_frontier=object(),
+            supplemental_histories=(),
+            supplemental_denominator_proven=True,
+            source="malformed",
+        )
