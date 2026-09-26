@@ -155,6 +155,7 @@ def merge_visible_plan_with_loaded_snapshot(visible: RaidPlan, loaded: RaidPlan 
         status=loaded.status,
         members=tuple(members),
         triggered_responsibilities=triggered,
+        coverage_providers=loaded.coverage_providers,
     )
 
 
