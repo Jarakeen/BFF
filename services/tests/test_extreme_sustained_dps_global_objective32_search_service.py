@@ -679,3 +679,77 @@ def test_global_result_requires_canonical_axis_inventory() -> None:
             target_health=1_000_000,
             target_resistance=18_200.0,
         )
+
+
+
+@pytest.mark.parametrize(
+    ("search_result", "missing_axes", "omitted_scope", "expected_code"),
+    (
+        (_search_result(proven=False), (), (), "finite_denominator_open"),
+        (_search_result(), ("encounter_policy",), (), "physical_axis_missing"),
+        (
+            _search_result(),
+            (),
+            ("runtime encounter histories remain open",),
+            "theoretical_scope_omitted",
+        ),
+    ),
+)
+def test_objective32_end_to_end_closed_and_broken_scenarios_fail_for_expected_gate(
+    search_result,
+    missing_axes,
+    omitted_scope,
+    expected_code,
+) -> None:
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=_GlobalSearch(search_result, missing_axes=missing_axes),
+    )
+    result = service.search(
+        closure_inventory=_closed_closure_inventory(),
+        runtime_state_frontier=_runtime_frontier(omitted_scope=omitted_scope),
+        dual_bar_frontier="gear",
+        candidate_id_prefix="objective32-gate3",
+        required_duration_seconds=20.0,
+        potion_cooldown_seconds=45.0,
+        starting_ultimate=0.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="Boss",
+        runtime_snapshot="snapshot",
+        target_health=1_000_000,
+        target_resistance=18_200.0,
+    )
+
+    assert result.theoretical_maximum_proven is False
+    assert result.blockers.closed is False
+    assert any(row.code == expected_code for row in result.blockers.blockers)
+
+
+def test_objective32_end_to_end_closed_scenario_reaches_theoretical_proof() -> None:
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=_GlobalSearch(_search_result()),
+    )
+    result = service.search(
+        closure_inventory=_closed_closure_inventory(),
+        runtime_state_frontier=_runtime_frontier(),
+        dual_bar_frontier="gear",
+        candidate_id_prefix="objective32-gate3-closed",
+        required_duration_seconds=20.0,
+        potion_cooldown_seconds=45.0,
+        starting_ultimate=0.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="Boss",
+        runtime_snapshot="snapshot",
+        target_health=1_000_000,
+        target_resistance=18_200.0,
+    )
+
+    assert result.search.global_maximum_proven is True
+    assert result.axis_inventory.missing_canonical_axes == ()
+    assert result.axis_coverage.missing_axes == ()
+    assert result.closure.mechanics_closure_complete is True
+    assert result.closure.omitted_scope == ()
+    assert result.closure.unresolved == ()
+    assert result.blockers.closed is True
+    assert result.theoretical_maximum_proven is True
