@@ -53,6 +53,13 @@ class ExtremeSustainedDPSPotionResourceObservationFrontierService:
         additional_resource_event_times: tuple[float, ...] = (),
         additional_resource_event_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSPotionResourceObservationFrontier:
+        if not isinstance(heavy_attack_completion_evidence, tuple):
+            raise TypeError("heavy_attack_completion_evidence must be a tuple")
+        if not isinstance(additional_resource_event_times, tuple):
+            raise TypeError("additional_resource_event_times must be a tuple")
+        if not isinstance(additional_resource_event_denominator_proven, bool):
+            raise TypeError("additional_resource_event_denominator_proven must be boolean")
+
         duration = float(plan.duration_seconds)
         if not math.isfinite(duration) or duration <= 0.0:
             raise ValueError(
@@ -101,6 +108,10 @@ class ExtremeSustainedDPSPotionResourceObservationFrontierService:
             values.add(_seconds(completion))
 
         for raw in additional_resource_event_times:
+            if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+                raise TypeError(
+                    "additional potion resource observation times must be numeric"
+                )
             value = float(raw)
             if not math.isfinite(value) or value < 0.0:
                 raise ValueError(
