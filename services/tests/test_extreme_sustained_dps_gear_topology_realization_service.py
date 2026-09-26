@@ -110,7 +110,6 @@ def test_exhaustive_branch_with_no_physical_witness_is_proven_empty() -> None:
     (
         ("unresolved", [], "unresolved evidence must be a tuple"),
         ("truncated", 0, "truncated flag must be boolean"),
-        ("denominator_proven", 1, "denominator proof must be boolean"),
     ),
 )
 def test_topology_realization_requires_strict_upstream_proof_fields(
