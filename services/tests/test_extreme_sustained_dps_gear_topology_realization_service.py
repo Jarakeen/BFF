@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from services.extreme_gear_set_topology_catalog_service import (
     ExtremeGearSetCountTopology,
 )
@@ -101,3 +103,25 @@ def test_exhaustive_branch_with_no_physical_witness_is_proven_empty() -> None:
     assert result.denominator_proven is True
     assert result.unresolved == ()
     assert any("proven empty" in row.casefold() for row in result.evidence)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("unresolved", [], "unresolved evidence must be a tuple"),
+        ("truncated", 0, "truncated flag must be boolean"),
+        ("denominator_proven", 1, "denominator proof must be boolean"),
+    ),
+)
+def test_topology_realization_requires_strict_upstream_proof_fields(
+    field, value, message
+) -> None:
+    result = _result()
+    object.__setattr__(result, field, value)
+    service = ExtremeSustainedDPSGearTopologyRealizationService(
+        topology_service=_TopologyService(),
+        realization_service=_RealizationService(result),
+    )
+
+    with pytest.raises(TypeError, match=message):
+        service.realize(0)
