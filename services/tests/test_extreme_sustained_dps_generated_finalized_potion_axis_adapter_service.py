@@ -322,3 +322,22 @@ def test_finalized_potion_policy_index_rejects_boolean() -> None:
 
     with pytest.raises(TypeError, match="policy index must be an integer"):
         adapter.axis().candidate_at(root, True)
+
+
+
+@pytest.mark.parametrize("value", (True, "1.0"))
+def test_finalized_potion_evidence_rejects_non_numeric_resource_event_times(value) -> None:
+    with pytest.raises(TypeError, match="event times must be numeric"):
+        ExtremeSustainedDPSFinalizedPotionTimingEvidence(
+            additional_resource_event_times=(value,),
+            additional_resource_event_denominator_proven=True,
+        )
+
+
+@pytest.mark.parametrize("value", (-1.0, float("inf"), float("nan")))
+def test_finalized_potion_evidence_rejects_invalid_resource_event_times(value) -> None:
+    with pytest.raises(ValueError, match="finite and non-negative"):
+        ExtremeSustainedDPSFinalizedPotionTimingEvidence(
+            additional_resource_event_times=(value,),
+            additional_resource_event_denominator_proven=True,
+        )
