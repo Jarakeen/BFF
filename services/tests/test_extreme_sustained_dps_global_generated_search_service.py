@@ -408,3 +408,68 @@ def test_global_search_rejects_malformed_structural_materialization(
 
     with pytest.raises(TypeError, match=message):
         service.search(**_valid_search_kwargs())
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    (
+        ("required_duration_seconds", "20", "required_duration_seconds must be numeric"),
+        ("target_resistance", "18200", "target_resistance must be numeric"),
+        ("starting_ultimate", "0", "starting_ultimate must be numeric"),
+        ("potion_cooldown_seconds", "45", "potion_cooldown_seconds must be numeric"),
+    ),
+)
+def test_global_search_rejects_coerced_numeric_scalars(field, value, match) -> None:
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_Materialization(),
+        pipeline=_Pipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+    kwargs = _valid_search_kwargs()
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=match):
+        service.search(**kwargs)
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    (
+        ("candidate_id_prefix", 7, "candidate_id_prefix must be a string"),
+        ("target_identity", "", "target_identity must be a non-empty string"),
+        ("target_name", None, "target_name must be a non-empty string"),
+        ("initial_bar", 1, "initial_bar must be a string"),
+    ),
+)
+def test_global_search_requires_typed_identity_strings(field, value, match) -> None:
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_Materialization(),
+        pipeline=_Pipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+    kwargs = _valid_search_kwargs()
+    kwargs[field] = value
+
+    with pytest.raises((TypeError, ValueError), match=match):
+        service.search(**kwargs)
+
+
+def test_global_search_rejects_negative_starting_ultimate_and_nonpositive_potion_cooldown() -> None:
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_Materialization(),
+        pipeline=_Pipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+
+    kwargs = _valid_search_kwargs()
+    kwargs["starting_ultimate"] = -1.0
+    with pytest.raises(ValueError, match="starting_ultimate must be non-negative"):
+        service.search(**kwargs)
+
+    kwargs = _valid_search_kwargs()
+    kwargs["potion_cooldown_seconds"] = 0.0
+    with pytest.raises(ValueError, match="potion_cooldown_seconds must be positive"):
+        service.search(**kwargs)
