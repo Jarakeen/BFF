@@ -22,11 +22,27 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownState:
     evidence: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if not isinstance(self.effect, EffectVariant):
+            raise TypeError("weapon-enchantment cooldown state effect must be EffectVariant")
+        if isinstance(self.cooldown_seconds, bool) or not isinstance(
+            self.cooldown_seconds,
+            (int, float),
+        ):
+            raise TypeError("weapon-enchantment cooldown_seconds must be numeric")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("weapon-enchantment cooldown state evidence must be a tuple")
         cooldown = float(self.cooldown_seconds)
         if not math.isfinite(cooldown) or cooldown < 0.0:
             raise ValueError("weapon-enchantment cooldown_seconds must be finite and non-negative")
         object.__setattr__(self, "cooldown_seconds", cooldown)
         if self.last_activation_time_seconds is not None:
+            if isinstance(self.last_activation_time_seconds, bool) or not isinstance(
+                self.last_activation_time_seconds,
+                (int, float),
+            ):
+                raise TypeError(
+                    "weapon-enchantment last_activation_time_seconds must be numeric"
+                )
             last = float(self.last_activation_time_seconds)
             if not math.isfinite(last) or last < 0.0:
                 raise ValueError(
@@ -42,6 +58,35 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownReadiness:
     ready_at: tuple[tuple[EffectVariant, float], ...]
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("ready", self.ready),
+            ("blocked", self.blocked),
+            ("ready_at", self.ready_at),
+            ("evidence", self.evidence),
+            ("unresolved", self.unresolved),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"weapon-enchantment cooldown readiness {label} must be a tuple")
+        if any(not isinstance(row, EffectVariant) for row in (*self.ready, *self.blocked)):
+            raise TypeError(
+                "weapon-enchantment cooldown readiness ready/blocked must contain EffectVariant records"
+            )
+        for row in self.ready_at:
+            if not isinstance(row, tuple) or len(row) != 2:
+                raise TypeError(
+                    "weapon-enchantment cooldown readiness ready_at rows must be (effect, time) tuples"
+                )
+            effect, timestamp = row
+            if not isinstance(effect, EffectVariant):
+                raise TypeError(
+                    "weapon-enchantment cooldown readiness ready_at effects must be EffectVariant records"
+                )
+            if isinstance(timestamp, bool) or not isinstance(timestamp, (int, float)):
+                raise TypeError(
+                    "weapon-enchantment cooldown readiness ready_at times must be numeric"
+                )
 
     @property
     def resolved(self) -> bool:
@@ -70,6 +115,29 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownReadinessService:
         candidates: tuple[EffectVariant, ...],
         states: tuple[ExtremeSustainedDPSWeaponEnchantmentCooldownState, ...],
     ) -> ExtremeSustainedDPSWeaponEnchantmentCooldownReadiness:
+        if isinstance(activation_time_seconds, bool) or not isinstance(
+            activation_time_seconds,
+            (int, float),
+        ):
+            raise TypeError(
+                "weapon-enchantment activation_time_seconds must be numeric"
+            )
+        if not isinstance(candidates, tuple):
+            raise TypeError("weapon-enchantment cooldown candidates must be a tuple")
+        if any(not isinstance(row, EffectVariant) for row in candidates):
+            raise TypeError(
+                "weapon-enchantment cooldown candidates must contain EffectVariant records"
+            )
+        if not isinstance(states, tuple):
+            raise TypeError("weapon-enchantment cooldown states must be a tuple")
+        if any(
+            not isinstance(row, ExtremeSustainedDPSWeaponEnchantmentCooldownState)
+            for row in states
+        ):
+            raise TypeError(
+                "weapon-enchantment cooldown states must contain canonical cooldown-state records"
+            )
+
         now = float(activation_time_seconds)
         if not math.isfinite(now) or now < 0.0:
             raise ValueError(
@@ -77,7 +145,7 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownReadinessService:
             )
 
         candidate_by_key = {cls._effect_key(effect): effect for effect in candidates}
-        if len(candidate_by_key) != len(tuple(candidates)):
+        if len(candidate_by_key) != len(candidates):
             return ExtremeSustainedDPSWeaponEnchantmentCooldownReadiness(
                 ready=(),
                 blocked=(),
@@ -93,7 +161,7 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownReadinessService:
         ] = {}
         foreign: list[ExtremeSustainedDPSWeaponEnchantmentCooldownState] = []
         duplicates: list[tuple[str, str, str, str]] = []
-        for state in tuple(states):
+        for state in states:
             key = cls._effect_key(state.effect)
             if key not in candidate_by_key:
                 foreign.append(state)
@@ -135,7 +203,7 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownReadinessService:
         blocked: list[EffectVariant] = []
         ready_at: list[tuple[EffectVariant, float]] = []
         evidence: list[str] = []
-        for effect in tuple(candidates):
+        for effect in candidates:
             state = state_by_key[cls._effect_key(effect)]
             last = state.last_activation_time_seconds
             if last is None:
