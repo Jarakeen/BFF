@@ -9,7 +9,11 @@ positions are canonical encounter mechanics.
 
 from dataclasses import asdict, dataclass, field
 import json
+import os
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+from services.planning_artifact_pydantic_schema import validate_position_timeline_document
 
 
 SCHEMA_VERSION = 1
@@ -70,63 +74,24 @@ class PositionTimelineStore:
         if not self.path.exists():
             return PositionTimeline()
         try:
-            payload = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return PositionTimeline()
-        if not isinstance(payload, dict):
-            return PositionTimeline()
-        raw_steps = payload.get("steps", [])
-        if not isinstance(raw_steps, list):
-            return PositionTimeline()
-
-        steps: list[PositionTimelineStep] = []
-        for raw_step in raw_steps:
-            if not isinstance(raw_step, dict):
-                continue
-            raw_items = raw_step.get("items", [])
-            if not isinstance(raw_items, list):
-                raw_items = []
-            items: list[TimelineItemState] = []
-            for raw_item in raw_items:
-                if not isinstance(raw_item, dict):
-                    continue
-                item_id = str(raw_item.get("item_id", "") or "").strip()
-                if not item_id:
-                    continue
-                try:
-                    items.append(
-                        TimelineItemState(
-                            item_id=item_id,
-                            family=str(raw_item.get("family", "token") or "token"),
-                            kind=str(raw_item.get("kind", "") or ""),
-                            label=str(raw_item.get("label", "") or ""),
-                            x=float(raw_item.get("x", 0.5)),
-                            y=float(raw_item.get("y", 0.5)),
-                            radius=float(raw_item.get("radius", 0.0) or 0.0),
-                            visible=bool(raw_item.get("visible", True)),
-                        )
-                    )
-                except (TypeError, ValueError):
-                    continue
-            name = str(raw_step.get("name", "") or "").strip() or f"Step {len(steps) + 1}"
-            note = str(raw_step.get("note", "") or "")
-            try:
-                duration = bounded_duration(float(raw_step.get("duration_seconds", DEFAULT_STEP_SECONDS)))
-            except (TypeError, ValueError):
-                duration = DEFAULT_STEP_SECONDS
-            steps.append(
-                PositionTimelineStep(
-                    name=name,
-                    note=note,
-                    duration_seconds=duration,
-                    items=tuple(items),
-                )
+            payload = validate_position_timeline_document(
+                json.loads(self.path.read_text(encoding="utf-8"))
             )
-        return PositionTimeline(steps=tuple(steps))
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
+            raise RuntimeError(f"Raid Map position timeline failed to load safely: {exc}") from exc
+        steps = tuple(
+            PositionTimelineStep(
+                name=row["name"],
+                note=row["note"],
+                duration_seconds=row["duration_seconds"],
+                items=tuple(TimelineItemState(**item) for item in row["items"]),
+            )
+            for row in payload["steps"]
+        )
+        return PositionTimeline(steps=steps)
 
     def save(self, timeline: PositionTimeline) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {
+        payload = validate_position_timeline_document({
             "schema_version": SCHEMA_VERSION,
             "steps": [
                 {
@@ -137,10 +102,27 @@ class PositionTimelineStore:
                 }
                 for step in timeline.steps
             ],
-        }
-        temporary = self.path.with_suffix(self.path.suffix + ".tmp")
-        temporary.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
+        })
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile(
+                "w", encoding="utf-8", dir=self.path.parent,
+                prefix=f".{self.path.name}.", suffix=".tmp", delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                json.dump(payload, handle, indent=2, ensure_ascii=False)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+        read_back = validate_position_timeline_document(
+            json.loads(self.path.read_text(encoding="utf-8"))
         )
-        temporary.replace(self.path)
+        if read_back != payload:
+            raise RuntimeError("Raid Map position timeline did not round-trip exactly")
+
