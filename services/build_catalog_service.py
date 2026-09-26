@@ -340,6 +340,41 @@ class BuildCatalogService:
             raise RuntimeError(f"Build deletion readback failed for {wanted!r}")
         return True
 
+    def save_on_connection(
+        self,
+        catalog: dict[str, Any],
+        db: sqlite3.Connection,
+    ) -> dict[str, Any]:
+        """Save a validated database catalog inside the caller's transaction.
+
+        The caller owns BEGIN/COMMIT/ROLLBACK. This exists for compound user-state
+        mutations that must update build identity and related foundrydock.db rows
+        atomically.
+        """
+        if not self._database_mode:
+            raise ValueError("save_on_connection requires a SQLite Build catalog")
+        normalized = self._validated_catalog(catalog)
+        payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True)
+        db.execute(
+            """
+            INSERT INTO build_catalog(singleton_id, payload_json, updated_at)
+            VALUES (1, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(singleton_id) DO UPDATE SET
+                payload_json=excluded.payload_json,
+                updated_at=CURRENT_TIMESTAMP
+            """,
+            (payload,),
+        )
+        row = db.execute(
+            "SELECT payload_json FROM build_catalog WHERE singleton_id = 1"
+        ).fetchone()
+        if row is None:
+            raise RuntimeError("canonical Build catalog could not be read back after save")
+        persisted = self._validated_catalog(json.loads(str(row[0] or "")))
+        if persisted != normalized:
+            raise RuntimeError("canonical Build catalog did not round-trip exactly")
+        return normalized
+
     def save(self, catalog: dict[str, Any]) -> None:
         normalized = self._validated_catalog(catalog)
         if self._database_mode:
