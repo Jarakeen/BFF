@@ -55,6 +55,20 @@ class ExtremeSustainedDPSPassiveRankFrontier:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.axes, tuple):
+            raise TypeError("passive-rank frontier axes must be a tuple")
+        if isinstance(self.candidate_count, bool) or not isinstance(self.candidate_count, int):
+            raise TypeError("passive-rank frontier candidate_count must be an integer")
+        if self.candidate_count < 0:
+            raise ValueError("passive-rank frontier candidate_count cannot be negative")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("passive-rank frontier denominator_proven must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("passive-rank frontier evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("passive-rank frontier unresolved must be a tuple")
+
 
 class ExtremeSustainedDPSPassiveRankFrontierService:
     """Index legal rank states for explicitly owned combat-line passives lazily."""
@@ -150,7 +164,7 @@ class ExtremeSustainedDPSPassiveRankFrontierService:
         final_unresolved = tuple(dict.fromkeys(item for item in unresolved if item))
         return ExtremeSustainedDPSPassiveRankFrontier(
             axes=tuple(axes),
-            candidate_count=int(count if axes else 0),
+            candidate_count=count if axes else 0,
             denominator_proven=bool(axes and count > 0 and not final_unresolved),
             evidence=(
                 f"Explicitly owned non-class skill lines: {len(owned)}",
@@ -177,7 +191,9 @@ class ExtremeSustainedDPSPassiveRankFrontierService:
                 + "; ".join(frontier.unresolved)
             )
 
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("passive-rank candidate index must be an integer")
+        target = index
         if target < 0 or target >= frontier.candidate_count:
             raise IndexError("passive-rank candidate index out of range")
 
