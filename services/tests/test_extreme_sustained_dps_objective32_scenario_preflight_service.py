@@ -223,3 +223,15 @@ def test_preflight_rejects_truthy_non_boolean_candidate_runtime_proofs() -> None
             heavy_attack_channel_block_denominator_proven=True,
             encounter_policy_adapter=object(),
         )
+
+
+def test_preflight_rejects_mutable_runtime_frontier_diagnostics() -> None:
+    frontier = _runtime()
+    frontier.unresolved = []
+
+    with pytest.raises(TypeError, match="unresolved must be a tuple"):
+        ExtremeSustainedDPSObjective32ScenarioPreflightService.assess(
+            runtime_state_frontier=frontier,
+            heavy_attack_channel_block_denominator_proven=True,
+            encounter_policy_adapter=object(),
+        )
