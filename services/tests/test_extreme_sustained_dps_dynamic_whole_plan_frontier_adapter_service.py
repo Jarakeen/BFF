@@ -65,6 +65,7 @@ def test_execute_policy_adapter_preserves_frontier_denominator() -> None:
         SimpleNamespace(
             candidates=rows,
             denominator_proven=True,
+            omitted_scope=(),
         )
     )
 
@@ -79,6 +80,7 @@ def test_heavy_attack_adapter_preserves_reviewed_window_omission() -> None:
         SimpleNamespace(
             candidates=rows,
             denominator_proven=True,
+            omitted_scope=(),
         )
     )
 
@@ -108,6 +110,7 @@ def test_heavy_attack_adapter_can_clear_omission_with_complete_window_proof() ->
         SimpleNamespace(
             candidates=rows,
             denominator_proven=True,
+            omitted_scope=(),
         ),
         complete_window_denominator_proven=True,
     )
@@ -122,31 +125,34 @@ def test_indexed_whole_plan_adapter_requires_strict_proof_record_fields() -> Non
         ExtremeSustainedDPSIndexedWholePlanAdapter(
             axes=["execute_policy"],  # type: ignore[arg-type]
             choice_count=1,
-            choice_at=lambda _index: object(),
+            _resolver=lambda _index: object(),
             denominator_proven=True,
+            omitted_scope=(),
         )
 
     with pytest.raises(TypeError, match="choice_count must be an integer"):
         ExtremeSustainedDPSIndexedWholePlanAdapter(
             axes=("execute_policy",),
             choice_count=True,  # type: ignore[arg-type]
-            choice_at=lambda _index: object(),
+            _resolver=lambda _index: object(),
             denominator_proven=True,
+            omitted_scope=(),
         )
 
     with pytest.raises(TypeError, match="denominator_proven must be boolean"):
         ExtremeSustainedDPSIndexedWholePlanAdapter(
             axes=("execute_policy",),
             choice_count=1,
-            choice_at=lambda _index: object(),
+            _resolver=lambda _index: object(),
             denominator_proven="true",  # type: ignore[arg-type]
+            omitted_scope=(),
         )
 
     with pytest.raises(TypeError, match="omitted_scope must be a tuple"):
         ExtremeSustainedDPSIndexedWholePlanAdapter(
             axes=("execute_policy",),
             choice_count=1,
-            choice_at=lambda _index: object(),
+            _resolver=lambda _index: object(),
             denominator_proven=True,
             omitted_scope=["open"],  # type: ignore[arg-type]
         )
@@ -156,7 +162,7 @@ def test_indexed_whole_plan_adapter_rejects_boolean_index() -> None:
     adapter = ExtremeSustainedDPSIndexedWholePlanAdapter(
         axes=("execute_policy",),
         choice_count=1,
-        choice_at=lambda index: index,
+        _resolver=lambda index: index,
         denominator_proven=True,
     )
 
