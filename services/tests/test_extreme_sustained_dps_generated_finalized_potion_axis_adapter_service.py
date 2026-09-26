@@ -307,3 +307,18 @@ def test_finalized_potion_denominator_requires_canonical_timing_evidence() -> No
 
     with pytest.raises(TypeError, match="canonical timing evidence"):
         adapter.axis().candidate_count(root)
+
+
+
+def test_finalized_potion_policy_index_rejects_boolean() -> None:
+    adapter, _denominator, _legality = _adapter()
+    root = adapter.root(
+        _upstream(),
+        build=PlayerBuild(Potion=""),
+        progression="progression",
+        potion_cooldown_seconds=45.0,
+        evidence_resolver=_resolver,
+    )
+
+    with pytest.raises(TypeError, match="policy index must be an integer"):
+        adapter.axis().candidate_at(root, True)
