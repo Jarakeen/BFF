@@ -28,10 +28,6 @@ class ExtremeSustainedDPSGeneratedSearchBranch:
     payload: object | None = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.evidence, tuple):
-            raise TypeError("exact sustained-DPS leaf evidence must be a tuple")
-        if not isinstance(self.unresolved, tuple):
-            raise TypeError("exact sustained-DPS leaf unresolved evidence must be a tuple")
         key = str(self.candidate_key or "").strip()
         if not key:
             raise ValueError("generated sustained-DPS search branch requires candidate_key")
@@ -62,6 +58,10 @@ class ExtremeSustainedDPSExactLeafEvaluation:
     unresolved: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("exact sustained-DPS leaf evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("exact sustained-DPS leaf unresolved evidence must be a tuple")
         key = str(self.candidate_key or "").strip()
         if not key:
             raise ValueError("exact sustained-DPS leaf evaluation requires candidate_key")
