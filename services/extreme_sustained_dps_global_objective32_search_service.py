@@ -116,6 +116,20 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
             raise ValueError(
                 "global Objective #32 theoretical proof requires finite generated-search proof"
             )
+        if self.closure.theoretical_maximum_proven and (
+            self.closure.omitted_scope or self.closure.unresolved
+        ):
+            raise ValueError(
+                "global Objective #32 theoretical proof cannot retain closure debt"
+            )
+        if self.blockers.closed and (
+            self.search.unresolved
+            or self.axis_inventory.unresolved
+            or self.axis_coverage.unresolved
+        ):
+            raise ValueError(
+                "global Objective #32 closed blocker report cannot coexist with unresolved proof debt"
+            )
 
     @property
     def best_modeled_dps(self) -> float | None:
