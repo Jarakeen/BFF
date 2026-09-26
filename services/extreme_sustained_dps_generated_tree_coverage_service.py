@@ -15,9 +15,28 @@ class ExtremeSustainedDPSGeneratedTreeCoverageResult:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.proof, ExtremeSustainedDPSAxisCoverageProof):
+            raise TypeError("generated tree coverage requires canonical axis coverage proof")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("generated tree coverage evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("generated tree coverage unresolved must be a tuple")
+        if self.proof.unresolved != self.unresolved:
+            raise ValueError(
+                "generated tree coverage proof unresolved evidence must match result unresolved evidence"
+            )
+
 
 class ExtremeSustainedDPSGeneratedTreeCoverageService:
     """Derive coverage only from a successfully exhausted generated search tree."""
+
+    @staticmethod
+    def _tuple_field(owner: object, field: str, label: str) -> tuple:
+        value = getattr(owner, field, ())
+        if not isinstance(value, tuple):
+            raise TypeError(f"generated tree coverage {label} must be a tuple")
+        return value
 
     @classmethod
     def from_search(
@@ -31,9 +50,12 @@ class ExtremeSustainedDPSGeneratedTreeCoverageService:
             raise TypeError("generated tree coverage requires boolean global_maximum_proven")
         unresolved: list[str] = []
 
+        raw_search_unresolved = getattr(search_result, "unresolved", ())
+        if not isinstance(raw_search_unresolved, tuple):
+            raise TypeError("generated tree coverage search unresolved must be a tuple")
         search_unresolved = tuple(
             str(item).strip()
-            for item in tuple(getattr(search_result, "unresolved", ()) or ())
+            for item in raw_search_unresolved
             if str(item).strip()
         )
         unresolved.extend(
@@ -47,14 +69,10 @@ class ExtremeSustainedDPSGeneratedTreeCoverageService:
                 "Generated finite search denominator maximum is not proven"
             )
 
-        inventory_unresolved = tuple(
-            getattr(axis_inventory, "unresolved", ()) or ()
-        )
+        inventory_unresolved = cls._tuple_field(axis_inventory, "unresolved", "axis inventory unresolved")
         unresolved.extend(str(item) for item in inventory_unresolved if str(item))
 
-        duplicates = tuple(
-            getattr(axis_inventory, "duplicate_canonical_axes", ()) or ()
-        )
+        duplicates = cls._tuple_field(axis_inventory, "duplicate_canonical_axes", "axis inventory duplicate_canonical_axes")
         if duplicates:
             unresolved.append(
                 "Generated tree contains duplicate canonical-axis enumeration: "
@@ -62,12 +80,8 @@ class ExtremeSustainedDPSGeneratedTreeCoverageService:
             )
 
         complete = bool(finite_closed and not unresolved)
-        searched_axes = tuple(
-            getattr(axis_inventory, "searched_canonical_axes", ()) or ()
-        )
-        omitted_scope = tuple(
-            getattr(axis_inventory, "omitted_scope", ()) or ()
-        )
+        searched_axes = cls._tuple_field(axis_inventory, "searched_canonical_axes", "axis inventory searched_canonical_axes")
+        omitted_scope = cls._tuple_field(axis_inventory, "omitted_scope", "axis inventory omitted_scope")
 
         proof = ExtremeSustainedDPSAxisCoverageProof(
             source="completed generated search tree canonical-axis inventory",
