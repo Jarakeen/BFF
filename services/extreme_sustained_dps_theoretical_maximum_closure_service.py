@@ -63,6 +63,13 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
         omitted_scope: tuple[str, ...] = (),
         closure_inventory: object | None = None,
     ) -> ExtremeSustainedDPSTheoreticalMaximumClosure:
+        if not isinstance(search_result, ExtremeSustainedDPSGeneratedSearchResult):
+            raise TypeError("theoretical closure requires canonical generated search result")
+        if not isinstance(axis_coverage, ExtremeSustainedDPSAxisDominanceComposition):
+            raise TypeError("theoretical closure requires canonical axis dominance composition")
+        if not isinstance(omitted_scope, tuple):
+            raise TypeError("theoretical closure omitted_scope must be a tuple")
+
         canonical = tuple(CANONICAL_SUSTAINED_DPS_MUTATION_AXES)
         required = tuple(axis_coverage.required_axes)
         missing_required = tuple(axis for axis in canonical if axis not in required)
