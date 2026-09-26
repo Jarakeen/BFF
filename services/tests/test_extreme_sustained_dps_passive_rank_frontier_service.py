@@ -113,3 +113,72 @@ def test_passive_rejects_boolean_candidate_index() -> None:
             character_class="Warden",
             index=True,
         )
+
+
+@pytest.mark.parametrize("field,value", (("offset", True), ("limit", "2"), ("offset", 1.25)))
+def test_passive_page_requires_strict_integer_bounds(field, value) -> None:
+    progression = CharacterProgression(
+        owned_skill_lines=("Fighters Guild",),
+        passive_ranks={},
+    )
+    kwargs = {"offset": 0, "limit": 2}
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"passive-rank page {field} must be an integer"):
+        _service().page(
+            progression,
+            character_class="Warden",
+            **kwargs,
+        )
+
+
+def test_passive_frontier_rejects_truthy_non_boolean_combat_line_proof() -> None:
+    class _MalformedUniverse:
+        def passives(self):
+            return (
+                _Passive(
+                    "Malformed Passive",
+                    "Fighters Guild",
+                    2,
+                    combat_line="false",  # type: ignore[arg-type]
+                ),
+            )
+
+    result = ExtremeSustainedDPSPassiveRankFrontierService(
+        _MalformedUniverse()
+    ).frontier(
+        CharacterProgression(
+            owned_skill_lines=("Fighters Guild",),
+            passive_ranks={},
+        ),
+        character_class="Warden",
+    )
+
+    assert result.denominator_proven is False
+    assert any("combat_line proof must be boolean" in row for row in result.unresolved)
+
+
+@pytest.mark.parametrize("max_rank", (True, "2", 2.0))
+def test_passive_frontier_rejects_coerced_max_rank(max_rank) -> None:
+    class _MalformedUniverse:
+        def passives(self):
+            return (
+                _Passive(
+                    "Malformed Passive",
+                    "Fighters Guild",
+                    max_rank,  # type: ignore[arg-type]
+                ),
+            )
+
+    result = ExtremeSustainedDPSPassiveRankFrontierService(
+        _MalformedUniverse()
+    ).frontier(
+        CharacterProgression(
+            owned_skill_lines=("Fighters Guild",),
+            passive_ranks={},
+        ),
+        character_class="Warden",
+    )
+
+    assert result.denominator_proven is False
+    assert any("max rank must be an integer" in row for row in result.unresolved)
