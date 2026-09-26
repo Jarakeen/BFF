@@ -11,6 +11,8 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+import os
 from typing import Any
 
 from services.build_profile_pydantic_schema import (
@@ -90,8 +92,10 @@ class BuildProfileService:
             return {"version": 1, "profiles": {}}
         try:
             payload = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return {"version": 1, "profiles": {}}
+        except OSError as exc:
+            raise ValueError(f"Build profile store could not be read: {exc}") from exc
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Build profile store contains invalid JSON: {exc}") from exc
         try:
             return validate_build_profile_store_payload(payload)
         except ValueError as exc:
@@ -131,16 +135,29 @@ class BuildProfileService:
         payload = self._load_payload()
         profiles = dict(payload["profiles"])
         profiles[key] = validate_build_profile_payload(asdict(profile.normalized()))
-        temporary = self.path.with_suffix(self.path.suffix + ".tmp")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         persisted_payload = validate_build_profile_store_payload(
             {"version": 1, "profiles": profiles}
         )
-        temporary.write_text(
-            json.dumps(persisted_payload, indent=2, sort_keys=True),
-            encoding="utf-8",
-        )
-        temporary.replace(self.path)
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                dir=self.path.parent,
+                prefix=f".{self.path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                json.dump(persisted_payload, handle, indent=2, sort_keys=True)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
         try:
             read_back = json.loads(self.path.read_text(encoding="utf-8"))
             read_back = validate_build_profile_store_payload(read_back)
