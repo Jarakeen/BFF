@@ -64,3 +64,46 @@ def test_unproven_mundus_food_denominator_fails_closed() -> None:
         service.axes()[0].candidate_count(service.root(_context()))
 
     assert service.coverage().dominated_axes == ()
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("mundus_choices", ["The Thief"], "Mundus choices must be a tuple"),
+        ("food_choices", ["Food A"], "food choices must be a tuple"),
+        ("denominator_proven", "true", "denominator_proven must be boolean"),
+        ("unresolved", ["open"], "unresolved must be a tuple"),
+    ),
+)
+def test_generated_mundus_food_constructor_rejects_mutable_or_truthy_proof_inputs(
+    field,
+    value,
+    message,
+) -> None:
+    kwargs = {
+        "mundus_choices": ("The Thief",),
+        "food_choices": ("Food A",),
+        "denominator_proven": True,
+        "unresolved": (),
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=message):
+        ExtremeSustainedDPSGeneratedMundusFoodAxisAdapterService(**kwargs)
+
+
+def test_generated_mundus_food_axes_reject_boolean_indices() -> None:
+    service = ExtremeSustainedDPSGeneratedMundusFoodAxisAdapterService(
+        mundus_choices=("The Thief",),
+        food_choices=("Food A",),
+        denominator_proven=True,
+    )
+    state = service.root(_context())
+    mundus_axis, food_axis = service.axes()
+
+    with pytest.raises(TypeError, match="Mundus choice index must be an integer"):
+        mundus_axis.candidate_at(state, True)
+
+    state = mundus_axis.candidate_at(state, 0)
+    with pytest.raises(TypeError, match="food choice index must be an integer"):
+        food_axis.candidate_at(state, False)
