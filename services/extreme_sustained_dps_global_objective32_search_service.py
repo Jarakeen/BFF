@@ -107,6 +107,15 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
             raise ValueError(
                 "global Objective #32 theoretical closure and blocker report must agree"
             )
+        if self.closure.mechanics_closure_complete and self.closure_inventory is not None:
+            if not self.closure_inventory.closure_ready:
+                raise ValueError(
+                    "global Objective #32 mechanics closure cannot exceed closure inventory readiness"
+                )
+        if self.closure.theoretical_maximum_proven and not self.search.global_maximum_proven:
+            raise ValueError(
+                "global Objective #32 theoretical proof requires finite generated-search proof"
+            )
 
     @property
     def best_modeled_dps(self) -> float | None:
