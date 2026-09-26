@@ -9,6 +9,7 @@ cast, matching RotationScheduledActionResourceLegalityService semantics.
 """
 
 from dataclasses import dataclass
+import math
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.rotation_ultimate import UltimateRotationScheduler, UltimateScheduleRule
@@ -139,13 +140,27 @@ class ExtremeSustainedDPSDelayedUltimatePolicyFrontierService:
         starting_ultimate: float,
         generation_events: tuple[UltimateGenerationEvent, ...] = (),
     ) -> ExtremeSustainedDPSDelayedUltimatePolicyFrontier:
-        target_bar = str(bar or "").strip().casefold()
+        if not isinstance(bar, str):
+            raise TypeError("delayed Ultimate frontier bar must be a string")
+        if not isinstance(spend_rule, UltimateSpendRule):
+            raise TypeError("delayed Ultimate frontier spend_rule must be an UltimateSpendRule")
+        if isinstance(starting_ultimate, bool) or not isinstance(starting_ultimate, (int, float)):
+            raise TypeError("starting_ultimate must be numeric")
+        starting = float(starting_ultimate)
+        if not math.isfinite(starting) or starting < 0.0:
+            raise ValueError("starting_ultimate must be finite and non-negative")
+        if not isinstance(generation_events, tuple):
+            raise TypeError("generation_events must be a tuple")
+        if any(not isinstance(event, UltimateGenerationEvent) for event in generation_events):
+            raise TypeError("generation_events must contain UltimateGenerationEvent records")
+
+        target_bar = bar.strip().casefold()
         slots = self._eligible_slots(plan, bar=target_bar)
         unresolved: list[str] = []
 
         events = tuple(
             sorted(
-                tuple(generation_events),
+                generation_events,
                 key=lambda row: (row.time_seconds, row.source.casefold()),
             )
         )
@@ -156,7 +171,7 @@ class ExtremeSustainedDPSDelayedUltimatePolicyFrontierService:
 
         sequences = self._legal_slot_sequences(
             slots=slots,
-            starting_ultimate=float(starting_ultimate),
+            starting_ultimate=starting,
             generation_events=events,
             cost=float(spend_rule.cost),
         )
@@ -217,7 +232,7 @@ class ExtremeSustainedDPSDelayedUltimatePolicyFrontierService:
                 f"Eligible {target_bar}-bar skill slots: {len(slots)}",
                 f"Legal delayed Ultimate policies: {len(policies)}",
                 f"Ultimate cost: {float(spend_rule.cost):g}",
-                f"Starting Ultimate: {float(starting_ultimate):g}",
+                f"Starting Ultimate: {starting:g}",
                 "Every legal cast/skip branch over the exact seed-plan same-bar skill slots is enumerated",
                 "Same-timestamp Ultimate generation is deliberately unavailable to the cast at that timestamp",
             ),
