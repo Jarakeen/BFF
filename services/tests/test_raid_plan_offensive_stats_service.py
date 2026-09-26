@@ -275,6 +275,7 @@ def test_raid_plan_crit_damage_caps_at_125_percent() -> None:
     row = next(item for item in result.rows if item.seat_id == "dd-1")
 
     assert row.raid_critical_damage == pytest.approx(CRITICAL_DAMAGE_CAP)
+    assert row.uncapped_raid_critical_damage == pytest.approx(1.51)
     assert row.critical_capped is True
 
 
@@ -300,5 +301,6 @@ def test_unresolved_seat_stays_visible_instead_of_inventing_zero_stats() -> None
 
     assert row.resolved is False
     assert row.personal_critical_damage is None
+    assert row.uncapped_raid_critical_damage is None
     assert row.physical_penetration is None
     assert row.unresolved
