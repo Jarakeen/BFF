@@ -1,3 +1,5 @@
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import BarId, EffectLayer
 from minmax.combat_effects import CombatEffect
@@ -5,7 +7,9 @@ from minmax.effects import EffectUnit
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
 from services.extreme_sustained_dps_weapon_enchantment_proc_consequence_service import (
+    ExtremeSustainedDPSWeaponEnchantmentProcConsequenceResolution,
     ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService,
+    ExtremeSustainedDPSWeaponEnchantmentProcOccurrence,
 )
 from services.extreme_sustained_dps_weapon_enchantment_runtime_source_service import (
     ExtremeSustainedDPSWeaponEnchantmentRuntimeSource,
@@ -142,3 +146,56 @@ def test_non_enchant_runtime_attempts_are_ignored():
 
     assert result.resolved is True
     assert result.occurrences == ()
+
+
+def test_proc_consequence_resolver_requires_tuple_inputs():
+    with pytest.raises(TypeError, match="attempts must be a tuple"):
+        ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService.resolve(
+            attempts=[_attempt()],  # type: ignore[arg-type]
+            sources=(_source(),),
+        )
+
+    with pytest.raises(TypeError, match="sources must be a tuple"):
+        ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService.resolve(
+            attempts=(_attempt(),),
+            sources=[_source()],  # type: ignore[arg-type]
+        )
+
+
+def test_proc_consequence_resolver_requires_typed_nested_records():
+    with pytest.raises(TypeError, match="RuntimeEffectEventAttempt records"):
+        ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService.resolve(
+            attempts=(object(),),  # type: ignore[arg-type]
+            sources=(_source(),),
+        )
+
+    with pytest.raises(TypeError, match="runtime source records"):
+        ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService.resolve(
+            attempts=(),
+            sources=(object(),),  # type: ignore[arg-type]
+        )
+
+
+def test_proc_occurrence_requires_strict_sequence_and_consequence_types():
+    with pytest.raises(TypeError, match="sequence must be an integer"):
+        ExtremeSustainedDPSWeaponEnchantmentProcOccurrence(
+            time_seconds=1.0,
+            sequence=True,  # type: ignore[arg-type]
+            source=_source(),
+            consequences=_source().effects,
+        )
+
+    with pytest.raises(TypeError, match="consequences must be a tuple"):
+        ExtremeSustainedDPSWeaponEnchantmentProcOccurrence(
+            time_seconds=1.0,
+            sequence=0,
+            source=_source(),
+            consequences=list(_source().effects),  # type: ignore[arg-type]
+        )
+
+
+def test_proc_resolution_requires_tuple_occurrences():
+    with pytest.raises(TypeError, match="occurrences must be a tuple"):
+        ExtremeSustainedDPSWeaponEnchantmentProcConsequenceResolution(
+            occurrences=[],  # type: ignore[arg-type]
+        )
