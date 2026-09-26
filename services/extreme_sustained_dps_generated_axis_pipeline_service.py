@@ -91,7 +91,10 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
 
     @staticmethod
     def _require_complete(stage: object, label: str) -> None:
-        if not bool(getattr(stage, "complete", False)):
+        complete = getattr(stage, "complete", False)
+        if not isinstance(complete, bool):
+            raise TypeError(f"generated {label} complete flag must be boolean")
+        if not complete:
             raise ValueError(
                 f"generated axis pipeline requires complete {label} selections"
             )
@@ -179,8 +182,14 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             progression=getattr(assembled, "progression", None),
             scenario=scenario,
         )
-        if not bool(getattr(resolution, "complete", False)):
-            detail = "; ".join(tuple(getattr(resolution, "unresolved", ()) or ()))
+        complete = getattr(resolution, "complete", False)
+        if not isinstance(complete, bool):
+            raise TypeError("potion cooldown resolution complete flag must be boolean")
+        unresolved = getattr(resolution, "unresolved", ())
+        if not isinstance(unresolved, tuple):
+            raise TypeError("potion cooldown resolution unresolved evidence must be a tuple")
+        if not complete:
+            detail = "; ".join(unresolved)
             raise ValueError(
                 "generated axis pipeline potion cooldown is unresolved"
                 + (f": {detail}" if detail else "")
@@ -443,6 +452,16 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         prefix = str(candidate_id_prefix or "").strip()
         if not prefix:
             raise ValueError("generated axis pipeline candidate_id_prefix is required")
+        if isinstance(duration_seconds, bool):
+            raise TypeError("generated axis pipeline duration must be numeric, not boolean")
+        if isinstance(potion_cooldown_seconds, bool):
+            raise TypeError("generated axis pipeline potion cooldown must be numeric, not boolean")
+        if isinstance(starting_ultimate, bool):
+            raise TypeError("generated axis pipeline starting Ultimate must be numeric, not boolean")
+        if not isinstance(use_scheduled_combat_attacks_for_ultimate, bool):
+            raise TypeError("generated axis pipeline scheduled-combat Ultimate flag must be boolean")
+        if not isinstance(heavy_attack_channel_block_denominator_proven, bool):
+            raise TypeError("generated axis pipeline Heavy Attack denominator proof flag must be boolean")
         gear = self.gear_adapter.root(
             build,
             progression,
@@ -460,18 +479,14 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             starting_ultimate=float(starting_ultimate),
             ultimate_generation_events=tuple(ultimate_generation_events),
             heroism_windows=tuple(heroism_windows),
-            use_scheduled_combat_attacks_for_ultimate=bool(
-                use_scheduled_combat_attacks_for_ultimate
-            ),
+            use_scheduled_combat_attacks_for_ultimate=use_scheduled_combat_attacks_for_ultimate,
             priorities=priorities,
             snapshot_resolver=snapshot_resolver,
             target_identity=str(target_identity or "").strip(),
             duration_rules=tuple(duration_rules),
             heavy_attack_windows=tuple(heavy_attack_windows),
             heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
-            heavy_attack_channel_block_denominator_proven=bool(
-                heavy_attack_channel_block_denominator_proven
-            ),
+            heavy_attack_channel_block_denominator_proven=heavy_attack_channel_block_denominator_proven,
             requires_finalized_potion=bool(self.finalized_potion_adapter is not None),
         )
 
