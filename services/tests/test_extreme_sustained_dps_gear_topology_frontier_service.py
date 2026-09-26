@@ -73,3 +73,17 @@ def test_topology_frontier_keeps_unused_units_states() -> None:
 
     assert any(row.unused_units > 0 for row in rows)
     assert any(row.unused_units == 0 for row in rows)
+
+
+def test_gear_topology_rejects_boolean_index() -> None:
+    with pytest.raises(TypeError, match="topology index must be an integer"):
+        _service().topology_at(True)
+
+
+@pytest.mark.parametrize("field,value", (("offset", False), ("limit", "2"), ("offset", 1.5)))
+def test_gear_topology_page_requires_strict_integer_bounds(field, value) -> None:
+    kwargs = {"offset": 0, "limit": 2}
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"gear-set topology page {field} must be an integer"):
+        _service().page(**kwargs)
