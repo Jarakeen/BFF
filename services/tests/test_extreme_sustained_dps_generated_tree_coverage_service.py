@@ -106,3 +106,15 @@ def test_complete_heavy_attack_axis_reaches_tree_coverage_without_omission() -> 
 
     assert result.proof.dominated_axes == ("heavy_attack_policy",)
     assert result.proof.omitted_scope == ()
+
+
+def test_tree_coverage_rejects_truthy_non_boolean_global_maximum_proof() -> None:
+    try:
+        ExtremeSustainedDPSGeneratedTreeCoverageService.from_search(
+            search_result=SimpleNamespace(global_maximum_proven="false"),
+            axis_inventory=_inventory(),
+        )
+    except TypeError as exc:
+        assert "boolean global_maximum_proven" in str(exc)
+    else:
+        raise AssertionError("truthy non-boolean search proof must fail closed")
