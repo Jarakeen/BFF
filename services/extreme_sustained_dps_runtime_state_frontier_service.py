@@ -23,6 +23,13 @@ class ExtremeSustainedDPSRuntimeStateChoice:
     effects: tuple[EffectVariant, ...] = ()
 
     def __post_init__(self) -> None:
+        for label, value in (
+            ("evidence", self.evidence),
+            ("unresolved", self.unresolved),
+            ("effects", self.effects),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"runtime-state choice {label} must be a tuple")
         value = str(self.runtime_state_id or "").strip()
         if not value:
             raise ValueError("runtime-state choice requires runtime_state_id")
@@ -66,6 +73,14 @@ class ExtremeSustainedDPSRuntimeStateFrontier:
     omitted_scope: tuple[str, ...]
 
     def __post_init__(self) -> None:
+        for label, value in (
+            ("choices", self.choices),
+            ("evidence", self.evidence),
+            ("unresolved", self.unresolved),
+            ("omitted_scope", self.omitted_scope),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"runtime-state frontier {label} must be a tuple")
         if any(
             not isinstance(choice, ExtremeSustainedDPSRuntimeStateChoice)
             for choice in self.choices
@@ -128,6 +143,14 @@ class ExtremeSustainedDPSRuntimeStateFrontierService:
         source: str,
         omitted_scope: tuple[str, ...] = (),
     ) -> ExtremeSustainedDPSRuntimeStateFrontier:
+        if not isinstance(choices, tuple):
+            raise TypeError("runtime-state choices must be a tuple")
+        if any(not isinstance(choice, ExtremeSustainedDPSRuntimeStateChoice) for choice in choices):
+            raise TypeError("runtime-state choices must contain canonical runtime-state choices")
+        if not isinstance(denominator_proven, bool):
+            raise TypeError("runtime-state denominator proof flag must be boolean")
+        if not isinstance(omitted_scope, tuple):
+            raise TypeError("runtime-state omitted scope must be a tuple")
         unresolved: list[str] = []
         seen: set[str] = set()
         rows: list[ExtremeSustainedDPSRuntimeStateChoice] = []
@@ -165,7 +188,7 @@ class ExtremeSustainedDPSRuntimeStateFrontierService:
                 if str(item).strip()
             )
         )
-        complete = bool(rows and denominator_proven and not deduped)
+        complete = bool(rows) and denominator_proven and not deduped
 
         return ExtremeSustainedDPSRuntimeStateFrontier(
             choices=tuple(rows),
