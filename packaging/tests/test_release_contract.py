@@ -92,14 +92,19 @@ def test_release_runtime_formula_module_does_not_import_pytest() -> None:
 
 
 def test_release_version_has_one_python_source_of_truth() -> None:
-    version = (ROOT / "app_version.py").read_text(encoding="utf-8")
+    version_path = ROOT / "app_version.py"
+    spec = importlib.util.spec_from_file_location(
+        "foundrydock_app_version_test",
+        version_path,
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
     build = (ROOT / "packaging" / "build_release.ps1").read_text(encoding="utf-8")
-
-    import re
-
-    match = re.search(r'^APP_VERSION\\s*=\\s*["\\'](\\d+\\.\\d+\\.\\d+)["\\']', version, re.MULTILINE)
-    assert match is not None
-    assert match.group(1)
+    assert isinstance(module.APP_VERSION, str)
+    assert len(module.APP_VERSION.split(".")) == 3
+    assert all(part.isdigit() for part in module.APP_VERSION.split("."))
     assert 'from app_version import APP_VERSION; print(APP_VERSION)' in build
     assert 'APP_VERSION' not in (ROOT / "packaging" / "BFF.spec").read_text(encoding="utf-8")
 
