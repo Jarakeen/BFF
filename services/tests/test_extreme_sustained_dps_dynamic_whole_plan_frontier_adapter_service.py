@@ -164,6 +164,7 @@ def test_indexed_whole_plan_adapter_rejects_boolean_index() -> None:
         choice_count=1,
         _resolver=lambda index: index,
         denominator_proven=True,
+        omitted_scope=(),
     )
 
     with pytest.raises(TypeError, match="index must be an integer"):
