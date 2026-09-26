@@ -13,17 +13,18 @@ class _Universe:
         return self.rows
 
 
-def test_explicit_empty_rank_inventory_is_complete_empty_grant_inventory() -> None:
+def test_empty_passive_universe_cannot_prove_empty_grant_inventory() -> None:
     service = ExtremeSustainedDPSPotionCooldownPassiveGrantService(_Universe())
 
-    result = service.resolve(
-        object(),
-        CharacterProgression(passive_ranks={}),
-    )
-
-    assert result.complete
-    assert result.passives == ()
-    assert result.unresolved == ()
+    try:
+        service.resolve(
+            object(),
+            CharacterProgression(passive_ranks={}),
+        )
+    except ValueError as exc:
+        assert "passive universe is empty; denominator is not proven" in str(exc)
+    else:
+        raise AssertionError("empty passive universe must fail closed")
 
 
 def test_nonempty_unowned_passive_universe_certifies_empty_grants() -> None:
