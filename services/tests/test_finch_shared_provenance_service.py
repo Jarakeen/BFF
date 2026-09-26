@@ -41,6 +41,8 @@ def test_provenance_records_exact_snapshot_used_for_local_copy(tmp_path) -> None
     assert row.local_key == "rg-pm-shared-copy"
     assert row.published_by == "BFF"
     assert row.source_updated_at == "2026-09-21T01:00:00+00:00"
+    persisted = json.loads((tmp_path / "provenance.json").read_text(encoding="utf-8"))
+    assert isinstance(persisted["copies"], list)
     assert (
         service.relation_for(snapshot)
         == "Copied from this Finch snapshot • local: rg-pm-shared-copy"
