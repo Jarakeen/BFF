@@ -955,7 +955,11 @@ class CoveragePage(FoundryPage):
         provider = rows[labels.index(selected)]
         updated = plan.without_coverage_provider(effect, provider.seat_id)
         try:
-            self.raid_plan_repository.save(updated, expected=plan)
+            self.raid_plan_repository.save(
+                updated,
+                expected=plan,
+                allow_coverage_clear=True,
+            )
             persisted = self.raid_plan_repository.get(plan_id)
             if persisted is None:
                 raise RuntimeError("saved Raid Plan failed Coverage read-back verification")
