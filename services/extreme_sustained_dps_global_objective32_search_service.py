@@ -87,6 +87,15 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         root_key: str = "generated-global-root",
         **search_kwargs,
     ) -> ExtremeSustainedDPSGlobalObjective32SearchResult:
+        if not isinstance(coverage_proofs, tuple):
+            raise TypeError("global Objective #32 coverage_proofs must be a tuple")
+        if any(not isinstance(proof, ExtremeSustainedDPSAxisCoverageProof) for proof in coverage_proofs):
+            raise TypeError("global Objective #32 coverage_proofs must contain canonical axis coverage proofs")
+        if scope_proof is not None and not isinstance(scope_proof, ExtremeSustainedDPSObjective32SearchScopeProof):
+            raise TypeError("global Objective #32 scope_proof must be canonical when supplied")
+        if not isinstance(omitted_scope, tuple):
+            raise TypeError("global Objective #32 omitted_scope must be a tuple")
+
         normalized_root = str(root_key or "").strip() or "generated-global-root"
         if self.require_closure_ready_scenario and self.potion_cooldown_resolver is None:
             raise ValueError(
