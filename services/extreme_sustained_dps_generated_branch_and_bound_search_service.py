@@ -12,6 +12,12 @@ from dataclasses import dataclass
 import math
 from typing import Callable, Protocol
 
+from services.extreme_sustained_dps_runtime_effect_relevance_service import (
+    ExtremeSustainedDPSRuntimeEffectRelevance,
+)
+from services.extreme_sustained_dps_runtime_effect_scaling_service import (
+    ExtremeSustainedDPSRuntimeEffectScalingResult,
+)
 from services.extreme_sustained_dps_pruning_service import (
     ExtremeSustainedDPSBoundEvidence,
     ExtremeSustainedDPSPruningDisposition,
@@ -56,6 +62,8 @@ class ExtremeSustainedDPSExactLeafEvaluation:
     mechanic_complete: bool
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
+    relevance: ExtremeSustainedDPSRuntimeEffectRelevance | None = None
+    scaling: ExtremeSustainedDPSRuntimeEffectScalingResult | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.evidence, tuple):
@@ -68,6 +76,14 @@ class ExtremeSustainedDPSExactLeafEvaluation:
         object.__setattr__(self, "candidate_key", key)
         if not isinstance(self.mechanic_complete, bool):
             raise TypeError("exact sustained-DPS leaf mechanic_complete must be boolean")
+        if self.relevance is not None and not isinstance(
+            self.relevance, ExtremeSustainedDPSRuntimeEffectRelevance
+        ):
+            raise TypeError("exact sustained-DPS leaf relevance must be canonical when supplied")
+        if self.scaling is not None and not isinstance(
+            self.scaling, ExtremeSustainedDPSRuntimeEffectScalingResult
+        ):
+            raise TypeError("exact sustained-DPS leaf scaling must be canonical when supplied")
 
         modeled = self.modeled_dps
         if modeled is not None:
