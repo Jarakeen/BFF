@@ -3,6 +3,9 @@ import pytest
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.support_target_type import SupportTargetType
+from services.extreme_sustained_dps_runtime_effect_relevance_service import (
+    ExtremeSustainedDPSRuntimeEffectRelevance,
+)
 from services.extreme_sustained_dps_closure_inventory_service import (
     ExtremeSustainedDPSClosureInventory,
     ExtremeSustainedDPSClosureInventoryService,
@@ -147,3 +150,57 @@ def test_closure_inventory_rejects_non_tuple_mechanics_denominator() -> None:
         ExtremeSustainedDPSClosureInventoryService.build(
             mechanics_dependency_keys=[],  # type: ignore[arg-type]
         )
+
+
+def test_best_candidate_inventory_fails_closed_without_runtime_relevance() -> None:
+    inventory = ExtremeSustainedDPSClosureInventoryService.build_for_best_candidates(
+        (SimpleNamespace(candidate_key="winner", relevance=None, scaling=None),),
+        mechanics_dependency_keys=(),
+    )
+
+    assert inventory.closure_ready is False
+    assert inventory.source_data_blockers == (
+        "Best candidate winner is missing canonical runtime relevance evidence",
+    )
+
+
+def test_best_candidate_inventory_accepts_proven_no_relevant_runtime_effects() -> None:
+    relevance = ExtremeSustainedDPSRuntimeEffectRelevance(
+        relevant=(),
+        irrelevant=(),
+        unresolved=(),
+        source_data_unresolved=(),
+        math_unresolved=(),
+        evidence=("all candidate runtime effects proven irrelevant to sustained DPS",),
+    )
+    inventory = ExtremeSustainedDPSClosureInventoryService.build_for_best_candidates(
+        (SimpleNamespace(candidate_key="winner", relevance=relevance, scaling=None),),
+        mechanics_dependency_keys=(),
+    )
+
+    assert inventory.closure_ready is True
+    assert inventory.source_data_blockers == ()
+    assert inventory.math_review_blockers == ()
+
+
+def test_best_candidate_inventory_audits_every_tied_maximum() -> None:
+    relevance = ExtremeSustainedDPSRuntimeEffectRelevance(
+        relevant=(),
+        irrelevant=(),
+        unresolved=(),
+        source_data_unresolved=(),
+        math_unresolved=(),
+        evidence=("candidate runtime relevance proven",),
+    )
+    inventory = ExtremeSustainedDPSClosureInventoryService.build_for_best_candidates(
+        (
+            SimpleNamespace(candidate_key="winner-a", relevance=relevance, scaling=None),
+            SimpleNamespace(candidate_key="winner-b", relevance=None, scaling=None),
+        ),
+        mechanics_dependency_keys=(),
+    )
+
+    assert inventory.closure_ready is False
+    assert inventory.source_data_blockers == (
+        "Best candidate winner-b is missing canonical runtime relevance evidence",
+    )
