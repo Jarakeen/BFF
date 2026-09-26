@@ -45,7 +45,7 @@ _SLOT_COLORS = {
 
 
 class BuildMatrixIncludeOptions(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
     sets: bool = True
     weapons: bool = True
@@ -58,14 +58,14 @@ class BuildMatrixIncludeOptions(BaseModel):
 
 
 class BuildMatrixSlotSelection(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
     slot: BuildMatrixSlot
     variant_index: int | None = Field(default=None, ge=0)
 
 
 class BuildMatrixExportRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
     mode: BuildMatrixMode = "mapped_variants"
     slots: tuple[BuildMatrixSlotSelection, ...]
@@ -85,7 +85,7 @@ class BuildMatrixExportRequest(BaseModel):
 
 
 class BuildMatrixCard(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
     title: str
     subtitle: str = ""
@@ -132,7 +132,7 @@ class BuildMatrixCard(BaseModel):
 
 
 class BuildMatrixBaseline(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
     race: str = ""
     mundus: str = ""
@@ -154,7 +154,7 @@ class BuildMatrixBaseline(BaseModel):
 
 
 class BuildMatrixPage(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
     player: str
     eso_class: str = ""
