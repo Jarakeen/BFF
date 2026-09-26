@@ -17,16 +17,44 @@ from services.roster_player_identity_service import RosterPlayerIdentityService
 from services.roster_service import RosterService
 
 
-def _exact_member(roster: RosterService, name: str):
-    target = " ".join(str(name or "").strip().split()).casefold()
-    matches = [
-        member
-        for member in roster.list_members()
-        if " ".join(str(member.PlayerName or "").strip().split()).casefold() == target
-    ]
+def _key(value: object) -> str:
+    return " ".join(str(value or "").strip().split()).casefold()
+
+
+def _candidate_members(roster: RosterService, builds: BuildService, name: str):
+    target = _key(name)
+    catalog = builds.canonical.catalog_service.load_strict()
+    matching_player_ids = {
+        str(row.get("player_id") or "").strip()
+        for row in catalog.get("players", [])
+        if isinstance(row, dict)
+        and target in {
+            _key(row.get("gamertag")),
+            _key(row.get("name")),
+            _key(row.get("player_name")),
+        }
+    }
+    matches = []
+    for member in roster.list_members():
+        if (
+            _key(member.PlayerName) == target
+            or str(getattr(member, "CanonicalPlayerId", "") or "").strip() in matching_player_ids
+        ):
+            matches.append(member)
+    return matches
+
+
+def _exact_member(roster: RosterService, builds: BuildService, name: str):
+    matches = _candidate_members(roster, builds, name)
     if len(matches) != 1:
+        detail = "; ".join(
+            f"id={member.Id} player={member.PlayerName!r} character={member.CharacterName!r} "
+            f"canonical_player_id={getattr(member, 'CanonicalPlayerId', '')!r}"
+            for member in matches
+        ) or "(none)"
         raise RuntimeError(
-            f"Expected exactly one Personnel record named {name!r}; found {len(matches)}."
+            f"Expected exactly one Personnel/canonical Player match for {name!r}; "
+            f"found {len(matches)}: {detail}"
         )
     return matches[0]
 
@@ -44,8 +72,8 @@ def main() -> int:
     builds = BuildService(get_data_dir() / "builds.json")
     service = RosterPlayerIdentityService(database, builds)
 
-    survivor = _exact_member(roster, args.survivor)
-    donor = _exact_member(roster, args.donor)
+    survivor = _exact_member(roster, builds, args.survivor)
+    donor = _exact_member(roster, builds, args.donor)
     print(f"DB: {database_path}")
     print(f"SURVIVOR: id={survivor.Id} | {survivor.PlayerName} | {survivor.CharacterName}")
     print(f"DONOR:    id={donor.Id} | {donor.PlayerName} | {donor.CharacterName}")
