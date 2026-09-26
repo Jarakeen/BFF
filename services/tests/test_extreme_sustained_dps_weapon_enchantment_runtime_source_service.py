@@ -1,3 +1,4 @@
+from minmax.character_build.effect_layer import BarId
 from minmax.combat_effects import CombatEffect
 from minmax.effects import EffectUnit
 from models.build_model import GearSlot, PlayerBuild
