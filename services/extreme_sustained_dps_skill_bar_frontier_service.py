@@ -75,6 +75,19 @@ class ExtremeSustainedDPSSkillBarLegalityContext:
     allowed_scribed_ability_ids: tuple[int, ...] = ()
 
     def __post_init__(self) -> None:
+        for label, value in (
+            ("class_skill_lines", self.class_skill_lines),
+            ("owned_skill_lines", self.owned_skill_lines),
+            ("weapon_skill_lines", self.weapon_skill_lines),
+            ("armor_skill_lines", self.armor_skill_lines),
+            ("allowed_scribed_ability_ids", self.allowed_scribed_ability_ids),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"generated skill-bar context {label} must be a tuple")
+        if not isinstance(self.vampire, bool):
+            raise TypeError("generated skill-bar context vampire flag must be boolean")
+        if not isinstance(self.werewolf, bool):
+            raise TypeError("generated skill-bar context werewolf flag must be boolean")
         if self.vampire and self.werewolf:
             raise ValueError("generated skill-bar context cannot be both Vampire and Werewolf")
 
@@ -109,6 +122,25 @@ class ExtremeSustainedDPSSkillBarFrontier:
     denominator_proven: bool
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("front_candidate_count", self.front_candidate_count),
+            ("back_candidate_count", self.back_candidate_count),
+            ("candidate_count", self.candidate_count),
+        ):
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"skill-bar frontier {label} must be an integer")
+            if value < 0:
+                raise ValueError(f"skill-bar frontier {label} cannot be negative")
+        if not isinstance(self.one_bar_only, bool):
+            raise TypeError("skill-bar frontier one_bar_only must be boolean")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("skill-bar frontier denominator_proven must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("skill-bar frontier evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("skill-bar frontier unresolved must be a tuple")
 
 
 class _BarIndexer:
@@ -149,7 +181,9 @@ class _BarIndexer:
         return self.normal_candidate_count * self.ultimate_candidate_count
 
     def _normal_at(self, index: int) -> tuple[ExtremeSustainedDPSSkillAlternative, ...]:
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("normal skill-bar state index must be an integer")
+        target = index
         total = self.normal_candidate_count
         if target < 0 or target >= total:
             raise IndexError("normal skill-bar state index out of range")
@@ -183,7 +217,9 @@ class _BarIndexer:
         return tuple(selected)
 
     def _ultimate_at(self, index: int) -> ExtremeSustainedDPSSkillAlternative | None:
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("Ultimate skill-bar state index must be an integer")
+        target = index
         if target < 0 or target >= self.ultimate_candidate_count:
             raise IndexError("Ultimate skill-bar state index out of range")
         if target == 0:
@@ -196,7 +232,9 @@ class _BarIndexer:
         raise IndexError("Ultimate skill-bar state index out of range")
 
     def state_at(self, index: int) -> ExtremeSustainedDPSSkillBarState:
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("skill-bar state index must be an integer")
+        target = index
         if target < 0 or target >= self.candidate_count:
             raise IndexError("skill-bar state index out of range")
         ultimate_count = self.ultimate_candidate_count
@@ -386,6 +424,8 @@ class ExtremeSustainedDPSSkillBarFrontierService:
         back_context: ExtremeSustainedDPSSkillBarLegalityContext,
         one_bar_only: bool = False,
     ) -> ExtremeSustainedDPSSkillBarFrontier:
+        if not isinstance(one_bar_only, bool):
+            raise TypeError("skill-bar one_bar_only must be boolean")
         front = self._indexer(front_context)
         back = self._indexer(back_context)
         unresolved: list[str] = []
@@ -404,8 +444,8 @@ class ExtremeSustainedDPSSkillBarFrontierService:
             front_candidate_count=front_count,
             back_candidate_count=back_count,
             candidate_count=total,
-            one_bar_only=bool(one_bar_only),
-            denominator_proven=bool(total > 0 and not final_unresolved),
+            one_bar_only=one_bar_only,
+            denominator_proven=total > 0 and not final_unresolved,
             evidence=(
                 f"Front legal bar states: {front_count}",
                 f"Back legal bar states: {back_count}",
@@ -428,6 +468,10 @@ class ExtremeSustainedDPSSkillBarFrontierService:
         index: int,
         one_bar_only: bool = False,
     ) -> ExtremeSustainedDPSTwoBarSkillCandidate:
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("two-bar skill candidate index must be an integer")
+        if not isinstance(one_bar_only, bool):
+            raise TypeError("skill-bar one_bar_only must be boolean")
         frontier = self.frontier(
             front_context=front_context,
             back_context=back_context,
@@ -438,7 +482,7 @@ class ExtremeSustainedDPSSkillBarFrontierService:
                 "skill-bar frontier denominator is unresolved: "
                 + "; ".join(frontier.unresolved)
             )
-        target = int(index)
+        target = index
         if target < 0 or target >= frontier.candidate_count:
             raise IndexError("two-bar skill candidate index out of range")
 
