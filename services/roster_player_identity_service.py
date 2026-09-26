@@ -489,23 +489,30 @@ class RosterPlayerIdentityService:
                 (donor_id,),
             )
             self.database.execute("DELETE FROM roster_member WHERE id = ?", (donor_id,))
+
+            # Personnel, canonical Build identity, and every affected Raid Plan
+            # share foundrydock.db. Keep the explicit merge atomic across all three
+            # authorities so a failure cannot strand half-merged player identity.
+            self._merge_canonical_players(
+                survivor_name,
+                donor_name,
+                db=self.database.connection,
+            )
+            repository = RaidPlanRepository(Path(self.database.database))
+            self._rewrite_raid_plan_player_identity(
+                survivor_id=survivor_id,
+                donor_id=donor_id,
+                survivor_name=survivor_name,
+                donor_name=donor_name,
+                survivor_player_id=survivor_player_id,
+                donor_player_id=donor_player_id,
+                repository=repository,
+                db=self.database.connection,
+            )
             self.database.commit()
         except Exception:
             self.database.rollback()
             raise
-
-        # Canonical user-build identity is stored outside SQLite. Do this only
-        # after the roster transaction commits; backups above make the operation
-        # reversible if a later filesystem write fails.
-        self._merge_canonical_players(survivor_name, donor_name)
-        self._rewrite_raid_plan_player_identity(
-            survivor_id=survivor_id,
-            donor_id=donor_id,
-            survivor_name=survivor_name,
-            donor_name=donor_name,
-            survivor_player_id=survivor_player_id,
-            donor_player_id=donor_player_id,
-        )
 
         return PlayerIdentityMergeResult(
             survivor_id=survivor_id,
