@@ -123,3 +123,65 @@ def test_pdf_export_smoke(tmp_path: Path) -> None:
     PerformanceModeBuildMatrixExporter().export_build(_build(), target)
     assert target.exists()
     assert target.stat().st_size > 1000
+
+
+def test_export_source_rejects_wrong_length_skill_bar() -> None:
+    build = _build()
+    build.FrontBarSkills = ["Flail"] * 5
+
+    with pytest.raises(ValidationError):
+        default_export_request(build)
+
+
+def test_export_source_rejects_attribute_total_over_game_limit() -> None:
+    build = _build()
+    build.AttributeHealth = 1
+    build.AttributeMagicka = 64
+
+    with pytest.raises(ValidationError, match="attribute points cannot exceed"):
+        default_export_request(build)
+
+
+def test_export_source_rejects_truthy_string_world_state() -> None:
+    build = _build()
+    build.Vampire = "false"  # type: ignore[assignment]
+
+    with pytest.raises(ValidationError):
+        default_export_request(build)
+
+
+def test_export_source_rejects_duplicate_class_masteries() -> None:
+    build = _build()
+    build.ClassMasteryAbilityIds = [12345, 12345]
+
+    with pytest.raises(ValidationError, match="must be unique"):
+        default_export_request(build)
+
+
+def test_export_source_rejects_malformed_variant_bar() -> None:
+    build = _build()
+    build.ContextVariants[0].FrontBarSkills = ["Only one slot"]
+
+    with pytest.raises(ValidationError):
+        default_export_request(build)
+
+
+def test_export_source_rejects_noncanonical_armor_payload() -> None:
+    build = _build()
+    build.Armor["Head"] = "not-a-slot-mapping"  # type: ignore[assignment]
+
+    with pytest.raises(TypeError, match="armor slot"):
+        default_export_request(build)
+
+
+def test_export_source_snapshot_does_not_mutate_original_build() -> None:
+    build = _build()
+    original_food = build.Food
+    original_variant_food = build.ContextVariants[0].Food
+
+    request = default_export_request(build)
+    page = build_matrix_page(build, request)
+
+    assert page.baseline.food == original_food
+    assert build.Food == original_food
+    assert build.ContextVariants[0].Food == original_variant_food
