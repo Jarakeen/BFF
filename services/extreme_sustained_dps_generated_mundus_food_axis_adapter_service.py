@@ -38,6 +38,14 @@ class ExtremeSustainedDPSGeneratedMundusFoodAxisAdapterService:
         denominator_proven: bool,
         unresolved: tuple[str, ...] = (),
     ) -> None:
+        if not isinstance(mundus_choices, tuple):
+            raise TypeError("generated Mundus choices must be a tuple")
+        if not isinstance(food_choices, tuple):
+            raise TypeError("generated food choices must be a tuple")
+        if not isinstance(denominator_proven, bool):
+            raise TypeError("generated Mundus/food denominator_proven must be boolean")
+        if not isinstance(unresolved, tuple):
+            raise TypeError("generated Mundus/food unresolved must be a tuple")
         self.mundus_choices = self._choices(mundus_choices)
         self.food_choices = self._choices(food_choices)
         self.unresolved = tuple(
@@ -47,10 +55,10 @@ class ExtremeSustainedDPSGeneratedMundusFoodAxisAdapterService:
                 if str(item).strip()
             )
         )
-        self.denominator_proven = bool(
+        self.denominator_proven = (
             denominator_proven
-            and self.mundus_choices
-            and self.food_choices
+            and bool(self.mundus_choices)
+            and bool(self.food_choices)
             and not self.unresolved
         )
 
@@ -92,7 +100,9 @@ class ExtremeSustainedDPSGeneratedMundusFoodAxisAdapterService:
         index: int,
     ) -> ExtremeSustainedDPSGeneratedMundusFoodAxisState:
         self._require_denominator()
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("generated Mundus choice index must be an integer")
+        target = index
         if target < 0 or target >= len(self.mundus_choices):
             raise IndexError("generated Mundus choice index out of range")
         build = PlayerBuild.from_dict(state.context.build.to_dict())
@@ -126,7 +136,9 @@ class ExtremeSustainedDPSGeneratedMundusFoodAxisAdapterService:
             raise ValueError(
                 "generated food axis requires a selected Mundus first"
             )
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("generated food choice index must be an integer")
+        target = index
         if target < 0 or target >= len(self.food_choices):
             raise IndexError("generated food choice index out of range")
         build = PlayerBuild.from_dict(state.context.build.to_dict())
