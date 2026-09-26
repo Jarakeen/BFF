@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 
@@ -247,3 +249,43 @@ def test_exact_leaf_uses_final_assembled_progression_not_gear_stage_progression(
 
     assert runtime.calls[0][1]["progression"] == "progression"
     assert runtime.calls[0][1]["progression"] != "pre-late-progression"
+
+
+def test_leaf_evaluation_rejects_truthy_non_boolean_complete_flag() -> None:
+    runtime = _RuntimeEvaluation(_runtime_result())
+    service = ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService(
+        runtime_evaluation=runtime,
+    )
+    node = _node()
+    node.state.complete = "false"
+
+    with pytest.raises(TypeError, match="complete flag must be boolean"):
+        service.evaluate(
+            node,
+            runtime_snapshot="snapshot",
+            target_health=100,
+            target_resistance=0.0,
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("target_health", True, "target health must be an integer"),
+        ("target_resistance", True, "target resistance must be numeric"),
+    ),
+)
+def test_leaf_evaluation_rejects_boolean_numeric_inputs(field, value, message) -> None:
+    runtime = _RuntimeEvaluation(_runtime_result())
+    service = ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService(
+        runtime_evaluation=runtime,
+    )
+    values = {
+        "runtime_snapshot": "snapshot",
+        "target_health": 100,
+        "target_resistance": 0.0,
+    }
+    values[field] = value
+
+    with pytest.raises(TypeError, match=message):
+        service.evaluate(_node(), **values)
