@@ -215,3 +215,23 @@ def test_runtime_attempt_choice_requires_canonical_attempts() -> None:
             attempts=(object(),),
             evidence=(),
         )
+
+
+def test_runtime_attempt_builder_requires_strict_event_denominator_flag() -> None:
+    with pytest.raises(TypeError, match="event_denominator_proven must be boolean"):
+        ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService.build(
+            events=(_event(),),
+            effects=(_effect("a"),),
+            event_denominator_proven="false",
+            source="malformed",
+        )
+
+
+def test_runtime_attempt_builder_requires_canonical_input_records() -> None:
+    with pytest.raises(TypeError, match="events must contain RuntimeEvent"):
+        ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService.build(
+            events=(object(),),
+            effects=(),
+            event_denominator_proven=True,
+            source="malformed",
+        )
