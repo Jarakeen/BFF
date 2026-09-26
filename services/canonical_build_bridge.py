@@ -128,11 +128,21 @@ class CanonicalBuildBridge:
             return canonical_roster
 
         if catalog["builds"]:
-            if canonical_roster.Members:
+            meaningful_canonical = any(
+                isinstance(entry, dict)
+                and (
+                    isinstance(entry.get("payload"), dict)
+                    or self._is_valid_legacy_build(entry.get("legacy"))
+                )
+                for entry in catalog["builds"]
+            )
+            if canonical_roster.Members and meaningful_canonical:
                 return canonical_roster
 
-            # Explicit legacy/test paths retain the historical compatibility
-            # recovery behavior.
+            # Explicit legacy/test paths retain historical recovery when the
+            # canonical catalog contains only identity placeholders. A populated
+            # compatibility file is allowed to repair that migration artifact,
+            # then is immediately resynced into canonical form.
             roster = self.enchantment_compatibility.normalize_roster(self._load_legacy())
             if roster.Members:
                 catalog = self.sync_from_roster(roster)
