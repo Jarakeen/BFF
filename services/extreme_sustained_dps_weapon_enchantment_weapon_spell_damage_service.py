@@ -22,8 +22,43 @@ class ExtremeSustainedDPSWeaponEnchantmentWeaponSpellDamageWindow:
     magnitude: float
     source_label: str
 
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("start_seconds", self.start_seconds),
+            ("end_seconds", self.end_seconds),
+            ("magnitude", self.magnitude),
+        ):
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise TypeError(
+                    f"weapon-enchantment Weapon/Spell Damage window {label} must be numeric"
+                )
+            if not math.isfinite(float(value)):
+                raise ValueError(
+                    f"weapon-enchantment Weapon/Spell Damage window {label} must be finite"
+                )
+        if float(self.start_seconds) < 0.0:
+            raise ValueError(
+                "weapon-enchantment Weapon/Spell Damage window start_seconds cannot be negative"
+            )
+        if float(self.end_seconds) <= float(self.start_seconds):
+            raise ValueError(
+                "weapon-enchantment Weapon/Spell Damage window end_seconds must be after start_seconds"
+            )
+        if float(self.magnitude) < 0.0:
+            raise ValueError(
+                "weapon-enchantment Weapon/Spell Damage window magnitude cannot be negative"
+            )
+        if not isinstance(self.source_label, str) or not self.source_label.strip():
+            raise TypeError(
+                "weapon-enchantment Weapon/Spell Damage window source_label must be a non-empty string"
+            )
+
     def active_at(self, time_seconds: float) -> bool:
+        if isinstance(time_seconds, bool) or not isinstance(time_seconds, (int, float)):
+            raise TypeError("Weapon/Spell Damage active_at time_seconds must be numeric")
         instant = float(time_seconds)
+        if not math.isfinite(instant):
+            raise ValueError("Weapon/Spell Damage active_at time_seconds must be finite")
         return self.start_seconds <= instant < self.end_seconds
 
     def as_effect_variant(self) -> EffectVariant:
@@ -42,6 +77,24 @@ class ExtremeSustainedDPSWeaponEnchantmentWeaponSpellDamageResolution:
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.windows, tuple):
+            raise TypeError("Weapon/Spell Damage resolution windows must be a tuple")
+        if any(
+            not isinstance(
+                row,
+                ExtremeSustainedDPSWeaponEnchantmentWeaponSpellDamageWindow,
+            )
+            for row in self.windows
+        ):
+            raise TypeError(
+                "Weapon/Spell Damage resolution windows must contain canonical window records"
+            )
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("Weapon/Spell Damage resolution evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("Weapon/Spell Damage resolution unresolved must be a tuple")
+
     @property
     def resolved(self) -> bool:
         return not self.unresolved
@@ -50,7 +103,7 @@ class ExtremeSustainedDPSWeaponEnchantmentWeaponSpellDamageResolution:
         active = tuple(
             window
             for window in self.windows
-            if window.active_at(float(time_seconds))
+            if window.active_at(time_seconds)
         )
         if not active:
             return ()
