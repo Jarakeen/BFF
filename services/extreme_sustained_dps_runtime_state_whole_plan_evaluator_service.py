@@ -78,6 +78,14 @@ class ExtremeSustainedDPSRuntimeStateWholePlanEvaluator:
             initial_bar=self.scenario.initial_bar,
         )
 
+        mechanic_complete = getattr(result, "mechanic_complete", None)
+        if not isinstance(mechanic_complete, bool):
+            raise TypeError("runtime-state whole-plan mechanic_complete must be boolean")
+        if not isinstance(choice.unresolved, tuple):
+            raise TypeError("runtime-state whole-plan choice unresolved must be a tuple")
+        if not isinstance(result.unresolved, tuple):
+            raise TypeError("runtime-state whole-plan result unresolved must be a tuple")
+
         record = result.record
         return ExtremeSustainedDPSWholePlanEvaluation(
             choice_id=choice.runtime_state_id,
@@ -85,7 +93,7 @@ class ExtremeSustainedDPSRuntimeStateWholePlanEvaluator:
             duration_seconds=(
                 None if record is None else float(record.duration_seconds)
             ),
-            mechanic_complete=bool(result.mechanic_complete and not choice.unresolved),
+            mechanic_complete=mechanic_complete and not choice.unresolved,
             unresolved=tuple(
                 dict.fromkeys(
                     (
