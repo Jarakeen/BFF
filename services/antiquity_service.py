@@ -3,8 +3,13 @@ from __future__ import annotations
 """Profile-aware Antiquities catalog harvested from the UESP antiquityLeads export."""
 
 import csv
+import copy
 import json
+import os
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+from services.antiquity_progress_pydantic_schema import validate_antiquity_progress_document
 
 
 _FIELDS = (
@@ -114,24 +119,43 @@ class AntiquityService:
 
         if self.progress_path.exists():
             try:
-                payload = json.loads(self.progress_path.read_text(encoding="utf-8"))
-                profiles = payload.get("profiles") if isinstance(payload, dict) else {}
-                if isinstance(profiles, dict):
-                    self._progress = {
-                        str(profile): dict(entries or {})
-                        for profile, entries in profiles.items()
-                        if str(profile).strip() and isinstance(entries, dict)
-                    }
-            except (OSError, ValueError, TypeError):
-                self._progress = {}
+                payload = validate_antiquity_progress_document(
+                    json.loads(self.progress_path.read_text(encoding="utf-8"))
+                )
+                self._progress = {
+                    str(profile): dict(entries)
+                    for profile, entries in payload["profiles"].items()
+                }
+            except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+                raise RuntimeError(f"Antiquity progress failed to load safely: {exc}") from exc
         self._progress.setdefault(self.DEFAULT_PROFILE, {})
 
     def _save_progress(self) -> None:
+        payload = validate_antiquity_progress_document(
+            {"schema_version": 1, "profiles": self._progress}
+        )
         self.progress_path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self.progress_path.with_suffix(self.progress_path.suffix + ".tmp")
-        payload = {"schema_version": 1, "profiles": self._progress}
-        tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-        tmp.replace(self.progress_path)
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile(
+                "w", encoding="utf-8", dir=self.progress_path.parent,
+                prefix=f".{self.progress_path.name}.", suffix=".tmp", delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                json.dump(payload, handle, indent=2, ensure_ascii=False)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.progress_path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+        read_back = validate_antiquity_progress_document(
+            json.loads(self.progress_path.read_text(encoding="utf-8"))
+        )
+        if read_back != payload:
+            raise RuntimeError("Antiquity progress did not round-trip exactly")
 
     def profiles(self) -> list[str]:
         names = sorted(self._progress, key=str.casefold)
@@ -200,23 +224,30 @@ class AntiquityService:
         if antiquity_id not in self._by_id:
             raise KeyError(f"Unknown antiquity ID: {antiquity_id}")
         profile = self.ensure_profile(self._active_profile)
+        before = copy.deepcopy(self._progress)
         self._progress[profile][str(antiquity_id)] = {
             "recovered": bool(recovered),
             "recovered_on": str(recovered_on or "").strip(),
             "notes": str(notes or "").strip(),
         }
-        self._save_progress()
+        try:
+            self._save_progress()
+        except Exception:
+            self._progress = before
+            raise
 
     def set_recovered_batch(self, recovered_by_id: dict[int, bool]) -> int:
         if not recovered_by_id:
             return 0
+        unknown = sorted(int(raw_id) for raw_id in recovered_by_id if int(raw_id) not in self._by_id)
+        if unknown:
+            raise KeyError(f"Unknown antiquity IDs: {unknown}")
         profile = self.ensure_profile(self._active_profile)
+        before = copy.deepcopy(self._progress)
         entries = self._progress[profile]
         count = 0
         for raw_id, recovered in recovered_by_id.items():
             antiquity_id = int(raw_id)
-            if antiquity_id not in self._by_id:
-                continue
             key = str(antiquity_id)
             existing = dict(entries.get(key) or {})
             existing["recovered"] = bool(recovered)
@@ -224,7 +255,11 @@ class AntiquityService:
             existing.setdefault("notes", "")
             entries[key] = existing
             count += 1
-        self._save_progress()
+        try:
+            self._save_progress()
+        except Exception:
+            self._progress = before
+            raise
         return count
 
     def close(self) -> None:
