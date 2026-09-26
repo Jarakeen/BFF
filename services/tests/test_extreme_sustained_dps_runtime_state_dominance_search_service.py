@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from types import SimpleNamespace
 
 from services.extreme_sustained_dps_finite_whole_plan_dominance_service import (
@@ -83,3 +85,38 @@ def test_open_runtime_family_cannot_promote_numeric_ceiling() -> None:
 
     assert result.axis_coverage.dominated_axes == ()
     assert result.bound.proven_safe is False
+
+
+def test_runtime_state_adapter_rejects_boolean_index() -> None:
+    service = ExtremeSustainedDPSRuntimeStateDominanceSearchService(
+        ".",
+        scenario=SimpleNamespace(plan=SimpleNamespace(duration_seconds=20.0)),
+        evaluator=_Evaluator(
+            {
+                "base": _row("base", 100.0),
+                "buffed": _row("buffed", 140.0),
+            }
+        ),
+    )
+
+    from services.extreme_sustained_dps_runtime_state_dominance_search_service import (
+        _RuntimeStateWholePlanAdapter,
+    )
+
+    adapter = _RuntimeStateWholePlanAdapter(_frontier())
+    with pytest.raises(TypeError, match="choice index must be an integer"):
+        adapter.choice_at(True)
+
+
+def test_runtime_state_adapter_preserves_strict_frontier_proof_types() -> None:
+    from dataclasses import replace
+    from services.extreme_sustained_dps_runtime_state_dominance_search_service import (
+        _RuntimeStateWholePlanAdapter,
+    )
+
+    frontier = _frontier()
+    bad = replace(frontier, denominator_proven="true")  # type: ignore[arg-type]
+    adapter = _RuntimeStateWholePlanAdapter(bad)
+
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        _ = adapter.denominator_proven
