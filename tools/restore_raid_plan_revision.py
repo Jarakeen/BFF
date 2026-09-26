@@ -11,7 +11,7 @@ restore.
 import argparse
 import json
 import sqlite3
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
@@ -44,6 +44,11 @@ class RevisionCandidate:
     @property
     def members(self) -> tuple[dict, ...]:
         rows = self.payload.get("members", [])
+        return tuple(row for row in rows if isinstance(row, dict))
+
+    @property
+    def coverage_providers(self) -> tuple[dict, ...]:
+        rows = self.payload.get("coverage_providers", [])
         return tuple(row for row in rows if isinstance(row, dict))
 
 
@@ -244,6 +249,39 @@ def restore_candidate(database_path: Path, candidate: RevisionCandidate) -> Path
     return snapshot
 
 
+def restore_coverage_candidate(
+    database_path: Path,
+    candidate: RevisionCandidate,
+) -> Path | None:
+    repository = RaidPlanRepository(database_path)
+    current = repository.get(candidate.plan_id)
+    if current is None:
+        raise RuntimeError(
+            "Current Raid Plan does not exist; Coverage-only restore requires a current plan."
+        )
+
+    recovered = repository._decode_plan(candidate.payload)
+    if not recovered.coverage_providers:
+        raise RuntimeError(
+            "Selected Raid Plan revision has no manual Coverage providers to restore."
+        )
+
+    snapshot = UserSafetySnapshotService(database_path=database_path).create(
+        f"before-raid-plan-coverage-revision-restore-{candidate.plan_id}"
+    )
+    updated = replace(
+        current,
+        coverage_providers=recovered.coverage_providers,
+    )
+    repository.save(updated, expected=current)
+    persisted = repository.get(updated.plan_id)
+    if persisted is None or persisted.coverage_providers != recovered.coverage_providers:
+        raise RuntimeError(
+            "Restored Raid Plan Coverage failed canonical read-back verification."
+        )
+    return snapshot
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Restore the newest Raid Plan revision matching known-good roster conditions."
@@ -293,6 +331,11 @@ def main() -> int:
         help="Preview or restore one exact raid_plan_revision revision_id.",
     )
     parser.add_argument(
+        "--coverage-only",
+        action="store_true",
+        help="Restore only manual Coverage providers from the selected revision, preserving the current Raid Plan roster, assignments, Builds, and other fields.",
+    )
+    parser.add_argument(
         "--apply",
         action="store_true",
         help="Actually restore the matched revision. Without this flag, only preview it.",
@@ -325,6 +368,7 @@ def main() -> int:
                 f"{row.name} [{row.plan_id}]"
             )
             print(_seat_summary(row))
+            print(f"  manual Coverage providers: {len(row.coverage_providers)}")
         return 0
 
     if args.revision_id is not None:
@@ -358,16 +402,26 @@ def main() -> int:
         f"from {candidate.timestamp}: {candidate.name} [{candidate.plan_id}]"
     )
     print(_seat_summary(candidate))
+    print(f"Manual Coverage providers in revision: {len(candidate.coverage_providers)}")
 
     if not args.apply:
-        print("\nPreview only. Re-run with --apply to restore this Raid Plan.")
+        mode = "Coverage only" if args.coverage_only else "entire Raid Plan"
+        print(f"\nPreview only. Restore mode: {mode}. Re-run with --apply to apply.")
         return 0
 
-    snapshot = restore_candidate(database, candidate)
-    print(f"\nRestored Raid Plan: {candidate.name}")
+    if args.coverage_only:
+        snapshot = restore_coverage_candidate(database, candidate)
+        print(
+            f"\nRestored {len(candidate.coverage_providers)} manual Coverage provider(s) "
+            f"to current Raid Plan: {candidate.name}"
+        )
+        print("Roster, assignments, Builds, notes, and all other current Raid Plan fields were preserved.")
+    else:
+        snapshot = restore_candidate(database, candidate)
+        print(f"\nRestored Raid Plan: {candidate.name}")
+        print("Only this Raid Plan was restored. Other user data was left untouched.")
     if snapshot is not None:
         print(f"Safety snapshot: {snapshot}")
-    print("Only this Raid Plan was restored. Other user data was left untouched.")
     return 0
 
 
