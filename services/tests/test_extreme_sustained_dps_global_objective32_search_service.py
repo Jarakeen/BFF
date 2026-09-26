@@ -15,6 +15,9 @@ from services.extreme_sustained_dps_generated_branch_and_bound_search_service im
 from services.extreme_sustained_dps_generated_axis_inventory_service import (
     ExtremeSustainedDPSGeneratedAxisInventory,
 )
+from services.extreme_sustained_dps_closure_inventory_service import (
+    ExtremeSustainedDPSClosureInventory,
+)
 from services.extreme_sustained_dps_global_objective32_search_service import (
     ExtremeSustainedDPSGlobalObjective32SearchResult,
     ExtremeSustainedDPSGlobalObjective32SearchService,
@@ -124,12 +127,12 @@ def _remaining_without_runtime():
 
 
 def _closed_closure_inventory():
-    return SimpleNamespace(
-        closure_ready=True,
+    return ExtremeSustainedDPSClosureInventory(
         source_data_blockers=(),
         math_review_blockers=(),
         mechanics_blockers=(),
         mechanics_advisories=(),
+        evidence=("synthetic fully closed Objective #32 mechanics inventory",),
     )
 
 def _runtime_frontier(*, omitted_scope=()):
