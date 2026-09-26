@@ -118,3 +118,75 @@ def test_unresolved_runtime_result_stays_unresolved() -> None:
     assert result.modeled_dps is None
     assert result.mechanic_complete is False
     assert result.unresolved == ("runtime proc unresolved",)
+
+
+def test_generated_whole_plan_requires_strict_mechanic_complete() -> None:
+    class _TruthyRuntime:
+        def evaluate(self, build, **kwargs):
+            return SimpleNamespace(
+                record=None,
+                mechanic_complete=1,
+                unresolved=(),
+            )
+
+    scenario = SimpleNamespace(
+        build=object(),
+        progression=object(),
+        gear_state=object(),
+        runtime_snapshot=object(),
+        target_health=100000,
+        target_resistance=18200.0,
+        target_name="Boss",
+    )
+    choice = SimpleNamespace(
+        identity="strict",
+        plan=SimpleNamespace(duration_seconds=10.0),
+        starting_bar="front",
+    )
+    evaluator = ExtremeSustainedDPSGeneratedWholePlanChoiceEvaluator(
+        runtime_service=_TruthyRuntime(),
+        scenario=scenario,
+        choice_id_resolver=lambda row: row.identity,
+        plan_resolver=lambda row: row.plan,
+        initial_bar_resolver=lambda row: row.starting_bar,
+    )
+
+    import pytest
+    with pytest.raises(TypeError, match="mechanic_complete must be boolean"):
+        evaluator.evaluate(choice)
+
+
+def test_generated_whole_plan_requires_tuple_unresolved_evidence() -> None:
+    class _MutableRuntime:
+        def evaluate(self, build, **kwargs):
+            return SimpleNamespace(
+                record=None,
+                mechanic_complete=False,
+                unresolved=[],
+            )
+
+    scenario = SimpleNamespace(
+        build=object(),
+        progression=object(),
+        gear_state=object(),
+        runtime_snapshot=object(),
+        target_health=100000,
+        target_resistance=18200.0,
+        target_name="Boss",
+    )
+    choice = SimpleNamespace(
+        identity="strict",
+        plan=SimpleNamespace(duration_seconds=10.0),
+        starting_bar="front",
+    )
+    evaluator = ExtremeSustainedDPSGeneratedWholePlanChoiceEvaluator(
+        runtime_service=_MutableRuntime(),
+        scenario=scenario,
+        choice_id_resolver=lambda row: row.identity,
+        plan_resolver=lambda row: row.plan,
+        initial_bar_resolver=lambda row: row.starting_bar,
+    )
+
+    import pytest
+    with pytest.raises(TypeError, match="unresolved evidence must be a tuple"):
+        evaluator.evaluate(choice)
