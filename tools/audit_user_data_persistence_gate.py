@@ -14,8 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.config import get_user_database_path
-from services.build_catalog_service import BuildCatalogService
-from services.raid_plan_repository import RaidPlanRepository
+from services.raid_plan_pydantic_schema import validate_raid_plan_payload
 from services.user_build_catalog_pydantic_schema import validate_user_build_catalog_payload
 
 
@@ -52,25 +51,46 @@ def main(argv: list[str] | None = None) -> int:
     if missing:
         raise RuntimeError(f"Missing canonical user-data table(s): {', '.join(missing)}")
 
-    catalog = BuildCatalogService(path).load_strict()
-    validate_user_build_catalog_payload(catalog)
-
-    raid_plans = RaidPlanRepository(path).list_plans()
-    with sqlite3.connect(path) as db:
+    uri = f"file:{path.resolve().as_posix()}?mode=ro"
+    with sqlite3.connect(uri, uri=True) as db:
         db.row_factory = sqlite3.Row
+        catalog_row = db.execute(
+            "SELECT payload_json FROM build_catalog WHERE singleton_id = 1"
+        ).fetchone()
+        if catalog_row is None:
+            raise RuntimeError("Canonical Build catalog row is missing")
+        try:
+            catalog = validate_user_build_catalog_payload(
+                json.loads(str(catalog_row["payload_json"] or ""))
+            )
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise RuntimeError(f"Canonical Build catalog failed strict validation: {exc}") from exc
+
+        raid_rows = db.execute(
+            "SELECT plan_id, payload_json FROM raid_plan ORDER BY plan_id COLLATE NOCASE"
+        ).fetchall()
+        raid_plans = []
+        for row in raid_rows:
+            try:
+                payload = validate_raid_plan_payload(
+                    json.loads(str(row["payload_json"] or ""))
+                )
+            except (json.JSONDecodeError, TypeError, ValueError) as exc:
+                raise RuntimeError(
+                    f"Raid Plan {row['plan_id']!r} failed strict validation: {exc}"
+                ) from exc
+            if str(payload.get("plan_id") or "").casefold() != str(row["plan_id"] or "").casefold():
+                raise RuntimeError(
+                    f"Raid Plan row identity does not match payload: {row['plan_id']!r}"
+                )
+            raid_plans.append(payload)
+
         members = db.execute(
             "SELECT id, player_name, character_name FROM roster_member ORDER BY id"
         ).fetchall()
         teams = db.execute(
             "SELECT id, name FROM team ORDER BY name COLLATE NOCASE"
         ).fetchall()
-
-    # list_plans/get exercise the strict Raid Plan Pydantic read boundary for every
-    # persisted plan rather than trusting list metadata alone.
-    for summary in raid_plans:
-        loaded = RaidPlanRepository(path).get(summary.plan_id)
-        if loaded is None:
-            raise RuntimeError(f"Raid Plan {summary.plan_id!r} disappeared during audit")
 
     after = _digest(path)
     if after != before:
