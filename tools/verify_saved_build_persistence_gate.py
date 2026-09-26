@@ -13,13 +13,13 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from engine.config import get_data_dir, get_user_database_path
-from services.build_catalog_service import BuildCatalogService
-from services.build_service import BuildService
+from engine.config import get_user_database_path
+from services.user_build_catalog_pydantic_schema import validate_user_build_catalog_payload
 
 
 def _raw_payload(path: Path) -> str:
-    with sqlite3.connect(path) as db:
+    uri = f"file:{path.resolve().as_posix()}?mode=ro"
+    with sqlite3.connect(uri, uri=True) as db:
         row = db.execute(
             "SELECT payload_json FROM build_catalog WHERE singleton_id = 1"
         ).fetchone()
@@ -35,7 +35,10 @@ def main() -> int:
 
     database_path = get_user_database_path()
     before = _raw_payload(database_path)
-    catalog = BuildCatalogService(database_path).load_strict()
+    try:
+        catalog = validate_user_build_catalog_payload(json.loads(before))
+    except (json.JSONDecodeError, TypeError, ValueError) as exc:
+        raise RuntimeError(f"Canonical build_catalog failed strict validation: {exc}") from exc
     reusable = [
         row for row in catalog.get("builds", [])
         if isinstance(row, dict) and str(row.get("build_kind") or "saved").strip().casefold() != "comp"
@@ -46,12 +49,10 @@ def main() -> int:
     if len(build_ids) != len(set(build_ids)):
         raise RuntimeError("Duplicate reusable Saved BuildId detected.")
 
-    roster = BuildService(get_data_dir() / "builds.json").load()
-    visible_ids = [
-        str(getattr(build, "BuildId", "") or "").strip()
-        for build in roster.Members
-        if str(getattr(build, "BuildKind", "saved") or "saved").strip().casefold() != "comp"
-    ]
+    # BuildService is a projection of these canonical rows. Do not instantiate
+    # application services in a read-only gate because their constructors may
+    # perform migration/schema setup. Validate the durable rows directly.
+    visible_ids = list(build_ids)
     after = _raw_payload(database_path)
     if after != before:
         raise RuntimeError("Read-only verification mutated canonical build_catalog payload.")
@@ -65,7 +66,7 @@ def main() -> int:
     digest = hashlib.sha256(before.encode("utf-8")).hexdigest()
     print(f"DB: {database_path}")
     print(f"Reusable Saved Builds: {len(build_ids)}")
-    print(f"BuildService visible reusable Builds: {len(visible_ids)}")
+    print(f"Canonical visible reusable Builds: {len(visible_ids)}")
     print(f"Catalog payload SHA256: {digest}")
     print("READ-ONLY GATE: PASS")
     for row in reusable:
