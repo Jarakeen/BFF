@@ -1,7 +1,12 @@
 from pathlib import Path
 from types import SimpleNamespace
 
-from models.raid_plan import RaidPlan, RaidPlanMember, RaidPlanTriggeredResponsibility
+from models.raid_plan import (
+    RaidPlan,
+    RaidPlanCoverageProvider,
+    RaidPlanMember,
+    RaidPlanTriggeredResponsibility,
+)
 from services.raid_plan_repository import RaidPlanRepository
 from ui import raid_plan_persistence_page
 from ui.raid_plan_persistence_page import merge_visible_plan_with_loaded_snapshot
@@ -589,3 +594,45 @@ def test_planning_pages_reload_latest_saved_plan_on_entry() -> None:
     assert "def showEvent(self, event) -> None:" in source
     assert "latest = self.plan_repository.get(loaded.plan_id)" in source
     assert "self.apply_plan(latest)" in source
+
+
+def test_save_merge_preserves_hidden_coverage_overlay() -> None:
+    provider = RaidPlanCoverageProvider(
+        effect_name="Minor Berserk",
+        seat_id="healer-1",
+        source="Combat Prayer",
+        note="Recovered from revision 160",
+    )
+    loaded = RaidPlan(
+        plan_id="core-team",
+        trial_id="sunspire",
+        name="Core Team",
+        members=(
+            RaidPlanMember(
+                seat_id="healer-1",
+                gamertag="Jarakeen",
+                role="Healer",
+                eso_class="Warden",
+            ),
+        ),
+        coverage_providers=(provider,),
+    )
+    visible = RaidPlan(
+        plan_id="core-team",
+        trial_id="sunspire",
+        name="Core Team",
+        difficulty="Veteran Hardmode",
+        members=(
+            RaidPlanMember(
+                seat_id="healer-1",
+                gamertag="Jarakeen",
+                role="Healer",
+                eso_class="Warden",
+            ),
+        ),
+    )
+
+    merged = merge_visible_plan_with_loaded_snapshot(visible, loaded)
+
+    assert merged.difficulty == "Veteran Hardmode"
+    assert merged.coverage_providers == (provider,)
