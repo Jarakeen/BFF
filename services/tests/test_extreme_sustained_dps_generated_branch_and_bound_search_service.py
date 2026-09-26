@@ -374,3 +374,59 @@ def test_exact_leaf_requires_tuple_evidence_collections() -> None:
             mechanic_complete=True,
             evidence=["mutable"],
         )
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    (
+        ("modeled_dps", "10", "modeled_dps must be numeric"),
+        ("duration_seconds", "10", "duration must be numeric"),
+    ),
+)
+def test_exact_leaf_rejects_coerced_numeric_evidence(field, value, match) -> None:
+    kwargs = {
+        "candidate_key": "leaf",
+        "modeled_dps": 10.0,
+        "duration_seconds": 10.0,
+        "mechanic_complete": True,
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=match):
+        ExtremeSustainedDPSExactLeafEvaluation(**kwargs)
+
+
+def test_generated_search_rejects_string_duration_input() -> None:
+    with pytest.raises(TypeError, match="search duration must be numeric"):
+        ExtremeSustainedDPSGeneratedBranchAndBoundSearchService.search(
+            (_branch("leaf", 10.0, leaf=True),),
+            expand_branch=lambda _branch: (),
+            evaluate_leaf=_leaf_eval({"leaf": 10.0}),
+            required_duration_seconds="10",  # type: ignore[arg-type]
+        )
+
+
+def test_generated_search_result_rejects_coerced_best_dps() -> None:
+    leaf = ExtremeSustainedDPSExactLeafEvaluation(
+        candidate_key="leaf",
+        modeled_dps=10.0,
+        duration_seconds=10.0,
+        mechanic_complete=True,
+    )
+
+    with pytest.raises(TypeError, match="best_modeled_dps must be numeric"):
+        ExtremeSustainedDPSGeneratedSearchResult(
+            best_modeled_dps="10",  # type: ignore[arg-type]
+            best_candidates=(leaf,),
+            unique_leader=leaf,
+            evaluated_leaves=(leaf,),
+            visited_branch_count=1,
+            expanded_branch_count=0,
+            evaluated_leaf_count=1,
+            pruned_branch_count=0,
+            forced_open_branch_count=0,
+            global_maximum_proven=True,
+            unique_leader_proven=True,
+            evidence=(),
+            unresolved=(),
+        )
