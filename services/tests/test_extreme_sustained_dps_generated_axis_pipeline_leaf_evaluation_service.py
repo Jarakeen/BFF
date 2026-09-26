@@ -289,3 +289,116 @@ def test_leaf_evaluation_rejects_boolean_numeric_inputs(field, value, message) -
 
     with pytest.raises(TypeError, match=message):
         service.evaluate(_node(), **values)
+
+
+@pytest.mark.parametrize(
+    "field,value,message",
+    (
+        ("target_health", "100", "target health must be an integer"),
+        ("target_resistance", "0", "target resistance must be numeric"),
+        ("target_name", 7, "target_name must be a string"),
+        ("initial_bar", 1, "initial_bar must be a string"),
+    ),
+)
+def test_leaf_evaluation_rejects_coerced_scalar_inputs(field, value, message) -> None:
+    runtime = _RuntimeEvaluation(_runtime_result())
+    service = ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService(
+        runtime_evaluation=runtime,
+    )
+    values = {
+        "runtime_snapshot": "snapshot",
+        "target_health": 100,
+        "target_resistance": 0.0,
+        "target_name": "Boss",
+        "initial_bar": "front",
+    }
+    values[field] = value
+
+    with pytest.raises(TypeError, match=message):
+        service.evaluate(_node(), **values)
+
+
+def test_leaf_evaluation_rejects_invalid_scalar_ranges() -> None:
+    runtime = _RuntimeEvaluation(_runtime_result())
+    service = ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService(
+        runtime_evaluation=runtime,
+    )
+
+    with pytest.raises(ValueError, match="target health must be positive"):
+        service.evaluate(
+            _node(),
+            runtime_snapshot="snapshot",
+            target_health=0,
+            target_resistance=0.0,
+        )
+
+    with pytest.raises(ValueError, match="target resistance must be finite and non-negative"):
+        service.evaluate(
+            _node(),
+            runtime_snapshot="snapshot",
+            target_health=100,
+            target_resistance=float("inf"),
+        )
+
+    with pytest.raises(ValueError, match="initial_bar must be front or back"):
+        service.evaluate(
+            _node(),
+            runtime_snapshot="snapshot",
+            target_health=100,
+            target_resistance=0.0,
+            initial_bar="middle",
+        )
+
+
+def test_runtime_state_choice_requires_tuple_unresolved_and_effects() -> None:
+    runtime = _RuntimeEvaluation(_runtime_result())
+    service = ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService(
+        runtime_evaluation=runtime,
+    )
+    base = _node()
+
+    malformed_unresolved = SimpleNamespace(
+        unresolved=["gap"],
+        snapshot="snapshot",
+        evidence=(),
+        effects=(),
+    )
+    node = ExtremeSustainedDPSGeneratedFrontierNode(
+        candidate_key="candidate:bad-unresolved",
+        state=SimpleNamespace(
+            **base.state.__dict__,
+            runtime_state_choice=malformed_unresolved,
+        ),
+        coordinates=base.coordinates,
+        evidence=base.evidence,
+    )
+    with pytest.raises(TypeError, match="unresolved evidence must be a tuple"):
+        service.evaluate(
+            node,
+            runtime_snapshot="snapshot",
+            target_health=100,
+            target_resistance=0.0,
+        )
+
+    malformed_effects = SimpleNamespace(
+        unresolved=(),
+        snapshot="snapshot",
+        evidence=(),
+        effects=[],
+    )
+    node = ExtremeSustainedDPSGeneratedFrontierNode(
+        candidate_key="candidate:bad-effects",
+        state=SimpleNamespace(
+            **base.state.__dict__,
+            runtime_state_choice=malformed_effects,
+        ),
+        coordinates=base.coordinates,
+        evidence=base.evidence,
+    )
+    with pytest.raises(TypeError, match="effects must be a tuple"):
+        service.evaluate(
+            node,
+            runtime_snapshot="snapshot",
+            target_health=100,
+            target_resistance=0.0,
+        )
