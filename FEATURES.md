@@ -778,3 +778,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Extreme same-tree proof promotion hardening** — canonical generated-tree coverage now requires an actual boolean finite-maximum proof before physically searched mutation axes can be promoted into Objective #32 coverage. Truthy strings can no longer turn an unresolved generated tree into same-denominator coverage evidence.
 
 - **Extreme pruning-proof hardening** — action-dominance proofs now require stable candidate identity, tuple-shaped dominated/required/unresolved collections, non-boolean finite numeric ceilings, and canonical occurrence/dominance records before exact action damage can become a pruning-safe optimistic bound. This closes Python bool-as-number and string-as-axis proof loopholes at the branch-and-bound boundary.
+
+- **Extreme branch-pruning evidence hardening** — pruning now accepts only tuple-shaped canonical bound evidence, while bound/decision/result diagnostics require immutable tuple collections before branch disposition is calculated. Duck-typed or mutable evidence can no longer reach the prune/survive/forced-open decision boundary.
