@@ -232,3 +232,34 @@ def test_blocker_report_requires_canonical_blocker_records() -> None:
             blockers=(object(),),
             evidence=(),
         )
+
+
+def test_blocker_assessment_rejects_mutable_search_unresolved_collection() -> None:
+    with pytest.raises(TypeError, match="search result unresolved must be a tuple"):
+        ExtremeSustainedDPSObjective32BlockerService.assess(
+            search_result=SimpleNamespace(
+                global_maximum_proven=True,
+                unresolved=[],
+            ),
+            axis_inventory=SimpleNamespace(
+                missing_canonical_axes=(),
+                duplicate_canonical_axes=(),
+                unresolved=(),
+            ),
+            axis_coverage=SimpleNamespace(
+                missing_axes=(),
+                unresolved=(),
+            ),
+            closure=SimpleNamespace(
+                omitted_scope=(),
+                unresolved=(),
+            ),
+        )
+
+
+def test_blocker_report_rejects_mutable_proof_collections() -> None:
+    with pytest.raises(TypeError, match="blockers must be a tuple"):
+        ExtremeSustainedDPSObjective32BlockerReport(
+            blockers=[],
+            evidence=(),
+        )
