@@ -239,3 +239,33 @@ def test_malformed_mechanics_blocker_collection_cannot_launder_proof() -> None:
         assert "source_data_blockers must be a tuple" in str(exc)
     else:
         raise AssertionError("malformed closure blocker collection must fail closed")
+
+
+def test_theoretical_closure_rejects_duck_typed_search_result() -> None:
+    malformed = type(
+        "SearchResult",
+        (),
+        {"global_maximum_proven": True, "best_modeled_dps": 150.0},
+    )()
+    try:
+        ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+            malformed,  # type: ignore[arg-type]
+            axis_coverage=_coverage(),
+        )
+    except TypeError as exc:
+        assert "canonical generated search result" in str(exc)
+    else:
+        raise AssertionError("duck-typed generated search result must fail closed")
+
+
+def test_theoretical_closure_rejects_non_tuple_manual_omitted_scope() -> None:
+    try:
+        ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+            _search(),
+            axis_coverage=_coverage(),
+            omitted_scope=["open timing"],  # type: ignore[arg-type]
+        )
+    except TypeError as exc:
+        assert "omitted_scope must be a tuple" in str(exc)
+    else:
+        raise AssertionError("non-tuple omitted scope must fail closed")
