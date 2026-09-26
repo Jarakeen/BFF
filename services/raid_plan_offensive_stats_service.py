@@ -66,6 +66,7 @@ class RaidPlanOffensiveStatRow:
     eso_class: str
     personal_critical_damage: float | None
     raid_critical_damage: float | None
+    uncapped_raid_critical_damage: float | None
     physical_penetration: float | None
     spell_penetration: float | None
     raid_armor_reduction: float
@@ -355,6 +356,7 @@ class RaidPlanOffensiveStatsService:
                         eso_class=_clean(member.eso_class),
                         personal_critical_damage=None,
                         raid_critical_damage=None,
+                        uncapped_raid_critical_damage=None,
                         physical_penetration=None,
                         spell_penetration=None,
                         raid_armor_reduction=raid_reduction,
@@ -421,10 +423,15 @@ class RaidPlanOffensiveStatsService:
                 )
 
             contributions.extend(raid_contributions)
-            combined_crit = (
+            uncapped_combined_crit = (
                 None
                 if personal_crit is None
-                else min(CRITICAL_DAMAGE_CAP, personal_crit + raid_crit_bonus + target_crit_bonus)
+                else personal_crit + raid_crit_bonus + target_crit_bonus
+            )
+            combined_crit = (
+                None
+                if uncapped_combined_crit is None
+                else min(CRITICAL_DAMAGE_CAP, uncapped_combined_crit)
             )
             effective_physical = None if physical is None else physical + raid_reduction
             effective_spell = None if spell is None else spell + raid_reduction
@@ -438,6 +445,7 @@ class RaidPlanOffensiveStatsService:
                     eso_class=_clean(member.eso_class or build.EsoClass),
                     personal_critical_damage=personal_crit,
                     raid_critical_damage=combined_crit,
+                    uncapped_raid_critical_damage=uncapped_combined_crit,
                     physical_penetration=physical,
                     spell_penetration=spell,
                     raid_armor_reduction=raid_reduction,
