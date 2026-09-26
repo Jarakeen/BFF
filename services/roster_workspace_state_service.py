@@ -18,6 +18,11 @@ import json
 
 from services.eso_database import EsoDatabase
 from services.user_database import user_database_for
+from services.roster_workspace_pydantic_schema import (
+    validate_recruitment_candidate,
+    validate_roster_archive,
+    validate_roster_availability,
+)
 
 
 _AVAILABILITY_STATES = frozenset({"available", "unavailable", "maybe", "late", "tentative", "unknown"})
@@ -195,39 +200,44 @@ class RosterWorkspaceStateService:
 
     def set_availability(self, value: MemberAvailability) -> None:
         item = value.normalized()
-        self.db.execute(
-            """
-            INSERT INTO roster_member_availability (
-                roster_member_id, monday, tuesday, wednesday, thursday,
-                friday, saturday, sunday, preferred_times, notes, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(roster_member_id) DO UPDATE SET
-                monday=excluded.monday,
-                tuesday=excluded.tuesday,
-                wednesday=excluded.wednesday,
-                thursday=excluded.thursday,
-                friday=excluded.friday,
-                saturday=excluded.saturday,
-                sunday=excluded.sunday,
-                preferred_times=excluded.preferred_times,
-                notes=excluded.notes,
-                updated_at=excluded.updated_at
-            """,
-            (
-                item.roster_member_id,
-                item.monday,
-                item.tuesday,
-                item.wednesday,
-                item.thursday,
-                item.friday,
-                item.saturday,
-                item.sunday,
-                item.preferred_times,
-                item.notes,
-                _now(),
-            ),
-        )
-        self.db.commit()
+        payload = validate_roster_availability({
+            "roster_member_id": item.roster_member_id,
+            "monday": item.monday, "tuesday": item.tuesday, "wednesday": item.wednesday,
+            "thursday": item.thursday, "friday": item.friday, "saturday": item.saturday,
+            "sunday": item.sunday, "preferred_times": item.preferred_times, "notes": item.notes,
+        })
+        db = self.db.connection
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            db.execute(
+                """INSERT INTO roster_member_availability (
+                    roster_member_id, monday, tuesday, wednesday, thursday, friday,
+                    saturday, sunday, preferred_times, notes, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(roster_member_id) DO UPDATE SET
+                    monday=excluded.monday, tuesday=excluded.tuesday,
+                    wednesday=excluded.wednesday, thursday=excluded.thursday,
+                    friday=excluded.friday, saturday=excluded.saturday,
+                    sunday=excluded.sunday, preferred_times=excluded.preferred_times,
+                    notes=excluded.notes, updated_at=excluded.updated_at""",
+                (payload["roster_member_id"], payload["monday"], payload["tuesday"],
+                 payload["wednesday"], payload["thursday"], payload["friday"],
+                 payload["saturday"], payload["sunday"], payload["preferred_times"],
+                 payload["notes"], _now()),
+            )
+            row = db.execute(
+                """SELECT roster_member_id, monday, tuesday, wednesday, thursday,
+                          friday, saturday, sunday, preferred_times, notes
+                   FROM roster_member_availability WHERE roster_member_id = ?""",
+                (payload["roster_member_id"],),
+            ).fetchone()
+            read_back = validate_roster_availability(dict(row)) if row is not None else None
+            if read_back != payload:
+                raise RuntimeError("Roster availability did not round-trip exactly")
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
 
     def list_recruits(self, *, include_archived: bool = False) -> tuple[RecruitmentCandidate, ...]:
         where = "" if include_archived else "WHERE status <> 'archived'"
@@ -268,52 +278,56 @@ class RosterWorkspaceStateService:
 
     def save_recruit(self, candidate: RecruitmentCandidate) -> int:
         item = candidate.normalized()
+        payload = validate_recruitment_candidate({
+            "id": item.id, "player_name": item.player_name,
+            "character_name": item.character_name, "desired_role": item.desired_role,
+            "eso_class": item.eso_class, "target_team": item.target_team,
+            "availability": item.availability, "status": item.status, "notes": item.notes,
+        })
         now = _now()
-        if item.id is None:
-            cursor = self.db.execute(
-                """
-                INSERT INTO roster_recruitment_candidate (
-                    player_name, character_name, desired_role, eso_class,
-                    target_team, availability, status, notes, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    item.player_name,
-                    item.character_name,
-                    item.desired_role,
-                    item.eso_class,
-                    item.target_team,
-                    item.availability,
-                    item.status,
-                    item.notes,
-                    now,
-                    now,
-                ),
-            )
-            self.db.commit()
-            return int(cursor.lastrowid)
-        self.db.execute(
-            """
-            UPDATE roster_recruitment_candidate
-            SET player_name=?, character_name=?, desired_role=?, eso_class=?,
-                target_team=?, availability=?, status=?, notes=?, updated_at=?
-            WHERE id=?
-            """,
-            (
-                item.player_name,
-                item.character_name,
-                item.desired_role,
-                item.eso_class,
-                item.target_team,
-                item.availability,
-                item.status,
-                item.notes,
-                now,
-                int(item.id),
-            ),
-        )
-        self.db.commit()
-        return int(item.id)
+        db = self.db.connection
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            if payload["id"] is None:
+                cursor = db.execute(
+                    """INSERT INTO roster_recruitment_candidate (
+                        player_name, character_name, desired_role, eso_class,
+                        target_team, availability, status, notes, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (payload["player_name"], payload["character_name"], payload["desired_role"],
+                     payload["eso_class"], payload["target_team"], payload["availability"],
+                     payload["status"], payload["notes"], now, now),
+                )
+                candidate_id = int(cursor.lastrowid)
+            else:
+                candidate_id = int(payload["id"])
+                cursor = db.execute(
+                    """UPDATE roster_recruitment_candidate
+                       SET player_name=?, character_name=?, desired_role=?, eso_class=?,
+                           target_team=?, availability=?, status=?, notes=?, updated_at=?
+                       WHERE id=?""",
+                    (payload["player_name"], payload["character_name"], payload["desired_role"],
+                     payload["eso_class"], payload["target_team"], payload["availability"],
+                     payload["status"], payload["notes"], now, candidate_id),
+                )
+                if cursor.rowcount != 1:
+                    raise ValueError(f"recruitment candidate {candidate_id} does not exist")
+            row = db.execute(
+                """SELECT id, player_name, character_name, desired_role, eso_class,
+                          target_team, availability, status, notes
+                   FROM roster_recruitment_candidate WHERE id=?""",
+                (candidate_id,),
+            ).fetchone()
+            expected = dict(payload)
+            expected["id"] = candidate_id
+            read_back = validate_recruitment_candidate(dict(row)) if row is not None else None
+            if read_back != expected:
+                raise RuntimeError("Recruitment candidate did not round-trip exactly")
+            db.commit()
+            return candidate_id
+        except Exception:
+            db.rollback()
+            raise
 
     def set_recruit_status(self, candidate_id: int, status: str) -> None:
         key = _clean(status).casefold()
