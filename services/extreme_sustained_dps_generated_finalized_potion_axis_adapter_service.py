@@ -314,8 +314,18 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
                 ),
             )
         )
-        if not resource_observations.denominator_proven:
-            detail = "; ".join(resource_observations.unresolved)
+        resource_proven = getattr(resource_observations, "denominator_proven", None)
+        if not isinstance(resource_proven, bool):
+            raise TypeError(
+                "finalized potion resource observation denominator proof flag must be boolean"
+            )
+        resource_unresolved = getattr(resource_observations, "unresolved", ())
+        if not isinstance(resource_unresolved, tuple):
+            raise TypeError(
+                "finalized potion resource observation unresolved evidence must be a tuple"
+            )
+        if not resource_proven:
+            detail = "; ".join(resource_unresolved)
             raise ValueError(
                 "finalized potion resource observation denominator is unresolved"
                 + (f": {detail}" if detail else "")
@@ -333,13 +343,32 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
             ),
             resource_observation_denominator_proven=True,
         )
-        if not denominator.denominator_proven:
-            detail = "; ".join(denominator.unresolved)
+        denominator_proven = getattr(denominator, "denominator_proven", None)
+        if not isinstance(denominator_proven, bool):
+            raise TypeError(
+                "finalized potion timing denominator proof flag must be boolean"
+            )
+        denominator_unresolved = getattr(denominator, "unresolved", ())
+        if not isinstance(denominator_unresolved, tuple):
+            raise TypeError(
+                "finalized potion timing denominator unresolved evidence must be a tuple"
+            )
+        if not denominator_proven:
+            detail = "; ".join(denominator_unresolved)
             raise ValueError(
                 "finalized potion timing denominator is unresolved"
                 + (f": {detail}" if detail else "")
             )
-        if not denominator.breakpoint_frontier.full_potion_timing_closed:
+        timing_closed = getattr(
+            denominator.breakpoint_frontier,
+            "full_potion_timing_closed",
+            None,
+        )
+        if not isinstance(timing_closed, bool):
+            raise TypeError(
+                "finalized potion breakpoint closure flag must be boolean"
+            )
+        if not timing_closed:
             raise ValueError(
                 "finalized potion timing denominator did not close named-buff and restoration timing"
             )
@@ -400,7 +429,9 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
         index: int,
     ) -> ExtremeSustainedDPSGeneratedFinalizedPotionAxisState:
         policies = self._policies(state)
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("finalized potion timing policy index must be an integer")
+        target = index
         if target < 0 or target >= len(policies):
             raise IndexError("finalized potion timing policy index out of range")
         policy = policies[target]
