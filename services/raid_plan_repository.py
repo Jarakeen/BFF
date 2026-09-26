@@ -157,6 +157,7 @@ class RaidPlanRepository:
     def save(
         self, plan: RaidPlan, *, expected: RaidPlan | None = None,
         must_be_new: bool = False,
+        allow_coverage_clear: bool = False,
     ) -> RaidPlan:
         if not isinstance(plan, RaidPlan):
             raise TypeError("plan must be a RaidPlan")
@@ -176,16 +177,15 @@ class RaidPlanRepository:
                     )
 
                 # Coverage is a Raid-Plan-owned overlay edited on a different screen.
-                # Older/stale page models may not carry it. Never let a generic
-                # last-writer save erase that overlay merely because its local plan
-                # snapshot has an empty/default collection. An intentional Coverage
-                # removal supplies an optimistic expected snapshot and is therefore
-                # allowed to clear the collection.
+                # Older/stale page models may not carry it. Never let any ordinary
+                # Raid Plan save erase that overlay merely because its local plan
+                # snapshot has an empty/default collection. Explicit Coverage removal
+                # must opt in with allow_coverage_clear=True.
                 existing_plan = None
                 if existing is not None:
                     existing_plan = self._decode_plan(json.loads(str(existing["payload_json"])))
                     if (
-                        expected is None
+                        not allow_coverage_clear
                         and existing_plan.coverage_providers
                         and not plan.coverage_providers
                     ):
@@ -267,7 +267,7 @@ class RaidPlanRepository:
             None,
         )
         if (
-            expected is None
+            not allow_coverage_clear
             and prior_plan is not None
             and prior_plan.coverage_providers
             and not plan.coverage_providers
