@@ -67,10 +67,6 @@ class ExtremeSustainedDPSGeneratedAxisInventory:
             raise ValueError(
                 "generated axis inventory missing axes cannot also be searched"
             )
-        if self.untagged_axis_names and not self.unresolved:
-            raise ValueError(
-                "generated axis inventory untagged axes require unresolved evidence"
-            )
 
 
 class ExtremeSustainedDPSGeneratedAxisInventoryService:
