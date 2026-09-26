@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from dataclasses import dataclass, replace
 
 from services.extreme_sustained_dps_generated_axis_pipeline_search_service import (
@@ -170,3 +172,66 @@ def test_appends_proven_local_runtime_family_as_terminal_search_axis() -> None:
     assert result.evaluated_leaf_count == 4
     assert result.best_modeled_dps == 1.0
     assert result.global_maximum_proven is True
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    (
+        ("required_duration_seconds", "10", "required_duration_seconds must be numeric"),
+        ("target_health", True, "target_health must be an integer"),
+        ("target_resistance", "18200", "target_resistance must be numeric"),
+        ("target_name", "", "target_name must be a non-empty string"),
+        ("initial_bar", 1, "initial_bar must be a string"),
+        ("root_key", "", "root_key must be a non-empty string"),
+    ),
+)
+def test_pipeline_search_rejects_coerced_scalar_inputs(field, value, match) -> None:
+    service = ExtremeSustainedDPSGeneratedAxisPipelineSearchService(
+        pipeline=_Pipeline(),
+        leaf_evaluation=_LeafEvaluation(),
+    )
+    kwargs = {
+        "required_duration_seconds": 10.0,
+        "runtime_snapshot": "snapshot",
+        "target_health": 100,
+        "target_resistance": 0.0,
+    }
+    kwargs[field] = value
+
+    with pytest.raises((TypeError, ValueError), match=match):
+        service.search(_State(), **kwargs)
+
+
+def test_pipeline_search_rejects_invalid_scalar_ranges() -> None:
+    service = ExtremeSustainedDPSGeneratedAxisPipelineSearchService(
+        pipeline=_Pipeline(),
+        leaf_evaluation=_LeafEvaluation(),
+    )
+
+    with pytest.raises(ValueError, match="required_duration_seconds must be finite and positive"):
+        service.search(
+            _State(),
+            required_duration_seconds=0.0,
+            runtime_snapshot="snapshot",
+            target_health=100,
+            target_resistance=0.0,
+        )
+
+    with pytest.raises(ValueError, match="target_health must be positive"):
+        service.search(
+            _State(),
+            required_duration_seconds=10.0,
+            runtime_snapshot="snapshot",
+            target_health=0,
+            target_resistance=0.0,
+        )
+
+    with pytest.raises(ValueError, match="initial_bar must be 'front' or 'back'"):
+        service.search(
+            _State(),
+            required_duration_seconds=10.0,
+            runtime_snapshot="snapshot",
+            target_health=100,
+            target_resistance=0.0,
+            initial_bar="middle",
+        )
