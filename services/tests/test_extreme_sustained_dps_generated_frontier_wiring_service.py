@@ -257,3 +257,79 @@ def test_generated_frontier_node_rejects_boolean_coordinate_index() -> None:
             state={},
             coordinates=(("Skill Bars", True),),
         )
+
+
+def test_indexed_axis_requires_typed_metadata_collections() -> None:
+    with pytest.raises(TypeError, match="axis name must be a string"):
+        ExtremeSustainedDPSIndexedFrontierAxis(
+            7,  # type: ignore[arg-type]
+            candidate_count=lambda _state: 1,
+            candidate_at=lambda state, _index: state,
+        )
+
+    with pytest.raises(TypeError, match="canonical_axes must be a tuple"):
+        ExtremeSustainedDPSIndexedFrontierAxis(
+            "Bad",
+            candidate_count=lambda _state: 1,
+            candidate_at=lambda state, _index: state,
+            canonical_axes=["race"],  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="omitted_scope must be a tuple"):
+        ExtremeSustainedDPSIndexedFrontierAxis(
+            "Bad",
+            candidate_count=lambda _state: 1,
+            candidate_at=lambda state, _index: state,
+            omitted_scope=["open"],  # type: ignore[arg-type]
+        )
+
+
+def test_frontier_node_requires_tuple_coordinate_pairs() -> None:
+    with pytest.raises(TypeError, match="coordinates must contain"):
+        ExtremeSustainedDPSGeneratedFrontierNode(
+            candidate_key="candidate",
+            state={},
+            coordinates=(["Skill Bars", 0],),  # type: ignore[list-item]
+        )
+
+
+def test_frontier_search_requires_typed_axes_and_root_key() -> None:
+    axis = ExtremeSustainedDPSIndexedFrontierAxis(
+        "Choice",
+        candidate_count=lambda _state: 1,
+        candidate_at=lambda state, _index: {**state, "score": 1.0},
+    )
+
+    with pytest.raises(TypeError, match="axes must be a tuple"):
+        ExtremeSustainedDPSGeneratedFrontierWiringService.search(
+            {},
+            axes=[axis],  # type: ignore[arg-type]
+            evaluate_leaf=_evaluate,
+            required_duration_seconds=10.0,
+        )
+
+    with pytest.raises(TypeError, match="root_key must be a string"):
+        ExtremeSustainedDPSGeneratedFrontierWiringService.search(
+            {},
+            axes=(axis,),
+            evaluate_leaf=_evaluate,
+            required_duration_seconds=10.0,
+            root_key=7,  # type: ignore[arg-type]
+        )
+
+
+def test_frontier_bound_providers_must_return_tuples() -> None:
+    axis = ExtremeSustainedDPSIndexedFrontierAxis(
+        "Choice",
+        candidate_count=lambda _state: 1,
+        candidate_at=lambda _state, _index: {"score": 1.0},
+        bound_inputs=lambda _state: [],  # type: ignore[return-value]
+    )
+
+    with pytest.raises(TypeError, match="bound provider must return a tuple"):
+        ExtremeSustainedDPSGeneratedFrontierWiringService.search(
+            {},
+            axes=(axis,),
+            evaluate_leaf=_evaluate,
+            required_duration_seconds=10.0,
+        )
