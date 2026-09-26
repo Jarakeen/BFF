@@ -268,7 +268,7 @@ class RosterPlayerIdentityService:
             shutil.copy2(path, backup)
         return str(backup)
 
-    def _merge_canonical_players(self, survivor_name: str, donor_name: str) -> None:
+    def _merge_canonical_players(self, survivor_name: str, donor_name: str, *, db=None) -> None:
         if self.build_service is None:
             return
         catalog_service = self.build_service.canonical.catalog_service
@@ -318,11 +318,10 @@ class RosterPlayerIdentityService:
                 for row in catalog.get("players", [])
                 if not (isinstance(row, dict) and _text(row.get("player_id")) == donor_id)
             ]
-        catalog_service.save(catalog)
-        # Rebuild the compatibility mirror from canonical state so older pages do
-        # not resurrect the discarded player name on their next save.
-        roster = self.build_service.load()
-        self.build_service.save(roster)
+        if db is None:
+            catalog_service.save(catalog)
+        else:
+            catalog_service.save_on_connection(catalog, db)
 
     def _rewrite_raid_plan_player_identity(
         self,
@@ -333,6 +332,8 @@ class RosterPlayerIdentityService:
         donor_name: str,
         survivor_player_id: str,
         donor_player_id: str,
+        repository: RaidPlanRepository | None = None,
+        db=None,
     ) -> None:
         """Move persisted Raid Plan chairs from a merged donor to the survivor.
 
@@ -340,7 +341,7 @@ class RosterPlayerIdentityService:
         Plan that still points at the donor roster/player id must therefore follow
         the survivor while preserving the chair's character/build/assignment state.
         """
-        repository = RaidPlanRepository(Path(self.database.database))
+        repository = repository or RaidPlanRepository(Path(self.database.database))
         donor_key = _identity_key(donor_name)
         for plan in repository.list_plans():
             changed = False
@@ -361,7 +362,11 @@ class RosterPlayerIdentityService:
                     changed = True
                 members.append(member)
             if changed:
-                repository.save(replace(plan, members=tuple(members)))
+                revised = replace(plan, members=tuple(members))
+                if db is None:
+                    repository.save(revised)
+                else:
+                    repository.save_on_connection(revised, db)
 
     def merge_players(
         self,
