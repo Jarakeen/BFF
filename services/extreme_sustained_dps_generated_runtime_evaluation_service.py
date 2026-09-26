@@ -255,7 +255,7 @@ class ExtremeSustainedDPSGeneratedRuntimeEvaluationService:
             raise ValueError("generated sustained-DPS target_health must be positive")
         if isinstance(target_resistance, bool) or not isinstance(target_resistance, (int, float)):
             raise TypeError("generated sustained-DPS target_resistance must be numeric")
-        resistance = resistance
+        resistance = float(target_resistance)
         if not math.isfinite(resistance) or resistance < 0.0:
             raise ValueError(
                 "generated sustained-DPS target_resistance must be finite and non-negative"
