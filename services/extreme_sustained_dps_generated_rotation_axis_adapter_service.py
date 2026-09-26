@@ -43,6 +43,26 @@ class ExtremeSustainedDPSGeneratedRotationAxisState:
     rotation_plan: ExtremeSustainedDPSRotationPlanCandidate | None = None
     rotation_policy: ExtremeSustainedDPSRotationPolicyCandidate | None = None
 
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("duration_seconds", self.duration_seconds),
+            ("potion_cooldown_seconds", self.potion_cooldown_seconds),
+            ("starting_ultimate", self.starting_ultimate),
+        ):
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise TypeError(f"generated rotation state {label} must be numeric")
+            if not math.isfinite(float(value)):
+                raise ValueError(f"generated rotation state {label} must be finite")
+        for label, value in (
+            ("ultimate_generation_events", self.ultimate_generation_events),
+            ("heroism_windows", self.heroism_windows),
+            ("encounter_demands", self.encounter_demands),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"generated rotation state {label} must be a tuple")
+        if not isinstance(self.use_scheduled_combat_attacks_for_ultimate, bool):
+            raise TypeError("generated rotation state scheduled-combat Ultimate flag must be boolean")
+
     @property
     def complete(self) -> bool:
         return self.rotation_policy is not None
@@ -102,10 +122,12 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
         state: ExtremeSustainedDPSGeneratedRotationAxisState,
         index: int,
     ) -> ExtremeSustainedDPSGeneratedRotationAxisState:
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("generated rotation-plan index must be an integer")
         candidate = self.rotation_plans.candidate_at(
             state.assembled,
             duration_seconds=state.duration_seconds,
-            index=int(index),
+            index=index,
             priorities=state.priorities,
             encounter_demands=state.encounter_demands,
         )
@@ -167,13 +189,19 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
                 state.use_scheduled_combat_attacks_for_ultimate
             ),
         )
-        ultimate_count = len(tuple(frontier.ultimate_timing_policies))
+        ultimate_policies = getattr(frontier, "ultimate_timing_policies", ())
+        if not isinstance(ultimate_policies, tuple):
+            raise TypeError("rotation policy Ultimate timing policies must be a tuple")
+        potion_policies = getattr(frontier, "potion_policies", ())
+        if not isinstance(potion_policies, tuple):
+            raise TypeError("rotation policy potion policies must be a tuple")
+        ultimate_count = len(ultimate_policies)
         if isinstance(index, bool) or not isinstance(index, int):
             raise TypeError("generated delayed-Ultimate policy index must be an integer")
         target = index
         if target < 0 or target >= ultimate_count:
             raise IndexError("generated delayed-Ultimate policy index out of range")
-        potion_count = len(tuple(frontier.potion_policies))
+        potion_count = len(potion_policies)
         if potion_count <= 0:
             raise ValueError("rotation policy frontier has no explicit potion:none slice")
         candidate = self.rotation_policies.candidate_at(
@@ -203,11 +231,11 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
         priorities: object | None = None,
         encounter_demands: tuple[object, ...] = (),
     ) -> ExtremeSustainedDPSGeneratedRotationAxisState:
-        if isinstance(duration_seconds, bool):
+        if isinstance(duration_seconds, bool) or not isinstance(duration_seconds, (int, float)):
             raise TypeError("generated rotation duration must be numeric, not boolean")
-        if isinstance(potion_cooldown_seconds, bool):
+        if isinstance(potion_cooldown_seconds, bool) or not isinstance(potion_cooldown_seconds, (int, float)):
             raise TypeError("generated potion cooldown must be numeric, not boolean")
-        if isinstance(starting_ultimate, bool):
+        if isinstance(starting_ultimate, bool) or not isinstance(starting_ultimate, (int, float)):
             raise TypeError("generated starting Ultimate must be numeric, not boolean")
         if not isinstance(use_scheduled_combat_attacks_for_ultimate, bool):
             raise TypeError("scheduled-combat Ultimate flag must be boolean")
