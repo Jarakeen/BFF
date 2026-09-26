@@ -504,3 +504,57 @@ def test_unmatched_comp_player_reports_name_without_creating_duplicate_identity(
         ("dd-8", "no active Personnel record matches 'New Player'; check the saved player name"),
     )
     assert BuildCatalogService(tmp_path / "foundrydock.db").load()["players"] == []
+
+
+def test_comp_identity_promotion_rolls_back_catalog_when_personnel_binding_fails(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    database_path = tmp_path / "foundrydock.db"
+    roster = RosterService(EsoDatabase(database_path))
+    member_id = roster.create_member(
+        RosterMember(
+            PlayerName="Atomic DD",
+            CharacterName="Atomic Character",
+            EsoClass="Nightblade",
+            PrimaryRole="DD",
+        )
+    )
+    service = _service(tmp_path)
+    state = CompPlanState(
+        raid_plan_id="atomic",
+        raid_plan_name="Atomic",
+        trial_id="sunspire",
+        chairs=(
+            CompChairState(
+                seat_id="DD1",
+                player_name="Atomic DD",
+                roster_member_id=member_id,
+                planned_gear_sets=("Aegis Caller",),
+            ),
+        ),
+    )
+
+    original_execute = service.database.execute
+
+    def fail_binding(sql, parameters=()):
+        if "UPDATE roster_member" in sql and "canonical_player_id" in sql:
+            raise RuntimeError("simulated Personnel binding failure")
+        return original_execute(sql, parameters)
+
+    monkeypatch.setattr(service.database, "execute", fail_binding)
+
+    try:
+        service.persist(state)
+    except RuntimeError as exc:
+        assert "simulated Personnel binding failure" in str(exc)
+    else:
+        raise AssertionError("simulated binding failure did not abort Comp persistence")
+
+    catalog = BuildCatalogService(database_path).load_strict()
+    assert catalog["players"] == []
+    assert catalog["characters"] == []
+    rebound = roster.get_member(member_id)
+    assert rebound is not None
+    assert rebound.CanonicalPlayerId == ""
+    assert rebound.CanonicalCharacterId == ""
