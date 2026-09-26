@@ -23,6 +23,13 @@ from services.extreme_sustained_dps_axis_dominance_composition_service import (
 from services.extreme_sustained_dps_theoretical_maximum_closure_service import (
     ExtremeSustainedDPSTheoreticalMaximumClosure,
 )
+from services.extreme_sustained_dps_closure_inventory_service import (
+    ExtremeSustainedDPSClosureInventory,
+)
+from services.canonical_knowledge_gap import (
+    CanonicalKnowledgeDomain,
+    CanonicalKnowledgeGap,
+)
 
 
 
@@ -148,19 +155,30 @@ def test_reports_search_and_inventory_unresolved_evidence() -> None:
 
 
 def test_integrates_typed_runtime_and_mechanics_closure_inventory() -> None:
-    gap = SimpleNamespace(
+    gap = CanonicalKnowledgeGap(
+        domain=CanonicalKnowledgeDomain.COOLDOWN,
         key="weapon_enchantments:runtime_cadence",
+        summary="Weapon enchantment runtime cadence remains open",
         needed_evidence="prove enchantment trigger and base cooldown",
+        consumers=("optimizer",),
+        source_context="Objective #32 regression fixture",
+        blocking=True,
     )
-    advisory = SimpleNamespace(
+    advisory = CanonicalKnowledgeGap(
+        domain=CanonicalKnowledgeDomain.SKILL_MECHANIC,
         key="skills:runtime_topology",
+        summary="Skill runtime topology remains partially reviewed",
         needed_evidence="complete per-skill runtime topology",
+        consumers=("optimizer",),
+        source_context="Objective #32 regression fixture",
+        blocking=False,
     )
-    inventory = SimpleNamespace(
+    inventory = ExtremeSustainedDPSClosureInventory(
         source_data_blockers=("scaled debuff magnitude unresolved",),
         math_review_blockers=("unique proc has no reviewed DPS router",),
         mechanics_blockers=(gap,),
         mechanics_advisories=(advisory,),
+        evidence=(),
     )
 
     result = ExtremeSustainedDPSObjective32BlockerService.assess(
