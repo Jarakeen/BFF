@@ -409,6 +409,9 @@ class RosterPlayerIdentityService:
         survivor_name = _text(survivor.PlayerName)
         survivor_player_id = _text(getattr(survivor, "CanonicalPlayerId", ""))
         donor_player_id = _text(getattr(donor, "CanonicalPlayerId", ""))
+        # Construct before the write transaction. Repository initialization may
+        # perform schema checks using its own SQLite connection.
+        raid_plan_repository = RaidPlanRepository(Path(self.database.database))
 
         try:
             # Alias writes are staged directly here so the entire Personnel merge
@@ -498,7 +501,6 @@ class RosterPlayerIdentityService:
                 donor_name,
                 db=self.database.connection,
             )
-            repository = RaidPlanRepository(Path(self.database.database))
             self._rewrite_raid_plan_player_identity(
                 survivor_id=survivor_id,
                 donor_id=donor_id,
@@ -506,7 +508,7 @@ class RosterPlayerIdentityService:
                 donor_name=donor_name,
                 survivor_player_id=survivor_player_id,
                 donor_player_id=donor_player_id,
-                repository=repository,
+                repository=raid_plan_repository,
                 db=self.database.connection,
             )
             self.database.commit()
