@@ -2,6 +2,7 @@ from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
+from minmax.support_stacking import StackingBehavior
 from minmax.support_target_type import SupportTargetType
 from services.extreme_runtime_snapshot import ExtremeRuntimeSnapshot
 from services.extreme_sustained_dps_runtime_self_combat_state_service import (
@@ -17,6 +18,7 @@ def _effect(name="minor_brutality", duration=5.5):
         duration=duration,
         trigger="weapon_poison_proc",
         target_type=SupportTargetType.SELF,
+        stacking_behavior=StackingBehavior.UNIQUE,
     )
 
 
