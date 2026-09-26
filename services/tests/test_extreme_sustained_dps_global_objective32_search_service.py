@@ -753,3 +753,51 @@ def test_objective32_end_to_end_closed_scenario_reaches_theoretical_proof() -> N
     assert result.closure.unresolved == ()
     assert result.blockers.closed is True
     assert result.theoretical_maximum_proven is True
+
+
+def test_global_objective32_requires_string_root_key() -> None:
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=_GlobalSearch(_search_result()),
+    )
+
+    with pytest.raises(TypeError, match="root_key must be a string"):
+        service.search(
+            closure_inventory=_closed_closure_inventory(),
+            runtime_state_frontier=_runtime_frontier(),
+            root_key=7,  # type: ignore[arg-type]
+            dual_bar_frontier="gear",
+            candidate_id_prefix="objective32",
+            required_duration_seconds=20.0,
+            potion_cooldown_seconds=45.0,
+            starting_ultimate=0.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="Boss",
+            runtime_snapshot="snapshot",
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+        )
+
+
+def test_global_objective32_omitted_scope_requires_strings() -> None:
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(
+        global_search=_GlobalSearch(_search_result()),
+    )
+
+    with pytest.raises(TypeError, match="omitted_scope must contain only strings"):
+        service.search(
+            closure_inventory=_closed_closure_inventory(),
+            runtime_state_frontier=_runtime_frontier(),
+            omitted_scope=("open", 7),  # type: ignore[arg-type]
+            dual_bar_frontier="gear",
+            candidate_id_prefix="objective32",
+            required_duration_seconds=20.0,
+            potion_cooldown_seconds=45.0,
+            starting_ultimate=0.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="Boss",
+            runtime_snapshot="snapshot",
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+        )
