@@ -121,3 +121,45 @@ def test_latest_plan_layout_returns_newest_saved_layout(tmp_path: Path) -> None:
 
     assert {row.map_id for row in rows} == {first_record.map_id, second_record.map_id}
     assert store.latest_plan_layout("rg-hm", "oaxiltso") is not None
+
+
+def test_raid_map_manifest_rejects_invalid_existing_state_without_overwrite(tmp_path: Path) -> None:
+    store = EncounterRaidMapStore(tmp_path)
+    store.manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    original = b'{"schema_version":1,"encounters":[]}'
+    store.manifest_path.write_bytes(original)
+    source = _image(tmp_path / "strategy.png")
+
+    with pytest.raises(RuntimeError, match="Pydantic validation"):
+        store.import_map("xalvakka", source)
+
+    assert store.manifest_path.read_bytes() == original
+
+
+def test_plan_layout_rejects_invalid_json_before_user_data_copy(tmp_path: Path) -> None:
+    store = EncounterRaidMapStore(tmp_path)
+    layout = tmp_path / "broken.json"
+    layout.write_text('{"version": 2, "items": ', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="valid JSON"):
+        store.save_plan_layout("rg-hm", layout, encounter_id="oaxiltso")
+
+    plan_root = tmp_path / "raid_maps" / "plans"
+    assert not plan_root.exists() or not any(plan_root.rglob("*.json"))
+
+
+def test_raid_map_manifest_rejects_duplicate_ids_before_write(tmp_path: Path) -> None:
+    store = EncounterRaidMapStore(tmp_path)
+    with pytest.raises(Exception, match="duplicate Raid Map id"):
+        store._write_manifest(
+            {
+                "schema_version": 1,
+                "encounters": {
+                    "xalvakka": [
+                        {"map_id": "same", "label": "A", "relative_path": "raid_maps/bosses/xalvakka/a.png"},
+                        {"map_id": "same", "label": "B", "relative_path": "raid_maps/bosses/xalvakka/b.png"},
+                    ]
+                },
+            }
+        )
+    assert not store.manifest_path.exists()
