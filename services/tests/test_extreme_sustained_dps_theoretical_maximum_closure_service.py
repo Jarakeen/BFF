@@ -277,14 +277,12 @@ def test_theoretical_closure_rejects_non_tuple_manual_omitted_scope() -> None:
 
 
 
-def test_theoretical_closure_rejects_truthy_non_boolean_search_proof() -> None:
-    malformed = replace(_search(), global_maximum_proven="false")
-
-    with pytest.raises(TypeError, match="boolean global_maximum_proven"):
-        ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
-            malformed,
-            axis_coverage=_coverage(),
-        )
+def test_generated_search_record_rejects_truthy_non_boolean_global_proof() -> None:
+    with pytest.raises(
+        TypeError,
+        match="generated search result global_maximum_proven must be boolean",
+    ):
+        replace(_search(), global_maximum_proven="false")
 
 
 def test_theoretical_closure_record_requires_strict_proof_fields() -> None:
