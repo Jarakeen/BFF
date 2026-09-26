@@ -75,8 +75,8 @@ class ExtremeSustainedDPSDynamicWholePlanFrontierAdapterService:
         frontier = frontier_service.frontier(candidate)
         return ExtremeSustainedDPSIndexedWholePlanAdapter(
             axes=("rotation_order", "light_attack_weave"),
-            choice_count=int(frontier.candidate_count),
-            denominator_proven=bool(frontier.denominator_proven),
+            choice_count=frontier.candidate_count,
+            denominator_proven=frontier.denominator_proven,
             omitted_scope=(
                 "starting-bar route remains part of rotation-order family identity",
                 "Ultimate/potion/execute/Heavy Attack/encounter-demand policies remain separate",
@@ -106,6 +106,18 @@ class ExtremeSustainedDPSDynamicWholePlanFrontierAdapterService:
             seed=seed,
             potion_cooldown_seconds=float(potion_cooldown_seconds),
         )
+        for field in (
+            "continuous_potion_timing_closed",
+            "delayed_ultimate_timing_closed",
+        ):
+            if not isinstance(getattr(frontier, field, None), bool):
+                raise TypeError(f"dynamic whole-plan frontier {field} must be boolean")
+        if not isinstance(use_scheduled_combat_attacks_for_ultimate, bool):
+            raise TypeError("use_scheduled_combat_attacks_for_ultimate must be boolean")
+        if not isinstance(ultimate_generation_events, tuple):
+            raise TypeError("ultimate_generation_events must be a tuple")
+        if not isinstance(heroism_windows, tuple):
+            raise TypeError("heroism_windows must be a tuple")
         omitted = []
         if not frontier.continuous_potion_timing_closed:
             omitted.append("continuous potion first-use offset remains open")
@@ -114,8 +126,8 @@ class ExtremeSustainedDPSDynamicWholePlanFrontierAdapterService:
 
         return ExtremeSustainedDPSIndexedWholePlanAdapter(
             axes=("ultimate_policy", "potion_timing_policy"),
-            choice_count=int(frontier.candidate_count),
-            denominator_proven=bool(frontier.anchored_policy_denominator_proven),
+            choice_count=frontier.candidate_count,
+            denominator_proven=frontier.anchored_policy_denominator_proven,
             omitted_scope=tuple(omitted),
             _resolver=lambda index: frontier_service.candidate_at(
                 build=build,
@@ -125,9 +137,7 @@ class ExtremeSustainedDPSDynamicWholePlanFrontierAdapterService:
                 index=index,
                 ultimate_generation_events=tuple(ultimate_generation_events),
                 heroism_windows=tuple(heroism_windows),
-                use_scheduled_combat_attacks_for_ultimate=bool(
-                    use_scheduled_combat_attacks_for_ultimate
-                ),
+                use_scheduled_combat_attacks_for_ultimate=use_scheduled_combat_attacks_for_ultimate,
             ),
         )
 
@@ -140,7 +150,7 @@ class ExtremeSustainedDPSDynamicWholePlanFrontierAdapterService:
         return ExtremeSustainedDPSIndexedWholePlanAdapter(
             axes=("execute_policy",),
             choice_count=len(rows),
-            denominator_proven=bool(frontier.denominator_proven),
+            denominator_proven=frontier.denominator_proven,
             omitted_scope=(),
             _resolver=lambda index: rows[index],
         )
@@ -152,11 +162,13 @@ class ExtremeSustainedDPSDynamicWholePlanFrontierAdapterService:
         *,
         complete_window_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSIndexedWholePlanAdapter[ExtremeSustainedDPSHeavyAttackPolicyCandidate]:
+        if not isinstance(complete_window_denominator_proven, bool):
+            raise TypeError("complete_window_denominator_proven must be boolean")
         rows = tuple(frontier.candidates)
         return ExtremeSustainedDPSIndexedWholePlanAdapter(
             axes=("heavy_attack_policy",),
             choice_count=len(rows),
-            denominator_proven=bool(frontier.denominator_proven),
+            denominator_proven=frontier.denominator_proven,
             omitted_scope=(
                 ()
                 if complete_window_denominator_proven
