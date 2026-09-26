@@ -168,7 +168,9 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
             ),
         )
         ultimate_count = len(tuple(frontier.ultimate_timing_policies))
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("generated delayed-Ultimate policy index must be an integer")
+        target = index
         if target < 0 or target >= ultimate_count:
             raise IndexError("generated delayed-Ultimate policy index out of range")
         potion_count = len(tuple(frontier.potion_policies))
@@ -209,6 +211,13 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
             raise TypeError("generated starting Ultimate must be numeric, not boolean")
         if not isinstance(use_scheduled_combat_attacks_for_ultimate, bool):
             raise TypeError("scheduled-combat Ultimate flag must be boolean")
+        for label, value in (
+            ("ultimate_generation_events", ultimate_generation_events),
+            ("heroism_windows", heroism_windows),
+            ("encounter_demands", encounter_demands),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"generated rotation {label} must be a tuple")
         duration = float(duration_seconds)
         cooldown = float(potion_cooldown_seconds)
         ultimate = float(starting_ultimate)
@@ -223,11 +232,11 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
             duration_seconds=duration,
             potion_cooldown_seconds=cooldown,
             starting_ultimate=ultimate,
-            ultimate_generation_events=tuple(ultimate_generation_events),
-            heroism_windows=tuple(heroism_windows),
+            ultimate_generation_events=ultimate_generation_events,
+            heroism_windows=heroism_windows,
             use_scheduled_combat_attacks_for_ultimate=use_scheduled_combat_attacks_for_ultimate,
             priorities=priorities,
-            encounter_demands=tuple(encounter_demands),
+            encounter_demands=encounter_demands,
         )
 
     def axes(self) -> tuple[ExtremeSustainedDPSIndexedFrontierAxis, ...]:
