@@ -149,3 +149,33 @@ def test_absolute_upper_damage_below_exact_witness_fails_closed() -> None:
     assert result.bound.proven_safe is False
     assert result.bound.upper_bound_damage is None
     assert any("below the exact witness" in row for row in result.bound.unresolved)
+
+
+def test_action_dominance_rejects_string_axis_denominator() -> None:
+    with pytest.raises(TypeError, match="dominated_axes must be a tuple"):
+        ExtremeSustainedDPSActionDominanceProof(
+            candidate_key="candidate",
+            dominated_axes="gear",  # type: ignore[arg-type]
+            required_axes=("gear",),
+        )
+
+
+@pytest.mark.parametrize("field", ("optimistic_multiplier", "optimistic_upper_damage"))
+def test_action_dominance_rejects_boolean_numeric_proof_fields(field: str) -> None:
+    kwargs = {
+        "candidate_key": "candidate",
+        "dominated_axes": ("gear",),
+        "required_axes": ("gear",),
+        field: True,
+    }
+    with pytest.raises(TypeError, match="numeric, not boolean"):
+        ExtremeSustainedDPSActionDominanceProof(**kwargs)
+
+
+def test_action_dominance_requires_candidate_identity() -> None:
+    with pytest.raises(ValueError, match="requires candidate_key"):
+        ExtremeSustainedDPSActionDominanceProof(
+            candidate_key=" ",
+            dominated_axes=("gear",),
+            required_axes=("gear",),
+        )
