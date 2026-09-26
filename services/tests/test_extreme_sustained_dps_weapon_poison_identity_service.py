@@ -243,3 +243,61 @@ def test_poison_item_evidence_normalizes_and_deduplicates_diagnostics() -> None:
     assert result.poison_id == "Test Poison IX"
     assert result.evidence == ("source",)
     assert result.unresolved == ("missing",)
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    (
+        ("effect_name", 7, "effect_name must be a string"),
+        ("base_duration_seconds", "10", "base duration must be numeric"),
+        ("triple_duration_seconds", "5", "triple duration must be numeric"),
+        ("solvent", 7, "solvent must be a string or None"),
+    ),
+)
+def test_poison_possible_effect_rejects_coerced_fields(field, value, match) -> None:
+    kwargs = {
+        "effect_name": "Minor Breach",
+        "base_duration_seconds": 10.0,
+        "triple_duration_seconds": 5.0,
+        "solvent": "Alkahest",
+        "level": 50,
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=match):
+        ExtremeSustainedDPSWeaponPoisonPossibleEffect(**kwargs)
+
+
+def test_poison_item_evidence_requires_tuple_string_diagnostics() -> None:
+    with pytest.raises(TypeError, match="possible_effects must be a tuple"):
+        ExtremeSustainedDPSWeaponPoisonItemEvidence(
+            poison_id="Test Poison IX",
+            possible_effects=[],  # type: ignore[arg-type]
+            source_evidence_complete=False,
+            exact_selection_proven=False,
+        )
+
+    with pytest.raises(TypeError, match="evidence must be a tuple"):
+        ExtremeSustainedDPSWeaponPoisonItemEvidence(
+            poison_id="Test Poison IX",
+            possible_effects=(),
+            source_evidence_complete=False,
+            exact_selection_proven=False,
+            evidence=["source"],  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="unresolved must contain only strings"):
+        ExtremeSustainedDPSWeaponPoisonItemEvidence(
+            poison_id="Test Poison IX",
+            possible_effects=(),
+            source_evidence_complete=False,
+            exact_selection_proven=False,
+            unresolved=("gap", 7),  # type: ignore[arg-type]
+        )
+
+
+def test_poison_identity_resolver_requires_string_poison_id(tmp_path) -> None:
+    path = _database(tmp_path, ())
+
+    with pytest.raises(TypeError, match="poison_id must be a string"):
+        ExtremeSustainedDPSWeaponPoisonIdentityService(path).resolve(7)  # type: ignore[arg-type]
