@@ -88,7 +88,7 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
         if not isinstance(omitted_scope, tuple):
             raise TypeError("theoretical closure omitted_scope must be a tuple")
 
-        global_maximum_proven = global_maximum_proven
+        global_maximum_proven = search_result.global_maximum_proven
         if not isinstance(global_maximum_proven, bool):
             raise TypeError(
                 "theoretical closure requires boolean global_maximum_proven"
