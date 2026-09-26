@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 
 from minmax.character_build.effect_instance import EffectVariant
