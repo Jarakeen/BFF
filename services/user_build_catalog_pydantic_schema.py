@@ -68,10 +68,10 @@ class UserBuildCatalogPayload(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     schema_version: int
-    players: tuple[PlayerCatalogPayload, ...] = ()
-    characters: tuple[CharacterCatalogPayload, ...] = ()
-    builds: tuple[BuildCatalogPayload, ...] = ()
-    team_assignments: tuple[TeamAssignmentCatalogPayload, ...] = ()
+    players: list[PlayerCatalogPayload] = Field(default_factory=list)
+    characters: list[CharacterCatalogPayload] = Field(default_factory=list)
+    builds: list[BuildCatalogPayload] = Field(default_factory=list)
+    team_assignments: list[TeamAssignmentCatalogPayload] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_identity_graph(self) -> "UserBuildCatalogPayload":
