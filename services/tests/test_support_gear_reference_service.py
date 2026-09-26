@@ -80,3 +80,28 @@ def test_support_gear_reference_rejects_unknown_role() -> None:
             set_name="Set",
             coverage="Effect",
         )
+
+
+def test_support_gear_create_reuses_same_role_set_identity(tmp_path: Path) -> None:
+    service = SupportGearReferenceService(tmp_path / "foundrydock.db")
+    first = service.create(
+        role="healer",
+        set_name="Powerful Assault",
+        coverage="Unique damage buff",
+        notes="first",
+    )
+    second = service.create(
+        role="healer",
+        set_name="Powerful Assault",
+        coverage="Unique Weapon / Spell Damage",
+        notes="updated",
+    )
+
+    matches = [
+        row
+        for row in service.list_for_role("healer")
+        if row.set_name == "Powerful Assault"
+    ]
+    assert first.reference_id == second.reference_id
+    assert len(matches) == 1
+    assert matches[0].notes == "updated"
