@@ -140,3 +140,25 @@ def test_duck_typed_runtime_frontier_cannot_enter_proven_axis() -> None:
 
     with pytest.raises(TypeError, match="canonical runtime-state frontier"):
         ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.axis(frontier)
+
+
+def test_runtime_axis_rejects_boolean_choice_index() -> None:
+    axis = ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.axis(_frontier())
+    state = SimpleNamespace(complete=True)
+
+    with pytest.raises(TypeError, match="choice index must be an integer"):
+        axis.candidate_at(state, True)
+
+
+def test_candidate_runtime_axis_rejects_boolean_choice_index() -> None:
+    class _Resolver:
+        def resolve(self, _state):
+            return _frontier()
+
+    axis = ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.candidate_axis(
+        _Resolver()
+    )
+    state = SimpleNamespace(complete=True)
+
+    with pytest.raises(TypeError, match="choice index must be an integer"):
+        axis.candidate_at(state, False)
