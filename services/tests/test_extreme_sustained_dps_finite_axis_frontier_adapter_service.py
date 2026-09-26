@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from types import SimpleNamespace
 
 from services.extreme_sustained_dps_finite_axis_frontier_adapter_service import (
@@ -102,3 +104,62 @@ def test_adapter_rejects_out_of_range_index() -> None:
         pass
     else:
         raise AssertionError("expected out-of-range indexed choice to raise")
+
+
+def test_adapter_rejects_boolean_index() -> None:
+    adapter = ExtremeSustainedDPSFiniteAxisFrontierAdapterService.champion_points(
+        _CPService(),
+        object(),
+    )
+
+    with pytest.raises(TypeError, match="choice index must be an integer"):
+        adapter.choice_at(True)
+
+
+def test_adapter_rejects_truthy_denominator_and_boolean_count() -> None:
+    class _BadProofService(_CPService):
+        def frontier(self):
+            return SimpleNamespace(
+                candidate_count=1,
+                denominator_proven="true",
+                evidence=("cp",),
+                unresolved=(),
+            )
+
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        ExtremeSustainedDPSFiniteAxisFrontierAdapterService.champion_points(
+            _BadProofService(),
+            object(),
+        )
+
+    class _BadCountService(_CPService):
+        def frontier(self):
+            return SimpleNamespace(
+                candidate_count=True,
+                denominator_proven=True,
+                evidence=("cp",),
+                unresolved=(),
+            )
+
+    with pytest.raises(TypeError, match="choice_count must be an integer"):
+        ExtremeSustainedDPSFiniteAxisFrontierAdapterService.champion_points(
+            _BadCountService(),
+            object(),
+        )
+
+
+def test_adapter_rejects_non_tuple_evidence_shape() -> None:
+    class _BadEvidenceService(_CPService):
+        def frontier(self):
+            return SimpleNamespace(
+                candidate_count=1,
+                denominator_proven=True,
+                evidence=["cp"],
+                unresolved=(),
+            )
+
+    with pytest.raises(TypeError, match="evidence must be a tuple"):
+        ExtremeSustainedDPSFiniteAxisFrontierAdapterService.champion_points(
+            _BadEvidenceService(),
+            object(),
+        )
