@@ -194,6 +194,24 @@ class ExtremeSustainedDPSWeaponPoisonSequenceFrontierService:
         event_denominator_proven: bool,
         source: str,
     ) -> ExtremeSustainedDPSWeaponPoisonSequenceFrontier:
+        if not isinstance(event_denominator_proven, bool):
+            raise TypeError(
+                "weapon-poison event_denominator_proven must be boolean"
+            )
+        if any(not isinstance(row, RuntimeEvent) for row in events):
+            raise TypeError(
+                "weapon-poison events must contain RuntimeEvent records"
+            )
+        if not isinstance(player_build, PlayerBuild):
+            raise TypeError("weapon-poison sequence requires PlayerBuild")
+        if not isinstance(self.cadence, WeaponPoisonCadenceEvidence):
+            raise TypeError(
+                "weapon-poison sequence cadence must be WeaponPoisonCadenceEvidence"
+            )
+        if not isinstance(self.cadence.runtime_ready, bool):
+            raise TypeError(
+                "weapon-poison cadence runtime_ready must be boolean"
+            )
         unresolved: list[str] = []
         cadence = self.cadence
         if not event_denominator_proven:
