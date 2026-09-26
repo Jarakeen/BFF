@@ -20,6 +20,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from models.build_model import BuildContextVariant, PlayerBuild
 from services.build_context_variant_service import resolve_build_context
+from services.performance_mode_build_export_source_schema import (
+    validate_performance_mode_export_source,
+)
 
 BuildMatrixSlot = Literal["boss1", "boss2", "boss3", "trash", "flex"]
 BuildMatrixMode = Literal["current", "mapped_variants", "separate_variants"]
@@ -184,6 +187,7 @@ def _variant_records(build: PlayerBuild) -> tuple[_VariantRef, ...]:
 
 def variant_choices(build: PlayerBuild) -> tuple[tuple[int, str], ...]:
     """Stable index/label choices for the export dialog."""
+    build = validate_performance_mode_export_source(build)
     return tuple((item.index, item.label) for item in _variant_records(build))
 
 
@@ -206,6 +210,7 @@ def _variant_bucket(ref: _VariantRef) -> str:
 
 def default_export_request(build: PlayerBuild) -> BuildMatrixExportRequest:
     """Map saved variants conservatively without inventing game semantics."""
+    build = validate_performance_mode_export_source(build)
     refs = list(_variant_records(build))
     mapped: dict[BuildMatrixSlot, int | None] = {slot: None for slot in _SLOT_ORDER}
     used: set[int] = set()
@@ -415,6 +420,7 @@ def build_matrix_page(
     mastery_names: dict[int, str] | None = None,
 ) -> BuildMatrixPage:
     """Create the validated presentation model before any PDF drawing."""
+    build = validate_performance_mode_export_source(build)
     request = BuildMatrixExportRequest.model_validate(request)
     refs = {item.index: item for item in _variant_records(build)}
     for selection in request.slots:
@@ -528,7 +534,13 @@ class PerformanceModeBuildMatrixExporter:
     ) -> Path:
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        selected = [build for build in builds if _clean(build.Name) or _clean(build.Gamertag) or _clean(build.BuildName)]
+        selected: list[PlayerBuild] = []
+        for build in builds:
+            if not isinstance(build, PlayerBuild):
+                raise TypeError("Performance Mode Build Matrix export requires PlayerBuild records")
+            if not (_clean(build.Name) or _clean(build.Gamertag) or _clean(build.BuildName)):
+                continue
+            selected.append(validate_performance_mode_export_source(build))
         if requests is None:
             reqs = [default_export_request(build) for build in selected]
         else:
