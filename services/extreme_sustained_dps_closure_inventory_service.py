@@ -50,6 +50,16 @@ class ExtremeSustainedDPSClosureInventory:
     evidence: tuple[str, ...]
 
     def __post_init__(self) -> None:
+        for name in (
+            "source_data_blockers",
+            "math_review_blockers",
+            "mechanics_blockers",
+            "mechanics_advisories",
+            "evidence",
+        ):
+            if not isinstance(getattr(self, name), tuple):
+                raise TypeError(f"closure inventory {name} must be a tuple")
+
         def _strings(values: tuple[str, ...]) -> tuple[str, ...]:
             return tuple(
                 dict.fromkeys(
