@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from services.extreme_sustained_dps_structural_action_upper_bound_service import (
     ExtremeSustainedDPSAbsoluteActionDamageCeiling,
     ExtremeSustainedDPSDamageActionCountProof,
@@ -93,3 +95,57 @@ def test_missing_absolute_action_ceiling_forces_open() -> None:
     assert result.bound.proven_safe is False
     assert result.bound.upper_bound_dps is None
     assert any("unavailable" in row for row in result.unresolved)
+
+
+def test_action_count_proof_rejects_boolean_count() -> None:
+    with pytest.raises(TypeError, match="count must be an integer"):
+        ExtremeSustainedDPSDamageActionCountProof(
+            maximum_damage_action_count=True,
+            proven_safe=True,
+            source="bad",
+        )
+
+
+def test_action_count_proof_rejects_truthy_proven_safe() -> None:
+    with pytest.raises(TypeError, match="proven_safe must be boolean"):
+        ExtremeSustainedDPSDamageActionCountProof(
+            maximum_damage_action_count=10,
+            proven_safe="true",  # type: ignore[arg-type]
+            source="bad",
+        )
+
+
+def test_absolute_action_ceiling_rejects_boolean_damage() -> None:
+    with pytest.raises(TypeError, match="ceiling must be numeric"):
+        ExtremeSustainedDPSAbsoluteActionDamageCeiling(
+            upper_bound_damage=True,
+            proven_safe=True,
+            covers_periodic_and_triggered=True,
+            source="bad",
+        )
+
+
+def test_structural_action_ceiling_rejects_duck_typed_count_proof() -> None:
+    malformed = type(
+        "CountProof",
+        (),
+        {
+            "maximum_damage_action_count": 10,
+            "proven_safe": True,
+            "source": "duck",
+            "unresolved": (),
+            "complete": True,
+        },
+    )()
+    with pytest.raises(TypeError, match="canonical action-count proof"):
+        ExtremeSustainedDPSStructuralActionUpperBoundService.evaluate(
+            "branch:duck",
+            duration_seconds=10.0,
+            action_count=malformed,  # type: ignore[arg-type]
+            action_damage=ExtremeSustainedDPSAbsoluteActionDamageCeiling(
+                upper_bound_damage=100.0,
+                proven_safe=True,
+                covers_periodic_and_triggered=True,
+                source="safe",
+            ),
+        )
