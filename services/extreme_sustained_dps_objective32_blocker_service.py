@@ -34,6 +34,10 @@ class ExtremeSustainedDPSObjective32BlockerReport:
     evidence: tuple[str, ...]
 
     def __post_init__(self) -> None:
+        if not isinstance(self.blockers, tuple):
+            raise TypeError("Objective #32 blocker report blockers must be a tuple")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("Objective #32 blocker report evidence must be a tuple")
         if any(
             not isinstance(row, ExtremeSustainedDPSObjective32Blocker)
             for row in self.blockers
@@ -59,6 +63,13 @@ class ExtremeSustainedDPSObjective32BlockerReport:
 
 class ExtremeSustainedDPSObjective32BlockerService:
     """Explain theoretical closure debt without changing proof semantics."""
+
+    @staticmethod
+    def _proof_tuple(owner: object, field: str, label: str) -> tuple:
+        value = getattr(owner, field, ())
+        if not isinstance(value, tuple):
+            raise TypeError(f"Objective #32 {label} {field} must be a tuple")
+        return value
 
     @classmethod
     def assess(
@@ -90,7 +101,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
                 )
             )
 
-        for item in tuple(getattr(search_result, "unresolved", ()) or ()):
+        for item in cls._proof_tuple(search_result, "unresolved", "search result"):
             detail = str(item).strip()
             if detail:
                 blockers.append(
@@ -102,9 +113,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
                     )
                 )
 
-        for axis in tuple(
-            getattr(axis_inventory, "missing_canonical_axes", ()) or ()
-        ):
+        for axis in cls._proof_tuple(axis_inventory, "missing_canonical_axes", "axis inventory"):
             blockers.append(
                 ExtremeSustainedDPSObjective32Blocker(
                     code="physical_axis_missing",
@@ -118,9 +127,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
                 )
             )
 
-        for axis in tuple(
-            getattr(axis_inventory, "duplicate_canonical_axes", ()) or ()
-        ):
+        for axis in cls._proof_tuple(axis_inventory, "duplicate_canonical_axes", "axis inventory"):
             blockers.append(
                 ExtremeSustainedDPSObjective32Blocker(
                     code="physical_axis_duplicate",
@@ -134,7 +141,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
                 )
             )
 
-        for item in tuple(getattr(axis_inventory, "unresolved", ()) or ()):
+        for item in cls._proof_tuple(axis_inventory, "unresolved", "axis inventory"):
             detail = str(item).strip()
             if detail:
                 blockers.append(
@@ -146,7 +153,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
                     )
                 )
 
-        for axis in tuple(getattr(axis_coverage, "missing_axes", ()) or ()):
+        for axis in cls._proof_tuple(axis_coverage, "missing_axes", "axis coverage"):
             blockers.append(
                 ExtremeSustainedDPSObjective32Blocker(
                     code="axis_coverage_missing",
@@ -160,7 +167,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
                 )
             )
 
-        for item in tuple(getattr(axis_coverage, "unresolved", ()) or ()):
+        for item in cls._proof_tuple(axis_coverage, "unresolved", "axis coverage"):
             detail = str(item).strip()
             if detail:
                 blockers.append(
@@ -172,7 +179,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
                     )
                 )
 
-        for item in tuple(getattr(closure, "omitted_scope", ()) or ()):
+        for item in cls._proof_tuple(closure, "omitted_scope", "theoretical closure"):
             detail = str(item).strip()
             if detail:
                 blockers.append(
@@ -184,7 +191,7 @@ class ExtremeSustainedDPSObjective32BlockerService:
                     )
                 )
 
-        for item in tuple(getattr(closure, "unresolved", ()) or ()):
+        for item in cls._proof_tuple(closure, "unresolved", "theoretical closure"):
             detail = str(item).strip()
             if detail and "scope remains explicitly omitted" not in detail:
                 blockers.append(
@@ -197,8 +204,8 @@ class ExtremeSustainedDPSObjective32BlockerService:
                 )
 
         if closure_inventory is not None:
-            for item in tuple(
-                getattr(closure_inventory, "source_data_blockers", ()) or ()
+            for item in cls._proof_tuple(
+                closure_inventory, "source_data_blockers", "closure inventory"
             ):
                 detail = str(item).strip()
                 if detail:
@@ -211,8 +218,8 @@ class ExtremeSustainedDPSObjective32BlockerService:
                         )
                     )
 
-            for item in tuple(
-                getattr(closure_inventory, "math_review_blockers", ()) or ()
+            for item in cls._proof_tuple(
+                closure_inventory, "math_review_blockers", "closure inventory"
             ):
                 detail = str(item).strip()
                 if detail:
@@ -225,8 +232,8 @@ class ExtremeSustainedDPSObjective32BlockerService:
                         )
                     )
 
-            for gap in tuple(
-                getattr(closure_inventory, "mechanics_blockers", ()) or ()
+            for gap in cls._proof_tuple(
+                closure_inventory, "mechanics_blockers", "closure inventory"
             ):
                 blockers.append(
                     ExtremeSustainedDPSObjective32Blocker(
@@ -237,8 +244,8 @@ class ExtremeSustainedDPSObjective32BlockerService:
                     )
                 )
 
-            for gap in tuple(
-                getattr(closure_inventory, "mechanics_advisories", ()) or ()
+            for gap in cls._proof_tuple(
+                closure_inventory, "mechanics_advisories", "closure inventory"
             ):
                 blockers.append(
                     ExtremeSustainedDPSObjective32Blocker(
