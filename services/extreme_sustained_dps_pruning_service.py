@@ -37,6 +37,8 @@ class ExtremeSustainedDPSBoundEvidence:
             raise ValueError("sustained-DPS bound evidence requires source")
         if not isinstance(self.proven_safe, bool):
             raise TypeError("sustained-DPS bound proven_safe must be boolean")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("sustained-DPS bound unresolved must be a tuple")
 
         upper = self.upper_bound_dps
         if upper is not None:
@@ -90,6 +92,8 @@ class ExtremeSustainedDPSPruningDecision:
             raise ValueError("pruning decision requires reason")
         if not source:
             raise ValueError("pruning decision requires source")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("pruning decision unresolved must be a tuple")
 
         incumbent = self.incumbent_dps
         if isinstance(incumbent, bool):
@@ -156,6 +160,10 @@ class ExtremeSustainedDPSPruningResult:
         incumbent = float(self.incumbent_dps)
         if not math.isfinite(incumbent) or incumbent < 0.0:
             raise ValueError("pruning result incumbent_dps must be finite and non-negative")
+        if not isinstance(self.decisions, tuple):
+            raise TypeError("pruning result decisions must be a tuple")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("pruning result evidence must be a tuple")
         if any(
             not isinstance(row, ExtremeSustainedDPSPruningDecision)
             for row in self.decisions
@@ -230,6 +238,10 @@ class ExtremeSustainedDPSPruningService:
         *,
         incumbent_dps: float,
     ) -> ExtremeSustainedDPSPruningResult:
+        if not isinstance(bounds, tuple):
+            raise TypeError("sustained-DPS pruning bounds must be a tuple")
+        if any(not isinstance(bound, ExtremeSustainedDPSBoundEvidence) for bound in bounds):
+            raise TypeError("sustained-DPS pruning bounds must contain canonical bound evidence")
         if isinstance(incumbent_dps, bool):
             raise TypeError("sustained-DPS incumbent must be numeric")
         try:
@@ -243,7 +255,7 @@ class ExtremeSustainedDPSPruningService:
 
         decisions: list[ExtremeSustainedDPSPruningDecision] = []
         seen: set[str] = set()
-        for evidence in tuple(bounds):
+        for evidence in bounds:
             key = str(evidence.candidate_key or "").strip()
             if not key:
                 raise ValueError("sustained-DPS pruning candidate_key cannot be empty")
