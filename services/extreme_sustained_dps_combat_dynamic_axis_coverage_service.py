@@ -35,13 +35,22 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageResult:
 class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
     """Promote only finite dynamic denominator closure actually proven by each frontier."""
 
+    @staticmethod
+    def _complete(frontier: object, field: str = "denominator_proven") -> tuple[bool, tuple]:
+        unresolved = getattr(frontier, "unresolved", ())
+        if not isinstance(unresolved, tuple):
+            raise TypeError("combat dynamic frontier unresolved evidence must be a tuple")
+        proven = getattr(frontier, field, None)
+        if not isinstance(proven, bool):
+            raise TypeError(f"combat dynamic frontier {field} must be boolean")
+        return proven and not unresolved, unresolved
+
     @classmethod
     def skill_bars(
         cls,
         frontier: ExtremeSustainedDPSSkillBarFrontier,
     ) -> ExtremeSustainedDPSCombatDynamicAxisCoverageResult:
-        unresolved = tuple(frontier.unresolved)
-        complete = bool(frontier.denominator_proven and not unresolved)
+        complete, unresolved = cls._complete(frontier)
         proof = ExtremeSustainedDPSAxisCoverageProof(
             source="complete sustained-DPS legal skill-bar denominator",
             dominated_axes=("skill_bars",) if complete else (),
@@ -67,8 +76,7 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
         cls,
         frontier: ExtremeSustainedDPSRotationFamilyFrontier,
     ) -> ExtremeSustainedDPSCombatDynamicAxisCoverageResult:
-        unresolved = tuple(frontier.unresolved)
-        complete = bool(frontier.denominator_proven and not unresolved)
+        complete, unresolved = cls._complete(frontier)
         proof = ExtremeSustainedDPSAxisCoverageProof(
             source="complete sustained-DPS semi-static seed rotation denominator",
             dominated_axes=(
@@ -101,10 +109,9 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
         cls,
         frontier: ExtremeSustainedDPSRotationPolicyFrontier,
     ) -> ExtremeSustainedDPSCombatDynamicAxisCoverageResult:
-        unresolved = tuple(frontier.unresolved)
-        complete = bool(
-            frontier.anchored_policy_denominator_proven
-            and not unresolved
+        complete, unresolved = cls._complete(
+            frontier,
+            "anchored_policy_denominator_proven",
         )
         omitted: list[str] = []
         if not frontier.continuous_potion_timing_closed:
@@ -149,8 +156,7 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
         cls,
         frontier: ExtremeSustainedDPSExecutePolicyFrontier,
     ) -> ExtremeSustainedDPSCombatDynamicAxisCoverageResult:
-        unresolved = tuple(frontier.unresolved)
-        complete = bool(frontier.denominator_proven and not unresolved)
+        complete, unresolved = cls._complete(frontier)
         proof = ExtremeSustainedDPSAxisCoverageProof(
             source="complete sustained-DPS execute-policy denominator",
             dominated_axes=("execute_policy",) if complete else (),
@@ -176,8 +182,9 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
         *,
         complete_window_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSCombatDynamicAxisCoverageResult:
-        unresolved = tuple(frontier.unresolved)
-        complete = bool(frontier.denominator_proven and not unresolved)
+        if not isinstance(complete_window_denominator_proven, bool):
+            raise TypeError("Heavy Attack complete-window denominator proof must be boolean")
+        complete, unresolved = cls._complete(frontier)
         omitted = (
             ()
             if complete_window_denominator_proven
