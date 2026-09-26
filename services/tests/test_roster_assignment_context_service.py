@@ -123,3 +123,53 @@ def test_legacy_assignment_remains_fallback_until_team_default_is_saved(tmp_path
 
     assert resolved["notes"] == "Old roster note"
     assert resolved["_source"] == "legacy"
+
+
+def test_assignment_context_rejects_oversized_value_before_mutation(tmp_path) -> None:
+    roster, context, member_id = _services(tmp_path)
+    team = "Swine & Punishment"
+
+    context.set_field(
+        member_id,
+        team_name=team,
+        field="notes",
+        value="Keep this",
+    )
+
+    try:
+        context.set_field(
+            member_id,
+            team_name=team,
+            field="notes",
+            value="x" * 12001,
+        )
+    except ValueError as exc:
+        assert "Pydantic validation" in str(exc)
+    else:
+        raise AssertionError("oversized assignment context was accepted")
+
+    resolved = context.get_effective_assignment(
+        member_id,
+        team_name=team,
+        legacy_service=roster,
+    )
+    assert resolved["notes"] == "Keep this"
+
+
+def test_assignment_context_rejects_invalid_team_before_creation(tmp_path) -> None:
+    roster, context, member_id = _services(tmp_path)
+    before = tuple(roster.list_team_names())
+
+    try:
+        context.set_field(
+            member_id,
+            team_name="x" * 241,
+            field="gear_needed",
+            value="PA ice staff",
+        )
+    except ValueError as exc:
+        assert "Pydantic validation" in str(exc)
+    else:
+        raise AssertionError("invalid team identity was accepted")
+
+    assert tuple(roster.list_team_names()) == before
