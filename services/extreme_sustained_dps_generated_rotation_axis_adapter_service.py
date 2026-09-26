@@ -67,9 +67,17 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
         *,
         proof_field: str,
     ) -> int:
-        count = int(getattr(frontier, "candidate_count", 0))
-        unresolved = tuple(getattr(frontier, "unresolved", ()) or ())
-        if not bool(getattr(frontier, proof_field, False)):
+        raw_count = getattr(frontier, "candidate_count", 0)
+        if isinstance(raw_count, bool) or not isinstance(raw_count, int):
+            raise TypeError(f"{label} candidate count must be an integer")
+        count = raw_count
+        unresolved = getattr(frontier, "unresolved", ())
+        if not isinstance(unresolved, tuple):
+            raise TypeError(f"{label} unresolved evidence must be a tuple")
+        proof = getattr(frontier, proof_field, False)
+        if not isinstance(proof, bool):
+            raise TypeError(f"{label} denominator proof flag must be boolean")
+        if not proof:
             detail = "; ".join(str(item) for item in unresolved if str(item))
             raise ValueError(
                 f"{label} denominator is unresolved"
@@ -134,7 +142,10 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
             "rotation policy frontier",
             proof_field="anchored_policy_denominator_proven",
         )
-        count = len(tuple(getattr(frontier, "ultimate_timing_policies", ()) or ()))
+        policies = getattr(frontier, "ultimate_timing_policies", ())
+        if not isinstance(policies, tuple):
+            raise TypeError("rotation policy Ultimate timing policies must be a tuple")
+        count = len(policies)
         if count <= 0:
             raise ValueError("generated delayed-Ultimate policy denominator is empty")
         return count
@@ -190,6 +201,14 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
         priorities: object | None = None,
         encounter_demands: tuple[object, ...] = (),
     ) -> ExtremeSustainedDPSGeneratedRotationAxisState:
+        if isinstance(duration_seconds, bool):
+            raise TypeError("generated rotation duration must be numeric, not boolean")
+        if isinstance(potion_cooldown_seconds, bool):
+            raise TypeError("generated potion cooldown must be numeric, not boolean")
+        if isinstance(starting_ultimate, bool):
+            raise TypeError("generated starting Ultimate must be numeric, not boolean")
+        if not isinstance(use_scheduled_combat_attacks_for_ultimate, bool):
+            raise TypeError("scheduled-combat Ultimate flag must be boolean")
         duration = float(duration_seconds)
         cooldown = float(potion_cooldown_seconds)
         ultimate = float(starting_ultimate)
@@ -206,9 +225,7 @@ class ExtremeSustainedDPSGeneratedRotationAxisAdapterService:
             starting_ultimate=ultimate,
             ultimate_generation_events=tuple(ultimate_generation_events),
             heroism_windows=tuple(heroism_windows),
-            use_scheduled_combat_attacks_for_ultimate=bool(
-                use_scheduled_combat_attacks_for_ultimate
-            ),
+            use_scheduled_combat_attacks_for_ultimate=use_scheduled_combat_attacks_for_ultimate,
             priorities=priorities,
             encounter_demands=tuple(encounter_demands),
         )
