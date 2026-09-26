@@ -110,3 +110,30 @@ def test_runtime_state_frontier_rejects_proven_state_with_unresolved_evidence() 
             unresolved=("gap",),
             omitted_scope=(),
         )
+
+
+def test_runtime_state_choice_rejects_mutable_proof_collections() -> None:
+    with pytest.raises(TypeError, match="evidence must be a tuple"):
+        ExtremeSustainedDPSRuntimeStateChoice(
+            runtime_state_id="runtime:test",
+            snapshot=object(),
+            evidence=["mutable"],
+        )
+
+
+def test_runtime_state_frontier_builder_rejects_truthy_non_boolean_proof() -> None:
+    with pytest.raises(TypeError, match="proof flag must be boolean"):
+        ExtremeSustainedDPSRuntimeStateFrontierService.build(
+            (_choice("base"),),
+            denominator_proven="false",
+            source="invalid proof",
+        )
+
+
+def test_runtime_state_frontier_builder_requires_tuple_choices() -> None:
+    with pytest.raises(TypeError, match="choices must be a tuple"):
+        ExtremeSustainedDPSRuntimeStateFrontierService.build(
+            [_choice("base")],
+            denominator_proven=True,
+            source="invalid collection",
+        )
