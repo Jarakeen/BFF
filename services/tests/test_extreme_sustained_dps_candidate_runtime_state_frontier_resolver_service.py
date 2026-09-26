@@ -7,6 +7,9 @@ import pytest
 from services.extreme_sustained_dps_candidate_runtime_state_frontier_resolver_service import (
     ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService,
 )
+from services.extreme_sustained_dps_runtime_effect_relevance_service import (
+    ExtremeSustainedDPSRuntimeEffectRelevance,
+)
 from services.extreme_sustained_dps_runtime_external_history_frontier_service import (
     ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult,
 )
@@ -49,6 +52,14 @@ class _Scenario:
             denominator_proven=True,
             source=f"runtime family {candidate_id}",
         )
+        relevance = ExtremeSustainedDPSRuntimeEffectRelevance(
+            relevant=(),
+            irrelevant=(),
+            unresolved=(),
+            source_data_unresolved=(),
+            math_unresolved=(),
+            evidence=(f"relevance {candidate_id}",),
+        )
         return ExtremeSustainedDPSRuntimeScenarioFrontierResult(
             runtime=ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult(
                 frontier=frontier,
@@ -57,6 +68,7 @@ class _Scenario:
             ),
             evidence=(f"scenario {candidate_id}",),
             unresolved=(),
+            relevance=relevance,
         )
 
 
@@ -76,6 +88,20 @@ def test_resolver_uses_finalized_candidate_and_assembled_build() -> None:
     assert call["player_build"] == "build"
     assert call["target_identity"] == "Boss"
     assert call["effects"] is None
+
+
+def test_resolver_preserves_candidate_typed_runtime_closure_evidence() -> None:
+    resolver = ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(
+        scenario_frontier=_Scenario(),
+        supplemental_event_denominator_proven=True,
+        supplemental_history_denominator_proven=True,
+    )
+
+    result = resolver.resolve(_state("typed"))
+
+    assert result.relevance is not None
+    assert result.relevance.evidence == ("relevance typed",)
+    assert result.scaling is None
 
 
 def test_resolver_recomputes_runtime_family_per_candidate() -> None:
