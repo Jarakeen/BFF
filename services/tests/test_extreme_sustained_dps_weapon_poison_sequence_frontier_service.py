@@ -178,3 +178,66 @@ def test_poison_sequence_builder_requires_canonical_events_and_build() -> None:
             event_denominator_proven=True,
             source="malformed",
         )
+
+
+def test_poison_sequence_builder_requires_tuple_events_and_string_source() -> None:
+    with pytest.raises(TypeError, match="events must be a tuple"):
+        ExtremeSustainedDPSWeaponPoisonSequenceFrontierService().build(
+            events=[_event(1.0, 0)],  # type: ignore[arg-type]
+            player_build=PlayerBuild(FrontBarPoison="Poison"),
+            event_denominator_proven=True,
+            source="strict",
+        )
+
+    with pytest.raises(TypeError, match="sequence source must be a string"):
+        ExtremeSustainedDPSWeaponPoisonSequenceFrontierService().build(
+            events=(_event(1.0, 0),),
+            player_build=PlayerBuild(FrontBarPoison="Poison"),
+            event_denominator_proven=True,
+            source=7,  # type: ignore[arg-type]
+        )
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    (
+        ("choice_id", 7, "choice_id must be a string"),
+        ("procs", [], "procs must be a tuple"),
+        ("chance_misses", [], "chance_misses must be a tuple"),
+        ("cooldown_blocked", [], "cooldown_blocked must be a tuple"),
+        ("last_proc_time_seconds", "1", "last proc time must be numeric"),
+        ("branch_probability", "0.5", "branch probability must be numeric"),
+    ),
+)
+def test_poison_sequence_choice_rejects_coerced_fields(field, value, match) -> None:
+    kwargs = {
+        "choice_id": "choice",
+        "procs": (),
+        "chance_misses": (),
+        "cooldown_blocked": (),
+        "last_proc_time_seconds": None,
+        "branch_probability": 1.0,
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=match):
+        ExtremeSustainedDPSWeaponPoisonSequenceChoice(**kwargs)
+
+
+def test_poison_proc_occurrence_requires_string_poison_id() -> None:
+    with pytest.raises(TypeError, match="poison_id must be a string"):
+        ExtremeSustainedDPSWeaponPoisonProcOccurrence(
+            event=_event(1.0, 0),
+            poison_id=7,  # type: ignore[arg-type]
+        )
+
+
+def test_poison_sequence_frontier_requires_tuple_choices() -> None:
+    with pytest.raises(TypeError, match="choices must be a tuple"):
+        ExtremeSustainedDPSWeaponPoisonSequenceFrontier(
+            choices=[],  # type: ignore[arg-type]
+            candidate_count=0,
+            denominator_proven=False,
+            evidence=(),
+            unresolved=("open",),
+        )
