@@ -8,6 +8,7 @@ from pathlib import Path
 
 from engine.config import get_data_dir, get_user_database_path
 from services.eso_collectible_database_service import EsoCollectibleDatabaseService
+from services.collection_progress_pydantic_schema import validate_collection_profile, validate_collection_progress
 from services.user_data_migration_service import migrate_legacy_user_data
 
 
@@ -298,9 +299,7 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
         return names or [self.DEFAULT_PROFILE]
 
     def ensure_profile(self, name: str) -> str:
-        normalized = self._normalize_profile_name(name)
-        if not normalized:
-            raise ValueError("Profile name cannot be empty.")
+        normalized = validate_collection_profile(self._normalize_profile_name(name))
         self.progress_connection.execute(
             "INSERT OR IGNORE INTO collectible_profile(profile_name) VALUES (?)",
             (normalized,),
@@ -434,6 +433,14 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
             raise RuntimeError("Collectible database is not available.")
         profile_name = self.ensure_profile(profile or self._active_profile)
         rumor_id = self._rumor_id_from_virtual(collectible_id)
+        validation_id = int(rumor_id) if rumor_id is not None else int(collectible_id)
+        payload = validate_collection_progress({
+            "profile": profile_name,
+            "item_id": validation_id,
+            "owned": bool(owned),
+            "acquired_on": str(acquired_on or "").strip(),
+            "notes": str(notes or "").strip(),
+        })
         db = self.progress_connection
 
         if rumor_id is not None:
@@ -445,7 +452,9 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
             ).fetchone()
             if exists is None:
                 raise KeyError(f"Unknown rumor id: {rumor_id}")
-            db.execute(
+            db.execute("BEGIN IMMEDIATE")
+            try:
+                db.execute(
                 """
                 INSERT INTO collectible_rumor_progress(
                     profile_name, rumor_id, owned, acquired_on, notes, updated_at
@@ -457,14 +466,23 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
                     updated_at=CURRENT_TIMESTAMP
                 """,
                 (
-                    profile_name,
-                    int(rumor_id),
-                    1 if owned else 0,
-                    acquired_on.strip() or None,
-                    notes.strip(),
+                    payload["profile"],
+                    payload["item_id"],
+                    1 if payload["owned"] else 0,
+                    payload["acquired_on"] or None,
+                    payload["notes"],
                 ),
-            )
-            db.commit()
+                )
+                row = db.execute(
+                    "SELECT owned, COALESCE(acquired_on, '') AS acquired_on, notes FROM collectible_rumor_progress WHERE profile_name = ? AND rumor_id = ?",
+                    (payload["profile"], payload["item_id"]),
+                ).fetchone()
+                if row is None or bool(row["owned"]) != payload["owned"] or str(row["acquired_on"] or "") != payload["acquired_on"] or str(row["notes"] or "") != payload["notes"]:
+                    raise RuntimeError("Rumor progress did not round-trip exactly")
+                db.commit()
+            except Exception:
+                db.rollback()
+                raise
             return
 
         exists = self.connection.execute(
@@ -474,7 +492,9 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
         if exists is None:
             raise KeyError(f"Unknown collectible id: {collectible_id}")
 
-        db.execute(
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            db.execute(
             """
             INSERT INTO collectible_progress(
                 profile_name, collectible_id, owned, acquired_on, notes, updated_at
@@ -486,23 +506,45 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
                 updated_at=CURRENT_TIMESTAMP
             """,
             (
-                profile_name,
-                int(collectible_id),
-                1 if owned else 0,
-                acquired_on.strip() or None,
-                notes.strip(),
+                payload["profile"],
+                payload["item_id"],
+                1 if payload["owned"] else 0,
+                payload["acquired_on"] or None,
+                payload["notes"],
             ),
-        )
-        db.commit()
+            )
+            row = db.execute(
+                "SELECT owned, COALESCE(acquired_on, '') AS acquired_on, notes FROM collectible_progress WHERE profile_name = ? AND collectible_id = ?",
+                (payload["profile"], payload["item_id"]),
+            ).fetchone()
+            if row is None or bool(row["owned"]) != payload["owned"] or str(row["acquired_on"] or "") != payload["acquired_on"] or str(row["notes"] or "") != payload["notes"]:
+                raise RuntimeError("Collectible progress did not round-trip exactly")
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
 
     def set_owned_batch(self, profile: str, owned_by_id: dict[int, bool]) -> int:
         profile_name = self.ensure_profile(profile)
         if not owned_by_id:
             return 0
+        normalized = {int(k): bool(v) for k, v in owned_by_id.items()}
+        for virtual_id in normalized:
+            rumor_id = self._rumor_id_from_virtual(virtual_id)
+            if rumor_id is not None:
+                if rumor_id <= 0:
+                    raise ValueError("Rumor ids must resolve to positive canonical ids")
+                exists = self.connection.execute("SELECT 1 FROM collectible_rumor WHERE id = ?", (rumor_id,)).fetchone()
+            else:
+                if virtual_id <= 0:
+                    raise ValueError("Collectible ids must be positive")
+                exists = self.connection.execute("SELECT 1 FROM collectible WHERE id = ?", (virtual_id,)).fetchone()
+            if exists is None:
+                raise KeyError(f"Unknown collectible/rumor id: {virtual_id}")
         db = self.progress_connection
-        db.execute("BEGIN")
+        db.execute("BEGIN IMMEDIATE")
         try:
-            for collectible_id, owned in owned_by_id.items():
+            for collectible_id, owned in normalized.items():
                 rumor_id = self._rumor_id_from_virtual(collectible_id)
                 if rumor_id is not None:
                     db.execute(
@@ -532,7 +574,7 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
         except Exception:
             db.rollback()
             raise
-        return len(owned_by_id)
+        return len(normalized)
 
     def export_progress_csv(self, target_path: Path) -> Path:
         target_path = Path(target_path)
