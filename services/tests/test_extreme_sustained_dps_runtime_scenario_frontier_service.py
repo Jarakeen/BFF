@@ -12,6 +12,7 @@ from minmax.support_stacking import StackingBehavior
 from minmax.support_target_type import SupportTargetType
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_runtime_scenario_frontier_service import (
+    ExtremeSustainedDPSRuntimeScenarioFrontierResult,
     ExtremeSustainedDPSRuntimeScenarioFrontierService,
 )
 from services.extreme_sustained_dps_runtime_effect_scaling_service import (
@@ -1078,4 +1079,60 @@ def test_runtime_scenario_requires_canonical_supplemental_collections() -> None:
             supplemental_histories=(object(),),
             supplemental_denominator_proven=True,
             source="malformed",
+        )
+
+
+
+def test_runtime_scenario_result_requires_canonical_runtime_evidence() -> None:
+    with pytest.raises(TypeError, match="canonical runtime frontier evidence"):
+        ExtremeSustainedDPSRuntimeScenarioFrontierResult(
+            runtime=SimpleNamespace(frontier=object()),
+            evidence=(),
+            unresolved=(),
+        )
+
+
+def test_runtime_scenario_result_requires_tuple_proof_collections() -> None:
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService().build(
+        plan=_plan(),
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        events=(),
+        effects=(),
+        event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed boss scenario",
+    )
+
+    with pytest.raises(TypeError, match="evidence must be a tuple"):
+        ExtremeSustainedDPSRuntimeScenarioFrontierResult(
+            runtime=result.runtime,
+            evidence=["mutable"],
+            unresolved=(),
+        )
+
+
+def test_scenario_builder_rejects_truthy_non_boolean_denominator_flags() -> None:
+    service = ExtremeSustainedDPSRuntimeScenarioFrontierService()
+    kwargs = dict(
+        plan=_plan(),
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        events=(),
+        effects=(),
+        supplemental_histories=(),
+        source="reviewed boss scenario",
+    )
+
+    with pytest.raises(TypeError, match="event_denominator_proven must be boolean"):
+        service.build(
+            **kwargs,
+            event_denominator_proven="false",
+            supplemental_denominator_proven=True,
+        )
+
+    with pytest.raises(TypeError, match="supplemental_denominator_proven must be boolean"):
+        service.build(
+            **kwargs,
+            event_denominator_proven=True,
+            supplemental_denominator_proven="false",
         )
