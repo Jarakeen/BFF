@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
     QComboBox,
+    QFileDialog,
     QHBoxLayout,
     QInputDialog,
     QLabel,
@@ -25,6 +26,7 @@ from engine.config import DEFAULT_DATABASE, get_data_dir, get_settings_path, get
 from models.build_model import BuildRoster, PlayerBuild
 from models.raid_plan import RaidPlanCoverageProvider
 from services.build_service import BuildService
+from services.coverage_pdf_export_service import CoveragePDFRow, export_coverage_pdf
 from services.finch_shared_provenance_service import format_shared_timestamp
 from services.finch_shared_coverage_service import (
     list_shared_coverage_from_finch,
@@ -287,11 +289,17 @@ class CoveragePage(FoundryPage):
             "Verify the selected Raid Plan's Coverage assignments are persisted in the canonical Raid Plan."
         )
         self.save_coverage_button.clicked.connect(self._save_coverage)
+        self.export_coverage_pdf_button = QPushButton("Export PDF")
+        self.export_coverage_pdf_button.setToolTip(
+            "Export the selected Raid Plan's covered effects, providers, sources, backups, and Coverage status."
+        )
+        self.export_coverage_pdf_button.clicked.connect(self._export_coverage_pdf)
         header_actions = QWidget()
         header_actions_layout = QHBoxLayout(header_actions)
         header_actions_layout.setContentsMargins(0, 0, 0, 0)
         header_actions_layout.setSpacing(6)
         header_actions_layout.addWidget(self.add_provider_button)
+        header_actions_layout.addWidget(self.export_coverage_pdf_button)
         header_actions_layout.addWidget(self.save_coverage_button)
         table_card.set_header_action(header_actions)
         table_card.addLayout(filters)
@@ -331,6 +339,81 @@ class CoveragePage(FoundryPage):
         lower.addWidget(notes, 2)
         root.addLayout(lower, 1)
         return page
+
+    def _export_coverage_pdf(self, *_args) -> None:
+        plan_id = self._selected_raid_plan_id_for_finch()
+        if not plan_id:
+            self.status.warning("Select a saved Raid Plan before exporting Coverage.")
+            return
+
+        try:
+            plan = self.raid_plan_repository.get(plan_id)
+        except Exception as exc:
+            self.status.error(f"Could not load Raid Plan for Coverage export: {exc}")
+            return
+        if plan is None:
+            self.status.warning("Selected Raid Plan is no longer available.")
+            return
+
+        covered_states = {
+            "assigned_manual",
+            "assigned_supported",
+            "assigned_conditional",
+            "assigned_unproven",
+            "backup_only",
+            "unassigned_available",
+            "available",
+            "conditional",
+        }
+        rows: list[CoveragePDFRow] = []
+        for row_index in range(self.table.rowCount()):
+            evidence_item = self.table.item(row_index, 8)
+            state = (
+                str(evidence_item.data(Qt.ItemDataRole.UserRole) or "").strip()
+                if evidence_item is not None
+                else ""
+            )
+            if state not in covered_states:
+                continue
+
+            def cell(column: int) -> str:
+                item = self.table.item(row_index, column)
+                return str(item.text() if item is not None else "").strip()
+
+            rows.append(
+                CoveragePDFRow(
+                    effect=cell(0),
+                    provider=cell(4),
+                    backup=cell(5),
+                    source=cell(3),
+                    status=cell(8),
+                )
+            )
+
+        safe_name = "".join(
+            char if char.isalnum() or char in {" ", "-", "_"} else "_"
+            for char in str(plan.name or "Raid Plan")
+        ).strip() or "Raid Plan"
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Coverage PDF",
+            f"{safe_name}_coverage.pdf",
+            "Printer-Friendly PDF (*.pdf)",
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.casefold() != ".pdf":
+            path = path.with_suffix(".pdf")
+
+        try:
+            export_coverage_pdf(plan, tuple(rows), path)
+        except Exception as exc:
+            self.status.error(f"Coverage PDF export failed: {exc}")
+            return
+        self.status.success(
+            f"Exported {len(rows)} covered effect(s) to {path}."
+        )
 
     def set_team_scope(
         self, name: str, members: tuple[tuple[str, PlayerBuild], ...], *, total_slots: int = 12
