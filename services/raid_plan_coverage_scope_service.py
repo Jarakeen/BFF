@@ -17,6 +17,7 @@ from models.raid_plan import RaidPlan
 from services.raid_plan_saved_build_resolution_service import (
     RaidPlanSavedBuildResolutionService,
 )
+from services.roster_placeholder_identity import is_personnel_placeholder
 
 
 def _clean(value: object) -> str:
@@ -203,10 +204,19 @@ class RaidPlanCoverageScopeService:
                     or _clean(member.secondary_assignment)
                     or _clean(member.assignment_source)
                 )
-                has_named_identity = bool(
-                    _clean(member.character_name) or _clean(member.gamertag)
+                identity_labels = tuple(
+                    label
+                    for label in (
+                        _clean(member.character_name),
+                        _clean(member.gamertag),
+                    )
+                    if label
                 )
-                if has_named_identity and has_planned_evidence:
+                has_real_identity = bool(identity_labels) and not all(
+                    is_personnel_placeholder(label)
+                    for label in identity_labels
+                )
+                if has_real_identity and has_planned_evidence:
                     members.append(
                         RaidPlanCoverageMember(
                             seat_id=member.seat_id,
