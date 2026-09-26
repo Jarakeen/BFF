@@ -225,6 +225,33 @@ def find_recovery_candidate(
     return min(matches, key=distance)
 
 
+def _coverage_summary(candidate: RevisionCandidate) -> str:
+    rows = candidate.coverage_providers
+    if not rows:
+        return "  (no manual Coverage providers)"
+    by_effect: dict[str, list[dict]] = {}
+    for row in rows:
+        effect = _clean(row.get("effect_name")) or "(unnamed effect)"
+        by_effect.setdefault(effect, []).append(row)
+
+    lines = [
+        f"  manual Coverage providers: {len(rows)}",
+        f"  unique Coverage effects: {len(by_effect)}",
+    ]
+    for effect in sorted(by_effect, key=str.casefold):
+        entries = []
+        for row in by_effect[effect]:
+            seat = _clean(row.get("seat_id")) or "?"
+            source = _clean(row.get("source")) or "?"
+            note = _clean(row.get("note"))
+            text = f"{seat} • {source}"
+            if note:
+                text += f" • {note}"
+            entries.append(text)
+        lines.append(f"    {effect}: " + " | ".join(entries))
+    return "\n".join(lines)
+
+
 def _seat_summary(candidate: RevisionCandidate) -> str:
     lines = []
     for member in candidate.members:
@@ -368,7 +395,7 @@ def main() -> int:
                 f"{row.name} [{row.plan_id}]"
             )
             print(_seat_summary(row))
-            print(f"  manual Coverage providers: {len(row.coverage_providers)}")
+            print(_coverage_summary(row))
         return 0
 
     if args.revision_id is not None:
@@ -402,7 +429,7 @@ def main() -> int:
         f"from {candidate.timestamp}: {candidate.name} [{candidate.plan_id}]"
     )
     print(_seat_summary(candidate))
-    print(f"Manual Coverage providers in revision: {len(candidate.coverage_providers)}")
+    print(_coverage_summary(candidate))
 
     if not args.apply:
         mode = "Coverage only" if args.coverage_only else "entire Raid Plan"
