@@ -6,6 +6,9 @@ import pytest
 from pydantic import ValidationError
 
 from models.build_model import BuildContextVariant, ChampionPointEntry, PlayerBuild
+from services.performance_mode_build_export_source_schema import (
+    PerformanceModeBuildExportSource,
+)
 from services.performance_mode_build_matrix_export_service import (
     BuildMatrixExportRequest,
     BuildMatrixIncludeOptions,
@@ -185,3 +188,35 @@ def test_export_source_snapshot_does_not_mutate_original_build() -> None:
     assert page.baseline.food == original_food
     assert build.Food == original_food
     assert build.ContextVariants[0].Food == original_variant_food
+
+
+def test_export_source_rejects_unknown_extra_armor_slot() -> None:
+    build = _build()
+    build.Armor["Tail"] = {
+        "Set": "Definitely Not Canonical",
+        "Set2": "",
+        "Quality": "",
+        "Trait": "",
+        "Enchant": "",
+        "EnchantTier": "",
+        "EnchantQuality": "",
+        "Level": "",
+        "Weight": "",
+    }
+
+    with pytest.raises(ValueError, match="unknown armor slots"):
+        default_export_request(build)
+
+
+def test_export_source_snapshot_is_frozen() -> None:
+    source = PerformanceModeBuildExportSource.from_build(_build())
+
+    with pytest.raises(ValidationError, match="frozen"):
+        source.Name = "Mutated"  # type: ignore[misc]
+
+
+def test_export_request_is_frozen() -> None:
+    request = default_export_request(_build())
+
+    with pytest.raises(ValidationError, match="frozen"):
+        request.mode = "current"  # type: ignore[misc]
