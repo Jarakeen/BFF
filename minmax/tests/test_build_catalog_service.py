@@ -87,6 +87,8 @@ def test_delete_build_removes_only_named_build_and_preserves_identity(tmp_path) 
 def test_delete_build_requires_stable_id_and_missing_id_is_noop(tmp_path) -> None:
     service = BuildCatalogService(tmp_path / "foundrydock.db")
     catalog = service.new_catalog()
+    catalog["players"] = [{"player_id": "p1", "gamertag": "KeepMe"}]
+    catalog["characters"] = [{"character_id": "c1", "player_id": "p1", "name": "Keep Me"}]
     catalog["builds"] = [
         {"build_id": "b1", "character_id": "c1", "name": "Keep Me", "payload": {}},
     ]
@@ -98,3 +100,34 @@ def test_delete_build_requires_stable_id_and_missing_id_is_noop(tmp_path) -> Non
         service.delete_build("")
     assert service.delete_build("does-not-exist") is False
     assert [row["build_id"] for row in service.load_strict()["builds"]] == ["b1"]
+
+
+def test_catalog_save_rejects_broken_identity_graph_before_write(tmp_path) -> None:
+    import pytest
+
+    service = BuildCatalogService(tmp_path / "foundrydock.db")
+    valid = service.new_catalog()
+    service.save(valid)
+
+    broken = service.new_catalog()
+    broken["builds"] = [
+        {"build_id": "orphan", "character_id": "missing", "name": "Nope", "payload": {}}
+    ]
+    with pytest.raises(ValueError, match="unknown character"):
+        service.save(broken)
+
+    assert service.load_strict() == valid
+
+
+def test_catalog_save_rejects_duplicate_stable_ids_before_write(tmp_path) -> None:
+    import pytest
+
+    service = BuildCatalogService(tmp_path / "foundrydock.db")
+    catalog = service.new_catalog()
+    catalog["players"] = [
+        {"player_id": "p1", "gamertag": "One"},
+        {"player_id": "P1", "gamertag": "Two"},
+    ]
+
+    with pytest.raises(ValueError, match="duplicate canonical player_id"):
+        service.save(catalog)
