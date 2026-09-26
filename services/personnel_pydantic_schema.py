@@ -64,6 +64,19 @@ class PersonnelPayload(BaseModel):
         return canonical
 
 
+class TeamIdentityPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    team_name: str = Field(min_length=1, max_length=240)
+
+
+class PersonnelAssignmentPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    field: str = Field(min_length=1, max_length=80)
+    value: str = Field(default="", max_length=12000)
+
+
 class TeamScheduleSlotPayload(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -95,14 +108,26 @@ def validate_personnel_payload(raw: Any) -> dict[str, Any]:
     return PersonnelPayload.model_validate(raw).model_dump(mode="python")
 
 
+def validate_team_identity_payload(raw: Any) -> dict[str, Any]:
+    return TeamIdentityPayload.model_validate(raw).model_dump(mode="python")
+
+
+def validate_personnel_assignment_payload(raw: Any) -> dict[str, Any]:
+    return PersonnelAssignmentPayload.model_validate(raw).model_dump(mode="python")
+
+
 def validate_team_schedule_payload(raw: Any) -> dict[str, Any]:
     return TeamSchedulePayload.model_validate(raw).model_dump(mode="python")
 
 
 __all__ = [
     "PersonnelPayload",
+    "PersonnelAssignmentPayload",
+    "TeamIdentityPayload",
     "TeamSchedulePayload",
     "ValidationError",
     "validate_personnel_payload",
+    "validate_personnel_assignment_payload",
+    "validate_team_identity_payload",
     "validate_team_schedule_payload",
 ]
