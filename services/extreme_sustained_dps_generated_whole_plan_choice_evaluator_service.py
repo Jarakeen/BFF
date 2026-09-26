@@ -86,6 +86,12 @@ class ExtremeSustainedDPSGeneratedWholePlanChoiceEvaluator(Generic[T]):
             initial_bar=initial_bar,
         )
 
+        mechanic_complete = getattr(result, "mechanic_complete", None)
+        if not isinstance(mechanic_complete, bool):
+            raise TypeError("generated whole-plan mechanic_complete must be boolean")
+        if not isinstance(result.unresolved, tuple):
+            raise TypeError("generated whole-plan unresolved evidence must be a tuple")
+
         return ExtremeSustainedDPSWholePlanEvaluation(
             choice_id=choice_id,
             modeled_dps=(
@@ -94,7 +100,7 @@ class ExtremeSustainedDPSGeneratedWholePlanChoiceEvaluator(Generic[T]):
             duration_seconds=(
                 None if result.record is None else float(result.record.duration_seconds)
             ),
-            mechanic_complete=bool(result.mechanic_complete),
+            mechanic_complete=mechanic_complete,
             unresolved=tuple(result.unresolved),
         )
 
