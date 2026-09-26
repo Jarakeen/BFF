@@ -70,3 +70,13 @@ def test_potion_frontier_rejects_boolean_candidate_index() -> None:
 
     with pytest.raises(TypeError, match="candidate index must be an integer"):
         service.candidate_at(PlayerBuild(), True)
+
+
+@pytest.mark.parametrize("field,value", (("offset", True), ("limit", "2"), ("offset", 1.5)))
+def test_potion_page_requires_strict_integer_bounds(field, value) -> None:
+    service = ExtremeSustainedDPSPotionFrontierService(_Repository())
+    kwargs = {"offset": 0, "limit": 2}
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"potion page {field} must be an integer"):
+        service.page(PlayerBuild(), **kwargs)
