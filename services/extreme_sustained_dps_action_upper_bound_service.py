@@ -31,6 +31,22 @@ class ExtremeSustainedDPSActionDominanceProof:
     unresolved: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        key = str(self.candidate_key or "").strip()
+        if not key:
+            raise ValueError("sustained-DPS action dominance proof requires candidate_key")
+        if not isinstance(self.dominated_axes, tuple):
+            raise TypeError("sustained-DPS action dominated_axes must be a tuple")
+        if not isinstance(self.required_axes, tuple):
+            raise TypeError("sustained-DPS action required_axes must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("sustained-DPS action unresolved must be a tuple")
+        if isinstance(self.optimistic_multiplier, bool):
+            raise TypeError("sustained-DPS action dominance multiplier must be numeric, not boolean")
+        if isinstance(self.optimistic_upper_damage, bool):
+            raise TypeError("sustained-DPS action absolute upper damage must be numeric, not boolean")
+        object.__setattr__(self, "candidate_key", key)
+        object.__setattr__(self, "source", str(self.source or "").strip())
+
         multiplier = float(self.optimistic_multiplier)
         if not isfinite(multiplier) or multiplier < 1.0:
             raise ValueError(
