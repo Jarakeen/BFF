@@ -34,8 +34,19 @@ class ExtremeSustainedDPSStructuralAxisCoverageService:
         cls,
         frontier: ExtremeSustainedDPSGeneratedFrontier,
     ) -> ExtremeSustainedDPSStructuralAxisCoverageResult:
+        if not isinstance(frontier.unresolved, tuple):
+            raise TypeError("structural axis coverage unresolved evidence must be a tuple")
+        if not isinstance(frontier.structural_denominator_proven, bool):
+            raise TypeError("structural axis coverage denominator proof must be boolean")
+        if (
+            isinstance(frontier.structural_candidate_count, bool)
+            or not isinstance(frontier.structural_candidate_count, int)
+        ):
+            raise TypeError("structural axis coverage candidate count must be an integer")
+        if not isinstance(frontier.expanded_axes, tuple):
+            raise TypeError("structural axis coverage expanded_axes must be a tuple")
         unresolved = list(frontier.unresolved)
-        complete = bool(
+        complete = (
             frontier.structural_denominator_proven
             and frontier.structural_candidate_count > 0
             and not unresolved
