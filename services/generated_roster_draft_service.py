@@ -16,6 +16,7 @@ import json
 
 from services.eso_database import EsoDatabase
 from services.user_database import user_database_for
+from services.generated_roster_draft_pydantic_schema import validate_generated_roster_draft
 
 
 GENERATED_ROSTER_DRAFT_OWNERSHIP = "composition_recruitment_evidence_only"
@@ -227,75 +228,84 @@ class GeneratedRosterDraftService:
         difficulty: str,
         slots: tuple[GeneratedRosterDraftSlot, ...],
     ) -> GeneratedRosterDraft:
-        plan_name = str(name or "").strip()
-        plan_goal = str(goal or "").strip()
-        if not plan_name:
-            raise ValueError("generated roster draft requires a name")
-        if not plan_goal:
-            raise ValueError("generated roster draft requires a goal")
-        if not slots:
-            raise ValueError("generated roster draft requires at least one slot")
-
-        self.db.execute(
-            """
-            INSERT INTO generated_roster_draft (name, goal, difficulty, updated_at)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(name) DO UPDATE SET
-                goal = excluded.goal,
-                difficulty = excluded.difficulty,
-                updated_at = CURRENT_TIMESTAMP
-            """,
-            (plan_name, plan_goal, str(difficulty or "").strip()),
-        )
-        row = self.db.execute(
-            "SELECT id FROM generated_roster_draft WHERE name = ? COLLATE NOCASE",
-            (plan_name,),
-        ).fetchone()
-        if row is None:
-            raise RuntimeError("generated roster draft could not be reloaded after save")
-        draft_id = int(row["id"])
-        self.db.execute(
-            "DELETE FROM generated_roster_draft_slot WHERE draft_id = ?",
-            (draft_id,),
-        )
-        for index, slot in enumerate(slots):
-            self.db.execute(
-                """
-                INSERT INTO generated_roster_draft_slot (
-                    draft_id, slot_index, slot_name, kind, player_name,
-                    character_name, eso_class, build_name, gear_summary, unresolved,
-                    role, source_kind, source_name, source_url, candidate_id,
-                    gear_sets_json, skills_json, mundus
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    draft_id,
-                    index,
-                    slot.slot_name,
-                    slot.kind,
-                    slot.player_name,
-                    slot.character_name,
-                    slot.eso_class,
-                    slot.build_name,
-                    slot.gear_summary,
-                    slot.unresolved,
-                    slot.role,
-                    slot.source_kind,
-                    slot.source_name,
-                    slot.source_url,
-                    slot.candidate_id,
-                    json.dumps(list(slot.gear_sets), ensure_ascii=False),
-                    json.dumps(list(slot.skills), ensure_ascii=False),
-                    slot.mundus,
-                ),
+        intended = validate_generated_roster_draft({
+            "name": str(name or "").strip(),
+            "goal": str(goal or "").strip(),
+            "difficulty": str(difficulty or "").strip(),
+            "slots": tuple({
+                "slot_name": slot.slot_name, "kind": slot.kind,
+                "player_name": slot.player_name, "character_name": slot.character_name,
+                "eso_class": slot.eso_class, "build_name": slot.build_name,
+                "gear_summary": slot.gear_summary, "unresolved": slot.unresolved,
+                "role": slot.role, "source_kind": slot.source_kind,
+                "source_name": slot.source_name, "source_url": slot.source_url,
+                "candidate_id": slot.candidate_id, "gear_sets": tuple(slot.gear_sets),
+                "skills": tuple(slot.skills), "mundus": slot.mundus,
+            } for slot in slots),
+        })
+        db = self.db.connection
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            db.execute(
+                """INSERT INTO generated_roster_draft (name, goal, difficulty, updated_at)
+                   VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                   ON CONFLICT(name) DO UPDATE SET goal=excluded.goal,
+                       difficulty=excluded.difficulty, updated_at=CURRENT_TIMESTAMP""",
+                (intended["name"], intended["goal"], intended["difficulty"]),
             )
-        self.db.commit()
-
+            row = db.execute(
+                "SELECT id FROM generated_roster_draft WHERE name = ? COLLATE NOCASE",
+                (intended["name"],),
+            ).fetchone()
+            if row is None:
+                raise RuntimeError("generated roster draft could not be reloaded after save")
+            draft_id = int(row["id"])
+            db.execute("DELETE FROM generated_roster_draft_slot WHERE draft_id = ?", (draft_id,))
+            for index, slot in enumerate(intended["slots"]):
+                db.execute(
+                    """INSERT INTO generated_roster_draft_slot (
+                        draft_id, slot_index, slot_name, kind, player_name, character_name,
+                        eso_class, build_name, gear_summary, unresolved, role, source_kind,
+                        source_name, source_url, candidate_id, gear_sets_json, skills_json, mundus
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (draft_id, index, slot["slot_name"], slot["kind"], slot["player_name"],
+                     slot["character_name"], slot["eso_class"], slot["build_name"],
+                     slot["gear_summary"], slot["unresolved"], slot["role"], slot["source_kind"],
+                     slot["source_name"], slot["source_url"], slot["candidate_id"],
+                     json.dumps(list(slot["gear_sets"]), ensure_ascii=False),
+                     json.dumps(list(slot["skills"]), ensure_ascii=False), slot["mundus"]),
+                )
+            persisted = self._load_row(
+                db.execute(
+                    "SELECT id, name, goal, difficulty FROM generated_roster_draft WHERE id = ?",
+                    (draft_id,),
+                ).fetchone()
+            )
+            read_back = validate_generated_roster_draft({
+                "name": persisted.name, "goal": persisted.goal,
+                "difficulty": persisted.difficulty,
+                "slots": tuple({
+                    "slot_name": slot.slot_name, "kind": slot.kind,
+                    "player_name": slot.player_name, "character_name": slot.character_name,
+                    "eso_class": slot.eso_class, "build_name": slot.build_name,
+                    "gear_summary": slot.gear_summary, "unresolved": slot.unresolved,
+                    "role": slot.role, "source_kind": slot.source_kind,
+                    "source_name": slot.source_name, "source_url": slot.source_url,
+                    "candidate_id": slot.candidate_id, "gear_sets": tuple(slot.gear_sets),
+                    "skills": tuple(slot.skills), "mundus": slot.mundus,
+                } for slot in persisted.slots),
+            })
+            if read_back != intended:
+                raise RuntimeError("generated roster draft did not round-trip exactly")
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
         return GeneratedRosterDraft(
             draft_id=draft_id,
-            name=plan_name,
-            goal=plan_goal,
-            difficulty=str(difficulty or "").strip(),
+            name=intended["name"],
+            goal=intended["goal"],
+            difficulty=intended["difficulty"],
             slots=tuple(slots),
         )
 
