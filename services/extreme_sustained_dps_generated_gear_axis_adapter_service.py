@@ -90,9 +90,17 @@ class ExtremeSustainedDPSGeneratedGearAxisAdapterService:
         *,
         count_field: str = "candidate_count",
     ) -> int:
-        count = int(getattr(frontier, count_field, 0))
-        unresolved = tuple(getattr(frontier, "unresolved", ()) or ())
-        if not bool(getattr(frontier, "denominator_proven", False)):
+        raw_count = getattr(frontier, count_field, 0)
+        if isinstance(raw_count, bool) or not isinstance(raw_count, int):
+            raise TypeError(f"{label} candidate count must be an integer")
+        count = raw_count
+        unresolved = getattr(frontier, "unresolved", ())
+        if not isinstance(unresolved, tuple):
+            raise TypeError(f"{label} unresolved evidence must be a tuple")
+        denominator_proven = getattr(frontier, "denominator_proven", False)
+        if not isinstance(denominator_proven, bool):
+            raise TypeError(f"{label} denominator proof flag must be boolean")
+        if not denominator_proven:
             detail = "; ".join(str(item) for item in unresolved if str(item))
             raise ValueError(
                 f"{label} denominator is unresolved"
