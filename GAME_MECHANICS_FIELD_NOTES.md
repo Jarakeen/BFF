@@ -17,6 +17,12 @@ Keep equations secondary. The point of this file is to preserve the useful idea 
 
 ---
 
+## 2026-09-26 — Generated search coordinates and ceilings are typed evidence too
+
+The Objective #32 search tree now applies the same fail-closed rule to frontier page coordinates, weapon/armor/skill source collections, global-search scalar inputs, branch-and-bound DPS/duration evidence, and frontier wiring metadata. Search coordinates must be actual integers, timing/resistance/DPS values must be actual numeric values, and bound providers must return immutable tuple evidence rather than arbitrary iterables.
+
+Why this matters: a global maximum proof is only as sound as the tree that was actually enumerated. Silently converting `"10"`, `True`, mutable lists, or malformed axis metadata can make the tree look finite and canonical when the caller never supplied canonical evidence. The engine now rejects those shapes before they can participate in pruning or closure.
+
 ## 2026-09-26 — Potion, Heavy Attack, and delayed-Ultimate frontiers require typed proof inputs
 
 Objective #32 now applies the same fail-closed evidence rule to potion paging/resource observations, continuous potion timing breakpoints, finalized potion-restoration proof flags, reviewed Heavy Attack windows, and delayed-Ultimate generation inputs. Booleans cannot masquerade as numbers, strings are not silently parsed into timestamps/ranks/resources, and proof collections must arrive in the immutable tuple shape the frontier contract declares.
