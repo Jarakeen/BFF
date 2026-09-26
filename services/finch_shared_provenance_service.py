@@ -72,7 +72,7 @@ class FinchSharedProvenancePayload(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     schema_version: int = Field(default=_SCHEMA_VERSION, ge=_SCHEMA_VERSION, le=_SCHEMA_VERSION)
-    copies: tuple[FinchCopyProvenancePayload, ...] = ()
+    copies: list[FinchCopyProvenancePayload] = Field(default_factory=list)
 
 
 class FinchSharedProvenanceService:
