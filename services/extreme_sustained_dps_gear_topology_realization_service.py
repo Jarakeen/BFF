@@ -73,23 +73,26 @@ class ExtremeSustainedDPSGearTopologyRealizationService:
             max_assignments=max_assignments,
         )
 
+        if not isinstance(result.unresolved, tuple):
+            raise TypeError("gear topology realization unresolved evidence must be a tuple")
+        if not isinstance(result.truncated, bool):
+            raise TypeError("gear topology realization truncated flag must be boolean")
+        if not isinstance(result.denominator_proven, bool):
+            raise TypeError("gear topology realization denominator proof must be boolean")
         unresolved = list(result.unresolved)
         if result.truncated:
             unresolved.append(
                 "Named-set assignment search was truncated; this topology branch is exploratory, not denominator-proven"
             )
         final_unresolved = tuple(dict.fromkeys(item for item in unresolved if item))
-        proven = bool(
-            result.denominator_proven
-            and not final_unresolved
-        )
+        proven = result.denominator_proven and not final_unresolved
         return ExtremeSustainedDPSGearTopologyRealization(
             topology_index=int(topology_index),
             topology_signature=topology.signature,
             assignments_considered=int(result.assignments_considered),
             assignments_realized=int(result.assignments_realized),
             assignments_rejected=int(result.assignments_rejected),
-            truncated=bool(result.truncated),
+            truncated=result.truncated,
             denominator_proven=proven,
             evidence=(
                 f"Topology: {topology.signature}",
