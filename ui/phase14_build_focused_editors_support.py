@@ -1202,9 +1202,12 @@ def _footer(page) -> QWidget:
     more.setProperty("secondary", True)
     menu = QMenu(more)
 
+    from ui.build_matrix_export_support import export_selected_build_to_pdf
+
     actions = (
         ("Save as Template", lambda: _proxy(page, "template_build_button")),
         ("Copy Build To…", lambda: _proxy(page, "copy_build_button")),
+        ("Export Build to PDF…", lambda: export_selected_build_to_pdf(page)),
         ("Export Builds…", page._export_csv),
         ("Delete Build", lambda: _proxy(page, "delete_build_button")),
     )
