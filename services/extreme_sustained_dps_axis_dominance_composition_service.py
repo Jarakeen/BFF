@@ -118,6 +118,40 @@ class ExtremeSustainedDPSAxisDominanceComposition:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        key = str(self.candidate_key or "").strip()
+        if not key:
+            raise ValueError("axis dominance composition requires candidate_key")
+        for name in (
+            "required_axes",
+            "dominated_axes",
+            "missing_axes",
+            "contributing_sources",
+            "omitted_scope",
+            "evidence",
+            "unresolved",
+        ):
+            if not isinstance(getattr(self, name), tuple):
+                raise TypeError(f"axis dominance composition {name} must be a tuple")
+        if not isinstance(self.proof, ExtremeSustainedDPSActionDominanceProof):
+            raise TypeError("axis dominance composition requires canonical dominance proof")
+        expected_missing = tuple(
+            axis for axis in self.required_axes if axis not in set(self.dominated_axes)
+        )
+        if self.missing_axes != expected_missing:
+            raise ValueError(
+                "axis dominance composition missing_axes must match required minus dominated axes"
+            )
+        if self.proof.candidate_key != key:
+            raise ValueError("axis dominance composition proof candidate key must match composition")
+        if self.proof.required_axes != self.required_axes:
+            raise ValueError("axis dominance composition proof required_axes must match composition")
+        if self.proof.dominated_axes != self.dominated_axes:
+            raise ValueError("axis dominance composition proof dominated_axes must match composition")
+        if self.proof.unresolved != self.unresolved:
+            raise ValueError("axis dominance composition proof unresolved must match composition")
+        object.__setattr__(self, "candidate_key", key)
+
 
 class ExtremeSustainedDPSAxisDominanceCompositionService:
     """Union proof coverage and emit a canonical action-dominance coverage proof."""
