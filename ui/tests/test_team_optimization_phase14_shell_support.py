@@ -64,9 +64,22 @@ def test_phase14_optimizer_explains_missing_and_incomplete_plan_scope() -> None:
     source = _source()
 
     assert "No Raid Plan is loaded." in source
-    assert "select and Load the saved plan" in source
+    assert "Select a saved plan above to preview it" in source
     assert "An empty or partial team can still be opened" in source
     assert "Its team has no filled chairs yet." in source
     assert "report the remaining open chairs as blockers" in source
     assert "def _render_scope_message(page, raid_plan: RaidPlan, named_chairs: int)" in source
     assert "_render_scope_message(page, raid_plan, named_chairs)" in source
+
+
+def test_phase14_optimizer_draft_preview_can_open_saved_plans_without_saving() -> None:
+    source = _source()
+
+    assert "Optimizer is in draft format. Only preview is available at this time." in source
+    assert 'page.optimizer_plan_combo.addItem("Select saved Raid Plan…", None)' in source
+    assert "RaidPlanRepository(get_user_database_path()).list_plans()" in source
+    assert "RaidPlanRepository(get_user_database_path()).get(str(plan_id))" in source
+    assert "page.set_raid_plan_adviser_scope(plan)" in source
+    assert "page.optimizer_plan_combo.setEnabled(False)" not in source
+    assert "repository.save(" not in source
+    assert ".save(plan" not in source
