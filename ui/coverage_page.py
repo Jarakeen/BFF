@@ -49,8 +49,7 @@ from ui.raid_review_async_task import RaidReviewAsyncTask
 _FINCH_COVERAGE_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="finch-coverage")
 
 CORE_COVERAGE = tuple(row.display_name for row in DEFAULT_RAID_COVERAGE_PROFILE.requirements if row.required)
-DEBUFFS = {"Major Vulnerability", "Major Breach", "Crusher", "Minor Brittle", "Minor Maim"}
-UTILITY = {"Orbs", "Purify", "Magickasteal"}
+UTILITY = {"Orbs", "Purify"}
 
 
 class CoveragePage(FoundryPage):
@@ -982,7 +981,15 @@ class CoveragePage(FoundryPage):
             name = item.text()
             evidence = self.table.item(row, 8).data(Qt.ItemDataRole.UserRole)
             source_count = self.table.item(row, 3).data(Qt.ItemDataRole.UserRole) or 0
-            category = "Debuffs" if name in DEBUFFS else "Utility" if name in UTILITY else "Buffs"
+            type_item = self.table.item(row, 1)
+            type_text = str(type_item.text() if type_item is not None else "").strip()
+            category = (
+                "Utility"
+                if name in UTILITY
+                else "Debuffs"
+                if "debuff" in type_text.casefold()
+                else "Buffs"
+            )
             searchable = f"{name} {self.table.item(row, 3).text()}".casefold()
             visible = (
                 (effect_type == "All Effects" or effect_type == category)
