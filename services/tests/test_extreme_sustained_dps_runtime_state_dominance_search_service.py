@@ -108,15 +108,10 @@ def test_runtime_state_adapter_rejects_boolean_index() -> None:
         adapter.choice_at(True)
 
 
-def test_runtime_state_adapter_preserves_strict_frontier_proof_types() -> None:
-    from dataclasses import replace
-    from services.extreme_sustained_dps_runtime_state_dominance_search_service import (
-        _RuntimeStateWholePlanAdapter,
-    )
-
-    frontier = _frontier()
-    bad = replace(frontier, denominator_proven="true")  # type: ignore[arg-type]
-    adapter = _RuntimeStateWholePlanAdapter(bad)
-
-    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
-        _ = adapter.denominator_proven
+def test_runtime_state_frontier_rejects_truthy_denominator_proof() -> None:
+    with pytest.raises(TypeError, match="denominator proof flag must be boolean"):
+        ExtremeSustainedDPSRuntimeStateFrontierService.build(
+            (ExtremeSustainedDPSRuntimeStateChoice("base", object()),),
+            denominator_proven="true",  # type: ignore[arg-type]
+            source="invalid proof",
+        )
