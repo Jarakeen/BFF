@@ -186,8 +186,12 @@ class ExtremeSustainedDPSArmorTraitEnchantFrontierService:
         limit: int = 100,
     ) -> tuple[ExtremeSustainedDPSArmorTraitEnchantCandidate, ...]:
         frontier = cls.frontier(baseline_build)
-        start = max(0, int(offset))
-        size = max(0, int(limit))
+        if isinstance(offset, bool) or not isinstance(offset, int):
+            raise TypeError("armor trait/enchant page offset must be an integer")
+        if isinstance(limit, bool) or not isinstance(limit, int):
+            raise TypeError("armor trait/enchant page limit must be an integer")
+        start = max(0, offset)
+        size = max(0, limit)
         if size == 0 or start >= frontier.candidate_count:
             return ()
         stop = min(frontier.candidate_count, start + size)
