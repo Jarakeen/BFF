@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from services.extreme_sustained_dps_generated_tree_coverage_service import (
     ExtremeSustainedDPSGeneratedTreeCoverageService,
 )
@@ -118,3 +120,24 @@ def test_tree_coverage_rejects_truthy_non_boolean_global_maximum_proof() -> None
         assert "boolean global_maximum_proven" in str(exc)
     else:
         raise AssertionError("truthy non-boolean search proof must fail closed")
+
+
+
+@pytest.mark.parametrize(
+    "field",
+    ("unresolved", "duplicate_canonical_axes", "searched_canonical_axes", "omitted_scope"),
+)
+def test_tree_coverage_rejects_mutable_inventory_proof_collections(field) -> None:
+    with pytest.raises(TypeError, match="must be a tuple"):
+        ExtremeSustainedDPSGeneratedTreeCoverageService.from_search(
+            search_result=SimpleNamespace(global_maximum_proven=True, unresolved=()),
+            axis_inventory=_inventory(**{field: []}),
+        )
+
+
+def test_tree_coverage_rejects_mutable_search_unresolved_evidence() -> None:
+    with pytest.raises(TypeError, match="search unresolved must be a tuple"):
+        ExtremeSustainedDPSGeneratedTreeCoverageService.from_search(
+            search_result=SimpleNamespace(global_maximum_proven=True, unresolved=[]),
+            axis_inventory=_inventory(),
+        )
