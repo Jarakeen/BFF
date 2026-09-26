@@ -15,9 +15,7 @@ if str(ROOT) not in sys.path:
 
 from engine.config import get_user_database_path
 from services.build_catalog_service import BuildCatalogService
-from services.eso_database import EsoDatabase
 from services.raid_plan_repository import RaidPlanRepository
-from services.roster_service import RosterService
 from services.user_build_catalog_pydantic_schema import validate_user_build_catalog_payload
 
 
@@ -58,9 +56,14 @@ def main(argv: list[str] | None = None) -> int:
     validate_user_build_catalog_payload(catalog)
 
     raid_plans = RaidPlanRepository(path).list_plans()
-    roster = RosterService(EsoDatabase(path))
-    members = roster.list_members(include_archived=True)
-    teams = roster.list_team_schedules()
+    with sqlite3.connect(path) as db:
+        db.row_factory = sqlite3.Row
+        members = db.execute(
+            "SELECT id, player_name, character_name FROM roster_member ORDER BY id"
+        ).fetchall()
+        teams = db.execute(
+            "SELECT id, name FROM team ORDER BY name COLLATE NOCASE"
+        ).fetchall()
 
     # list_plans/get exercise the strict Raid Plan Pydantic read boundary for every
     # persisted plan rather than trusting list metadata alone.
@@ -92,7 +95,7 @@ def main(argv: list[str] | None = None) -> int:
         for name in sorted(requested):
             personnel = [
                 member for member in members
-                if str(member.PlayerName or "").strip().casefold() == name
+                if str(member["player_name"] or "").strip().casefold() == name
             ]
             characters = [
                 row for row in catalog["characters"]
