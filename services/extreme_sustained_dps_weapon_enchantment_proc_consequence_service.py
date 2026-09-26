@@ -21,12 +21,41 @@ class ExtremeSustainedDPSWeaponEnchantmentProcOccurrence:
     source: ExtremeSustainedDPSWeaponEnchantmentRuntimeSource
     consequences: tuple[CombatEffect, ...]
 
+    def __post_init__(self) -> None:
+        if isinstance(self.time_seconds, bool) or not isinstance(self.time_seconds, (int, float)):
+            raise TypeError("weapon-enchantment proc occurrence time_seconds must be numeric")
+        if isinstance(self.sequence, bool) or not isinstance(self.sequence, int):
+            raise TypeError("weapon-enchantment proc occurrence sequence must be an integer")
+        if self.sequence < 0:
+            raise ValueError("weapon-enchantment proc occurrence sequence cannot be negative")
+        if not isinstance(self.source, ExtremeSustainedDPSWeaponEnchantmentRuntimeSource):
+            raise TypeError("weapon-enchantment proc occurrence source must be canonical runtime source")
+        if not isinstance(self.consequences, tuple):
+            raise TypeError("weapon-enchantment proc occurrence consequences must be a tuple")
+        if any(not isinstance(row, CombatEffect) for row in self.consequences):
+            raise TypeError("weapon-enchantment proc occurrence consequences must contain CombatEffect records")
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSWeaponEnchantmentProcConsequenceResolution:
     occurrences: tuple[ExtremeSustainedDPSWeaponEnchantmentProcOccurrence, ...]
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.occurrences, tuple):
+            raise TypeError("weapon-enchantment proc resolution occurrences must be a tuple")
+        if any(
+            not isinstance(row, ExtremeSustainedDPSWeaponEnchantmentProcOccurrence)
+            for row in self.occurrences
+        ):
+            raise TypeError(
+                "weapon-enchantment proc resolution occurrences must contain canonical occurrence records"
+            )
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("weapon-enchantment proc resolution evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("weapon-enchantment proc resolution unresolved must be a tuple")
 
     @property
     def resolved(self) -> bool:
@@ -56,12 +85,26 @@ class ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService:
         attempts: tuple[RuntimeEffectEventAttempt, ...],
         sources: tuple[ExtremeSustainedDPSWeaponEnchantmentRuntimeSource, ...],
     ) -> ExtremeSustainedDPSWeaponEnchantmentProcConsequenceResolution:
+        if not isinstance(attempts, tuple):
+            raise TypeError("weapon-enchantment proc attempts must be a tuple")
+        if any(not isinstance(row, RuntimeEffectEventAttempt) for row in attempts):
+            raise TypeError("weapon-enchantment proc attempts must contain RuntimeEffectEventAttempt records")
+        if not isinstance(sources, tuple):
+            raise TypeError("weapon-enchantment proc sources must be a tuple")
+        if any(
+            not isinstance(row, ExtremeSustainedDPSWeaponEnchantmentRuntimeSource)
+            for row in sources
+        ):
+            raise TypeError(
+                "weapon-enchantment proc sources must contain canonical runtime source records"
+            )
+
         source_by_key: dict[
             tuple[str, str, str, str],
             ExtremeSustainedDPSWeaponEnchantmentRuntimeSource,
         ] = {}
         unresolved: list[str] = []
-        for source in tuple(sources):
+        for source in sources:
             key = cls._source_key(source)
             if key in source_by_key:
                 unresolved.append(
@@ -72,7 +115,7 @@ class ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService:
             source_by_key[key] = source
 
         occurrences: list[ExtremeSustainedDPSWeaponEnchantmentProcOccurrence] = []
-        for attempt in tuple(attempts):
+        for attempt in attempts:
             if attempt.event.trigger != WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER:
                 continue
             if attempt.bound_effect_key is None:
@@ -96,10 +139,10 @@ class ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService:
                 continue
             occurrences.append(
                 ExtremeSustainedDPSWeaponEnchantmentProcOccurrence(
-                    time_seconds=float(attempt.event.time_seconds),
-                    sequence=int(attempt.event.sequence),
+                    time_seconds=attempt.event.time_seconds,
+                    sequence=attempt.event.sequence,
                     source=source,
-                    consequences=tuple(source.effects),
+                    consequences=source.effects,
                 )
             )
 
@@ -116,7 +159,7 @@ class ExtremeSustainedDPSWeaponEnchantmentProcConsequenceService:
         return ExtremeSustainedDPSWeaponEnchantmentProcConsequenceResolution(
             occurrences=ordered,
             evidence=(
-                f"Canonical equipped enchant sources supplied: {len(tuple(sources))}",
+                f"Canonical equipped enchant sources supplied: {len(sources)}",
                 f"Source-bound enchant proc attempts inspected: {sum(1 for row in attempts if row.event.trigger == WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER)}",
                 f"Exact enchant proc consequence occurrences resolved: {len(ordered)}",
                 f"Canonical consequence rows attached to selected procs: {sum(len(row.consequences) for row in ordered)}",
