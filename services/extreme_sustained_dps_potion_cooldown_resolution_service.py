@@ -13,6 +13,10 @@ from minmax.character_build.saved_build_adapter import SavedBuildCharacterAdapte
 from minmax.jewelry_potion_cooldown_repository import JewelryPotionCooldownRepository
 from minmax.jewelry_trait_repository import JewelryTraitRepository
 from models.build_model import PlayerBuild
+from services.extreme_sustained_dps_potion_cooldown_passive_grant_service import (
+    ExtremeSustainedDPSPotionCooldownPassiveEvidence,
+    ExtremeSustainedDPSPotionCooldownPassiveGrantService,
+)
 
 
 ExtremePotionPassiveGrantEvidence = ExtremeSustainedDPSPotionCooldownPassiveEvidence
@@ -21,10 +25,6 @@ ExtremePotionPassiveGrantResolver = Callable[
     [PlayerBuild, object],
     ExtremePotionPassiveGrantEvidence,
 ]
-from services.extreme_sustained_dps_potion_cooldown_passive_grant_service import (
-    ExtremeSustainedDPSPotionCooldownPassiveEvidence,
-    ExtremeSustainedDPSPotionCooldownPassiveGrantService,
-)
 from services.extreme_skill_universe_service import ExtremeSkillUniverseService
 from services.rotation_build_potion_cooldown_service import (
     RotationBuildPotionCooldownResolution,
