@@ -65,3 +65,34 @@ def test_invalid_jewelry_index_fails_closed() -> None:
 def test_jewelry_frontier_rejects_boolean_candidate_index() -> None:
     with pytest.raises(TypeError, match="candidate index must be an integer"):
         _service().candidate_at(_build(), False)
+
+
+@pytest.mark.parametrize("field,value", (("offset", False), ("limit", "3"), ("offset", 2.5)))
+def test_jewelry_page_requires_strict_integer_bounds(field, value) -> None:
+    kwargs = {"offset": 0, "limit": 3}
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"jewelry page {field} must be an integer"):
+        _service().page(_build(), **kwargs)
+
+
+def test_jewelry_frontier_requires_tuple_choice_collections() -> None:
+    with pytest.raises(TypeError, match="enchant choices must be a tuple"):
+        ExtremeSustainedDPSJewelryFrontierService(
+            trait_choices=("Bloodthirsty",),
+            enchant_choices=["Weapon Damage"],  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="trait choices must be a tuple"):
+        ExtremeSustainedDPSJewelryFrontierService(
+            trait_choices=["Bloodthirsty"],  # type: ignore[arg-type]
+            enchant_choices=("Weapon Damage",),
+        )
+
+
+def test_jewelry_frontier_rejects_non_string_choices() -> None:
+    with pytest.raises(TypeError, match="must contain only strings"):
+        ExtremeSustainedDPSJewelryFrontierService(
+            trait_choices=("Bloodthirsty", 7),  # type: ignore[arg-type]
+            enchant_choices=("Weapon Damage",),
+        )
