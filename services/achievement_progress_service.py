@@ -11,6 +11,8 @@ import json
 import sqlite3
 from pathlib import Path
 
+from services.achievement_progress_pydantic_schema import validate_achievement_progress_snapshot
+
 
 class AchievementProgressService:
     VERSION = 2
@@ -209,18 +211,30 @@ class AchievementProgressService:
         self._profiles[profile_name] = {str(value) for value in achievement_ids}
         self._save()
 
-    def _save(self) -> None:
+    def _validated_snapshot(self) -> dict:
         self._ensure_loaded()
+        return validate_achievement_progress_snapshot(
+            {
+                "active_profile": self._active_profile,
+                "profiles": {
+                    name: tuple(sorted(completed))
+                    for name, completed in self._profiles.items()
+                },
+            }
+        )
+
+    def _save(self) -> None:
+        snapshot = self._validated_snapshot()
         if self._database_mode:
-            self._save_database()
+            self._save_database(snapshot)
             return
         self.progress_path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "Version": self.VERSION,
-            "ActiveProfile": self._active_profile,
+            "ActiveProfile": snapshot["active_profile"],
             "Profiles": {
-                name: {"Completed": sorted(completed)}
-                for name, completed in self._profiles.items()
+                name: {"Completed": list(completed)}
+                for name, completed in snapshot["profiles"].items()
             },
         }
         self.progress_path.write_text(
@@ -228,12 +242,12 @@ class AchievementProgressService:
             encoding="utf-8",
         )
 
-    def _save_database(self) -> None:
+    def _save_database(self, snapshot: dict) -> None:
         self.progress_path.parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as db:
             db.execute("BEGIN")
             try:
-                for profile in self._profiles:
+                for profile, achievement_ids in snapshot["profiles"].items():
                     db.execute(
                         "INSERT OR IGNORE INTO achievement_profile(profile_name) VALUES (?)",
                         (profile,),
@@ -250,7 +264,7 @@ class AchievementProgressService:
                         """,
                         [
                             (profile, achievement_id)
-                            for achievement_id in sorted(self._profiles[profile])
+                            for achievement_id in achievement_ids
                         ],
                     )
                 db.execute(
@@ -259,8 +273,38 @@ class AchievementProgressService:
                     VALUES ('active_achievement_profile', ?)
                     ON CONFLICT(key) DO UPDATE SET value=excluded.value
                     """,
-                    (self._active_profile,),
+                    (snapshot["active_profile"],),
                 )
+                persisted_profiles: dict[str, tuple[str, ...]] = {}
+                for row in db.execute(
+                    "SELECT profile_name FROM achievement_profile ORDER BY profile_name"
+                ).fetchall():
+                    profile_name = self._normalize_profile_name(row["profile_name"])
+                    if profile_name in snapshot["profiles"]:
+                        ids = tuple(
+                            str(item["achievement_id"])
+                            for item in db.execute(
+                                """
+                                SELECT achievement_id
+                                FROM achievement_progress
+                                WHERE profile_name = ? AND completed = 1
+                                ORDER BY achievement_id
+                                """,
+                                (profile_name,),
+                            ).fetchall()
+                        )
+                        persisted_profiles[profile_name] = ids
+                meta = db.execute(
+                    "SELECT value FROM user_state_meta WHERE key='active_achievement_profile'"
+                ).fetchone()
+                read_back = validate_achievement_progress_snapshot(
+                    {
+                        "active_profile": self._normalize_profile_name(meta["value"]) if meta else "",
+                        "profiles": persisted_profiles,
+                    }
+                )
+                if read_back != snapshot:
+                    raise RuntimeError("Achievement progress did not round-trip exactly")
                 db.commit()
             except Exception:
                 db.rollback()
