@@ -8,6 +8,7 @@ from uuid import uuid4
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QCompleter,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
@@ -22,6 +23,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.config import DEFAULT_DATABASE
+from minmax.gear_set_repository import GearSetRepository
 from services.support_gear_reference_service import (
     SupportGearReference,
     SupportGearReferenceService,
@@ -35,6 +38,7 @@ class _SupportGearDialog(QDialog):
         *,
         role: str,
         reference: SupportGearReference | None = None,
+        set_name_choices: tuple[str, ...] = (),
         parent=None,
     ):
         super().__init__(parent)
@@ -50,6 +54,11 @@ class _SupportGearDialog(QDialog):
 
         self.set_name = QLineEdit()
         self.set_name.setPlaceholderText("e.g. Pillager's Profit")
+        if set_name_choices:
+            completer = QCompleter(set_name_choices, self)
+            completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+            completer.setFilterMode(Qt.MatchFlag.MatchContains)
+            self.set_name.setCompleter(completer)
         self.coverage = QLineEdit()
         self.coverage.setPlaceholderText("e.g. Group Ultimate generation")
         self.notes = QLineEdit()
@@ -115,6 +124,7 @@ class SupportGearReferenceWidget(QWidget):
     ):
         super().__init__(parent)
         self.service = service or SupportGearReferenceService()
+        self.set_name_choices = self._load_set_name_choices()
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -139,6 +149,22 @@ class SupportGearReferenceWidget(QWidget):
         root.addLayout(columns, 1)
 
         self.refresh()
+
+    @staticmethod
+    def _load_set_name_choices() -> tuple[str, ...]:
+        try:
+            return tuple(
+                sorted(
+                    {
+                        str(row.name or "").strip()
+                        for row in GearSetRepository(DEFAULT_DATABASE).list_sets()
+                        if str(row.name or "").strip()
+                    },
+                    key=str.casefold,
+                )
+            )
+        except Exception:
+            return ()
 
     def _role_card(self, role: str, title: str) -> tuple[FoundryCard, QTableWidget]:
         card = FoundryCard(title, "gear").set_watermark("compass", 0.04)
@@ -201,7 +227,11 @@ class SupportGearReferenceWidget(QWidget):
         )
 
     def _add(self, role: str) -> None:
-        dialog = _SupportGearDialog(role=role, parent=self)
+        dialog = _SupportGearDialog(
+            role=role,
+            set_name_choices=self.set_name_choices,
+            parent=self,
+        )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         try:
@@ -220,7 +250,12 @@ class SupportGearReferenceWidget(QWidget):
                 "Select a row first.",
             )
             return
-        dialog = _SupportGearDialog(role=role, reference=reference, parent=self)
+        dialog = _SupportGearDialog(
+            role=role,
+            reference=reference,
+            set_name_choices=self.set_name_choices,
+            parent=self,
+        )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         try:
