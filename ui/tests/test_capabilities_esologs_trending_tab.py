@@ -11,12 +11,16 @@ def test_capabilities_page_wires_esologs_trending_as_second_desk_tab():
 
     ranked = source.index('self.desk_tabs.addTab("Ranked Team Builds")')
     trending = source.index('self.desk_tabs.addTab("ESO Logs Trending")')
+    support = source.index('self.desk_tabs.addTab("Support Gear")')
     performance = source.index('self.desk_tabs.addTab("Performance Dashboard")')
-    assert ranked < trending < performance
+    assert ranked < trending < support < performance
 
     ranked_stack = source.index("self.desk_stack.addWidget(self.top_team_card)")
     trending_stack = source.index("self.desk_stack.addWidget(self.trending_card)")
+    support_stack = source.index(
+        "self.desk_stack.addWidget(self.support_gear_reference)"
+    )
     performance_stack = source.index(
         "self.desk_stack.addWidget(self.performance_member_column)"
     )
-    assert ranked_stack < trending_stack < performance_stack
+    assert ranked_stack < trending_stack < support_stack < performance_stack
