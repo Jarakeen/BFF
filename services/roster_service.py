@@ -18,7 +18,11 @@ from models.team_schedule import TeamSchedule, TeamScheduleSlot
 from services.eso_database import EsoDatabase
 from services.user_database import user_database_for
 from services.roster_placeholder_identity import is_personnel_placeholder
-from services.personnel_pydantic_schema import (\n    ValidationError as PersonnelValidationError,\n    validate_personnel_payload,\n    validate_team_schedule_payload,\n)\n
+from services.personnel_pydantic_schema import (
+    ValidationError as PersonnelValidationError,
+    validate_personnel_payload,
+    validate_team_schedule_payload,
+)
 
 class RosterService:
     """Roster read/write access, including many-to-many team membership."""
