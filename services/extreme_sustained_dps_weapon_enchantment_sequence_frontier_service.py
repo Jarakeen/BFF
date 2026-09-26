@@ -33,7 +33,16 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy:
         identity = str(self.cooldown_identity or "").strip()
         if not identity:
             raise ValueError("weapon-enchantment cooldown policy requires cooldown_identity")
-        cooldown = float(self.cooldown_seconds)
+        if isinstance(self.cooldown_seconds, bool):
+            raise TypeError(
+                "weapon-enchantment cooldown policy cooldown_seconds must be numeric"
+            )
+        try:
+            cooldown = float(self.cooldown_seconds)
+        except (TypeError, ValueError):
+            raise TypeError(
+                "weapon-enchantment cooldown policy cooldown_seconds must be numeric"
+            ) from None
         if not math.isfinite(cooldown) or cooldown < 0.0:
             raise ValueError(
                 "weapon-enchantment cooldown policy requires finite non-negative cooldown_seconds"
@@ -313,6 +322,25 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService:
         event_denominator_proven: bool,
         source: str,
     ) -> ExtremeSustainedDPSWeaponEnchantmentSequenceFrontier:
+        if not isinstance(event_denominator_proven, bool):
+            raise TypeError(
+                "weapon-enchantment event_denominator_proven must be boolean"
+            )
+        if any(not isinstance(row, RuntimeEvent) for row in events):
+            raise TypeError(
+                "weapon-enchantment events must contain RuntimeEvent records"
+            )
+        if any(not isinstance(row, EffectVariant) for row in effects):
+            raise TypeError(
+                "weapon-enchantment effects must contain EffectVariant records"
+            )
+        if any(
+            not isinstance(row, ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy)
+            for row in policies
+        ):
+            raise TypeError(
+                "weapon-enchantment policies must contain canonical cooldown policies"
+            )
         unresolved: list[str] = []
         if not event_denominator_proven:
             unresolved.append(
