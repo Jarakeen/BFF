@@ -105,25 +105,21 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
                     f"{str(candidate_id_prefix or '').strip()}"
                     f"|structural-family:{choice.structural_family_index}"
                 ),
-                duration_seconds=float(duration_seconds),
+                duration_seconds=duration_seconds,
                 potion_cooldown_seconds=potion_cooldown_seconds,
-                starting_ultimate=float(starting_ultimate),
+                starting_ultimate=starting_ultimate,
                 potion_cooldown_resolver=potion_cooldown_resolver,
                 potion_cooldown_scenario=potion_cooldown_scenario,
                 priorities=priorities,
                 snapshot_resolver=snapshot_resolver,
                 target_identity=target_identity,
-                ultimate_generation_events=tuple(ultimate_generation_events),
-                heroism_windows=tuple(heroism_windows),
-                use_scheduled_combat_attacks_for_ultimate=bool(
-                    use_scheduled_combat_attacks_for_ultimate
-                ),
-                duration_rules=tuple(duration_rules),
-                heavy_attack_windows=tuple(heavy_attack_windows),
-                heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
-                heavy_attack_channel_block_denominator_proven=bool(
-                    heavy_attack_channel_block_denominator_proven
-                ),
+                ultimate_generation_events=ultimate_generation_events,
+                heroism_windows=heroism_windows,
+                use_scheduled_combat_attacks_for_ultimate=use_scheduled_combat_attacks_for_ultimate,
+                duration_rules=duration_rules,
+                heavy_attack_windows=heavy_attack_windows,
+                heavy_attack_channel_blocks=heavy_attack_channel_blocks,
+                heavy_attack_channel_block_denominator_proven=heavy_attack_channel_block_denominator_proven,
             )
 
         return ExtremeSustainedDPSIndexedFrontierAxis(
@@ -159,12 +155,9 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
 
     @staticmethod
     def _finite_float(value: object, label: str) -> float:
-        if isinstance(value, bool):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise TypeError(f"{label} must be numeric")
-        try:
-            numeric = float(value)
-        except (TypeError, ValueError):
-            raise TypeError(f"{label} must be numeric") from None
+        numeric = float(value)
         if not math.isfinite(numeric):
             raise ValueError(f"{label} must be finite")
         return numeric
@@ -199,7 +192,9 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
         potion_cooldown_resolver=None,
         potion_cooldown_scenario=None,
     ):
-        prefix = str(candidate_id_prefix or "").strip()
+        if not isinstance(candidate_id_prefix, str):
+            raise TypeError("candidate_id_prefix must be a string")
+        prefix = candidate_id_prefix.strip()
         if not prefix:
             raise ValueError(
                 "global generated sustained-DPS search candidate_id_prefix is required"
@@ -218,6 +213,22 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
             raise ValueError("target_health must be positive")
 
         resistance = self._finite_float(target_resistance, "target_resistance")
+        starting = self._finite_float(starting_ultimate, "starting_ultimate")
+        if starting < 0.0:
+            raise ValueError("starting_ultimate must be non-negative")
+        if potion_cooldown_seconds is not None:
+            potion_cooldown = self._finite_float(
+                potion_cooldown_seconds,
+                "potion_cooldown_seconds",
+            )
+            if potion_cooldown <= 0.0:
+                raise ValueError("potion_cooldown_seconds must be positive")
+        else:
+            potion_cooldown = None
+        if not isinstance(target_identity, str) or not target_identity.strip():
+            raise TypeError("target_identity must be a non-empty string")
+        if not isinstance(target_name, str) or not target_name.strip():
+            raise TypeError("target_name must be a non-empty string")
         scheduled_attacks = self._strict_bool(
             use_scheduled_combat_attacks_for_ultimate,
             "use_scheduled_combat_attacks_for_ultimate",
@@ -226,7 +237,9 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
             heavy_attack_channel_block_denominator_proven,
             "heavy_attack_channel_block_denominator_proven",
         )
-        normalized_bar = str(initial_bar or "").strip().casefold()
+        if not isinstance(initial_bar, str):
+            raise TypeError("initial_bar must be a string")
+        normalized_bar = initial_bar.strip().casefold()
         if normalized_bar not in {"front", "back"}:
             raise ValueError("initial_bar must be 'front' or 'back'")
         for label, value in (
@@ -243,17 +256,17 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
             dual_bar_frontier=dual_bar_frontier,
             candidate_id_prefix=prefix,
             duration_seconds=duration,
-            potion_cooldown_seconds=potion_cooldown_seconds,
-            starting_ultimate=float(starting_ultimate),
+            potion_cooldown_seconds=potion_cooldown,
+            starting_ultimate=starting,
             priorities=priorities,
             snapshot_resolver=snapshot_resolver,
             target_identity=target_identity,
-            ultimate_generation_events=tuple(ultimate_generation_events),
-            heroism_windows=tuple(heroism_windows),
+            ultimate_generation_events=ultimate_generation_events,
+            heroism_windows=heroism_windows,
             use_scheduled_combat_attacks_for_ultimate=scheduled_attacks,
-            duration_rules=tuple(duration_rules),
-            heavy_attack_windows=tuple(heavy_attack_windows),
-            heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
+            duration_rules=duration_rules,
+            heavy_attack_windows=heavy_attack_windows,
+            heavy_attack_channel_blocks=heavy_attack_channel_blocks,
             heavy_attack_channel_block_denominator_proven=heavy_denominator_proven,
             potion_cooldown_resolver=potion_cooldown_resolver,
             potion_cooldown_scenario=potion_cooldown_scenario,
