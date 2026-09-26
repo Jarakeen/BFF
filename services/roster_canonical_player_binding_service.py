@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from services.build_service import BuildService
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
+from services.roster_workspace_pydantic_schema import validate_canonical_personnel_binding
 
 
 @dataclass(frozen=True)
@@ -71,11 +72,27 @@ class RosterCanonicalPlayerBindingService:
                     "canonical player binding conflicts with the member's canonical character owner"
                 )
 
-        self.database.execute(
-            "UPDATE roster_member SET canonical_player_id = ? WHERE id = ?",
-            (player_id, int(roster_member_id)),
-        )
-        self.database.commit()
+        payload = validate_canonical_personnel_binding({
+            "roster_member_id": int(roster_member_id),
+            "canonical_player_id": player_id,
+            "canonical_character_id": character_id,
+        })
+        self.database.execute("BEGIN IMMEDIATE")
+        try:
+            self.database.execute(
+                "UPDATE roster_member SET canonical_player_id = ? WHERE id = ?",
+                (payload["canonical_player_id"], payload["roster_member_id"]),
+            )
+            row = self.database.execute(
+                "SELECT canonical_player_id, canonical_character_id FROM roster_member WHERE id = ?",
+                (payload["roster_member_id"],),
+            ).fetchone()
+            if row is None or str(row["canonical_player_id"] or "") != payload["canonical_player_id"] or str(row["canonical_character_id"] or "") != payload["canonical_character_id"]:
+                raise RuntimeError("canonical player binding did not round-trip exactly")
+            self.database.commit()
+        except Exception:
+            self.database.rollback()
+            raise
         return CanonicalPlayerBinding(
             roster_member_id=int(roster_member_id),
             canonical_player_id=player_id,
@@ -88,11 +105,22 @@ class RosterCanonicalPlayerBindingService:
             raise ValueError(f"roster member {roster_member_id} does not exist")
         if str(member.CanonicalCharacterId or "").strip():
             raise ValueError("clear the canonical character binding before clearing its player")
-        self.database.execute(
-            "UPDATE roster_member SET canonical_player_id = '' WHERE id = ?",
-            (int(roster_member_id),),
-        )
-        self.database.commit()
+        member_id = int(roster_member_id)
+        self.database.execute("BEGIN IMMEDIATE")
+        try:
+            self.database.execute(
+                "UPDATE roster_member SET canonical_player_id = '' WHERE id = ?",
+                (member_id,),
+            )
+            row = self.database.execute(
+                "SELECT canonical_player_id FROM roster_member WHERE id = ?", (member_id,)
+            ).fetchone()
+            if row is None or str(row["canonical_player_id"] or "") != "":
+                raise RuntimeError("canonical player binding clear did not round-trip exactly")
+            self.database.commit()
+        except Exception:
+            self.database.rollback()
+            raise
 
 
 __all__ = ["CanonicalPlayerBinding", "RosterCanonicalPlayerBindingService"]
