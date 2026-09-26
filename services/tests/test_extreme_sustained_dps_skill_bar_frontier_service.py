@@ -212,3 +212,33 @@ def test_skill_bar_context_requires_strict_world_state_flags_and_tuples() -> Non
             character_class="Warden",
             owned_skill_lines=["Fighters Guild"],
         )
+
+
+@pytest.mark.parametrize("field,value", (("offset", False), ("limit", "4"), ("offset", 1.5)))
+def test_skill_bar_page_requires_strict_integer_bounds(field, value) -> None:
+    service = ExtremeSustainedDPSSkillBarFrontierService(skill_rows=_rows())
+    context = _context()
+    kwargs = {"offset": 0, "limit": 4}
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"skill-bar page {field} must be an integer"):
+        service.page(
+            PlayerBuild(),
+            front_context=context,
+            back_context=context,
+            **kwargs,
+        )
+
+
+def test_skill_bar_frontier_requires_tuple_skill_rows() -> None:
+    with pytest.raises(TypeError, match="skill rows must be a tuple"):
+        ExtremeSustainedDPSSkillBarFrontierService(
+            skill_rows=list(_rows()),  # type: ignore[arg-type]
+        )
+
+
+def test_skill_bar_frontier_requires_mapping_skill_rows() -> None:
+    with pytest.raises(TypeError, match="must contain mapping records"):
+        ExtremeSustainedDPSSkillBarFrontierService(
+            skill_rows=(object(),),  # type: ignore[arg-type]
+        )
