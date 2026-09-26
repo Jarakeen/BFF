@@ -7,12 +7,14 @@
 # Purpose:
 # Top Gear desk.
 #
-# Three desk-level tabs:
+# Four desk-level tabs:
 #   "Ranked Team Builds" -- ESO Logs top-ranked-team gear/skill
 #     evidence for a chosen trial (TopTeamCard, untouched here).
 #   "ESO Logs Trending" -- top individual DD, healer, and tank
 #     rankings for a chosen encounter, summarized into observed gear,
 #     class, and player-loadout trends.
+#   "Support Gear" -- editable Healer/Tank support-set idea board
+#     persisted in foundrydock.db with the raid-facing effect each set covers.
 #   "Performance Dashboard" -- up to 12 raid team member tabs,
 #     each pulling a report/fight from ESO Logs, letting you pick
 #     which player in that fight is you (by name, or by an
