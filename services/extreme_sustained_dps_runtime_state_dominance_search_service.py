@@ -22,27 +22,41 @@ from services.extreme_sustained_dps_runtime_state_whole_plan_evaluator_service i
 class _RuntimeStateWholePlanAdapter:
     frontier: ExtremeSustainedDPSRuntimeStateFrontier
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.frontier, ExtremeSustainedDPSRuntimeStateFrontier):
+            raise TypeError("runtime-state whole-plan adapter requires a runtime-state frontier")
+
     @property
     def axes(self) -> tuple[str, ...]:
         return ("runtime_state",)
 
     @property
     def choice_count(self) -> int:
-        return int(self.frontier.candidate_count)
+        count = self.frontier.candidate_count
+        if isinstance(count, bool) or not isinstance(count, int):
+            raise TypeError("runtime-state choice_count must be an integer")
+        return count
 
     @property
     def denominator_proven(self) -> bool:
-        return bool(self.frontier.denominator_proven)
+        value = self.frontier.denominator_proven
+        if not isinstance(value, bool):
+            raise TypeError("runtime-state denominator_proven must be boolean")
+        return value
 
     @property
     def omitted_scope(self) -> tuple[str, ...]:
-        return tuple(self.frontier.omitted_scope)
+        value = self.frontier.omitted_scope
+        if not isinstance(value, tuple):
+            raise TypeError("runtime-state omitted_scope must be a tuple")
+        return value
 
     def choice_at(self, index: int):
-        target = int(index)
-        if target < 0 or target >= self.choice_count:
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("runtime-state choice index must be an integer")
+        if index < 0 or index >= self.choice_count:
             raise IndexError("runtime-state choice index out of range")
-        return self.frontier.choices[target]
+        return self.frontier.choices[index]
 
 
 class ExtremeSustainedDPSRuntimeStateDominanceSearchService:
