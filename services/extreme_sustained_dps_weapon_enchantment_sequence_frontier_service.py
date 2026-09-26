@@ -30,19 +30,25 @@ class ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy:
     evidence: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        identity = str(self.cooldown_identity or "").strip()
+        if not isinstance(self.cooldown_identity, str):
+            raise TypeError(
+                "weapon-enchantment cooldown policy cooldown_identity must be a string"
+            )
+        if not isinstance(self.evidence, tuple):
+            raise TypeError(
+                "weapon-enchantment cooldown policy evidence must be a tuple"
+            )
+        identity = self.cooldown_identity.strip()
         if not identity:
             raise ValueError("weapon-enchantment cooldown policy requires cooldown_identity")
-        if isinstance(self.cooldown_seconds, bool):
+        if isinstance(self.cooldown_seconds, bool) or not isinstance(
+            self.cooldown_seconds,
+            (int, float),
+        ):
             raise TypeError(
                 "weapon-enchantment cooldown policy cooldown_seconds must be numeric"
             )
-        try:
-            cooldown = float(self.cooldown_seconds)
-        except (TypeError, ValueError):
-            raise TypeError(
-                "weapon-enchantment cooldown policy cooldown_seconds must be numeric"
-            ) from None
+        cooldown = float(self.cooldown_seconds)
         if not math.isfinite(cooldown) or cooldown < 0.0:
             raise ValueError(
                 "weapon-enchantment cooldown policy requires finite non-negative cooldown_seconds"
@@ -68,7 +74,19 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceChoice:
     evidence: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        choice_id = str(self.choice_id or "").strip()
+        if not isinstance(self.choice_id, str):
+            raise TypeError("weapon-enchantment sequence choice_id must be a string")
+        for label, value in (
+            ("attempts", self.attempts),
+            ("no_proc_events", self.no_proc_events),
+            ("last_activation_times", self.last_activation_times),
+            ("evidence", self.evidence),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(
+                    f"weapon-enchantment sequence {label} must be a tuple"
+                )
+        choice_id = self.choice_id.strip()
         if not choice_id:
             raise ValueError("weapon-enchantment sequence choice requires choice_id")
         if any(
@@ -86,11 +104,15 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceChoice:
         normalized_times: list[tuple[str, float]] = []
         seen: set[str] = set()
         for row in self.last_activation_times:
-            if not isinstance(row, (tuple, list)) or len(row) != 2:
+            if not isinstance(row, tuple) or len(row) != 2:
                 raise TypeError(
                     "weapon-enchantment last activation rows must be (identity, time) pairs"
                 )
-            identity = str(row[0] or "").strip()
+            if not isinstance(row[0], str):
+                raise TypeError(
+                    "weapon-enchantment last activation identity must be a string"
+                )
+            identity = row[0].strip()
             if not identity:
                 raise ValueError(
                     "weapon-enchantment last activation identity cannot be empty"
@@ -100,16 +122,11 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceChoice:
                     "weapon-enchantment last activation identities must be unique"
                 )
             seen.add(identity)
-            if isinstance(row[1], bool):
+            if isinstance(row[1], bool) or not isinstance(row[1], (int, float)):
                 raise TypeError(
                     "weapon-enchantment last activation time must be numeric"
                 )
-            try:
-                timestamp = float(row[1])
-            except (TypeError, ValueError):
-                raise TypeError(
-                    "weapon-enchantment last activation time must be numeric"
-                ) from None
+            timestamp = float(row[1])
             if not math.isfinite(timestamp) or timestamp < 0.0:
                 raise ValueError(
                     "weapon-enchantment last activation time must be finite and non-negative"
@@ -146,6 +163,12 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceFrontier:
     unresolved: tuple[str, ...]
 
     def __post_init__(self) -> None:
+        if not isinstance(self.choices, tuple):
+            raise TypeError("weapon-enchantment sequence choices must be a tuple")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("weapon-enchantment sequence evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("weapon-enchantment sequence unresolved must be a tuple")
         if any(
             not isinstance(
                 row,
@@ -322,6 +345,14 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService:
         event_denominator_proven: bool,
         source: str,
     ) -> ExtremeSustainedDPSWeaponEnchantmentSequenceFrontier:
+        if not isinstance(events, tuple):
+            raise TypeError("weapon-enchantment events must be a tuple")
+        if not isinstance(effects, tuple):
+            raise TypeError("weapon-enchantment effects must be a tuple")
+        if not isinstance(policies, tuple):
+            raise TypeError("weapon-enchantment policies must be a tuple")
+        if not isinstance(source, str):
+            raise TypeError("weapon-enchantment sequence source must be a string")
         if not isinstance(event_denominator_proven, bool):
             raise TypeError(
                 "weapon-enchantment event_denominator_proven must be boolean"
@@ -348,13 +379,13 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService:
             )
 
         policy_by_effect, policy_unresolved = self._policy_map(
-            effects=tuple(effects),
-            policies=tuple(policies),
+            effects=effects,
+            policies=policies,
         )
         unresolved.extend(policy_unresolved)
         effect_keys = {
             effect_variant_runtime_binding_key(effect)
-            for effect in tuple(effects)
+            for effect in effects
         }
 
         ordered_events = tuple(
@@ -372,7 +403,7 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService:
             for event in ordered_events:
                 ownership = self.ownership_service.resolve(
                     activation_event=event,
-                    enchantment_effects=tuple(effects),
+                    enchantment_effects=effects,
                 )
                 if ownership.unresolved:
                     unresolved.extend(tuple(ownership.unresolved))
@@ -465,7 +496,7 @@ class ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService:
                 f"Distinct weapon-enchantment sources supplied: {len(effect_keys)}",
                 f"Authoritative cooldown policies supplied: {len(policies)}",
                 f"Finite weapon-enchantment source histories: {len(choices)}",
-                f"Weapon-enchantment sequence source: {str(source or '').strip() or 'caller-supplied proof'}",
+                f"Weapon-enchantment sequence source: {source.strip() or 'caller-supplied proof'}",
                 (
                     "Weapon-enchantment source/cooldown sequence denominator is proven finite"
                     if complete
