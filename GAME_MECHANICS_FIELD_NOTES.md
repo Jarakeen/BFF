@@ -2033,3 +2033,13 @@ For generated crafted poisons, the Extreme Engine proves the solvent/level tier 
 If a source row for one of those required traits is malformed, skipping it would make the visible tier set look smaller and could falsely certify a maximum over an incomplete search space. The tier frontier now fails closed instead.
 
 **For BFF:** bad source data is a blocker, not a zero. If a required mechanics row cannot be read, Objective #32 does not get to pretend that coordinate is absent.
+
+---
+
+## 2026-09-26 — A capped Crit Damage value can hide wasted Crit Damage
+
+The effective Critical Damage value stops at 125%, but a raid plan can supply more Critical Damage than the player can use. If the calculator clips the number before retaining the pre-cap total, “exactly capped” and “several percent wasted” become indistinguishable.
+
+**Layman's version:** 125% on the character and 129% worth of planned bonuses both deal damage as 125%, but the second setup has 4% that could potentially be reassigned. The Raid Plan card now keeps that excess visible while still using 125% as the effective combat value.
+
+**For BFF:** preserve the uncapped composed Critical Damage total as evidence, clip only the effective value to 125%, and derive cap status from the uncapped total. Penetration status remains the player's Physical/Spell Pen plus planned target Armor reduction compared with 18,200 PvE target Armor.
