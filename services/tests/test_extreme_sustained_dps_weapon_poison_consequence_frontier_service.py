@@ -1,11 +1,14 @@
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.runtime_event import RuntimeEvent
 from minmax.combat_target_resistance import resistance_reduction_from_target_state
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_weapon_poison_consequence_frontier_service import (
+    ExtremeSustainedDPSWeaponPoisonConsequenceFrontierResult,
     ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService,
 )
 from services.extreme_sustained_dps_weapon_poison_dilution_selection_service import (
@@ -227,3 +230,68 @@ def test_poison_consequence_dispatch_prefers_resolve_method_on_callable_class() 
     )
 
     assert result.evidence == ("resolved poison:test",)
+
+
+def test_poison_consequence_result_requires_tuple_proof_collections() -> None:
+    with pytest.raises(TypeError, match="effects must be a tuple"):
+        ExtremeSustainedDPSWeaponPoisonConsequenceFrontierResult(
+            attempt_frontier=None,
+            effects=[],  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="evidence must be a tuple"):
+        ExtremeSustainedDPSWeaponPoisonConsequenceFrontierResult(
+            attempt_frontier=None,
+            effects=(),
+            evidence=[],  # type: ignore[arg-type]
+        )
+
+
+def test_poison_consequence_result_requires_effect_variants() -> None:
+    with pytest.raises(TypeError, match="must contain EffectVariant"):
+        ExtremeSustainedDPSWeaponPoisonConsequenceFrontierResult(
+            attempt_frontier=None,
+            effects=(object(),),  # type: ignore[arg-type]
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("unresolved", [], "sequence unresolved evidence must be a tuple"),
+        ("evidence", [], "sequence evidence must be a tuple"),
+        ("choices", [], "sequence choices must be a tuple"),
+        ("denominator_proven", 1, "sequence denominator proof must be boolean"),
+    ),
+)
+def test_poison_consequence_projection_requires_strict_sequence_proof_fields(
+    field, value, message
+) -> None:
+    sequence = _sequence()
+    object.__setattr__(sequence, field, value)
+
+    with pytest.raises(TypeError, match=message):
+        ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService(
+            consequence_resolver=_Resolver()
+        ).build(
+            sequence_frontier=sequence,
+            source="strict sequence proof fixture",
+        )
+
+
+def test_poison_consequence_resolver_requires_tuple_evidence() -> None:
+    class _MutableResolver:
+        def resolve(self, **_kwargs):
+            return SimpleNamespace(
+                effects=(_effect(),),
+                evidence=[],
+                unresolved=(),
+            )
+
+    with pytest.raises(TypeError, match="resolver evidence must be a tuple"):
+        ExtremeSustainedDPSWeaponPoisonConsequenceFrontierService(
+            consequence_resolver=_MutableResolver()
+        ).build(
+            sequence_frontier=_sequence(),
+            source="mutable resolver evidence",
+        )
