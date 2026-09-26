@@ -114,7 +114,7 @@ class UserBuildCatalogPayload(BaseModel):
 
 
 def validate_user_build_catalog_payload(raw: Any) -> dict[str, Any]:
-    return UserBuildCatalogPayload.model_validate(raw).model_dump(mode="python")
+    return UserBuildCatalogPayload.model_validate(raw).model_dump(mode="json")
 
 
 __all__ = [
