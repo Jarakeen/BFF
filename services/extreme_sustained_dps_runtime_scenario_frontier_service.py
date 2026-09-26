@@ -253,16 +253,21 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             enchantment_effects=enchantment_effects,
             player_build=player_build,
         )
-        policy_unresolved = tuple(
-            getattr(policy_result, "unresolved", ()) or ()
-        )
+        policy_unresolved = getattr(policy_result, "unresolved", ())
+        policy_evidence_raw = getattr(policy_result, "evidence", ())
+        if not isinstance(policy_unresolved, tuple):
+            raise TypeError("weapon-enchantment cooldown policy unresolved evidence must be a tuple")
+        if not isinstance(policy_evidence_raw, tuple):
+            raise TypeError("weapon-enchantment cooldown policy evidence must be a tuple")
         policy_evidence = tuple(
             str(item)
-            for item in tuple(getattr(policy_result, "evidence", ()) or ())
+            for item in policy_evidence_raw
             if str(item).strip()
         )
         if hasattr(policy_result, "policies"):
-            policies = tuple(getattr(policy_result, "policies") or ())
+            policies = getattr(policy_result, "policies")
+            if not isinstance(policies, tuple):
+                raise TypeError("weapon-enchantment cooldown policies must be a tuple")
         else:
             policies = tuple(policy_result or ())
 
