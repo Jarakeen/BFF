@@ -101,6 +101,12 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
             raise TypeError("theoretical closure requires canonical axis dominance composition")
         if not isinstance(omitted_scope, tuple):
             raise TypeError("theoretical closure omitted_scope must be a tuple")
+        if any(not isinstance(item, str) for item in omitted_scope):
+            raise TypeError("theoretical closure omitted_scope must contain only strings")
+        if any(not isinstance(item, str) for item in axis_coverage.omitted_scope):
+            raise TypeError(
+                "theoretical closure axis coverage omitted_scope must contain only strings"
+            )
 
         global_maximum_proven = search_result.global_maximum_proven
         if not isinstance(global_maximum_proven, bool):
@@ -128,12 +134,12 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
 
         omitted = tuple(
             dict.fromkeys(
-                str(item).strip()
+                item.strip()
                 for item in (
                     *axis_coverage.omitted_scope,
-                    *tuple(omitted_scope),
+                    *omitted_scope,
                 )
-                if str(item).strip()
+                if item.strip()
             )
         )
         (
@@ -197,11 +203,7 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
             mechanics_closure_complete=mechanics_complete,
             omitted_scope=omitted,
             theoretical_maximum_proven=theoretical,
-            best_modeled_dps=(
-                None
-                if search_result.best_modeled_dps is None
-                else float(search_result.best_modeled_dps)
-            ),
+            best_modeled_dps=search_result.best_modeled_dps,
             evidence=(
                 f"Finite generated denominator maximum proven: {global_maximum_proven}",
                 f"Canonical sustained-DPS axes required: {len(canonical)}",
