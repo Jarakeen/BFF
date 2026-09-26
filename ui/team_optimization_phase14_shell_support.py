@@ -229,6 +229,8 @@ def _build_recommendation_workspace(page) -> None:
     table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
     table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
     table.setMinimumHeight(330)
+    table.setWordWrap(True)
+    table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
     recommendations.addWidget(table)
     main.addWidget(recommendations, 7)
 
@@ -435,6 +437,7 @@ def _render_recommendations(page, review) -> None:
                         Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
                     )
                     table.setItem(row, column, item)
+        table.resizeRowsToContents()
     finally:
         page._optimizer_table_guard = False
     _update_selected_count(page)
