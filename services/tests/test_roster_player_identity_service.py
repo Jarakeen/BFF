@@ -256,3 +256,101 @@ def test_picker_dedupe_collapses_only_shared_canonical_player_id(tmp_path: Path)
     visible = service.deduplicated_members_for_pickers()
     assert {row.Id for row in visible} == {first, legacy}
     assert second not in {row.Id for row in visible}
+
+
+def test_production_identity_merge_rolls_back_personnel_and_catalog_when_raid_plan_rewrite_fails(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    from services.canonical_build_bridge import CanonicalBuildBridge
+
+    database_path = tmp_path / "foundrydock.db"
+    database = EsoDatabase(database_path)
+    roster = RosterService(database)
+    survivor_id = roster.create_member(
+        _member("AAA Aces", character="Aces Current", team="Performance Mode")
+    )
+    donor_id = roster.create_member(
+        _member("Ace AAA", character="Aces Old", team="Performance Mode")
+    )
+
+    builds = BuildService(tmp_path / "builds.json")
+    builds.canonical = CanonicalBuildBridge(
+        tmp_path / "builds.json",
+        catalog_path=database_path,
+    )
+    catalog_service = builds.canonical.catalog_service
+    catalog = catalog_service.new_catalog()
+    catalog["players"] = [
+        {"player_id": "player-survivor", "gamertag": "AAA Aces", "display_name": "AAA Aces"},
+        {"player_id": "player-donor", "gamertag": "Ace AAA", "display_name": "Ace AAA"},
+    ]
+    catalog["characters"] = [
+        {
+            "character_id": "character-survivor",
+            "player_id": "player-survivor",
+            "name": "Aces Current",
+            "gamertag": "AAA Aces",
+        },
+        {
+            "character_id": "character-donor",
+            "player_id": "player-donor",
+            "name": "Aces Old",
+            "gamertag": "Ace AAA",
+        },
+    ]
+    catalog_service.save(catalog)
+    roster.db.execute(
+        "UPDATE roster_member SET canonical_player_id = ?, canonical_character_id = ? WHERE id = ?",
+        ("player-survivor", "character-survivor", survivor_id),
+    )
+    roster.db.execute(
+        "UPDATE roster_member SET canonical_player_id = ?, canonical_character_id = ? WHERE id = ?",
+        ("player-donor", "character-donor", donor_id),
+    )
+    roster.db.commit()
+
+    repository = RaidPlanRepository(database_path)
+    repository.save(
+        RaidPlan(
+            plan_id="aces-plan",
+            trial_id="sunspire",
+            name="Aces Plan",
+            members=(
+                RaidPlanMember(
+                    seat_id="dd-1",
+                    gamertag="Ace AAA",
+                    roster_member_id=donor_id,
+                    player_id="player-donor",
+                    character_id="character-donor",
+                    role="DD",
+                ),
+            ),
+        )
+    )
+    before_catalog = catalog_service.load_strict()
+
+    def fail_raid_plan_save(self, plan, db, **kwargs):
+        raise RuntimeError("simulated Raid Plan rewrite failure")
+
+    monkeypatch.setattr(RaidPlanRepository, "save_on_connection", fail_raid_plan_save)
+
+    service = RosterPlayerIdentityService(database, builds)
+    try:
+        service.merge_players(
+            survivor_id=survivor_id,
+            donor_id=donor_id,
+            create_backups=False,
+        )
+    except RuntimeError as exc:
+        assert "simulated Raid Plan rewrite failure" in str(exc)
+    else:
+        raise AssertionError("simulated Raid Plan rewrite failure did not abort merge")
+
+    assert roster.get_member(survivor_id) is not None
+    assert roster.get_member(donor_id) is not None
+    assert catalog_service.load_strict() == before_catalog
+    unchanged_plan = repository.get("aces-plan")
+    assert unchanged_plan is not None
+    assert unchanged_plan.members[0].roster_member_id == donor_id
+    assert unchanged_plan.members[0].player_id == "player-donor"
