@@ -141,3 +141,41 @@ def test_rotation_family_forwards_explicit_encounter_demands_to_canonical_refine
     assert kwargs["priorities"] is priorities
     assert kwargs["demands"] == demands
     assert any("Encounter demand windows supplied: 2" in row for row in result.evidence)
+
+
+def test_rotation_plan_frontier_rejects_boolean_candidate_index() -> None:
+    with pytest.raises(TypeError, match="candidate index must be an integer"):
+        _service().candidate_at(
+            _candidate(),
+            duration_seconds=10.0,
+            index=True,
+        )
+
+
+@pytest.mark.parametrize("duration", (True, "10"))
+def test_rotation_plan_frontier_requires_strict_numeric_duration(duration) -> None:
+    with pytest.raises(TypeError, match="duration must be numeric"):
+        _service().candidate_at(
+            _candidate(),
+            duration_seconds=duration,
+            index=0,
+        )
+
+
+def test_rotation_plan_frontier_rejects_nonfinite_duration() -> None:
+    with pytest.raises(ValueError, match="finite and positive"):
+        _service().candidate_at(
+            _candidate(),
+            duration_seconds=float("inf"),
+            index=0,
+        )
+
+
+def test_rotation_plan_frontier_requires_tuple_encounter_demands() -> None:
+    with pytest.raises(TypeError, match="encounter_demands must be a tuple"):
+        _service().candidate_at(
+            _candidate(),
+            duration_seconds=10.0,
+            index=0,
+            encounter_demands=["demand"],
+        )
