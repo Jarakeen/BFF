@@ -10,7 +10,7 @@ from engine.config import get_data_dir, get_user_database_path
 from uuid import NAMESPACE_URL, uuid5
 
 from models.build_model import BuildRoster, PlayerBuild
-
+from services.user_build_catalog_pydantic_schema import (\n    ValidationError as CatalogValidationError,\n    validate_user_build_catalog_payload,\n)\n
 SCHEMA_VERSION = 4
 
 
@@ -271,8 +271,16 @@ class BuildCatalogService:
             "team_assignments": assignments,
         }
 
+    @classmethod
+    def _validated_catalog(cls, data: Any) -> dict[str, Any]:
+        normalized = cls._normalize(data)
+        try:
+            return validate_user_build_catalog_payload(normalized)
+        except CatalogValidationError as exc:
+            raise ValueError(f"canonical Build catalog failed Pydantic validation: {exc}") from exc
+
     def new_catalog(self) -> dict[str, Any]:
-        return self._normalize(None)
+        return self._validated_catalog(None)
 
     def load_strict(self) -> dict[str, Any]:
         if self._database_mode:
@@ -281,14 +289,10 @@ class BuildCatalogService:
                     "SELECT payload_json FROM build_catalog WHERE singleton_id = 1"
                 ).fetchone()
             if row is None:
-                return self._normalize(None)
-            payload = json.loads(str(row[0] or ""))
-            return self._normalize(payload)
+                return self._validated_catalog(None)\n            payload = json.loads(str(row[0] or ""))\n            return self._validated_catalog(payload)
 
         if not self.catalog_path.exists():
-            return self._normalize(None)
-        payload = json.loads(self.catalog_path.read_text(encoding="utf-8"))
-        return self._normalize(payload)
+            return self._validated_catalog(None)\n        payload = json.loads(self.catalog_path.read_text(encoding="utf-8"))\n        return self._validated_catalog(payload)
 
     def load(self) -> dict[str, Any]:
         try:
@@ -329,10 +333,11 @@ class BuildCatalogService:
         return True
 
     def save(self, catalog: dict[str, Any]) -> None:
-        normalized = self._normalize(catalog)
+        normalized = self._validated_catalog(catalog)
         if self._database_mode:
             payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True)
             with sqlite3.connect(self.catalog_path) as db:
+                db.execute("BEGIN IMMEDIATE")
                 db.execute(
                     """
                     INSERT INTO build_catalog(singleton_id, payload_json, updated_at)
@@ -343,6 +348,14 @@ class BuildCatalogService:
                     """,
                     (payload,),
                 )
+                row = db.execute(
+                    "SELECT payload_json FROM build_catalog WHERE singleton_id = 1"
+                ).fetchone()
+                if row is None:
+                    raise RuntimeError("canonical Build catalog could not be read back after save")
+                persisted = self._validated_catalog(json.loads(str(row[0] or "")))
+                if persisted != normalized:
+                    raise RuntimeError("canonical Build catalog did not round-trip exactly")
             return
 
         self.catalog_path.parent.mkdir(parents=True, exist_ok=True)
