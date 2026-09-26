@@ -275,10 +275,14 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
         ] = (),
         heavy_attack_channel_block_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSGeneratedRuntimePolicyAxisState:
-        identity = str(candidate_id or "").strip()
+        if not isinstance(candidate_id, str):
+            raise TypeError("generated runtime-policy candidate_id must be a string")
+        identity = candidate_id.strip()
         if not identity:
             raise ValueError("generated runtime-policy candidate_id is required")
-        target = str(target_identity or "").strip()
+        if not isinstance(target_identity, str):
+            raise TypeError("generated execute target identity must be a string")
+        target = target_identity.strip()
         if not target:
             raise ValueError("generated execute target identity is required")
         if snapshot_resolver is None:
