@@ -43,6 +43,8 @@ class ExtremeSustainedDPSPotionTimingBreakpointFrontierService:
 
     @staticmethod
     def _validate_positive(name: str, value: float) -> float:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise TypeError(f"{name} must be numeric")
         result = float(value)
         if not math.isfinite(result) or result <= 0.0:
             raise ValueError(f"{name} must be finite and positive")
@@ -65,8 +67,12 @@ class ExtremeSustainedDPSPotionTimingBreakpointFrontierService:
         *,
         duration_seconds: float,
     ) -> tuple[float, ...]:
+        if not isinstance(observations, tuple):
+            raise TypeError("potion timing observation_times must be a tuple")
         result: list[float] = []
         for raw in observations:
+            if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+                raise TypeError("potion timing observation times must be numeric")
             value = float(raw)
             if not math.isfinite(value) or value < 0.0:
                 raise ValueError(
@@ -85,8 +91,12 @@ class ExtremeSustainedDPSPotionTimingBreakpointFrontierService:
     def _normalize_durations(
         durations: tuple[float, ...],
     ) -> tuple[float, ...]:
+        if not isinstance(durations, tuple):
+            raise TypeError("effective_buff_durations must be a tuple")
         result: list[float] = []
         for raw in durations:
+            if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+                raise TypeError("effective potion buff durations must be numeric")
             value = float(raw)
             if not math.isfinite(value) or value <= 0.0:
                 raise ValueError(
@@ -133,13 +143,15 @@ class ExtremeSustainedDPSPotionTimingBreakpointFrontierService:
         effective_buff_durations: tuple[float, ...],
         instant_restoration_timing_closed: bool = False,
     ) -> ExtremeSustainedDPSPotionTimingBreakpointFrontier:
+        if not isinstance(instant_restoration_timing_closed, bool):
+            raise TypeError("instant_restoration_timing_closed must be boolean")
         duration = cls._validate_positive("duration_seconds", duration_seconds)
         cooldown = cls._validate_positive("cooldown_seconds", cooldown_seconds)
         observations = cls._normalize_observations(
-            tuple(observation_times),
+            observation_times,
             duration_seconds=duration,
         )
-        durations = cls._normalize_durations(tuple(effective_buff_durations))
+        durations = cls._normalize_durations(effective_buff_durations)
         unresolved: list[str] = []
 
         if not observations:
