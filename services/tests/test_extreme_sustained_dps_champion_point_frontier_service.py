@@ -76,3 +76,23 @@ def test_cp_duplicate_identity_withholds_denominator() -> None:
 def test_cp_rejects_boolean_candidate_index() -> None:
     with pytest.raises(TypeError, match="candidate index must be an integer"):
         _service().candidate_at(PlayerBuild(), True)
+
+
+@pytest.mark.parametrize("field,value", (("offset", True), ("limit", "2"), ("offset", 1.5)))
+def test_cp_page_requires_strict_integer_bounds(field, value) -> None:
+    kwargs = {"offset": 0, "limit": 2}
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"Champion Point page {field} must be an integer"):
+        _service().page(PlayerBuild(), **kwargs)
+
+
+def test_cp_combination_helper_rejects_coerced_inputs() -> None:
+    with pytest.raises(TypeError, match="combination choose must be an integer"):
+        _service()._combination_at(("A", "B"), True, 0)
+
+    with pytest.raises(TypeError, match="combination index must be an integer"):
+        _service()._combination_at(("A", "B"), 1, "0")
+
+    with pytest.raises(ValueError, match="choose is out of range"):
+        _service()._combination_at(("A", "B"), 3, 0)
