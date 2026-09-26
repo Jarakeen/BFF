@@ -40,16 +40,26 @@ class ExtremeSustainedDPSPotionObservationPoint:
     kind: str
 
     def __post_init__(self) -> None:
+        if isinstance(self.time_seconds, bool) or not isinstance(self.time_seconds, (int, float)):
+            raise TypeError("potion observation time must be numeric")
         time_seconds = float(self.time_seconds)
         if not math.isfinite(time_seconds) or time_seconds < 0.0:
             raise ValueError("potion observation time must be finite and non-negative")
-        source = str(self.source or "").strip()
-        kind = str(self.kind or "").strip()
+        if not isinstance(self.source, str):
+            raise TypeError("potion observation point source must be a string")
+        if not isinstance(self.kind, str):
+            raise TypeError("potion observation point kind must be a string")
+        source = self.source.strip()
+        kind = self.kind.strip()
         if not source:
             raise ValueError("potion observation point requires source")
         if not kind:
             raise ValueError("potion observation point requires kind")
-        sequence = None if self.sequence is None else int(self.sequence)
+        if self.sequence is not None and (
+            isinstance(self.sequence, bool) or not isinstance(self.sequence, int)
+        ):
+            raise TypeError("potion observation sequence must be an integer or None")
+        sequence = self.sequence
         if sequence is not None and sequence < 0:
             raise ValueError("potion observation sequence cannot be negative")
         object.__setattr__(self, "time_seconds", _seconds(time_seconds))
@@ -95,10 +105,29 @@ class ExtremeSustainedDPSPotionObservationFrontierService:
             RotationHeavyAttackCompletionEvidence, ...
         ] = (),
     ) -> ExtremeSustainedDPSPotionObservationFrontier:
+        if not isinstance(periodic_projections, tuple):
+            raise TypeError("periodic_projections must be a tuple")
+        if any(
+            not isinstance(item, RotationPeriodicDamageRuntimeProjection)
+            for item in periodic_projections
+        ):
+            raise TypeError(
+                "periodic_projections must contain RotationPeriodicDamageRuntimeProjection records"
+            )
+        if not isinstance(heavy_attack_completion_evidence, tuple):
+            raise TypeError("heavy_attack_completion_evidence must be a tuple")
+        if any(
+            not isinstance(item, RotationHeavyAttackCompletionEvidence)
+            for item in heavy_attack_completion_evidence
+        ):
+            raise TypeError(
+                "heavy_attack_completion_evidence must contain RotationHeavyAttackCompletionEvidence records"
+            )
+
         points: list[ExtremeSustainedDPSPotionObservationPoint] = []
         unresolved: list[str] = []
         heavy_by_action = cls._heavy_evidence_by_action(
-            tuple(heavy_attack_completion_evidence)
+            heavy_attack_completion_evidence
         )
 
         scheduled_heavy_keys = {
