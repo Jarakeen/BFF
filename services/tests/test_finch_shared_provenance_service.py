@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
+
+import pytest
 
 from services.finch_api_client import FinchSharedSnapshot
 from services.finch_shared_provenance_service import (
@@ -96,3 +99,34 @@ def test_latest_copy_for_returns_newest_local_context(tmp_path) -> None:
     assert latest is not None
     assert latest.local_key == second.local_key
     assert latest.local_key != first.local_key
+
+
+def test_provenance_rejects_malformed_existing_store_before_write(tmp_path) -> None:
+    path = tmp_path / "provenance.json"
+    path.write_text(
+        json.dumps({"schema_version": 1, "copies": "not-a-list"}),
+        encoding="utf-8",
+    )
+    before = path.read_bytes()
+    service = FinchSharedProvenanceService(path)
+
+    with pytest.raises(ValueError, match="Pydantic validation"):
+        service.record_copy(
+            snapshot=_snapshot("2026-09-21T01:00:00+00:00"),
+            local_key="rg-pm-shared-copy",
+        )
+
+    assert path.read_bytes() == before
+
+
+def test_provenance_rejects_blank_local_key_before_write(tmp_path) -> None:
+    path = tmp_path / "provenance.json"
+    service = FinchSharedProvenanceService(path)
+
+    with pytest.raises(ValueError, match="Pydantic validation"):
+        service.record_copy(
+            snapshot=_snapshot("2026-09-21T01:00:00+00:00"),
+            local_key="",
+        )
+
+    assert not path.exists()
