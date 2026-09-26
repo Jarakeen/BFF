@@ -36,6 +36,28 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationResolution:
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        if self.exact is not None and not isinstance(self.exact, EffectVariant):
+            raise TypeError("weapon-enchantment activation exact source must be EffectVariant")
+        if not isinstance(self.alternatives, tuple):
+            raise TypeError("weapon-enchantment activation alternatives must be a tuple")
+        if any(not isinstance(row, EffectVariant) for row in self.alternatives):
+            raise TypeError(
+                "weapon-enchantment activation alternatives must contain EffectVariant records"
+            )
+        if not isinstance(self.cooldown_state_proven, bool):
+            raise TypeError(
+                "weapon-enchantment activation cooldown_state_proven must be boolean"
+            )
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("weapon-enchantment activation evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("weapon-enchantment activation unresolved must be a tuple")
+        if any(not isinstance(row, str) for row in self.evidence):
+            raise TypeError("weapon-enchantment activation evidence must contain strings")
+        if any(not isinstance(row, str) for row in self.unresolved):
+            raise TypeError("weapon-enchantment activation unresolved must contain strings")
+
     @property
     def resolved(self) -> bool:
         return not self.unresolved
@@ -84,7 +106,34 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService:
             ExtremeSustainedDPSWeaponEnchantmentCooldownState, ...
         ] | None = None,
     ) -> ExtremeSustainedDPSWeaponEnchantmentActivationResolution:
-        trigger = str(getattr(activation_event, "trigger", "") or "").strip()
+        if not isinstance(enchantment_effects, tuple):
+            raise TypeError("weapon-enchantment activation enchantment_effects must be a tuple")
+        if any(not isinstance(row, EffectVariant) for row in enchantment_effects):
+            raise TypeError(
+                "weapon-enchantment activation enchantment_effects must contain EffectVariant records"
+            )
+        if cooldown_ready is not None:
+            if not isinstance(cooldown_ready, tuple):
+                raise TypeError("weapon-enchantment activation cooldown_ready must be a tuple")
+            if any(not isinstance(row, EffectVariant) for row in cooldown_ready):
+                raise TypeError(
+                    "weapon-enchantment activation cooldown_ready must contain EffectVariant records"
+                )
+        if cooldown_states is not None:
+            if not isinstance(cooldown_states, tuple):
+                raise TypeError("weapon-enchantment activation cooldown_states must be a tuple")
+            if any(
+                not isinstance(row, ExtremeSustainedDPSWeaponEnchantmentCooldownState)
+                for row in cooldown_states
+            ):
+                raise TypeError(
+                    "weapon-enchantment activation cooldown_states must contain canonical cooldown-state records"
+                )
+
+        trigger = getattr(activation_event, "trigger", "")
+        if not isinstance(trigger, str):
+            raise TypeError("weapon-enchantment activation event trigger must be a string")
+        trigger = trigger.strip()
         if trigger != WEAPON_ENCHANTMENT_ACTIVATION_TRIGGER:
             return ExtremeSustainedDPSWeaponEnchantmentActivationResolution(
                 activation_event=activation_event,
@@ -97,7 +146,7 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService:
 
         ownership = self.ownership_service.resolve(
             activation_event=activation_event,
-            enchantment_effects=tuple(enchantment_effects),
+            enchantment_effects=enchantment_effects,
         )
         if tuple(ownership.unresolved):
             return ExtremeSustainedDPSWeaponEnchantmentActivationResolution(
@@ -116,12 +165,18 @@ class ExtremeSustainedDPSWeaponEnchantmentActivationResolutionService:
         cooldown_state_proven = cooldown_ready is not None or cooldown_states is not None
         readiness_evidence: tuple[str, ...] = ()
         if cooldown_states is not None:
+            activation_time = getattr(activation_event, "time_seconds", None)
+            if isinstance(activation_time, bool) or not isinstance(
+                activation_time,
+                (int, float),
+            ):
+                raise TypeError(
+                    "weapon-enchantment activation event time_seconds must be numeric"
+                )
             readiness = self.readiness_service.resolve(
-                activation_time_seconds=float(
-                    getattr(activation_event, "time_seconds")
-                ),
+                activation_time_seconds=float(activation_time),
                 candidates=tuple(ownership.candidates),
-                states=tuple(cooldown_states),
+                states=cooldown_states,
             )
             if tuple(readiness.unresolved):
                 return ExtremeSustainedDPSWeaponEnchantmentActivationResolution(
