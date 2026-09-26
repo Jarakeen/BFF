@@ -9,6 +9,12 @@ from services.extreme_sustained_dps_runtime_scenario_frontier_service import (
     ExtremeSustainedDPSRuntimeScenarioFrontierResult,
     ExtremeSustainedDPSRuntimeScenarioFrontierService,
 )
+from services.extreme_sustained_dps_runtime_effect_relevance_service import (
+    ExtremeSustainedDPSRuntimeEffectRelevance,
+)
+from services.extreme_sustained_dps_runtime_effect_scaling_service import (
+    ExtremeSustainedDPSRuntimeEffectScalingResult,
+)
 from services.extreme_sustained_dps_runtime_witness_composition_service import (
     ExtremeSustainedDPSRuntimeExternalHistoryChoice,
 )
@@ -22,12 +28,22 @@ class ExtremeSustainedDPSCandidateRuntimeStateResolution:
     frontier: object
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+    relevance: ExtremeSustainedDPSRuntimeEffectRelevance | None = None
+    scaling: ExtremeSustainedDPSRuntimeEffectScalingResult | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.evidence, tuple):
             raise TypeError("candidate runtime-state resolution evidence must be a tuple")
         if not isinstance(self.unresolved, tuple):
             raise TypeError("candidate runtime-state resolution unresolved evidence must be a tuple")
+        if self.relevance is not None and not isinstance(
+            self.relevance, ExtremeSustainedDPSRuntimeEffectRelevance
+        ):
+            raise TypeError("candidate runtime-state relevance must be canonical when supplied")
+        if self.scaling is not None and not isinstance(
+            self.scaling, ExtremeSustainedDPSRuntimeEffectScalingResult
+        ):
+            raise TypeError("candidate runtime-state scaling must be canonical when supplied")
 
 
 class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
@@ -202,6 +218,8 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
                 *tuple(result.evidence),
             ),
             unresolved=tuple(result.unresolved),
+            relevance=result.relevance,
+            scaling=result.scaling,
         )
 
 
