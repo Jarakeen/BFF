@@ -21,6 +21,16 @@ class ExtremeSustainedDPSRuntimeEffectUniverse:
     weapon_enchantment_sources: tuple[object, ...] = ()
 
     def __post_init__(self) -> None:
+        for field in (
+            "effects",
+            "excluded_plan_owned",
+            "boundaries",
+            "evidence",
+            "unresolved",
+            "weapon_enchantment_sources",
+        ):
+            if not isinstance(getattr(self, field), tuple):
+                raise TypeError(f"runtime effect universe {field} must be a tuple")
         if any(not isinstance(row, EffectVariant) for row in self.effects):
             raise TypeError("runtime effect universe effects must contain EffectVariant records")
         if any(
@@ -123,6 +133,10 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
         build: PlayerBuild,
     ) -> ExtremeSustainedDPSRuntimeEffectUniverse:
         resolution = self.capability_service.resolve_effect_variants(build)
+        for field in ("unresolved", "boundaries", "effects"):
+            value = getattr(resolution, field, ())
+            if not isinstance(value, tuple):
+                raise TypeError(f"runtime capability resolution {field} must be a tuple")
 
         unresolved = tuple(
             dict.fromkeys(
@@ -162,13 +176,23 @@ class ExtremeSustainedDPSRuntimeEffectUniverseService:
         dedicated_weapon_unresolved: tuple[str, ...] = ()
         if dedicated_weapon_runtime:
             source_resolution = self.weapon_enchantment_runtime_source_service.resolve(build)
-            weapon_sources = tuple(getattr(source_resolution, "sources", ()) or ())
+            for field in ("sources", "evidence", "unresolved"):
+                value = getattr(source_resolution, field, ())
+                if not isinstance(value, tuple):
+                    raise TypeError(
+                        f"weapon-enchantment runtime source resolution {field} must be a tuple"
+                    )
+            weapon_sources = source_resolution.sources
             variant_resolution = self.weapon_enchantment_runtime_variant_service.resolve(
                 weapon_sources
             )
-            dedicated_weapon_effects = tuple(
-                getattr(variant_resolution, "effects", ()) or ()
-            )
+            for field in ("effects", "evidence", "unresolved"):
+                value = getattr(variant_resolution, field, ())
+                if not isinstance(value, tuple):
+                    raise TypeError(
+                        f"weapon-enchantment runtime variant resolution {field} must be a tuple"
+                    )
+            dedicated_weapon_effects = variant_resolution.effects
             dedicated_weapon_evidence = tuple(
                 dict.fromkeys(
                     (
