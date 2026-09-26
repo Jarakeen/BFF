@@ -10,6 +10,12 @@ from services.extreme_sustained_dps_axis_dominance_composition_service import (
     ExtremeSustainedDPSAxisDominanceComposition,
     ExtremeSustainedDPSAxisDominanceCompositionService,
 )
+from services.extreme_sustained_dps_generated_axis_inventory_service import (
+    ExtremeSustainedDPSGeneratedAxisInventory,
+)
+from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
+    ExtremeSustainedDPSGeneratedSearchResult,
+)
 from services.extreme_sustained_dps_generated_tree_coverage_service import (
     ExtremeSustainedDPSGeneratedTreeCoverageService,
 )
@@ -44,6 +50,10 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
     supplemental_evidence: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if not isinstance(self.search, ExtremeSustainedDPSGeneratedSearchResult):
+            raise TypeError("global Objective #32 result requires canonical generated search result")
+        if not isinstance(self.axis_inventory, ExtremeSustainedDPSGeneratedAxisInventory):
+            raise TypeError("global Objective #32 result requires canonical generated axis inventory")
         if not isinstance(self.axis_coverage, ExtremeSustainedDPSAxisDominanceComposition):
             raise TypeError("global Objective #32 result requires canonical axis coverage")
         if not isinstance(self.closure, ExtremeSustainedDPSTheoreticalMaximumClosure):
@@ -57,6 +67,18 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
             raise TypeError("global Objective #32 result requires canonical blocker report")
         if not isinstance(self.supplemental_evidence, tuple):
             raise TypeError("global Objective #32 result supplemental_evidence must be a tuple")
+        if self.axis_coverage.candidate_key != self.scope_proof.root_candidate_key if self.scope_proof is not None else False:
+            raise ValueError(
+                "global Objective #32 result coverage candidate key must match scope proof root"
+            )
+        if self.closure.finite_denominator_maximum_proven != self.search.global_maximum_proven:
+            raise ValueError(
+                "global Objective #32 closure finite-search proof must match generated search result"
+            )
+        if self.closure.theoretical_maximum_proven != self.blockers.closed:
+            raise ValueError(
+                "global Objective #32 theoretical closure and blocker report must agree"
+            )
 
     @property
     def best_modeled_dps(self) -> float | None:
