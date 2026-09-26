@@ -7,7 +7,7 @@ from services.roster_service import RosterService
 def test_roster_service_rejects_placeholder_player_creation(tmp_path) -> None:
     service = RosterService(EsoDatabase(tmp_path / "eso.db"))
 
-    for name in ("Tank 1", "Healer 2", "DD 8", "Recruitment Needed"):
+    for name in ("Tank 1", "Healer 2", "DD 8", "Recruitment Needed", "Recruit", "Open"):
         assert is_personnel_placeholder(name)
         try:
             service.create_member(RosterMember(PlayerName=name))
@@ -29,6 +29,14 @@ def test_roster_service_removes_existing_placeholder_rows_on_init(tmp_path) -> N
     database.execute(
         "INSERT INTO roster_member (player_name, status) VALUES (?, 'Active')",
         ("Recruitment Needed",),
+    )
+    database.execute(
+        "INSERT INTO roster_member (player_name, status) VALUES (?, 'Active')",
+        ("Recruit",),
+    )
+    database.execute(
+        "INSERT INTO roster_member (player_name, status) VALUES (?, 'Active')",
+        ("Open",),
     )
     database.commit()
 
