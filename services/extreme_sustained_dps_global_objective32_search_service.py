@@ -20,6 +20,7 @@ from services.extreme_sustained_dps_generated_tree_coverage_service import (
     ExtremeSustainedDPSGeneratedTreeCoverageService,
 )
 from services.extreme_sustained_dps_closure_inventory_service import (
+    ExtremeSustainedDPSClosureInventory,
     ExtremeSustainedDPSClosureInventoryService,
 )
 from services.extreme_sustained_dps_objective32_blocker_service import (
@@ -65,8 +66,40 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
             raise TypeError("global Objective #32 result scope_proof must be canonical")
         if not isinstance(self.blockers, ExtremeSustainedDPSObjective32BlockerReport):
             raise TypeError("global Objective #32 result requires canonical blocker report")
+        if self.closure_inventory is not None and not isinstance(
+            self.closure_inventory,
+            ExtremeSustainedDPSClosureInventory,
+        ):
+            raise TypeError("global Objective #32 result closure_inventory must be canonical")
         if not isinstance(self.supplemental_evidence, tuple):
             raise TypeError("global Objective #32 result supplemental_evidence must be a tuple")
+        if self.closure.best_modeled_dps != self.search.best_modeled_dps:
+            raise ValueError(
+                "global Objective #32 closure best DPS must match generated search result"
+            )
+        if self.closure.canonical_axis_coverage_complete != self.axis_coverage.proof.complete:
+            raise ValueError(
+                "global Objective #32 closure axis-completion proof must match coverage proof"
+            )
+        if self.closure.omitted_scope != tuple(
+            dict.fromkeys(
+                (
+                    *self.axis_coverage.omitted_scope,
+                    *self.axis_inventory.unresolved,
+                    *(
+                        (
+                            "Generated global search tree does not physically enumerate canonical axis(es): "
+                            + ", ".join(self.axis_inventory.missing_canonical_axes)
+                        ,)
+                        if self.axis_inventory.missing_canonical_axes
+                        else ()
+                    ),
+                )
+            )
+        ):
+            raise ValueError(
+                "global Objective #32 closure omitted scope must match axis inventory and coverage debt"
+            )
         if (
             self.scope_proof is not None
             and self.axis_coverage.candidate_key != self.scope_proof.root_candidate_key
