@@ -173,3 +173,42 @@ def test_explicit_subclass_line_is_legal_even_when_owned_by_foreign_base_class()
     )._families(rows, context, ultimate=False)
 
     assert any(row.base_ability_id == 700 for row in families)
+
+
+def test_skill_bar_frontier_rejects_boolean_candidate_index() -> None:
+    service = ExtremeSustainedDPSSkillBarFrontierService(skill_rows=_rows())
+    context = _context()
+
+    with pytest.raises(TypeError, match="candidate index must be an integer"):
+        service.candidate_at(
+            PlayerBuild(),
+            front_context=context,
+            back_context=context,
+            index=True,
+        )
+
+
+def test_skill_bar_frontier_requires_strict_one_bar_only_flag() -> None:
+    service = ExtremeSustainedDPSSkillBarFrontierService(skill_rows=_rows())
+    context = _context()
+
+    with pytest.raises(TypeError, match="one_bar_only must be boolean"):
+        service.frontier(
+            front_context=context,
+            back_context=context,
+            one_bar_only=1,
+        )
+
+
+def test_skill_bar_context_requires_strict_world_state_flags_and_tuples() -> None:
+    with pytest.raises(TypeError, match="vampire flag must be boolean"):
+        ExtremeSustainedDPSSkillBarLegalityContext(
+            character_class="Warden",
+            vampire="false",
+        )
+
+    with pytest.raises(TypeError, match="owned_skill_lines must be a tuple"):
+        ExtremeSustainedDPSSkillBarLegalityContext(
+            character_class="Warden",
+            owned_skill_lines=["Fighters Guild"],
+        )
