@@ -346,11 +346,12 @@ def _curse(build: PlayerBuild) -> str:
 
 
 def _variant_effective(build: PlayerBuild, variant: BuildContextVariant) -> PlayerBuild:
-    return resolve_build_context(
+    resolved = resolve_build_context(
         build,
         team_name=_clean(getattr(variant, "TeamName", "")),
         boss_name=_clean(getattr(variant, "BossName", "")),
     )
+    return validate_performance_mode_export_source(resolved)
 
 
 def _gear_changes(base: PlayerBuild, effective: PlayerBuild) -> tuple[str, str]:
