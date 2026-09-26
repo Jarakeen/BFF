@@ -20,7 +20,9 @@ from services.user_database import user_database_for
 from services.roster_placeholder_identity import is_personnel_placeholder
 from services.personnel_pydantic_schema import (
     ValidationError as PersonnelValidationError,
+    validate_personnel_assignment_payload,
     validate_personnel_payload,
+    validate_team_identity_payload,
     validate_team_schedule_payload,
 )
 
@@ -305,17 +307,27 @@ class RosterService:
             "INSERT OR IGNORE INTO roster_member_assignment (roster_member_id) VALUES (?)",
             (member_id,),
         )
+        try:
+            validated = validate_personnel_assignment_payload(
+                {"field": field, "value": value}
+            )
+        except PersonnelValidationError as exc:
+            raise ValueError(
+                f"Personnel assignment save failed Pydantic validation: {exc}"
+            ) from exc
         self.db.execute(
             f"UPDATE roster_member_assignment SET {field} = ? WHERE roster_member_id = ?",
-            (str(value or "").strip(), member_id),
+            (validated["value"], member_id),
         )
         self.db.commit()
 
     def ensure_team_name(self, team_name: str) -> str:
         """Ensure one durable Roster team identity exists for ``team_name``."""
-        name = str(team_name or "").strip()
-        if not name:
-            raise ValueError("team name is required")
+        try:
+            validated = validate_team_identity_payload({"team_name": team_name})
+        except PersonnelValidationError as exc:
+            raise ValueError(f"Team save failed Pydantic validation: {exc}") from exc
+        name = validated["team_name"]
         self.db.execute("INSERT OR IGNORE INTO team (name) VALUES (?)", (name,))
         row = self.db.execute(
             "SELECT name FROM team WHERE name = ? COLLATE NOCASE", (name,)
@@ -565,7 +577,23 @@ class RosterService:
         member = self.get_member(member_id)
         if member is None:
             raise ValueError(f"roster member {member_id} does not exist")
-        value = str(status or "").strip() or "Active"
+        candidate = RosterMember(
+            Id=member.Id,
+            PlayerName=member.PlayerName,
+            CharacterName=member.CharacterName,
+            EsoClass=member.EsoClass,
+            PrimaryRole=member.PrimaryRole,
+            SecondaryRole=member.SecondaryRole,
+            Status=str(status or "").strip() or "Active",
+            Team=member.Team,
+            CanonicalPlayerId=member.CanonicalPlayerId,
+            CanonicalCharacterId=member.CanonicalCharacterId,
+            DiscordName=member.DiscordName,
+            YouTube=member.YouTube,
+            Twitch=member.Twitch,
+            PersonnelNotes=member.PersonnelNotes,
+        )
+        value = self._validated_member(candidate).Status
         self.db.execute(
             "UPDATE roster_member SET status = ? WHERE id = ?",
             (value, member_id),
@@ -639,11 +667,15 @@ class RosterService:
     def add_member_to_team(self, member_id: int, team_name: str) -> None:
         """Add one Personnel record to one Team without disturbing other memberships."""
         member_id = int(member_id)
-        name = str(team_name or "").strip()
         if member_id <= 0:
             raise ValueError("member_id must be positive")
-        if not name:
+        if not str(team_name or "").strip():
             return
+        try:
+            validated = validate_team_identity_payload({"team_name": team_name})
+        except PersonnelValidationError as exc:
+            raise ValueError(f"Team membership save failed Pydantic validation: {exc}") from exc
+        name = validated["team_name"]
         if self.get_member(member_id) is None:
             raise ValueError(f"roster member {member_id} does not exist")
         self.db.execute("INSERT OR IGNORE INTO team (name) VALUES (?)", (name,))
