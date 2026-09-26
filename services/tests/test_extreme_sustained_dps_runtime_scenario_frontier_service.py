@@ -1003,3 +1003,77 @@ def test_runtime_scenario_poison_dispatch_prefers_build_method_on_callable_class
     )
 
     assert result.marker == "built"
+
+
+def test_runtime_scenario_requires_strict_supplemental_proof_flags() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="strict-flags",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    service = ExtremeSustainedDPSRuntimeScenarioFrontierService()
+
+    with pytest.raises(
+        TypeError,
+        match="supplemental_event_denominator_proven must be boolean",
+    ):
+        service.build_from_candidate(
+            candidate=candidate,
+            player_build=PlayerBuild(),
+            effects=(),
+            supplemental_events=(),
+            supplemental_event_denominator_proven="false",
+            supplemental_histories=(),
+            supplemental_denominator_proven=True,
+            source="malformed",
+        )
+
+    with pytest.raises(
+        TypeError,
+        match="supplemental_denominator_proven must be boolean",
+    ):
+        service.build_from_candidate(
+            candidate=candidate,
+            player_build=PlayerBuild(),
+            effects=(),
+            supplemental_events=(),
+            supplemental_event_denominator_proven=True,
+            supplemental_histories=(),
+            supplemental_denominator_proven="false",
+            source="malformed",
+        )
+
+
+def test_runtime_scenario_requires_canonical_supplemental_collections() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="strict-collections",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    service = ExtremeSustainedDPSRuntimeScenarioFrontierService()
+
+    with pytest.raises(TypeError, match="supplemental_events must be a tuple"):
+        service.build_from_candidate(
+            candidate=candidate,
+            player_build=PlayerBuild(),
+            effects=(),
+            supplemental_events=[],
+            supplemental_event_denominator_proven=True,
+            supplemental_histories=(),
+            supplemental_denominator_proven=True,
+            source="malformed",
+        )
+
+    with pytest.raises(TypeError, match="supplemental_histories must contain canonical"):
+        service.build_from_candidate(
+            candidate=candidate,
+            player_build=PlayerBuild(),
+            effects=(),
+            supplemental_events=(),
+            supplemental_event_denominator_proven=True,
+            supplemental_histories=(object(),),
+            supplemental_denominator_proven=True,
+            source="malformed",
+        )
