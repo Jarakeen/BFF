@@ -127,3 +127,23 @@ def test_closure_inventory_rejects_non_gap_mechanics_records() -> None:
             mechanics_advisories=(),
             evidence=(),
         )
+
+
+def test_closure_inventory_rejects_duck_typed_runtime_relevance() -> None:
+    malformed = type(
+        "Relevance",
+        (),
+        {"source_data_unresolved": (), "math_unresolved": ()},
+    )()
+    with pytest.raises(TypeError, match="closure relevance must be canonical"):
+        ExtremeSustainedDPSClosureInventoryService.build(
+            relevance=malformed,  # type: ignore[arg-type]
+            mechanics_dependency_keys=(),
+        )
+
+
+def test_closure_inventory_rejects_non_tuple_mechanics_denominator() -> None:
+    with pytest.raises(TypeError, match="mechanics_dependency_keys must be a tuple"):
+        ExtremeSustainedDPSClosureInventoryService.build(
+            mechanics_dependency_keys=[],  # type: ignore[arg-type]
+        )
