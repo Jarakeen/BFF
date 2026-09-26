@@ -358,3 +358,36 @@ def test_root_rejects_boolean_laundering_at_rotation_proof_boundary(
 
     with pytest.raises(TypeError, match=message):
         adapter.root(_assembled(), **values)
+
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("ultimate_generation_events", ["generation"], "ultimate_generation_events must be a tuple"),
+        ("heroism_windows", ["heroism"], "heroism_windows must be a tuple"),
+        ("encounter_demands", ["demand"], "encounter_demands must be a tuple"),
+    ),
+)
+def test_rotation_root_rejects_mutable_frontier_inputs(field, value, message) -> None:
+    adapter = _adapter()
+    values = {
+        "duration_seconds": 10.0,
+        "potion_cooldown_seconds": 45.0,
+        "starting_ultimate": 70.0,
+        "ultimate_generation_events": (),
+        "heroism_windows": (),
+        "encounter_demands": (),
+    }
+    values[field] = value
+
+    with pytest.raises(TypeError, match=message):
+        adapter.root(_assembled(), **values)
+
+
+def test_delayed_ultimate_policy_index_rejects_boolean() -> None:
+    adapter = _adapter()
+    state = adapter.axes()[0].candidate_at(_root(adapter), 0)
+
+    with pytest.raises(TypeError, match="policy index must be an integer"):
+        adapter.axes()[1].candidate_at(state, True)
