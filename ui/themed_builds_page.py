@@ -4,8 +4,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QFileDialog
 
-from services.accessibility_preferences import AccessibilityPreferences
-from services.share_document_export import ShareDocumentExporter
+from services.performance_mode_build_matrix_export_service import PerformanceModeBuildMatrixExporter
 from ui.builds_page import BuildsPage as BaseBuildsPage
 from ui.phase5_build_delete_support import attach_delete_build_action
 
@@ -21,7 +20,7 @@ class BuildsPage(BaseBuildsPage):
             pass
         self.export_button.setText("Export / Share")
         self.export_button.setToolTip(
-            "Export a themed PDF for people, or CSV for data interchange."
+            "Export one Performance Mode Build Matrix PDF page per character, or CSV for data interchange."
         )
         self.export_button.clicked.connect(self._export_builds)
         attach_delete_build_action(self)
@@ -57,12 +56,12 @@ class BuildsPage(BaseBuildsPage):
         if path.suffix.casefold() != ".pdf":
             path = path.with_suffix(".pdf")
         try:
-            theme_name = AccessibilityPreferences().visual_theme()
-            ShareDocumentExporter().export_builds(
-                self.roster,
+            PerformanceModeBuildMatrixExporter(
+                eso_db_path=Path(self.data_dir) / "eso.db",
+            ).export_builds(
+                self.roster.Members,
                 path,
-                theme_name=theme_name,
             )
-            self.status.success(f"Exported themed build dossier to {path}")
+            self.status.success(f"Exported Performance Mode Build Matrix packet to {path}")
         except Exception as exc:
             self.status.error(f"PDF export failed: {exc}")
