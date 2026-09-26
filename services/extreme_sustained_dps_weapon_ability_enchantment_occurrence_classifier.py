@@ -106,7 +106,14 @@ class ExtremeSustainedDPSWeaponAbilityEnchantmentOccurrenceClassifier:
                     "has no canonical component classification"
                 )
                 continue
-            if not bool(getattr(component, "is_damage", False)):
+            is_damage = getattr(component, "is_damage", None)
+            if not isinstance(is_damage, bool):
+                unresolved.append(
+                    f"{ability_name}: coefficient {int(coefficient_number)} "
+                    "requires boolean damage-component classification"
+                )
+                continue
+            if not is_damage:
                 unresolved.append(
                     f"{ability_name}: coefficient {int(coefficient_number)} "
                     "damage occurrence conflicts with non-damage component classification"
@@ -115,7 +122,7 @@ class ExtremeSustainedDPSWeaponAbilityEnchantmentOccurrenceClassifier:
 
             is_dot = getattr(component, "is_dot", None)
             is_aoe = getattr(component, "is_aoe", None)
-            if is_dot is None or is_aoe is None:
+            if not isinstance(is_dot, bool) or not isinstance(is_aoe, bool):
                 unresolved.append(
                     f"{ability_name}: coefficient {int(coefficient_number)} "
                     "requires reviewed DoT and AoE identity for enchant eligibility"
@@ -123,7 +130,7 @@ class ExtremeSustainedDPSWeaponAbilityEnchantmentOccurrenceClassifier:
                 continue
 
             reviewed += 1
-            if bool(is_dot) and not bool(is_aoe):
+            if is_dot and not is_aoe:
                 excluded_single_target_dot += 1
                 continue
             kept.append(occurrence)
