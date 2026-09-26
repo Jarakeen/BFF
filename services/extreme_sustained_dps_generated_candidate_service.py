@@ -38,6 +38,25 @@ class ExtremeSustainedDPSGeneratedFrontier:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if isinstance(self.structural_candidate_count, bool) or not isinstance(
+            self.structural_candidate_count,
+            int,
+        ):
+            raise TypeError("generated frontier structural_candidate_count must be an integer")
+        if self.structural_candidate_count < 0:
+            raise ValueError("generated frontier structural_candidate_count cannot be negative")
+        if not isinstance(self.structural_denominator_proven, bool):
+            raise TypeError("generated frontier structural_denominator_proven must be boolean")
+        for label, value in (
+            ("expanded_axes", self.expanded_axes),
+            ("deferred_axes", self.deferred_axes),
+            ("evidence", self.evidence),
+            ("unresolved", self.unresolved),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"generated frontier {label} must be a tuple")
+
     @property
     def generated_search_complete(self) -> bool:
         return self.structural_denominator_proven and not self.deferred_axes and not self.unresolved
@@ -66,9 +85,16 @@ class ExtremeSustainedDPSGeneratedCandidateService:
 
     def frontier(self) -> ExtremeSustainedDPSGeneratedFrontier:
         universe = self.universe_service.build()
+        if not isinstance(universe, ExtremeGlobalSearchUniverse):
+            raise TypeError("generated sustained-DPS frontier requires ExtremeGlobalSearchUniverse")
+        if not isinstance(universe.deferred_dynamic_axes, tuple):
+            raise TypeError("generated sustained-DPS deferred_dynamic_axes must be a tuple")
+        denominator_proven = universe.structural_denominator_proven
+        if not isinstance(denominator_proven, bool):
+            raise TypeError("generated sustained-DPS structural denominator proof must be boolean")
         count = self._candidate_count(universe)
         unresolved: list[str] = []
-        if not universe.structural_denominator_proven:
+        if not denominator_proven:
             unresolved.append(
                 "Structural Extreme denominator is incomplete; generated sustained-DPS frontier is not globally enumerable yet"
             )
@@ -85,7 +111,7 @@ class ExtremeSustainedDPSGeneratedCandidateService:
         )
         return ExtremeSustainedDPSGeneratedFrontier(
             structural_candidate_count=count,
-            structural_denominator_proven=bool(universe.structural_denominator_proven),
+            structural_denominator_proven=denominator_proven,
             expanded_axes=self.EXPANDED_AXES,
             deferred_axes=tuple(universe.deferred_dynamic_axes),
             evidence=evidence,
@@ -103,7 +129,9 @@ class ExtremeSustainedDPSGeneratedCandidateService:
         index: int,
     ) -> ExtremeSustainedDPSStructuralCandidate:
         count = cls._candidate_count(universe)
-        position = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("generated sustained-DPS structural candidate index must be an integer")
+        position = index
         if position < 0 or position >= count:
             raise IndexError(
                 f"generated sustained-DPS structural candidate index {position} outside 0..{max(count - 1, 0)}"
