@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from services.extreme_sustained_dps_dynamic_whole_plan_frontier_adapter_service import (
     ExtremeSustainedDPSDynamicWholePlanFrontierAdapterService,
+    ExtremeSustainedDPSIndexedWholePlanAdapter,
 )
 
 
@@ -112,3 +115,50 @@ def test_heavy_attack_adapter_can_clear_omission_with_complete_window_proof() ->
     assert adapter.axes == ("heavy_attack_policy",)
     assert adapter.choice_count == 2
     assert adapter.omitted_scope == ()
+
+
+def test_indexed_whole_plan_adapter_requires_strict_proof_record_fields() -> None:
+    with pytest.raises(TypeError, match="axes must be a tuple"):
+        ExtremeSustainedDPSIndexedWholePlanAdapter(
+            axes=["execute_policy"],  # type: ignore[arg-type]
+            choice_count=1,
+            choice_at=lambda _index: object(),
+            denominator_proven=True,
+        )
+
+    with pytest.raises(TypeError, match="choice_count must be an integer"):
+        ExtremeSustainedDPSIndexedWholePlanAdapter(
+            axes=("execute_policy",),
+            choice_count=True,  # type: ignore[arg-type]
+            choice_at=lambda _index: object(),
+            denominator_proven=True,
+        )
+
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        ExtremeSustainedDPSIndexedWholePlanAdapter(
+            axes=("execute_policy",),
+            choice_count=1,
+            choice_at=lambda _index: object(),
+            denominator_proven="true",  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="omitted_scope must be a tuple"):
+        ExtremeSustainedDPSIndexedWholePlanAdapter(
+            axes=("execute_policy",),
+            choice_count=1,
+            choice_at=lambda _index: object(),
+            denominator_proven=True,
+            omitted_scope=["open"],  # type: ignore[arg-type]
+        )
+
+
+def test_indexed_whole_plan_adapter_rejects_boolean_index() -> None:
+    adapter = ExtremeSustainedDPSIndexedWholePlanAdapter(
+        axes=("execute_policy",),
+        choice_count=1,
+        choice_at=lambda index: index,
+        denominator_proven=True,
+    )
+
+    with pytest.raises(TypeError, match="index must be an integer"):
+        adapter.choice_at(True)
