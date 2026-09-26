@@ -10,6 +10,7 @@ owned by the existing finalized-denominator services.
 """
 
 from dataclasses import dataclass, replace
+import math
 from typing import Protocol
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
@@ -56,6 +57,15 @@ class ExtremeSustainedDPSFinalizedPotionTimingEvidence:
             raise TypeError(
                 "finalized potion resource-event denominator proof flag must be boolean"
             )
+        for value in self.additional_resource_event_times:
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise TypeError(
+                    "finalized potion additional resource event times must be numeric"
+                )
+            if not math.isfinite(float(value)) or float(value) < 0.0:
+                raise ValueError(
+                    "finalized potion additional resource event times must be finite and non-negative"
+                )
 
 
 class ExtremeSustainedDPSFinalizedPotionTimingEvidenceResolver(Protocol):
@@ -456,9 +466,14 @@ class ExtremeSustainedDPSGeneratedFinalizedPotionAxisAdapterService:
             ultimate_spend_rules=(),
             potion_cooldown_seconds=state.potion_cooldown_seconds,
         )
+        legality_unresolved = getattr(assessment, "unresolved", ())
+        if not isinstance(legality_unresolved, tuple):
+            raise TypeError(
+                "finalized potion legality unresolved evidence must be a tuple"
+            )
         potion_unresolved = tuple(
             item
-            for item in assessment.unresolved
+            for item in legality_unresolved
             if "potion" in str(item).casefold()
         )
 
