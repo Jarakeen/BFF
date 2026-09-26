@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from services.extreme_sustained_dps_objective32_blocker_service import (
+    ExtremeSustainedDPSObjective32Blocker,
     ExtremeSustainedDPSObjective32BlockerReport,
     ExtremeSustainedDPSObjective32BlockerService,
 )
@@ -262,4 +263,32 @@ def test_blocker_report_rejects_mutable_proof_collections() -> None:
         ExtremeSustainedDPSObjective32BlockerReport(
             blockers=[],
             evidence=(),
+        )
+
+
+
+def test_blocker_report_rejects_duplicate_blocker_identity() -> None:
+    blocker = ExtremeSustainedDPSObjective32Blocker(
+        code="same",
+        category="coverage",
+        detail="same debt",
+        axis="runtime_state",
+    )
+    with pytest.raises(ValueError, match="duplicate blockers"):
+        ExtremeSustainedDPSObjective32BlockerReport(
+            blockers=(blocker, blocker),
+            evidence=(),
+        )
+
+
+def test_blocker_assessment_rejects_duck_typed_proof_records() -> None:
+    with pytest.raises(TypeError, match="canonical generated search result"):
+        ExtremeSustainedDPSObjective32BlockerService.assess(
+            search_result=SimpleNamespace(
+                global_maximum_proven=True,
+                unresolved=(),
+            ),
+            axis_inventory=SimpleNamespace(),
+            axis_coverage=SimpleNamespace(),
+            closure=SimpleNamespace(),
         )
