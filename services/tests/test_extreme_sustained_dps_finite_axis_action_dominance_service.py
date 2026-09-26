@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from services.extreme_sustained_dps_finite_axis_action_dominance_service import (
     ExtremeSustainedDPSFiniteAxisActionDominanceService,
     ExtremeSustainedDPSFiniteAxisChoice,
@@ -187,3 +189,61 @@ def test_indexed_frontier_is_consumed_one_choice_at_a_time() -> None:
     assert accessed == [0, 1, 2]
     assert result.upper_bound_damage == 120.0
     assert result.axis_coverage.dominated_axes == ("champion_points",)
+
+
+def test_indexed_finite_axis_rejects_truthy_denominator_proof() -> None:
+    class _Frontier:
+        axes = ("champion_points",)
+        choice_count = 1
+        denominator_proven = "true"
+
+        def choice_at(self, index):
+            return ExtremeSustainedDPSFiniteAxisChoice("cp:0", "0")
+
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        ExtremeSustainedDPSFiniteAxisActionDominanceService.evaluate_indexed(
+            candidate_key="branch:strict-proof",
+            frontier=_Frontier(),
+            evaluator=_Evaluator({"0": {"damage": (100.0,)}}),
+            source="strict proof boundary",
+        )
+
+
+def test_indexed_finite_axis_rejects_boolean_choice_count() -> None:
+    class _Frontier:
+        axes = ("champion_points",)
+        choice_count = True
+        denominator_proven = True
+
+        def choice_at(self, index):
+            return ExtremeSustainedDPSFiniteAxisChoice("cp:0", "0")
+
+    with pytest.raises(TypeError, match="choice_count must be an integer"):
+        ExtremeSustainedDPSFiniteAxisActionDominanceService.evaluate_indexed(
+            candidate_key="branch:strict-count",
+            frontier=_Frontier(),
+            evaluator=_Evaluator({"0": {"damage": (100.0,)}}),
+            source="strict count boundary",
+        )
+
+
+def test_direct_finite_axis_rejects_non_tuple_choices_and_truthy_proof() -> None:
+    with pytest.raises(TypeError, match="choices must be a tuple"):
+        ExtremeSustainedDPSFiniteAxisActionDominanceService.evaluate(
+            candidate_key="branch:bad-choices",
+            axes=("champion_points",),
+            choices=[ExtremeSustainedDPSFiniteAxisChoice("a", "a")],
+            denominator_proven=True,
+            evaluator=_Evaluator({"a": {"damage": (100.0,)}}),
+            source="strict direct boundary",
+        )
+
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        ExtremeSustainedDPSFiniteAxisActionDominanceService.evaluate(
+            candidate_key="branch:bad-proof",
+            axes=("champion_points",),
+            choices=(ExtremeSustainedDPSFiniteAxisChoice("a", "a"),),
+            denominator_proven=1,
+            evaluator=_Evaluator({"a": {"damage": (100.0,)}}),
+            source="strict direct boundary",
+        )
