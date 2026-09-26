@@ -187,8 +187,12 @@ class ExtremeSustainedDPSChampionPointFrontierService:
         limit: int = 100,
     ) -> tuple[ExtremeSustainedDPSChampionPointCandidate, ...]:
         frontier = self.frontier()
-        start = max(0, int(offset))
-        size = max(0, int(limit))
+        if isinstance(offset, bool) or not isinstance(offset, int):
+            raise TypeError("Champion Point page offset must be an integer")
+        if isinstance(limit, bool) or not isinstance(limit, int):
+            raise TypeError("Champion Point page limit must be an integer")
+        start = max(0, offset)
+        size = max(0, limit)
         if size == 0 or start >= frontier.candidate_count:
             return ()
         return tuple(
@@ -202,9 +206,15 @@ class ExtremeSustainedDPSChampionPointFrontierService:
         choose: int,
         index: int,
     ) -> tuple[str, ...]:
+        if isinstance(choose, bool) or not isinstance(choose, int):
+            raise TypeError("Champion Point combination choose must be an integer")
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("Champion Point combination index must be an integer")
         n = len(values)
-        k = int(choose)
-        target = int(index)
+        k = choose
+        target = index
+        if k < 0 or k > n:
+            raise ValueError("Champion Point combination choose is out of range")
         total = comb(n, k)
         if target < 0 or target >= total:
             raise IndexError("Champion Point discipline combination index out of range")
