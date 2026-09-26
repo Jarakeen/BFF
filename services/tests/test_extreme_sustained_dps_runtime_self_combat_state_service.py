@@ -18,7 +18,7 @@ def _effect(name="minor_brutality", duration=5.5):
         duration=duration,
         trigger="weapon_poison_proc",
         target_type=SupportTargetType.SELF,
-        stacking_behavior=StackingBehavior.UNIQUE,
+        stacking=StackingBehavior.UNIQUE,
     )
 
 
