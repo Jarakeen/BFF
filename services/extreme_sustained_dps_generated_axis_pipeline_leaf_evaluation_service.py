@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 """Exact-leaf bridge from the generated axis pipeline to canonical runtime evaluation."""
 
 from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
@@ -51,6 +53,24 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
     ) -> ExtremeSustainedDPSExactLeafEvaluation:
         if not isinstance(node, ExtremeSustainedDPSGeneratedFrontierNode):
             raise TypeError("generated leaf evaluation requires canonical frontier node")
+        if isinstance(target_health, bool) or not isinstance(target_health, int):
+            raise TypeError("generated leaf target health must be an integer")
+        if target_health <= 0:
+            raise ValueError("generated leaf target health must be positive")
+        if isinstance(target_resistance, bool) or not isinstance(target_resistance, (int, float)):
+            raise TypeError("generated leaf target resistance must be numeric")
+        resistance = float(target_resistance)
+        if not math.isfinite(resistance) or resistance < 0.0:
+            raise ValueError("generated leaf target resistance must be finite and non-negative")
+        if not isinstance(target_name, str):
+            raise TypeError("generated leaf target_name must be a string")
+        normalized_target = target_name.strip() or "Boss"
+        if not isinstance(initial_bar, str):
+            raise TypeError("generated leaf initial_bar must be a string")
+        normalized_bar = initial_bar.strip().casefold()
+        if normalized_bar not in {"front", "back"}:
+            raise ValueError("generated leaf initial_bar must be front or back")
+
         state = node.state
         runtime_choice = getattr(state, "runtime_state_choice", None)
         complete = getattr(state, "complete", False)
@@ -96,12 +116,16 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
                 "Generated axis pipeline leaf is missing " + ", ".join(missing),
             )
 
-        if runtime_choice is not None and getattr(runtime_choice, "unresolved", ()):
-            return self._incomplete(
-                node,
-                "Generated runtime-state choice is unresolved: "
-                + "; ".join(str(item) for item in runtime_choice.unresolved),
-            )
+        if runtime_choice is not None:
+            runtime_choice_unresolved = getattr(runtime_choice, "unresolved", ())
+            if not isinstance(runtime_choice_unresolved, tuple):
+                raise TypeError("runtime-state choice unresolved evidence must be a tuple")
+            if runtime_choice_unresolved:
+                return self._incomplete(
+                    node,
+                    "Generated runtime-state choice is unresolved: "
+                    + "; ".join(str(item) for item in runtime_choice_unresolved),
+                )
 
         effective_runtime_snapshot = (
             getattr(runtime_choice, "snapshot")
@@ -120,19 +144,15 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
             "plan": plan,
             "runtime_snapshot": effective_runtime_snapshot,
             "target_health": target_health,
-            "target_resistance": target_resistance,
-            "target_name": target_name,
-            "initial_bar": initial_bar,
+            "target_resistance": resistance,
+            "target_name": normalized_target,
+            "initial_bar": normalized_bar,
         }
         if runtime_choice is not None:
-            runtime_kwargs["runtime_effects"] = tuple(
-                getattr(runtime_choice, "effects", ())
-            )
-
-        if isinstance(target_health, bool) or not isinstance(target_health, int):
-            raise TypeError("generated leaf target health must be an integer")
-        if isinstance(target_resistance, bool) or not isinstance(target_resistance, (int, float)):
-            raise TypeError("generated leaf target resistance must be numeric")
+            effects = getattr(runtime_choice, "effects", ())
+            if not isinstance(effects, tuple):
+                raise TypeError("runtime-state choice effects must be a tuple")
+            runtime_kwargs["runtime_effects"] = effects
         result = self.runtime_evaluation.evaluate(
             build,
             **runtime_kwargs,
