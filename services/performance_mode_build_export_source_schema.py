@@ -319,6 +319,16 @@ class PerformanceModeBuildExportSource(BaseModel):
             raise ValueError("Vampire transformed form requires Vampire affiliation")
         if self.TransformedForm == "werewolf" and not self.Werewolf:
             raise ValueError("Werewolf transformed form requires Werewolf affiliation")
+
+        for variant in self.ContextVariants:
+            if variant.TransformedForm == "vampire" and not self.Vampire:
+                raise ValueError(
+                    "Vampire Context Variant requires Vampire affiliation on the parent Build"
+                )
+            if variant.TransformedForm == "werewolf" and not self.Werewolf:
+                raise ValueError(
+                    "Werewolf Context Variant requires Werewolf affiliation on the parent Build"
+                )
         return self
 
     @classmethod
