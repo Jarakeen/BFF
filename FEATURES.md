@@ -789,3 +789,5 @@ When a new feature becomes usable or a meaningful capability is added to an exis
 - **Extreme finalized-evidence admission hardening** — Finalized potion timing and generated leaf evaluation now require canonical proof evidence, strict boolean completion/denominator flags, immutable evidence collections, canonical generated candidates/frontier nodes, and non-boolean numeric runtime inputs before exact Objective #32 evidence is admitted.
 
 - **Extreme search-result and blocker-boundary hardening** — Objective #32 branch-and-bound now requires canonical roots, child branches, exact-leaf evidence, and immutable proof collections; blocker diagnostics likewise refuse mutable proof-state collections instead of silently normalizing them before theoretical-closure reporting.
+
+- **Extreme runtime-frontier proof-record hardening** — Objective #32 runtime-state families, scenario preflight, and candidate-scoped runtime resolution now require strict boolean closure flags, immutable canonical proof collections, canonical runtime choices/scenario results, and fail closed on truthy strings or mutable resolver outputs.
