@@ -209,3 +209,24 @@ def test_factory_rejects_generated_and_existing_poison_authority_paths(tmp_path)
             generated_weapon_poison_item_evidence_resolver=object(),
             generated_weapon_poison_dilution_mode_resolver=object(),
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("supplemental_event_denominator_proven", "true"),
+        ("supplemental_history_denominator_proven", 1),
+    ),
+)
+def test_factory_requires_strict_supplemental_proof_flags(tmp_path, field, value):
+    kwargs = {
+        "database_path": tmp_path / "eso.db",
+        "capability_service": _CapabilityService(),
+        "occurrence_provider_resolver": _occurrence_provider,
+        "supplemental_event_denominator_proven": True,
+        "supplemental_history_denominator_proven": True,
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"{field} must be boolean"):
+        ExtremeSustainedDPSCandidateRuntimeStateFactoryService.build(**kwargs)
