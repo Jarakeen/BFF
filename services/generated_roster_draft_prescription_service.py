@@ -11,6 +11,7 @@ draft identity. Normal reads and writes use ``generated_roster_draft_recruit_pre
 import json
 
 from services.eso_database import EsoDatabase
+from services.generated_roster_draft_pydantic_schema import validate_generated_roster_prescription
 
 
 GENERATED_ROSTER_DRAFT_PRESCRIPTION_STORAGE = (
@@ -129,33 +130,67 @@ class GeneratedRosterDraftPrescriptionService:
         adopted_character_name: str,
         adopted_build_name: str,
     ) -> None:
-        resolved_slot = str(slot_name or "").strip()
-        if not resolved_slot:
-            raise ValueError("generated draft prescription requires slot_name")
-        payload = json.dumps(prescription, ensure_ascii=False, sort_keys=True)
-        self.db.execute(
-            """
-            INSERT INTO generated_roster_draft_recruit_prescription (
-                draft_id, slot_name, prescription_json,
-                adopted_player_name, adopted_character_name, adopted_build_name,
-                updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(draft_id, slot_name) DO UPDATE SET
-                adopted_player_name = excluded.adopted_player_name,
-                adopted_character_name = excluded.adopted_character_name,
-                adopted_build_name = excluded.adopted_build_name,
-                updated_at = CURRENT_TIMESTAMP
-            """,
-            (
-                int(draft_id),
-                resolved_slot,
-                payload,
-                str(adopted_player_name or "").strip(),
-                str(adopted_character_name or "").strip(),
-                str(adopted_build_name or "").strip(),
-            ),
-        )
-        self.db.commit()
+        intended = validate_generated_roster_prescription({
+            "draft_id": int(draft_id),
+            "slot_name": str(slot_name or "").strip(),
+            "prescription": prescription,
+            "adopted_player_name": str(adopted_player_name or "").strip(),
+            "adopted_character_name": str(adopted_character_name or "").strip(),
+            "adopted_build_name": str(adopted_build_name or "").strip(),
+        })
+        payload = json.dumps(intended["prescription"], ensure_ascii=False, sort_keys=True)
+        db = self.db.connection
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            parent = db.execute(
+                "SELECT 1 FROM generated_roster_draft WHERE id = ?",
+                (intended["draft_id"],),
+            ).fetchone()
+            if parent is None:
+                raise ValueError(f"generated roster draft {intended['draft_id']} does not exist")
+            db.execute(
+                """
+                INSERT INTO generated_roster_draft_recruit_prescription (
+                    draft_id, slot_name, prescription_json,
+                    adopted_player_name, adopted_character_name, adopted_build_name,
+                    updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(draft_id, slot_name) DO UPDATE SET
+                    prescription_json = excluded.prescription_json,
+                    adopted_player_name = excluded.adopted_player_name,
+                    adopted_character_name = excluded.adopted_character_name,
+                    adopted_build_name = excluded.adopted_build_name,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (
+                    intended["draft_id"], intended["slot_name"], payload,
+                    intended["adopted_player_name"], intended["adopted_character_name"],
+                    intended["adopted_build_name"],
+                ),
+            )
+            row = db.execute(
+                """SELECT prescription_json, adopted_player_name, adopted_character_name,
+                          adopted_build_name
+                   FROM generated_roster_draft_recruit_prescription
+                   WHERE draft_id = ? AND slot_name = ? COLLATE NOCASE""",
+                (intended["draft_id"], intended["slot_name"]),
+            ).fetchone()
+            if row is None:
+                raise RuntimeError("generated roster prescription was not persisted")
+            read_back = validate_generated_roster_prescription({
+                "draft_id": intended["draft_id"],
+                "slot_name": intended["slot_name"],
+                "prescription": json.loads(str(row["prescription_json"])),
+                "adopted_player_name": str(row["adopted_player_name"]),
+                "adopted_character_name": str(row["adopted_character_name"]),
+                "adopted_build_name": str(row["adopted_build_name"]),
+            })
+            if read_back != intended:
+                raise RuntimeError("generated roster prescription did not round-trip exactly")
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
 
 
 __all__ = [
