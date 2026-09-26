@@ -47,6 +47,23 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisState:
     execute_policy: ExtremeSustainedDPSExecutePolicyCandidate | None = None
     heavy_attack_policy: ExtremeSustainedDPSHeavyAttackPolicyCandidate | None = None
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.seed, GeneratedRotationCandidate):
+            raise TypeError("generated runtime-policy state requires a GeneratedRotationCandidate seed")
+        if not isinstance(self.target_identity, str) or not self.target_identity.strip():
+            raise ValueError("generated runtime-policy state requires target_identity")
+        for label, value in (
+            ("duration_rules", self.duration_rules),
+            ("heavy_attack_windows", self.heavy_attack_windows),
+            ("heavy_attack_channel_blocks", self.heavy_attack_channel_blocks),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"generated runtime-policy state {label} must be a tuple")
+        if not isinstance(self.heavy_attack_channel_block_denominator_proven, bool):
+            raise TypeError(
+                "generated runtime-policy state Heavy Attack channel-block denominator proof must be boolean"
+            )
+
     @property
     def current_candidate(self) -> GeneratedRotationCandidate:
         if self.heavy_attack_policy is not None:
@@ -136,7 +153,9 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
             self._execute_frontier(state),
             "execute policy frontier",
         )
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("execute policy candidate index must be an integer")
+        target = index
         if target < 0 or target >= len(candidates):
             raise IndexError("execute policy candidate index out of range")
         return replace(
@@ -230,7 +249,9 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
             self._heavy_frontier(state),
             "Heavy Attack policy frontier",
         )
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("Heavy Attack policy candidate index must be an integer")
+        target = index
         if target < 0 or target >= len(candidates):
             raise IndexError("Heavy Attack policy candidate index out of range")
         return replace(state, heavy_attack_policy=candidates[target])
