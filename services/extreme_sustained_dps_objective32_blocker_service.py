@@ -4,6 +4,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from services.extreme_sustained_dps_axis_dominance_composition_service import (
+    ExtremeSustainedDPSAxisDominanceComposition,
+)
+from services.extreme_sustained_dps_closure_inventory_service import (
+    ExtremeSustainedDPSClosureInventory,
+)
+from services.extreme_sustained_dps_generated_axis_inventory_service import (
+    ExtremeSustainedDPSGeneratedAxisInventory,
+)
+from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
+    ExtremeSustainedDPSGeneratedSearchResult,
+)
+from services.extreme_sustained_dps_theoretical_maximum_closure_service import (
+    ExtremeSustainedDPSTheoreticalMaximumClosure,
+)
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSObjective32Blocker:
@@ -87,6 +103,22 @@ class ExtremeSustainedDPSObjective32BlockerService:
         closure: object,
         closure_inventory: object | None = None,
     ) -> ExtremeSustainedDPSObjective32BlockerReport:
+        for value, expected, label in (
+            (search_result, ExtremeSustainedDPSGeneratedSearchResult, "generated search result"),
+            (axis_inventory, ExtremeSustainedDPSGeneratedAxisInventory, "generated axis inventory"),
+            (axis_coverage, ExtremeSustainedDPSAxisDominanceComposition, "axis coverage"),
+            (closure, ExtremeSustainedDPSTheoreticalMaximumClosure, "theoretical closure"),
+        ):
+            if not isinstance(value, expected):
+                raise TypeError(f"Objective #32 blocker assessment requires canonical {label}")
+        if closure_inventory is not None and not isinstance(
+            closure_inventory,
+            ExtremeSustainedDPSClosureInventory,
+        ):
+            raise TypeError(
+                "Objective #32 blocker assessment requires canonical closure inventory"
+            )
+
         blockers: list[ExtremeSustainedDPSObjective32Blocker] = []
 
         global_maximum_proven = getattr(search_result, "global_maximum_proven", None)
