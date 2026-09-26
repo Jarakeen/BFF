@@ -9,6 +9,7 @@ resulting plan is promotable to canonical full-charge completion evidence.
 
 from dataclasses import dataclass
 from itertools import combinations
+import math
 from typing import Callable
 
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
@@ -29,14 +30,28 @@ class ExtremeSustainedDPSHeavyAttackWindow:
     encounter_allows_channel: bool = True
 
     def __post_init__(self) -> None:
-        bar = str(self.bar or "").strip().casefold()
+        if not isinstance(self.bar, str):
+            raise TypeError("heavy-attack window bar must be a string")
+        bar = self.bar.strip().casefold()
         if bar not in {"front", "back"}:
             raise ValueError("heavy-attack window bar must be front or back")
-        object.__setattr__(self, "bar", bar)
+        if isinstance(self.time_seconds, bool) or not isinstance(self.time_seconds, (int, float)):
+            raise TypeError("heavy-attack window time_seconds must be numeric")
+        if not math.isfinite(float(self.time_seconds)) or float(self.time_seconds) < 0.0:
+            raise ValueError("heavy-attack window time_seconds must be finite and non-negative")
+        if isinstance(self.sequence, bool) or not isinstance(self.sequence, int):
+            raise TypeError("heavy-attack window sequence must be an integer")
+        if self.sequence < 0:
+            raise ValueError("heavy-attack window sequence cannot be negative")
+        if isinstance(self.channel_seconds, bool) or not isinstance(self.channel_seconds, (int, float)):
+            raise TypeError("heavy-attack window channel_seconds must be numeric")
+        if not math.isfinite(float(self.channel_seconds)):
+            raise ValueError("heavy-attack window channel_seconds must be finite")
         if abs(float(self.channel_seconds) - _REVIEWED_FULL_CHARGE_SECONDS) > _EPSILON:
             raise ValueError("generated fully charged Heavy Attack window must use reviewed 1.8s timing")
-        if int(self.sequence) < 0:
-            raise ValueError("heavy-attack window sequence cannot be negative")
+        if not isinstance(self.encounter_allows_channel, bool):
+            raise TypeError("heavy-attack window encounter_allows_channel must be boolean")
+        object.__setattr__(self, "bar", bar)
 
 
 @dataclass(frozen=True)
@@ -193,6 +208,10 @@ class ExtremeSustainedDPSHeavyAttackPolicyFrontierService:
             GeneratedRotationCandidate,
         ] | None = None,
     ) -> ExtremeSustainedDPSHeavyAttackPolicyFrontier:
+        if not isinstance(windows, tuple):
+            raise TypeError("heavy-attack policy windows must be a tuple")
+        if any(not isinstance(window, ExtremeSustainedDPSHeavyAttackWindow) for window in windows):
+            raise TypeError("heavy-attack policy windows must contain reviewed window records")
         unique: dict[tuple[float, int, str], ExtremeSustainedDPSHeavyAttackWindow] = {}
         unresolved: list[str] = []
         for window in windows:
