@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.extreme_sustained_dps_heavy_attack_policy_frontier_service import (
     ExtremeSustainedDPSHeavyAttackPolicyFrontierService,
@@ -99,3 +101,43 @@ def test_unsafe_encounter_window_is_not_retained() -> None:
     )
 
     assert tuple(row.policy_id for row in result.candidates) == ("heavy:none",)
+
+
+@pytest.mark.parametrize(
+    "kwargs,match",
+    (
+        ({"time_seconds": "0"}, "time_seconds must be numeric"),
+        ({"sequence": True}, "sequence must be an integer"),
+        ({"channel_seconds": "1.8"}, "channel_seconds must be numeric"),
+        ({"encounter_allows_channel": "false"}, "encounter_allows_channel must be boolean"),
+        ({"bar": 1}, "bar must be a string"),
+    ),
+)
+def test_heavy_window_requires_strict_evidence_types(kwargs, match) -> None:
+    values = {
+        "time_seconds": 0.0,
+        "sequence": 1,
+        "bar": "front",
+        "channel_seconds": 1.8,
+        "encounter_allows_channel": True,
+    }
+    values.update(kwargs)
+
+    with pytest.raises(TypeError, match=match):
+        ExtremeSustainedDPSHeavyAttackWindow(**values)
+
+
+def test_heavy_policy_requires_tuple_reviewed_windows() -> None:
+    service = ExtremeSustainedDPSHeavyAttackPolicyFrontierService()
+
+    with pytest.raises(TypeError, match="windows must be a tuple"):
+        service.expand(
+            seed=_seed(),
+            windows=[ExtremeSustainedDPSHeavyAttackWindow(0.0, 1, "front")],  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="reviewed window records"):
+        service.expand(
+            seed=_seed(),
+            windows=(object(),),  # type: ignore[arg-type]
+        )
