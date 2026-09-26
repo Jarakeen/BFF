@@ -83,11 +83,13 @@ def test_matrix_uses_full_baseline_and_only_variant_swaps() -> None:
     assert boss1.sets_pieces
     assert boss3.front_skills[0] == ""
     assert boss3.front_skills[1] == "Radiant Glory"
-    assert "Clockwork Citrus Filet" in boss3.food_potion
+    assert boss3.food_potion == ""
     assert trash.front_skills[0] == "Cephaliarch's Flail"
-    assert "Heroism Potion" in flex.food_potion
+    assert flex.food_potion == ""
     assert page.baseline.food == "Orzorga's Smoked Bear Haunch"
+    assert page.baseline.potions == "Essence of Spell Power"
     assert "Deadly Aim" in page.baseline.cp_core
+    assert not hasattr(page.baseline, "race")
 
 
 def test_export_request_is_strict_and_rejects_string_boolean() -> None:
@@ -126,6 +128,44 @@ def test_pdf_export_smoke(tmp_path: Path) -> None:
     PerformanceModeBuildMatrixExporter().export_build(_build(), target)
     assert target.exists()
     assert target.stat().st_size > 1000
+
+
+def test_static_footer_owns_food_potions_and_class_mastery() -> None:
+    build = _build()
+    build.ClassMasteryAbilityIds = [111, 222]
+    page = build_matrix_page(
+        build,
+        default_export_request(build),
+        mastery_names={111: "Nothing Wasted", 222: "Cycle Unending"},
+    )
+
+    assert all(card.food_potion == "" for card in page.cards)
+    assert all(card.mastery == "" for card in page.cards)
+    assert page.baseline.food == "Orzorga's Smoked Bear Haunch"
+    assert page.baseline.potions == "Essence of Spell Power"
+    assert page.baseline.class_mastery == "Nothing Wasted · Cycle Unending"
+
+
+def test_pdf_name_wrapping_preserves_full_gameplay_names() -> None:
+    class _WidthProbe:
+        @staticmethod
+        def stringWidth(text: str, _font_name: str, font_size: float) -> float:
+            return len(text) * font_size * 0.52
+
+    text = (
+        "Perfected Slivers of the Null Arca / Inspired Scholarship / "
+        "Cephaliarch's Flail"
+    )
+    lines = PerformanceModeBuildMatrixExporter._wrap_lines(
+        _WidthProbe(),
+        text,
+        font_name="Helvetica",
+        font_size=5.0,
+        max_width=90.0,
+    )
+
+    assert " ".join(lines) == text
+    assert "…" not in "".join(lines)
 
 
 def test_export_source_rejects_wrong_length_skill_bar() -> None:
