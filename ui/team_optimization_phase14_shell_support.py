@@ -108,8 +108,10 @@ def _configure_table(table: QTableWidget) -> None:
 
 def _build_header_context(page) -> None:
     page.optimizer_plan_combo = QComboBox()
-    page.optimizer_plan_combo.addItem("Open from Raid Plan…", None)
-    page.optimizer_plan_combo.setEnabled(False)
+    page.optimizer_plan_combo.addItem("Select saved Raid Plan…", None)
+    page.optimizer_plan_combo.setToolTip(
+        "Preview a saved Raid Plan directly. Selecting a plan does not save or modify it."
+    )
     page.header.add_context_widget(
         _context_field(page, "RAID PLAN", page.optimizer_plan_combo)
     )
@@ -139,16 +141,30 @@ def _build_header_context(page) -> None:
     )
 
 
+def _build_draft_notice(page) -> None:
+    notice = QLabel(
+        "Optimizer is in draft format. Only preview is available at this time."
+    )
+    notice.setWordWrap(True)
+    notice.setProperty("warningBanner", True)
+    notice.setToolTip(
+        "Optimizer is read-only. Previewing recommendations does not save or overwrite "
+        "Raid Plans, Builds, Roles, Assignments, or Comp Maker data."
+    )
+    page.optimizer_draft_notice = notice
+    page.layout.addWidget(notice)
+
+
 def _build_scope_message(page) -> None:
     message = QLabel(
-        "No Raid Plan is loaded. Go to Raid Plans, select and Load the saved plan, "
-        "then choose Open Adviser. An empty or partial team can still be opened; "
+        "No Raid Plan is loaded. Select a saved plan above to preview it, or use "
+        "Open Adviser from Raid Plans. An empty or partial team can still be opened; "
         "Optimization will flag unfilled chairs."
     )
     message.setWordWrap(True)
     message.setProperty("fieldNote", True)
     message.setToolTip(
-        "The My Plans list does not automatically hand a plan to Team Optimization."
+        "Selecting a saved Raid Plan here opens a read-only Optimizer preview."
     )
     page.optimizer_scope_message = message
     page.layout.addWidget(message)
@@ -485,9 +501,54 @@ def _review_selected(page) -> None:
     )
 
 
+def _populate_saved_plan_choices(page, selected_plan_id: str | None = None) -> None:
+    from engine.config import get_user_database_path
+    from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
+
+    wanted = str(selected_plan_id or "").strip().casefold()
+    page._optimizer_plan_combo_guard = True
+    try:
+        page.optimizer_plan_combo.clear()
+        page.optimizer_plan_combo.addItem("Select saved Raid Plan…", None)
+        try:
+            plans = RaidPlanRepository(get_user_database_path()).list_plans()
+        except (OSError, RaidPlanRepositoryError) as exc:
+            page.status.warning(f"Could not list saved Raid Plans: {exc}")
+            return
+        selected_index = 0
+        for plan in plans:
+            page.optimizer_plan_combo.addItem(plan.name, plan.plan_id)
+            if wanted and plan.plan_id.casefold() == wanted:
+                selected_index = page.optimizer_plan_combo.count() - 1
+        page.optimizer_plan_combo.setCurrentIndex(selected_index)
+    finally:
+        page._optimizer_plan_combo_guard = False
+
+
+def _load_selected_saved_plan(page, *_args) -> None:
+    if getattr(page, "_optimizer_plan_combo_guard", False):
+        return
+    plan_id = page.optimizer_plan_combo.currentData()
+    if not plan_id:
+        return
+
+    from engine.config import get_user_database_path
+    from services.raid_plan_repository import RaidPlanRepository, RaidPlanRepositoryError
+
+    try:
+        plan = RaidPlanRepository(get_user_database_path()).get(str(plan_id))
+    except (OSError, RaidPlanRepositoryError) as exc:
+        page.status.warning(f"Could not open saved Raid Plan preview: {exc}")
+        return
+    if plan is None:
+        page.status.warning("That saved Raid Plan no longer exists. Refreshing the list.")
+        _populate_saved_plan_choices(page)
+        return
+    page.set_raid_plan_adviser_scope(plan)
+
+
 def _render_plan_context(page, raid_plan: RaidPlan) -> None:
-    page.optimizer_plan_combo.clear()
-    page.optimizer_plan_combo.addItem(raid_plan.name, raid_plan.plan_id)
+    _populate_saved_plan_choices(page, raid_plan.plan_id)
     page.optimizer_encounter_combo.clear()
     page.optimizer_encounter_combo.addItem(raid_plan.trial_id, raid_plan.trial_id)
     page.optimizer_difficulty_combo.clear()
@@ -539,6 +600,7 @@ def _init_with_phase14_workbench(self, parent=None) -> None:
     self.set_status(self.status)
 
     _build_header_context(self)
+    _build_draft_notice(self)
     _build_scope_message(self)
     _build_team_snapshot(self)
     _build_recommendation_workspace(self)
@@ -546,6 +608,7 @@ def _init_with_phase14_workbench(self, parent=None) -> None:
 
     self._optimizer_rendered_findings = ()
     self._optimizer_table_guard = False
+    self._optimizer_plan_combo_guard = False
     self._raid_plan_adviser_scope = None
     self._raid_plan_adviser_review = None
     self._raid_plan_optimizer_adviser_service = None
@@ -557,6 +620,10 @@ def _init_with_phase14_workbench(self, parent=None) -> None:
         "phase14_constructor_ms": (perf_counter() - started) * 1000.0,
     }
 
+    self.optimizer_plan_combo.currentIndexChanged.connect(
+        lambda *_: _load_selected_saved_plan(self)
+    )
+    _populate_saved_plan_choices(self)
     self.optimizer_recommendation_table.itemChanged.connect(
         lambda *_: _update_selected_count(self)
     )
@@ -565,7 +632,7 @@ def _init_with_phase14_workbench(self, parent=None) -> None:
     )
     self.optimizer_review_button.clicked.connect(lambda *_: _review_selected(self))
     self.status.info(
-        "Open Team Optimization from a saved Raid Plan to receive evidence-backed recommendations."
+        "Optimizer draft preview • select a saved Raid Plan to inspect evidence-backed recommendations."
     )
 
 
