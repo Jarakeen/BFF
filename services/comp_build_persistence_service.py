@@ -457,20 +457,45 @@ class CompBuildPersistenceService:
         # Canonical identity promotion may add Players/Characters. Persist those
         # additions, but never add/update a Build merely because Comp Maker saved.
         if staged_roster_bindings:
-            self.bridge.save_catalog(catalog)
-        for roster_member_id, player_id, character_id in dict.fromkeys(
-            staged_roster_bindings
-        ):
-            self.database.execute(
-                """
-                UPDATE roster_member
-                SET canonical_player_id = ?, canonical_character_id = ?
-                WHERE id = ?
-                """,
-                (player_id, character_id, roster_member_id),
-            )
-        if staged_roster_bindings:
-            self.database.commit()
+            bindings = tuple(dict.fromkeys(staged_roster_bindings))
+            self.database.execute("BEGIN IMMEDIATE")
+            try:
+                self.bridge.catalog_service.save_on_connection(
+                    catalog,
+                    self.database.connection,
+                )
+                for roster_member_id, player_id, character_id in bindings:
+                    self.database.execute(
+                        """
+                        UPDATE roster_member
+                        SET canonical_player_id = ?, canonical_character_id = ?
+                        WHERE id = ?
+                        """,
+                        (player_id, character_id, roster_member_id),
+                    )
+                    row = self.database.execute(
+                        """
+                        SELECT canonical_player_id, canonical_character_id
+                        FROM roster_member
+                        WHERE id = ?
+                        """,
+                        (roster_member_id,),
+                    ).fetchone()
+                    if row is None:
+                        raise RuntimeError(
+                            f"Personnel row {roster_member_id} disappeared during Comp identity promotion"
+                        )
+                    if (
+                        str(row["canonical_player_id"] or "") != player_id
+                        or str(row["canonical_character_id"] or "") != character_id
+                    ):
+                        raise RuntimeError(
+                            f"Personnel identity binding did not round-trip for row {roster_member_id}"
+                        )
+                self.database.commit()
+            except Exception:
+                self.database.rollback()
+                raise
 
         return CompBuildPersistenceResult(
             state=updated_state,
