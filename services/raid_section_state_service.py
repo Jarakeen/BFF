@@ -10,9 +10,14 @@ unknown; this service never manufactures telemetry.
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+from pydantic import ValidationError
 
 from engine.config import get_app_root
+from services.raid_section_state_pydantic_schema import validate_raid_section_state_payload
 
 
 def _now() -> str:
@@ -62,23 +67,45 @@ class RaidSectionStateService:
                 "finch_raid_map_previews": {},
             }
         try:
-            payload = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError, TypeError):
-            payload = {}
-        if not isinstance(payload, dict):
-            payload = {}
-        payload.setdefault("human_ready", {})
-        payload.setdefault("runs", {})
-        payload.setdefault("events", [])
-        payload.setdefault("reviews", [])
-        payload.setdefault("attempts", [])
-        payload.setdefault("raid_map_links", {})
-        payload.setdefault("finch_raid_map_previews", {})
-        return payload
+            raw = json.loads(self.path.read_text(encoding="utf-8"))
+            return validate_raid_section_state_payload(raw)
+        except (OSError, json.JSONDecodeError, TypeError, ValueError, ValidationError) as exc:
+            raise RuntimeError(f"Raid section state failed strict validation: {exc}") from exc
 
     def _write(self, payload: dict) -> None:
+        try:
+            persisted = validate_raid_section_state_payload(payload)
+        except (TypeError, ValueError, ValidationError) as exc:
+            raise RuntimeError(f"Raid section state failed strict validation: {exc}") from exc
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                dir=self.path.parent,
+                prefix=f".{self.path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                json.dump(persisted, handle, ensure_ascii=False, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+        try:
+            read_back = validate_raid_section_state_payload(
+                json.loads(self.path.read_text(encoding="utf-8"))
+            )
+        except (OSError, json.JSONDecodeError, TypeError, ValueError, ValidationError) as exc:
+            raise RuntimeError(f"Raid section state failed read-back validation: {exc}") from exc
+        if read_back != persisted:
+            raise RuntimeError("Raid section state did not round-trip exactly")
 
     def human_ready(self, plan_id: str, seat_id: str) -> bool | None:
         payload = self._read()
