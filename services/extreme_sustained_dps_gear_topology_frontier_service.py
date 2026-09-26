@@ -77,7 +77,9 @@ class ExtremeSustainedDPSGearTopologyFrontierService:
 
     def topology_at(self, index: int) -> ExtremeGearSetCountTopology:
         catalog = self.catalog()
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("gear-set topology index must be an integer")
+        target = index
         if target < 0 or target >= len(catalog.topologies):
             raise IndexError("gear-set topology index out of range")
         return catalog.topologies[target]
@@ -89,8 +91,12 @@ class ExtremeSustainedDPSGearTopologyFrontierService:
         limit: int = 100,
     ) -> tuple[ExtremeGearSetCountTopology, ...]:
         catalog = self.catalog()
-        start = max(0, int(offset))
-        size = max(0, int(limit))
+        if isinstance(offset, bool) or not isinstance(offset, int):
+            raise TypeError("gear-set topology page offset must be an integer")
+        if isinstance(limit, bool) or not isinstance(limit, int):
+            raise TypeError("gear-set topology page limit must be an integer")
+        start = max(0, offset)
+        size = max(0, limit)
         if size == 0 or start >= len(catalog.topologies):
             return ()
         return tuple(catalog.topologies[start : start + size])
