@@ -432,7 +432,15 @@ def _route_plan_page(window, source_page, target: str) -> None:
             repository = getattr(source_page, "plan_repository", None)
             if plan is not None and repository is not None:
                 verified_plan = repository.get(plan.plan_id)
-                plan = verified_plan if verified_plan == plan else None
+                if verified_plan is not None and verified_plan != plan:
+                    apply_plan = getattr(source_page, "apply_plan", None)
+                    if callable(apply_plan):
+                        apply_plan(verified_plan)
+                        plan = verified_plan
+                    else:
+                        plan = None
+                else:
+                    plan = verified_plan
         except (AttributeError, OSError, TypeError, ValueError):
             plan = None
         if plan is not None:
