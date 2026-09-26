@@ -235,3 +235,11 @@ def test_coverage_exposes_pdf_export_of_reconciled_covered_rows() -> None:
     assert '"unassigned_available"' in source
     assert "manual_sources_by_effect" in source
     assert "for row_index in range(self.table.rowCount())" in source
+
+
+def test_coverage_filter_uses_rendered_catalog_type_not_legacy_name_list() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert "DEBUFFS =" not in source
+    assert 'if "debuff" in type_text.casefold()' in source
+    assert 'UTILITY = {"Orbs", "Purify"}' in source
