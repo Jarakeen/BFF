@@ -351,3 +351,39 @@ def test_runtime_policy_complete_discovery_flag_requires_boolean() -> None:
             heavy_attack_policies=_HeavyFrontier(),
             require_complete_heavy_attack_discovery="false",
         )
+
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("duration_rules", ["rule"], "duration_rules must be a tuple"),
+        ("heavy_attack_windows", ["window"], "heavy_attack_windows must be a tuple"),
+        ("heavy_attack_channel_blocks", ["block"], "heavy_attack_channel_blocks must be a tuple"),
+        (
+            "heavy_attack_channel_block_denominator_proven",
+            "false",
+            "denominator proof must be boolean",
+        ),
+    ),
+)
+def test_runtime_policy_root_rejects_mutable_or_truthy_proof_inputs(
+    field,
+    value,
+    message,
+) -> None:
+    adapter = _adapter()
+    values = {
+        "candidate_id": "candidate",
+        "priorities": object(),
+        "snapshot_resolver": object(),
+        "target_identity": "boss",
+        "duration_rules": (),
+        "heavy_attack_windows": (),
+        "heavy_attack_channel_blocks": (),
+        "heavy_attack_channel_block_denominator_proven": False,
+    }
+    values[field] = value
+
+    with pytest.raises(TypeError, match=message):
+        adapter.root(SimpleNamespace(plan="plan"), **values)
