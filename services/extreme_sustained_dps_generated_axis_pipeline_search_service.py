@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 """Run the composed generated-axis pipeline through proof-safe branch-and-bound."""
 
 from services.extreme_sustained_dps_generated_axis_pipeline_service import (
@@ -44,12 +46,39 @@ class ExtremeSustainedDPSGeneratedAxisPipelineSearchService:
         branch_bound_inputs=None,
         runtime_state_frontier=None,
     ) -> ExtremeSustainedDPSGeneratedSearchResult:
+        if isinstance(required_duration_seconds, bool) or not isinstance(
+            required_duration_seconds,
+            (int, float),
+        ):
+            raise TypeError("required_duration_seconds must be numeric")
+        duration = float(required_duration_seconds)
+        if not math.isfinite(duration) or duration <= 0.0:
+            raise ValueError("required_duration_seconds must be finite and positive")
+        if isinstance(target_health, bool) or not isinstance(target_health, int):
+            raise TypeError("target_health must be an integer")
+        if target_health <= 0:
+            raise ValueError("target_health must be positive")
+        if isinstance(target_resistance, bool) or not isinstance(target_resistance, (int, float)):
+            raise TypeError("target_resistance must be numeric")
+        resistance = float(target_resistance)
+        if not math.isfinite(resistance):
+            raise ValueError("target_resistance must be finite")
+        if not isinstance(target_name, str) or not target_name.strip():
+            raise TypeError("target_name must be a non-empty string")
+        if not isinstance(initial_bar, str):
+            raise TypeError("initial_bar must be a string")
+        normalized_bar = initial_bar.strip().casefold()
+        if normalized_bar not in {"front", "back"}:
+            raise ValueError("initial_bar must be 'front' or 'back'")
+        if not isinstance(root_key, str) or not root_key.strip():
+            raise TypeError("root_key must be a non-empty string")
+
         evaluate_leaf = self.leaf_evaluation.evaluator(
             runtime_snapshot=runtime_snapshot,
-            target_health=int(target_health),
-            target_resistance=float(target_resistance),
-            target_name=target_name,
-            initial_bar=initial_bar,
+            target_health=target_health,
+            target_resistance=resistance,
+            target_name=target_name.strip(),
+            initial_bar=normalized_bar,
         )
         axes = tuple(self.pipeline.axes())
         if runtime_state_frontier is not None:
@@ -64,8 +93,8 @@ class ExtremeSustainedDPSGeneratedAxisPipelineSearchService:
             root_state,
             axes=axes,
             evaluate_leaf=evaluate_leaf,
-            required_duration_seconds=float(required_duration_seconds),
-            root_key=root_key,
+            required_duration_seconds=duration,
+            root_key=root_key.strip(),
             root_bound_inputs=root_bound_inputs,
             branch_bound_inputs=branch_bound_inputs,
         )
