@@ -8,6 +8,9 @@ from services.extreme_sustained_dps_generated_runtime_state_axis_adapter_service
     ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService,
     ExtremeSustainedDPSGeneratedRuntimeStateLeaf,
 )
+from services.extreme_sustained_dps_runtime_effect_relevance_service import (
+    ExtremeSustainedDPSRuntimeEffectRelevance,
+)
 from services.extreme_sustained_dps_runtime_state_frontier_service import (
     ExtremeSustainedDPSRuntimeStateChoice,
     ExtremeSustainedDPSRuntimeStateFrontierService,
@@ -105,6 +108,49 @@ def test_candidate_runtime_axis_resolves_frontier_per_upstream_candidate() -> No
         "candidate-a",
         "candidate-b",
     ]
+
+
+def test_candidate_runtime_axis_preserves_typed_closure_evidence_on_leaf() -> None:
+    relevance = ExtremeSustainedDPSRuntimeEffectRelevance(
+        relevant=(),
+        irrelevant=(),
+        unresolved=(),
+        source_data_unresolved=(),
+        math_unresolved=(),
+        evidence=("candidate relevance proven",),
+    )
+
+    class _Resolver:
+        def resolve(self, _state):
+            return SimpleNamespace(
+                frontier=_frontier(),
+                relevance=relevance,
+                scaling=None,
+            )
+
+    axis = ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.candidate_axis(
+        _Resolver()
+    )
+    leaf = axis.candidate_at(SimpleNamespace(complete=True), 0)
+
+    assert leaf.relevance is relevance
+    assert leaf.scaling is None
+
+
+def test_candidate_runtime_axis_rejects_duck_typed_closure_evidence() -> None:
+    class _Resolver:
+        def resolve(self, _state):
+            return SimpleNamespace(
+                frontier=_frontier(),
+                relevance=SimpleNamespace(unresolved=()),
+            )
+
+    axis = ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.candidate_axis(
+        _Resolver()
+    )
+
+    with pytest.raises(TypeError, match="relevance must be canonical"):
+        axis.candidate_count(SimpleNamespace(complete=True))
 
 
 def test_candidate_runtime_axis_rejects_omitted_runtime_scope() -> None:
