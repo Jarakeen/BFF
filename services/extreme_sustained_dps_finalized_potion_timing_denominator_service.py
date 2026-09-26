@@ -60,15 +60,20 @@ class ExtremeSustainedDPSFinalizedPotionTimingDenominatorService:
         resource_observation_times: tuple[float, ...] = (),
         resource_observation_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSFinalizedPotionTimingDenominator:
+        if not isinstance(instant_restoration_timing_closed, bool):
+            raise TypeError("instant_restoration_timing_closed must be boolean")
+        if not isinstance(resource_observation_denominator_proven, bool):
+            raise TypeError("resource_observation_denominator_proven must be boolean")
+        if not isinstance(resource_observation_times, tuple):
+            raise TypeError("resource_observation_times must be a tuple")
+
         unresolved = list(observation_frontier.unresolved)
-        resource_times = tuple(
-            sorted(
-                {
-                    float(value)
-                    for value in tuple(resource_observation_times)
-                }
-            )
-        )
+        normalized_resource_times: list[float] = []
+        for value in resource_observation_times:
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise TypeError("resource_observation_times must contain only numbers")
+            normalized_resource_times.append(float(value))
+        resource_times = tuple(sorted(set(normalized_resource_times)))
         if resource_times and not resource_observation_denominator_proven:
             unresolved.append(
                 "Potion resource observation times were supplied without denominator proof"
@@ -121,9 +126,13 @@ class ExtremeSustainedDPSFinalizedPotionTimingDenominatorService:
         durations: tuple[float, ...] = ()
         if rank is not None and event.resolved:
             try:
+                if isinstance(rank, bool) or not isinstance(rank, int):
+                    raise TypeError("Medicinal Use rank must be an integer")
+                if isinstance(cooldown_seconds, bool) or not isinstance(cooldown_seconds, (int, float)):
+                    raise TypeError("cooldown_seconds must be numeric")
                 cadence = PotionCadence(
                     event,
-                    medicinal_use_rank=int(rank),
+                    medicinal_use_rank=rank,
                     cooldown_seconds=float(cooldown_seconds),
                 )
             except ValueError as exc:
