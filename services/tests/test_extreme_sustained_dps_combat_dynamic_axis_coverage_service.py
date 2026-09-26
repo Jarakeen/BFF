@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from services.extreme_sustained_dps_combat_dynamic_axis_coverage_service import (
     ExtremeSustainedDPSCombatDynamicAxisCoverageService,
 )
@@ -112,3 +114,53 @@ def test_complete_discovered_heavy_policy_clears_reviewed_window_omission() -> N
         "proven-complete scheduler-derived Heavy Attack start family" in row
         for row in result.evidence
     )
+
+
+def test_dynamic_axis_coverage_rejects_mutable_unresolved_evidence() -> None:
+    with pytest.raises(TypeError, match="unresolved evidence must be a tuple"):
+        ExtremeSustainedDPSCombatDynamicAxisCoverageService.execute_policy(
+            SimpleNamespace(
+                candidates=(),
+                denominator_proven=True,
+                unresolved=[],
+            )
+        )
+
+
+def test_dynamic_axis_coverage_requires_strict_denominator_proof() -> None:
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        ExtremeSustainedDPSCombatDynamicAxisCoverageService.execute_policy(
+            SimpleNamespace(
+                candidates=(),
+                denominator_proven=1,
+                unresolved=(),
+            )
+        )
+
+
+def test_anchored_dynamic_axis_coverage_requires_strict_timing_closure_flags() -> None:
+    frontier = SimpleNamespace(
+        ultimate_options=(),
+        potion_policies=(),
+        candidate_count=0,
+        anchored_policy_denominator_proven=True,
+        continuous_potion_timing_closed="false",
+        delayed_ultimate_timing_closed=False,
+        unresolved=(),
+    )
+    with pytest.raises(TypeError, match="continuous_potion_timing_closed must be boolean"):
+        ExtremeSustainedDPSCombatDynamicAxisCoverageService.anchored_ultimate_potion_policy(
+            frontier
+        )
+
+
+def test_heavy_attack_dynamic_axis_coverage_requires_strict_window_proof() -> None:
+    with pytest.raises(TypeError, match="complete-window denominator proof must be boolean"):
+        ExtremeSustainedDPSCombatDynamicAxisCoverageService.heavy_attack_policy(
+            SimpleNamespace(
+                candidates=(),
+                denominator_proven=True,
+                unresolved=(),
+            ),
+            complete_window_denominator_proven=1,  # type: ignore[arg-type]
+        )
