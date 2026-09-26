@@ -162,8 +162,12 @@ class ExtremeSustainedDPSGeneratedCandidateService:
         offset: int = 0,
         limit: int = 100,
     ) -> tuple[ExtremeSustainedDPSStructuralCandidate, ...]:
-        start = max(0, int(offset))
-        size = max(0, int(limit))
+        if isinstance(offset, bool) or not isinstance(offset, int):
+            raise TypeError("generated sustained-DPS page offset must be an integer")
+        if isinstance(limit, bool) or not isinstance(limit, int):
+            raise TypeError("generated sustained-DPS page limit must be an integer")
+        start = max(0, offset)
+        size = max(0, limit)
         if size == 0:
             return ()
         universe = self.universe_service.build()
