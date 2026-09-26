@@ -80,3 +80,49 @@ def test_runtime_gap_remains_unresolved() -> None:
     assert result.modeled_dps is None
     assert result.mechanic_complete is False
     assert result.unresolved == ("cooldown ownership unresolved",)
+
+
+def test_runtime_choice_evaluator_requires_strict_mechanic_complete() -> None:
+    snapshot = object()
+    evaluator = ExtremeSustainedDPSRuntimeStateWholePlanEvaluator(
+        ".",
+        scenario=_scenario(),
+        runtime_service=_Runtime(
+            {
+                snapshot: SimpleNamespace(
+                    record=None,
+                    mechanic_complete=1,
+                    unresolved=(),
+                )
+            }
+        ),
+    )
+
+    import pytest
+    with pytest.raises(TypeError, match="mechanic_complete must be boolean"):
+        evaluator.evaluate(
+            ExtremeSustainedDPSRuntimeStateChoice("runtime:strict", snapshot)
+        )
+
+
+def test_runtime_choice_evaluator_requires_tuple_runtime_unresolved() -> None:
+    snapshot = object()
+    evaluator = ExtremeSustainedDPSRuntimeStateWholePlanEvaluator(
+        ".",
+        scenario=_scenario(),
+        runtime_service=_Runtime(
+            {
+                snapshot: SimpleNamespace(
+                    record=None,
+                    mechanic_complete=False,
+                    unresolved=[],
+                )
+            }
+        ),
+    )
+
+    import pytest
+    with pytest.raises(TypeError, match="result unresolved must be a tuple"):
+        evaluator.evaluate(
+            ExtremeSustainedDPSRuntimeStateChoice("runtime:strict", snapshot)
+        )
