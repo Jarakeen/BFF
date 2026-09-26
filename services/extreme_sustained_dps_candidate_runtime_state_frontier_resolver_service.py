@@ -23,6 +23,12 @@ class ExtremeSustainedDPSCandidateRuntimeStateResolution:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("candidate runtime-state resolution evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("candidate runtime-state resolution unresolved evidence must be a tuple")
+
 
 class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
     """Build one candidate-scoped runtime_state frontier from the final pipeline witness."""
@@ -112,7 +118,10 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
         self,
         state: object,
     ) -> ExtremeSustainedDPSCandidateRuntimeStateResolution:
-        if not bool(getattr(state, "complete", False)):
+        complete = getattr(state, "complete", False)
+        if not isinstance(complete, bool):
+            raise TypeError("candidate runtime-state pipeline complete flag must be boolean")
+        if not complete:
             raise ValueError(
                 "candidate runtime-state resolution requires complete finalized pipeline state"
             )
@@ -135,20 +144,20 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
             state,
             None,
         )
-        supplemental_events = tuple(
-            self._resolve_optional(
-                self.supplemental_event_resolver,
-                state,
-                (),
-            )
+        supplemental_events = self._resolve_optional(
+            self.supplemental_event_resolver,
+            state,
+            (),
         )
-        supplemental_histories = tuple(
-            self._resolve_optional(
-                self.supplemental_history_resolver,
-                state,
-                (),
-            )
+        if not isinstance(supplemental_events, tuple):
+            raise TypeError("candidate runtime-state supplemental events must be a tuple")
+        supplemental_histories = self._resolve_optional(
+            self.supplemental_history_resolver,
+            state,
+            (),
         )
+        if not isinstance(supplemental_histories, tuple):
+            raise TypeError("candidate runtime-state supplemental histories must be a tuple")
         if not all(
             isinstance(row, ExtremeSustainedDPSRuntimeExternalHistoryChoice)
             for row in supplemental_histories
@@ -184,6 +193,8 @@ class ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
                 ),
             )
         )
+        if not isinstance(result, ExtremeSustainedDPSRuntimeScenarioFrontierResult):
+            raise TypeError("candidate runtime-state scenario frontier must return canonical result")
         return ExtremeSustainedDPSCandidateRuntimeStateResolution(
             frontier=result.frontier,
             evidence=(
