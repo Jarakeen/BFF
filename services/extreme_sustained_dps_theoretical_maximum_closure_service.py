@@ -28,6 +28,32 @@ class ExtremeSustainedDPSTheoreticalMaximumClosure:
 class ExtremeSustainedDPSTheoreticalMaximumClosureService:
     """Separate finite-tree completion from theoretical objective closure."""
 
+    @staticmethod
+    def _mechanics_inventory_state(closure_inventory: object | None) -> tuple[bool, tuple[object, ...], tuple[object, ...], tuple[object, ...], tuple[object, ...]]:
+        if closure_inventory is None:
+            return True, (), (), (), ()
+
+        ready = getattr(closure_inventory, "closure_ready", None)
+        if not isinstance(ready, bool):
+            raise TypeError("Objective #32 closure inventory requires boolean closure_ready")
+
+        names = (
+            "source_data_blockers",
+            "math_review_blockers",
+            "mechanics_blockers",
+            "mechanics_advisories",
+        )
+        values: list[tuple[object, ...]] = []
+        for name in names:
+            value = getattr(closure_inventory, name, None)
+            if not isinstance(value, tuple):
+                raise TypeError(
+                    f"Objective #32 closure inventory {name} must be a tuple"
+                )
+            values.append(value)
+
+        return ready, values[0], values[1], values[2], values[3]
+
     @classmethod
     def close(
         cls,
@@ -60,10 +86,13 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
                 if str(item).strip()
             )
         )
-        mechanics_complete = bool(
-            closure_inventory is None
-            or bool(getattr(closure_inventory, "closure_ready", False))
-        )
+        (
+            mechanics_complete,
+            source_data,
+            math_review,
+            mechanics_blockers,
+            mechanics_advisories,
+        ) = cls._mechanics_inventory_state(closure_inventory)
         unresolved: list[str] = []
 
         if not search_result.global_maximum_proven:
@@ -95,18 +124,6 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
                 + "; ".join(omitted)
             )
         if closure_inventory is not None and not mechanics_complete:
-            source_data = tuple(
-                getattr(closure_inventory, "source_data_blockers", ()) or ()
-            )
-            math_review = tuple(
-                getattr(closure_inventory, "math_review_blockers", ()) or ()
-            )
-            mechanics_blockers = tuple(
-                getattr(closure_inventory, "mechanics_blockers", ()) or ()
-            )
-            mechanics_advisories = tuple(
-                getattr(closure_inventory, "mechanics_advisories", ()) or ()
-            )
             unresolved.append(
                 "Objective #32 mechanics closure remains open: "
                 f"source-data={len(source_data)}, "
