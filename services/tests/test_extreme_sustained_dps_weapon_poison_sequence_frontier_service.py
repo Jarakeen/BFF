@@ -150,3 +150,31 @@ def test_poison_sequence_frontier_rejects_candidate_count_drift() -> None:
             evidence=(),
             unresolved=(),
         )
+
+
+def test_poison_sequence_builder_requires_strict_event_denominator_flag() -> None:
+    with pytest.raises(TypeError, match="event_denominator_proven must be boolean"):
+        ExtremeSustainedDPSWeaponPoisonSequenceFrontierService().build(
+            events=(_event(1.0, 0),),
+            player_build=PlayerBuild(FrontBarPoison="Poison"),
+            event_denominator_proven="false",
+            source="malformed",
+        )
+
+
+def test_poison_sequence_builder_requires_canonical_events_and_build() -> None:
+    with pytest.raises(TypeError, match="events must contain RuntimeEvent"):
+        ExtremeSustainedDPSWeaponPoisonSequenceFrontierService().build(
+            events=(object(),),
+            player_build=PlayerBuild(FrontBarPoison="Poison"),
+            event_denominator_proven=True,
+            source="malformed",
+        )
+
+    with pytest.raises(TypeError, match="requires PlayerBuild"):
+        ExtremeSustainedDPSWeaponPoisonSequenceFrontierService().build(
+            events=(),
+            player_build=object(),
+            event_denominator_proven=True,
+            source="malformed",
+        )
