@@ -49,6 +49,18 @@ class ExtremeSustainedDPSGeneratedAxisInventory:
             raise ValueError(
                 "generated axis inventory duplicate axes must also be searched axes"
             )
+        if len(set(searched)) != len(searched):
+            raise ValueError("generated axis inventory searched axes must be unique")
+        if len(set(self.axis_names)) != len(self.axis_names):
+            raise ValueError("generated axis inventory axis_names must be unique")
+        if any(name not in set(self.axis_names) for name in self.untagged_axis_names):
+            raise ValueError(
+                "generated axis inventory untagged_axis_names must come from axis_names"
+            )
+        if self.duplicate_canonical_axes and not self.unresolved:
+            raise ValueError(
+                "generated axis inventory duplicate canonical axes require unresolved evidence"
+            )
 
 
 class ExtremeSustainedDPSGeneratedAxisInventoryService:
