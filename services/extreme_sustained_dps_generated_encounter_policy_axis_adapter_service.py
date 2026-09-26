@@ -34,6 +34,23 @@ class ExtremeSustainedDPSGeneratedEncounterPolicyAxisAdapterService:
         *,
         frontier: ExtremeSustainedDPSEncounterPolicyFrontier,
     ) -> None:
+        if not isinstance(frontier, ExtremeSustainedDPSEncounterPolicyFrontier):
+            raise TypeError(
+                "generated encounter-policy axis requires a canonical encounter-policy frontier"
+            )
+        if not isinstance(frontier.denominator_proven, bool):
+            raise TypeError("encounter-policy denominator_proven must be boolean")
+        if isinstance(frontier.candidate_count, bool) or not isinstance(
+            frontier.candidate_count,
+            int,
+        ):
+            raise TypeError("encounter-policy candidate_count must be an integer")
+        if not isinstance(frontier.choices, tuple):
+            raise TypeError("encounter-policy choices must be a tuple")
+        if not isinstance(frontier.unresolved, tuple):
+            raise TypeError("encounter-policy unresolved must be a tuple")
+        if not isinstance(frontier.omitted_scope, tuple):
+            raise TypeError("encounter-policy omitted_scope must be a tuple")
         self.frontier = frontier
 
     def _count(self, _state: object) -> int:
@@ -41,7 +58,7 @@ class ExtremeSustainedDPSGeneratedEncounterPolicyAxisAdapterService:
             raise ValueError(
                 "generated encounter-policy axis requires a proven finite denominator"
             )
-        return int(self.frontier.candidate_count)
+        return self.frontier.candidate_count
 
     def _at(
         self,
@@ -49,7 +66,9 @@ class ExtremeSustainedDPSGeneratedEncounterPolicyAxisAdapterService:
         index: int,
     ) -> ExtremeSustainedDPSGeneratedEncounterPolicyAxisState:
         count = self._count(state)
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("generated encounter-policy choice index must be an integer")
+        target = index
         if target < 0 or target >= count:
             raise IndexError("generated encounter-policy choice index out of range")
         return ExtremeSustainedDPSGeneratedEncounterPolicyAxisState(
@@ -69,7 +88,7 @@ class ExtremeSustainedDPSGeneratedEncounterPolicyAxisAdapterService:
                 candidate_count=self._count,
                 candidate_at=self._at,
                 canonical_axes=("encounter_policy",),
-                omitted_scope=tuple(self.frontier.omitted_scope),
+                omitted_scope=self.frontier.omitted_scope,
             ),
         )
 
@@ -81,8 +100,8 @@ class ExtremeSustainedDPSGeneratedEncounterPolicyAxisAdapterService:
                 if self.frontier.denominator_proven
                 else ()
             ),
-            unresolved=tuple(self.frontier.unresolved),
-            omitted_scope=tuple(self.frontier.omitted_scope),
+            unresolved=self.frontier.unresolved,
+            omitted_scope=self.frontier.omitted_scope,
         )
 
 
