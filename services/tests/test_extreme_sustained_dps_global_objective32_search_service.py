@@ -607,3 +607,29 @@ def test_global_objective32_requires_strict_closure_ready_flag() -> None:
             global_search=_GlobalSearch(_search_result()),
             require_closure_ready_scenario="true",
         )
+
+
+def test_global_objective32_rejects_noncanonical_coverage_proof_before_search() -> None:
+    global_search = _GlobalSearch(_search_result())
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(global_search=global_search)
+    malformed = SimpleNamespace(
+        source="duck proof",
+        dominated_axes=("gear_topology",),
+        unresolved=(),
+        omitted_scope=(),
+    )
+    with pytest.raises(TypeError, match="canonical axis coverage proofs"):
+        service.search(coverage_proofs=(malformed,))  # type: ignore[arg-type]
+    assert global_search.calls == []
+
+
+def test_global_objective32_rejects_duck_typed_scope_proof_before_search() -> None:
+    global_search = _GlobalSearch(_search_result())
+    service = ExtremeSustainedDPSGlobalObjective32SearchService(global_search=global_search)
+    malformed = SimpleNamespace(
+        root_candidate_key="generated-global-root",
+        coverage_matches_search_denominator=True,
+    )
+    with pytest.raises(TypeError, match="scope_proof must be canonical"):
+        service.search(scope_proof=malformed)  # type: ignore[arg-type]
+    assert global_search.calls == []
