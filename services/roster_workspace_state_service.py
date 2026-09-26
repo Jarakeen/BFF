@@ -333,11 +333,27 @@ class RosterWorkspaceStateService:
         key = _clean(status).casefold()
         if key not in _RECRUITMENT_STATES:
             raise ValueError(f"Unsupported recruitment status: {status}")
-        self.db.execute(
-            "UPDATE roster_recruitment_candidate SET status=?, updated_at=? WHERE id=?",
-            (key, _now(), int(candidate_id)),
-        )
-        self.db.commit()
+        candidate_id = int(candidate_id)
+        if candidate_id <= 0:
+            raise ValueError("candidate_id must be positive")
+        db = self.db.connection
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            cursor = db.execute(
+                "UPDATE roster_recruitment_candidate SET status=?, updated_at=? WHERE id=?",
+                (key, _now(), candidate_id),
+            )
+            if cursor.rowcount != 1:
+                raise ValueError(f"recruitment candidate {candidate_id} does not exist")
+            row = db.execute(
+                "SELECT status FROM roster_recruitment_candidate WHERE id=?", (candidate_id,)
+            ).fetchone()
+            if row is None or str(row["status"]) != key:
+                raise RuntimeError("Recruitment status did not round-trip exactly")
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
 
     def archive(
         self,
@@ -349,25 +365,45 @@ class RosterWorkspaceStateService:
         related_team: str = "",
         payload: dict | None = None,
     ) -> int:
-        cursor = self.db.execute(
-            """
-            INSERT INTO roster_archive_record (
-                entity_type, entity_key, display_name, reason,
-                related_team, archived_at, payload_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                _clean(entity_type),
-                _clean(entity_key),
-                _clean(display_name),
-                _clean(reason),
-                _clean(related_team),
-                _now(),
-                json.dumps(payload or {}, sort_keys=True),
-            ),
-        )
-        self.db.commit()
-        return int(cursor.lastrowid)
+        intended = validate_roster_archive({
+            "entity_type": _clean(entity_type), "entity_key": _clean(entity_key),
+            "display_name": _clean(display_name), "reason": _clean(reason),
+            "related_team": _clean(related_team), "payload": payload or {},
+        })
+        payload_json = json.dumps(intended["payload"], ensure_ascii=False, sort_keys=True)
+        db = self.db.connection
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            cursor = db.execute(
+                """INSERT INTO roster_archive_record (
+                    entity_type, entity_key, display_name, reason,
+                    related_team, archived_at, payload_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (intended["entity_type"], intended["entity_key"], intended["display_name"],
+                 intended["reason"], intended["related_team"], _now(), payload_json),
+            )
+            archive_id = int(cursor.lastrowid)
+            row = db.execute(
+                """SELECT entity_type, entity_key, display_name, reason,
+                          related_team, payload_json
+                   FROM roster_archive_record WHERE id=?""",
+                (archive_id,),
+            ).fetchone()
+            if row is None:
+                raise RuntimeError("Roster archive record was not persisted")
+            read_back = validate_roster_archive({
+                "entity_type": str(row["entity_type"]), "entity_key": str(row["entity_key"]),
+                "display_name": str(row["display_name"]), "reason": str(row["reason"]),
+                "related_team": str(row["related_team"]),
+                "payload": json.loads(str(row["payload_json"])),
+            })
+            if read_back != intended:
+                raise RuntimeError("Roster archive record did not round-trip exactly")
+            db.commit()
+            return archive_id
+        except Exception:
+            db.rollback()
+            raise
 
     def list_archive(self) -> tuple[ArchiveRecord, ...]:
         rows = self.db.execute(
