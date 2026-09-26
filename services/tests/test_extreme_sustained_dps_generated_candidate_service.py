@@ -167,3 +167,16 @@ def test_generated_frontier_requires_canonical_universe_record() -> None:
 
     with pytest.raises(TypeError, match="ExtremeGlobalSearchUniverse"):
         service.frontier()
+
+
+@pytest.mark.parametrize("field,value", (("offset", True), ("limit", "4"), ("offset", 1.5)))
+def test_generated_candidate_page_requires_strict_integer_bounds(field, value) -> None:
+    service = ExtremeSustainedDPSGeneratedCandidateService(
+        "unused.db",
+        universe_service=_UniverseService(_universe()),
+    )
+    kwargs = {"offset": 0, "limit": 4}
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"generated sustained-DPS page {field} must be an integer"):
+        service.page(**kwargs)
