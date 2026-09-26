@@ -238,12 +238,40 @@ class EncounterRaidMapStore:
         if source.suffix.lower() not in SUPPORTED_LAYOUT_SUFFIXES:
             raise ValueError("Editable Raid Plan layout must be JSON")
 
-        digest = hashlib.sha256(source.read_bytes()).hexdigest()[:16]
+        source_bytes = source.read_bytes()
+        try:
+            parsed_layout = json.loads(source_bytes.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"Editable Raid Plan layout must contain valid JSON: {exc}") from exc
+        if not isinstance(parsed_layout, dict):
+            raise ValueError("Editable Raid Plan layout must contain a JSON object")
+
+        digest = hashlib.sha256(source_bytes).hexdigest()[:16]
         destination_dir = self.plan_layout_root / plan_key / scope
         destination_dir.mkdir(parents=True, exist_ok=True)
         destination = destination_dir / f"{digest}.json"
         if source.resolve() != destination.resolve() and not destination.exists():
-            shutil.copy2(source, destination)
+            temporary_path: Path | None = None
+            try:
+                with NamedTemporaryFile(
+                    "wb",
+                    dir=destination_dir,
+                    prefix=f".{digest}.",
+                    suffix=".tmp",
+                    delete=False,
+                ) as handle:
+                    temporary_path = Path(handle.name)
+                    handle.write(source_bytes)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(temporary_path, destination)
+                temporary_path = None
+            finally:
+                if temporary_path is not None:
+                    temporary_path.unlink(missing_ok=True)
+        persisted_bytes = destination.read_bytes()
+        if hashlib.sha256(persisted_bytes).hexdigest()[:16] != digest:
+            raise RuntimeError("Raid Plan layout did not round-trip exactly")
 
         relative = str(destination.relative_to(self.data_dir)).replace("\\", "/")
         return EncounterRaidMap(
