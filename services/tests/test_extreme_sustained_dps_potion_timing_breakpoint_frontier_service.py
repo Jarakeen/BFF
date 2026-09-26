@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from services.extreme_sustained_dps_potion_timing_breakpoint_frontier_service import (
     ExtremeSustainedDPSPotionTimingBreakpointFrontierService,
 )
@@ -77,3 +79,74 @@ def test_empty_named_buff_duration_set_fails_closed() -> None:
 
     assert result.named_buff_state_denominator_proven is False
     assert any("No effective named-buff durations" in row for row in result.unresolved)
+
+
+def test_breakpoint_frontier_requires_strict_restoration_proof_boolean() -> None:
+    with pytest.raises(TypeError, match="instant_restoration_timing_closed must be boolean"):
+        ExtremeSustainedDPSPotionTimingBreakpointFrontierService.build(
+            duration_seconds=20.0,
+            cooldown_seconds=10.0,
+            observation_times=(5.0,),
+            effective_buff_durations=(4.0,),
+            instant_restoration_timing_closed="false",  # type: ignore[arg-type]
+        )
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    (
+        ("duration_seconds", True, "duration_seconds must be numeric"),
+        ("cooldown_seconds", "10", "cooldown_seconds must be numeric"),
+    ),
+)
+def test_breakpoint_frontier_rejects_coerced_scalar_inputs(field, value, match) -> None:
+    kwargs = {
+        "duration_seconds": 20.0,
+        "cooldown_seconds": 10.0,
+        "observation_times": (5.0,),
+        "effective_buff_durations": (4.0,),
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=match):
+        ExtremeSustainedDPSPotionTimingBreakpointFrontierService.build(**kwargs)
+
+
+def test_breakpoint_frontier_requires_tuple_observation_and_duration_collections() -> None:
+    with pytest.raises(TypeError, match="observation_times must be a tuple"):
+        ExtremeSustainedDPSPotionTimingBreakpointFrontierService.build(
+            duration_seconds=20.0,
+            cooldown_seconds=10.0,
+            observation_times=[5.0],  # type: ignore[arg-type]
+            effective_buff_durations=(4.0,),
+        )
+
+    with pytest.raises(TypeError, match="effective_buff_durations must be a tuple"):
+        ExtremeSustainedDPSPotionTimingBreakpointFrontierService.build(
+            duration_seconds=20.0,
+            cooldown_seconds=10.0,
+            observation_times=(5.0,),
+            effective_buff_durations=[4.0],  # type: ignore[arg-type]
+        )
+
+
+@pytest.mark.parametrize("value", (False, "5", None))
+def test_breakpoint_frontier_rejects_coerced_observation_times(value) -> None:
+    with pytest.raises(TypeError, match="observation times must be numeric"):
+        ExtremeSustainedDPSPotionTimingBreakpointFrontierService.build(
+            duration_seconds=20.0,
+            cooldown_seconds=10.0,
+            observation_times=(value,),  # type: ignore[arg-type]
+            effective_buff_durations=(4.0,),
+        )
+
+
+@pytest.mark.parametrize("value", (True, "4", None))
+def test_breakpoint_frontier_rejects_coerced_buff_durations(value) -> None:
+    with pytest.raises(TypeError, match="buff durations must be numeric"):
+        ExtremeSustainedDPSPotionTimingBreakpointFrontierService.build(
+            duration_seconds=20.0,
+            cooldown_seconds=10.0,
+            observation_times=(5.0,),
+            effective_buff_durations=(value,),  # type: ignore[arg-type]
+        )
