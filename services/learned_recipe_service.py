@@ -3,6 +3,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+from services.collection_progress_pydantic_schema import validate_collection_batch, validate_collection_progress
+
 
 KIND_BY_CATEGORY = {
     "Recipes": "provisioning_recipe",
@@ -193,13 +195,23 @@ class LearnedRecipeService:
         if not self.available:
             raise RuntimeError("Learned recipe database is not available.")
         profile_name = self.ensure_profile(profile or self._active_profile)
+        payload = validate_collection_progress({
+            "profile": profile_name,
+            "item_id": int(item_id),
+            "owned": bool(learned),
+            "acquired_on": str(learned_on or "").strip(),
+            "notes": str(notes or "").strip(),
+        })
         exists = self.connection.execute(
             "SELECT 1 FROM learnable_recipe WHERE item_id = ?",
             (int(item_id),),
         ).fetchone()
         if exists is None:
             raise KeyError(f"Unknown learnable recipe item id: {item_id}")
-        self.connection.execute(
+        db = self.connection
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            db.execute(
             """
             INSERT INTO learnable_recipe_progress(
                 profile_name, item_id, learned, learned_on, notes, updated_at
@@ -211,23 +223,42 @@ class LearnedRecipeService:
                 updated_at = CURRENT_TIMESTAMP
             """,
             (
-                profile_name,
-                int(item_id),
-                1 if learned else 0,
-                learned_on.strip() or None,
-                notes.strip(),
+                payload["profile"],
+                payload["item_id"],
+                1 if payload["owned"] else 0,
+                payload["acquired_on"] or None,
+                payload["notes"],
             ),
-        )
-        self.connection.commit()
+            )
+            row = db.execute(
+                "SELECT learned, COALESCE(learned_on, '') AS learned_on, notes FROM learnable_recipe_progress WHERE profile_name = ? AND item_id = ?",
+                (payload["profile"], payload["item_id"]),
+            ).fetchone()
+            if row is None or bool(row["learned"]) != payload["owned"] or str(row["learned_on"] or "") != payload["acquired_on"] or str(row["notes"] or "") != payload["notes"]:
+                raise RuntimeError("Recipe progress did not round-trip exactly")
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
 
     def set_learned_batch(self, profile: str, learned_by_id: dict[int, bool]) -> int:
         profile_name = self.ensure_profile(profile)
         if not learned_by_id:
             return 0
+        payload = validate_collection_batch({
+            "profile": profile_name,
+            "owned_by_id": {int(k): bool(v) for k, v in learned_by_id.items()},
+        })
         db = self.connection
-        db.execute("BEGIN")
+        ids = tuple(payload["owned_by_id"])
+        placeholders = ",".join("?" for _ in ids)
+        known = {int(row[0]) for row in db.execute(f"SELECT item_id FROM learnable_recipe WHERE item_id IN ({placeholders})", ids).fetchall()}
+        missing = sorted(set(ids) - known)
+        if missing:
+            raise KeyError(f"Unknown learnable recipe item ids: {missing}")
+        db.execute("BEGIN IMMEDIATE")
         try:
-            for item_id, learned in learned_by_id.items():
+            for item_id, learned in payload["owned_by_id"].items():
                 db.execute(
                     """
                     INSERT INTO learnable_recipe_progress(profile_name, item_id, learned, updated_at)
@@ -236,13 +267,20 @@ class LearnedRecipeService:
                         learned = excluded.learned,
                         updated_at = CURRENT_TIMESTAMP
                     """,
-                    (profile_name, int(item_id), 1 if learned else 0),
+                    (payload["profile"], int(item_id), 1 if learned else 0),
                 )
+            rows = db.execute(
+                f"SELECT item_id, learned FROM learnable_recipe_progress WHERE profile_name = ? AND item_id IN ({placeholders})",
+                (payload["profile"], *ids),
+            ).fetchall()
+            read_back = {int(row["item_id"]): bool(row["learned"]) for row in rows}
+            if read_back != payload["owned_by_id"]:
+                raise RuntimeError("Recipe batch did not round-trip exactly")
             db.commit()
         except Exception:
             db.rollback()
             raise
-        return len(learned_by_id)
+        return len(payload["owned_by_id"])
 
     def close(self) -> None:
         if self._connection is not None:
