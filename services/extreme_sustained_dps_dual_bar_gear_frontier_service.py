@@ -26,6 +26,28 @@ class ExtremeSustainedDPSDualBarGearFrontier:
     unresolved: tuple[str, ...]
     catalog: ExtremeDualBarGearStateCatalog
 
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("expected_topology_count", self.expected_topology_count),
+            ("supplied_topology_count", self.supplied_topology_count),
+            ("proven_topology_count", self.proven_topology_count),
+            ("active_snapshot_count", self.active_snapshot_count),
+            ("dual_bar_state_count", self.dual_bar_state_count),
+            ("compatible_pairs_reviewed", self.compatible_pairs_reviewed),
+        ):
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"dual-bar gear frontier {label} must be an integer")
+            if value < 0:
+                raise ValueError(f"dual-bar gear frontier {label} cannot be negative")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("dual-bar gear frontier denominator_proven must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("dual-bar gear frontier evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("dual-bar gear frontier unresolved must be a tuple")
+        if not isinstance(self.catalog, ExtremeDualBarGearStateCatalog):
+            raise TypeError("dual-bar gear frontier requires canonical gear-state catalog")
+
 
 class ExtremeSustainedDPSDualBarGearFrontierService:
     """Require complete topology coverage before proving the two-bar gear denominator."""
@@ -37,14 +59,38 @@ class ExtremeSustainedDPSDualBarGearFrontierService:
         *,
         expected_topology_count: int,
     ) -> ExtremeSustainedDPSDualBarGearFrontier:
-        expected = int(expected_topology_count)
+        if isinstance(expected_topology_count, bool) or not isinstance(
+            expected_topology_count,
+            int,
+        ):
+            raise TypeError("expected_topology_count must be an integer")
+        expected = expected_topology_count
         if expected <= 0:
             raise ValueError("expected_topology_count must be positive")
+
+        if not isinstance(branches, tuple):
+            raise TypeError("gear topology branches must be a tuple")
+        if any(
+            not isinstance(branch, ExtremeSustainedDPSGearTopologyRealization)
+            for branch in branches
+        ):
+            raise TypeError(
+                "gear topology branches must contain canonical realization records"
+            )
 
         unresolved: list[str] = []
         by_index: dict[int, ExtremeSustainedDPSGearTopologyRealization] = {}
         for branch in branches:
-            index = int(branch.topology_index)
+            if isinstance(branch.topology_index, bool) or not isinstance(
+                branch.topology_index,
+                int,
+            ):
+                raise TypeError("gear topology branch topology_index must be an integer")
+            if not isinstance(branch.denominator_proven, bool):
+                raise TypeError("gear topology branch denominator_proven must be boolean")
+            if not isinstance(branch.unresolved, tuple):
+                raise TypeError("gear topology branch unresolved must be a tuple")
+            index = branch.topology_index
             if index < 0 or index >= expected:
                 unresolved.append(
                     f"Gear topology branch index {index} lies outside expected 0..{expected - 1}"
@@ -96,10 +142,10 @@ class ExtremeSustainedDPSDualBarGearFrontierService:
             expected_topology_count=expected,
             supplied_topology_count=len(by_index),
             proven_topology_count=proven_count,
-            active_snapshot_count=int(catalog.active_snapshots_reviewed),
+            active_snapshot_count=catalog.active_snapshots_reviewed,
             dual_bar_state_count=len(catalog.states),
-            compatible_pairs_reviewed=int(catalog.compatible_pairs_reviewed),
-            denominator_proven=bool(catalog.denominator_proven and not final_unresolved),
+            compatible_pairs_reviewed=catalog.compatible_pairs_reviewed,
+            denominator_proven=catalog.denominator_proven and not final_unresolved,
             evidence=(
                 f"Expected topology branches: {expected}",
                 f"Supplied/proven topology branches: {len(by_index)}/{proven_count}",
