@@ -12,7 +12,11 @@ from services.extreme_sustained_dps_runtime_effect_universe_service import (
     ExtremeSustainedDPSRuntimeEffectUniverseService,
 )
 from services.extreme_sustained_dps_runtime_effect_relevance_service import (
+    ExtremeSustainedDPSRuntimeEffectRelevance,
     ExtremeSustainedDPSRuntimeEffectRelevanceService,
+)
+from services.extreme_sustained_dps_runtime_effect_scaling_service import (
+    ExtremeSustainedDPSRuntimeEffectScalingResult,
 )
 from services.extreme_sustained_dps_runtime_event_skeleton_service import (
     ExtremeSustainedDPSRuntimeEventSkeletonService,
@@ -57,6 +61,8 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierResult:
     runtime: ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+    relevance: ExtremeSustainedDPSRuntimeEffectRelevance | None = None
+    scaling: ExtremeSustainedDPSRuntimeEffectScalingResult | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.runtime, ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult):
@@ -65,6 +71,14 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierResult:
             raise TypeError("runtime scenario result evidence must be a tuple")
         if not isinstance(self.unresolved, tuple):
             raise TypeError("runtime scenario result unresolved evidence must be a tuple")
+        if self.relevance is not None and not isinstance(
+            self.relevance, ExtremeSustainedDPSRuntimeEffectRelevance
+        ):
+            raise TypeError("runtime scenario result relevance must be canonical when supplied")
+        if self.scaling is not None and not isinstance(
+            self.scaling, ExtremeSustainedDPSRuntimeEffectScalingResult
+        ):
+            raise TypeError("runtime scenario result scaling must be canonical when supplied")
 
     @property
     def frontier(self):
@@ -619,6 +633,8 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             raise TypeError("runtime scenario omitted_scope must be a tuple")
         universe_evidence: tuple[str, ...] = ()
         universe_unresolved: tuple[str, ...] = ()
+        relevance: ExtremeSustainedDPSRuntimeEffectRelevance | None = None
+        scaling: ExtremeSustainedDPSRuntimeEffectScalingResult | None = None
         weapon_enchantment_control_effects: tuple[EffectVariant, ...] = ()
         if effects is None:
             if self.runtime_effect_universe is None:
@@ -698,6 +714,8 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                             )
                         )
                     ),
+                    relevance=relevance,
+                    scaling=scaling,
                 )
 
         else:
@@ -838,6 +856,8 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
                 *tuple(result.evidence),
             ),
             unresolved=unresolved,
+            relevance=relevance,
+            scaling=scaling,
         )
 
     def build(
