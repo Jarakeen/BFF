@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.rotation_demand_window import (
     RotationDemandKind,
     RotationDemandPattern,
@@ -73,3 +75,22 @@ def test_unproven_encounter_policy_denominator_fails_closed() -> None:
         assert "proven finite denominator" in str(exc)
     else:
         raise AssertionError("unproven encounter-policy denominator should fail closed")
+
+
+def test_generated_encounter_policy_axis_rejects_boolean_index() -> None:
+    frontier = ExtremeSustainedDPSEncounterPolicyFrontierService.build(
+        (
+            ExtremeSustainedDPSEncounterPolicyChoice(
+                "policy:a",
+                (_demand(),),
+            ),
+        ),
+        denominator_proven=True,
+        source="reviewed encounter policy",
+    )
+    adapter = ExtremeSustainedDPSGeneratedEncounterPolicyAxisAdapterService(
+        frontier=frontier
+    )
+
+    with pytest.raises(TypeError, match="choice index must be an integer"):
+        adapter.axes()[0].candidate_at(adapter.root("assembled"), True)
