@@ -10,7 +10,11 @@ from engine.config import get_data_dir, get_user_database_path
 from uuid import NAMESPACE_URL, uuid5
 
 from models.build_model import BuildRoster, PlayerBuild
-from services.user_build_catalog_pydantic_schema import (\n    ValidationError as CatalogValidationError,\n    validate_user_build_catalog_payload,\n)\n
+from services.user_build_catalog_pydantic_schema import (
+    ValidationError as CatalogValidationError,
+    validate_user_build_catalog_payload,
+)
+
 SCHEMA_VERSION = 4
 
 
@@ -289,10 +293,14 @@ class BuildCatalogService:
                     "SELECT payload_json FROM build_catalog WHERE singleton_id = 1"
                 ).fetchone()
             if row is None:
-                return self._validated_catalog(None)\n            payload = json.loads(str(row[0] or ""))\n            return self._validated_catalog(payload)
+                return self._validated_catalog(None)
+            payload = json.loads(str(row[0] or ""))
+            return self._validated_catalog(payload)
 
         if not self.catalog_path.exists():
-            return self._validated_catalog(None)\n        payload = json.loads(self.catalog_path.read_text(encoding="utf-8"))\n        return self._validated_catalog(payload)
+            return self._validated_catalog(None)
+        payload = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        return self._validated_catalog(payload)
 
     def load(self) -> dict[str, Any]:
         try:
