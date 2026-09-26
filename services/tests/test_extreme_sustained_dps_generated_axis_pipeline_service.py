@@ -798,3 +798,138 @@ def test_pipeline_structural_index_rejects_boolean() -> None:
             SimpleNamespace(structural_index=True),
             "plan",
         )
+
+
+@pytest.mark.parametrize(
+    "field,value,message",
+    (
+        ("candidate_id_prefix", 7, "candidate_id_prefix must be a string"),
+        ("duration_seconds", "10", "duration must be numeric"),
+        ("potion_cooldown_seconds", "45", "potion cooldown must be numeric"),
+        ("starting_ultimate", "0", "starting Ultimate must be numeric"),
+        ("target_identity", "", "target_identity must be a non-empty string"),
+    ),
+)
+def test_pipeline_root_rejects_coerced_scalar_inputs(field, value, message) -> None:
+    pipeline = _pipeline([])
+    values = {
+        "candidate_id_prefix": "structural:strict",
+        "duration_seconds": 10.0,
+        "potion_cooldown_seconds": 45.0,
+        "starting_ultimate": 0.0,
+        "target_identity": "boss",
+    }
+    values[field] = value
+
+    with pytest.raises((TypeError, ValueError), match=message):
+        pipeline.root(
+            "build",
+            "progression",
+            dual_bar_frontier="dual-frontier",
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            **values,
+        )
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "ultimate_generation_events",
+        "heroism_windows",
+        "duration_rules",
+        "heavy_attack_windows",
+        "heavy_attack_channel_blocks",
+    ),
+)
+def test_pipeline_root_requires_tuple_frontier_collections(field) -> None:
+    pipeline = _pipeline([])
+    kwargs = {
+        "dual_bar_frontier": "dual-frontier",
+        "candidate_id_prefix": "structural:strict",
+        "duration_seconds": 10.0,
+        "potion_cooldown_seconds": 45.0,
+        "starting_ultimate": 0.0,
+        "priorities": "priorities",
+        "snapshot_resolver": "resolver",
+        "target_identity": "boss",
+    }
+    kwargs[field] = []
+
+    with pytest.raises(TypeError, match=f"{field} must be a tuple"):
+        pipeline.root("build", "progression", **kwargs)
+
+
+def test_pipeline_root_rejects_invalid_numeric_ranges() -> None:
+    pipeline = _pipeline([])
+
+    with pytest.raises(ValueError, match="duration must be finite and positive"):
+        pipeline.root(
+            "build",
+            "progression",
+            dual_bar_frontier="dual-frontier",
+            candidate_id_prefix="structural:strict",
+            duration_seconds=0.0,
+            potion_cooldown_seconds=45.0,
+            starting_ultimate=0.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="boss",
+        )
+
+    with pytest.raises(ValueError, match="potion cooldown must be finite and positive"):
+        pipeline.root(
+            "build",
+            "progression",
+            dual_bar_frontier="dual-frontier",
+            candidate_id_prefix="structural:strict",
+            duration_seconds=10.0,
+            potion_cooldown_seconds=0.0,
+            starting_ultimate=0.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="boss",
+        )
+
+    with pytest.raises(ValueError, match="starting Ultimate must be finite and non-negative"):
+        pipeline.root(
+            "build",
+            "progression",
+            dual_bar_frontier="dual-frontier",
+            candidate_id_prefix="structural:strict",
+            duration_seconds=10.0,
+            potion_cooldown_seconds=45.0,
+            starting_ultimate=-1.0,
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="boss",
+        )
+
+
+def test_pipeline_rejects_coerced_resolved_potion_cooldown() -> None:
+    calls = []
+    resolver = _PotionCooldownResolver(cooldown="37")  # type: ignore[arg-type]
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+    )
+    state = pipeline.root(
+        "build",
+        "progression",
+        dual_bar_frontier="dual-frontier",
+        candidate_id_prefix="structural:strict",
+        duration_seconds=10.0,
+        potion_cooldown_seconds=None,
+        potion_cooldown_resolver=resolver,
+        starting_ultimate=0.0,
+        priorities="priorities",
+        snapshot_resolver="resolver",
+        target_identity="boss",
+    )
+    for axis in pipeline.axes()[:2]:
+        state = axis.candidate_at(state, 0)
+
+    with pytest.raises(TypeError, match="resolved potion cooldown must be numeric"):
+        pipeline.axes()[2].candidate_count(state)
