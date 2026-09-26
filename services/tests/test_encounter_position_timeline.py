@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from services.encounter_position_timeline import (
     PositionTimeline,
     PositionTimelineStep,
@@ -58,8 +60,12 @@ def test_store_round_trips_steps_and_items(tmp_path: Path) -> None:
     assert loaded == timeline
 
 
-def test_store_returns_empty_timeline_for_bad_json(tmp_path: Path) -> None:
+def test_store_fails_closed_for_bad_json_without_mutation(tmp_path: Path) -> None:
     path = tmp_path / "encounter_positioning_timeline.json"
-    path.write_text("not-json", encoding="utf-8")
+    original = b"not-json"
+    path.write_bytes(original)
 
-    assert PositionTimelineStore(path).load() == PositionTimeline()
+    with pytest.raises(RuntimeError, match="failed to load safely"):
+        PositionTimelineStore(path).load()
+
+    assert path.read_bytes() == original
