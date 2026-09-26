@@ -338,14 +338,15 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         offensive = FoundryCard("Critical Damage & Penetration", "crosshair")
         offensive.set_header_action(self.copy_discord_builds_button)
         offensive_note = QLabel(
-            "Current planned raid values. Crit Damage includes personal standing stats, "
-            "planned Force/Lucent/Brittle layers, and the 125% cap. Pen shows personal "
-            "Physical/Spell Pen plus planned target Armor reduction against 18,200 PvE Armor."
+            "Personal = what the player's Build brings. Raid = planned group buffs/debuffs. "
+            "Effective = personal Pen plus raid Armor reduction. Crit Damage caps at 125%; "
+            "Penetration is compared with 18,200 PvE target Armor. Status shows the exact "
+            "shortage or excess, so nobody has to perform table arithmetic recreationally."
         )
         offensive_note.setWordWrap(True)
         offensive_note.setProperty("muted", True)
         offensive.addWidget(offensive_note)
-        self.offensive_stats_table = QTableWidget(0, 10)
+        self.offensive_stats_table = QTableWidget(0, 9)
         self.offensive_stats_table.setHorizontalHeaderLabels(
             (
                 "SEAT / PLAYER",
@@ -353,10 +354,9 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
                 "PERSONAL CRIT",
                 "RAID CRIT",
                 "CRIT STATUS",
-                "PHYS PEN",
-                "SPELL PEN",
+                "PERSONAL PEN P / S",
                 "RAID ARMOR ↓",
-                "EFFECTIVE P / S",
+                "EFFECTIVE PEN P / S",
                 "PEN STATUS",
             )
         )
@@ -520,7 +520,15 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         if row.personal_critical_damage is not None:
             lines.append(f"Personal Critical Damage: {row.personal_critical_damage * 100:.1f}%")
         if row.raid_critical_damage is not None:
-            lines.append(f"Raid-adjusted Critical Damage: {row.raid_critical_damage * 100:.1f}%")
+            lines.append(f"Effective Critical Damage: {row.raid_critical_damage * 100:.1f}%")
+        if row.uncapped_raid_critical_damage is not None:
+            delta = row.uncapped_raid_critical_damage - 1.25
+            if abs(delta) <= 1e-9:
+                lines.append("Critical Damage status: at the 125% cap")
+            elif delta > 0:
+                lines.append(f"Critical Damage status: {delta * 100:.1f}% over cap (excess is clipped)")
+            else:
+                lines.append(f"Critical Damage status: {abs(delta) * 100:.1f}% below cap")
         if row.physical_penetration is not None:
             lines.append(f"Physical Penetration: {row.physical_penetration:,.0f}")
         if row.spell_penetration is not None:
@@ -564,13 +572,27 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.offensive_stats_summary.setText(message)
 
     @staticmethod
+    def _critical_damage_status(stat) -> str:
+        value = stat.uncapped_raid_critical_damage
+        if value is None:
+            return "—"
+        delta = value - 1.25
+        if abs(delta) <= 1e-9:
+            return "✓ CAP"
+        if delta > 0:
+            return f"↑ {delta * 100:.1f}% OVER"
+        return f"↓ {abs(delta) * 100:.1f}% SHORT"
+
+    @staticmethod
     def _penetration_status(stat) -> str:
         def _one(value) -> str:
             if value is None:
                 return "—"
             if abs(value) <= 1e-9:
-                return "AT"
-            return "OVER" if value > 0 else "BELOW"
+                return "✓ CAP"
+            if value > 0:
+                return f"↑ {value:,.0f}"
+            return f"↓ {abs(value):,.0f}"
 
         return (
             f"P {_one(stat.physical_overpenetration)} • "
@@ -608,11 +630,11 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
                     f"{stat.raid_critical_damage * 100:.1f}%"
                     + (" CAP" if stat.critical_capped else "")
                 ),
-                "—" if stat.raid_critical_damage is None else (
-                    "AT CAP" if stat.critical_capped else "BELOW"
+                self._critical_damage_status(stat),
+                "—" if stat.physical_penetration is None else (
+                    f"{stat.physical_penetration:,.0f} / "
+                    f"{stat.spell_penetration:,.0f}"
                 ),
-                "—" if stat.physical_penetration is None else f"{stat.physical_penetration:,.0f}",
-                "—" if stat.spell_penetration is None else f"{stat.spell_penetration:,.0f}",
                 f"{stat.raid_armor_reduction:,.0f}",
                 "—" if stat.effective_physical_penetration is None else (
                     f"{stat.effective_physical_penetration:,.0f} / "
