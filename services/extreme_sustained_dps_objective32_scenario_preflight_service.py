@@ -11,6 +11,14 @@ class ExtremeSustainedDPSObjective32ScenarioPreflight:
     evidence: tuple[str, ...]
     blockers: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.ready, bool):
+            raise TypeError("Objective #32 scenario preflight ready must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("Objective #32 scenario preflight evidence must be a tuple")
+        if not isinstance(self.blockers, tuple):
+            raise TypeError("Objective #32 scenario preflight blockers must be a tuple")
+
 
 class ExtremeSustainedDPSObjective32ScenarioPreflightService:
     """Validate the search-time evidence composition cannot own statically."""
@@ -63,22 +71,24 @@ class ExtremeSustainedDPSObjective32ScenarioPreflightService:
                 blockers.append(
                     "Objective #32 runtime-state denominator is not proven complete"
                 )
+            raw_unresolved = getattr(runtime_state_frontier, "unresolved", ())
+            if not isinstance(raw_unresolved, tuple):
+                raise TypeError("runtime_state_frontier.unresolved must be a tuple")
             unresolved = tuple(
                 str(item).strip()
-                for item in tuple(
-                    getattr(runtime_state_frontier, "unresolved", ()) or ()
-                )
+                for item in raw_unresolved
                 if str(item).strip()
             )
             blockers.extend(
                 f"Objective #32 runtime-state evidence unresolved: {item}"
                 for item in unresolved
             )
+            raw_omitted = getattr(runtime_state_frontier, "omitted_scope", ())
+            if not isinstance(raw_omitted, tuple):
+                raise TypeError("runtime_state_frontier.omitted_scope must be a tuple")
             omitted = tuple(
                 str(item).strip()
-                for item in tuple(
-                    getattr(runtime_state_frontier, "omitted_scope", ()) or ()
-                )
+                for item in raw_omitted
                 if str(item).strip()
             )
             blockers.extend(
