@@ -122,7 +122,13 @@ class ExtremeSustainedDPSPassiveRankFrontierService:
             line = _line_key(getattr(row, "skill_line", ""))
             if not line or line not in allowed_lines:
                 continue
-            if not bool(getattr(row, "combat_line", True)):
+            combat_line = getattr(row, "combat_line", True)
+            if not isinstance(combat_line, bool):
+                unresolved.append(
+                    f"{getattr(row, 'name', '')}: combat_line proof must be boolean"
+                )
+                continue
+            if not combat_line:
                 continue
 
             name = " ".join(str(getattr(row, "name", "") or "").strip().split())
@@ -136,10 +142,10 @@ class ExtremeSustainedDPSPassiveRankFrontierService:
             seen.add(key)
 
             max_rank = getattr(row, "max_rank", None)
-            try:
-                rank = int(max_rank)
-            except (TypeError, ValueError):
-                rank = 0
+            if isinstance(max_rank, bool) or not isinstance(max_rank, int):
+                unresolved.append(f"{name}: canonical passive max rank must be an integer")
+                continue
+            rank = max_rank
             if rank <= 0:
                 unresolved.append(f"{name}: canonical passive max rank is unavailable")
                 continue
@@ -237,8 +243,12 @@ class ExtremeSustainedDPSPassiveRankFrontierService:
         limit: int = 100,
     ) -> tuple[ExtremeSustainedDPSPassiveRankCandidate, ...]:
         frontier = self.frontier(progression, character_class=character_class)
-        start = max(0, int(offset))
-        size = max(0, int(limit))
+        if isinstance(offset, bool) or not isinstance(offset, int):
+            raise TypeError("passive-rank page offset must be an integer")
+        if isinstance(limit, bool) or not isinstance(limit, int):
+            raise TypeError("passive-rank page limit must be an integer")
+        start = max(0, offset)
+        size = max(0, limit)
         if size == 0 or start >= frontier.candidate_count:
             return ()
         return tuple(
