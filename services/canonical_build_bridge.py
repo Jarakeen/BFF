@@ -131,7 +131,7 @@ class CanonicalBuildBridge:
             meaningful_canonical = any(
                 isinstance(entry, dict)
                 and (
-                    isinstance(entry.get("payload"), dict)
+                    self._is_valid_legacy_build(entry.get("payload"))
                     or self._is_valid_legacy_build(entry.get("legacy"))
                 )
                 for entry in catalog["builds"]
@@ -374,7 +374,10 @@ class CanonicalBuildBridge:
             # rather than making the Build disappear. The historical placeholder gate
             # applies only to legacy snapshots, where identity-only rows may be stale
             # migration artifacts and a populated builds.json recovery source can exist.
-            payload_is_canonical = isinstance(payload, dict)
+            payload_is_canonical = (
+                isinstance(payload, dict)
+                and self._is_valid_legacy_build(payload)
+            )
             snapshot = payload if payload_is_canonical else legacy
             build_id = str(entry.get("build_id") or "").strip()
             character_id = str(entry.get("character_id") or "").strip()
