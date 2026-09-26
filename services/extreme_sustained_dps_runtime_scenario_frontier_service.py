@@ -789,10 +789,8 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             ),
             fixed_attempts=fixed_attempts,
             fixed_attempt_frontier=fixed_attempt_frontier,
-            supplemental_histories=tuple(supplemental_histories),
-            supplemental_denominator_proven=bool(
-                supplemental_denominator_proven
-            ),
+            supplemental_histories=supplemental_histories,
+            supplemental_denominator_proven=supplemental_denominator_proven,
             source=source,
             initial_bar=initial_bar,
             omitted_scope=tuple(omitted_scope),
@@ -838,10 +836,23 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
         initial_bar: str = "front",
         omitted_scope: tuple[str, ...] = (),
     ) -> ExtremeSustainedDPSRuntimeScenarioFrontierResult:
+        if not isinstance(event_denominator_proven, bool):
+            raise TypeError("runtime scenario event_denominator_proven must be boolean")
+        if not isinstance(supplemental_denominator_proven, bool):
+            raise TypeError("runtime scenario supplemental_denominator_proven must be boolean")
+        for label, value in (
+            ("events", events),
+            ("effects", effects),
+            ("fixed_attempts", fixed_attempts),
+            ("supplemental_histories", supplemental_histories),
+            ("omitted_scope", omitted_scope),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"runtime scenario {label} must be a tuple")
         attempts = ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService.build(
-            events=tuple(events),
-            effects=tuple(effects),
-            event_denominator_proven=bool(event_denominator_proven),
+            events=events,
+            effects=effects,
+            event_denominator_proven=event_denominator_proven,
             source=f"{source}: runtime event skeletons",
             fixed_attempts=tuple(fixed_attempts),
         )
@@ -865,7 +876,7 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             plan=plan,
             player_build=player_build,
             external_histories=tuple(assembled.choices),
-            denominator_proven=bool(assembled.denominator_proven),
+            denominator_proven=assembled.denominator_proven,
             source=source,
             initial_bar=initial_bar,
             omitted_scope=tuple(omitted_scope),
