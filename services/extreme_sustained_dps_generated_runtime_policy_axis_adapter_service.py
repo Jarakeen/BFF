@@ -252,6 +252,17 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
             raise ValueError("generated execute target identity is required")
         if snapshot_resolver is None:
             raise ValueError("generated execute snapshot resolver is required")
+        for label, value in (
+            ("duration_rules", duration_rules),
+            ("heavy_attack_windows", heavy_attack_windows),
+            ("heavy_attack_channel_blocks", heavy_attack_channel_blocks),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"generated runtime-policy {label} must be a tuple")
+        if not isinstance(heavy_attack_channel_block_denominator_proven, bool):
+            raise TypeError(
+                "generated runtime-policy Heavy Attack channel-block denominator proof must be boolean"
+            )
 
         seed = GeneratedRotationCandidate(
             candidate_id=identity,
@@ -264,10 +275,10 @@ class ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService:
             priorities=priorities,
             snapshot_resolver=snapshot_resolver,
             target_identity=target,
-            duration_rules=tuple(duration_rules),
-            heavy_attack_windows=tuple(heavy_attack_windows),
-            heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
-            heavy_attack_channel_block_denominator_proven=bool(
+            duration_rules=duration_rules,
+            heavy_attack_windows=heavy_attack_windows,
+            heavy_attack_channel_blocks=heavy_attack_channel_blocks,
+            heavy_attack_channel_block_denominator_proven=(
                 heavy_attack_channel_block_denominator_proven
             ),
         )
