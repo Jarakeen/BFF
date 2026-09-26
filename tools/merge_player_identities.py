@@ -77,6 +77,12 @@ def main() -> int:
     print(f"DB: {database_path}")
     print(f"SURVIVOR: id={survivor.Id} | {survivor.PlayerName} | {survivor.CharacterName}")
     print(f"DONOR:    id={donor.Id} | {donor.PlayerName} | {donor.CharacterName}")
+    if int(survivor.Id) == int(donor.Id):
+        raise RuntimeError(
+            "Both requested identities resolve to the same Personnel record. "
+            "This is a canonical Build Catalog hierarchy duplicate, not a Personnel merge; "
+            "no Personnel data was changed."
+        )
 
     if not args.apply:
         print("DRY RUN ONLY: no data changed. Re-run with --apply to merge.")
