@@ -46,6 +46,20 @@ class ExtremeSustainedDPSArmorTraitEnchantFrontier:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.slots, tuple):
+            raise TypeError("armor trait/enchant frontier slots must be a tuple")
+        if isinstance(self.candidate_count, bool) or not isinstance(self.candidate_count, int):
+            raise TypeError("armor trait/enchant frontier candidate_count must be an integer")
+        if self.candidate_count < 0:
+            raise ValueError("armor trait/enchant frontier candidate_count cannot be negative")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("armor trait/enchant frontier denominator_proven must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("armor trait/enchant frontier evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("armor trait/enchant frontier unresolved must be a tuple")
+
 
 class ExtremeSustainedDPSArmorTraitEnchantFrontierService:
     """Count and page the complete modeled armor trait/enchant product lazily."""
@@ -103,7 +117,7 @@ class ExtremeSustainedDPSArmorTraitEnchantFrontierService:
         )
         return ExtremeSustainedDPSArmorTraitEnchantFrontier(
             slots=tuple(slots),
-            candidate_count=int(count),
+            candidate_count=count,
             denominator_proven=proven,
             evidence=evidence,
             unresolved=tuple(dict.fromkeys(unresolved)),
@@ -122,7 +136,9 @@ class ExtremeSustainedDPSArmorTraitEnchantFrontierService:
                 + "; ".join(frontier.unresolved)
             )
 
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("armor trait/enchant candidate index must be an integer")
+        target = index
         if target < 0 or target >= frontier.candidate_count:
             raise IndexError("armor trait/enchant candidate index out of range")
 
