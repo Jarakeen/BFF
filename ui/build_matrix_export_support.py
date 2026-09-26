@@ -19,7 +19,9 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QRadioButton,
+    QScrollArea,
     QVBoxLayout,
+    QWidget,
 )
 
 from services.performance_mode_build_matrix_export_service import (
@@ -73,8 +75,19 @@ class PerformanceModeBuildMatrixExportDialog(QDialog):
         self._build_ui()
 
     def _build_ui(self) -> None:
-        root = QVBoxLayout(self)
+        outer = QVBoxLayout(self)
+        outer.setSpacing(0)
+        outer.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
+        content = QWidget(scroll)
+        root = QVBoxLayout(content)
         root.setSpacing(12)
+        root.setContentsMargins(14, 14, 14, 14)
 
         title = QLabel("Export Build to PDF")
         title.setProperty("heroTitle", True)
@@ -200,6 +213,10 @@ class PerformanceModeBuildMatrixExportDialog(QDialog):
         buttons.addWidget(cancel)
         buttons.addWidget(generate)
         root.addLayout(buttons)
+        root.addStretch(1)
+
+        scroll.setWidget(content)
+        outer.addWidget(scroll)
 
         self._sync_mapping_enabled()
 
