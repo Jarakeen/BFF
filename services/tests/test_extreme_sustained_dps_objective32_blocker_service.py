@@ -17,6 +17,7 @@ from services.extreme_sustained_dps_generated_axis_inventory_service import (
 )
 from services.extreme_sustained_dps_axis_dominance_composition_service import (
     CANONICAL_SUSTAINED_DPS_MUTATION_AXES,
+    ExtremeSustainedDPSAxisCoverageProof,
     ExtremeSustainedDPSAxisDominanceCompositionService,
 )
 from services.extreme_sustained_dps_theoretical_maximum_closure_service import (
@@ -65,18 +66,16 @@ def _canonical_coverage(*, missing=(), unresolved=()):
         axis for axis in CANONICAL_SUSTAINED_DPS_MUTATION_AXES
         if axis not in set(missing)
     )
-    return ExtremeSustainedDPSAxisDominanceCompositionService.compose(
-        candidate_key="objective32-test",
-        proofs=(),
-        required_axes=CANONICAL_SUSTAINED_DPS_MUTATION_AXES,
-        unresolved=tuple(unresolved),
-    ) if missing == CANONICAL_SUSTAINED_DPS_MUTATION_AXES else ExtremeSustainedDPSAxisDominanceCompositionService.compose(
-        candidate_key="objective32-test",
-        proofs=(),
-        required_axes=tuple(missing),
+    proof = ExtremeSustainedDPSAxisCoverageProof(
+        source="canonical blocker test coverage",
+        dominated_axes=dominated,
         unresolved=tuple(unresolved),
     )
-
+    return ExtremeSustainedDPSAxisDominanceCompositionService.compose(
+        candidate_key="objective32-test",
+        required_axes=CANONICAL_SUSTAINED_DPS_MUTATION_AXES,
+        proofs=(proof,),
+    )
 
 def _canonical_closure(*, omitted=(), unresolved=()):
     return ExtremeSustainedDPSTheoreticalMaximumClosure(
