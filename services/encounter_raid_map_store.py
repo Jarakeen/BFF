@@ -34,8 +34,8 @@ class RaidMapManifestRowPayload(BaseModel):
         path = Path(value)
         if path.is_absolute() or ".." in path.parts:
             raise ValueError("Raid Map relative_path must stay inside user data")
-        if path.suffix.casefold() not in SUPPORTED_IMAGE_SUFFIXES:
-            raise ValueError("Raid Map manifest may contain only supported image paths")
+        if path.suffix.casefold() not in SUPPORTED_IMAGE_SUFFIXES | SUPPORTED_LAYOUT_SUFFIXES:
+            raise ValueError("Raid Map manifest path has an unsupported file type")
         return value
 
 
