@@ -83,6 +83,21 @@ class ExtremeSustainedDPSRuntimeExternalHistoryAssemblyService:
         supplemental_denominator_proven: bool,
         source: str,
     ) -> ExtremeSustainedDPSRuntimeExternalHistoryAssemblyResult:
+        if not isinstance(attempt_frontier, ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier):
+            raise TypeError(
+                "runtime external-history assembly requires canonical attempt_frontier"
+            )
+        if not isinstance(supplemental_denominator_proven, bool):
+            raise TypeError(
+                "runtime external-history supplemental_denominator_proven must be boolean"
+            )
+        if any(
+            not isinstance(row, ExtremeSustainedDPSRuntimeExternalHistoryChoice)
+            for row in supplemental_histories
+        ):
+            raise TypeError(
+                "runtime external-history supplemental_histories must contain canonical histories"
+            )
         unresolved: list[str] = list(attempt_frontier.unresolved)
         if not attempt_frontier.denominator_proven:
             unresolved.append(
