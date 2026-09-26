@@ -170,7 +170,7 @@ def test_skill_assembly_rejects_missing_prior_axis_selections() -> None:
     )
     skill_axis = adapter.axes()[-1]
 
-    with pytest.raises(ValueError, match="requires CP, potion, and passive"):
+    with pytest.raises(ValueError, match="requires CP, potion, optional poison/tier, and passive"):
         skill_axis.candidate_at(adapter.root(_context()), 0)
 
 def test_optional_weapon_poison_frontier_becomes_physical_late_axis() -> None:
