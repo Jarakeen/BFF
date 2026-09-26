@@ -10,6 +10,12 @@ from services.extreme_sustained_dps_axis_dominance_composition_service import (
 from services.extreme_sustained_dps_generated_frontier_wiring_service import (
     ExtremeSustainedDPSIndexedFrontierAxis,
 )
+from services.extreme_sustained_dps_runtime_effect_relevance_service import (
+    ExtremeSustainedDPSRuntimeEffectRelevance,
+)
+from services.extreme_sustained_dps_runtime_effect_scaling_service import (
+    ExtremeSustainedDPSRuntimeEffectScalingResult,
+)
 from services.extreme_sustained_dps_runtime_state_frontier_service import (
     ExtremeSustainedDPSRuntimeStateChoice,
     ExtremeSustainedDPSRuntimeStateFrontier,
@@ -21,12 +27,22 @@ class ExtremeSustainedDPSGeneratedRuntimeStateLeaf:
     pipeline_state: object
     runtime_state_choice: ExtremeSustainedDPSRuntimeStateChoice
     omitted_scope: tuple[str, ...]
+    relevance: ExtremeSustainedDPSRuntimeEffectRelevance | None = None
+    scaling: ExtremeSustainedDPSRuntimeEffectScalingResult | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.runtime_state_choice, ExtremeSustainedDPSRuntimeStateChoice):
             raise TypeError("generated runtime-state leaf requires a canonical runtime-state choice")
         if not isinstance(self.omitted_scope, tuple):
             raise TypeError("generated runtime-state leaf omitted_scope must be a tuple")
+        if self.relevance is not None and not isinstance(
+            self.relevance, ExtremeSustainedDPSRuntimeEffectRelevance
+        ):
+            raise TypeError("generated runtime-state leaf relevance must be canonical when supplied")
+        if self.scaling is not None and not isinstance(
+            self.scaling, ExtremeSustainedDPSRuntimeEffectScalingResult
+        ):
+            raise TypeError("generated runtime-state leaf scaling must be canonical when supplied")
 
     @property
     def complete(self) -> bool:
@@ -123,7 +139,7 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
                 "candidate runtime-state axis requires explicit frontier resolver"
             )
 
-        def resolve_frontier(state: object) -> ExtremeSustainedDPSRuntimeStateFrontier:
+        def resolve_result(state: object):
             if hasattr(frontier_resolver, "resolve"):
                 result = frontier_resolver.resolve(state)
             elif callable(frontier_resolver):
@@ -139,7 +155,24 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
                     "candidate runtime-state frontier retains theoretical omitted scope: "
                     + "; ".join(frontier.omitted_scope)
                 )
-            return frontier
+            relevance = getattr(result, "relevance", None)
+            scaling = getattr(result, "scaling", None)
+            if relevance is not None and not isinstance(
+                relevance, ExtremeSustainedDPSRuntimeEffectRelevance
+            ):
+                raise TypeError(
+                    "candidate runtime-state resolver relevance must be canonical when supplied"
+                )
+            if scaling is not None and not isinstance(
+                scaling, ExtremeSustainedDPSRuntimeEffectScalingResult
+            ):
+                raise TypeError(
+                    "candidate runtime-state resolver scaling must be canonical when supplied"
+                )
+            return result, frontier
+
+        def resolve_frontier(state: object) -> ExtremeSustainedDPSRuntimeStateFrontier:
+            return resolve_result(state)[1]
 
         def candidate_count(state: object) -> int:
             complete = getattr(state, "complete", False)
@@ -159,7 +192,7 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
                 raise ValueError(
                     "candidate runtime-state axis requires a complete upstream generated pipeline state"
                 )
-            frontier = resolve_frontier(state)
+            result, frontier = resolve_result(state)
             if isinstance(index, bool) or not isinstance(index, int):
                 raise TypeError("candidate runtime-state choice index must be an integer")
             if index < 0 or index >= frontier.candidate_count:
@@ -168,6 +201,8 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
                 pipeline_state=state,
                 runtime_state_choice=frontier.choices[index],
                 omitted_scope=(),
+                relevance=getattr(result, "relevance", None),
+                scaling=getattr(result, "scaling", None),
             )
 
         return ExtremeSustainedDPSIndexedFrontierAxis(
