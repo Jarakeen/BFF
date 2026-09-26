@@ -339,8 +339,12 @@ class ExtremeSustainedDPSRotationPlanFrontierService:
         limit: int = 100,
     ) -> tuple[ExtremeSustainedDPSRotationPlanCandidate, ...]:
         frontier = self.frontier(candidate)
-        start = max(0, int(offset))
-        size = max(0, int(limit))
+        if isinstance(offset, bool) or not isinstance(offset, int):
+            raise TypeError("generated rotation-plan page offset must be an integer")
+        if isinstance(limit, bool) or not isinstance(limit, int):
+            raise TypeError("generated rotation-plan page limit must be an integer")
+        start = max(0, offset)
+        size = max(0, limit)
         if size == 0 or start >= frontier.candidate_count:
             return ()
         return tuple(
