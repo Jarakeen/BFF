@@ -22,21 +22,6 @@ class _CatalogService:
         self._build_ids = set(build_ids)
 
     def load_strict(self):
-        return SimpleNamespace(
-            builds=tuple(
-                SimpleNamespace(
-                    build_id=build_id,
-                    name=build_id,
-                    payload={
-                        "Name": build_id,
-                        "BuildName": build_id,
-                    },
-                )
-                for build_id in self._build_ids
-            )
-        )
-
-    def load(self):
         return {
             "builds": tuple(
                 {
@@ -50,6 +35,9 @@ class _CatalogService:
                 for build_id in self._build_ids
             )
         }
+
+    def load(self):
+        return self.load_strict()
 
 
 class _ArtifactService:
