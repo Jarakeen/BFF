@@ -20,8 +20,39 @@ class ExtremeSustainedDPSWeaponEnchantmentResistanceWindow:
     magnitude: float
     source_label: str
 
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("start_seconds", self.start_seconds),
+            ("end_seconds", self.end_seconds),
+            ("magnitude", self.magnitude),
+        ):
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise TypeError(
+                    f"weapon-enchantment resistance window {label} must be numeric"
+                )
+            if not math.isfinite(float(value)):
+                raise ValueError(
+                    f"weapon-enchantment resistance window {label} must be finite"
+                )
+        if float(self.start_seconds) < 0.0:
+            raise ValueError("weapon-enchantment resistance window start_seconds cannot be negative")
+        if float(self.end_seconds) <= float(self.start_seconds):
+            raise ValueError(
+                "weapon-enchantment resistance window end_seconds must be after start_seconds"
+            )
+        if float(self.magnitude) < 0.0:
+            raise ValueError("weapon-enchantment resistance window magnitude cannot be negative")
+        if not isinstance(self.source_label, str) or not self.source_label.strip():
+            raise TypeError(
+                "weapon-enchantment resistance window source_label must be a non-empty string"
+            )
+
     def active_at(self, time_seconds: float) -> bool:
+        if isinstance(time_seconds, bool) or not isinstance(time_seconds, (int, float)):
+            raise TypeError("resistance window active_at time_seconds must be numeric")
         instant = float(time_seconds)
+        if not math.isfinite(instant):
+            raise ValueError("resistance window active_at time_seconds must be finite")
         return self.start_seconds <= instant < self.end_seconds
 
 
@@ -31,6 +62,21 @@ class ExtremeSustainedDPSWeaponEnchantmentResistanceResolution:
     evidence: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.windows, tuple):
+            raise TypeError("resistance resolution windows must be a tuple")
+        if any(
+            not isinstance(row, ExtremeSustainedDPSWeaponEnchantmentResistanceWindow)
+            for row in self.windows
+        ):
+            raise TypeError(
+                "resistance resolution windows must contain canonical window records"
+            )
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("resistance resolution evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("resistance resolution unresolved must be a tuple")
+
     @property
     def resolved(self) -> bool:
         return not self.unresolved
@@ -39,7 +85,7 @@ class ExtremeSustainedDPSWeaponEnchantmentResistanceResolution:
         active = tuple(
             window
             for window in self.windows
-            if window.active_at(float(time_seconds))
+            if window.active_at(time_seconds)
         )
         if not active:
             return 0.0
