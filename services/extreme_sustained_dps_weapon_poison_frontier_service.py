@@ -38,6 +38,22 @@ class ExtremeSustainedDPSWeaponPoisonFrontier:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.selections, tuple):
+            raise TypeError("weapon-poison frontier selections must be a tuple")
+        if isinstance(self.candidate_count, bool) or not isinstance(self.candidate_count, int):
+            raise TypeError("weapon-poison frontier candidate_count must be an integer")
+        if self.candidate_count < 0:
+            raise ValueError("weapon-poison frontier candidate_count cannot be negative")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("weapon-poison frontier denominator_proven must be boolean")
+        if not isinstance(self.one_bar_only, bool):
+            raise TypeError("weapon-poison frontier one_bar_only must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("weapon-poison frontier evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("weapon-poison frontier unresolved must be a tuple")
+
 
 class ExtremeSustainedDPSWeaponPoisonFrontierService:
     """Enumerate exact canonical poison formulas independently on front/back bars."""
@@ -72,6 +88,8 @@ class ExtremeSustainedDPSWeaponPoisonFrontierService:
         *,
         one_bar_only: bool = False,
     ) -> ExtremeSustainedDPSWeaponPoisonFrontier:
+        if not isinstance(one_bar_only, bool):
+            raise TypeError("weapon-poison one_bar_only must be boolean")
         catalog = self.repository.catalog()
         unresolved = list(tuple(getattr(catalog, "unresolved", ()) or ()))
         formulas = tuple(getattr(catalog, "formulas", ()) or ())
@@ -111,7 +129,7 @@ class ExtremeSustainedDPSWeaponPoisonFrontierService:
             selections=tuple(selections),
             candidate_count=candidate_count,
             denominator_proven=denominator_proven,
-            one_bar_only=bool(one_bar_only),
+            one_bar_only=one_bar_only,
             evidence=(
                 f"Canonical Poison formulas enumerated: {len(unique_formulas)}",
                 f"Per-bar poison choices including none: {per_bar}",
@@ -134,13 +152,17 @@ class ExtremeSustainedDPSWeaponPoisonFrontierService:
         index: int,
         one_bar_only: bool = False,
     ) -> ExtremeSustainedDPSWeaponPoisonLoadoutCandidate:
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("weapon-poison candidate index must be an integer")
+        if not isinstance(one_bar_only, bool):
+            raise TypeError("weapon-poison one_bar_only must be boolean")
         frontier = self.frontier(one_bar_only=one_bar_only)
         if not frontier.denominator_proven:
             raise ValueError(
                 "weapon-poison frontier denominator is unresolved: "
                 + "; ".join(frontier.unresolved)
             )
-        target = int(index)
+        target = index
         if target < 0 or target >= frontier.candidate_count:
             raise IndexError("weapon-poison loadout candidate index out of range")
 
