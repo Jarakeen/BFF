@@ -12,6 +12,10 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+import os
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from services.finch_api_client import FinchSharedSnapshot
 
@@ -53,6 +57,24 @@ class FinchCopyProvenance:
     copied_at: str
 
 
+class FinchCopyProvenancePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, str_strip_whitespace=True)
+
+    kind: str = Field(min_length=1, max_length=80)
+    snapshot_key: str = Field(min_length=1, max_length=240)
+    local_key: str = Field(min_length=1, max_length=240)
+    published_by: str = Field(default="", max_length=240)
+    source_updated_at: str = Field(default="", max_length=120)
+    copied_at: str = Field(min_length=1, max_length=120)
+
+
+class FinchSharedProvenancePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    schema_version: int = Field(default=_SCHEMA_VERSION, ge=_SCHEMA_VERSION, le=_SCHEMA_VERSION)
+    copies: tuple[FinchCopyProvenancePayload, ...] = ()
+
+
 class FinchSharedProvenanceService:
     def __init__(self, path: Path) -> None:
         self.path = Path(path)
@@ -62,31 +84,15 @@ class FinchSharedProvenanceService:
             return ()
         try:
             raw = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return ()
-        if not isinstance(raw, dict) or raw.get("schema_version") != _SCHEMA_VERSION:
-            return ()
-        rows = raw.get("copies")
-        if not isinstance(rows, list):
-            return ()
-        result = []
-        for row in rows:
-            if not isinstance(row, dict):
-                continue
-            try:
-                result.append(
-                    FinchCopyProvenance(
-                        kind=_clean(row.get("kind")),
-                        snapshot_key=_clean(row.get("snapshot_key")),
-                        local_key=_clean(row.get("local_key")),
-                        published_by=_clean(row.get("published_by")),
-                        source_updated_at=_clean(row.get("source_updated_at")),
-                        copied_at=_clean(row.get("copied_at")),
-                    )
-                )
-            except Exception:
-                continue
-        return tuple(result)
+            payload = FinchSharedProvenancePayload.model_validate(raw)
+        except (OSError, json.JSONDecodeError, ValidationError) as exc:
+            raise ValueError(
+                f"Finch shared provenance failed Pydantic validation: {exc}"
+            ) from exc
+        return tuple(
+            FinchCopyProvenance(**row.model_dump(mode="python"))
+            for row in payload.copies
+        )
 
     def record_copy(
         self,
@@ -111,15 +117,49 @@ class FinchSharedProvenanceService:
             )
         ]
         existing.append(row)
-        payload = {
-            "schema_version": _SCHEMA_VERSION,
-            "copies": [asdict(item) for item in existing],
-        }
+        try:
+            payload = FinchSharedProvenancePayload.model_validate(
+                {
+                    "schema_version": _SCHEMA_VERSION,
+                    "copies": [asdict(item) for item in existing],
+                }
+            ).model_dump(mode="json")
+        except ValidationError as exc:
+            raise ValueError(
+                f"Finch shared provenance save failed Pydantic validation: {exc}"
+            ) from exc
+
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps(payload, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        temp_name: str | None = None
+        try:
+            with NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                dir=self.path.parent,
+                prefix=f".{self.path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                json.dump(payload, handle, indent=2, sort_keys=True)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+                temp_name = handle.name
+            os.replace(temp_name, self.path)
+            read_back = FinchSharedProvenancePayload.model_validate(
+                json.loads(self.path.read_text(encoding="utf-8"))
+            ).model_dump(mode="json")
+        except (OSError, json.JSONDecodeError, ValidationError) as exc:
+            if temp_name:
+                try:
+                    Path(temp_name).unlink(missing_ok=True)
+                except OSError:
+                    pass
+            raise ValueError(
+                f"Finch shared provenance save failed read-back validation: {exc}"
+            ) from exc
+        if read_back != payload:
+            raise ValueError("Finch shared provenance save did not round-trip exactly")
         return row
 
     def copies_for(
