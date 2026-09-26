@@ -122,7 +122,7 @@ class PerformanceModeBuildMatrixExportDialog(QDialog):
             hint.setProperty("muted", True)
             hint.setContentsMargins(24, 0, 0, 3)
             mode_layout.addWidget(hint)
-        self._mode_group.buttonClicked.connect(self._sync_mapping_enabled)
+        self._mode_group.buttonClicked.connect(lambda *_args: self._sync_mapping_enabled())
         root.addWidget(mode_box)
 
         mapping = QGroupBox("Variant handling")
