@@ -141,7 +141,9 @@ class ExtremeSustainedDPSGeneratedGearAxisAdapterService:
         index: int,
     ) -> ExtremeSustainedDPSGeneratedGearAxisState:
         frontier = state.dual_bar_frontier
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("dual-bar gear state index must be an integer")
+        target = index
         count = self._dual_count(state)
         if target < 0 or target >= count:
             raise IndexError("dual-bar gear state index out of range")
@@ -169,7 +171,9 @@ class ExtremeSustainedDPSGeneratedGearAxisAdapterService:
         index: int,
     ) -> ExtremeSustainedDPSGeneratedGearAxisState:
         context = self._require_context(state)
-        candidate = self.armor.candidate_at(state.current_build, int(index))
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("armor trait/enchant index must be an integer")
+        candidate = self.armor.candidate_at(state.current_build, index)
         return replace(
             state,
             armor=candidate,
@@ -192,7 +196,9 @@ class ExtremeSustainedDPSGeneratedGearAxisAdapterService:
         index: int,
     ) -> ExtremeSustainedDPSGeneratedGearAxisState:
         context = self._require_context(state)
-        candidate = self.jewelry.candidate_at(state.current_build, int(index))
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("jewelry trait/enchant index must be an integer")
+        candidate = self.jewelry.candidate_at(state.current_build, index)
         return replace(
             state,
             jewelry=candidate,
@@ -215,7 +221,9 @@ class ExtremeSustainedDPSGeneratedGearAxisAdapterService:
         index: int,
     ) -> ExtremeSustainedDPSGeneratedGearAxisState:
         context = self._require_context(state)
-        candidate = self.weapon.candidate_at(state.current_build, int(index))
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("weapon trait/enchant index must be an integer")
+        candidate = self.weapon.candidate_at(state.current_build, index)
         return replace(
             state,
             weapon=candidate,
