@@ -55,6 +55,12 @@ class ExtremeSustainedDPSAxisCoverageProof:
     omitted_scope: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if not isinstance(self.dominated_axes, tuple):
+            raise TypeError("axis coverage proof dominated_axes must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("axis coverage proof unresolved must be a tuple")
+        if not isinstance(self.omitted_scope, tuple):
+            raise TypeError("axis coverage proof omitted_scope must be a tuple")
         source = str(self.source or "").strip()
         if not source:
             raise ValueError("axis coverage proof requires source")
@@ -129,6 +135,12 @@ class ExtremeSustainedDPSAxisDominanceCompositionService:
         key = str(candidate_key or "").strip()
         if not key:
             raise ValueError("axis dominance composition requires candidate_key")
+        if not isinstance(required_axes, tuple):
+            raise TypeError("axis dominance composition required_axes must be a tuple")
+        if not isinstance(proofs, tuple):
+            raise TypeError("axis dominance composition proofs must be a tuple")
+        if any(not isinstance(proof, ExtremeSustainedDPSAxisCoverageProof) for proof in proofs):
+            raise TypeError("axis dominance composition proofs must contain canonical axis coverage proofs")
 
         canonical = {axis.casefold(): axis for axis in CANONICAL_SUSTAINED_DPS_MUTATION_AXES}
         required: list[str] = []
