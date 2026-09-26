@@ -9,8 +9,6 @@ Malformed saved state therefore fails closed before variant resolution, comparis
 or ReportLab rendering.
 """
 
-from typing import Any
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from models.build_model import (
@@ -28,7 +26,7 @@ def _clean_text(value: str) -> str:
 
 
 class PerformanceModeGearSlotSource(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
     Set: str = Field(default="", max_length=240)
     Trait: str = Field(default="", max_length=120)
@@ -57,7 +55,7 @@ class PerformanceModeGearSlotSource(BaseModel):
 
 
 class PerformanceModeChampionPointSource(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
     Name: str = Field(default="", max_length=240)
     Points: str = Field(default="", max_length=40)
@@ -78,7 +76,7 @@ class PerformanceModeChampionPointSource(BaseModel):
 
 
 class PerformanceModeVariantSource(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
     ContextType: str = Field(default="Boss", max_length=80)
     TeamName: str = Field(default="", max_length=240)
@@ -207,7 +205,7 @@ class PerformanceModeVariantSource(BaseModel):
 
 
 class PerformanceModeBuildExportSource(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
 
     Name: str = Field(default="", max_length=240)
     Gamertag: str = Field(default="", max_length=240)
@@ -327,6 +325,13 @@ class PerformanceModeBuildExportSource(BaseModel):
     def from_build(cls, build: PlayerBuild) -> "PerformanceModeBuildExportSource":
         if not isinstance(build, PlayerBuild):
             raise TypeError("Performance Mode Build Matrix export requires a PlayerBuild")
+
+        unknown_armor_slots = sorted(set(build.Armor) - set(ARMOR_SLOTS))
+        if unknown_armor_slots:
+            raise ValueError(
+                "Build Matrix source contains unknown armor slots: "
+                + ", ".join(unknown_armor_slots)
+            )
 
         armor: dict[str, PerformanceModeGearSlotSource] = {}
         for slot in ARMOR_SLOTS:
