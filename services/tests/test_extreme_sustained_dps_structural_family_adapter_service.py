@@ -114,3 +114,65 @@ def test_pair_with_wrong_bar_order_fails_closed() -> None:
 
     with pytest.raises(ValueError, match="expected front coordinate first"):
         service.choice_at(0)
+
+
+def test_structural_family_rejects_boolean_index() -> None:
+    route = _Route("route")
+    service = ExtremeSustainedDPSStructuralFamilyAdapterService(
+        generated_candidates=_Generated(
+            (
+                _candidate(0, route=route, bar="front"),
+                _candidate(1, route=route, bar="back"),
+            )
+        )
+    )
+
+    with pytest.raises(TypeError, match="index must be an integer"):
+        service.choice_at(True)
+
+
+def test_structural_family_rejects_truthy_source_denominator_proof() -> None:
+    class _BadGenerated(_Generated):
+        def frontier(self):
+            return type(
+                "_Frontier",
+                (),
+                {
+                    "structural_candidate_count": 2,
+                    "structural_denominator_proven": "true",
+                    "unresolved": (),
+                },
+            )()
+
+    service = ExtremeSustainedDPSStructuralFamilyAdapterService(
+        generated_candidates=_BadGenerated(
+            (
+                _candidate(0, bar="front"),
+                _candidate(1, bar="back"),
+            )
+        )
+    )
+
+    with pytest.raises(TypeError, match="structural_denominator_proven must be boolean"):
+        service.frontier()
+
+
+def test_structural_family_rejects_boolean_source_count() -> None:
+    class _BadGenerated(_Generated):
+        def frontier(self):
+            return type(
+                "_Frontier",
+                (),
+                {
+                    "structural_candidate_count": True,
+                    "structural_denominator_proven": True,
+                    "unresolved": (),
+                },
+            )()
+
+    service = ExtremeSustainedDPSStructuralFamilyAdapterService(
+        generated_candidates=_BadGenerated(())
+    )
+
+    with pytest.raises(TypeError, match="structural_candidate_count must be an integer"):
+        service.frontier()
