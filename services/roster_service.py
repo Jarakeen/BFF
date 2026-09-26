@@ -18,7 +18,7 @@ from models.team_schedule import TeamSchedule, TeamScheduleSlot
 from services.eso_database import EsoDatabase
 from services.user_database import user_database_for
 from services.roster_placeholder_identity import is_personnel_placeholder
-
+from services.personnel_pydantic_schema import (\n    ValidationError as PersonnelValidationError,\n    validate_personnel_payload,\n    validate_team_schedule_payload,\n)\n
 
 class RosterService:
     """Roster read/write access, including many-to-many team membership."""
@@ -375,12 +375,38 @@ class RosterService:
         return self._schedule_from_row(row)
 
     def set_team_schedule(self, schedule: TeamSchedule) -> None:
-        name = str(schedule.TeamName or "").strip()
-        if not name:
-            raise ValueError("Team name is required before a raid schedule can be saved.")
-        slots = tuple(schedule.Slots)
-        raid_days = str(schedule.RaidDays or "").strip()
-        raid_time = str(schedule.RaidTime or "").strip()
+        try:
+            validated = validate_team_schedule_payload(
+                {
+                    "team_name": schedule.TeamName,
+                    "raid_days": schedule.RaidDays,
+                    "raid_time": schedule.RaidTime,
+                    "timezone": schedule.TimeZone,
+                    "slots": tuple(
+                        {
+                            "day": slot.Day,
+                            "start_time": slot.StartTime,
+                            "end_time": slot.EndTime,
+                        }
+                        for slot in schedule.Slots
+                    ),
+                    "current_focus": schedule.CurrentFocus,
+                    "discord_url": schedule.DiscordUrl,
+                }
+            )
+        except PersonnelValidationError as exc:
+            raise ValueError(f"Team schedule save failed Pydantic validation: {exc}") from exc
+        name = validated["team_name"]
+        slots = tuple(
+            TeamScheduleSlot(
+                Day=row["day"],
+                StartTime=row["start_time"],
+                EndTime=row["end_time"],
+            )
+            for row in validated["slots"]
+        )
+        raid_days = validated["raid_days"]
+        raid_time = validated["raid_time"]
         if slots:
             raid_days = ", ".join(slot.Day for slot in slots)
             raid_time = slots[0].StartTime
@@ -396,13 +422,16 @@ class RosterService:
         """, (
             raid_days,
             raid_time,
-            str(schedule.TimeZone or "").strip(),
+            validated["timezone"],
             slots_json,
-            str(schedule.CurrentFocus or "").strip(),
-            str(schedule.DiscordUrl or "").strip(),
+            validated["current_focus"],
+            validated["discord_url"],
             name,
         ))
         self.db.commit()
+        saved = self.get_team_schedule(name)
+        if saved is None:
+            raise RuntimeError("Team schedule could not be reloaded after save")
 
     def delete_team(self, team_name: str) -> bool:
         name = str(team_name or "").strip()
@@ -420,6 +449,7 @@ class RosterService:
         return True
 
     def create_member(self, member: RosterMember) -> int:
+        member = self._validated_member(member)
         if is_personnel_placeholder(member.PlayerName):
             raise ValueError(
                 f"{member.PlayerName!r} is a planning placeholder, not a Personnel player"
@@ -446,9 +476,13 @@ class RosterService:
         member_id = cursor.lastrowid
         self._set_member_teams(member_id, member.Team)
         self.db.commit()
+        saved = self.get_member(int(member_id))
+        if saved is None:
+            raise RuntimeError("Personnel record could not be reloaded after create")
         return member_id
 
     def update_member(self, member: RosterMember):
+        member = self._validated_member(member)
         if member.Id is None:
             raise ValueError("Cannot update a roster member with no Id.")
         if is_personnel_placeholder(member.PlayerName):
@@ -478,6 +512,9 @@ class RosterService:
         ))
         self._set_member_teams(member.Id, member.Team)
         self.db.commit()
+        saved = self.get_member(int(member.Id))
+        if saved is None:
+            raise RuntimeError("Personnel record could not be reloaded after update")
 
     def set_member_status(self, member_id: int, status: str) -> RosterMember:
         member_id = int(member_id)
