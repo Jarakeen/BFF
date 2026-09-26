@@ -24,6 +24,24 @@ class ExtremeSustainedDPSTheoreticalMaximumClosure:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        for name in (
+            "finite_denominator_maximum_proven",
+            "canonical_axis_coverage_complete",
+            "mechanics_closure_complete",
+            "theoretical_maximum_proven",
+        ):
+            if not isinstance(getattr(self, name), bool):
+                raise TypeError(f"theoretical maximum closure {name} must be boolean")
+        for name in ("omitted_scope", "evidence", "unresolved"):
+            if not isinstance(getattr(self, name), tuple):
+                raise TypeError(f"theoretical maximum closure {name} must be a tuple")
+        if self.best_modeled_dps is not None and (
+            isinstance(self.best_modeled_dps, bool)
+            or not isinstance(self.best_modeled_dps, (int, float))
+        ):
+            raise TypeError("theoretical maximum closure best_modeled_dps must be numeric")
+
 
 class ExtremeSustainedDPSTheoreticalMaximumClosureService:
     """Separate finite-tree completion from theoretical objective closure."""
@@ -70,6 +88,17 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
         if not isinstance(omitted_scope, tuple):
             raise TypeError("theoretical closure omitted_scope must be a tuple")
 
+        global_maximum_proven = global_maximum_proven
+        if not isinstance(global_maximum_proven, bool):
+            raise TypeError(
+                "theoretical closure requires boolean global_maximum_proven"
+            )
+        coverage_proof_complete = axis_coverage.proof.complete
+        if not isinstance(coverage_proof_complete, bool):
+            raise TypeError(
+                "theoretical closure requires boolean axis coverage proof completion"
+            )
+
         canonical = tuple(CANONICAL_SUSTAINED_DPS_MUTATION_AXES)
         required = tuple(axis_coverage.required_axes)
         missing_required = tuple(axis for axis in canonical if axis not in required)
@@ -80,7 +109,7 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
             and not extra_required
             and not axis_coverage.missing_axes
             and not axis_coverage.unresolved
-            and axis_coverage.proof.complete
+            and coverage_proof_complete
         )
 
         omitted = tuple(
@@ -102,7 +131,7 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
         ) = cls._mechanics_inventory_state(closure_inventory)
         unresolved: list[str] = []
 
-        if not search_result.global_maximum_proven:
+        if not global_maximum_proven:
             unresolved.append(
                 "Generated branch-and-bound did not prove the maximum over its finite search denominator"
             )
@@ -141,7 +170,7 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
 
         deduped = tuple(dict.fromkeys(unresolved))
         theoretical = bool(
-            search_result.global_maximum_proven
+            global_maximum_proven
             and coverage_complete
             and mechanics_complete
             and not omitted
@@ -149,9 +178,7 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
         )
 
         return ExtremeSustainedDPSTheoreticalMaximumClosure(
-            finite_denominator_maximum_proven=bool(
-                search_result.global_maximum_proven
-            ),
+            finite_denominator_maximum_proven=global_maximum_proven,
             canonical_axis_coverage_complete=coverage_complete,
             mechanics_closure_complete=mechanics_complete,
             omitted_scope=omitted,
@@ -162,7 +189,7 @@ class ExtremeSustainedDPSTheoreticalMaximumClosureService:
                 else float(search_result.best_modeled_dps)
             ),
             evidence=(
-                f"Finite generated denominator maximum proven: {bool(search_result.global_maximum_proven)}",
+                f"Finite generated denominator maximum proven: {global_maximum_proven}",
                 f"Canonical sustained-DPS axes required: {len(canonical)}",
                 f"Canonical sustained-DPS axis coverage complete: {coverage_complete}",
                 f"Objective #32 mechanics closure complete: {mechanics_complete}",
