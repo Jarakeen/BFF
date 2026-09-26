@@ -301,3 +301,48 @@ def test_enchantment_sequence_frontier_requires_strict_denominator_flag():
             evidence=(),
             unresolved=(),
         )
+
+
+def test_enchantment_sequence_builder_requires_strict_event_denominator_flag() -> None:
+    effect = _effect("Main Enchant", "main_hand")
+    with pytest.raises(TypeError, match="event_denominator_proven must be boolean"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService().build(
+            events=(_event(1.0),),
+            effects=(effect,),
+            policies=(_policy(effect, "main"),),
+            event_denominator_proven="false",
+            source="malformed",
+        )
+
+
+def test_enchantment_sequence_builder_requires_canonical_nested_records() -> None:
+    effect = _effect("Main Enchant", "main_hand")
+
+    with pytest.raises(TypeError, match="events must contain RuntimeEvent"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService().build(
+            events=(object(),),
+            effects=(effect,),
+            policies=(_policy(effect, "main"),),
+            event_denominator_proven=True,
+            source="malformed",
+        )
+
+    with pytest.raises(TypeError, match="effects must contain EffectVariant"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService().build(
+            events=(),
+            effects=(object(),),
+            policies=(),
+            event_denominator_proven=True,
+            source="malformed",
+        )
+
+
+def test_enchantment_cooldown_policy_rejects_boolean_duration() -> None:
+    effect = _effect("Main Enchant", "main_hand")
+    with pytest.raises(TypeError, match="cooldown_seconds must be numeric"):
+        ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy(
+            effect=effect,
+            cooldown_identity="main",
+            cooldown_seconds=True,
+            authoritative=True,
+        )
