@@ -49,9 +49,14 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
         target_name: str = "Boss",
         initial_bar: str = "front",
     ) -> ExtremeSustainedDPSExactLeafEvaluation:
+        if not isinstance(node, ExtremeSustainedDPSGeneratedFrontierNode):
+            raise TypeError("generated leaf evaluation requires canonical frontier node")
         state = node.state
         runtime_choice = getattr(state, "runtime_state_choice", None)
-        if not bool(getattr(state, "complete", False)):
+        complete = getattr(state, "complete", False)
+        if not isinstance(complete, bool):
+            raise TypeError("generated leaf complete flag must be boolean")
+        if not complete:
             return self._incomplete(
                 node,
                 "Generated axis pipeline leaf is incomplete",
@@ -103,19 +108,19 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
             if runtime_choice is not None
             else runtime_snapshot
         )
-        runtime_choice_evidence = (
-            tuple(getattr(runtime_choice, "evidence", ()))
-            if runtime_choice is not None
-            else ()
-        )
+        runtime_choice_evidence = ()
+        if runtime_choice is not None:
+            runtime_choice_evidence = getattr(runtime_choice, "evidence", ())
+            if not isinstance(runtime_choice_evidence, tuple):
+                raise TypeError("runtime-state choice evidence must be a tuple")
 
         runtime_kwargs = {
             "progression": progression,
             "gear_state": gear_state,
             "plan": plan,
             "runtime_snapshot": effective_runtime_snapshot,
-            "target_health": int(target_health),
-            "target_resistance": float(target_resistance),
+            "target_health": target_health,
+            "target_resistance": target_resistance,
             "target_name": target_name,
             "initial_bar": initial_bar,
         }
@@ -124,6 +129,10 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
                 getattr(runtime_choice, "effects", ())
             )
 
+        if isinstance(target_health, bool) or not isinstance(target_health, int):
+            raise TypeError("generated leaf target health must be an integer")
+        if isinstance(target_resistance, bool) or not isinstance(target_resistance, (int, float)):
+            raise TypeError("generated leaf target resistance must be numeric")
         result = self.runtime_evaluation.evaluate(
             build,
             **runtime_kwargs,
