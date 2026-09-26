@@ -71,3 +71,8 @@ def test_cp_duplicate_identity_withholds_denominator() -> None:
 
     assert result.denominator_proven is False
     assert any("Duplicate" in row for row in result.unresolved)
+
+
+def test_cp_rejects_boolean_candidate_index() -> None:
+    with pytest.raises(TypeError, match="candidate index must be an integer"):
+        _service().candidate_at(PlayerBuild(), True)
