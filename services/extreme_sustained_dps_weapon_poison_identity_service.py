@@ -27,29 +27,37 @@ class ExtremeSustainedDPSWeaponPoisonPossibleEffect:
     level: int | None = None
 
     def __post_init__(self) -> None:
-        effect_name = " ".join(str(self.effect_name or "").strip().split())
+        if not isinstance(self.effect_name, str):
+            raise TypeError("weapon-poison possible effect effect_name must be a string")
+        effect_name = " ".join(self.effect_name.strip().split())
         if not effect_name:
             raise ValueError("weapon-poison possible effect requires effect_name")
 
-        try:
-            base_duration = float(self.base_duration_seconds)
-        except (TypeError, ValueError):
-            raise ValueError("weapon-poison base duration must be numeric") from None
+        if isinstance(self.base_duration_seconds, bool) or not isinstance(
+            self.base_duration_seconds,
+            (int, float),
+        ):
+            raise TypeError("weapon-poison base duration must be numeric")
+        base_duration = float(self.base_duration_seconds)
         if not math.isfinite(base_duration) or base_duration < 0.0:
             raise ValueError("weapon-poison base duration must be finite and non-negative")
 
         triple_duration = self.triple_duration_seconds
         if triple_duration is not None:
-            try:
-                triple_duration = float(triple_duration)
-            except (TypeError, ValueError):
-                raise ValueError("weapon-poison triple duration must be numeric") from None
+            if isinstance(triple_duration, bool) or not isinstance(
+                triple_duration,
+                (int, float),
+            ):
+                raise TypeError("weapon-poison triple duration must be numeric")
+            triple_duration = float(triple_duration)
             if not math.isfinite(triple_duration) or triple_duration < 0.0:
                 raise ValueError(
                     "weapon-poison triple duration must be finite and non-negative"
                 )
 
-        solvent = " ".join(str(self.solvent or "").strip().split()) or None
+        if self.solvent is not None and not isinstance(self.solvent, str):
+            raise TypeError("weapon-poison solvent must be a string or None")
+        solvent = " ".join((self.solvent or "").strip().split()) or None
         level = self.level
         if level is not None:
             if isinstance(level, bool) or not isinstance(level, int) or level < 0:
@@ -71,7 +79,19 @@ class ExtremeSustainedDPSWeaponPoisonItemEvidence:
     unresolved: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        poison_id = " ".join(str(self.poison_id or "").strip().split())
+        if not isinstance(self.poison_id, str):
+            raise TypeError("weapon-poison poison_id must be a string")
+        if not isinstance(self.possible_effects, tuple):
+            raise TypeError("weapon-poison possible_effects must be a tuple")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("weapon-poison evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("weapon-poison unresolved must be a tuple")
+        if any(not isinstance(row, str) for row in self.evidence):
+            raise TypeError("weapon-poison evidence must contain only strings")
+        if any(not isinstance(row, str) for row in self.unresolved):
+            raise TypeError("weapon-poison unresolved must contain only strings")
+        poison_id = " ".join(self.poison_id.strip().split())
         if not isinstance(self.source_evidence_complete, bool):
             raise TypeError("weapon-poison source_evidence_complete must be boolean")
         if not isinstance(self.exact_selection_proven, bool):
@@ -90,16 +110,16 @@ class ExtremeSustainedDPSWeaponPoisonItemEvidence:
 
         evidence = tuple(
             dict.fromkeys(
-                str(row).strip()
-                for row in tuple(self.evidence)
-                if str(row).strip()
+                row.strip()
+                for row in self.evidence
+                if row.strip()
             )
         )
         unresolved = tuple(
             dict.fromkeys(
-                str(row).strip()
-                for row in tuple(self.unresolved)
-                if str(row).strip()
+                row.strip()
+                for row in self.unresolved
+                if row.strip()
             )
         )
         object.__setattr__(self, "poison_id", poison_id)
@@ -146,7 +166,9 @@ class ExtremeSustainedDPSWeaponPoisonItemEvidenceService:
             return None
 
     def resolve(self, poison_id: str) -> ExtremeSustainedDPSWeaponPoisonItemEvidence:
-        selected = " ".join(str(poison_id or "").strip().split())
+        if not isinstance(poison_id, str):
+            raise TypeError("weapon-poison item evidence poison_id must be a string")
+        selected = " ".join(poison_id.strip().split())
         if not selected:
             return ExtremeSustainedDPSWeaponPoisonItemEvidence(
                 poison_id="",
