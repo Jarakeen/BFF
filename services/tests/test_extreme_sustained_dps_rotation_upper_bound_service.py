@@ -202,3 +202,43 @@ def test_rotation_upper_bound_rejects_inconsistent_direct_summary() -> None:
             evidence=(),
             unresolved=("open",),
         )
+
+
+def test_rotation_upper_bound_rejects_mutable_action_bound_denominator() -> None:
+    with pytest.raises(TypeError, match="action_bounds must be a tuple"):
+        ExtremeSustainedDPSRotationUpperBoundService.evaluate(
+            _plan(),
+            action_bounds=[_bound(0.0, 0, 1000.0)],  # type: ignore[arg-type]
+        )
+
+
+def test_rotation_upper_bound_rejects_duck_typed_action_bound() -> None:
+    malformed = type(
+        "Bound",
+        (),
+        {
+            "coordinate": (0.0, 0),
+            "upper_bound_damage": 1000.0,
+            "proven_safe": True,
+            "covers_periodic_and_triggered": True,
+            "unresolved": (),
+        },
+    )()
+    with pytest.raises(TypeError, match="canonical action bounds"):
+        ExtremeSustainedDPSRotationUpperBoundService.evaluate(
+            _plan(),
+            action_bounds=(malformed,),  # type: ignore[arg-type]
+        )
+
+
+def test_action_upper_bound_rejects_mutable_unresolved_collection() -> None:
+    with pytest.raises(TypeError, match="unresolved must be a tuple"):
+        ExtremeSustainedDPSActionUpperBound(
+            time_seconds=0.0,
+            sequence=0,
+            upper_bound_damage=None,
+            proven_safe=False,
+            covers_periodic_and_triggered=False,
+            source="test",
+            unresolved=[],  # type: ignore[arg-type]
+        )
