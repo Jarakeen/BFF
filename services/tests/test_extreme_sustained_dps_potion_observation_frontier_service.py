@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from minmax.runtime_event import RuntimeEvent
 from services.extreme_sustained_dps_potion_observation_frontier_service import (
     ExtremeSustainedDPSPotionObservationFrontierService,
+    ExtremeSustainedDPSPotionObservationPoint,
 )
 from services.rotation_candidate_periodic_damage_runtime_projection_service import (
     RotationPeriodicDamageRuntimeProjection,
@@ -123,3 +126,57 @@ def test_extra_heavy_completion_evidence_fails_closed() -> None:
         "no scheduled Heavy Attack" in row
         for row in result.unresolved
     )
+
+
+@pytest.mark.parametrize(
+    "kwargs,match",
+    (
+        ({"time_seconds": "1.0"}, "time must be numeric"),
+        ({"sequence": True}, "sequence must be an integer or None"),
+        ({"source": 7}, "source must be a string"),
+        ({"kind": 7}, "kind must be a string"),
+    ),
+)
+def test_potion_observation_point_requires_strict_types(kwargs, match) -> None:
+    values = {
+        "time_seconds": 1.0,
+        "sequence": 0,
+        "source": "Skill A",
+        "kind": "skill",
+    }
+    values.update(kwargs)
+
+    with pytest.raises(TypeError, match=match):
+        ExtremeSustainedDPSPotionObservationPoint(**values)
+
+
+def test_potion_observation_frontier_requires_tuple_evidence_collections() -> None:
+    with pytest.raises(TypeError, match="periodic_projections must be a tuple"):
+        ExtremeSustainedDPSPotionObservationFrontierService.collect(
+            plan=_plan(),
+            periodic_projections=[_periodic(2.5)],  # type: ignore[arg-type]
+            heavy_attack_completion_evidence=(_heavy(),),
+        )
+
+    with pytest.raises(TypeError, match="heavy_attack_completion_evidence must be a tuple"):
+        ExtremeSustainedDPSPotionObservationFrontierService.collect(
+            plan=_plan(),
+            periodic_projections=(_periodic(2.5),),
+            heavy_attack_completion_evidence=[_heavy()],  # type: ignore[arg-type]
+        )
+
+
+def test_potion_observation_frontier_requires_typed_evidence_records() -> None:
+    with pytest.raises(TypeError, match="RotationPeriodicDamageRuntimeProjection records"):
+        ExtremeSustainedDPSPotionObservationFrontierService.collect(
+            plan=_plan(),
+            periodic_projections=(object(),),  # type: ignore[arg-type]
+            heavy_attack_completion_evidence=(_heavy(),),
+        )
+
+    with pytest.raises(TypeError, match="RotationHeavyAttackCompletionEvidence records"):
+        ExtremeSustainedDPSPotionObservationFrontierService.collect(
+            plan=_plan(),
+            periodic_projections=(),
+            heavy_attack_completion_evidence=(object(),),  # type: ignore[arg-type]
+        )
