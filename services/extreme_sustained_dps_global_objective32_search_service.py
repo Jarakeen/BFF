@@ -283,7 +283,13 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
         effective_closure_inventory = (
             closure_inventory
             if closure_inventory is not None
-            else ExtremeSustainedDPSClosureInventoryService.build()
+            else (
+                ExtremeSustainedDPSClosureInventoryService.build_for_best_candidates(
+                    search.best_candidates
+                )
+                if self.require_closure_ready_scenario
+                else ExtremeSustainedDPSClosureInventoryService.build()
+            )
         )
         closure = ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
             search,
