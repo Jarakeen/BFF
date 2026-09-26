@@ -183,8 +183,12 @@ class ExtremeSustainedDPSGlobalObjective32SearchService:
             raise TypeError("global Objective #32 scope_proof must be canonical when supplied")
         if not isinstance(omitted_scope, tuple):
             raise TypeError("global Objective #32 omitted_scope must be a tuple")
+        if any(not isinstance(item, str) for item in omitted_scope):
+            raise TypeError("global Objective #32 omitted_scope must contain only strings")
+        if not isinstance(root_key, str):
+            raise TypeError("global Objective #32 root_key must be a string")
 
-        normalized_root = str(root_key or "").strip() or "generated-global-root"
+        normalized_root = root_key.strip() or "generated-global-root"
         if self.require_closure_ready_scenario and self.potion_cooldown_resolver is None:
             raise ValueError(
                 "Canonical Objective #32 closure requires a canonical potion cooldown resolver"
