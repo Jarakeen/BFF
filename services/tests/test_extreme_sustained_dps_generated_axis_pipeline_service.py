@@ -12,6 +12,7 @@ from services.extreme_sustained_dps_generated_branch_and_bound_search_service im
 )
 from services.extreme_sustained_dps_generated_axis_pipeline_service import (
     ExtremeSustainedDPSGeneratedAxisPipelineService,
+    ExtremeSustainedDPSGeneratedAxisPipelineState,
 )
 from services.extreme_sustained_dps_generated_frontier_wiring_service import (
     ExtremeSustainedDPSGeneratedFrontierWiringService,
@@ -761,4 +762,39 @@ def test_pipeline_root_rejects_boolean_laundering(field, value, message) -> None
             snapshot_resolver="resolver",
             target_identity="boss",
             **values,
+        )
+
+
+
+def test_pipeline_terminal_complete_rejects_truthy_non_boolean_flag() -> None:
+    state = ExtremeSustainedDPSGeneratedAxisPipelineState(
+        gear=object(),
+        candidate_id_prefix="strict",
+        duration_seconds=10.0,
+        potion_cooldown_seconds=45.0,
+        potion_cooldown_resolver=None,
+        potion_cooldown_scenario=None,
+        starting_ultimate=0.0,
+        ultimate_generation_events=(),
+        heroism_windows=(),
+        use_scheduled_combat_attacks_for_ultimate=False,
+        priorities=object(),
+        snapshot_resolver=object(),
+        target_identity="boss",
+        duration_rules=(),
+        heavy_attack_windows=(),
+        heavy_attack_channel_blocks=(),
+        heavy_attack_channel_block_denominator_proven=True,
+        runtime=SimpleNamespace(complete="false"),
+    )
+
+    with pytest.raises(TypeError, match="terminal complete flag must be boolean"):
+        _ = state.complete
+
+
+def test_pipeline_structural_index_rejects_boolean() -> None:
+    with pytest.raises(TypeError, match="structural index must be an integer"):
+        ExtremeSustainedDPSGeneratedAxisPipelineService._structural_index(
+            SimpleNamespace(structural_index=True),
+            "plan",
         )
