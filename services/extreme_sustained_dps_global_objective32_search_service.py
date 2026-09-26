@@ -67,7 +67,10 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
             raise TypeError("global Objective #32 result requires canonical blocker report")
         if not isinstance(self.supplemental_evidence, tuple):
             raise TypeError("global Objective #32 result supplemental_evidence must be a tuple")
-        if self.axis_coverage.candidate_key != self.scope_proof.root_candidate_key if self.scope_proof is not None else False:
+        if (
+            self.scope_proof is not None
+            and self.axis_coverage.candidate_key != self.scope_proof.root_candidate_key
+        ):
             raise ValueError(
                 "global Objective #32 result coverage candidate key must match scope proof root"
             )
