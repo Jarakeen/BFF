@@ -41,13 +41,21 @@ class ExtremeSustainedDPSIndexedWholePlanAdapter(Generic[T]):
     _resolver: Callable[[int], T]
 
     def __post_init__(self) -> None:
-        count = int(self.choice_count)
-        if count < 0:
+        if not isinstance(self.axes, tuple):
+            raise TypeError("indexed whole-plan adapter axes must be a tuple")
+        if isinstance(self.choice_count, bool) or not isinstance(self.choice_count, int):
+            raise TypeError("indexed whole-plan adapter choice_count must be an integer")
+        if self.choice_count < 0:
             raise ValueError("indexed whole-plan adapter choice_count cannot be negative")
-        object.__setattr__(self, "choice_count", count)
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("indexed whole-plan adapter denominator_proven must be boolean")
+        if not isinstance(self.omitted_scope, tuple):
+            raise TypeError("indexed whole-plan adapter omitted_scope must be a tuple")
 
     def choice_at(self, index: int) -> T:
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("indexed whole-plan adapter choice index must be an integer")
+        target = index
         if target < 0 or target >= self.choice_count:
             raise IndexError("indexed whole-plan adapter choice index out of range")
         return self._resolver(target)
