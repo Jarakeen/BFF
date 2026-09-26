@@ -114,3 +114,11 @@ def test_empty_armor_frontier_is_unproven() -> None:
     assert result.denominator_proven is False
     assert result.candidate_count == 1
     assert result.unresolved
+
+
+def test_armor_trait_enchant_frontier_rejects_boolean_candidate_index() -> None:
+    with pytest.raises(TypeError, match="candidate index must be an integer"):
+        ExtremeSustainedDPSArmorTraitEnchantFrontierService.candidate_at(
+            _build(),
+            True,
+        )
