@@ -51,6 +51,7 @@ from widgets.capability_editor import CapabilityEditor
 from widgets.performance_dashboard import PerformanceDashboard
 from widgets.top_team_card import TopTeamCard
 from widgets.esologs_trending_card import EsoLogsTrendingCard
+from widgets.support_gear_reference import SupportGearReferenceWidget
 from widgets.build_dashboard import BuildDashboard
 
 from models.capability_model import CapabilityRoster, CapabilityProfile
@@ -191,6 +192,12 @@ class CapabilitiesPage(FoundryPage):
             QSizePolicy.Policy.Expanding,
         )
 
+        self.support_gear_reference = SupportGearReferenceWidget()
+        self.support_gear_reference.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+
         #
         # Tab strip
         #
@@ -298,6 +305,7 @@ class CapabilitiesPage(FoundryPage):
         self.desk_tabs.setDrawBase(True)
         self.desk_tabs.addTab("Ranked Team Builds")
         self.desk_tabs.addTab("ESO Logs Trending")
+        self.desk_tabs.addTab("Support Gear")
         self.desk_tabs.addTab("Performance Dashboard")
         self.desk_tabs.currentChanged.connect(self._select_desk_tab)
 
@@ -307,7 +315,9 @@ class CapabilitiesPage(FoundryPage):
 
         self.desk_stack.addWidget(self.trending_card)  # index 1: ESO Logs Trending
 
-        self.desk_stack.addWidget(self.performance_member_column)  # index 2: Performance Dashboard
+        self.desk_stack.addWidget(self.support_gear_reference)  # index 2: Support Gear
+
+        self.desk_stack.addWidget(self.performance_member_column)  # index 3: Performance Dashboard
 
         desk_container = QWidget()
 
