@@ -102,6 +102,15 @@ class ExtremeSustainedDPSObjective32SearchService:
         closure_inventory: object | None = None,
         omitted_scope: tuple[str, ...] = (),
     ) -> ExtremeSustainedDPSObjective32SearchResult:
+        if not isinstance(coverage_proofs, tuple):
+            raise TypeError("Objective #32 coverage_proofs must be a tuple")
+        if any(not isinstance(proof, ExtremeSustainedDPSAxisCoverageProof) for proof in coverage_proofs):
+            raise TypeError("Objective #32 coverage_proofs must contain canonical axis coverage proofs")
+        if not isinstance(scope_proof, ExtremeSustainedDPSObjective32SearchScopeProof):
+            raise TypeError("Objective #32 search requires canonical scope proof")
+        if not isinstance(omitted_scope, tuple):
+            raise TypeError("Objective #32 omitted_scope must be a tuple")
+
         search = self.pipeline_search.search(
             root_state,
             required_duration_seconds=float(required_duration_seconds),
