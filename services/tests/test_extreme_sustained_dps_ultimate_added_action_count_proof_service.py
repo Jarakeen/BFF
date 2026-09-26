@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.extreme_sustained_dps_rotation_policy_frontier_service import (
     ExtremeSustainedDPSPotionTimingPolicy,
@@ -122,3 +124,30 @@ def test_only_selected_bar_ultimate_actions_are_counted() -> None:
 
     assert result.maximum_additional_damage_actions == 1
     assert result.proof.complete is True
+
+
+
+def test_truthy_non_boolean_resource_legality_does_not_prove_policy() -> None:
+    policy = _candidate(option="front", cast_times=(5.0,))
+    object.__setattr__(
+        policy,
+        "resource_legality",
+        SimpleNamespace(is_legal="false", unresolved=()),
+    )
+
+    result = ExtremeSustainedDPSUltimateAddedActionCountProofService.prove(policy)
+
+    assert result.proof.complete is False
+    assert any("legality flag is not boolean" in row for row in result.unresolved)
+
+
+def test_resource_legality_requires_tuple_unresolved_evidence() -> None:
+    policy = _candidate(option="front", cast_times=(5.0,))
+    object.__setattr__(
+        policy,
+        "resource_legality",
+        SimpleNamespace(is_legal=True, unresolved=["mutable"]),
+    )
+
+    with pytest.raises(TypeError, match="unresolved evidence must be a tuple"):
+        ExtremeSustainedDPSUltimateAddedActionCountProofService.prove(policy)
