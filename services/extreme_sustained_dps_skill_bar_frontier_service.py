@@ -258,11 +258,15 @@ class ExtremeSustainedDPSSkillBarFrontierService:
         if database_path is None and skill_rows is None:
             raise ValueError("database_path or skill_rows is required")
         self.database_path = Path(database_path) if database_path is not None else None
+        if skill_rows is not None and not isinstance(skill_rows, tuple):
+            raise TypeError("generated skill rows must be a tuple")
         self.skill_rows = (
-            tuple(skill_rows)
+            skill_rows
             if skill_rows is not None
             else tuple(load_skill_choices(self.database_path))  # type: ignore[arg-type]
         )
+        if any(not isinstance(row, dict) for row in self.skill_rows):
+            raise TypeError("generated skill rows must contain mapping records")
 
     @staticmethod
     def _shared_line_owned(
@@ -524,8 +528,12 @@ class ExtremeSustainedDPSSkillBarFrontierService:
             back_context=back_context,
             one_bar_only=one_bar_only,
         )
-        start = max(0, int(offset))
-        size = max(0, int(limit))
+        if isinstance(offset, bool) or not isinstance(offset, int):
+            raise TypeError("skill-bar page offset must be an integer")
+        if isinstance(limit, bool) or not isinstance(limit, int):
+            raise TypeError("skill-bar page limit must be an integer")
+        start = max(0, offset)
+        size = max(0, limit)
         if size == 0 or start >= frontier.candidate_count:
             return ()
         return tuple(
