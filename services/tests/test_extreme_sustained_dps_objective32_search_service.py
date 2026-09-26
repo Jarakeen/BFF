@@ -266,3 +266,42 @@ def test_scope_proof_requires_strict_boolean_equivalence_flag() -> None:
             coverage_matches_search_denominator="false",
             source="malformed proof fixture",
         )
+
+
+def test_objective32_wrapper_rejects_non_tuple_coverage_proofs_before_search() -> None:
+    pipeline = _PipelineSearch(_search_result())
+    service = ExtremeSustainedDPSObjective32SearchService(pipeline_search=pipeline)
+    with pytest.raises(TypeError, match="coverage_proofs must be a tuple"):
+        service.search(
+            "root",
+            coverage_proofs=[_proof_without_runtime()],  # type: ignore[arg-type]
+            scope_proof=ExtremeSustainedDPSObjective32SearchScopeProof(
+                root_candidate_key="generated-root",
+                coverage_matches_search_denominator=True,
+            ),
+            required_duration_seconds=20.0,
+            runtime_snapshot="fallback",
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+        )
+    assert pipeline.calls == []
+
+
+def test_objective32_wrapper_rejects_duck_typed_scope_proof_before_search() -> None:
+    pipeline = _PipelineSearch(_search_result())
+    service = ExtremeSustainedDPSObjective32SearchService(pipeline_search=pipeline)
+    malformed = SimpleNamespace(
+        root_candidate_key="generated-root",
+        coverage_matches_search_denominator=True,
+    )
+    with pytest.raises(TypeError, match="canonical scope proof"):
+        service.search(
+            "root",
+            coverage_proofs=(_proof_without_runtime(),),
+            scope_proof=malformed,  # type: ignore[arg-type]
+            required_duration_seconds=20.0,
+            runtime_snapshot="fallback",
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+        )
+    assert pipeline.calls == []
