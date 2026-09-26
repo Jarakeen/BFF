@@ -346,3 +346,77 @@ def test_enchantment_cooldown_policy_rejects_boolean_duration() -> None:
             cooldown_seconds=True,
             authoritative=True,
         )
+
+
+def test_enchantment_sequence_builder_requires_tuple_collections() -> None:
+    effect = _effect("Main Enchant", "main_hand")
+    policy = _policy(effect, "main")
+
+    with pytest.raises(TypeError, match="events must be a tuple"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService().build(
+            events=[_event(1.0)],  # type: ignore[arg-type]
+            effects=(effect,),
+            policies=(policy,),
+            event_denominator_proven=True,
+            source="strict",
+        )
+
+    with pytest.raises(TypeError, match="effects must be a tuple"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService().build(
+            events=(_event(1.0),),
+            effects=[effect],  # type: ignore[arg-type]
+            policies=(policy,),
+            event_denominator_proven=True,
+            source="strict",
+        )
+
+    with pytest.raises(TypeError, match="policies must be a tuple"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService().build(
+            events=(_event(1.0),),
+            effects=(effect,),
+            policies=[policy],  # type: ignore[arg-type]
+            event_denominator_proven=True,
+            source="strict",
+        )
+
+
+def test_enchantment_sequence_builder_requires_string_source() -> None:
+    effect = _effect("Main Enchant", "main_hand")
+    with pytest.raises(TypeError, match="sequence source must be a string"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceFrontierService().build(
+            events=(_event(1.0),),
+            effects=(effect,),
+            policies=(_policy(effect, "main"),),
+            event_denominator_proven=True,
+            source=7,  # type: ignore[arg-type]
+        )
+
+
+def test_enchantment_cooldown_policy_requires_string_identity_and_strict_number() -> None:
+    effect = _effect("Main Enchant", "main_hand")
+
+    with pytest.raises(TypeError, match="cooldown_identity must be a string"):
+        ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy(
+            effect=effect,
+            cooldown_identity=7,  # type: ignore[arg-type]
+            cooldown_seconds=4.0,
+            authoritative=True,
+        )
+
+    with pytest.raises(TypeError, match="cooldown_seconds must be numeric"):
+        ExtremeSustainedDPSWeaponEnchantmentCooldownPolicy(
+            effect=effect,
+            cooldown_identity="main",
+            cooldown_seconds="4",  # type: ignore[arg-type]
+            authoritative=True,
+        )
+
+
+def test_enchantment_sequence_choice_requires_tuple_last_activation_rows() -> None:
+    with pytest.raises(TypeError, match="last activation rows must be"):
+        ExtremeSustainedDPSWeaponEnchantmentSequenceChoice(
+            choice_id="choice",
+            attempts=(),
+            no_proc_events=(),
+            last_activation_times=(["main", 1.0],),  # type: ignore[list-item]
+        )
