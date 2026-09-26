@@ -166,3 +166,41 @@ def test_pruning_result_rejects_count_drift() -> None:
             forced_open_count=0,
             evidence=(),
         )
+
+
+def test_pruning_rejects_mutable_bound_denominator() -> None:
+    with pytest.raises(TypeError, match="pruning bounds must be a tuple"):
+        ExtremeSustainedDPSPruningService.prune(
+            [_bound("A", 100.0)],  # type: ignore[arg-type]
+            incumbent_dps=120.0,
+        )
+
+
+def test_pruning_rejects_duck_typed_bound_evidence() -> None:
+    malformed = type(
+        "Bound",
+        (),
+        {
+            "candidate_key": "A",
+            "upper_bound_dps": 100.0,
+            "proven_safe": True,
+            "source": "duck",
+            "unresolved": (),
+        },
+    )()
+    with pytest.raises(TypeError, match="canonical bound evidence"):
+        ExtremeSustainedDPSPruningService.prune(
+            (malformed,),  # type: ignore[arg-type]
+            incumbent_dps=120.0,
+        )
+
+
+def test_bound_evidence_rejects_mutable_unresolved_collection() -> None:
+    with pytest.raises(TypeError, match="bound unresolved must be a tuple"):
+        ExtremeSustainedDPSBoundEvidence(
+            candidate_key="A",
+            upper_bound_dps=None,
+            proven_safe=False,
+            source="test",
+            unresolved=[],  # type: ignore[arg-type]
+        )
