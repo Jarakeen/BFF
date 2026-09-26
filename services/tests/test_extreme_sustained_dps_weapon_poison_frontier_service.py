@@ -1,3 +1,5 @@
+import pytest
+
 from types import SimpleNamespace
 
 from minmax.alchemy_formula_catalog import AlchemyFormula
@@ -126,3 +128,24 @@ def test_poison_frontier_requires_at_least_one_canonical_formula() -> None:
         "has no selectable formulas" in row
         for row in result.unresolved
     )
+
+
+def test_weapon_poison_frontier_rejects_boolean_candidate_index() -> None:
+    service = ExtremeSustainedDPSWeaponPoisonFrontierService(
+        _Repository((_formula("Breach"),))
+    )
+
+    with pytest.raises(TypeError, match="candidate index must be an integer"):
+        service.candidate_at(PlayerBuild(), index=True)
+
+
+def test_weapon_poison_frontier_requires_strict_one_bar_only_flag() -> None:
+    service = ExtremeSustainedDPSWeaponPoisonFrontierService(
+        _Repository((_formula("Breach"),))
+    )
+
+    with pytest.raises(TypeError, match="one_bar_only must be boolean"):
+        service.frontier(one_bar_only=1)
+
+    with pytest.raises(TypeError, match="one_bar_only must be boolean"):
+        service.candidate_at(PlayerBuild(), index=0, one_bar_only="false")
