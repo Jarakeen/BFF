@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.runtime_effect_sequence import RuntimeEffectEventAttempt
 from minmax.runtime_event import RuntimeEvent
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
@@ -113,3 +115,47 @@ def test_invalid_history_choice_fails_entire_runtime_denominator_closed() -> Non
         "must not supply potion uses" in row
         for row in result.unresolved
     )
+
+
+def test_runtime_external_history_frontier_rejects_truthy_denominator_proof() -> None:
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        ExtremeSustainedDPSRuntimeExternalHistoryFrontierService().build(
+            plan=_plan(),
+            player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+            external_histories=(
+                ExtremeSustainedDPSRuntimeExternalHistoryChoice(
+                    "history:none",
+                    (),
+                ),
+            ),
+            denominator_proven="true",
+            source="invalid proof",
+        )
+
+
+def test_runtime_external_history_frontier_rejects_mutable_history_collection() -> None:
+    with pytest.raises(TypeError, match="external histories must be a tuple"):
+        ExtremeSustainedDPSRuntimeExternalHistoryFrontierService().build(
+            plan=_plan(),
+            player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+            external_histories=[],
+            denominator_proven=False,
+            source="invalid shape",
+        )
+
+
+def test_runtime_external_history_frontier_rejects_mutable_omitted_scope() -> None:
+    with pytest.raises(TypeError, match="omitted_scope must be a tuple"):
+        ExtremeSustainedDPSRuntimeExternalHistoryFrontierService().build(
+            plan=_plan(),
+            player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+            external_histories=(
+                ExtremeSustainedDPSRuntimeExternalHistoryChoice(
+                    "history:none",
+                    (),
+                ),
+            ),
+            denominator_proven=True,
+            source="invalid shape",
+            omitted_scope=["open"],
+        )
