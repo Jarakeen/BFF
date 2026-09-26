@@ -60,20 +60,24 @@ class _GlobalSearch:
         self.inventory_unresolved = tuple(inventory_unresolved)
 
     def axis_inventory(self, *, runtime_state_frontier=None):
-        return SimpleNamespace(
+        searched = tuple(
+            axis
+            for axis in CANONICAL_SUSTAINED_DPS_MUTATION_AXES
+            if axis not in set(self.missing_axes)
+        )
+        return ExtremeSustainedDPSGeneratedAxisInventory(
+            axis_names=searched,
+            searched_canonical_axes=searched,
             missing_canonical_axes=self.missing_axes,
-            unresolved=self.inventory_unresolved,
+            untagged_axis_names=(),
             duplicate_canonical_axes=(),
             omitted_scope=(
                 tuple(getattr(runtime_state_frontier, "omitted_scope", ()) or ())
                 if runtime_state_frontier is not None
                 else ()
             ),
-            searched_canonical_axes=tuple(
-                axis
-                for axis in CANONICAL_SUSTAINED_DPS_MUTATION_AXES
-                if axis not in set(self.missing_axes)
-            ),
+            evidence=(),
+            unresolved=self.inventory_unresolved,
         )
 
     def search(self, **kwargs):
@@ -640,9 +644,21 @@ def test_global_objective32_rejects_duck_typed_scope_proof_before_search() -> No
 
 
 
+
+
 def test_global_result_requires_canonical_axis_inventory() -> None:
+    class _NonCanonicalInventorySearch(_GlobalSearch):
+        def axis_inventory(self, *, runtime_state_frontier=None):
+            return SimpleNamespace(
+                missing_canonical_axes=(),
+                unresolved=(),
+                duplicate_canonical_axes=(),
+                omitted_scope=(),
+                searched_canonical_axes=CANONICAL_SUSTAINED_DPS_MUTATION_AXES,
+            )
+
     service = ExtremeSustainedDPSGlobalObjective32SearchService(
-        global_search=_GlobalSearch(_search_result()),
+        global_search=_NonCanonicalInventorySearch(_search_result()),
     )
     with pytest.raises(TypeError, match="canonical generated axis inventory"):
         service.search(
