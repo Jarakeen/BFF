@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
+import pytest
+
 from services.extreme_sustained_dps_axis_dominance_composition_service import (
     CANONICAL_SUSTAINED_DPS_MUTATION_AXES,
     ExtremeSustainedDPSAxisCoverageProof,
@@ -10,6 +14,7 @@ from services.extreme_sustained_dps_generated_branch_and_bound_search_service im
     ExtremeSustainedDPSGeneratedSearchResult,
 )
 from services.extreme_sustained_dps_theoretical_maximum_closure_service import (
+    ExtremeSustainedDPSTheoreticalMaximumClosure,
     ExtremeSustainedDPSTheoreticalMaximumClosureService,
 )
 
@@ -269,3 +274,28 @@ def test_theoretical_closure_rejects_non_tuple_manual_omitted_scope() -> None:
         assert "omitted_scope must be a tuple" in str(exc)
     else:
         raise AssertionError("non-tuple omitted scope must fail closed")
+
+
+
+def test_theoretical_closure_rejects_truthy_non_boolean_search_proof() -> None:
+    malformed = replace(_search(), global_maximum_proven="false")
+
+    with pytest.raises(TypeError, match="boolean global_maximum_proven"):
+        ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+            malformed,
+            axis_coverage=_coverage(),
+        )
+
+
+def test_theoretical_closure_record_requires_strict_proof_fields() -> None:
+    with pytest.raises(TypeError, match="theoretical_maximum_proven must be boolean"):
+        ExtremeSustainedDPSTheoreticalMaximumClosure(
+            finite_denominator_maximum_proven=True,
+            canonical_axis_coverage_complete=True,
+            mechanics_closure_complete=True,
+            omitted_scope=(),
+            theoretical_maximum_proven="false",
+            best_modeled_dps=150.0,
+            evidence=(),
+            unresolved=(),
+        )
