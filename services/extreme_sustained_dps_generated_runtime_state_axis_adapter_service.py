@@ -24,10 +24,10 @@ class ExtremeSustainedDPSGeneratedRuntimeStateLeaf:
 
     @property
     def complete(self) -> bool:
-        return bool(
-            getattr(self.pipeline_state, "complete", False)
-            and not self.runtime_state_choice.unresolved
-        )
+        upstream_complete = getattr(self.pipeline_state, "complete", False)
+        if not isinstance(upstream_complete, bool):
+            raise TypeError("upstream generated pipeline complete flag must be boolean")
+        return upstream_complete and not self.runtime_state_choice.unresolved
 
     def __getattr__(self, name: str):
         return getattr(self.pipeline_state, name)
@@ -38,6 +38,8 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
 
     @staticmethod
     def _validate(frontier: ExtremeSustainedDPSRuntimeStateFrontier) -> None:
+        if not isinstance(frontier, ExtremeSustainedDPSRuntimeStateFrontier):
+            raise TypeError("runtime-state axis requires a canonical runtime-state frontier")
         if not frontier.denominator_proven:
             raise ValueError(
                 "generated runtime-state axis requires a proven local denominator"
@@ -63,14 +65,20 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
         cls._validate(frontier)
 
         def candidate_count(state: object) -> int:
-            if not bool(getattr(state, "complete", False)):
+            complete = getattr(state, "complete", False)
+            if not isinstance(complete, bool):
+                raise TypeError("upstream generated pipeline complete flag must be boolean")
+            if not complete:
                 raise ValueError(
                     "runtime-state axis requires a complete upstream generated pipeline state"
                 )
             return int(frontier.candidate_count)
 
         def candidate_at(state: object, index: int):
-            if not bool(getattr(state, "complete", False)):
+            complete = getattr(state, "complete", False)
+            if not isinstance(complete, bool):
+                raise TypeError("upstream generated pipeline complete flag must be boolean")
+            if not complete:
                 raise ValueError(
                     "runtime-state axis requires a complete upstream generated pipeline state"
                 )
@@ -127,14 +135,20 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
             return frontier
 
         def candidate_count(state: object) -> int:
-            if not bool(getattr(state, "complete", False)):
+            complete = getattr(state, "complete", False)
+            if not isinstance(complete, bool):
+                raise TypeError("upstream generated pipeline complete flag must be boolean")
+            if not complete:
                 raise ValueError(
                     "candidate runtime-state axis requires a complete upstream generated pipeline state"
                 )
             return int(resolve_frontier(state).candidate_count)
 
         def candidate_at(state: object, index: int):
-            if not bool(getattr(state, "complete", False)):
+            complete = getattr(state, "complete", False)
+            if not isinstance(complete, bool):
+                raise TypeError("upstream generated pipeline complete flag must be boolean")
+            if not complete:
                 raise ValueError(
                     "candidate runtime-state axis requires a complete upstream generated pipeline state"
                 )
