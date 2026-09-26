@@ -20,7 +20,32 @@ def test_bridge_ignores_empty_legacy_builds_in_canonical_catalog(tmp_path: Path)
 
     bridge.catalog_service.save({
         "schema_version": 2,
-        "characters": [],
+        "characters": [
+            {
+                "character_id": "magrat",
+                "name": "Magrat",
+                "gamertag": "Jarakeen",
+                "eso_class": "Warden",
+                "race": "Breton",
+                "role": "Healer",
+                "alliance": "",
+                "vampire": False,
+                "werewolf": False,
+                "owned_skill_lines": [],
+            },
+            {
+                "character_id": "ghost",
+                "name": "",
+                "gamertag": "",
+                "eso_class": "",
+                "race": "",
+                "role": "",
+                "alliance": "",
+                "vampire": False,
+                "werewolf": False,
+                "owned_skill_lines": [],
+            },
+        ],
         "builds": [
             {"build_id": "real", "character_id": "magrat", "name": "DF Healer", "legacy": real.to_dict()},
             {"build_id": "blank", "character_id": "ghost", "name": "", "legacy": blank.to_dict()},
