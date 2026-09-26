@@ -398,3 +398,16 @@ def test_complete_heavy_attack_discovery_rejects_truthy_non_boolean_denominator(
 
     with pytest.raises(TypeError, match="discovery denominator proof flag must be boolean"):
         adapter.axes()[1].candidate_count(state)
+
+
+def test_generated_runtime_policy_axes_reject_boolean_indices() -> None:
+    adapter = _adapter()
+    axes = adapter.axes()
+    state = _root(adapter)
+
+    with pytest.raises(TypeError, match="execute policy candidate index must be an integer"):
+        axes[0].candidate_at(state, True)
+
+    state = axes[0].candidate_at(state, 0)
+    with pytest.raises(TypeError, match="Heavy Attack policy candidate index must be an integer"):
+        axes[1].candidate_at(state, False)
