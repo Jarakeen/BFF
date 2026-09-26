@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from services.extreme_sustained_dps_potion_resource_observation_frontier_service import (
     ExtremeSustainedDPSPotionResourceObservationFrontierService,
@@ -82,3 +84,40 @@ def test_extra_heavy_completion_evidence_fails_closed() -> None:
 
     assert result.denominator_proven is False
     assert any("no matching scheduled heavy" in row for row in result.unresolved)
+
+
+def test_resource_observation_requires_strict_boolean_denominator_proof() -> None:
+    with pytest.raises(
+        TypeError,
+        match="additional_resource_event_denominator_proven must be boolean",
+    ):
+        ExtremeSustainedDPSPotionResourceObservationFrontierService.collect(
+            plan=_plan(),
+            additional_resource_event_denominator_proven="false",  # type: ignore[arg-type]
+        )
+
+
+def test_resource_observation_requires_tuple_collections() -> None:
+    with pytest.raises(TypeError, match="heavy_attack_completion_evidence must be a tuple"):
+        ExtremeSustainedDPSPotionResourceObservationFrontierService.collect(
+            plan=_plan(),
+            heavy_attack_completion_evidence=[_heavy()],  # type: ignore[arg-type]
+            additional_resource_event_denominator_proven=True,
+        )
+
+    with pytest.raises(TypeError, match="additional_resource_event_times must be a tuple"):
+        ExtremeSustainedDPSPotionResourceObservationFrontierService.collect(
+            plan=_plan(),
+            additional_resource_event_times=[3.5],  # type: ignore[arg-type]
+            additional_resource_event_denominator_proven=True,
+        )
+
+
+@pytest.mark.parametrize("value", (True, "3.5", None))
+def test_resource_observation_rejects_coerced_additional_times(value) -> None:
+    with pytest.raises(TypeError, match="observation times must be numeric"):
+        ExtremeSustainedDPSPotionResourceObservationFrontierService.collect(
+            plan=_plan(),
+            additional_resource_event_times=(value,),  # type: ignore[arg-type]
+            additional_resource_event_denominator_proven=True,
+        )
