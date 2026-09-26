@@ -59,7 +59,7 @@ def test_assignment_write_rejects_oversized_value_before_mutation(tmp_path) -> N
     with pytest.raises(ValueError, match="Pydantic validation"):
         service.set_member_assignment_field(member_id, "notes", "x" * 12001)
 
-    assignments = service.get_member_assignment_fields(member_id)
+    assignments = service.get_member_assignment(member_id)
     assert assignments["notes"] == ""
 
 
