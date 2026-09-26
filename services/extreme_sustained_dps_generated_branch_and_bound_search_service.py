@@ -87,12 +87,9 @@ class ExtremeSustainedDPSExactLeafEvaluation:
 
         modeled = self.modeled_dps
         if modeled is not None:
-            if isinstance(modeled, bool):
+            if isinstance(modeled, bool) or not isinstance(modeled, (int, float)):
                 raise TypeError("exact sustained-DPS leaf modeled_dps must be numeric")
-            try:
-                modeled = float(modeled)
-            except (TypeError, ValueError):
-                raise TypeError("exact sustained-DPS leaf modeled_dps must be numeric") from None
+            modeled = float(modeled)
             if not math.isfinite(modeled) or modeled < 0.0:
                 raise ValueError(
                     "exact sustained-DPS leaf modeled_dps must be finite and non-negative"
@@ -100,12 +97,9 @@ class ExtremeSustainedDPSExactLeafEvaluation:
 
         duration = self.duration_seconds
         if duration is not None:
-            if isinstance(duration, bool):
+            if isinstance(duration, bool) or not isinstance(duration, (int, float)):
                 raise TypeError("exact sustained-DPS leaf duration must be numeric")
-            try:
-                duration = float(duration)
-            except (TypeError, ValueError):
-                raise TypeError("exact sustained-DPS leaf duration must be numeric") from None
+            duration = float(duration)
             if not math.isfinite(duration) or duration <= 0.0:
                 raise ValueError(
                     "exact sustained-DPS leaf duration must be finite and positive"
@@ -234,14 +228,9 @@ class ExtremeSustainedDPSGeneratedSearchResult:
 
         best = self.best_modeled_dps
         if best is not None:
-            if isinstance(best, bool):
+            if isinstance(best, bool) or not isinstance(best, (int, float)):
                 raise TypeError("generated search result best_modeled_dps must be numeric")
-            try:
-                best = float(best)
-            except (TypeError, ValueError):
-                raise TypeError(
-                    "generated search result best_modeled_dps must be numeric"
-                ) from None
+            best = float(best)
             if not math.isfinite(best) or best < 0.0:
                 raise ValueError(
                     "generated search result best_modeled_dps must be finite and non-negative"
@@ -340,12 +329,12 @@ class ExtremeSustainedDPSGeneratedBranchAndBoundSearchService:
         evaluate_leaf: ExtremeSustainedDPSLeafEvaluator,
         required_duration_seconds: float,
     ) -> ExtremeSustainedDPSGeneratedSearchResult:
-        if isinstance(required_duration_seconds, bool):
+        if isinstance(required_duration_seconds, bool) or not isinstance(
+            required_duration_seconds,
+            (int, float),
+        ):
             raise TypeError("generated sustained-DPS search duration must be numeric")
-        try:
-            duration = float(required_duration_seconds)
-        except (TypeError, ValueError):
-            raise TypeError("generated sustained-DPS search duration must be numeric") from None
+        duration = float(required_duration_seconds)
         if not math.isfinite(duration) or duration <= 0.0:
             raise ValueError(
                 "generated sustained-DPS search duration must be finite and positive"
