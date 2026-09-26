@@ -29,12 +29,21 @@ class ExtremeSustainedDPSDamageActionCountProof:
     unresolved: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if not isinstance(self.proven_safe, bool):
+            raise TypeError("maximum damage-action count proven_safe must be boolean")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("maximum damage-action count unresolved must be a tuple")
+        source = str(self.source or "").strip()
+        if not source:
+            raise ValueError("maximum damage-action count proof requires source")
         if self.maximum_damage_action_count is not None:
-            count = int(self.maximum_damage_action_count)
+            if isinstance(self.maximum_damage_action_count, bool) or not isinstance(self.maximum_damage_action_count, int):
+                raise TypeError("maximum damage-action count must be an integer")
+            count = self.maximum_damage_action_count
             if count < 0:
                 raise ValueError("maximum damage-action count cannot be negative")
             object.__setattr__(self, "maximum_damage_action_count", count)
-        object.__setattr__(self, "source", str(self.source or "").strip())
+        object.__setattr__(self, "source", source)
         object.__setattr__(
             self,
             "unresolved",
@@ -65,14 +74,25 @@ class ExtremeSustainedDPSAbsoluteActionDamageCeiling:
     unresolved: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if not isinstance(self.proven_safe, bool):
+            raise TypeError("absolute action damage proven_safe must be boolean")
+        if not isinstance(self.covers_periodic_and_triggered, bool):
+            raise TypeError("absolute action damage covers_periodic_and_triggered must be boolean")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("absolute action damage unresolved must be a tuple")
+        source = str(self.source or "").strip()
+        if not source:
+            raise ValueError("absolute action damage ceiling requires source")
         if self.upper_bound_damage is not None:
+            if isinstance(self.upper_bound_damage, bool):
+                raise TypeError("absolute action damage ceiling must be numeric")
             value = float(self.upper_bound_damage)
             if not isfinite(value) or value < 0.0:
                 raise ValueError(
                     "absolute action damage ceiling must be finite and non-negative"
                 )
             object.__setattr__(self, "upper_bound_damage", value)
-        object.__setattr__(self, "source", str(self.source or "").strip())
+        object.__setattr__(self, "source", source)
         object.__setattr__(
             self,
             "unresolved",
@@ -121,6 +141,12 @@ class ExtremeSustainedDPSStructuralActionUpperBoundService:
         key = str(candidate_key or "").strip()
         if not key:
             raise ValueError("structural action ceiling requires candidate_key")
+        if not isinstance(action_count, ExtremeSustainedDPSDamageActionCountProof):
+            raise TypeError("structural action ceiling requires canonical action-count proof")
+        if not isinstance(action_damage, ExtremeSustainedDPSAbsoluteActionDamageCeiling):
+            raise TypeError("structural action ceiling requires canonical action-damage proof")
+        if isinstance(duration_seconds, bool):
+            raise TypeError("structural action ceiling duration must be numeric")
 
         duration = float(duration_seconds)
         if not isfinite(duration) or duration <= 0.0:
