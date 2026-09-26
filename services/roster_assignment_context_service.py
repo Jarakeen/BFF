@@ -9,6 +9,11 @@ optional per-encounter overrides without duplicating the member or build.
 
 from services.eso_database import EsoDatabase
 from services.roster_service import RosterService
+from services.personnel_pydantic_schema import (
+    ValidationError as PersonnelValidationError,
+    validate_personnel_assignment_payload,
+    validate_team_identity_payload,
+)
 from services.user_database import user_database_for
 
 
@@ -185,11 +190,20 @@ class RosterAssignmentContextService:
     ) -> None:
         if field not in _ASSIGNMENT_FIELDS:
             raise ValueError(f"unsupported roster assignment field: {field}")
+        try:
+            assignment = validate_personnel_assignment_payload(
+                {"field": field, "value": value}
+            )
+            team = validate_team_identity_payload({"team_name": team_name})
+        except PersonnelValidationError as exc:
+            raise ValueError(
+                f"Roster assignment context failed Pydantic validation: {exc}"
+            ) from exc
         member_id = int(member_id)
         roster = RosterService(self.db)
         if roster.get_member(member_id) is None:
             raise ValueError(f"roster member {member_id} does not exist")
-        team_id = self._team_id(team_name, create=True)
+        team_id = self._team_id(team["team_name"], create=True)
         if team_id is None:
             raise ValueError("choose a team before editing assignments")
         encounter = self._clean(encounter_id)
@@ -207,7 +221,7 @@ class RosterAssignmentContextService:
             SET {field} = ?
             WHERE roster_member_id = ? AND team_id = ? AND encounter_id = ?
             """,
-            (self._clean(value), member_id, team_id, encounter),
+            (assignment["value"], member_id, team_id, encounter),
         )
         self.db.commit()
 
