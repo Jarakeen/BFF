@@ -70,14 +70,6 @@ class ExtremeSustainedDPSDualBarGearFrontierService:
 
         if not isinstance(branches, tuple):
             raise TypeError("gear topology branches must be a tuple")
-        if any(
-            not isinstance(branch, ExtremeSustainedDPSGearTopologyRealization)
-            for branch in branches
-        ):
-            raise TypeError(
-                "gear topology branches must contain canonical realization records"
-            )
-
         unresolved: list[str] = []
         by_index: dict[int, ExtremeSustainedDPSGearTopologyRealization] = {}
         for branch in branches:
