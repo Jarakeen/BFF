@@ -411,3 +411,24 @@ def test_generated_runtime_policy_axes_reject_boolean_indices() -> None:
     state = axes[0].candidate_at(state, 0)
     with pytest.raises(TypeError, match="Heavy Attack policy candidate index must be an integer"):
         axes[1].candidate_at(state, False)
+
+
+@pytest.mark.parametrize(
+    "field,value,message",
+    (
+        ("candidate_id", 7, "candidate_id must be a string"),
+        ("target_identity", 7, "target identity must be a string"),
+    ),
+)
+def test_runtime_policy_root_rejects_coerced_identity_inputs(field, value, message) -> None:
+    adapter = _adapter()
+    values = {
+        "candidate_id": "candidate",
+        "priorities": object(),
+        "snapshot_resolver": object(),
+        "target_identity": "boss",
+    }
+    values[field] = value
+
+    with pytest.raises(TypeError, match=message):
+        adapter.root(SimpleNamespace(plan="plan"), **values)
