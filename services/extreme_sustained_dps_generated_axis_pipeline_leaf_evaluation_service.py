@@ -150,6 +150,8 @@ class ExtremeSustainedDPSGeneratedAxisPipelineLeafEvaluationService:
                 (*node.evidence, *runtime_choice_evidence, *exact.evidence)
             ),
             unresolved=tuple(exact.unresolved),
+            relevance=getattr(state, "relevance", None),
+            scaling=getattr(state, "scaling", None),
         )
 
     def evaluator(
