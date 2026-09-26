@@ -303,10 +303,6 @@ class RosterService:
         member_id = int(member_id)
         if self.get_member(member_id) is None:
             raise ValueError(f"roster member {member_id} does not exist")
-        self.db.execute(
-            "INSERT OR IGNORE INTO roster_member_assignment (roster_member_id) VALUES (?)",
-            (member_id,),
-        )
         try:
             validated = validate_personnel_assignment_payload(
                 {"field": field, "value": value}
@@ -315,6 +311,10 @@ class RosterService:
             raise ValueError(
                 f"Personnel assignment save failed Pydantic validation: {exc}"
             ) from exc
+        self.db.execute(
+            "INSERT OR IGNORE INTO roster_member_assignment (roster_member_id) VALUES (?)",
+            (member_id,),
+        )
         self.db.execute(
             f"UPDATE roster_member_assignment SET {field} = ? WHERE roster_member_id = ?",
             (validated["value"], member_id),
