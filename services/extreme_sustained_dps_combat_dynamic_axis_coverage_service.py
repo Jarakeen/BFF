@@ -113,12 +113,18 @@ class ExtremeSustainedDPSCombatDynamicAxisCoverageService:
             frontier,
             "anchored_policy_denominator_proven",
         )
+        continuous_closed = getattr(frontier, "continuous_potion_timing_closed", None)
+        delayed_closed = getattr(frontier, "delayed_ultimate_timing_closed", None)
+        if not isinstance(continuous_closed, bool):
+            raise TypeError("combat dynamic frontier continuous_potion_timing_closed must be boolean")
+        if not isinstance(delayed_closed, bool):
+            raise TypeError("combat dynamic frontier delayed_ultimate_timing_closed must be boolean")
         omitted: list[str] = []
-        if not frontier.continuous_potion_timing_closed:
+        if not continuous_closed:
             omitted.append(
                 "continuous potion first-use offset is not closed by anchored policy coverage"
             )
-        if not frontier.delayed_ultimate_timing_closed:
+        if not delayed_closed:
             omitted.append(
                 "deliberate post-affordability Ultimate delay is not closed by anchored policy coverage"
             )
