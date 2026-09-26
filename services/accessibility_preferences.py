@@ -3,7 +3,11 @@ from __future__ import annotations
 """Persistent accessibility and display preferences owned by the local Foundry install."""
 
 import json
+import os
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+from services.settings_pydantic_schema import validate_accessibility_payload
 
 from engine.config import get_app_root
 
@@ -57,16 +61,32 @@ class AccessibilityPreferences:
             return {}
         try:
             payload = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError, TypeError):
-            return {}
-        return payload if isinstance(payload, dict) else {}
+            return validate_accessibility_payload(payload)
+        except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise RuntimeError(f"Accessibility preferences failed strict validation: {exc}") from exc
 
     def _write(self, payload: dict) -> None:
+        try:
+            persisted = validate_accessibility_payload(payload)
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError(f"Accessibility preferences failed strict validation: {exc}") from exc
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile("w", encoding="utf-8", dir=self.path.parent, prefix=f".{self.path.name}.", suffix=".tmp", delete=False) as handle:
+                temporary_path = Path(handle.name)
+                json.dump(persisted, handle, ensure_ascii=False, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+        read_back = validate_accessibility_payload(json.loads(self.path.read_text(encoding="utf-8")))
+        if read_back != persisted:
+            raise RuntimeError("Accessibility preferences did not round-trip exactly")
 
     def color_vision_mode(self) -> str:
         return COLOR_VISION_FRIENDLY
