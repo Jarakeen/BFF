@@ -298,3 +298,21 @@ def test_poison_tier_enabled_skill_assembly_requires_tier_selection() -> None:
 
     with pytest.raises(ValueError, match="optional poison/tier"):
         axes[5].candidate_at(state, 0)
+
+
+def test_truthy_non_boolean_late_axis_denominator_proof_fails_closed() -> None:
+    adapter = ExtremeSustainedDPSGeneratedLateAxisAdapterService(
+        champion_points=_FrontierService("cp"),
+        potions=_FrontierService("potion"),
+        passive_ranks=_FrontierService("passive"),
+        skill_bars=_FrontierService("skills"),
+        assembly=_Assembly,
+    )
+    adapter.champion_points.frontier = lambda *args, **kwargs: SimpleNamespace(
+        candidate_count=2,
+        denominator_proven="false",
+        unresolved=(),
+    )
+
+    with pytest.raises(TypeError, match="proof flag must be boolean"):
+        adapter.axes()[0].candidate_count(adapter.root(_context()))
