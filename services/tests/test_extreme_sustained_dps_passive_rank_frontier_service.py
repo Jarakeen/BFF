@@ -99,3 +99,17 @@ def test_passive_invalid_index_fails_closed() -> None:
             character_class="Warden",
             index=9,
         )
+
+
+def test_passive_rejects_boolean_candidate_index() -> None:
+    progression = CharacterProgression(
+        owned_skill_lines=("Fighters Guild",),
+        passive_ranks={},
+    )
+
+    with pytest.raises(TypeError, match="candidate index must be an integer"):
+        _service().candidate_at(
+            progression,
+            character_class="Warden",
+            index=True,
+        )
