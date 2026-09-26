@@ -81,24 +81,16 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
             raise ValueError(
                 "global Objective #32 closure axis-completion proof must match coverage proof"
             )
-        if self.closure.omitted_scope != tuple(
-            dict.fromkeys(
-                (
-                    *self.axis_coverage.omitted_scope,
-                    *self.axis_inventory.unresolved,
-                    *(
-                        (
-                            "Generated global search tree does not physically enumerate canonical axis(es): "
-                            + ", ".join(self.axis_inventory.missing_canonical_axes)
-                        ,)
-                        if self.axis_inventory.missing_canonical_axes
-                        else ()
-                    ),
-                )
-            )
+        if self.closure.theoretical_maximum_proven and (
+            self.axis_inventory.missing_canonical_axes
+            or self.axis_inventory.duplicate_canonical_axes
+            or self.axis_inventory.unresolved
+            or self.axis_coverage.missing_axes
+            or self.axis_coverage.unresolved
+            or self.axis_coverage.omitted_scope
         ):
             raise ValueError(
-                "global Objective #32 closure omitted scope must match axis inventory and coverage debt"
+                "global Objective #32 theoretical closure cannot coexist with axis inventory or coverage debt"
             )
         if (
             self.scope_proof is not None
