@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from services.extreme_sustained_dps_finite_whole_plan_dominance_service import (
     ExtremeSustainedDPSFiniteWholePlanDominanceService,
     ExtremeSustainedDPSWholePlanEvaluation,
@@ -139,3 +141,118 @@ def test_unproven_denominator_blocks_family_ceiling() -> None:
 
     assert result.bound.proven_safe is False
     assert any("not proven complete" in row for row in result.unresolved)
+
+
+def test_whole_plan_frontier_rejects_truthy_denominator_proof() -> None:
+    class _BadFrontier(_Frontier):
+        denominator_proven = "true"
+
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        ExtremeSustainedDPSFiniteWholePlanDominanceService.evaluate_indexed(
+            candidate_key="branch:strict-proof",
+            frontier=_BadFrontier(),
+            evaluator=_Evaluator(
+                {
+                    0: _row("r0", 100.0),
+                    1: _row("r1", 110.0),
+                    2: _row("r2", 120.0),
+                }
+            ),
+            required_duration_seconds=10.0,
+            source="strict whole-plan boundary",
+        )
+
+
+def test_whole_plan_frontier_rejects_boolean_choice_count() -> None:
+    class _BadFrontier(_Frontier):
+        choice_count = True
+
+    with pytest.raises(TypeError, match="choice_count must be an integer"):
+        ExtremeSustainedDPSFiniteWholePlanDominanceService.evaluate_indexed(
+            candidate_key="branch:strict-count",
+            frontier=_BadFrontier(),
+            evaluator=_Evaluator({0: _row("r0", 100.0)}),
+            required_duration_seconds=10.0,
+            source="strict whole-plan boundary",
+        )
+
+
+def test_whole_plan_frontier_rejects_non_tuple_axes_and_omitted_scope() -> None:
+    class _BadAxes(_Frontier):
+        axes = ["rotation_order"]
+
+    with pytest.raises(TypeError, match="axes must be a tuple"):
+        ExtremeSustainedDPSFiniteWholePlanDominanceService.evaluate_indexed(
+            candidate_key="branch:strict-axes",
+            frontier=_BadAxes(),
+            evaluator=_Evaluator(
+                {
+                    0: _row("r0", 100.0),
+                    1: _row("r1", 110.0),
+                    2: _row("r2", 120.0),
+                }
+            ),
+            required_duration_seconds=10.0,
+            source="strict whole-plan boundary",
+        )
+
+    class _BadOmitted(_Frontier):
+        omitted_scope = ["open"]
+
+    with pytest.raises(TypeError, match="omitted_scope must be a tuple"):
+        ExtremeSustainedDPSFiniteWholePlanDominanceService.evaluate_indexed(
+            candidate_key="branch:strict-omitted",
+            frontier=_BadOmitted(),
+            evaluator=_Evaluator(
+                {
+                    0: _row("r0", 100.0),
+                    1: _row("r1", 110.0),
+                    2: _row("r2", 120.0),
+                }
+            ),
+            required_duration_seconds=10.0,
+            source="strict whole-plan boundary",
+        )
+
+
+def test_whole_plan_duration_rejects_boolean() -> None:
+    with pytest.raises(TypeError, match="duration must be numeric"):
+        ExtremeSustainedDPSFiniteWholePlanDominanceService.evaluate_indexed(
+            candidate_key="branch:strict-duration",
+            frontier=_Frontier(),
+            evaluator=_Evaluator(
+                {
+                    0: _row("r0", 100.0),
+                    1: _row("r1", 110.0),
+                    2: _row("r2", 120.0),
+                }
+            ),
+            required_duration_seconds=True,
+            source="strict whole-plan boundary",
+        )
+
+
+def test_whole_plan_evaluation_requires_strict_mechanic_proof_and_numeric_fields() -> None:
+    with pytest.raises(TypeError, match="mechanic_complete must be boolean"):
+        ExtremeSustainedDPSWholePlanEvaluation(
+            choice_id="bad-proof",
+            modeled_dps=100.0,
+            duration_seconds=10.0,
+            mechanic_complete="true",
+        )
+
+    with pytest.raises(TypeError, match="modeled_dps must be numeric or None"):
+        ExtremeSustainedDPSWholePlanEvaluation(
+            choice_id="bad-score",
+            modeled_dps=True,
+            duration_seconds=10.0,
+            mechanic_complete=True,
+        )
+
+    with pytest.raises(TypeError, match="duration_seconds must be numeric or None"):
+        ExtremeSustainedDPSWholePlanEvaluation(
+            choice_id="bad-duration",
+            modeled_dps=100.0,
+            duration_seconds=False,
+            mechanic_complete=True,
+        )
