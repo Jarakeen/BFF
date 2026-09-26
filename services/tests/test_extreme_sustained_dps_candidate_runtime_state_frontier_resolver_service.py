@@ -7,6 +7,9 @@ import pytest
 from services.extreme_sustained_dps_candidate_runtime_state_frontier_resolver_service import (
     ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService,
 )
+from services.extreme_sustained_dps_runtime_scenario_frontier_service import (
+    ExtremeSustainedDPSRuntimeScenarioFrontierResult,
+)
 from services.extreme_sustained_dps_runtime_state_frontier_service import (
     ExtremeSustainedDPSRuntimeStateChoice,
     ExtremeSustainedDPSRuntimeStateFrontierService,
@@ -43,7 +46,7 @@ class _Scenario:
             denominator_proven=True,
             source=f"runtime family {candidate_id}",
         )
-        return SimpleNamespace(
+        return ExtremeSustainedDPSRuntimeScenarioFrontierResult(
             frontier=frontier,
             evidence=(f"scenario {candidate_id}",),
             unresolved=(),
@@ -175,3 +178,24 @@ def test_resolver_requires_scenario_build_from_candidate_contract() -> None:
         ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(
             scenario_frontier=object(),
         )
+
+
+def test_resolver_rejects_truthy_non_boolean_pipeline_complete_flag() -> None:
+    resolver = ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(
+        scenario_frontier=_Scenario(),
+    )
+    state = _state()
+    state.complete = "false"
+
+    with pytest.raises(TypeError, match="complete flag must be boolean"):
+        resolver.resolve(state)
+
+
+def test_resolver_rejects_mutable_supplemental_event_collection() -> None:
+    resolver = ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService(
+        scenario_frontier=_Scenario(),
+        supplemental_event_resolver=lambda _state: ["event"],
+    )
+
+    with pytest.raises(TypeError, match="supplemental events must be a tuple"):
+        resolver.resolve(_state())
