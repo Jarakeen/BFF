@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+from services.settings_pydantic_schema import validate_settings_payload
 
 from engine.config import get_user_database_path
 
@@ -146,22 +150,60 @@ class SettingsService:
             ),
         }
 
-    def save(self, settings: dict) -> None:
-        settings = dict(settings)
-        secret = settings.pop("EsoLogsClientSecret", "")
-        stored_in_keyring = self._save_secret(secret)
-        finch_api_key = settings.pop("FinchApiKey", "")
-        finch_stored_in_keyring = self._save_finch_api_key(finch_api_key)
-
-        if not stored_in_keyring:
-            settings["EsoLogsClientSecret"] = secret
-        if not finch_stored_in_keyring:
-            settings["FinchApiKey"] = finch_api_key
-
-        self.settings_path.write_text(
-            json.dumps(settings, ensure_ascii=False, indent=4),
-            encoding="utf-8",
+    def _atomic_write(self, payload: dict) -> None:
+        validated = validate_settings_payload(payload)
+        self.settings_path.parent.mkdir(parents=True, exist_ok=True)
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                dir=self.settings_path.parent,
+                prefix=f".{self.settings_path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                json.dump(validated, handle, ensure_ascii=False, indent=4)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.settings_path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+        read_back = validate_settings_payload(
+            json.loads(self.settings_path.read_text(encoding="utf-8"))
         )
+        if read_back != validated:
+            raise RuntimeError("Settings did not round-trip exactly")
+
+    def save(self, settings: dict) -> None:
+        intended = dict(settings)
+        secret = str(intended.pop("EsoLogsClientSecret", "") or "")
+        finch_api_key = str(intended.pop("FinchApiKey", "") or "")
+
+        # Validate before touching either disk or the OS credential vault.
+        validate_settings_payload(intended)
+
+        # Persist a safe non-secret snapshot first. A failed disk write therefore
+        # cannot leave keyring state ahead of settings.json.
+        self._atomic_write(intended)
+
+        stored_in_keyring = self._save_secret(secret)
+        finch_stored_in_keyring = self._save_finch_api_key(finch_api_key)
+        if stored_in_keyring and finch_stored_in_keyring:
+            return
+
+        # Keyring is optional. If either secret could not be stored there, keep
+        # only that secret in the local settings file as the historical fallback.
+        fallback = dict(intended)
+        if not stored_in_keyring:
+            fallback["EsoLogsClientSecret"] = secret
+        if not finch_stored_in_keyring:
+            fallback["FinchApiKey"] = finch_api_key
+        self._atomic_write(fallback)
 
     # --------------------------------------------------
     # ESO Logs Client Secret (keyring-backed)
