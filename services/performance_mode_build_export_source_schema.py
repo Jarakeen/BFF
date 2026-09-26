@@ -370,7 +370,14 @@ class PerformanceModeBuildExportSource(BaseModel):
             Notes=build.Notes,
             ContextVariants=tuple(
                 PerformanceModeVariantSource.from_variant(variant)
-                for variant in build.ContextVariants
+                for variant in (
+                    list(build.ContextVariants)
+                    if build.ContextVariants
+                    else [
+                        BuildContextVariant.from_boss_loadout(loadout)
+                        for loadout in build.BossLoadouts
+                    ]
+                )
             ),
             TransformedForm=build.TransformedForm,
             FrontBarPoison=build.FrontBarPoison,
