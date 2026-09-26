@@ -171,23 +171,37 @@ class ExtremeSustainedDPSGeneratedSearchResult:
             raise TypeError(
                 "generated search result best_candidates must contain exact leaf evaluations"
             )
-        if any(row not in self.evaluated_leaves for row in self.best_candidates):
+        evaluated_keys = tuple(row.candidate_key for row in self.evaluated_leaves)
+        if len(set(evaluated_keys)) != len(evaluated_keys):
             raise ValueError(
-                "generated search result best_candidates must come from evaluated_leaves"
+                "generated search result evaluated_leaves must have unique candidate keys"
+            )
+        best_keys = tuple(row.candidate_key for row in self.best_candidates)
+        if len(set(best_keys)) != len(best_keys):
+            raise ValueError(
+                "generated search result best_candidates must have unique candidate keys"
+            )
+        if any(key not in set(evaluated_keys) for key in best_keys):
+            raise ValueError(
+                "generated search result best_candidates must come from evaluated_leaves by candidate key"
             )
         if not isinstance(self.global_maximum_proven, bool):
             raise TypeError("generated search result global_maximum_proven must be boolean")
         if not isinstance(self.unique_leader_proven, bool):
             raise TypeError("generated search result unique_leader_proven must be boolean")
         if self.unique_leader_proven and (
-            not self.global_maximum_proven or self.unique_leader is None
+            not self.global_maximum_proven
+            or self.unique_leader is None
+            or len(self.best_candidates) != 1
         ):
             raise ValueError(
-                "generated search result unique leader proof requires proven global maximum and leader"
+                "generated search result unique leader proof requires proven global maximum and exactly one best candidate"
             )
-        if self.unique_leader is not None and self.unique_leader not in self.best_candidates:
+        if self.unique_leader is not None and (
+            self.unique_leader.candidate_key not in set(best_keys)
+        ):
             raise ValueError(
-                "generated search result unique_leader must be one of best_candidates"
+                "generated search result unique_leader must be one of best_candidates by candidate key"
             )
 
         best = self.best_modeled_dps
