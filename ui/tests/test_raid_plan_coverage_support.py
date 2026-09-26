@@ -218,3 +218,20 @@ def test_coverage_exposes_explicit_verified_save_action() -> None:
     assert "self.save_coverage_button.clicked.connect(self._save_coverage)" in source
     assert "def _save_coverage(self) -> None:" in source
     assert "Coverage providers changed during persistence verification" in source
+
+
+def test_coverage_exposes_pdf_export_of_reconciled_covered_rows() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert 'QPushButton("Export PDF")' in source
+    assert "self.export_coverage_pdf_button.clicked.connect(self._export_coverage_pdf)" in source
+    assert "def _export_coverage_pdf(self, *_args) -> None:" in source
+    assert "CoveragePDFRow(" in source
+    assert '"assigned_manual"' in source
+    assert '"assigned_supported"' in source
+    assert '"assigned_conditional"' in source
+    assert '"assigned_unproven"' in source
+    assert '"backup_only"' in source
+    assert '"unassigned_available"' in source
+    assert "manual_sources_by_effect" in source
+    assert "for row_index in range(self.table.rowCount())" in source
