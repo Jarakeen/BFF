@@ -214,3 +214,31 @@ def test_build_profile_pydantic_rejects_unknown_weight(tmp_path) -> None:
     import pytest
     with pytest.raises(ValueError, match="unknown armor weight"):
         service.update("build-1", armor_weight="Cardboard")
+
+
+def test_malformed_build_profile_json_fails_closed_without_overwrite(tmp_path) -> None:
+    import pytest
+
+    path = tmp_path / "build_profiles.json"
+    original = b'{"version": 1, "profiles": '
+    path.write_bytes(original)
+    service = BuildProfileService(path)
+
+    with pytest.raises(ValueError, match="invalid JSON"):
+        service.update("build-1", favorite=True)
+
+    assert path.read_bytes() == original
+
+
+def test_invalid_build_profile_store_fails_closed_without_overwrite(tmp_path) -> None:
+    import pytest
+
+    path = tmp_path / "build_profiles.json"
+    original = b'{"version": 1, "profiles": []}'
+    path.write_bytes(original)
+    service = BuildProfileService(path)
+
+    with pytest.raises(ValueError, match="Pydantic validation"):
+        service.put("build-1", BuildProfile(favorite=True))
+
+    assert path.read_bytes() == original
