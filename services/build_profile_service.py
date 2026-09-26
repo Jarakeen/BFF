@@ -13,7 +13,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-from services.build_profile_pydantic_schema import (\n    validate_build_profile_payload,\n    validate_build_profile_store_payload,\n)
+from services.build_profile_pydantic_schema import (
+    validate_build_profile_payload,
+    validate_build_profile_store_payload,
+)
 
 DEFAULT_QUALITY = "Gold"
 DEFAULT_ITEM_LEVEL = "CP160"
