@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from services.extreme_sustained_dps_generated_axis_inventory_service import (
+    ExtremeSustainedDPSGeneratedAxisInventory,
     ExtremeSustainedDPSGeneratedAxisInventoryService,
 )
 from services.extreme_sustained_dps_generated_frontier_wiring_service import (
@@ -178,3 +179,36 @@ def test_inventory_rejects_string_additional_axis_denominator() -> None:
         assert "additional_canonical_axes must be a tuple" in str(exc)
     else:
         raise AssertionError("string additional-axis denominator must fail closed")
+
+
+
+def test_axis_inventory_rejects_inconsistent_missing_axes() -> None:
+    with pytest.raises(ValueError, match="missing_canonical_axes must match"):
+        ExtremeSustainedDPSGeneratedAxisInventory(
+            axis_names=(),
+            searched_canonical_axes=("race",),
+            missing_canonical_axes=(),
+            untagged_axis_names=(),
+            duplicate_canonical_axes=(),
+            omitted_scope=(),
+            evidence=(),
+            unresolved=(),
+        )
+
+
+def test_axis_inventory_rejects_duplicate_axis_not_searched() -> None:
+    missing = tuple(
+        axis for axis in CANONICAL_SUSTAINED_DPS_MUTATION_AXES
+        if axis != "race"
+    )
+    with pytest.raises(ValueError, match="duplicate axes must also be searched"):
+        ExtremeSustainedDPSGeneratedAxisInventory(
+            axis_names=(),
+            searched_canonical_axes=("race",),
+            missing_canonical_axes=missing,
+            untagged_axis_names=(),
+            duplicate_canonical_axes=("class_route",),
+            omitted_scope=(),
+            evidence=(),
+            unresolved=(),
+        )
