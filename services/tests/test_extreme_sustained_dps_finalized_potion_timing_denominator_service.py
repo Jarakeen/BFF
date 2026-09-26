@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.character_progression import CharacterProgression
 from minmax.potion_use_event import PotionBuffGrant, PotionTraitUse, PotionUseEvent
 from models.build_model import PlayerBuild
@@ -167,3 +169,82 @@ def test_unproven_resource_observation_times_fail_closed() -> None:
         "without denominator proof" in row
         for row in result.unresolved
     )
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    (
+        (
+            "instant_restoration_timing_closed",
+            "false",
+            "instant_restoration_timing_closed must be boolean",
+        ),
+        (
+            "resource_observation_denominator_proven",
+            1,
+            "resource_observation_denominator_proven must be boolean",
+        ),
+    ),
+)
+def test_finalized_potion_timing_requires_strict_boolean_proof_flags(
+    field,
+    value,
+    match,
+) -> None:
+    kwargs = {
+        "player_build": PlayerBuild(Potion="Potion X"),
+        "progression": _progression(3),
+        "observation_frontier": _observations(1.0, 20.0),
+        "duration_seconds": 60.0,
+        "cooldown_seconds": 45.0,
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=match):
+        ExtremeSustainedDPSFinalizedPotionTimingDenominatorService(
+            event_resolver=_Resolver()
+        ).build(**kwargs)
+
+
+def test_finalized_potion_timing_requires_tuple_resource_observations() -> None:
+    with pytest.raises(TypeError, match="resource_observation_times must be a tuple"):
+        ExtremeSustainedDPSFinalizedPotionTimingDenominatorService(
+            event_resolver=_Resolver()
+        ).build(
+            player_build=PlayerBuild(Potion="Potion X"),
+            progression=_progression(3),
+            observation_frontier=_observations(1.0, 20.0),
+            duration_seconds=60.0,
+            cooldown_seconds=45.0,
+            resource_observation_times=[2.0, 4.0],  # type: ignore[arg-type]
+            resource_observation_denominator_proven=True,
+        )
+
+
+@pytest.mark.parametrize("value", (True, "2.0", None))
+def test_finalized_potion_timing_rejects_coerced_resource_observations(value) -> None:
+    with pytest.raises(TypeError, match="must contain only numbers"):
+        ExtremeSustainedDPSFinalizedPotionTimingDenominatorService(
+            event_resolver=_Resolver()
+        ).build(
+            player_build=PlayerBuild(Potion="Potion X"),
+            progression=_progression(3),
+            observation_frontier=_observations(1.0, 20.0),
+            duration_seconds=60.0,
+            cooldown_seconds=45.0,
+            resource_observation_times=(value,),  # type: ignore[arg-type]
+            resource_observation_denominator_proven=True,
+        )
+
+
+def test_finalized_potion_timing_rejects_non_integer_medicinal_use_rank() -> None:
+    with pytest.raises(TypeError, match="Medicinal Use rank must be an integer"):
+        ExtremeSustainedDPSFinalizedPotionTimingDenominatorService(
+            event_resolver=_Resolver()
+        ).build(
+            player_build=PlayerBuild(Potion="Potion X"),
+            progression=_progression("3"),  # type: ignore[arg-type]
+            observation_frontier=_observations(1.0, 20.0),
+            duration_seconds=60.0,
+            cooldown_seconds=45.0,
+        )
