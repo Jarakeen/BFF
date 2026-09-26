@@ -1,6 +1,9 @@
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import BarId, EffectLayer
 from services.extreme_sustained_dps_weapon_enchantment_cooldown_readiness_service import (
+    ExtremeSustainedDPSWeaponEnchantmentCooldownReadiness,
     ExtremeSustainedDPSWeaponEnchantmentCooldownReadinessService,
     ExtremeSustainedDPSWeaponEnchantmentCooldownState,
 )
@@ -108,3 +111,58 @@ def test_foreign_state_fails_closed():
 
     assert result.resolved is False
     assert any("outside the source-owned candidate set" in row for row in result.unresolved)
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    (
+        ("cooldown_seconds", "4", "cooldown_seconds must be numeric"),
+        ("last_activation_time_seconds", "1", "last_activation_time_seconds must be numeric"),
+    ),
+)
+def test_cooldown_state_rejects_coerced_numeric_fields(field, value, match):
+    kwargs = {
+        "effect": _effect("Main Enchant", "main_hand"),
+        "cooldown_seconds": 4.0,
+        "last_activation_time_seconds": 1.0,
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=match):
+        ExtremeSustainedDPSWeaponEnchantmentCooldownState(**kwargs)
+
+
+def test_cooldown_resolver_requires_tuple_typed_inputs():
+    main = _effect("Main Enchant", "main_hand")
+
+    with pytest.raises(TypeError, match="candidates must be a tuple"):
+        ExtremeSustainedDPSWeaponEnchantmentCooldownReadinessService.resolve(
+            activation_time_seconds=1.0,
+            candidates=[main],  # type: ignore[arg-type]
+            states=(_state(main, 4.0),),
+        )
+
+    with pytest.raises(TypeError, match="states must be a tuple"):
+        ExtremeSustainedDPSWeaponEnchantmentCooldownReadinessService.resolve(
+            activation_time_seconds=1.0,
+            candidates=(main,),
+            states=[_state(main, 4.0)],  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="activation_time_seconds must be numeric"):
+        ExtremeSustainedDPSWeaponEnchantmentCooldownReadinessService.resolve(
+            activation_time_seconds="1.0",  # type: ignore[arg-type]
+            candidates=(main,),
+            states=(_state(main, 4.0),),
+        )
+
+
+def test_cooldown_readiness_requires_tuple_ready_at_rows():
+    main = _effect("Main Enchant", "main_hand")
+
+    with pytest.raises(TypeError, match="ready_at rows must be"):
+        ExtremeSustainedDPSWeaponEnchantmentCooldownReadiness(
+            ready=(main,),
+            blocked=(),
+            ready_at=([main, 0.0],),  # type: ignore[list-item]
+        )
