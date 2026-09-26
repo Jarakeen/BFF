@@ -220,3 +220,22 @@ def test_export_request_is_frozen() -> None:
 
     with pytest.raises(ValidationError, match="frozen"):
         request.mode = "current"  # type: ignore[misc]
+
+
+def test_export_source_rejects_unowned_variant_transformed_form() -> None:
+    build = _build()
+    build.ContextVariants[0].TransformedForm = "werewolf"
+
+    with pytest.raises(ValidationError, match="requires Werewolf affiliation"):
+        default_export_request(build)
+
+
+def test_resolved_variant_is_revalidated_before_matrix_comparison() -> None:
+    build = _build()
+    build.SecondMundus = "The Shadow"
+    build.ContextVariants[0].Mundus = "The Shadow"
+
+    request = default_export_request(build)
+
+    with pytest.raises(ValidationError, match="Mundus boons must be distinct"):
+        build_matrix_page(build, request)
