@@ -179,3 +179,24 @@ def test_action_dominance_requires_candidate_identity() -> None:
             dominated_axes=("gear",),
             required_axes=("gear",),
         )
+
+
+def test_action_upper_bound_rejects_duck_typed_dominance_proof() -> None:
+    malformed = type(
+        "Dominance",
+        (),
+        {
+            "unresolved": (),
+            "source": "duck proof",
+            "required_axes": (),
+            "dominated_axes": (),
+            "complete": True,
+            "optimistic_upper_damage": None,
+            "optimistic_multiplier": 1.0,
+        },
+    )()
+    with pytest.raises(TypeError, match="canonical dominance proof"):
+        ExtremeSustainedDPSActionUpperBoundService.from_occurrences(
+            occurrence_evidence=_occurrences(),
+            dominance=malformed,  # type: ignore[arg-type]
+        )
