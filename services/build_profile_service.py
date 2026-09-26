@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from services.build_profile_pydantic_schema import validate_build_profile_payload
+from services.build_profile_pydantic_schema import (\n    validate_build_profile_payload,\n    validate_build_profile_store_payload,\n)
 
 DEFAULT_QUALITY = "Gold"
 DEFAULT_ITEM_LEVEL = "CP160"
@@ -89,8 +89,10 @@ class BuildProfileService:
             payload = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             return {"version": 1, "profiles": {}}
-        profiles = payload.get("profiles") if isinstance(payload, dict) else None
-        return {"version": 1, "profiles": profiles if isinstance(profiles, dict) else {}}
+        try:
+            return validate_build_profile_store_payload(payload)
+        except ValueError as exc:
+            raise ValueError(f"Build profile store failed Pydantic validation: {exc}") from exc
 
     def get(self, build_id: str) -> BuildProfile:
         key = str(build_id or "").strip()
@@ -128,8 +130,21 @@ class BuildProfileService:
         profiles[key] = validate_build_profile_payload(asdict(profile.normalized()))
         temporary = self.path.with_suffix(self.path.suffix + ".tmp")
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary.write_text(json.dumps({"version": 1, "profiles": profiles}, indent=2, sort_keys=True), encoding="utf-8")
+        persisted_payload = validate_build_profile_store_payload(
+            {"version": 1, "profiles": profiles}
+        )
+        temporary.write_text(
+            json.dumps(persisted_payload, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
         temporary.replace(self.path)
+        try:
+            read_back = json.loads(self.path.read_text(encoding="utf-8"))
+            read_back = validate_build_profile_store_payload(read_back)
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
+            raise ValueError(f"Build profile save failed read-back validation: {exc}") from exc
+        if read_back != persisted_payload:
+            raise ValueError("Build profile save did not round-trip exactly")
 
     def update(self, build_id: str, **changes: Any) -> BuildProfile:
         current = asdict(self.get(build_id))
