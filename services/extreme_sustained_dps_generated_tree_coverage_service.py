@@ -26,6 +26,9 @@ class ExtremeSustainedDPSGeneratedTreeCoverageService:
         search_result: object,
         axis_inventory: object,
     ) -> ExtremeSustainedDPSGeneratedTreeCoverageResult:
+        global_maximum_proven = getattr(search_result, "global_maximum_proven", None)
+        if not isinstance(global_maximum_proven, bool):
+            raise TypeError("generated tree coverage requires boolean global_maximum_proven")
         unresolved: list[str] = []
 
         search_unresolved = tuple(
@@ -38,11 +41,8 @@ class ExtremeSustainedDPSGeneratedTreeCoverageService:
             for item in search_unresolved
         )
 
-        finite_closed = bool(
-            getattr(search_result, "global_maximum_proven", False)
-            and not search_unresolved
-        )
-        if not getattr(search_result, "global_maximum_proven", False):
+        finite_closed = bool(global_maximum_proven and not search_unresolved)
+        if not global_maximum_proven:
             unresolved.append(
                 "Generated finite search denominator maximum is not proven"
             )
