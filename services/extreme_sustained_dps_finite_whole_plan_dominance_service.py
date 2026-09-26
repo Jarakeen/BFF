@@ -51,6 +51,24 @@ class ExtremeSustainedDPSWholePlanEvaluation:
     mechanic_complete: bool
     unresolved: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.choice_id, str):
+            raise TypeError("whole-plan evaluation choice_id must be a string")
+        if self.modeled_dps is not None and (
+            isinstance(self.modeled_dps, bool)
+            or not isinstance(self.modeled_dps, (int, float))
+        ):
+            raise TypeError("whole-plan evaluation modeled_dps must be numeric or None")
+        if self.duration_seconds is not None and (
+            isinstance(self.duration_seconds, bool)
+            or not isinstance(self.duration_seconds, (int, float))
+        ):
+            raise TypeError("whole-plan evaluation duration_seconds must be numeric or None")
+        if not isinstance(self.mechanic_complete, bool):
+            raise TypeError("whole-plan evaluation mechanic_complete must be boolean")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("whole-plan evaluation unresolved must be a tuple")
+
 
 class ExtremeSustainedDPSFiniteWholePlanEvaluator(Protocol[T]):
     def evaluate(self, choice: T) -> ExtremeSustainedDPSWholePlanEvaluation: ...
@@ -91,9 +109,26 @@ class ExtremeSustainedDPSFiniteWholePlanDominanceService:
         if not key:
             raise ValueError("finite whole-plan dominance requires candidate_key")
 
+        if isinstance(required_duration_seconds, bool) or not isinstance(
+            required_duration_seconds,
+            (int, float),
+        ):
+            raise TypeError("finite whole-plan dominance duration must be numeric")
         duration = float(required_duration_seconds)
         if duration <= 0.0:
             raise ValueError("finite whole-plan dominance duration must be positive")
+
+        if not isinstance(frontier.axes, tuple):
+            raise TypeError("finite whole-plan axes must be a tuple")
+        raw_count = frontier.choice_count
+        if isinstance(raw_count, bool) or not isinstance(raw_count, int):
+            raise TypeError("finite whole-plan choice_count must be an integer")
+        if raw_count < 0:
+            raise ValueError("finite whole-plan choice_count cannot be negative")
+        if not isinstance(frontier.denominator_proven, bool):
+            raise TypeError("finite whole-plan denominator_proven must be boolean")
+        if not isinstance(frontier.omitted_scope, tuple):
+            raise TypeError("finite whole-plan omitted_scope must be a tuple")
 
         canonical = {
             axis.casefold(): axis
@@ -115,10 +150,10 @@ class ExtremeSustainedDPSFiniteWholePlanDominanceService:
 
         if not axes:
             unresolved.append("Finite whole-plan dominance requires at least one canonical axis")
-        if not bool(frontier.denominator_proven):
+        if not frontier.denominator_proven:
             unresolved.append("Finite whole-plan denominator is not proven complete")
 
-        expected = int(frontier.choice_count)
+        expected = raw_count
         if expected <= 0:
             unresolved.append("Finite whole-plan denominator is empty")
 
@@ -130,9 +165,13 @@ class ExtremeSustainedDPSFiniteWholePlanDominanceService:
 
         for index in range(max(expected, 0)):
             result = evaluator.evaluate(frontier.choice_at(index))
+            if not isinstance(result, ExtremeSustainedDPSWholePlanEvaluation):
+                raise TypeError(
+                    "finite whole-plan evaluator must return ExtremeSustainedDPSWholePlanEvaluation"
+                )
             evaluated += 1
 
-            choice_id = str(result.choice_id or "").strip()
+            choice_id = result.choice_id.strip()
             if not choice_id:
                 unresolved.append(f"choice index {index}: whole-plan evaluator returned empty identity")
                 continue
