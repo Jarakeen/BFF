@@ -49,18 +49,17 @@ class ExtremeSustainedDPSGeneratedAxisPipelineState:
 
     @property
     def complete(self) -> bool:
-        return bool(
-            (
-                self.requires_finalized_potion
-                and self.finalized_potion is not None
-                and getattr(self.finalized_potion, "complete", False)
+        if not isinstance(self.requires_finalized_potion, bool):
+            raise TypeError(
+                "generated axis pipeline requires_finalized_potion flag must be boolean"
             )
-            or (
-                not self.requires_finalized_potion
-                and self.runtime is not None
-                and getattr(self.runtime, "complete", False)
-            )
-        )
+        stage = self.finalized_potion if self.requires_finalized_potion else self.runtime
+        if stage is None:
+            return False
+        complete = getattr(stage, "complete", False)
+        if not isinstance(complete, bool):
+            raise TypeError("generated axis pipeline terminal complete flag must be boolean")
+        return complete
 
 
 class ExtremeSustainedDPSGeneratedAxisPipelineService:
@@ -247,7 +246,11 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
             raise ValueError(
                 f"complete generated rotation state is missing {label} structural index"
             )
-        return int(raw)
+        if isinstance(raw, bool) or not isinstance(raw, int):
+            raise TypeError(
+                f"complete generated rotation state {label} structural index must be an integer"
+            )
+        return raw
 
     def _runtime_state(
         self,
