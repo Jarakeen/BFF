@@ -41,6 +41,20 @@ class ExtremeSustainedDPSTheoreticalMaximumClosure:
             or not isinstance(self.best_modeled_dps, (int, float))
         ):
             raise TypeError("theoretical maximum closure best_modeled_dps must be numeric")
+        if self.theoretical_maximum_proven and not (
+            self.finite_denominator_maximum_proven
+            and self.canonical_axis_coverage_complete
+            and self.mechanics_closure_complete
+            and not self.omitted_scope
+            and not self.unresolved
+        ):
+            raise ValueError(
+                "theoretical maximum proof requires finite denominator, axis coverage, mechanics closure, and no closure debt"
+            )
+        if self.finite_denominator_maximum_proven and self.best_modeled_dps is None:
+            raise ValueError(
+                "finite denominator maximum proof requires best modeled DPS evidence"
+            )
 
 
 class ExtremeSustainedDPSTheoreticalMaximumClosureService:
