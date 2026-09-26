@@ -329,3 +329,25 @@ def test_complete_heavy_attack_axis_has_no_reviewed_window_omission() -> None:
 
     assert adapter.axes()[1].canonical_axes == ("heavy_attack_policy",)
     assert adapter.axes()[1].omitted_scope == ()
+
+
+def test_truthy_non_boolean_runtime_policy_denominator_proof_fails_closed() -> None:
+    execute = _ExecuteFrontier()
+    execute.expand = lambda **kwargs: SimpleNamespace(
+        candidates=(object(),),
+        denominator_proven="false",
+        unresolved=(),
+    )
+    adapter = _adapter(execute=execute)
+
+    with pytest.raises(TypeError, match="proof flag must be boolean"):
+        adapter.axes()[0].candidate_count(_root(adapter))
+
+
+def test_runtime_policy_complete_discovery_flag_requires_boolean() -> None:
+    with pytest.raises(TypeError, match="discovery flag must be boolean"):
+        ExtremeSustainedDPSGeneratedRuntimePolicyAxisAdapterService(
+            execute_policies=_ExecuteFrontier(),
+            heavy_attack_policies=_HeavyFrontier(),
+            require_complete_heavy_attack_discovery="false",
+        )
