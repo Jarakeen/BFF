@@ -17,6 +17,12 @@ Keep equations secondary. The point of this file is to preserve the useful idea 
 
 ---
 
+## 2026-09-26 — Generated CP, jewelry, and passive frontiers reject coercion
+
+Extreme Engine frontier enumeration now treats paging indices, Champion Point combination ranks, jewelry choice collections, passive `combat_line` proof flags, and canonical passive max ranks as typed evidence rather than values that may be coerced with `int()`, `bool()`, or `str()`.
+
+Why this matters: Python will happily turn values such as `True`, `"2"`, or `2.0` into superficially usable search inputs. For an exact sustained-DPS denominator, that is not harmless convenience. It can silently promote malformed catalog evidence into a supposedly proven finite search space. These frontiers now fail closed or mark their denominator unresolved instead.
+
 ## 2026-09-06 — Healer sustain and heavy attacks are path-dependent
 
 ### A higher recovery threshold does not necessarily leave you with more Magicka
