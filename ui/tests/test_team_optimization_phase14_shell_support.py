@@ -91,3 +91,13 @@ def test_phase14_optimizer_wraps_recommendation_cells_and_fits_row_height() -> N
     assert "table.setWordWrap(True)" in source
     assert "QHeaderView.ResizeMode.ResizeToContents" in source
     assert "table.resizeRowsToContents()" in source
+
+
+def test_phase14_optimizer_does_not_elide_wrapped_recommendation_text() -> None:
+    source = _source()
+
+    assert "table.setTextElideMode(Qt.TextElideMode.ElideNone)" in source
+    assert "table.setColumnWidth(1, 190)" in source
+    assert "table.setColumnWidth(2, 230)" in source
+    assert "table.setColumnWidth(3, 220)" in source
+    assert "header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)" in source
