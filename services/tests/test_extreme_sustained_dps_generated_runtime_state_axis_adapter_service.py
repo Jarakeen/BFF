@@ -120,3 +120,23 @@ def test_candidate_runtime_axis_rejects_omitted_runtime_scope() -> None:
 
     with pytest.raises(ValueError, match="theoretical omitted scope"):
         axis.candidate_count(SimpleNamespace(complete=True))
+
+
+def test_truthy_non_boolean_upstream_complete_flag_fails_closed() -> None:
+    axis = ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.axis(_frontier())
+
+    with pytest.raises(TypeError, match="complete flag must be boolean"):
+        axis.candidate_count(SimpleNamespace(complete="false"))
+
+
+def test_duck_typed_runtime_frontier_cannot_enter_proven_axis() -> None:
+    frontier = SimpleNamespace(
+        choices=(ExtremeSustainedDPSRuntimeStateChoice("runtime:a", "snapshot-a"),),
+        candidate_count=1,
+        denominator_proven=True,
+        unresolved=(),
+        omitted_scope=(),
+    )
+
+    with pytest.raises(TypeError, match="canonical runtime-state frontier"):
+        ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService.axis(frontier)
