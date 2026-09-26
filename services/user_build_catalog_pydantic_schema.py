@@ -49,7 +49,7 @@ class BuildCatalogPayload(_CatalogRecord):
     character_id: str = Field(min_length=1, max_length=200)
     name: str = Field(default="", max_length=300)
     legacy: dict[str, Any] = {}
-    payload: dict[str, Any] = {}
+    payload: dict[str, Any] | None = None
     build_kind: str = Field(default="saved", max_length=80)
     source: dict[str, Any] = {}
 
