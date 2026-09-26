@@ -16,6 +16,8 @@ PERSONNEL_PLACEHOLDER_NAMES: tuple[str, ...] = (
     "DD 7",
     "DD 8",
     "Recruitment Needed",
+    "Recruit",
+    "Open",
 )
 
 
