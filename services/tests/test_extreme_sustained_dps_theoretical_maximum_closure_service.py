@@ -299,3 +299,32 @@ def test_theoretical_closure_record_requires_strict_proof_fields() -> None:
             evidence=(),
             unresolved=(),
         )
+
+
+
+def test_theoretical_closure_record_rejects_internally_contradictory_success() -> None:
+    with pytest.raises(ValueError, match="theoretical maximum proof requires"):
+        ExtremeSustainedDPSTheoreticalMaximumClosure(
+            finite_denominator_maximum_proven=True,
+            canonical_axis_coverage_complete=False,
+            mechanics_closure_complete=True,
+            omitted_scope=(),
+            theoretical_maximum_proven=True,
+            best_modeled_dps=100.0,
+            evidence=(),
+            unresolved=(),
+        )
+
+
+def test_theoretical_closure_record_requires_best_dps_for_finite_proof() -> None:
+    with pytest.raises(ValueError, match="requires best modeled DPS"):
+        ExtremeSustainedDPSTheoreticalMaximumClosure(
+            finite_denominator_maximum_proven=True,
+            canonical_axis_coverage_complete=True,
+            mechanics_closure_complete=True,
+            omitted_scope=(),
+            theoretical_maximum_proven=False,
+            best_modeled_dps=None,
+            evidence=(),
+            unresolved=("still open",),
+        )
