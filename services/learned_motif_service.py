@@ -3,6 +3,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+from services.collection_progress_pydantic_schema import validate_collection_batch, validate_collection_progress
+
 
 class LearnedMotifService:
     DEFAULT_PROFILE = "Default"
@@ -141,7 +143,19 @@ class LearnedMotifService:
     def set_progress(self, item_id: int, *, learned: bool, learned_on: str = "", notes: str = "") -> None:
         if not self.available:
             raise RuntimeError("Motif database is not available.")
-        self.connection.execute(
+        payload = validate_collection_progress({
+            "profile": self._active_profile,
+            "item_id": int(item_id),
+            "owned": bool(learned),
+            "acquired_on": str(learned_on or "").strip(),
+            "notes": str(notes or "").strip(),
+        })
+        db = self.connection
+        if db.execute("SELECT 1 FROM learnable_motif WHERE item_id = ?", (payload["item_id"],)).fetchone() is None:
+            raise KeyError(f"Unknown learnable motif item id: {item_id}")
+        db.execute("BEGIN IMMEDIATE")
+        try:
+            db.execute(
             """
             INSERT INTO learnable_motif_progress(profile_name, item_id, learned, learned_on, notes, updated_at)
             VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -152,22 +166,41 @@ class LearnedMotifService:
                 updated_at = CURRENT_TIMESTAMP
             """,
             (
-                self._active_profile,
-                int(item_id),
-                1 if learned else 0,
-                learned_on.strip() or None,
-                notes.strip(),
+                payload["profile"],
+                payload["item_id"],
+                1 if payload["owned"] else 0,
+                payload["acquired_on"] or None,
+                payload["notes"],
             ),
-        )
-        self.connection.commit()
+            )
+            row = db.execute(
+                "SELECT learned, COALESCE(learned_on, '') AS learned_on, notes FROM learnable_motif_progress WHERE profile_name = ? AND item_id = ?",
+                (payload["profile"], payload["item_id"]),
+            ).fetchone()
+            if row is None or bool(row["learned"]) != payload["owned"] or str(row["learned_on"] or "") != payload["acquired_on"] or str(row["notes"] or "") != payload["notes"]:
+                raise RuntimeError("Motif progress did not round-trip exactly")
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
 
     def set_learned_batch(self, learned_by_id: dict[int, bool]) -> int:
         if not learned_by_id:
             return 0
+        payload = validate_collection_batch({
+            "profile": self._active_profile,
+            "owned_by_id": {int(k): bool(v) for k, v in learned_by_id.items()},
+        })
         db = self.connection
-        db.execute("BEGIN")
+        ids = tuple(payload["owned_by_id"])
+        placeholders = ",".join("?" for _ in ids)
+        known = {int(row[0]) for row in db.execute(f"SELECT item_id FROM learnable_motif WHERE item_id IN ({placeholders})", ids).fetchall()}
+        missing = sorted(set(ids) - known)
+        if missing:
+            raise KeyError(f"Unknown learnable motif item ids: {missing}")
+        db.execute("BEGIN IMMEDIATE")
         try:
-            for item_id, learned in learned_by_id.items():
+            for item_id, learned in payload["owned_by_id"].items():
                 db.execute(
                     """
                     INSERT INTO learnable_motif_progress(profile_name, item_id, learned, updated_at)
@@ -178,11 +211,18 @@ class LearnedMotifService:
                     """,
                     (self._active_profile, int(item_id), 1 if learned else 0),
                 )
+            rows = db.execute(
+                f"SELECT item_id, learned FROM learnable_motif_progress WHERE profile_name = ? AND item_id IN ({placeholders})",
+                (payload["profile"], *ids),
+            ).fetchall()
+            read_back = {int(row["item_id"]): bool(row["learned"]) for row in rows}
+            if read_back != payload["owned_by_id"]:
+                raise RuntimeError("Motif batch did not round-trip exactly")
             db.commit()
         except Exception:
             db.rollback()
             raise
-        return len(learned_by_id)
+        return len(payload["owned_by_id"])
 
     def close(self) -> None:
         if self._connection is not None:
