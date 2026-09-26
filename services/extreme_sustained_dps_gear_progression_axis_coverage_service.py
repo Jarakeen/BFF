@@ -34,13 +34,30 @@ class ExtremeSustainedDPSStructuralAxisCoverageResult:
 class ExtremeSustainedDPSGearProgressionAxisCoverageService:
     """Promote only denominator closure that each frontier actually proves."""
 
+    @staticmethod
+    def _strict_frontier_proof(frontier, *, label: str) -> tuple[bool, tuple[str, ...]]:
+        proven = getattr(frontier, "denominator_proven", None)
+        if not isinstance(proven, bool):
+            raise TypeError(f"{label} denominator_proven must be boolean")
+        unresolved = getattr(frontier, "unresolved", None)
+        if not isinstance(unresolved, tuple):
+            raise TypeError(f"{label} unresolved must be a tuple")
+        return proven, unresolved
+
     @classmethod
     def dual_bar_gear(
         cls,
         frontier: ExtremeSustainedDPSDualBarGearFrontier,
     ) -> ExtremeSustainedDPSStructuralAxisCoverageResult:
-        unresolved = tuple(frontier.unresolved)
-        complete = bool(frontier.denominator_proven and not unresolved)
+        proven, unresolved = cls._strict_frontier_proof(
+            frontier,
+            label="dual-bar gear frontier",
+        )
+        for field in ("expected_topology_count", "proven_topology_count", "dual_bar_state_count"):
+            value = getattr(frontier, field, None)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise TypeError(f"dual-bar gear frontier {field} must be a non-negative integer")
+        complete = proven and not unresolved
         proof = ExtremeSustainedDPSAxisCoverageProof(
             source="complete sustained-DPS dual-bar named-gear denominator",
             dominated_axes=(
@@ -71,8 +88,13 @@ class ExtremeSustainedDPSGearProgressionAxisCoverageService:
         cls,
         frontier: ExtremeSustainedDPSChampionPointFrontier,
     ) -> ExtremeSustainedDPSStructuralAxisCoverageResult:
-        unresolved = tuple(frontier.unresolved)
-        complete = bool(frontier.denominator_proven and not unresolved)
+        proven, unresolved = cls._strict_frontier_proof(
+            frontier,
+            label="Champion Point frontier",
+        )
+        if isinstance(frontier.candidate_count, bool) or not isinstance(frontier.candidate_count, int):
+            raise TypeError("Champion Point frontier candidate_count must be an integer")
+        complete = proven and not unresolved
         proof = ExtremeSustainedDPSAxisCoverageProof(
             source="complete sustained-DPS Champion Point denominator",
             dominated_axes=("champion_points",) if complete else (),
@@ -98,8 +120,13 @@ class ExtremeSustainedDPSGearProgressionAxisCoverageService:
         cls,
         frontier: ExtremeSustainedDPSPassiveRankFrontier,
     ) -> ExtremeSustainedDPSStructuralAxisCoverageResult:
-        unresolved = tuple(frontier.unresolved)
-        complete = bool(frontier.denominator_proven and not unresolved)
+        proven, unresolved = cls._strict_frontier_proof(
+            frontier,
+            label="passive-rank frontier",
+        )
+        if isinstance(frontier.candidate_count, bool) or not isinstance(frontier.candidate_count, int):
+            raise TypeError("passive-rank frontier candidate_count must be an integer")
+        complete = proven and not unresolved
         proof = ExtremeSustainedDPSAxisCoverageProof(
             source="complete sustained-DPS passive-rank denominator",
             dominated_axes=("passive_ranks",) if complete else (),
