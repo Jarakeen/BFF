@@ -3,6 +3,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+from services.collection_progress_pydantic_schema import validate_stickerbook_bookmark
+
 
 class StickerbookBookmarkService:
     """Profile-aware set shortlist for gear the user may want to try in raid comps."""
@@ -47,8 +49,17 @@ class StickerbookBookmarkService:
         *,
         note: str | None = None,
     ) -> None:
-        profile = self._profile(profile_id)
+        payload = validate_stickerbook_bookmark(
+            {
+                "profile": self._profile(profile_id),
+                "set_id": int(set_id),
+                "bookmarked": bool(bookmarked),
+                "note": note,
+            }
+        )
+        profile = payload["profile"]
         with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
             connection.execute(
                 """
                 INSERT INTO stickerbook_set_bookmark(profile_id, set_id, bookmarked, note)
@@ -58,8 +69,18 @@ class StickerbookBookmarkService:
                     bookmarked = excluded.bookmarked,
                     note = COALESCE(excluded.note, stickerbook_set_bookmark.note)
                 """,
-                (profile, int(set_id), int(bool(bookmarked)), note),
+                (profile, payload["set_id"], int(payload["bookmarked"]), payload["note"]),
             )
+            row = connection.execute(
+                "SELECT bookmarked, note FROM stickerbook_set_bookmark WHERE profile_id = ? AND set_id = ?",
+                (profile, payload["set_id"]),
+            ).fetchone()
+            if row is None or bool(row["bookmarked"]) != payload["bookmarked"]:
+                connection.rollback()
+                raise RuntimeError("Stickerbook bookmark did not round-trip exactly")
+            if payload["note"] is not None and str(row["note"] or "") != payload["note"]:
+                connection.rollback()
+                raise RuntimeError("Stickerbook bookmark note did not round-trip exactly")
             connection.commit()
 
     def is_bookmarked(self, profile_id: str, set_id: int) -> bool:
