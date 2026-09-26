@@ -391,3 +391,35 @@ def test_delayed_ultimate_policy_index_rejects_boolean() -> None:
 
     with pytest.raises(TypeError, match="policy index must be an integer"):
         adapter.axes()[1].candidate_at(state, True)
+
+
+def test_generated_rotation_plan_axis_rejects_boolean_index() -> None:
+    adapter = _adapter()
+
+    with pytest.raises(TypeError, match="rotation-plan index must be an integer"):
+        adapter.axes()[0].candidate_at(_root(adapter), True)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("duration_seconds", "10", "duration must be numeric"),
+        ("potion_cooldown_seconds", "45", "cooldown must be numeric"),
+        ("starting_ultimate", "70", "Ultimate must be numeric"),
+    ),
+)
+def test_generated_rotation_root_rejects_numeric_string_coercion(
+    field,
+    value,
+    message,
+) -> None:
+    adapter = _adapter()
+    values = {
+        "duration_seconds": 10.0,
+        "potion_cooldown_seconds": 45.0,
+        "starting_ultimate": 70.0,
+    }
+    values[field] = value
+
+    with pytest.raises(TypeError, match=message):
+        adapter.root(_assembled(), **values)
