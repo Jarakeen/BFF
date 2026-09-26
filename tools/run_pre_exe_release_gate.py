@@ -28,6 +28,8 @@ COMMANDS = (
             "services/tests/test_settings_pydantic_persistence.py",
             "services/tests/test_collection_progress_pydantic_persistence.py",
             "services/tests/test_user_artifact_pydantic_persistence.py",
+            "services/tests/test_comp_maker_template_pydantic_persistence.py",
+            "services/tests/test_encounter_position_timeline.py",
             "services/tests/test_finch_shared_provenance_service.py",
             "services/tests/test_raid_plan_repository.py",
             "services/tests/test_raid_plan_repository_revisions.py",
