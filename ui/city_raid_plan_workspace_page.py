@@ -345,17 +345,19 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         offensive_note.setWordWrap(True)
         offensive_note.setProperty("muted", True)
         offensive.addWidget(offensive_note)
-        self.offensive_stats_table = QTableWidget(0, 8)
+        self.offensive_stats_table = QTableWidget(0, 10)
         self.offensive_stats_table.setHorizontalHeaderLabels(
             (
                 "SEAT / PLAYER",
                 "CLASS",
                 "PERSONAL CRIT",
                 "RAID CRIT",
+                "CRIT STATUS",
                 "PHYS PEN",
                 "SPELL PEN",
                 "RAID ARMOR ↓",
                 "EFFECTIVE P / S",
+                "PEN STATUS",
             )
         )
         self.offensive_stats_table.verticalHeader().setVisible(False)
@@ -561,6 +563,20 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
         self.offensive_stats_table.setRowCount(0)
         self.offensive_stats_summary.setText(message)
 
+    @staticmethod
+    def _penetration_status(stat) -> str:
+        def _one(value) -> str:
+            if value is None:
+                return "—"
+            if abs(value) <= 1e-9:
+                return "AT"
+            return "OVER" if value > 0 else "BELOW"
+
+        return (
+            f"P {_one(stat.physical_overpenetration)} • "
+            f"S {_one(stat.spell_overpenetration)}"
+        )
+
     def _refresh_offensive_stats(self, plan) -> None:
         if not hasattr(self, "offensive_stats_table"):
             return
@@ -592,6 +608,9 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
                     f"{stat.raid_critical_damage * 100:.1f}%"
                     + (" CAP" if stat.critical_capped else "")
                 ),
+                "—" if stat.raid_critical_damage is None else (
+                    "AT CAP" if stat.critical_capped else "BELOW"
+                ),
                 "—" if stat.physical_penetration is None else f"{stat.physical_penetration:,.0f}",
                 "—" if stat.spell_penetration is None else f"{stat.spell_penetration:,.0f}",
                 f"{stat.raid_armor_reduction:,.0f}",
@@ -599,6 +618,7 @@ class CityRaidPlanWorkspacePage(RaidPlanAdviserPage):
                     f"{stat.effective_physical_penetration:,.0f} / "
                     f"{stat.effective_spell_penetration:,.0f}"
                 ),
+                self._penetration_status(stat),
             )
             tooltip = self._offensive_stat_tooltip(stat)
             for column, label in enumerate(labels):
