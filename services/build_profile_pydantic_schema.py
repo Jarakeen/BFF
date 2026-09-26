@@ -60,8 +60,19 @@ class BuildProfilePayload(BaseModel):
         return normalized
 
 
+
+class BuildProfileStorePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    version: int = Field(default=1, ge=1, le=1)
+    profiles: dict[str, BuildProfilePayload] = Field(default_factory=dict)
+
+
+def validate_build_profile_store_payload(raw: Any) -> dict[str, Any]:
+    return BuildProfileStorePayload.model_validate(raw).model_dump(mode="json")
+
 def validate_build_profile_payload(raw: Any) -> dict[str, Any]:
     return BuildProfilePayload.model_validate(raw).model_dump(mode="python")
 
 
-__all__ = ["BuildProfilePayload", "validate_build_profile_payload"]
+__all__ = ["BuildProfilePayload", "BuildProfileStorePayload", "validate_build_profile_payload", "validate_build_profile_store_payload"]
