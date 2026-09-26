@@ -189,3 +189,53 @@ def test_closed_mechanics_inventory_allows_existing_theoretical_proof() -> None:
 
     assert result.mechanics_closure_complete is True
     assert result.theoretical_maximum_proven is True
+
+
+def test_truthy_non_boolean_mechanics_closure_cannot_launder_proof() -> None:
+    inventory = type(
+        "Inventory",
+        (),
+        {
+            "closure_ready": "false",
+            "source_data_blockers": (),
+            "math_review_blockers": (),
+            "mechanics_blockers": (),
+            "mechanics_advisories": (),
+        },
+    )()
+
+    try:
+        ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+            _search(),
+            axis_coverage=_coverage(),
+            closure_inventory=inventory,
+        )
+    except TypeError as exc:
+        assert "boolean closure_ready" in str(exc)
+    else:
+        raise AssertionError("truthy non-boolean closure proof must fail closed")
+
+
+def test_malformed_mechanics_blocker_collection_cannot_launder_proof() -> None:
+    inventory = type(
+        "Inventory",
+        (),
+        {
+            "closure_ready": True,
+            "source_data_blockers": [],
+            "math_review_blockers": (),
+            "mechanics_blockers": (),
+            "mechanics_advisories": (),
+        },
+    )()
+
+    try:
+        ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+            _search(),
+            axis_coverage=_coverage(),
+            closure_inventory=inventory,
+        )
+    except TypeError as exc:
+        assert "source_data_blockers must be a tuple" in str(exc)
+    else:
+        raise AssertionError("malformed closure blocker collection must fail closed")
