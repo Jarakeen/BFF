@@ -23,6 +23,14 @@ class ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.frontier, ExtremeSustainedDPSRuntimeStateFrontier):
+            raise TypeError("runtime external-history result requires a runtime-state frontier")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("runtime external-history result evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("runtime external-history result unresolved must be a tuple")
+
 
 class ExtremeSustainedDPSRuntimeExternalHistoryFrontierService:
     """Compose a proven external-history denominator into runtime-state witnesses."""
@@ -52,6 +60,28 @@ class ExtremeSustainedDPSRuntimeExternalHistoryFrontierService:
         omitted_scope: tuple[str, ...] = (),
         effects: tuple[EffectVariant, ...] = (),
     ) -> ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult:
+        if not isinstance(player_build, PlayerBuild):
+            raise TypeError("runtime external-history frontier requires a PlayerBuild")
+        if not isinstance(external_histories, tuple):
+            raise TypeError("runtime external histories must be a tuple")
+        if any(
+            not isinstance(history, ExtremeSustainedDPSRuntimeExternalHistoryChoice)
+            for history in external_histories
+        ):
+            raise TypeError(
+                "runtime external histories must contain canonical history choices"
+            )
+        if not isinstance(denominator_proven, bool):
+            raise TypeError("runtime external-history denominator_proven must be boolean")
+        if not isinstance(omitted_scope, tuple):
+            raise TypeError("runtime external-history omitted_scope must be a tuple")
+        if not isinstance(effects, tuple):
+            raise TypeError("runtime external-history effects must be a tuple")
+        if any(not isinstance(effect, EffectVariant) for effect in effects):
+            raise TypeError(
+                "runtime external-history effects must contain EffectVariant records"
+            )
+
         unresolved: list[str] = []
         runtime_choices: list[ExtremeSustainedDPSRuntimeStateChoice] = []
         seen: set[str] = set()
@@ -110,13 +140,13 @@ class ExtremeSustainedDPSRuntimeExternalHistoryFrontierService:
         deduped = tuple(dict.fromkeys(unresolved))
         frontier = ExtremeSustainedDPSRuntimeStateFrontierService.build(
             tuple(runtime_choices),
-            denominator_proven=bool(
+            denominator_proven=(
                 denominator_proven
                 and not deduped
                 and len(runtime_choices) == len(external_histories)
             ),
             source=source,
-            omitted_scope=tuple(omitted_scope),
+            omitted_scope=omitted_scope,
         )
         combined_unresolved = tuple(
             dict.fromkeys(
