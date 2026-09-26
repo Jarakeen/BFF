@@ -63,3 +63,8 @@ def test_unequipped_offhands_do_not_expand_denominator() -> None:
 def test_invalid_weapon_index_fails_closed() -> None:
     with pytest.raises(IndexError):
         _service().candidate_at(_build(), 16)
+
+
+def test_weapon_frontier_rejects_boolean_candidate_index() -> None:
+    with pytest.raises(TypeError, match="candidate index must be an integer"):
+        _service().candidate_at(_build(), True)
