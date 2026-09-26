@@ -28,6 +28,10 @@ class ExtremeSustainedDPSGeneratedSearchBranch:
     payload: object | None = None
 
     def __post_init__(self) -> None:
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("exact sustained-DPS leaf evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("exact sustained-DPS leaf unresolved evidence must be a tuple")
         key = str(self.candidate_key or "").strip()
         if not key:
             raise ValueError("generated sustained-DPS search branch requires candidate_key")
@@ -142,6 +146,14 @@ class ExtremeSustainedDPSGeneratedSearchResult:
     unresolved: tuple[str, ...]
 
     def __post_init__(self) -> None:
+        for label, value in (
+            ("best_candidates", self.best_candidates),
+            ("evaluated_leaves", self.evaluated_leaves),
+            ("evidence", self.evidence),
+            ("unresolved", self.unresolved),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"generated search result {label} must be a tuple")
         for label, value in (
             ("visited_branch_count", self.visited_branch_count),
             ("expanded_branch_count", self.expanded_branch_count),
@@ -322,8 +334,12 @@ class ExtremeSustainedDPSGeneratedBranchAndBoundSearchService:
             raise ValueError(
                 "generated sustained-DPS search duration must be finite and positive"
             )
+        if not isinstance(roots, tuple):
+            raise TypeError("generated sustained-DPS search roots must be a tuple")
         if not roots:
             raise ValueError("generated sustained-DPS branch-and-bound search requires roots")
+        if any(not isinstance(root, ExtremeSustainedDPSGeneratedSearchBranch) for root in roots):
+            raise TypeError("generated sustained-DPS search roots must contain canonical branches")
 
         queue = list(roots)
         seen: set[str] = set()
@@ -371,6 +387,8 @@ class ExtremeSustainedDPSGeneratedBranchAndBoundSearchService:
 
             if branch.is_leaf:
                 exact = evaluate_leaf(branch)
+                if not isinstance(exact, ExtremeSustainedDPSExactLeafEvaluation):
+                    raise TypeError("generated sustained-DPS leaf evaluator must return canonical exact evidence")
                 if exact.candidate_key != key:
                     unresolved.append(
                         f"Exact leaf evaluator returned mismatched key {exact.candidate_key!r} for {key!r}"
@@ -407,7 +425,11 @@ class ExtremeSustainedDPSGeneratedBranchAndBoundSearchService:
                     has_incumbent = True
                 continue
 
-            children = tuple(expand_branch(branch))
+            children = expand_branch(branch)
+            if not isinstance(children, tuple):
+                raise TypeError("generated sustained-DPS branch expander must return a tuple")
+            if any(not isinstance(child, ExtremeSustainedDPSGeneratedSearchBranch) for child in children):
+                raise TypeError("generated sustained-DPS branch expander must return canonical branches")
             expanded += 1
             if not children:
                 unresolved.append(
