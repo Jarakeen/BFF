@@ -34,6 +34,11 @@ class ExtremeSustainedDPSGeneratedAxisInventoryService:
         *,
         additional_canonical_axes: tuple[str, ...] = (),
     ) -> ExtremeSustainedDPSGeneratedAxisInventory:
+        if not isinstance(axes, tuple):
+            raise TypeError("generated axis inventory axes must be a tuple")
+        if not isinstance(additional_canonical_axes, tuple):
+            raise TypeError("generated axis inventory additional_canonical_axes must be a tuple")
+
         canonical = tuple(CANONICAL_SUSTAINED_DPS_MUTATION_AXES)
         canonical_set = set(canonical)
         axis_names = tuple(axis.name for axis in axes)
