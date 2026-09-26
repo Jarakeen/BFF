@@ -243,3 +243,13 @@ def test_coverage_filter_uses_rendered_catalog_type_not_legacy_name_list() -> No
     assert "DEBUFFS =" not in source
     assert 'if "debuff" in type_text.casefold()' in source
     assert 'UTILITY = {"Orbs", "Purify"}' in source
+
+
+def test_coverage_removal_is_the_only_ui_path_that_opts_into_clear() -> None:
+    source = Path("ui/coverage_page.py").read_text(encoding="utf-8")
+
+    assert source.count("allow_coverage_clear=True") == 1
+    removal = source.split("def _remove_manual_provider", 1)[1].split(
+        "def _apply_coverage_filters", 1
+    )[0]
+    assert "allow_coverage_clear=True" in removal
