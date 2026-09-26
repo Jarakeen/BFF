@@ -161,9 +161,6 @@ class PerformanceModeBuildMatrixExportDialog(QDialog):
             ("weapons", "Weapons"),
             ("skills", "Skills"),
             ("champion_points", "CP"),
-            ("food", "Food"),
-            ("potions", "Potions"),
-            ("class_mastery", "Class Mastery"),
             ("notes", "Notes"),
         )
         for index, (key, label) in enumerate(options):
@@ -172,6 +169,14 @@ class PerformanceModeBuildMatrixExportDialog(QDialog):
             include_layout.addWidget(check, index // 4, index % 4)
             self._checks[key] = check
         root.addWidget(include_box)
+
+        always_on_note = QLabel(
+            "Class Mastery, Food, and Potions are always printed once in the Always On footer. "
+            "Race is intentionally omitted from this sheet."
+        )
+        always_on_note.setWordWrap(True)
+        always_on_note.setProperty("muted", True)
+        root.addWidget(always_on_note)
 
         note = QLabel(
             "If the Build has no Context Variants, export produces one filled page. "
@@ -214,9 +219,9 @@ class PerformanceModeBuildMatrixExportDialog(QDialog):
             weapons=bool(self._checks["weapons"].isChecked()),
             skills=bool(self._checks["skills"].isChecked()),
             champion_points=bool(self._checks["champion_points"].isChecked()),
-            food=bool(self._checks["food"].isChecked()),
-            potions=bool(self._checks["potions"].isChecked()),
-            class_mastery=bool(self._checks["class_mastery"].isChecked()),
+            food=True,
+            potions=True,
+            class_mastery=True,
             notes=bool(self._checks["notes"].isChecked()),
         )
         slots = tuple(
