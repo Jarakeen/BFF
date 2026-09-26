@@ -10,6 +10,7 @@ from services.extreme_sustained_dps_objective32_blocker_service import (
     ExtremeSustainedDPSObjective32BlockerService,
 )
 from services.extreme_sustained_dps_generated_branch_and_bound_search_service import (
+    ExtremeSustainedDPSExactLeafEvaluation,
     ExtremeSustainedDPSGeneratedSearchResult,
 )
 from services.extreme_sustained_dps_generated_axis_inventory_service import (
@@ -34,20 +35,28 @@ from services.canonical_knowledge_gap import (
 
 
 def _canonical_search(*, proven=True, unresolved=()):
+    unresolved = tuple(unresolved)
+    leaf = ExtremeSustainedDPSExactLeafEvaluation(
+        candidate_key="objective32-blocker-test",
+        modeled_dps=150.0,
+        duration_seconds=20.0,
+        mechanic_complete=True,
+    )
+    retained = (leaf,) if proven else ()
     return ExtremeSustainedDPSGeneratedSearchResult(
-        best_modeled_dps=None,
-        best_candidates=(),
-        unique_leader=None,
-        evaluated_leaves=(),
-        visited_branch_count=0,
+        best_modeled_dps=150.0 if proven else None,
+        best_candidates=retained,
+        unique_leader=leaf if proven else None,
+        evaluated_leaves=retained,
+        visited_branch_count=1 if proven else 0,
         expanded_branch_count=0,
-        evaluated_leaf_count=0,
+        evaluated_leaf_count=len(retained),
         pruned_branch_count=0,
         forced_open_branch_count=0,
         global_maximum_proven=proven,
-        unique_leader_proven=False,
+        unique_leader_proven=proven,
         evidence=(),
-        unresolved=tuple(unresolved),
+        unresolved=unresolved,
     )
 
 
