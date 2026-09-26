@@ -9,10 +9,13 @@ pins (or creates manually) are persisted to Operations.
 
 from dataclasses import asdict, dataclass
 import json
+import os
 from math import ceil
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from services.top_team_service import TopTeamService
+from services.user_artifact_pydantic_schema import validate_performance_focus_document
 
 
 @dataclass(frozen=True)
@@ -67,10 +70,12 @@ class PerformanceFocusStore:
         if not self.path.exists():
             return []
         try:
-            payload = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return []
-        values = payload.get("Goals", []) if isinstance(payload, dict) else []
+            payload = validate_performance_focus_document(
+                json.loads(self.path.read_text(encoding="utf-8"))
+            )
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
+            raise RuntimeError(f"Performance Focus goals failed to load safely: {exc}") from exc
+        values = payload["Goals"]
         return [
             PerformanceFocusGoal.from_dict(row)
             for row in values
@@ -78,11 +83,31 @@ class PerformanceFocusStore:
         ]
 
     def save(self, goals: list[PerformanceFocusGoal]) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps({"Goals": [goal.to_dict() for goal in goals]}, indent=2),
-            encoding="utf-8",
+        payload = validate_performance_focus_document(
+            {"Goals": [goal.to_dict() for goal in goals]}
         )
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile(
+                "w", encoding="utf-8", dir=self.path.parent,
+                prefix=f".{self.path.name}.", suffix=".tmp", delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                json.dump(payload, handle, ensure_ascii=False, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+        read_back = validate_performance_focus_document(
+            json.loads(self.path.read_text(encoding="utf-8"))
+        )
+        if read_back != payload:
+            raise RuntimeError("Performance Focus goals did not round-trip exactly")
 
     def upsert(self, goal: PerformanceFocusGoal) -> None:
         goals = self.load()
