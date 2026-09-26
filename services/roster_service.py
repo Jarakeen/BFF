@@ -452,6 +452,46 @@ class RosterService:
         self.db.commit()
         return True
 
+    @staticmethod
+    def _validated_member(member: RosterMember) -> RosterMember:
+        try:
+            payload = validate_personnel_payload(
+                {
+                    "id": member.Id,
+                    "player_name": member.PlayerName,
+                    "character_name": member.CharacterName,
+                    "eso_class": member.EsoClass,
+                    "primary_role": member.PrimaryRole,
+                    "secondary_role": member.SecondaryRole,
+                    "status": member.Status or "Active",
+                    "team": member.Team,
+                    "canonical_player_id": member.CanonicalPlayerId,
+                    "canonical_character_id": member.CanonicalCharacterId,
+                    "discord_name": member.DiscordName,
+                    "youtube": member.YouTube,
+                    "twitch": member.Twitch,
+                    "personnel_notes": member.PersonnelNotes,
+                }
+            )
+        except PersonnelValidationError as exc:
+            raise ValueError(f"Personnel save failed Pydantic validation: {exc}") from exc
+        return RosterMember(
+            Id=payload["id"],
+            PlayerName=payload["player_name"],
+            CharacterName=payload["character_name"],
+            EsoClass=payload["eso_class"],
+            PrimaryRole=payload["primary_role"],
+            SecondaryRole=payload["secondary_role"],
+            Status=payload["status"],
+            Team=payload["team"],
+            CanonicalPlayerId=payload["canonical_player_id"],
+            CanonicalCharacterId=payload["canonical_character_id"],
+            DiscordName=payload["discord_name"],
+            YouTube=payload["youtube"],
+            Twitch=payload["twitch"],
+            PersonnelNotes=payload["personnel_notes"],
+        )
+
     def create_member(self, member: RosterMember) -> int:
         member = self._validated_member(member)
         if is_personnel_placeholder(member.PlayerName):
