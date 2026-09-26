@@ -31,7 +31,7 @@ def _key(value: object) -> str:
 class RaidPlanCoverageMember:
     seat_id: str
     player_label: str
-    build: PlayerBuild
+    build: PlayerBuild | None
 
 
 @dataclass(frozen=True)
@@ -68,7 +68,7 @@ class RaidPlanCoverageScope:
 
     @property
     def resolved_builds(self) -> tuple[PlayerBuild, ...]:
-        return tuple(row.build for row in self.members)
+        return tuple(row.build for row in self.members if row.build is not None)
 
     def primary_for(self, effect_name: str) -> tuple[str, ...]:
         wanted = _key(effect_name)
@@ -196,6 +196,24 @@ class RaidPlanCoverageScopeService:
                     )
             else:
                 unresolved.extend(result.unresolved)
+                has_planned_evidence = bool(
+                    planned_sets
+                    or planned_skill_names
+                    or _clean(member.primary_assignment)
+                    or _clean(member.secondary_assignment)
+                    or _clean(member.assignment_source)
+                )
+                has_named_identity = bool(
+                    _clean(member.character_name) or _clean(member.gamertag)
+                )
+                if has_named_identity and has_planned_evidence:
+                    members.append(
+                        RaidPlanCoverageMember(
+                            seat_id=member.seat_id,
+                            player_label=player_label,
+                            build=None,
+                        )
+                    )
 
             primary_key = _key(member.primary_assignment)
             if primary_key in primary:
