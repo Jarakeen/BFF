@@ -321,3 +321,56 @@ def test_generated_search_result_unique_proof_requires_exactly_one_best_candidat
             evidence=(),
             unresolved=(),
         )
+
+
+def test_generated_search_requires_tuple_roots() -> None:
+    with pytest.raises(TypeError, match="roots must be a tuple"):
+        ExtremeSustainedDPSGeneratedBranchAndBoundSearchService.search(
+            [_branch("leaf", 10.0, leaf=True)],
+            expand_branch=lambda _branch: (),
+            evaluate_leaf=_leaf_eval({"leaf": 10.0}),
+            required_duration_seconds=10.0,
+        )
+
+
+def test_generated_search_requires_canonical_exact_leaf_evidence() -> None:
+    with pytest.raises(TypeError, match="canonical exact evidence"):
+        ExtremeSustainedDPSGeneratedBranchAndBoundSearchService.search(
+            (_branch("leaf", 10.0, leaf=True),),
+            expand_branch=lambda _branch: (),
+            evaluate_leaf=lambda branch: type(
+                "Leaf",
+                (),
+                {
+                    "candidate_key": branch.candidate_key,
+                    "modeled_dps": 10.0,
+                    "duration_seconds": 10.0,
+                    "mechanic_complete": True,
+                    "unresolved": (),
+                },
+            )(),
+            required_duration_seconds=10.0,
+        )
+
+
+def test_generated_search_requires_tuple_child_branches() -> None:
+    root = _branch("root", 20.0, leaf=False)
+
+    with pytest.raises(TypeError, match="branch expander must return a tuple"):
+        ExtremeSustainedDPSGeneratedBranchAndBoundSearchService.search(
+            (root,),
+            expand_branch=lambda _branch: [_branch("leaf", 10.0, leaf=True, depth=1)],
+            evaluate_leaf=_leaf_eval({"leaf": 10.0}),
+            required_duration_seconds=10.0,
+        )
+
+
+def test_exact_leaf_requires_tuple_evidence_collections() -> None:
+    with pytest.raises(TypeError, match="evidence must be a tuple"):
+        ExtremeSustainedDPSExactLeafEvaluation(
+            candidate_key="leaf",
+            modeled_dps=10.0,
+            duration_seconds=10.0,
+            mechanic_complete=True,
+            evidence=["mutable"],
+        )
