@@ -17,6 +17,12 @@ Keep equations secondary. The point of this file is to preserve the useful idea 
 
 ---
 
+## 2026-09-26 — Potion, Heavy Attack, and delayed-Ultimate frontiers require typed proof inputs
+
+Objective #32 now applies the same fail-closed evidence rule to potion paging/resource observations, continuous potion timing breakpoints, finalized potion-restoration proof flags, reviewed Heavy Attack windows, and delayed-Ultimate generation inputs. Booleans cannot masquerade as numbers, strings are not silently parsed into timestamps/ranks/resources, and proof collections must arrive in the immutable tuple shape the frontier contract declares.
+
+Why this matters: these values define finite search denominators and exact timing boundaries. Quiet coercion can create a mechanically plausible branch that was never actually proven. Rejecting malformed evidence keeps "enumerated everything" tied to the evidence we truly possess rather than Python's willingness to reinterpret it.
+
 ## 2026-09-26 — Generated CP, jewelry, and passive frontiers reject coercion
 
 Extreme Engine frontier enumeration now treats paging indices, Champion Point combination ranks, jewelry choice collections, passive `combat_line` proof flags, and canonical passive max ranks as typed evidence rather than values that may be coerced with `int()`, `bool()`, or `str()`.
