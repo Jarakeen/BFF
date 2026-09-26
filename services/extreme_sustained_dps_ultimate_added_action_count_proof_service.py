@@ -71,13 +71,21 @@ class ExtremeSustainedDPSUltimateAddedActionCountProofService:
             )
 
         assessment = policy.resource_legality
-        if not bool(getattr(assessment, "is_legal", False)):
+        legality = getattr(assessment, "is_legal", None)
+        if not isinstance(legality, bool):
+            unresolved.append(
+                "Selected Ultimate policy final resource legality flag is not boolean"
+            )
+        elif not legality:
             unresolved.append(
                 "Selected Ultimate policy failed final canonical resource legality"
             )
+        legality_unresolved = getattr(assessment, "unresolved", ())
+        if not isinstance(legality_unresolved, tuple):
+            raise TypeError("Ultimate resource-legality unresolved evidence must be a tuple")
         unresolved.extend(
             str(item).strip()
-            for item in tuple(getattr(assessment, "unresolved", ()) or ())
+            for item in legality_unresolved
             if str(item).strip()
         )
 
