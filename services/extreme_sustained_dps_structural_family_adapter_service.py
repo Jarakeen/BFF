@@ -27,6 +27,19 @@ class ExtremeSustainedDPSStructuralFamilyChoice:
     source_front_index: int
     source_back_index: int
 
+    def __post_init__(self) -> None:
+        for label, value in (
+            ("structural_family_index", self.structural_family_index),
+            ("source_front_index", self.source_front_index),
+            ("source_back_index", self.source_back_index),
+        ):
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"structural family {label} must be an integer")
+            if value < 0:
+                raise ValueError(f"structural family {label} cannot be negative")
+        if not isinstance(self.candidate, ExtremeSustainedDPSStructuralCandidate):
+            raise TypeError("structural family choice requires a structural candidate")
+
 
 @dataclass(frozen=True)
 class ExtremeSustainedDPSStructuralFamilyFrontier:
@@ -34,6 +47,18 @@ class ExtremeSustainedDPSStructuralFamilyFrontier:
     denominator_proven: bool
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if isinstance(self.choice_count, bool) or not isinstance(self.choice_count, int):
+            raise TypeError("structural family frontier choice_count must be an integer")
+        if self.choice_count < 0:
+            raise ValueError("structural family frontier choice_count cannot be negative")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("structural family frontier denominator_proven must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("structural family frontier evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("structural family frontier unresolved must be a tuple")
 
 
 class ExtremeSustainedDPSStructuralFamilyAdapterService:
@@ -51,7 +76,7 @@ class ExtremeSustainedDPSStructuralFamilyAdapterService:
         left: ExtremeSustainedDPSStructuralCandidate,
         right: ExtremeSustainedDPSStructuralCandidate,
     ) -> bool:
-        return bool(
+        return (
             left.race == right.race
             and left.class_route == right.class_route
             and left.attributes == right.attributes
@@ -59,8 +84,18 @@ class ExtremeSustainedDPSStructuralFamilyAdapterService:
 
     def frontier(self) -> ExtremeSustainedDPSStructuralFamilyFrontier:
         source = self.generated_candidates.frontier()
+        if not isinstance(source.unresolved, tuple):
+            raise TypeError("source structural frontier unresolved must be a tuple")
+        if isinstance(source.structural_candidate_count, bool) or not isinstance(
+            source.structural_candidate_count,
+            int,
+        ):
+            raise TypeError("source structural_candidate_count must be an integer")
+        if not isinstance(source.structural_denominator_proven, bool):
+            raise TypeError("source structural_denominator_proven must be boolean")
+
         unresolved = list(source.unresolved)
-        count = int(source.structural_candidate_count)
+        count = source.structural_candidate_count
 
         if not source.structural_denominator_proven:
             unresolved.append(
@@ -99,10 +134,12 @@ class ExtremeSustainedDPSStructuralFamilyAdapterService:
                 "sustained-DPS structural family denominator is unresolved"
             )
 
-        target = int(index)
-        if target < 0 or target >= frontier.choice_count:
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("sustained-DPS structural family index must be an integer")
+        if index < 0 or index >= frontier.choice_count:
             raise IndexError("sustained-DPS structural family index out of range")
 
+        target = index
         front_index = target * 2
         back_index = front_index + 1
         front = self.generated_candidates.candidate_at(front_index)
