@@ -97,6 +97,13 @@ class ExtremeSustainedDPSClosureInventoryService:
         scaling: ExtremeSustainedDPSRuntimeEffectScalingResult | None = None,
         mechanics_dependency_keys: tuple[str, ...] = OBJECTIVE32_MECHANICS_DEPENDENCIES,
     ) -> ExtremeSustainedDPSClosureInventory:
+        if relevance is not None and not isinstance(relevance, ExtremeSustainedDPSRuntimeEffectRelevance):
+            raise TypeError("Objective #32 closure relevance must be canonical when supplied")
+        if scaling is not None and not isinstance(scaling, ExtremeSustainedDPSRuntimeEffectScalingResult):
+            raise TypeError("Objective #32 closure scaling must be canonical when supplied")
+        if not isinstance(mechanics_dependency_keys, tuple):
+            raise TypeError("Objective #32 mechanics_dependency_keys must be a tuple")
+
         report = CanonicalMechanicsCoverageAuditService().audit(
             shared_canonical_mechanics_inventory()
         )
