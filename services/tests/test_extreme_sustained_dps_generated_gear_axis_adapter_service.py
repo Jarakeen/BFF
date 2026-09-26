@@ -159,3 +159,27 @@ def test_boolean_gear_candidate_count_is_not_accepted_as_integer() -> None:
 
     with pytest.raises(TypeError, match="candidate count must be an integer"):
         adapter.axes()[0].candidate_count(state)
+
+
+@pytest.mark.parametrize(
+    ("axis_index", "message"),
+    (
+        (0, "dual-bar gear state index must be an integer"),
+        (1, "armor trait/enchant index must be an integer"),
+        (2, "jewelry trait/enchant index must be an integer"),
+        (3, "weapon trait/enchant index must be an integer"),
+    ),
+)
+def test_generated_gear_axes_reject_boolean_indices(axis_index, message) -> None:
+    adapter = _adapter()
+    axes = adapter.axes()
+    state = adapter.root(
+        _Build(),
+        object(),
+        dual_bar_frontier=_dual_frontier(),
+    )
+    for prior in range(axis_index):
+        state = axes[prior].candidate_at(state, 0)
+
+    with pytest.raises(TypeError, match=message):
+        axes[axis_index].candidate_at(state, True)
