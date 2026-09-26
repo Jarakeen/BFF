@@ -183,6 +183,16 @@ class ExtremeSustainedDPSRuntimeAttemptEvidenceFrontierService:
         source: str,
         fixed_attempts: tuple[RuntimeEffectEventAttempt, ...] = (),
     ) -> ExtremeSustainedDPSRuntimeAttemptEvidenceFrontier:
+        if not isinstance(event_denominator_proven, bool):
+            raise TypeError("runtime attempt event_denominator_proven must be boolean")
+        if any(not isinstance(row, RuntimeEvent) for row in events):
+            raise TypeError("runtime attempt events must contain RuntimeEvent records")
+        if any(not isinstance(row, EffectVariant) for row in effects):
+            raise TypeError("runtime attempt effects must contain EffectVariant records")
+        if any(not isinstance(row, RuntimeEffectEventAttempt) for row in fixed_attempts):
+            raise TypeError(
+                "runtime attempt fixed_attempts must contain RuntimeEffectEventAttempt records"
+            )
         unresolved: list[str] = []
         if not event_denominator_proven:
             unresolved.append(
