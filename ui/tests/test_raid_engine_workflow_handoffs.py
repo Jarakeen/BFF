@@ -21,6 +21,8 @@ def test_plan_workflow_routes_preserve_comp_and_coverage_context() -> None:
     assert 'if target == "console:7":' in route
     assert '_open_raid_plan_coverage(window, plan)' in route
     assert 'Save or discard Raid Plan changes before opening Coverage.' in route
+    assert 'apply_plan = getattr(source_page, "apply_plan", None)' in route
+    assert "apply_plan(verified_plan)" in route
 
 
 def test_finch_coverage_publish_defaults_to_canonical_plan_database() -> None:
