@@ -11,10 +11,57 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import os
+from tempfile import NamedTemporaryFile
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 
 SUPPORTED_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
 SUPPORTED_LAYOUT_SUFFIXES = {".json"}
+
+
+class RaidMapManifestRowPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, str_strip_whitespace=True)
+
+    map_id: str = Field(min_length=1, max_length=128)
+    label: str = Field(min_length=1, max_length=240)
+    relative_path: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("relative_path")
+    @classmethod
+    def validate_relative_path(cls, value: str) -> str:
+        path = Path(value)
+        if path.is_absolute() or ".." in path.parts:
+            raise ValueError("Raid Map relative_path must stay inside user data")
+        if path.suffix.casefold() not in SUPPORTED_IMAGE_SUFFIXES:
+            raise ValueError("Raid Map manifest may contain only supported image paths")
+        return value
+
+
+class RaidMapManifestPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    schema_version: int = Field(default=1, ge=1, le=1)
+    encounters: dict[str, list[RaidMapManifestRowPayload]] = Field(default_factory=dict)
+
+    @field_validator("encounters")
+    @classmethod
+    def validate_encounters(
+        cls, value: dict[str, list[RaidMapManifestRowPayload]]
+    ) -> dict[str, list[RaidMapManifestRowPayload]]:
+        for encounter_id, rows in value.items():
+            key = str(encounter_id or "").strip()
+            if not key or any(part in key for part in ("/", "\\", "..")):
+                raise ValueError(f"invalid Raid Map encounter id: {encounter_id!r}")
+            map_ids = [row.map_id.casefold() for row in rows]
+            if len(map_ids) != len(set(map_ids)):
+                raise ValueError(f"duplicate Raid Map id in encounter {encounter_id!r}")
+        return value
+
+
+def _validated_manifest(payload: object) -> dict:
+    return RaidMapManifestPayload.model_validate(payload).model_dump(mode="json")
 
 
 @dataclass(frozen=True)
@@ -48,21 +95,42 @@ class EncounterRaidMapStore:
             payload = json.loads(self.manifest_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise RuntimeError(f"Unable to read Raid Map manifest: {exc}") from exc
-        if not isinstance(payload, dict):
-            raise RuntimeError("Raid Map manifest must contain a JSON object")
-        encounters = payload.get("encounters", {})
-        if not isinstance(encounters, dict):
-            raise RuntimeError("Raid Map manifest encounters must be an object")
-        return {"schema_version": 1, "encounters": encounters}
+        try:
+            return _validated_manifest(payload)
+        except (ValidationError, ValueError) as exc:
+            raise RuntimeError(f"Raid Map manifest failed Pydantic validation: {exc}") from exc
 
     def _write_manifest(self, payload: dict) -> None:
+        persisted = _validated_manifest(payload)
         self.manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.manifest_path.with_suffix(".tmp")
-        temporary.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
-        temporary.replace(self.manifest_path)
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                dir=self.manifest_path.parent,
+                prefix=f".{self.manifest_path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                json.dump(persisted, handle, indent=2, ensure_ascii=False, sort_keys=True)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.manifest_path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+        try:
+            read_back = _validated_manifest(
+                json.loads(self.manifest_path.read_text(encoding="utf-8"))
+            )
+        except (OSError, json.JSONDecodeError, ValidationError, ValueError) as exc:
+            raise RuntimeError(f"Raid Map manifest failed read-back validation: {exc}") from exc
+        if read_back != persisted:
+            raise RuntimeError("Raid Map manifest did not round-trip exactly")
 
     def list_maps(self, encounter_id: str) -> tuple[EncounterRaidMap, ...]:
         encounter_id = self._clean_encounter_id(encounter_id)
