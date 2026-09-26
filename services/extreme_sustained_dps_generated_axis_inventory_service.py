@@ -61,6 +61,16 @@ class ExtremeSustainedDPSGeneratedAxisInventory:
             raise ValueError(
                 "generated axis inventory duplicate canonical axes require unresolved evidence"
             )
+        if self.missing_canonical_axes and not all(
+            axis not in searched for axis in self.missing_canonical_axes
+        ):
+            raise ValueError(
+                "generated axis inventory missing axes cannot also be searched"
+            )
+        if self.untagged_axis_names and not self.unresolved:
+            raise ValueError(
+                "generated axis inventory untagged axes require unresolved evidence"
+            )
 
 
 class ExtremeSustainedDPSGeneratedAxisInventoryService:
