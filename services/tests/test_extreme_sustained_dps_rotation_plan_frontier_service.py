@@ -179,3 +179,16 @@ def test_rotation_plan_frontier_requires_tuple_encounter_demands() -> None:
             index=0,
             encounter_demands=["demand"],
         )
+
+
+@pytest.mark.parametrize("field,value", (("offset", True), ("limit", "4"), ("offset", 2.5)))
+def test_rotation_plan_page_requires_strict_integer_bounds(field, value) -> None:
+    kwargs = {"offset": 0, "limit": 4}
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"generated rotation-plan page {field} must be an integer"):
+        _service().page(
+            _candidate(),
+            duration_seconds=10.0,
+            **kwargs,
+        )
