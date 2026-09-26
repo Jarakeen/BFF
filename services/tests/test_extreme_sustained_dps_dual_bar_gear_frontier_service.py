@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from types import SimpleNamespace
 
 from services.extreme_gear_physical_slot_realization_service import ExtremeWeaponSlotShape
@@ -109,3 +111,38 @@ def test_out_of_range_topology_index_fails_closed() -> None:
 
     assert result.denominator_proven is False
     assert any("outside expected" in item for item in result.unresolved)
+
+
+def test_dual_bar_frontier_rejects_boolean_expected_topology_count() -> None:
+    with pytest.raises(TypeError, match="expected_topology_count must be an integer"):
+        ExtremeSustainedDPSDualBarGearFrontierService.build(
+            (),
+            expected_topology_count=True,
+        )
+
+
+def test_dual_bar_frontier_rejects_truthy_branch_denominator_proof() -> None:
+    with pytest.raises(TypeError, match="branch denominator_proven must be boolean"):
+        ExtremeSustainedDPSDualBarGearFrontierService.build(
+            (_branch(0, proven="true"),),
+            expected_topology_count=1,
+        )
+
+
+def test_dual_bar_frontier_rejects_boolean_branch_index() -> None:
+    with pytest.raises(TypeError, match="topology_index must be an integer"):
+        ExtremeSustainedDPSDualBarGearFrontierService.build(
+            (_branch(True),),
+            expected_topology_count=1,
+        )
+
+
+def test_dual_bar_frontier_rejects_mutable_branch_unresolved() -> None:
+    branch = _branch(0)
+    branch.unresolved = ["open"]
+
+    with pytest.raises(TypeError, match="branch unresolved must be a tuple"):
+        ExtremeSustainedDPSDualBarGearFrontierService.build(
+            (branch,),
+            expected_topology_count=1,
+        )
