@@ -215,6 +215,8 @@ def test_reviewed_runtime_data_and_user_state_are_classified() -> None:
     assert (ROOT / "data" / "rotation_policy" / "encounter_demands.json").is_file()
 
     for name in (
+        "build_profiles.json",
+        "finch_shared_provenance.json",
         "discord_registrations.json",
         "encounter_positioning.json",
         "encounter_positioning.png",
