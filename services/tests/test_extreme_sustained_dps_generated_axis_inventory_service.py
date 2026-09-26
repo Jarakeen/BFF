@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
+from services.extreme_sustained_dps_axis_dominance_composition_service import (
+    CANONICAL_SUSTAINED_DPS_MUTATION_AXES,
+)
 from services.extreme_sustained_dps_generated_axis_inventory_service import (
     ExtremeSustainedDPSGeneratedAxisInventory,
     ExtremeSustainedDPSGeneratedAxisInventoryService,
