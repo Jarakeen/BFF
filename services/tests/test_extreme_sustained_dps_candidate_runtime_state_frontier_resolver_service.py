@@ -7,6 +7,9 @@ import pytest
 from services.extreme_sustained_dps_candidate_runtime_state_frontier_resolver_service import (
     ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService,
 )
+from services.extreme_sustained_dps_runtime_external_history_frontier_service import (
+    ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult,
+)
 from services.extreme_sustained_dps_runtime_scenario_frontier_service import (
     ExtremeSustainedDPSRuntimeScenarioFrontierResult,
 )
@@ -47,7 +50,11 @@ class _Scenario:
             source=f"runtime family {candidate_id}",
         )
         return ExtremeSustainedDPSRuntimeScenarioFrontierResult(
-            frontier=frontier,
+            runtime=ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult(
+                frontier=frontier,
+                evidence=(f"runtime {candidate_id}",),
+                unresolved=(),
+            ),
             evidence=(f"scenario {candidate_id}",),
             unresolved=(),
         )
