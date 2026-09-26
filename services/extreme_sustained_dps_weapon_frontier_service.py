@@ -74,9 +74,13 @@ class ExtremeSustainedDPSWeaponFrontierService:
         enchant_choices: tuple[str, ...],
         trait_choices: tuple[str, ...] | None = None,
     ) -> None:
+        if not isinstance(enchant_choices, tuple):
+            raise TypeError("weapon enchant choices must be a tuple")
+        if trait_choices is not None and not isinstance(trait_choices, tuple):
+            raise TypeError("weapon trait choices must be a tuple")
         self.enchant_choices = self._clean(enchant_choices)
         self.trait_choices = self._clean(
-            tuple(trait_choices) if trait_choices is not None else tuple(WEAPON_TRAITS)
+            trait_choices if trait_choices is not None else tuple(WEAPON_TRAITS)
         )
 
     @classmethod
@@ -184,8 +188,12 @@ class ExtremeSustainedDPSWeaponFrontierService:
         limit: int = 100,
     ) -> tuple[ExtremeSustainedDPSWeaponCandidate, ...]:
         frontier = self.frontier(baseline_build)
-        start = max(0, int(offset))
-        size = max(0, int(limit))
+        if isinstance(offset, bool) or not isinstance(offset, int):
+            raise TypeError("weapon page offset must be an integer")
+        if isinstance(limit, bool) or not isinstance(limit, int):
+            raise TypeError("weapon page limit must be an integer")
+        start = max(0, offset)
+        size = max(0, limit)
         if size == 0 or start >= frontier.candidate_count:
             return ()
         return tuple(
@@ -195,10 +203,14 @@ class ExtremeSustainedDPSWeaponFrontierService:
 
     @staticmethod
     def _clean(values: tuple[str, ...]) -> tuple[str, ...]:
+        if not isinstance(values, tuple):
+            raise TypeError("weapon frontier choices must be a tuple")
+        if any(not isinstance(value, str) for value in values):
+            raise TypeError("weapon frontier choices must contain only strings")
         unique = {
-            " ".join(str(value or "").strip().split())
+            " ".join(value.strip().split())
             for value in values
-            if str(value or "").strip()
+            if value.strip()
         }
         return tuple(sorted(unique, key=str.casefold))
 
