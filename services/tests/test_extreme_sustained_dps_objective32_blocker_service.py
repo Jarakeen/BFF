@@ -105,19 +105,10 @@ def test_closed_objective_has_no_blockers() -> None:
 def test_reports_missing_axis_and_theoretical_omission_structurally() -> None:
     result = ExtremeSustainedDPSObjective32BlockerService.assess(
         search_result=_canonical_search(),
-        axis_inventory=SimpleNamespace(
-            missing_canonical_axes=("runtime_state",),
-            duplicate_canonical_axes=(),
-            unresolved=(),
-        ),
-        axis_coverage=SimpleNamespace(
-            missing_axes=("runtime_state",),
-            unresolved=(),
-        ),
-        closure=SimpleNamespace(
-            omitted_scope=(
-                "continuous potion first-use offset remains open",
-            ),
+        axis_inventory=_canonical_inventory(missing=("runtime_state",)),
+        axis_coverage=_canonical_coverage(missing=("runtime_state",)),
+        closure=_canonical_closure(
+            omitted=("continuous potion first-use offset remains open",)
         ),
     )
 
@@ -132,18 +123,16 @@ def test_reports_missing_axis_and_theoretical_omission_structurally() -> None:
 
 def test_reports_search_and_inventory_unresolved_evidence() -> None:
     result = ExtremeSustainedDPSObjective32BlockerService.assess(
-        search_result=SimpleNamespace(
-            global_maximum_proven=False,
+        search_result=_canonical_search(
+            proven=False,
             unresolved=("leaf damage unresolved",),
         ),
-        axis_inventory=SimpleNamespace(
-            missing_canonical_axes=(),
-            duplicate_canonical_axes=("mundus",),
+        axis_inventory=_canonical_inventory(
+            duplicate=("mundus",),
             unresolved=("tree metadata conflict",),
         ),
-        axis_coverage=SimpleNamespace(
-            missing_axes=(),
-            unresolved=("coverage contributor open",),
+        axis_coverage=_canonical_coverage(
+            unresolved=("coverage contributor open",)
         ),
         closure=_canonical_closure(),
     )
@@ -221,9 +210,8 @@ def test_theoretical_gate_unresolved_is_visible_without_inventory() -> None:
         search_result=_canonical_search(),
         axis_inventory=_canonical_inventory(),
         axis_coverage=_canonical_coverage(),
-        closure=SimpleNamespace(
-            omitted_scope=(),
-            unresolved=("Objective #32 mechanics closure remains open",),
+        closure=_canonical_closure(
+            unresolved=("Objective #32 mechanics closure remains open",)
         ),
     )
 
@@ -233,27 +221,17 @@ def test_theoretical_gate_unresolved_is_visible_without_inventory() -> None:
     )
 
 
-def test_blocker_assessment_requires_strict_global_proof_flag() -> None:
-    with pytest.raises(TypeError, match="boolean global_maximum_proven"):
+def test_blocker_assessment_rejects_noncanonical_search_before_inner_flags() -> None:
+    with pytest.raises(TypeError, match="canonical generated search result"):
         ExtremeSustainedDPSObjective32BlockerService.assess(
             search_result=SimpleNamespace(
                 global_maximum_proven="false",
                 unresolved=(),
             ),
-            axis_inventory=SimpleNamespace(
-                missing_canonical_axes=(),
-                duplicate_canonical_axes=(),
-                unresolved=(),
-            ),
-            axis_coverage=SimpleNamespace(
-                missing_axes=(),
-                unresolved=(),
-            ),
-            closure=SimpleNamespace(
-                omitted_scope=(),
-            ),
+            axis_inventory=_canonical_inventory(),
+            axis_coverage=_canonical_coverage(),
+            closure=_canonical_closure(),
         )
-
 
 def test_blocker_report_requires_canonical_blocker_records() -> None:
     with pytest.raises(TypeError, match="canonical blocker records"):
@@ -263,28 +241,17 @@ def test_blocker_report_requires_canonical_blocker_records() -> None:
         )
 
 
-def test_blocker_assessment_rejects_mutable_search_unresolved_collection() -> None:
-    with pytest.raises(TypeError, match="search result unresolved must be a tuple"):
+def test_blocker_assessment_rejects_duck_typed_mutable_search_record() -> None:
+    with pytest.raises(TypeError, match="canonical generated search result"):
         ExtremeSustainedDPSObjective32BlockerService.assess(
             search_result=SimpleNamespace(
                 global_maximum_proven=True,
                 unresolved=[],
             ),
-            axis_inventory=SimpleNamespace(
-                missing_canonical_axes=(),
-                duplicate_canonical_axes=(),
-                unresolved=(),
-            ),
-            axis_coverage=SimpleNamespace(
-                missing_axes=(),
-                unresolved=(),
-            ),
-            closure=SimpleNamespace(
-                omitted_scope=(),
-                unresolved=(),
-            ),
+            axis_inventory=_canonical_inventory(),
+            axis_coverage=_canonical_coverage(),
+            closure=_canonical_closure(),
         )
-
 
 def test_blocker_report_rejects_mutable_proof_collections() -> None:
     with pytest.raises(TypeError, match="blockers must be a tuple"):
