@@ -37,6 +37,20 @@ class ExtremeSustainedDPSJewelryFrontier:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.slots, tuple):
+            raise TypeError("jewelry frontier slots must be a tuple")
+        if isinstance(self.candidate_count, bool) or not isinstance(self.candidate_count, int):
+            raise TypeError("jewelry frontier candidate_count must be an integer")
+        if self.candidate_count < 0:
+            raise ValueError("jewelry frontier candidate_count cannot be negative")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("jewelry frontier denominator_proven must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("jewelry frontier evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("jewelry frontier unresolved must be a tuple")
+
 
 class ExtremeSustainedDPSJewelryFrontierService:
     """Preserve the complete modeled jewelry trait × canonical glyph-family product."""
@@ -91,7 +105,7 @@ class ExtremeSustainedDPSJewelryFrontierService:
         proven = bool(slots and count > 0 and not unresolved)
         return ExtremeSustainedDPSJewelryFrontier(
             slots=tuple(slots),
-            candidate_count=int(count),
+            candidate_count=count,
             denominator_proven=proven,
             evidence=(
                 f"Equipped jewelry slots in frontier: {len(slots)}",
@@ -114,7 +128,9 @@ class ExtremeSustainedDPSJewelryFrontierService:
                 "jewelry frontier denominator is unresolved: " + "; ".join(frontier.unresolved)
             )
 
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("jewelry candidate index must be an integer")
+        target = index
         if target < 0 or target >= frontier.candidate_count:
             raise IndexError("jewelry candidate index out of range")
 
