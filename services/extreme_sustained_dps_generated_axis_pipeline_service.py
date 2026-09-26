@@ -9,6 +9,7 @@ axis-local optimistic-bound provider.
 """
 
 from dataclasses import dataclass, replace
+import math
 
 from minmax.potion_cadence import BASE_POTION_COOLDOWN_SECONDS
 
@@ -171,9 +172,12 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         if state.potion_cooldown_resolver is None:
             if state.potion_cooldown_seconds is None:
                 raise ValueError("generated axis pipeline requires potion cooldown evidence")
-            cooldown = float(state.potion_cooldown_seconds)
-            if cooldown <= 0.0:
-                raise ValueError("generated axis pipeline potion cooldown must be positive")
+            raw_cooldown = state.potion_cooldown_seconds
+            if isinstance(raw_cooldown, bool) or not isinstance(raw_cooldown, (int, float)):
+                raise TypeError("generated axis pipeline potion cooldown must be numeric")
+            cooldown = float(raw_cooldown)
+            if not math.isfinite(cooldown) or cooldown <= 0.0:
+                raise ValueError("generated axis pipeline potion cooldown must be finite and positive")
             return cooldown
         scenario = state.potion_cooldown_scenario
         resolution = state.potion_cooldown_resolver.resolve(
@@ -193,9 +197,12 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
                 "generated axis pipeline potion cooldown is unresolved"
                 + (f": {detail}" if detail else "")
             )
-        cooldown = float(resolution.cooldown_seconds)
-        if cooldown <= 0.0:
-            raise ValueError("generated axis pipeline resolved potion cooldown must be positive")
+        raw_cooldown = getattr(resolution, "cooldown_seconds", None)
+        if isinstance(raw_cooldown, bool) or not isinstance(raw_cooldown, (int, float)):
+            raise TypeError("resolved potion cooldown must be numeric")
+        cooldown = float(raw_cooldown)
+        if not math.isfinite(cooldown) or cooldown <= 0.0:
+            raise ValueError("generated axis pipeline resolved potion cooldown must be finite and positive")
         return cooldown
 
     def _rotation_state(
@@ -452,15 +459,43 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         heavy_attack_channel_blocks: tuple[object, ...] = (),
         heavy_attack_channel_block_denominator_proven: bool = False,
     ) -> ExtremeSustainedDPSGeneratedAxisPipelineState:
-        prefix = str(candidate_id_prefix or "").strip()
+        if not isinstance(candidate_id_prefix, str):
+            raise TypeError("generated axis pipeline candidate_id_prefix must be a string")
+        prefix = candidate_id_prefix.strip()
         if not prefix:
             raise ValueError("generated axis pipeline candidate_id_prefix is required")
-        if isinstance(duration_seconds, bool):
-            raise TypeError("generated axis pipeline duration must be numeric, not boolean")
-        if isinstance(potion_cooldown_seconds, bool):
-            raise TypeError("generated axis pipeline potion cooldown must be numeric, not boolean")
-        if isinstance(starting_ultimate, bool):
-            raise TypeError("generated axis pipeline starting Ultimate must be numeric, not boolean")
+        if isinstance(duration_seconds, bool) or not isinstance(duration_seconds, (int, float)):
+            raise TypeError("generated axis pipeline duration must be numeric")
+        duration = float(duration_seconds)
+        if not math.isfinite(duration) or duration <= 0.0:
+            raise ValueError("generated axis pipeline duration must be finite and positive")
+        if potion_cooldown_seconds is not None:
+            if isinstance(potion_cooldown_seconds, bool) or not isinstance(
+                potion_cooldown_seconds,
+                (int, float),
+            ):
+                raise TypeError("generated axis pipeline potion cooldown must be numeric")
+            cooldown = float(potion_cooldown_seconds)
+            if not math.isfinite(cooldown) or cooldown <= 0.0:
+                raise ValueError("generated axis pipeline potion cooldown must be finite and positive")
+        else:
+            cooldown = None
+        if isinstance(starting_ultimate, bool) or not isinstance(starting_ultimate, (int, float)):
+            raise TypeError("generated axis pipeline starting Ultimate must be numeric")
+        starting = float(starting_ultimate)
+        if not math.isfinite(starting) or starting < 0.0:
+            raise ValueError("generated axis pipeline starting Ultimate must be finite and non-negative")
+        if not isinstance(target_identity, str) or not target_identity.strip():
+            raise TypeError("generated axis pipeline target_identity must be a non-empty string")
+        for label, value in (
+            ("ultimate_generation_events", ultimate_generation_events),
+            ("heroism_windows", heroism_windows),
+            ("duration_rules", duration_rules),
+            ("heavy_attack_windows", heavy_attack_windows),
+            ("heavy_attack_channel_blocks", heavy_attack_channel_blocks),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"generated axis pipeline {label} must be a tuple")
         if not isinstance(use_scheduled_combat_attacks_for_ultimate, bool):
             raise TypeError("generated axis pipeline scheduled-combat Ultimate flag must be boolean")
         if not isinstance(heavy_attack_channel_block_denominator_proven, bool):
@@ -473,22 +508,20 @@ class ExtremeSustainedDPSGeneratedAxisPipelineService:
         return ExtremeSustainedDPSGeneratedAxisPipelineState(
             gear=gear,
             candidate_id_prefix=prefix,
-            duration_seconds=float(duration_seconds),
-            potion_cooldown_seconds=(
-                None if potion_cooldown_seconds is None else float(potion_cooldown_seconds)
-            ),
+            duration_seconds=duration,
+            potion_cooldown_seconds=cooldown,
             potion_cooldown_resolver=potion_cooldown_resolver,
             potion_cooldown_scenario=potion_cooldown_scenario,
-            starting_ultimate=float(starting_ultimate),
-            ultimate_generation_events=tuple(ultimate_generation_events),
-            heroism_windows=tuple(heroism_windows),
+            starting_ultimate=starting,
+            ultimate_generation_events=ultimate_generation_events,
+            heroism_windows=heroism_windows,
             use_scheduled_combat_attacks_for_ultimate=use_scheduled_combat_attacks_for_ultimate,
             priorities=priorities,
             snapshot_resolver=snapshot_resolver,
-            target_identity=str(target_identity or "").strip(),
-            duration_rules=tuple(duration_rules),
-            heavy_attack_windows=tuple(heavy_attack_windows),
-            heavy_attack_channel_blocks=tuple(heavy_attack_channel_blocks),
+            target_identity=target_identity.strip(),
+            duration_rules=duration_rules,
+            heavy_attack_windows=heavy_attack_windows,
+            heavy_attack_channel_blocks=heavy_attack_channel_blocks,
             heavy_attack_channel_block_denominator_proven=heavy_attack_channel_block_denominator_proven,
             requires_finalized_potion=bool(self.finalized_potion_adapter is not None),
         )
