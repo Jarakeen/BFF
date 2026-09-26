@@ -355,6 +355,18 @@ class CoveragePage(FoundryPage):
             self.status.warning("Selected Raid Plan is no longer available.")
             return
 
+        manual_sources_by_effect: dict[str, list[str]] = {}
+        for provider in tuple(getattr(plan, "coverage_providers", ()) or ()):
+            detail = str(provider.source or "").strip()
+            note = str(provider.note or "").strip()
+            if note:
+                detail = f"{detail} — {note}"
+            if detail:
+                manual_sources_by_effect.setdefault(
+                    str(provider.effect_name or "").strip().casefold(),
+                    [],
+                ).append(detail)
+
         covered_states = {
             "assigned_manual",
             "assigned_supported",
@@ -380,12 +392,27 @@ class CoveragePage(FoundryPage):
                 item = self.table.item(row_index, column)
                 return str(item.text() if item is not None else "").strip()
 
+            effect = cell(0)
+            table_source = cell(3)
+            manual_sources = tuple(
+                dict.fromkeys(
+                    manual_sources_by_effect.get(effect.casefold(), ())
+                )
+            )
+            source = (
+                "Raid lead: " + " | ".join(manual_sources)
+                if manual_sources
+                else table_source
+            )
+            if manual_sources and table_source and table_source != "—":
+                source += f" • Evidence: {table_source}"
+
             rows.append(
                 CoveragePDFRow(
-                    effect=cell(0),
+                    effect=effect,
                     provider=cell(4),
                     backup=cell(5),
-                    source=cell(3),
+                    source=source,
                     status=cell(8),
                 )
             )
