@@ -322,3 +322,39 @@ def test_generated_policy_axis_always_selects_explicit_no_potion_slice() -> None
     )
     assert candidate_call[5] == 3
     assert state.rotation_policy.structural_index == 3
+
+
+def test_truthy_non_boolean_rotation_denominator_proof_fails_closed() -> None:
+    plans = _PlanFrontier()
+    plans.proven = "false"
+    adapter = _adapter(plans=plans)
+
+    with pytest.raises(TypeError, match="proof flag must be boolean"):
+        adapter.axes()[0].candidate_count(_root(adapter))
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("duration_seconds", True, "duration must be numeric"),
+        ("potion_cooldown_seconds", True, "cooldown must be numeric"),
+        ("starting_ultimate", True, "Ultimate must be numeric"),
+        ("use_scheduled_combat_attacks_for_ultimate", "false", "flag must be boolean"),
+    ),
+)
+def test_root_rejects_boolean_laundering_at_rotation_proof_boundary(
+    field,
+    value,
+    message,
+) -> None:
+    adapter = _adapter()
+    values = {
+        "duration_seconds": 10.0,
+        "potion_cooldown_seconds": 45.0,
+        "starting_ultimate": 70.0,
+        "use_scheduled_combat_attacks_for_ultimate": False,
+    }
+    values[field] = value
+
+    with pytest.raises(TypeError, match=message):
+        adapter.root(_assembled(), **values)
