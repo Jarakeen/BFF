@@ -83,3 +83,11 @@ def test_phase14_optimizer_draft_preview_can_open_saved_plans_without_saving() -
     assert "page.optimizer_plan_combo.setEnabled(False)" not in source
     assert "repository.save(" not in source
     assert ".save(plan" not in source
+
+
+def test_phase14_optimizer_wraps_recommendation_cells_and_fits_row_height() -> None:
+    source = _source()
+
+    assert "table.setWordWrap(True)" in source
+    assert "QHeaderView.ResizeMode.ResizeToContents" in source
+    assert "table.resizeRowsToContents()" in source
