@@ -22,6 +22,12 @@ class ExtremeSustainedDPSGeneratedRuntimeStateLeaf:
     runtime_state_choice: ExtremeSustainedDPSRuntimeStateChoice
     omitted_scope: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.runtime_state_choice, ExtremeSustainedDPSRuntimeStateChoice):
+            raise TypeError("generated runtime-state leaf requires a canonical runtime-state choice")
+        if not isinstance(self.omitted_scope, tuple):
+            raise TypeError("generated runtime-state leaf omitted_scope must be a tuple")
+
     @property
     def complete(self) -> bool:
         upstream_complete = getattr(self.pipeline_state, "complete", False)
@@ -72,7 +78,7 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
                 raise ValueError(
                     "runtime-state axis requires a complete upstream generated pipeline state"
                 )
-            return int(frontier.candidate_count)
+            return frontier.candidate_count
 
         def candidate_at(state: object, index: int):
             complete = getattr(state, "complete", False)
@@ -82,12 +88,13 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
                 raise ValueError(
                     "runtime-state axis requires a complete upstream generated pipeline state"
                 )
-            target = int(index)
-            if target < 0 or target >= frontier.candidate_count:
+            if isinstance(index, bool) or not isinstance(index, int):
+                raise TypeError("generated runtime-state choice index must be an integer")
+            if index < 0 or index >= frontier.candidate_count:
                 raise IndexError("generated runtime-state choice index out of range")
             return ExtremeSustainedDPSGeneratedRuntimeStateLeaf(
                 pipeline_state=state,
-                runtime_state_choice=frontier.choices[target],
+                runtime_state_choice=frontier.choices[index],
                 omitted_scope=tuple(frontier.omitted_scope),
             )
 
@@ -142,7 +149,7 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
                 raise ValueError(
                     "candidate runtime-state axis requires a complete upstream generated pipeline state"
                 )
-            return int(resolve_frontier(state).candidate_count)
+            return resolve_frontier(state).candidate_count
 
         def candidate_at(state: object, index: int):
             complete = getattr(state, "complete", False)
@@ -153,12 +160,13 @@ class ExtremeSustainedDPSGeneratedRuntimeStateAxisAdapterService:
                     "candidate runtime-state axis requires a complete upstream generated pipeline state"
                 )
             frontier = resolve_frontier(state)
-            target = int(index)
-            if target < 0 or target >= frontier.candidate_count:
+            if isinstance(index, bool) or not isinstance(index, int):
+                raise TypeError("candidate runtime-state choice index must be an integer")
+            if index < 0 or index >= frontier.candidate_count:
                 raise IndexError("candidate runtime-state choice index out of range")
             return ExtremeSustainedDPSGeneratedRuntimeStateLeaf(
                 pipeline_state=state,
-                runtime_state_choice=frontier.choices[target],
+                runtime_state_choice=frontier.choices[index],
                 omitted_scope=(),
             )
 
