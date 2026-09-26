@@ -58,6 +58,14 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierResult:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.runtime, ExtremeSustainedDPSRuntimeExternalHistoryFrontierResult):
+            raise TypeError("runtime scenario result requires canonical runtime frontier evidence")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("runtime scenario result evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("runtime scenario result unresolved evidence must be a tuple")
+
     @property
     def frontier(self):
         return self.runtime.frontier
@@ -533,10 +541,20 @@ class ExtremeSustainedDPSRuntimeScenarioFrontierService:
             unresolved.append(
                 "weapon-poison consequence resolver returned no finite runtime attempt frontier"
             )
-        elif not bool(getattr(consequence_frontier, "denominator_proven", False)):
-            unresolved.append(
-                "weapon-poison consequence runtime attempt denominator is not proven complete"
+        else:
+            consequence_denominator = getattr(
+                consequence_frontier,
+                "denominator_proven",
+                None,
             )
+            if not isinstance(consequence_denominator, bool):
+                unresolved.append(
+                    "weapon-poison consequence runtime attempt denominator proof is not boolean"
+                )
+            elif not consequence_denominator:
+                unresolved.append(
+                    "weapon-poison consequence runtime attempt denominator is not proven complete"
+                )
         if not consequence_effects:
             unresolved.append(
                 "weapon-poison consequence resolver returned no runtime effects"
