@@ -387,3 +387,14 @@ def test_runtime_policy_root_rejects_mutable_or_truthy_proof_inputs(
 
     with pytest.raises(TypeError, match=message):
         adapter.root(SimpleNamespace(plan="plan"), **values)
+
+
+
+def test_complete_heavy_attack_discovery_rejects_truthy_non_boolean_denominator() -> None:
+    discovery = _HeavyDiscovery()
+    discovery.proven = "false"
+    adapter = _adapter(discovery=discovery, complete=True)
+    state = adapter.axes()[0].candidate_at(_root(adapter), 0)
+
+    with pytest.raises(TypeError, match="discovery denominator proof flag must be boolean"):
+        adapter.axes()[1].candidate_count(state)
