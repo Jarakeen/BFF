@@ -45,6 +45,8 @@ class ExtremeSustainedDPSActionUpperBound:
             raise TypeError(
                 "action upper-bound covers_periodic_and_triggered must be boolean"
             )
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("action upper-bound unresolved must be a tuple")
 
         object.__setattr__(self, "time_seconds", time_seconds)
 
@@ -108,6 +110,10 @@ class ExtremeSustainedDPSRotationUpperBound:
             raise ValueError("rotation upper-bound duration must be finite and positive")
         if not isinstance(self.proven_safe, bool):
             raise TypeError("rotation upper-bound proven_safe must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("rotation upper-bound evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("rotation upper-bound unresolved must be a tuple")
 
         for label, value in (
             ("damage_action_count", self.damage_action_count),
@@ -197,6 +203,13 @@ class ExtremeSustainedDPSRotationUpperBoundService:
         *,
         action_bounds: tuple[ExtremeSustainedDPSActionUpperBound, ...],
     ) -> ExtremeSustainedDPSRotationUpperBound:
+        if not isinstance(plan, RotationPlan):
+            raise TypeError("rotation upper-bound evaluation requires canonical RotationPlan")
+        if not isinstance(action_bounds, tuple):
+            raise TypeError("rotation upper-bound action_bounds must be a tuple")
+        if any(not isinstance(bound, ExtremeSustainedDPSActionUpperBound) for bound in action_bounds):
+            raise TypeError("rotation upper-bound action_bounds must contain canonical action bounds")
+
         duration = float(plan.duration_seconds)
         if not isfinite(duration) or duration <= 0.0:
             raise ValueError("rotation upper-bound plan duration must be positive and finite")
@@ -217,7 +230,7 @@ class ExtremeSustainedDPSRotationUpperBoundService:
 
         supplied: dict[tuple[float, int], ExtremeSustainedDPSActionUpperBound] = {}
         unresolved: list[str] = []
-        for bound in tuple(action_bounds):
+        for bound in action_bounds:
             coordinate = bound.coordinate
             if coordinate in supplied:
                 raise ValueError(
