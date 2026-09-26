@@ -79,6 +79,14 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
         generated_weapon_poison_dilution_mode_resolver: object | None = None,
         source: str = "Objective #32 candidate runtime scenario",
     ) -> ExtremeSustainedDPSCandidateRuntimeStateFrontierResolverService:
+        if not isinstance(supplemental_event_denominator_proven, bool):
+            raise TypeError(
+                "supplemental_event_denominator_proven must be boolean"
+            )
+        if not isinstance(supplemental_history_denominator_proven, bool):
+            raise TypeError(
+                "supplemental_history_denominator_proven must be boolean"
+            )
         if capability_service is None:
             raise ValueError(
                 "candidate runtime-state factory requires canonical saved-build capability service"
@@ -196,13 +204,9 @@ class ExtremeSustainedDPSCandidateRuntimeStateFactoryService:
             scenario_frontier=scenario_frontier,
             occurrence_provider_resolver=occurrence_provider_resolver,
             supplemental_event_resolver=supplemental_event_resolver,
-            supplemental_event_denominator_proven=bool(
-                supplemental_event_denominator_proven
-            ),
+            supplemental_event_denominator_proven=supplemental_event_denominator_proven,
             supplemental_history_resolver=supplemental_history_resolver,
-            supplemental_history_denominator_proven=bool(
-                supplemental_history_denominator_proven
-            ),
+            supplemental_history_denominator_proven=supplemental_history_denominator_proven,
             weapon_poison_consequence_resolver_resolver=(
                 weapon_poison_consequence_resolver_resolver
             ),
