@@ -43,6 +43,21 @@ class ExtremeSustainedDPSGlobalObjective32SearchResult:
     closure_inventory: object | None = None
     supplemental_evidence: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.axis_coverage, ExtremeSustainedDPSAxisDominanceComposition):
+            raise TypeError("global Objective #32 result requires canonical axis coverage")
+        if not isinstance(self.closure, ExtremeSustainedDPSTheoreticalMaximumClosure):
+            raise TypeError("global Objective #32 result requires canonical theoretical closure")
+        if self.scope_proof is not None and not isinstance(
+            self.scope_proof,
+            ExtremeSustainedDPSObjective32SearchScopeProof,
+        ):
+            raise TypeError("global Objective #32 result scope_proof must be canonical")
+        if not isinstance(self.blockers, ExtremeSustainedDPSObjective32BlockerReport):
+            raise TypeError("global Objective #32 result requires canonical blocker report")
+        if not isinstance(self.supplemental_evidence, tuple):
+            raise TypeError("global Objective #32 result supplemental_evidence must be a tuple")
+
     @property
     def best_modeled_dps(self) -> float | None:
         return getattr(self.search, "best_modeled_dps", None)
