@@ -326,3 +326,28 @@ def test_theoretical_closure_record_requires_best_dps_for_finite_proof() -> None
             evidence=(),
             unresolved=("still open",),
         )
+
+
+def test_theoretical_closure_rejects_non_string_manual_omitted_scope() -> None:
+    with pytest.raises(TypeError, match="omitted_scope must contain only strings"):
+        ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+            _search(),
+            axis_coverage=_coverage(),
+            omitted_scope=("open timing", 7),  # type: ignore[arg-type]
+        )
+
+
+def test_theoretical_closure_rejects_non_string_axis_omission() -> None:
+    coverage = replace(
+        _coverage(),
+        omitted_scope=("open timing", 7),  # type: ignore[arg-type]
+    )
+
+    with pytest.raises(
+        TypeError,
+        match="axis coverage omitted_scope must contain only strings",
+    ):
+        ExtremeSustainedDPSTheoreticalMaximumClosureService.close(
+            _search(),
+            axis_coverage=coverage,
+        )
