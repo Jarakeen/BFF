@@ -139,3 +139,23 @@ def test_unresolved_downstream_trait_frontier_fails_closed() -> None:
 
     with pytest.raises(ValueError, match="armor glyph denominator missing"):
         adapter.axes()[1].candidate_count(state)
+
+
+def test_truthy_non_boolean_gear_denominator_proof_fails_closed() -> None:
+    adapter = _adapter()
+    frontier = _dual_frontier()
+    frontier.denominator_proven = "false"
+    state = adapter.root(_Build(), object(), dual_bar_frontier=frontier)
+
+    with pytest.raises(TypeError, match="proof flag must be boolean"):
+        adapter.axes()[0].candidate_count(state)
+
+
+def test_boolean_gear_candidate_count_is_not_accepted_as_integer() -> None:
+    adapter = _adapter()
+    frontier = _dual_frontier()
+    frontier.dual_bar_state_count = True
+    state = adapter.root(_Build(), object(), dual_bar_frontier=frontier)
+
+    with pytest.raises(TypeError, match="candidate count must be an integer"):
+        adapter.axes()[0].candidate_count(state)
