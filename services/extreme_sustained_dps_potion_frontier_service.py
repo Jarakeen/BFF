@@ -44,6 +44,20 @@ class ExtremeSustainedDPSPotionFrontier:
     evidence: tuple[str, ...]
     unresolved: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.families, tuple):
+            raise TypeError("potion frontier families must be a tuple")
+        if isinstance(self.candidate_count, bool) or not isinstance(self.candidate_count, int):
+            raise TypeError("potion frontier candidate_count must be an integer")
+        if self.candidate_count < 0:
+            raise ValueError("potion frontier candidate_count cannot be negative")
+        if not isinstance(self.denominator_proven, bool):
+            raise TypeError("potion frontier denominator_proven must be boolean")
+        if not isinstance(self.evidence, tuple):
+            raise TypeError("potion frontier evidence must be a tuple")
+        if not isinstance(self.unresolved, tuple):
+            raise TypeError("potion frontier unresolved must be a tuple")
+
 
 class ExtremeSustainedDPSPotionFrontierService:
     """Enumerate canonical potion effect families without assuming activation."""
@@ -149,7 +163,9 @@ class ExtremeSustainedDPSPotionFrontierService:
             raise ValueError(
                 "potion frontier denominator is unresolved: " + "; ".join(frontier.unresolved)
             )
-        target = int(index)
+        if isinstance(index, bool) or not isinstance(index, int):
+            raise TypeError("potion candidate index must be an integer")
+        target = index
         if target < 0 or target >= frontier.candidate_count:
             raise IndexError("potion candidate index out of range")
 
