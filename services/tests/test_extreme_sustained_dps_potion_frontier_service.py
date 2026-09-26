@@ -63,3 +63,10 @@ def test_potion_invalid_index_fails_closed() -> None:
     service = ExtremeSustainedDPSPotionFrontierService(_Repository())
     with pytest.raises(IndexError):
         service.candidate_at(PlayerBuild(), 3)
+
+
+def test_potion_frontier_rejects_boolean_candidate_index() -> None:
+    service = ExtremeSustainedDPSPotionFrontierService(_Repository())
+
+    with pytest.raises(TypeError, match="candidate index must be an integer"):
+        service.candidate_at(PlayerBuild(), True)
