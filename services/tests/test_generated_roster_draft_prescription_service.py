@@ -143,3 +143,52 @@ def test_legacy_prescription_rows_migrate_forward_without_rewrite(tmp_path) -> N
     assert legacy_row is not None
     assert json.loads(str(legacy_row["prescription_json"])) == legacy_payload
     assert str(legacy_row["adopted_build_name"]) == "RG Tank"
+
+
+def test_existing_prescription_updates_payload_not_only_adoption_names(tmp_path) -> None:
+    db = EsoDatabase(tmp_path / "eso.db")
+    drafts = GeneratedRosterDraftService(db)
+    draft = drafts.save_plan(
+        name="PM",
+        goal="Godslayer",
+        difficulty="Veteran",
+        slots=(GeneratedRosterDraftSlot(
+            slot_name="DD 1", kind="prescribed_recruit",
+            player_name="Recruitment Needed", character_name="",
+            eso_class="Necromancer", build_name="Support DD",
+        ),),
+    )
+    service = GeneratedRosterDraftPrescriptionService(db)
+    service.save(
+        draft_id=draft.draft_id, slot_name="DD 1",
+        prescription={"gear": ["Z'en"]},
+        adopted_player_name="", adopted_character_name="", adopted_build_name="",
+    )
+    service.save(
+        draft_id=draft.draft_id, slot_name="DD 1",
+        prescription={"gear": ["Alkosh"], "class": "Dragonknight"},
+        adopted_player_name="Cobble", adopted_character_name="Cobble DK",
+        adopted_build_name="Z'enKosh",
+    )
+
+    assert service.load(draft.draft_id, "DD 1") == {
+        "gear": ["Alkosh"], "class": "Dragonknight"
+    }
+
+
+def test_prescription_rejects_missing_parent_draft_without_row(tmp_path) -> None:
+    db = EsoDatabase(tmp_path / "eso.db")
+    GeneratedRosterDraftService(db)
+    service = GeneratedRosterDraftPrescriptionService(db)
+
+    import pytest
+    with pytest.raises(ValueError, match="does not exist"):
+        service.save(
+            draft_id=999, slot_name="DD 1", prescription={"role": "DD"},
+            adopted_player_name="", adopted_character_name="", adopted_build_name="",
+        )
+
+    row = db.execute(
+        "SELECT COUNT(*) AS count FROM generated_roster_draft_recruit_prescription"
+    ).fetchone()
+    assert int(row["count"]) == 0
