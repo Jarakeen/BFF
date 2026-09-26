@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from minmax.character_build.effect_instance import EffectVariant
 from minmax.character_build.effect_layer import EffectLayer
 from minmax.character_progression import AttributeAllocation, CharacterProgression
@@ -134,3 +136,79 @@ def test_non_gear_active_effect_does_not_create_gear_bridge_blocker() -> None:
     )
 
     assert result.unresolved == ()
+
+
+@pytest.mark.parametrize(
+    "field,value,match",
+    (
+        ("target_health", True, "target_health must be an integer"),
+        ("target_resistance", "18200", "target_resistance must be numeric"),
+        ("target_name", 7, "target_name must be a string"),
+        ("initial_bar", 1, "initial_bar must be a string"),
+    ),
+)
+def test_generated_runtime_input_boundary_rejects_coerced_scalars(field, value, match) -> None:
+    kwargs = {
+        "runtime_effects": (),
+        "target_health": 1_000_000,
+        "target_resistance": 18_200.0,
+        "target_name": "Boss",
+        "initial_bar": "front",
+    }
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=match):
+        from services.extreme_sustained_dps_generated_runtime_evaluation_service import (
+            ExtremeSustainedDPSGeneratedRuntimeEvaluationService,
+        )
+        ExtremeSustainedDPSGeneratedRuntimeEvaluationService._validate_evaluation_inputs(
+            **kwargs
+        )
+
+
+def test_generated_runtime_input_boundary_requires_tuple_effects() -> None:
+    from services.extreme_sustained_dps_generated_runtime_evaluation_service import (
+        ExtremeSustainedDPSGeneratedRuntimeEvaluationService,
+    )
+
+    with pytest.raises(TypeError, match="runtime_effects must be a tuple"):
+        ExtremeSustainedDPSGeneratedRuntimeEvaluationService._validate_evaluation_inputs(
+            runtime_effects=[],  # type: ignore[arg-type]
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+            target_name="Boss",
+            initial_bar="front",
+        )
+
+
+def test_generated_runtime_input_boundary_rejects_invalid_ranges() -> None:
+    from services.extreme_sustained_dps_generated_runtime_evaluation_service import (
+        ExtremeSustainedDPSGeneratedRuntimeEvaluationService,
+    )
+
+    with pytest.raises(ValueError, match="target_health must be positive"):
+        ExtremeSustainedDPSGeneratedRuntimeEvaluationService._validate_evaluation_inputs(
+            runtime_effects=(),
+            target_health=0,
+            target_resistance=18_200.0,
+            target_name="Boss",
+            initial_bar="front",
+        )
+
+    with pytest.raises(ValueError, match="target_resistance must be finite and non-negative"):
+        ExtremeSustainedDPSGeneratedRuntimeEvaluationService._validate_evaluation_inputs(
+            runtime_effects=(),
+            target_health=1_000_000,
+            target_resistance=float("inf"),
+            target_name="Boss",
+            initial_bar="front",
+        )
+
+    with pytest.raises(ValueError, match="initial_bar must be front or back"):
+        ExtremeSustainedDPSGeneratedRuntimeEvaluationService._validate_evaluation_inputs(
+            runtime_effects=(),
+            target_health=1_000_000,
+            target_resistance=18_200.0,
+            target_name="Boss",
+            initial_bar="middle",
+        )
