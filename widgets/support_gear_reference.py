@@ -235,7 +235,13 @@ class SupportGearReferenceWidget(QWidget):
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         try:
-            self.service.save(dialog.result_reference())
+            reference = dialog.result_reference()
+            self.service.create(
+                role=reference.role,
+                set_name=reference.set_name,
+                coverage=reference.coverage,
+                notes=reference.notes,
+            )
         except Exception as exc:
             QMessageBox.warning(self, "Could Not Add Set", str(exc))
             return
