@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from types import SimpleNamespace
 
 from services.extreme_sustained_dps_champion_point_frontier_service import (
@@ -104,3 +106,42 @@ def test_incomplete_passive_frontier_promotes_nothing() -> None:
 
     assert result.proof.dominated_axes == ()
     assert "passive denominator unresolved" in result.unresolved
+
+
+def test_dual_bar_coverage_rejects_truthy_denominator_proof() -> None:
+    frontier = SimpleNamespace(
+        denominator_proven="true",
+        unresolved=(),
+        expected_topology_count=1,
+        proven_topology_count=1,
+        dual_bar_state_count=1,
+    )
+
+    with pytest.raises(TypeError, match="denominator_proven must be boolean"):
+        ExtremeSustainedDPSGearProgressionAxisCoverageService.dual_bar_gear(frontier)
+
+
+def test_dual_bar_coverage_rejects_non_tuple_unresolved() -> None:
+    frontier = SimpleNamespace(
+        denominator_proven=True,
+        unresolved=["open"],
+        expected_topology_count=1,
+        proven_topology_count=1,
+        dual_bar_state_count=1,
+    )
+
+    with pytest.raises(TypeError, match="unresolved must be a tuple"):
+        ExtremeSustainedDPSGearProgressionAxisCoverageService.dual_bar_gear(frontier)
+
+
+def test_dual_bar_coverage_rejects_boolean_counts() -> None:
+    frontier = SimpleNamespace(
+        denominator_proven=True,
+        unresolved=(),
+        expected_topology_count=True,
+        proven_topology_count=1,
+        dual_bar_state_count=1,
+    )
+
+    with pytest.raises(TypeError, match="expected_topology_count must be a non-negative integer"):
+        ExtremeSustainedDPSGearProgressionAxisCoverageService.dual_bar_gear(frontier)
