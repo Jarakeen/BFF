@@ -344,3 +344,67 @@ def test_global_search_rejects_mutable_frontier_collections(field) -> None:
 
     with pytest.raises(TypeError, match=f"{field} must be a tuple"):
         service.search(**kwargs)
+
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("denominator_proven", "true", "denominator proof must be boolean"),
+        ("unresolved", [], "unresolved evidence must be a tuple"),
+        ("choice_count", True, "choice_count must be an integer"),
+        ("choice_count", -1, "choice_count must be non-negative"),
+        ("choice_count", 0, "proven structural family denominator cannot be empty"),
+    ),
+)
+def test_global_search_rejects_malformed_structural_denominator(field, value, message) -> None:
+    class _MalformedFamilies(_Families):
+        def validate_denominator(self):
+            values = {
+                "denominator_proven": True,
+                "choice_count": 2,
+                "unresolved": (),
+            }
+            values[field] = value
+            return SimpleNamespace(**values)
+
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_MalformedFamilies(),
+        structural_materialization=_Materialization(),
+        pipeline=_Pipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+
+    with pytest.raises((TypeError, ValueError), match=message):
+        service.search(**_valid_search_kwargs())
+
+
+@pytest.mark.parametrize(
+    ("complete", "unresolved", "message"),
+    (
+        ("true", (), "complete flag must be boolean"),
+        (True, [], "unresolved evidence must be a tuple"),
+    ),
+)
+def test_global_search_rejects_malformed_structural_materialization(
+    complete, unresolved, message
+) -> None:
+    class _MalformedMaterialization(_Materialization):
+        def materialize(self, choice):
+            row = super().materialize(choice)
+            return SimpleNamespace(
+                complete=complete,
+                build=row.build,
+                progression=row.progression,
+                unresolved=unresolved,
+            )
+
+    service = ExtremeSustainedDPSGlobalGeneratedSearchService(
+        structural_families=_Families(),
+        structural_materialization=_MalformedMaterialization(),
+        pipeline=_Pipeline(),
+        leaf_evaluation=_Leaf(),
+    )
+
+    with pytest.raises(TypeError, match=message):
+        service.search(**_valid_search_kwargs())
