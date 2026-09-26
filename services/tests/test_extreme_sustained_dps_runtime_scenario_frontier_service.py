@@ -367,6 +367,47 @@ def test_candidate_builder_prunes_proven_non_dps_runtime_effects() -> None:
     )
 
 
+def test_candidate_builder_preserves_typed_runtime_closure_evidence() -> None:
+    candidate = GeneratedRotationCandidate(
+        candidate_id="candidate",
+        plan=_plan(),
+        refresh_leads=(),
+        action_claims=(),
+    )
+    effect = EffectVariant(
+        name="damage_shield",
+        layer=EffectLayer.PROC,
+        source="Reviewed Shield",
+        trigger="damage_dealt",
+        duration=4.0,
+    )
+
+    class _Universe:
+        def resolve(self, build):
+            return SimpleNamespace(
+                effects=(effect,),
+                evidence=("candidate runtime effect universe resolved",),
+                unresolved=(),
+            )
+
+    result = ExtremeSustainedDPSRuntimeScenarioFrontierService(
+        runtime_effect_universe=_Universe(),
+    ).build_from_candidate(
+        candidate=candidate,
+        player_build=PlayerBuild(Name="Generated", BuildName="Candidate", Role="DD"),
+        effects=None,
+        supplemental_event_denominator_proven=True,
+        supplemental_histories=(),
+        supplemental_denominator_proven=True,
+        source="reviewed boss scenario",
+    )
+
+    assert result.relevance is not None
+    assert result.relevance.irrelevant == (effect,)
+    assert result.relevance.unresolved == ()
+    assert result.scaling is None
+
+
 def test_candidate_builder_fails_closed_on_unreviewed_runtime_effect_relevance() -> None:
     candidate = GeneratedRotationCandidate(
         candidate_id="candidate",
