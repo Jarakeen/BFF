@@ -210,6 +210,15 @@ class ExtremeSustainedDPSGlobalGeneratedSearchService:
         normalized_bar = str(initial_bar or "").strip().casefold()
         if normalized_bar not in {"front", "back"}:
             raise ValueError("initial_bar must be 'front' or 'back'")
+        for label, value in (
+            ("ultimate_generation_events", ultimate_generation_events),
+            ("heroism_windows", heroism_windows),
+            ("duration_rules", duration_rules),
+            ("heavy_attack_windows", heavy_attack_windows),
+            ("heavy_attack_channel_blocks", heavy_attack_channel_blocks),
+        ):
+            if not isinstance(value, tuple):
+                raise TypeError(f"{label} must be a tuple")
 
         structural_axis = self._structural_axis(
             dual_bar_frontier=dual_bar_frontier,
