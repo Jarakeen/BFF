@@ -570,6 +570,23 @@ class ProfiledCollectibleService(EsoCollectibleDatabaseService):
                         """,
                         (profile_name, int(collectible_id), 1 if owned else 0),
                     )
+            read_back: dict[int, bool] = {}
+            for virtual_id in normalized:
+                rumor_id = self._rumor_id_from_virtual(virtual_id)
+                if rumor_id is not None:
+                    row = db.execute(
+                        "SELECT owned FROM collectible_rumor_progress WHERE profile_name = ? AND rumor_id = ?",
+                        (profile_name, rumor_id),
+                    ).fetchone()
+                else:
+                    row = db.execute(
+                        "SELECT owned FROM collectible_progress WHERE profile_name = ? AND collectible_id = ?",
+                        (profile_name, virtual_id),
+                    ).fetchone()
+                if row is not None:
+                    read_back[virtual_id] = bool(row["owned"])
+            if read_back != normalized:
+                raise RuntimeError("Collectible batch did not round-trip exactly")
             db.commit()
         except Exception:
             db.rollback()
