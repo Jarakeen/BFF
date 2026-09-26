@@ -68,3 +68,34 @@ def test_invalid_weapon_index_fails_closed() -> None:
 def test_weapon_frontier_rejects_boolean_candidate_index() -> None:
     with pytest.raises(TypeError, match="candidate index must be an integer"):
         _service().candidate_at(_build(), True)
+
+
+@pytest.mark.parametrize("field,value", (("offset", True), ("limit", "2"), ("offset", 1.5)))
+def test_weapon_page_requires_strict_integer_bounds(field, value) -> None:
+    kwargs = {"offset": 0, "limit": 2}
+    kwargs[field] = value
+
+    with pytest.raises(TypeError, match=f"weapon page {field} must be an integer"):
+        _service().page(_build(), **kwargs)
+
+
+def test_weapon_frontier_requires_tuple_choice_collections() -> None:
+    with pytest.raises(TypeError, match="enchant choices must be a tuple"):
+        ExtremeSustainedDPSWeaponFrontierService(
+            trait_choices=("Precise",),
+            enchant_choices=["Flame"],  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="trait choices must be a tuple"):
+        ExtremeSustainedDPSWeaponFrontierService(
+            trait_choices=["Precise"],  # type: ignore[arg-type]
+            enchant_choices=("Flame",),
+        )
+
+
+def test_weapon_frontier_rejects_non_string_choices() -> None:
+    with pytest.raises(TypeError, match="must contain only strings"):
+        ExtremeSustainedDPSWeaponFrontierService(
+            trait_choices=("Precise", 7),  # type: ignore[arg-type]
+            enchant_choices=("Flame",),
+        )
