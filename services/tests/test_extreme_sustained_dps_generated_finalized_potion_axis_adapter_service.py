@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from minmax.rotation_plan import RotationAction, RotationActionKind, RotationPlan
 from models.build_model import PlayerBuild
 from services.extreme_sustained_dps_generated_finalized_potion_axis_adapter_service import (
@@ -247,4 +249,61 @@ def test_missing_resource_event_denominator_proof_fails_closed() -> None:
     import pytest
 
     with pytest.raises(ValueError, match="resource observation denominator"):
+        adapter.axis().candidate_count(root)
+
+
+def test_finalized_potion_evidence_rejects_truthy_non_boolean_denominator_flag() -> None:
+    with pytest.raises(TypeError, match="proof flag must be boolean"):
+        ExtremeSustainedDPSFinalizedPotionTimingEvidence(
+            additional_resource_event_denominator_proven="false",
+        )
+
+
+def test_finalized_potion_root_rejects_truthy_non_boolean_complete_flag() -> None:
+    adapter, _denominator, _legality = _adapter()
+    upstream = SimpleNamespace(
+        runtime=SimpleNamespace(complete="false", current_candidate=_candidate()),
+        complete=False,
+    )
+
+    with pytest.raises(TypeError, match="complete flag must be boolean"):
+        adapter.root(
+            upstream,
+            build=PlayerBuild(Potion="Potion X"),
+            progression="progression",
+            potion_cooldown_seconds=45.0,
+            evidence_resolver=_resolver,
+        )
+
+
+def test_finalized_potion_root_rejects_boolean_cooldown() -> None:
+    adapter, _denominator, _legality = _adapter()
+
+    with pytest.raises(TypeError, match="cooldown must be numeric"):
+        adapter.root(
+            _upstream(),
+            build=PlayerBuild(Potion="Potion X"),
+            progression="progression",
+            potion_cooldown_seconds=True,
+            evidence_resolver=_resolver,
+        )
+
+
+def test_finalized_potion_denominator_requires_canonical_timing_evidence() -> None:
+    adapter, _denominator, _legality = _adapter()
+    root = adapter.root(
+        _upstream(),
+        build=PlayerBuild(Potion="Potion X"),
+        progression="progression",
+        potion_cooldown_seconds=45.0,
+        evidence_resolver=lambda _candidate: SimpleNamespace(
+            periodic_projections=(),
+            heavy_attack_completion_evidence=(),
+            additional_resource_event_times=(),
+            additional_resource_event_denominator_proven=True,
+            unresolved=(),
+        ),
+    )
+
+    with pytest.raises(TypeError, match="canonical timing evidence"):
         adapter.axis().candidate_count(root)
