@@ -412,6 +412,17 @@ class RosterPlayerIdentityService:
         # Construct before the write transaction. Repository initialization may
         # perform schema checks using its own SQLite connection.
         raid_plan_repository = RaidPlanRepository(Path(self.database.database))
+        catalog_service = (
+            self.build_service.canonical.catalog_service
+            if self.build_service is not None
+            else None
+        )
+        atomic_catalog = bool(
+            catalog_service is not None
+            and getattr(catalog_service, "_database_mode", False)
+            and Path(catalog_service.catalog_path).resolve()
+            == Path(self.database.database).resolve()
+        )
 
         try:
             # Alias writes are staged directly here so the entire Personnel merge
@@ -496,11 +507,12 @@ class RosterPlayerIdentityService:
             # Personnel, canonical Build identity, and every affected Raid Plan
             # share foundrydock.db. Keep the explicit merge atomic across all three
             # authorities so a failure cannot strand half-merged player identity.
-            self._merge_canonical_players(
-                survivor_name,
-                donor_name,
-                db=self.database.connection,
-            )
+            if atomic_catalog:
+                self._merge_canonical_players(
+                    survivor_name,
+                    donor_name,
+                    db=self.database.connection,
+                )
             self._rewrite_raid_plan_player_identity(
                 survivor_id=survivor_id,
                 donor_id=donor_id,
@@ -515,6 +527,12 @@ class RosterPlayerIdentityService:
         except Exception:
             self.database.rollback()
             raise
+
+        # Explicit legacy/test paths can still use JSON catalog storage. They
+        # cannot participate in the SQLite transaction; production foundrydock.db
+        # catalog state always does.
+        if self.build_service is not None and not atomic_catalog:
+            self._merge_canonical_players(survivor_name, donor_name)
 
         return PlayerIdentityMergeResult(
             survivor_id=survivor_id,
