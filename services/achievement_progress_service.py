@@ -7,9 +7,12 @@ Production now points it at foundrydock.db so user-owned progress is separated
 from replaceable ESO reference data.
 """
 
+import copy
 import json
+import os
 import sqlite3
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from services.achievement_progress_pydantic_schema import validate_achievement_progress_snapshot
 
@@ -69,8 +72,12 @@ class AchievementProgressService:
         if self.progress_path.exists():
             try:
                 data = json.loads(self.progress_path.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError, TypeError):
-                data = {}
+            except (json.JSONDecodeError, OSError, TypeError) as exc:
+                raise RuntimeError(
+                    f"Achievement progress failed to load safely: {exc}"
+                ) from exc
+            if not isinstance(data, dict):
+                raise RuntimeError("Achievement progress must contain a JSON object")
 
             raw_profiles = data.get("Profiles")
             if isinstance(raw_profiles, dict):
@@ -237,10 +244,25 @@ class AchievementProgressService:
                 for name, completed in snapshot["profiles"].items()
             },
         }
-        self.progress_path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile(
+                "w", encoding="utf-8", dir=self.progress_path.parent,
+                prefix=f".{self.progress_path.name}.", suffix=".tmp", delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+                json.dump(payload, handle, ensure_ascii=False, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, self.progress_path)
+            temporary_path = None
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+        read_back = json.loads(self.progress_path.read_text(encoding="utf-8"))
+        if read_back != payload:
+            raise RuntimeError("Achievement progress JSON did not round-trip exactly")
 
     def _save_database(self, snapshot: dict) -> None:
         self.progress_path.parent.mkdir(parents=True, exist_ok=True)
