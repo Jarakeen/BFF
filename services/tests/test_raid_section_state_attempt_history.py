@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pytest
+
 from services.raid_section_state_service import RaidSectionStateService
 
 
@@ -106,3 +108,29 @@ def test_attempt_ledger_keeps_trial_and_plan_identity(tmp_path) -> None:
     assert row.trial_id == "rockgrove"
     assert row.plan_name == "Performance Mode RG"
     assert row.encounter_id == "xalvakka"
+
+
+def test_malformed_raid_section_state_fails_closed_without_overwrite(tmp_path) -> None:
+    path = tmp_path / "raid_section_state.json"
+    original = b'{"human_ready": [], "runs": {}}'
+    path.write_bytes(original)
+    service = RaidSectionStateService(path)
+
+    with pytest.raises(RuntimeError, match="strict validation"):
+        service.set_run_notes("rg-pm", "do not erase me")
+
+    assert path.read_bytes() == original
+
+
+def test_invalid_raid_section_state_write_is_rejected_before_mutation(tmp_path) -> None:
+    path = tmp_path / "raid_section_state.json"
+    service = RaidSectionStateService(path)
+    service.set_run_notes("rg-pm", "existing")
+    original = path.read_bytes()
+    payload = service._read()
+    payload["events"] = [{"timestamp": "", "plan_id": "", "kind": "note", "text": "bad", "evidence": "MANUAL"}]
+
+    with pytest.raises(RuntimeError, match="strict validation"):
+        service._write(payload)
+
+    assert path.read_bytes() == original
