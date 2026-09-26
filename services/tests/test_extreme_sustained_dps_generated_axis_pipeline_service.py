@@ -707,3 +707,58 @@ def test_raw_potion_cooldown_must_be_positive(cooldown: float) -> None:
 
     with pytest.raises(ValueError, match="potion cooldown must be positive"):
         pipeline.axes()[2].candidate_count(state)
+
+
+def test_pipeline_rejects_truthy_non_boolean_stage_complete_flag() -> None:
+    calls = []
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+    )
+    state = _root(pipeline)
+    state = replace(state, gear=SimpleNamespace(complete="false", context="context"))
+
+    with pytest.raises(TypeError, match="complete flag must be boolean"):
+        pipeline.axes()[1].candidate_count(state)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("duration_seconds", True, "duration must be numeric"),
+        ("potion_cooldown_seconds", True, "cooldown must be numeric"),
+        ("starting_ultimate", True, "Ultimate must be numeric"),
+        ("use_scheduled_combat_attacks_for_ultimate", "false", "flag must be boolean"),
+        ("heavy_attack_channel_block_denominator_proven", "false", "proof flag must be boolean"),
+    ),
+)
+def test_pipeline_root_rejects_boolean_laundering(field, value, message) -> None:
+    calls = []
+    pipeline = ExtremeSustainedDPSGeneratedAxisPipelineService(
+        gear_adapter=_GearAdapter(calls),
+        late_adapter=_LateAdapter(calls),
+        rotation_adapter=_RotationAdapter(calls),
+        runtime_policy_adapter=_RuntimeAdapter(calls),
+    )
+    values = {
+        "duration_seconds": 10.0,
+        "potion_cooldown_seconds": 45.0,
+        "starting_ultimate": 0.0,
+        "use_scheduled_combat_attacks_for_ultimate": False,
+        "heavy_attack_channel_block_denominator_proven": False,
+    }
+    values[field] = value
+
+    with pytest.raises(TypeError, match=message):
+        pipeline.root(
+            "build",
+            "progression",
+            dual_bar_frontier="dual-frontier",
+            candidate_id_prefix="structural:strict",
+            priorities="priorities",
+            snapshot_resolver="resolver",
+            target_identity="boss",
+            **values,
+        )
