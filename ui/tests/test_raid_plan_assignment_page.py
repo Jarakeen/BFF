@@ -159,9 +159,13 @@ def test_raid_plan_workspace_exposes_crit_and_pen_calculator() -> None:
     assert 'FoundryCard("Critical Damage & Penetration", "crosshair")' in source
     assert '"PERSONAL CRIT"' in source
     assert '"RAID CRIT"' in source
+    assert '"CRIT STATUS"' in source
     assert '"PHYS PEN"' in source
     assert '"SPELL PEN"' in source
     assert '"RAID ARMOR ↓"' in source
     assert '"EFFECTIVE P / S"' in source
+    assert '"PEN STATUS"' in source
+    assert '"AT CAP" if stat.critical_capped else "BELOW"' in source
+    assert '"OVER" if value > 0 else "BELOW"' in source
     assert "self._refresh_offensive_stats(plan)" in source
     assert "18,200" in source
